@@ -89,6 +89,74 @@ graph TD;
     Diag -.-> Editor
 ```
 
+## 4.5. Bazel Rule Design (Library & Site Pattern)
+
+To natively support Massive Monorepo codebases where decentralized teams manage isolated documentation, `rusty-sphinx` relies strictly on a **Library & Site Pattern**, powered by Bazel's Action Graph and Providers. 
+
+This mirrors idiomatic targets like `cc_library` / `cc_binary`.
+
+### Usage Example
+
+**1. Decentralized Libraries (`rusty_sphinx_library`)**
+Teams maintain their own `.rst` documentation in subfolders using `rusty_sphinx_library`. This rule parses localized documentation and **mandates** that external links are declared in the `deps` attribute.
+
+```starlark
+# //team_a/BUILD.bazel
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["**/*.rst"]),
+    deps = ["//team_b/shared:docs"], # Mandatory for resolving cross-links
+)
+```
+
+**2. Centralized Site Assembler (`rusty_sphinx_site`)**
+To build the complete global project documentation, a top-level rule collects all the localized libraries to generate a unified, cross-referenced web portal. 
+
+```starlark
+# //docs_portal/BUILD.bazel
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_site")
+
+rusty_sphinx_site(
+    name = "enterprise_docs",
+    deps = [
+        "//team_a:docs",
+        "//team_b:docs",
+    ],
+)
+```
+
+### Strict Dependencies & Fast Previews
+
+To ensure site integrity while maintaining developer velocity in a monorepo, `rusty-sphinx` balances strict dependency tracking with local build overrides:
+
+- **Mandatory Dependencies for Links**: `rusty_sphinx_library` targets require explicit `deps` declarations for any external documents they link to. This guarantees the Bazel dependency graph is accurate and allows broken links to be caught instantly at compilation time during a full build.
+- **Late Resolution (Phase 2)**: Cross-references are stored as string markers in the AST during Phase 1. They are resolved globally during Phase 2 Indexing at the `rusty_sphinx_site` level.
+- **Fast Preview Mode ("Bypass Deps")**: To support rapid local iteration without compiling the transitive closure of the entire company's documentation, the Bazel rules support a fast build mode (e.g., via a specific flag like `--config=fast_docs` or a generated `_fast` sub-target). In this mode, external `deps` are purposefully disregarded or stubbed, and broken links are gracefully ignored. This allows a team to instantly preview their local sub-documentation structural changes in milliseconds without waiting on external dependencies.
+
+
+### Implications for the Rule Implementations
+
+This strict separation requires the Starlark implementation to map the **Multi-Phase Compilation Model** across the Bazel target dependency graph:
+
+1. **Phase 1 Actions (`rusty_sphinx_library`)**:
+   For every `.rst` file in `srcs`, the local library rule declares an action running the worker in `parse` mode.
+   - **Outputs**: `page.ast`
+   The rule returns a `RustySphinxInfo` provider containing its generated `.ast` files.
+
+2. **Phase 2 & 3 Actions (`rusty_sphinx_site`)**:
+   The site assembler rule extracts the `RustySphinxInfo` provider from all its `deps` to collect *every single transitively compiled `.ast` file* across the entire monorepo.
+   
+   - **Phase 2 (Index Action)**: It declares exactly one action running the worker in `index` mode, passing the full collection of localized `.ast` files.
+     - **Output**: A unified `project.index`.
+   
+   - **Phase 3 (Render Actions)**: It declares an action running the worker in `render` mode for every individual `.ast` file.
+     - **Inputs**: `page.ast` and the unified global `project.index`.
+     - **Outputs**: `page.html`
+
+**Why this scales infinitely:** If a developer in `team_a` fixes a typo, Bazel only reruns Phase 1 for that single file. `team_b`'s `.ast` files are fully cached. Because Bazel tracks the inputs to Phase 2 and Phase 3 natively, the global index is quickly rebuilt, and then Bazel only triggers Phase 3 for the HTML pages strictly impacted by the modifications. The Rust binary never needs to "know" about monorepos; Bazel orchestrates caching effortlessly.
+
 ## 5. Next Steps for Implementation
 1. **Repository Setup**: Initialize a Cargo workspace with the core crates (`ast`, `parser`, `analyzer`, `renderer`, `worker`, `lsp`).
 2. **Prototyping the AST**: Define the data structure for the AST that can handle both valid RST elements and represent syntax errors organically.
