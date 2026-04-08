@@ -34,3 +34,25 @@ jobs:
       
     - name: Document
       run: cargo doc --no-deps
+
+  bazel_integration:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Bazel
+      uses: bazel-contrib/setup-bazel@0.9.1
+      with:
+        # Cache Bazel's external dependencies between CI runs
+        bazelisk-cache: true
+        disk-cache: ${{ github.workflow }}
+        repository-cache: true
+
+    - name: Build full site (all teams)
+      run: bazel build //examples:site
+
+    - name: Build team_a in isolation (partial build)
+      run: bazel build //examples/team_a:docs
+
+    - name: Build team_b in isolation (partial build)
+      run: bazel build //examples/team_b:docs

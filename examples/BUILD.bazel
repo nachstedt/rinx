@@ -1,0 +1,18 @@
+"""
+Top-level example site.
+
+Assembles the documentation from team_a and team_b into a single HTML site.
+
+  bazel build //examples:site          # build the full example site
+  bazel build //examples/team_a:docs   # build team_a in isolation
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_site")
+
+rusty_sphinx_site(
+    name = "site",
+    deps = [
+        "//examples/team_a:docs",
+        "//examples/team_b:docs",
+    ],
+)

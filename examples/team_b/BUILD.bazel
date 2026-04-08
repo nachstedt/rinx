@@ -1,0 +1,9 @@
+"""Team B documentation library."""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    visibility = ["//visibility:public"],
+)
