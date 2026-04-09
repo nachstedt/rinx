@@ -1,0 +1,6 @@
+# This package is the root of the rusty_sphinx Bazel rules module.
+# The Starlark rules are in rules/, providers in providers.bzl, and defs.bzl
+# is the public API entry point.
+#
+# The rusty-sphinx worker binary is NOT built here; it is built by the
+# consuming workspace (see examples/bazel_workspace/tools/).

@@ -1,12 +1,14 @@
 //! Abstract Syntax Tree representations for the Rusty-Sphinx Document.
 
-#[derive(Debug, PartialEq, Eq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
     Heading(String),
     Paragraph(String),
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Document {
     pub nodes: Vec<Node>,
 }

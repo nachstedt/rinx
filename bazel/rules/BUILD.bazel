@@ -1,0 +1,1 @@
+# Makes rules/ a Bazel package so its .bzl files can be loaded with //rules:*.

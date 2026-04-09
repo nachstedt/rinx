@@ -1,0 +1,30 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+rust_library(
+    name = "rusty_sphinx",
+    srcs = [
+        "src/analyzer.rs",
+        "src/ast.rs",
+        "src/lib.rs",
+        "src/parser.rs",
+        "src/renderer.rs",
+    ],
+    deps = [
+        "@crates//:serde",
+        "@crates//:serde_json",
+    ],
+    edition = "2024",
+    visibility = ["//visibility:public"],
+)
+
+rust_binary(
+    name = "rusty_sphinx_worker",
+    srcs = ["src/main.rs"],
+    deps = [
+        ":rusty_sphinx",
+        "@crates//:serde",
+        "@crates//:serde_json",
+    ],
+    edition = "2024",
+    visibility = ["//visibility:public"],
+)

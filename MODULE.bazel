@@ -1,0 +1,56 @@
+"""
+Root Bazel workspace for rusty-sphinx.
+
+This workspace:
+ - Builds the rusty-sphinx binary from src/ via rules_rust.
+ - Loads the rusty_sphinx Starlark rules from the local bazel/ subdirectory.
+ - Provides example documentation targets under examples/.
+
+Quick start:
+  bazel build //:rusty_sphinx_worker          # build the binary
+  bazel build //examples:site                 # build the full example site
+  bazel build //examples/team_a:docs          # build team_a in isolation
+"""
+
+module(
+    name = "rusty_sphinx_workspace",
+    version = "0.0.0",
+)
+
+# ── Local rules module ────────────────────────────────────────────────────────
+
+bazel_dep(name = "rusty_sphinx", version = "0.0.0")
+
+local_path_override(
+    module_name = "rusty_sphinx",
+    path = "bazel",
+)
+
+# ── Rust toolchain ────────────────────────────────────────────────────────────
+
+bazel_dep(name = "rules_rust", version = "0.69.0")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2024",
+)
+use_repo(rust, "rust_toolchains")
+
+register_toolchains("@rust_toolchains//:all")
+
+# ── Crate dependencies (serde, serde_json) ────────────────────────────────────
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+
+crate.from_cargo(
+    name = "crates",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml"],
+    supported_platform_triples = [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+    ],
+)
+
+use_repo(crate, "crates")
