@@ -38,19 +38,57 @@ pub fn analyze_many(docs: &[Document]) -> ProjectIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ast::Node;
 
     #[test]
-    fn test_analyze_empty_document() {
+    fn test_analyze_returns_default_index_for_empty_document() {
+        // Given
         let doc = Document::new(vec![]);
+
+        // When
         let index = analyze(&doc);
-        // We just ensure it returns successfully as a stub for now.
+
+        // Then
+        let _ = format!("{index:?}"); // Ensures it doesn't panic
+    }
+
+    #[test]
+    fn test_analyze_returns_default_index_for_populated_document() {
+        // Given
+        let doc = Document::new(vec![Node::Heading("Title".to_string())]);
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        // Currently analyze does not populate anything, but it shouldn't panic
         let _ = format!("{index:?}");
     }
 
     #[test]
-    fn test_analyze_many() {
+    fn test_analyze_many_returns_default_index_for_multiple_documents() {
+        // Given
         let docs = vec![Document::new(vec![]), Document::new(vec![])];
+
+        // When
         let index = analyze_many(&docs);
+
+        // Then
         let _ = format!("{index:?}");
+    }
+
+    #[test]
+    fn test_merge_combines_indices_without_error() {
+        // Given
+        let mut idx1 = ProjectIndex::default();
+        let idx2 = ProjectIndex::default();
+
+        // When
+        idx1.merge(idx2);
+
+        // Then
+        // Since we don't have fields to assert equality on right now,
+        // we just ensure the execution path is hit without issues.
+        let _ = format!("{idx1:?}");
     }
 }

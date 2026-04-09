@@ -76,30 +76,139 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_empty() {
-        let doc = parse("");
+    fn test_parse_returns_empty_document_for_empty_input() {
+        // Given
+        let input = "";
+
+        // When
+        let doc = parse(input);
+
+        // Then
         assert_eq!(doc.nodes.len(), 0);
     }
 
     #[test]
-    fn test_parse_heading_only() {
-        let doc = parse("Heading\n=======");
+    fn test_parse_creates_heading_node() {
+        // Given
+        let input = "Heading\n=======";
+
+        // When
+        let doc = parse(input);
+
+        // Then
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(doc.nodes[0], Node::Heading("Heading".to_string()));
     }
 
     #[test]
-    fn test_parse_paragraph_only() {
-        let doc = parse("Just some\ntext");
+    fn test_parse_creates_paragraph_node() {
+        // Given
+        let input = "Just some\ntext";
+
+        // When
+        let doc = parse(input);
+
+        // Then
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(doc.nodes[0], Node::Paragraph("Just some\ntext".to_string()));
     }
 
     #[test]
-    fn test_parse_mixed() {
-        let doc = parse("Title\n=====\n\nText.");
+    fn test_parse_creates_mixed_nodes_for_heading_and_paragraph() {
+        // Given
+        let input = "Title\n=====\n\nText.";
+
+        // When
+        let doc = parse(input);
+
+        // Then
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(doc.nodes[0], Node::Heading("Title".to_string()));
         assert_eq!(doc.nodes[1], Node::Paragraph("Text.".to_string()));
+    }
+
+    #[test]
+    fn test_parse_creates_paragraph_for_shorter_underline() {
+        // Given
+        let input = "Long Heading\n===";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph("Long Heading\n===".to_string())
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_heading_for_alternate_punctuation() {
+        // Given
+        let input = "Sub Title\n---------";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(doc.nodes[0], Node::Heading("Sub Title".to_string()));
+    }
+
+    #[test]
+    fn test_parse_ignores_surrounding_whitespace_for_heading() {
+        // Given
+        let input = "Heading  \n  =======  \n\nNext";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(doc.nodes[0], Node::Heading("Heading".to_string()));
+        assert_eq!(doc.nodes[1], Node::Paragraph("Next".to_string()));
+    }
+
+    #[test]
+    fn test_parse_creates_multiple_paragraphs_ignoring_blank_lines() {
+        // Given
+        let input = "Para 1\n\n\nPara 2\n\nPara 3";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 3);
+        assert_eq!(doc.nodes[0], Node::Paragraph("Para 1".to_string()));
+        assert_eq!(doc.nodes[1], Node::Paragraph("Para 2".to_string()));
+        assert_eq!(doc.nodes[2], Node::Paragraph("Para 3".to_string()));
+    }
+
+    #[test]
+    fn test_parse_handles_carriage_returns_gracefully() {
+        // Given
+        let input = "Heading\r\n=======\r\n\r\nPara\r\nline 2";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(doc.nodes[0], Node::Heading("Heading".to_string()));
+        assert_eq!(doc.nodes[1], Node::Paragraph("Para\nline 2".to_string()));
+    }
+
+    #[test]
+    fn test_parse_creates_heading_from_punctuation_lines() {
+        // Given
+        let input = "===\n---";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(doc.nodes[0], Node::Heading("===".to_string()));
     }
 }
