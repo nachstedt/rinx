@@ -36,7 +36,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_greeting() {
-        assert_eq!(greeting("Rustacean"), "Hello, Rustacean!");
+    fn test_greeting_returns_formatted_message() {
+        // Given
+        let name = "Rustacean";
+
+        // When
+        let result = greeting(name);
+
+        // Then
+        assert_eq!(result, "Hello, Rustacean!");
+    }
+
+    #[test]
+    fn test_process_rst_renders_html_from_rst() {
+        // Given
+        let rst = "Introduction\n============\n\nThis is a paragraph.";
+
+        // When
+        let html = process_rst(rst);
+
+        // Then
+        assert_eq!(html, "<h1>Introduction</h1>\n<p>This is a paragraph.</p>\n");
     }
 }

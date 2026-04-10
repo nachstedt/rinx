@@ -25,12 +25,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_document_new() {
+    fn test_new_creates_document_with_given_nodes() {
+        // Given
         let nodes = vec![
             Node::Heading("Title".to_string()),
             Node::Paragraph("Body".to_string()),
         ];
+
+        // When
         let doc = Document::new(nodes);
+
+        // Then
         assert_eq!(doc.nodes.len(), 2);
     }
 }

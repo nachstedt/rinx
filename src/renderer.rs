@@ -12,10 +12,12 @@ pub fn render(doc: &Document, _index: &ProjectIndex) -> String {
     for node in &doc.nodes {
         match node {
             Node::Heading(text) => {
-                let _ = writeln!(html, "<h1>{text}</h1>");
+                let escaped_text = html_escape::encode_text(text);
+                let _ = writeln!(html, "<h1>{escaped_text}</h1>");
             }
             Node::Paragraph(text) => {
-                let _ = writeln!(html, "<p>{text}</p>");
+                let escaped_text = html_escape::encode_text(text);
+                let _ = writeln!(html, "<p>{escaped_text}</p>");
             }
         }
     }
@@ -28,21 +30,54 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_render_empty() {
+    fn test_render_returns_empty_string_for_empty_document() {
+        // Given
         let doc = Document::new(vec![]);
-        let index = ProjectIndex {};
+        let index = ProjectIndex::default();
+
+        // When
         let result = render(&doc, &index);
+
+        // Then
         assert_eq!(result, "");
     }
 
     #[test]
-    fn test_render_nodes() {
+    fn test_render_formats_heading_and_paragraph_nodes() {
+        // Given
         let doc = Document::new(vec![
             Node::Heading("Title".to_string()),
             Node::Paragraph("Paragraph".to_string()),
+            Node::Heading("Another Heading".to_string()),
         ]);
-        let index = ProjectIndex {};
+        let index = ProjectIndex::default();
+
+        // When
         let result = render(&doc, &index);
-        assert_eq!(result, "<h1>Title</h1>\n<p>Paragraph</p>\n");
+
+        // Then
+        assert_eq!(
+            result,
+            "<h1>Title</h1>\n<p>Paragraph</p>\n<h1>Another Heading</h1>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_escapes_html_special_characters() {
+        // Given
+        let doc = Document::new(vec![
+            Node::Heading("Title <script>".to_string()),
+            Node::Paragraph("A & B > C".to_string()),
+        ]);
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index);
+
+        // Then
+        assert_eq!(
+            result,
+            "<h1>Title &lt;script&gt;</h1>\n<p>A &amp; B &gt; C</p>\n"
+        );
     }
 }
