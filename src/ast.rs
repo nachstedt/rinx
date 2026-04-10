@@ -3,9 +3,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Directive {
+    Toctree {
+        paths: Vec<String>,
+    },
+    Unknown {
+        name: String,
+        argument: String,
+        body: String,
+    },
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
     Heading(String),
     Paragraph(String),
+    Directive(Directive),
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
