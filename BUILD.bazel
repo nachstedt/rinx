@@ -1,4 +1,5 @@
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@crates//:defs.bzl", "all_crate_deps")
 
 rust_library(
     name = "rusty_sphinx",
@@ -9,10 +10,9 @@ rust_library(
         "src/parser.rs",
         "src/renderer.rs",
     ],
-    deps = [
-        "@crates//:serde",
-        "@crates//:serde_json",
-    ],
+    deps = all_crate_deps(
+        normal = True,
+    ),
     edition = "2024",
     visibility = ["//visibility:public"],
 )
@@ -20,10 +20,10 @@ rust_library(
 rust_binary(
     name = "rusty_sphinx_worker",
     srcs = ["src/main.rs"],
-    deps = [
+    deps = all_crate_deps(
+        normal = True,
+    ) + [
         ":rusty_sphinx",
-        "@crates//:serde",
-        "@crates//:serde_json",
     ],
     edition = "2024",
     visibility = ["//visibility:public"],
