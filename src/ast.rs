@@ -16,7 +16,7 @@ pub enum Directive {
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
-    Heading(String),
+    Heading { level: u8, text: String },
     Paragraph(String),
     Directive(Directive),
 }
@@ -41,7 +41,10 @@ mod tests {
     fn test_new_creates_document_with_given_nodes() {
         // Given
         let nodes = vec![
-            Node::Heading("Title".to_string()),
+            Node::Heading {
+                level: 1,
+                text: "Title".to_string(),
+            },
             Node::Paragraph("Body".to_string()),
         ];
 
