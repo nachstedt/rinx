@@ -26,62 +26,62 @@ pub fn parse(input: &str) -> Document {
         // Check if line is a directive
         if line.trim().starts_with(".. ") && line.contains("::") {
             let trimmed = line.trim();
-            if let Some((name_part, arg_part)) = trimmed.split_once("::") {
-                if let Some(name_inner) = name_part.strip_prefix(".. ") {
-                    let name = name_inner.trim().to_string();
-                    let argument = arg_part.trim().to_string();
+            if let Some((name_part, arg_part)) = trimmed.split_once("::")
+                && let Some(name_inner) = name_part.strip_prefix(".. ")
+            {
+                let name = name_inner.trim().to_string();
+                let argument = arg_part.trim().to_string();
 
-                    let mut body_lines = Vec::new();
-                    i += 1;
-                    while i < lines.len() {
-                        let next_line = lines[i].trim_end();
-                        if next_line.trim().is_empty()
-                            || next_line.starts_with(' ')
-                            || next_line.starts_with('\t')
-                        {
-                            body_lines.push(next_line);
-                        } else {
-                            break;
-                        }
-                        i += 1;
-                    }
-
-                    // Remove trailing empty lines
-                    while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
-                        body_lines.pop();
-                    }
-
-                    // Remove leading empty lines
-                    let mut start = 0;
-                    while start < body_lines.len() && body_lines[start].trim().is_empty() {
-                        start += 1;
-                    }
-
-                    let directive = if name == "toctree" {
-                        let paths = body_lines[start..]
-                            .iter()
-                            .map(|l| l.trim_start().to_string())
-                            .filter(|l| !l.is_empty())
-                            .collect();
-                        Directive::Toctree { paths }
+                let mut body_lines = Vec::new();
+                i += 1;
+                while i < lines.len() {
+                    let next_line = lines[i].trim_end();
+                    if next_line.trim().is_empty()
+                        || next_line.starts_with(' ')
+                        || next_line.starts_with('\t')
+                    {
+                        body_lines.push(next_line);
                     } else {
-                        let mut body = String::new();
-                        for l in &body_lines[start..] {
-                            if !body.is_empty() {
-                                body.push('\n');
-                            }
-                            body.push_str(l.trim_start());
-                        }
-                        Directive::Unknown {
-                            name,
-                            argument,
-                            body,
-                        }
-                    };
-
-                    nodes.push(Node::Directive(directive));
-                    continue;
+                        break;
+                    }
+                    i += 1;
                 }
+
+                // Remove trailing empty lines
+                while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
+                    body_lines.pop();
+                }
+
+                // Remove leading empty lines
+                let mut start = 0;
+                while start < body_lines.len() && body_lines[start].trim().is_empty() {
+                    start += 1;
+                }
+
+                let directive = if name == "toctree" {
+                    let paths = body_lines[start..]
+                        .iter()
+                        .map(|l| l.trim_start().to_string())
+                        .filter(|l| !l.is_empty())
+                        .collect();
+                    Directive::Toctree { paths }
+                } else {
+                    let mut body = String::new();
+                    for l in &body_lines[start..] {
+                        if !body.is_empty() {
+                            body.push('\n');
+                        }
+                        body.push_str(l.trim_start());
+                    }
+                    Directive::Unknown {
+                        name,
+                        argument,
+                        body,
+                    }
+                };
+
+                nodes.push(Node::Directive(directive));
+                continue;
             }
         }
 

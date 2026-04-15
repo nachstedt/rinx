@@ -17,8 +17,6 @@ jobs:
     
     - name: Set up Rust
       uses: dtolnay/rust-toolchain@stable
-      with:
-        components: clippy, rustfmt
         
     - name: Check formatting
       run: cargo fmt -- --check
