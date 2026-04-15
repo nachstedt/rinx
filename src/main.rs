@@ -253,7 +253,7 @@ mod tests {
     #[test]
     fn test_process_index_returns_serialized_project_index() {
         // Given
-        let docs = vec![r#"{"nodes":[{"Heading":"Title"}]}"#.to_string()];
+        let docs = vec![r#"{"nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#.to_string()];
 
         // When
         let index = process_index(&docs).unwrap();
@@ -265,7 +265,7 @@ mod tests {
     #[test]
     fn test_process_render_returns_html_string() {
         // Given
-        let doc = r#"{"nodes":[{"Heading":"Title"}]}"#;
+        let doc = r#"{"nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#;
         let index = "{}";
 
         // When

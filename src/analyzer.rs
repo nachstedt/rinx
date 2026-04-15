@@ -55,7 +55,10 @@ mod tests {
     #[test]
     fn test_analyze_returns_default_index_for_populated_document() {
         // Given
-        let doc = Document::new(vec![Node::Heading("Title".to_string())]);
+        let doc = Document::new(vec![Node::Heading {
+            level: 1,
+            text: "Title".to_string(),
+        }]);
 
         // When
         let index = analyze(&doc);

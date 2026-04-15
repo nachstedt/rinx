@@ -15,7 +15,13 @@ fn test_parser_step() {
     let input = "Title\n=====\n\nParagraph text here.\nMore text.";
     let ast = parser::parse(input);
     assert_eq!(ast.nodes.len(), 2);
-    assert_eq!(ast.nodes[0], ast::Node::Heading("Title".to_string()));
+    assert_eq!(
+        ast.nodes[0],
+        ast::Node::Heading {
+            level: 1,
+            text: "Title".to_string()
+        }
+    );
     assert_eq!(
         ast.nodes[1],
         ast::Node::Paragraph("Paragraph text here.\nMore text.".to_string())
@@ -25,7 +31,10 @@ fn test_parser_step() {
 #[test]
 fn test_renderer_step() {
     let doc = ast::Document::new(vec![
-        ast::Node::Heading("Section".to_string()),
+        ast::Node::Heading {
+            level: 1,
+            text: "Section".to_string(),
+        },
         ast::Node::Paragraph("A line of text.".to_string()),
     ]);
     let index = analyzer::analyze(&doc);
@@ -50,11 +59,52 @@ Another Heading
 And another paragraph.
 ";
 
+    // Overview uses '-' (first seen) -> h1
+    // Another Heading uses '~' (second seen) -> h2
     let expected_html = "\
 <h1>Overview</h1>
 <p>This is a simple paragraph.\nIt spans multiple lines.</p>
-<h1>Another Heading</h1>
+<h2>Another Heading</h2>
 <p>And another paragraph.</p>
+";
+
+    let result = process_rst(input);
+    assert_eq!(result, expected_html);
+}
+
+#[test]
+fn test_e2e_multi_level_headings() {
+    let input = "\
+Level 1
+=======
+
+Text 1.
+
+Level 2
+-------
+
+Text 2.
+
+Level 3
+~~~~~~~
+
+Text 3.
+
+Another Level 1
+===============
+
+Text 4.
+";
+
+    let expected_html = "\
+<h1>Level 1</h1>
+<p>Text 1.</p>
+<h2>Level 2</h2>
+<p>Text 2.</p>
+<h3>Level 3</h3>
+<p>Text 3.</p>
+<h1>Another Level 1</h1>
+<p>Text 4.</p>
 ";
 
     let result = process_rst(input);

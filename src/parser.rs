@@ -8,11 +8,20 @@ use crate::ast::{Directive, Document, Node};
 /// - A heading is defined as a line of text followed by a line composed purely
 ///   of punctuation character(s) (e.g. `===` or `---`) that is at least as long
 ///   as the text line above it.
+/// - Heading levels are determined by the order in which each underline character
+///   is first encountered in the document: the first character seen becomes level
+///   1, the second distinct character level 2, etc.
 /// - Otherwise, consecutive non-blank lines are grouped into a Paragraph.
+///
+/// # Panics
+///
+/// The internal implementation uses `expect()` on an iterator that is guaranteed
+/// to be non-empty by preceding checks.
 #[must_use]
 pub fn parse(input: &str) -> Document {
     let lines: Vec<&str> = input.lines().collect();
     let mut nodes = Vec::new();
+    let mut adornment_order: Vec<char> = Vec::new();
 
     let mut i = 0;
     while i < lines.len() {
@@ -23,114 +32,154 @@ pub fn parse(input: &str) -> Document {
             continue;
         }
 
-        // Check if line is a directive
-        if line.trim().starts_with(".. ") && line.contains("::") {
-            let trimmed = line.trim();
-            if let Some((name_part, arg_part)) = trimmed.split_once("::")
-                && let Some(name_inner) = name_part.strip_prefix(".. ")
-            {
-                let name = name_inner.trim().to_string();
-                let argument = arg_part.trim().to_string();
-
-                let mut body_lines = Vec::new();
-                i += 1;
-                while i < lines.len() {
-                    let next_line = lines[i].trim_end();
-                    if next_line.trim().is_empty()
-                        || next_line.starts_with(' ')
-                        || next_line.starts_with('\t')
-                    {
-                        body_lines.push(next_line);
-                    } else {
-                        break;
-                    }
-                    i += 1;
-                }
-
-                // Remove trailing empty lines
-                while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
-                    body_lines.pop();
-                }
-
-                // Remove leading empty lines
-                let mut start = 0;
-                while start < body_lines.len() && body_lines[start].trim().is_empty() {
-                    start += 1;
-                }
-
-                let directive = if name == "toctree" {
-                    let paths = body_lines[start..]
-                        .iter()
-                        .map(|l| l.trim_start().to_string())
-                        .filter(|l| !l.is_empty())
-                        .collect();
-                    Directive::Toctree { paths }
-                } else {
-                    let mut body = String::new();
-                    for l in &body_lines[start..] {
-                        if !body.is_empty() {
-                            body.push('\n');
-                        }
-                        body.push_str(l.trim_start());
-                    }
-                    Directive::Unknown {
-                        name,
-                        argument,
-                        body,
-                    }
-                };
-
-                nodes.push(Node::Directive(directive));
-                continue;
-            }
+        if let Some((consumed, node)) = try_parse_directive(&lines, i) {
+            nodes.push(node);
+            i += consumed;
+            continue;
         }
 
-        // Check if next line is a heading marker
-        if i + 1 < lines.len() {
-            let next_line = lines[i + 1].trim();
-            if !next_line.is_empty()
-                && next_line.chars().all(|c| c.is_ascii_punctuation())
-                && next_line.len() >= line.trim().len()
-            {
-                nodes.push(Node::Heading(line.trim().to_string()));
-                i += 2;
-                continue;
-            }
+        if let Some((consumed, node)) = try_parse_heading(&lines, i, &mut adornment_order) {
+            nodes.push(node);
+            i += consumed;
+            continue;
         }
 
-        // Parse as a paragraph
-        let mut paragraph_text = String::new();
-        while i < lines.len() {
-            let current = lines[i].trim_end();
-            if current.trim().is_empty() {
-                break;
-            }
-
-            // Peek at next line to ensure we don't consume a heading's text line
-            // as part of the current paragraph
-            if i + 1 < lines.len() {
-                let peek_next = lines[i + 1].trim();
-                let is_heading = !peek_next.is_empty()
-                    && peek_next.chars().all(|c| c.is_ascii_punctuation())
-                    && peek_next.len() >= current.trim().len();
-                if is_heading && !paragraph_text.is_empty() {
-                    break;
-                }
-            }
-
-            if !paragraph_text.is_empty() {
-                paragraph_text.push('\n');
-            }
-            paragraph_text.push_str(current.trim());
-            i += 1;
-        }
-
-        if !paragraph_text.is_empty() {
-            nodes.push(Node::Paragraph(paragraph_text));
-        }
+        let (consumed, node) = parse_paragraph(&lines, i);
+        nodes.push(node);
+        i += consumed;
     }
 
     Document::new(nodes)
+}
+
+fn try_parse_directive(lines: &[&str], i: usize) -> Option<(usize, Node)> {
+    let line = lines[i].trim_end();
+    if !(line.trim().starts_with(".. ") && line.contains("::")) {
+        return None;
+    }
+
+    let trimmed = line.trim();
+    let (name_part, arg_part) = trimmed.split_once("::")?;
+    let name_inner = name_part.strip_prefix(".. ")?;
+
+    let name = name_inner.trim().to_string();
+    let argument = arg_part.trim().to_string();
+
+    let mut body_lines = Vec::new();
+    let mut current = i + 1;
+    while current < lines.len() {
+        let next_line = lines[current].trim_end();
+        if next_line.trim().is_empty() || next_line.starts_with(' ') || next_line.starts_with('\t')
+        {
+            body_lines.push(next_line);
+        } else {
+            break;
+        }
+        current += 1;
+    }
+
+    // Remove trailing and leading empty lines
+    while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
+        body_lines.pop();
+    }
+    let mut start = 0;
+    while start < body_lines.len() && body_lines[start].trim().is_empty() {
+        start += 1;
+    }
+
+    let directive = if name == "toctree" {
+        let paths = body_lines[start..]
+            .iter()
+            .map(|l| l.trim_start().to_string())
+            .filter(|l| !l.is_empty())
+            .collect();
+        Directive::Toctree { paths }
+    } else {
+        let mut body = String::new();
+        for l in &body_lines[start..] {
+            if !body.is_empty() {
+                body.push('\n');
+            }
+            body.push_str(l.trim_start());
+        }
+        Directive::Unknown {
+            name,
+            argument,
+            body,
+        }
+    };
+
+    Some((current - i, Node::Directive(directive)))
+}
+
+fn try_parse_heading(
+    lines: &[&str],
+    i: usize,
+    adornment_order: &mut Vec<char>,
+) -> Option<(usize, Node)> {
+    if i + 1 >= lines.len() {
+        return None;
+    }
+
+    let line = lines[i].trim_end();
+    let next_line = lines[i + 1].trim();
+
+    if !next_line.is_empty()
+        && next_line.chars().all(|c| c.is_ascii_punctuation())
+        && next_line.len() >= line.trim().len()
+    {
+        let adornment_char = next_line.chars().next().expect("non-empty underline");
+        let level = if let Some(pos) = adornment_order.iter().position(|&c| c == adornment_char) {
+            pos + 1
+        } else {
+            adornment_order.push(adornment_char);
+            adornment_order.len()
+        };
+
+        #[allow(clippy::cast_possible_truncation)]
+        let level = level as u8;
+
+        return Some((
+            2,
+            Node::Heading {
+                level,
+                text: line.trim().to_string(),
+            },
+        ));
+    }
+
+    None
+}
+
+fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
+    let mut paragraph_text = String::new();
+    let mut current = i;
+
+    while current < lines.len() {
+        let line = lines[current].trim_end();
+        if line.trim().is_empty() {
+            break;
+        }
+
+        // Peek at next line to ensure we don't consume a heading's text line
+        if current + 1 < lines.len() {
+            let peek_next = lines[current + 1].trim();
+            let is_heading = !peek_next.is_empty()
+                && peek_next.chars().all(|c| c.is_ascii_punctuation())
+                && peek_next.len() >= line.trim().len();
+            if is_heading && !paragraph_text.is_empty() {
+                break;
+            }
+        }
+
+        if !paragraph_text.is_empty() {
+            paragraph_text.push('\n');
+        }
+        paragraph_text.push_str(line.trim());
+        current += 1;
+    }
+
+    (current - i, Node::Paragraph(paragraph_text))
 }
 
 #[cfg(test)]
@@ -159,7 +208,13 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        assert_eq!(doc.nodes[0], Node::Heading("Heading".to_string()));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "Heading".to_string()
+            }
+        );
     }
 
     #[test]
@@ -185,7 +240,13 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
-        assert_eq!(doc.nodes[0], Node::Heading("Title".to_string()));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "Title".to_string()
+            }
+        );
         assert_eq!(doc.nodes[1], Node::Paragraph("Text.".to_string()));
     }
 
@@ -215,7 +276,13 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        assert_eq!(doc.nodes[0], Node::Heading("Sub Title".to_string()));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "Sub Title".to_string()
+            }
+        );
     }
 
     #[test]
@@ -228,7 +295,13 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
-        assert_eq!(doc.nodes[0], Node::Heading("Heading".to_string()));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "Heading".to_string()
+            }
+        );
         assert_eq!(doc.nodes[1], Node::Paragraph("Next".to_string()));
     }
 
@@ -257,7 +330,13 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
-        assert_eq!(doc.nodes[0], Node::Heading("Heading".to_string()));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "Heading".to_string()
+            }
+        );
         assert_eq!(doc.nodes[1], Node::Paragraph("Para\nline 2".to_string()));
     }
 
@@ -271,7 +350,117 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        assert_eq!(doc.nodes[0], Node::Heading("===".to_string()));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "===".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_h1_for_first_adornment_char() {
+        // Given — a single heading using `=`
+        let input = "Title\n=====";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "Title".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_h2_for_second_adornment_char() {
+        // Given — first heading with `=`, second with `-`
+        let input = "H1\n==\n\nH2\n--";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "H1".to_string()
+            }
+        );
+        assert_eq!(
+            doc.nodes[1],
+            Node::Heading {
+                level: 2,
+                text: "H2".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_reuses_level_for_same_adornment_char() {
+        // Given — both headings use the same `=` adornment
+        let input = "First\n=====\n\nSecond\n======";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "First".to_string()
+            }
+        );
+        assert_eq!(
+            doc.nodes[1],
+            Node::Heading {
+                level: 1,
+                text: "Second".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_assigns_levels_by_encounter_order() {
+        // Given — three headings using `=`, `-`, and `~` in that order
+        let input = "H1\n==\n\nH2\n--\n\nH3\n~~";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 3);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "H1".to_string()
+            }
+        );
+        assert_eq!(
+            doc.nodes[1],
+            Node::Heading {
+                level: 2,
+                text: "H2".to_string()
+            }
+        );
+        assert_eq!(
+            doc.nodes[2],
+            Node::Heading {
+                level: 3,
+                text: "H3".to_string()
+            }
+        );
     }
 
     #[test]
