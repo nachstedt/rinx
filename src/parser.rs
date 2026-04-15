@@ -1,6 +1,6 @@
 //! The parser module converts RST text into an Abstract Syntax Tree (Document).
 
-use crate::ast::{Document, Node};
+use crate::ast::{Directive, Document, Node};
 
 /// Parses an RST-formatted string into a Document.
 ///
@@ -21,6 +21,68 @@ pub fn parse(input: &str) -> Document {
         if line.trim().is_empty() {
             i += 1;
             continue;
+        }
+
+        // Check if line is a directive
+        if line.trim().starts_with(".. ") && line.contains("::") {
+            let trimmed = line.trim();
+            if let Some((name_part, arg_part)) = trimmed.split_once("::")
+                && let Some(name_inner) = name_part.strip_prefix(".. ")
+            {
+                let name = name_inner.trim().to_string();
+                let argument = arg_part.trim().to_string();
+
+                let mut body_lines = Vec::new();
+                i += 1;
+                while i < lines.len() {
+                    let next_line = lines[i].trim_end();
+                    if next_line.trim().is_empty()
+                        || next_line.starts_with(' ')
+                        || next_line.starts_with('\t')
+                    {
+                        body_lines.push(next_line);
+                    } else {
+                        break;
+                    }
+                    i += 1;
+                }
+
+                // Remove trailing empty lines
+                while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
+                    body_lines.pop();
+                }
+
+                // Remove leading empty lines
+                let mut start = 0;
+                while start < body_lines.len() && body_lines[start].trim().is_empty() {
+                    start += 1;
+                }
+
+                let directive = if name == "toctree" {
+                    let paths = body_lines[start..]
+                        .iter()
+                        .map(|l| l.trim_start().to_string())
+                        .filter(|l| !l.is_empty())
+                        .collect();
+                    Directive::Toctree { paths }
+                } else {
+                    let mut body = String::new();
+                    for l in &body_lines[start..] {
+                        if !body.is_empty() {
+                            body.push('\n');
+                        }
+                        body.push_str(l.trim_start());
+                    }
+                    Directive::Unknown {
+                        name,
+                        argument,
+                        body,
+                    }
+                };
+
+                nodes.push(Node::Directive(directive));
+                continue;
+            }
         }
 
         // Check if next line is a heading marker
@@ -210,5 +272,44 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(doc.nodes[0], Node::Heading("===".to_string()));
+    }
+
+    #[test]
+    fn test_parse_creates_directive() {
+        // Given
+        let input = ".. toctree::\n   \n   team_a/index\n   team_b/index\n\nNext Para";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Directive(Directive::Toctree {
+                paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
+            })
+        );
+        assert_eq!(doc.nodes[1], Node::Paragraph("Next Para".to_string()));
+    }
+
+    #[test]
+    fn test_parse_directive_with_argument_and_trailing_indents() {
+        // Given
+        let input = ".. code-block:: rust\n\n   let x = 1;\n   \n   let y = 2;\n\n";
+
+        // When
+        let doc = parse(input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Directive(Directive::Unknown {
+                name: "code-block".to_string(),
+                argument: "rust".to_string(),
+                body: "let x = 1;\n\nlet y = 2;".to_string(),
+            })
+        );
     }
 }

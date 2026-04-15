@@ -1,7 +1,7 @@
 //! The renderer module converts the AST and `ProjectIndex` into HTML.
 
 use crate::analyzer::ProjectIndex;
-use crate::ast::{Document, Node};
+use crate::ast::{Directive, Document, Node};
 use std::fmt::Write as _;
 
 /// Renders a Document into an HTML string.
@@ -19,6 +19,18 @@ pub fn render(doc: &Document, _index: &ProjectIndex) -> String {
                 let escaped_text = html_escape::encode_text(text);
                 let _ = writeln!(html, "<p>{escaped_text}</p>");
             }
+            Node::Directive(directive) => match directive {
+                Directive::Toctree { paths } => {
+                    let _ = writeln!(html, "<ul>");
+                    for path in paths {
+                        let href = format!("{path}.html");
+                        let escaped_text = html_escape::encode_text(path);
+                        let _ = writeln!(html, "  <li><a href=\"{href}\">{escaped_text}</a></li>");
+                    }
+                    let _ = writeln!(html, "</ul>");
+                }
+                Directive::Unknown { .. } => {}
+            },
         }
     }
 
@@ -78,6 +90,24 @@ mod tests {
         assert_eq!(
             result,
             "<h1>Title &lt;script&gt;</h1>\n<p>A &amp; B &gt; C</p>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_formats_toctree_as_html_list() {
+        // Given
+        let doc = Document::new(vec![Node::Directive(Directive::Toctree {
+            paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
+        })]);
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index);
+
+        // Then
+        assert_eq!(
+            result,
+            "<ul>\n  <li><a href=\"team_a/index.html\">team_a/index</a></li>\n  <li><a href=\"team_b/index.html\">team_b/index</a></li>\n</ul>\n"
         );
     }
 }
