@@ -14,12 +14,15 @@ use std::collections::HashMap;
 pub struct ProjectIndex {
     /// Maps target names to document paths.
     pub targets: HashMap<String, String>,
+    /// Maps document paths to their top-level title.
+    pub document_titles: HashMap<String, String>,
 }
 
 impl ProjectIndex {
     /// Merge another `ProjectIndex` into this one.
     pub fn merge(&mut self, other: ProjectIndex) {
         self.targets.extend(other.targets);
+        self.document_titles.extend(other.document_titles);
     }
 }
 
@@ -27,9 +30,14 @@ impl ProjectIndex {
 #[must_use]
 pub fn analyze(doc: &Document) -> ProjectIndex {
     let mut index = ProjectIndex::default();
+    let mut found_title = false;
     for node in &doc.nodes {
         if let crate::ast::Node::Target(name) = node {
             index.targets.insert(name.clone(), doc.path.clone());
+        }
+        if !found_title && let crate::ast::Node::Heading { level: 1, text } = node {
+            index.document_titles.insert(doc.path.clone(), text.clone());
+            found_title = true;
         }
     }
     index
@@ -127,5 +135,34 @@ mod tests {
         // Then
         assert_eq!(index.targets.len(), 1);
         assert_eq!(index.targets.get("section-1").unwrap(), "docs/my-file.rst");
+    }
+
+    #[test]
+    fn test_analyze_extracts_h1_title() {
+        // Given
+        let doc = Document::new(
+            "docs/my-file.rst".to_string(),
+            vec![
+                Node::Paragraph(vec![crate::ast::InlineNode::Text("some text".to_string())]),
+                Node::Heading {
+                    level: 1,
+                    text: "My Title".to_string(),
+                },
+                Node::Heading {
+                    level: 1,
+                    text: "Ignored Second H1".to_string(),
+                },
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.document_titles.len(), 1);
+        assert_eq!(
+            index.document_titles.get("docs/my-file.rst").unwrap(),
+            "My Title"
+        );
     }
 }
