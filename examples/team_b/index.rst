@@ -1,3 +1,5 @@
+.. _team-b-index:
+
 Team B: Infrastructure Guide
 ============================
 
@@ -14,3 +16,5 @@ Configuration
 
 All configuration is managed via environment variables and checked into
 the infra repository under the config directory.
+
+See also :ref:`home-index`, :ref:`team-a-index`, and :ref:`team-b-index`.

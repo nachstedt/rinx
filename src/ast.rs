@@ -15,21 +15,29 @@ pub enum Directive {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum InlineNode {
+    Text(String),
+    Reference(String),
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
     Heading { level: u8, text: String },
-    Paragraph(String),
+    Paragraph(Vec<InlineNode>),
     Directive(Directive),
+    Target(String),
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Document {
+    pub path: String,
     pub nodes: Vec<Node>,
 }
 
 impl Document {
     #[must_use]
-    pub fn new(nodes: Vec<Node>) -> Self {
-        Self { nodes }
+    pub fn new(path: String, nodes: Vec<Node>) -> Self {
+        Self { path, nodes }
     }
 }
 
@@ -45,11 +53,11 @@ mod tests {
                 level: 1,
                 text: "Title".to_string(),
             },
-            Node::Paragraph("Body".to_string()),
+            Node::Paragraph(vec![InlineNode::Text("Body".to_string())]),
         ];
 
         // When
-        let doc = Document::new(nodes);
+        let doc = Document::new("test.rst".to_string(), nodes);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);

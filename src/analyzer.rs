@@ -6,23 +6,33 @@
 use crate::ast::Document;
 use serde::{Deserialize, Serialize};
 
+use std::collections::HashMap;
+
 /// A global symbol table built from all documents in the project.
 /// Extended with cross-reference data as the parser gains more RST features.
 #[derive(Debug, Default, Serialize, Deserialize)]
-pub struct ProjectIndex {}
+pub struct ProjectIndex {
+    /// Maps target names to document paths.
+    pub targets: HashMap<String, String>,
+}
 
 impl ProjectIndex {
     /// Merge another `ProjectIndex` into this one.
-    pub fn merge(&mut self, _other: ProjectIndex) {
-        // No-op for now; will combine symbol tables when cross-refs are added.
+    pub fn merge(&mut self, other: ProjectIndex) {
+        self.targets.extend(other.targets);
     }
 }
 
 /// Analyzes a single `Document` and returns a local `ProjectIndex`.
-/// Currently a no-op that returns an empty `ProjectIndex`.
 #[must_use]
-pub fn analyze(_doc: &Document) -> ProjectIndex {
-    ProjectIndex::default()
+pub fn analyze(doc: &Document) -> ProjectIndex {
+    let mut index = ProjectIndex::default();
+    for node in &doc.nodes {
+        if let crate::ast::Node::Target(name) = node {
+            index.targets.insert(name.clone(), doc.path.clone());
+        }
+    }
+    index
 }
 
 /// Analyzes a collection of `Document`s and merges them into one `ProjectIndex`.
@@ -43,7 +53,7 @@ mod tests {
     #[test]
     fn test_analyze_returns_default_index_for_empty_document() {
         // Given
-        let doc = Document::new(vec![]);
+        let doc = Document::new("test.rst".to_string(), vec![]);
 
         // When
         let index = analyze(&doc);
@@ -55,7 +65,7 @@ mod tests {
     #[test]
     fn test_analyze_returns_default_index_for_populated_document() {
         // Given
-        let doc = Document::new(vec![Node::Heading {
+        let doc = Document::new("test.rst".to_string(), vec![Node::Heading {
             level: 1,
             text: "Title".to_string(),
         }]);
@@ -71,7 +81,7 @@ mod tests {
     #[test]
     fn test_analyze_many_returns_default_index_for_multiple_documents() {
         // Given
-        let docs = vec![Document::new(vec![]), Document::new(vec![])];
+        let docs = vec![Document::new("test1.rst".to_string(), vec![]), Document::new("test2.rst".to_string(), vec![])];
 
         // When
         let index = analyze_many(&docs);
@@ -93,5 +103,20 @@ mod tests {
         // Since we don't have fields to assert equality on right now,
         // we just ensure the execution path is hit without issues.
         let _ = format!("{idx1:?}");
+    }
+    #[test]
+    fn test_analyze_populates_targets_for_target_nodes() {
+        // Given
+        let doc = Document::new("docs/my-file.rst".to_string(), vec![
+            Node::Target("section-1".to_string()),
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("some text".to_string())]),
+        ]);
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.targets.len(), 1);
+        assert_eq!(index.targets.get("section-1").unwrap(), "docs/my-file.rst");
     }
 }

@@ -47,8 +47,8 @@ fn flag_values(args: &[String], flag: &str) -> Result<Vec<String>> {
     Ok(values)
 }
 
-fn process_parse(rst_content: &str) -> Result<String> {
-    let doc = parser::parse(rst_content);
+fn process_parse(path: &str, rst_content: &str) -> Result<String> {
+    let doc = parser::parse(path, rst_content);
     serde_json::to_string(&doc).context("Serialization error")
 }
 
@@ -78,7 +78,7 @@ fn cmd_parse(args: &[String]) -> Result<()> {
     let output = flag_value(args, "--output")?;
 
     let rst = fs::read_to_string(&input).with_context(|| format!("Error reading '{input}'"))?;
-    let json = process_parse(&rst)?;
+    let json = process_parse(&input, &rst)?;
     fs::write(&output, json).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
@@ -114,7 +114,7 @@ fn cmd_render(args: &[String]) -> Result<()> {
 
 fn cmd_legacy(path: &str) -> Result<()> {
     let rst = fs::read_to_string(path).with_context(|| format!("Error reading '{path}'"))?;
-    let html = process_rst(&rst);
+    let html = process_rst(path, &rst);
     print!("{html}");
     Ok(())
 }
@@ -244,29 +244,30 @@ mod tests {
         let rst = "Title\n=====";
 
         // When
-        let json = process_parse(rst).unwrap();
+        let json = process_parse("team_a/index.rst", rst).unwrap();
 
         // Then
         assert!(json.contains("Title"));
+        assert!(json.contains(r#""path":"team_a/index.rst""#));
     }
 
     #[test]
     fn test_process_index_returns_serialized_project_index() {
         // Given
-        let docs = vec![r#"{"nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#.to_string()];
+        let docs = vec![r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#.to_string()];
 
         // When
         let index = process_index(&docs).unwrap();
 
         // Then
-        assert_eq!(index, "{}");
+        assert_eq!(index, r#"{"targets":{}}"#);
     }
 
     #[test]
     fn test_process_render_returns_html_string() {
         // Given
-        let doc = r#"{"nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#;
-        let index = "{}";
+        let doc = r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#;
+        let index = r#"{"targets":{}}"#;
 
         // When
         let html = process_render(doc, index).unwrap();

@@ -18,7 +18,7 @@ use crate::ast::{Directive, Document, Node};
 /// The internal implementation uses `expect()` on an iterator that is guaranteed
 /// to be non-empty by preceding checks.
 #[must_use]
-pub fn parse(input: &str) -> Document {
+pub fn parse(path: &str, input: &str) -> Document {
     let lines: Vec<&str> = input.lines().collect();
     let mut nodes = Vec::new();
     let mut adornment_order: Vec<char> = Vec::new();
@@ -38,6 +38,12 @@ pub fn parse(input: &str) -> Document {
             continue;
         }
 
+        if let Some((consumed, node)) = try_parse_target(&lines, i) {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
         if let Some((consumed, node)) = try_parse_heading(&lines, i, &mut adornment_order) {
             nodes.push(node);
             i += consumed;
@@ -49,7 +55,18 @@ pub fn parse(input: &str) -> Document {
         i += consumed;
     }
 
-    Document::new(nodes)
+    Document::new(path.to_string(), nodes)
+}
+
+fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)> {
+    let line = lines[i].trim();
+    if line.starts_with(".. _") && line.ends_with(':') {
+        let name = &line[4..line.len() - 1];
+        if !name.is_empty() {
+            return Some((1, Node::Target(name.trim().to_string())));
+        }
+    }
+    None
 }
 
 fn try_parse_directive(lines: &[&str], i: usize) -> Option<(usize, Node)> {
@@ -153,17 +170,17 @@ fn try_parse_heading(
 
 fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
     let mut paragraph_text = String::new();
-    let mut current = i;
+    let mut current_pos_line = i;
 
-    while current < lines.len() {
-        let line = lines[current].trim_end();
+    while current_pos_line < lines.len() {
+        let line = lines[current_pos_line].trim_end();
         if line.trim().is_empty() {
             break;
         }
 
         // Peek at next line to ensure we don't consume a heading's text line
-        if current + 1 < lines.len() {
-            let peek_next = lines[current + 1].trim();
+        if current_pos_line + 1 < lines.len() {
+            let peek_next = lines[current_pos_line + 1].trim();
             let is_heading = !peek_next.is_empty()
                 && peek_next.chars().all(|c| c.is_ascii_punctuation())
                 && peek_next.len() >= line.trim().len();
@@ -176,10 +193,38 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
             paragraph_text.push('\n');
         }
         paragraph_text.push_str(line.trim());
-        current += 1;
+        current_pos_line += 1;
     }
 
-    (current - i, Node::Paragraph(paragraph_text))
+    // split paragraph text by `:ref:\`target\``
+    let mut inlines = Vec::new();
+    let mut current_pos = 0;
+    while let Some(start) = paragraph_text[current_pos..].find(":ref:`") {
+        let absolute_start = current_pos + start;
+        let search_start = absolute_start + 6; // length of ":ref:`"
+        if let Some(end) = paragraph_text[search_start..].find('`') {
+            let absolute_end = search_start + end;
+            // push text before
+            if absolute_start > current_pos {
+                inlines.push(crate::ast::InlineNode::Text(
+                    paragraph_text[current_pos..absolute_start].to_string(),
+                ));
+            }
+            // push reference
+            let target = paragraph_text[search_start..absolute_end].to_string();
+            inlines.push(crate::ast::InlineNode::Reference(target));
+            current_pos = absolute_end + 1;
+        } else {
+            break;
+        }
+    }
+    if current_pos < paragraph_text.len() {
+        inlines.push(crate::ast::InlineNode::Text(
+            paragraph_text[current_pos..].to_string(),
+        ));
+    }
+
+    (current_pos_line - i, Node::Paragraph(inlines))
 }
 
 #[cfg(test)]
@@ -192,7 +237,7 @@ mod tests {
         let input = "";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 0);
@@ -204,7 +249,7 @@ mod tests {
         let input = "Heading\n=======";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -223,11 +268,11 @@ mod tests {
         let input = "Just some\ntext";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        assert_eq!(doc.nodes[0], Node::Paragraph("Just some\ntext".to_string()));
+        assert_eq!(doc.nodes[0], Node::Paragraph(vec![crate::ast::InlineNode::Text("Just some\ntext".to_string())]));
     }
 
     #[test]
@@ -236,7 +281,7 @@ mod tests {
         let input = "Title\n=====\n\nText.";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -247,7 +292,7 @@ mod tests {
                 text: "Title".to_string()
             }
         );
-        assert_eq!(doc.nodes[1], Node::Paragraph("Text.".to_string()));
+        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Text.".to_string())]));
     }
 
     #[test]
@@ -256,13 +301,13 @@ mod tests {
         let input = "Long Heading\n===";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(
             doc.nodes[0],
-            Node::Paragraph("Long Heading\n===".to_string())
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Long Heading\n===".to_string())])
         );
     }
 
@@ -272,7 +317,7 @@ mod tests {
         let input = "Sub Title\n---------";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -291,7 +336,7 @@ mod tests {
         let input = "Heading  \n  =======  \n\nNext";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -302,7 +347,7 @@ mod tests {
                 text: "Heading".to_string()
             }
         );
-        assert_eq!(doc.nodes[1], Node::Paragraph("Next".to_string()));
+        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Next".to_string())]));
     }
 
     #[test]
@@ -311,13 +356,13 @@ mod tests {
         let input = "Para 1\n\n\nPara 2\n\nPara 3";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 3);
-        assert_eq!(doc.nodes[0], Node::Paragraph("Para 1".to_string()));
-        assert_eq!(doc.nodes[1], Node::Paragraph("Para 2".to_string()));
-        assert_eq!(doc.nodes[2], Node::Paragraph("Para 3".to_string()));
+        assert_eq!(doc.nodes[0], Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 1".to_string())]));
+        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 2".to_string())]));
+        assert_eq!(doc.nodes[2], Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 3".to_string())]));
     }
 
     #[test]
@@ -326,7 +371,7 @@ mod tests {
         let input = "Heading\r\n=======\r\n\r\nPara\r\nline 2";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -337,7 +382,7 @@ mod tests {
                 text: "Heading".to_string()
             }
         );
-        assert_eq!(doc.nodes[1], Node::Paragraph("Para\nline 2".to_string()));
+        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Para\nline 2".to_string())]));
     }
 
     #[test]
@@ -346,7 +391,7 @@ mod tests {
         let input = "===\n---";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -365,7 +410,7 @@ mod tests {
         let input = "Title\n=====";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -384,7 +429,7 @@ mod tests {
         let input = "H1\n==\n\nH2\n--";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -410,7 +455,7 @@ mod tests {
         let input = "First\n=====\n\nSecond\n======";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -436,7 +481,7 @@ mod tests {
         let input = "H1\n==\n\nH2\n--\n\nH3\n~~";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 3);
@@ -469,7 +514,7 @@ mod tests {
         let input = ".. toctree::\n   \n   team_a/index\n   team_b/index\n\nNext Para";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
@@ -479,7 +524,7 @@ mod tests {
                 paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
             })
         );
-        assert_eq!(doc.nodes[1], Node::Paragraph("Next Para".to_string()));
+        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Next Para".to_string())]));
     }
 
     #[test]
@@ -488,7 +533,7 @@ mod tests {
         let input = ".. code-block:: rust\n\n   let x = 1;\n   \n   let y = 2;\n\n";
 
         // When
-        let doc = parse(input);
+        let doc = parse("test.rst", input);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -499,6 +544,39 @@ mod tests {
                 argument: "rust".to_string(),
                 body: "let x = 1;\n\nlet y = 2;".to_string(),
             })
+        );
+    }
+    #[test]
+    fn test_parse_creates_target_node_for_explicit_target() {
+        // Given
+        let input = ".. _my-target:\n\nSome text.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(doc.nodes[0], Node::Target("my-target".to_string()));
+        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Some text.".to_string())]));
+    }
+
+    #[test]
+    fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
+        // Given
+        let input = "Here is a :ref:`my-target` link.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![
+                crate::ast::InlineNode::Text("Here is a ".to_string()),
+                crate::ast::InlineNode::Reference("my-target".to_string()),
+                crate::ast::InlineNode::Text(" link.".to_string()),
+            ])
         );
     }
 }
