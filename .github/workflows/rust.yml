@@ -54,3 +54,6 @@ jobs:
 
     - name: Build team_b in isolation (partial build)
       run: bazel build //examples/team_b:docs
+
+    - name: Run strict dependencies test
+      run: ./tests/test_strict_deps.sh

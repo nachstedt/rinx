@@ -7,6 +7,7 @@ pub mod analyzer;
 pub mod ast;
 pub mod parser;
 pub mod renderer;
+pub mod validator;
 
 /// Returns a welcoming greeting for the Rusty Sphinx application.
 ///
