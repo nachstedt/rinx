@@ -36,9 +36,9 @@ def _rusty_sphinx_site_impl(ctx):
     # ── Phase 3: render ───────────────────────────────────────────────────────
     html_files = []
     for ast_file in ast_list:
+        # Namespace HTML outputs under the site's target name to prevent action conflicts
         html_out = ctx.actions.declare_file(
-            ast_file.basename.removesuffix(".ast") + ".html",
-            sibling = ast_file,
+            ctx.label.name + "_site_out/" + ast_file.short_path.removesuffix(".ast") + ".html",
         )
         ctx.actions.run(
             executable = worker,
