@@ -10,5 +10,6 @@ RustySphinxInfo = provider(
     fields = {
         "ast_files": "A depset of compiled .ast File objects.",
         "direct_doc_names": "A list of string names for documents directly explicitly exported by just this library.",
+        "svg_dirs": "A depset of TreeArtifacts containing rendered PlantUML SVGs.",
     },
 )

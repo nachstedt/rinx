@@ -1,5 +1,6 @@
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 load("@crates//:defs.bzl", "all_crate_deps")
+load("@rules_java//java:defs.bzl", "java_binary", "java_import")
 
 rust_library(
     name = "rusty_sphinx",
@@ -27,5 +28,17 @@ rust_binary(
         ":rusty_sphinx",
     ],
     edition = "2024",
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "plantuml_import",
+    jars = ["@plantuml_jar//file"],
+)
+
+java_binary(
+    name = "plantuml_tool",
+    main_class = "net.sourceforge.plantuml.Run",
+    runtime_deps = [":plantuml_import"],
     visibility = ["//visibility:public"],
 )

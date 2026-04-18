@@ -12,4 +12,12 @@ Installation
 
 Download the latest package and follow the setup steps below.
 
+.. plantuml::
+
+    @startuml
+    Alice -> Bob: Auth Request
+    Bob --> Alice: Auth Response
+    @enduml
+
 See also :ref:`home-index`, :ref:`team-a-index`, and :ref:`team-b-index`.
+ 

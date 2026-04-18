@@ -1,0 +1,2 @@
+build --java_runtime_version=remotejdk_17
+run --java_runtime_version=remotejdk_17

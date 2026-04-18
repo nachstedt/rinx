@@ -79,6 +79,22 @@ pub fn render(doc: &Document, index: &ProjectIndex) -> String {
                     }
                     let _ = writeln!(html, "</ul>");
                 }
+                Directive::PlantUml(content) => {
+                    let escaped_hash = html_escape::encode_text(content.hash());
+
+                    let current_dir = std::path::Path::new(&doc.path)
+                        .parent()
+                        .unwrap_or(std::path::Path::new(""));
+                    let image_path =
+                        std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
+                    let relative_path =
+                        pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
+                    let src = format!("{}", relative_path.display());
+
+                    let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
+                    let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
+                    let _ = writeln!(html, "</div>");
+                }
                 Directive::Unknown { .. } => {}
             },
         }
@@ -90,6 +106,7 @@ pub fn render(doc: &Document, index: &ProjectIndex) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ast::HashedContent;
 
     #[test]
     fn test_render_returns_empty_string_for_empty_document() {
@@ -322,5 +339,27 @@ mod tests {
             result,
             "<p><a href=\"../team_a/index.html#target-in-a\">target-in-a</a></p>\n"
         );
+    }
+
+    #[test]
+    fn test_render_formats_plantuml_with_relative_path() {
+        // Given a document in a subdirectory
+        let content = HashedContent::new("A -> B".to_string());
+        let expected_hash = content.hash().to_string();
+        let doc = Document::new(
+            "examples/team_b/index.rst".to_string(),
+            vec![Node::Directive(Directive::PlantUml(content))],
+        );
+
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index);
+
+        // Then the image src should point backwards up out of team_b/ and examples/ and into _images/
+        let expected = format!(
+            "<div class=\"plantuml-diagram\">\n  <img src=\"../../_images/{expected_hash}.svg\" alt=\"PlantUML Diagram\" />\n</div>\n"
+        );
+        assert_eq!(result, expected);
     }
 }

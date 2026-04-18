@@ -55,7 +55,34 @@ def _rusty_sphinx_site_impl(ctx):
         )
         html_files.append(html_out)
 
-    return [DefaultInfo(files = depset(html_files))]
+    # ── Phase 4: Bundle Images ────────────────────────────────────────────────
+    all_svg_dirs = depset(
+        transitive = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps],
+    ).to_list()
+    
+    final_outputs = html_files
+
+    if all_svg_dirs:
+        images_out = ctx.actions.declare_directory(ctx.label.name + "_site_out/_images")
+        
+        args = ctx.actions.args()
+        args.add(images_out.path)
+        for svg_dir in all_svg_dirs:
+            args.add(svg_dir.path)
+            
+        # Bazel passes $1 as the first arg. We don't use $0.
+        # So $1 is images_out, and $2, $3... are svg_dirs.
+        ctx.actions.run_shell(
+            command = "OUT=\"$1\"; shift; mkdir -p \"$OUT\"; for dir in \"$@\"; do cp -R \"$dir\"/* \"$OUT\"/ 2>/dev/null || true; done",
+            arguments = [args],
+            inputs = all_svg_dirs,
+            outputs = [images_out],
+            mnemonic = "RustySphinxBundleImages",
+            progress_message = "Bundling Site Images",
+        )
+        final_outputs.append(images_out)
+
+    return [DefaultInfo(files = depset(final_outputs))]
 
 rusty_sphinx_site = rule(
     implementation = _rusty_sphinx_site_impl,
