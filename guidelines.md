@@ -3,3 +3,9 @@
 - Name types after what they do, not what they are used for.
 - Enforce invariants at the type level using opaque types with smart constructors ("parse, don't validate").
 - In a build system, deserialization should validate invariants strictly and return errors on violations.
+- Prefer a single configuration file over accumulating individual CLI flags; adding future fields requires no interface changes.
+- Configuration files should contain metadata and settings, not file paths; sandboxed build systems relocate files, breaking embedded paths.
+- Relative file paths work correctly for offline viewing; do not use inlining as a workaround for path computation.
+- Function names should describe what the function concretely does, not just reflect its abstract role (e.g., prefer `build_project_index()` over `analyze_many()`).
+- Guidelines are beliefs, preferences and style choices, not factual statements about tools or technologies.
+- Maintain a warning-free codebase by resolving all Clippy lints to ensure idiomatic Rust patterns.

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page_title %}{{ page_title }} — {% endif %}{{ project }}</title>
+  <link rel="stylesheet" href="{{ css_path }}">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">{{ project }}</h2>
+        {% if version %}<p class="project-version">{{ version }}</p>{% endif %}
+      </div>
+      <nav class="sidebar-nav">
+        {% if nav_tree %}
+        <ul class="nav-tree">
+        {% for entry in nav_tree recursive %}
+          <li>
+            <a href="{{ entry.href }}">{{ entry.title }}</a>
+            {% if entry.children %}
+            <ul>
+              {{ loop(entry.children) }}
+            </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <p class="sidebar-placeholder">Navigation</p>
+        {% endif %}
+      </nav>
+    </aside>
+    <main class="document">
+      {{ body }}
+    </main>
+  </div>
+</body>
+</html>

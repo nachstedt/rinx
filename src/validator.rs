@@ -33,7 +33,7 @@ fn resolve_relative_path(doc_path: &str, toctree_entry: &str) -> String {
 ///
 /// # Errors
 ///
-/// Returns an error if any toctree entry is not found in the `allowed_paths` set.
+/// Returns an error if any toctree entry points to a path that is not in `allowed_paths`.
 pub fn validate_toctree<S: ::std::hash::BuildHasher>(
     doc: &Document,
     allowed_paths: &HashSet<String, S>,
