@@ -25,8 +25,8 @@ pub fn greeting(name: &str) -> String {
 /// Processes an RST text block through the full pipeline (parse, analyze, render)
 /// and outputs an HTML string.
 #[must_use]
-pub fn process_rst(input: &str) -> String {
-    let doc = parser::parse(input);
+pub fn process_rst(path: &str, input: &str) -> String {
+    let doc = parser::parse(path, input);
     let index = analyzer::analyze(&doc);
     renderer::render(&doc, &index)
 }
@@ -53,7 +53,7 @@ mod tests {
         let rst = "Introduction\n============\n\nThis is a paragraph.";
 
         // When
-        let html = process_rst(rst);
+        let html = process_rst("test.rst", rst);
 
         // Then
         assert_eq!(html, "<h1>Introduction</h1>\n<p>This is a paragraph.</p>\n");

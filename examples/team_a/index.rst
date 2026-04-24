@@ -1,3 +1,5 @@
+.. _team-a-index:
+
 Team A: Getting Started
 =======================
 
@@ -10,4 +12,4 @@ Installation
 
 Download the latest package and follow the setup steps below.
 
-See also the Team B infrastructure guide for deployment details.
+See also :ref:`home-index`, :ref:`team-a-index`, and :ref:`team-b-index`.

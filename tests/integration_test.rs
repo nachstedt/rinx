@@ -13,7 +13,7 @@ fn integration_greeting() {
 #[test]
 fn test_parser_step() {
     let input = "Title\n=====\n\nParagraph text here.\nMore text.";
-    let ast = parser::parse(input);
+    let ast = parser::parse("test.rst", input);
     assert_eq!(ast.nodes.len(), 2);
     assert_eq!(
         ast.nodes[0],
@@ -24,19 +24,24 @@ fn test_parser_step() {
     );
     assert_eq!(
         ast.nodes[1],
-        ast::Node::Paragraph("Paragraph text here.\nMore text.".to_string())
+        ast::Node::Paragraph(vec![ast::InlineNode::Text(
+            "Paragraph text here.\nMore text.".to_string()
+        )])
     );
 }
 
 #[test]
 fn test_renderer_step() {
-    let doc = ast::Document::new(vec![
-        ast::Node::Heading {
-            level: 1,
-            text: "Section".to_string(),
-        },
-        ast::Node::Paragraph("A line of text.".to_string()),
-    ]);
+    let doc = ast::Document::new(
+        "test.rst".to_string(),
+        vec![
+            ast::Node::Heading {
+                level: 1,
+                text: "Section".to_string(),
+            },
+            ast::Node::Paragraph(vec![ast::InlineNode::Text("A line of text.".to_string())]),
+        ],
+    );
     let index = analyzer::analyze(&doc);
     let html = renderer::render(&doc, &index);
 
@@ -68,7 +73,7 @@ And another paragraph.
 <p>And another paragraph.</p>
 ";
 
-    let result = process_rst(input);
+    let result = process_rst("test.rst", input);
     assert_eq!(result, expected_html);
 }
 
@@ -107,6 +112,6 @@ Text 4.
 <p>Text 4.</p>
 ";
 
-    let result = process_rst(input);
+    let result = process_rst("test.rst", input);
     assert_eq!(result, expected_html);
 }
