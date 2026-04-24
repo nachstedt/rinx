@@ -272,7 +272,12 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        assert_eq!(doc.nodes[0], Node::Paragraph(vec![crate::ast::InlineNode::Text("Just some\ntext".to_string())]));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                "Just some\ntext".to_string()
+            )])
+        );
     }
 
     #[test]
@@ -292,7 +297,10 @@ mod tests {
                 text: "Title".to_string()
             }
         );
-        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Text.".to_string())]));
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Text.".to_string())])
+        );
     }
 
     #[test]
@@ -307,7 +315,9 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(
             doc.nodes[0],
-            Node::Paragraph(vec![crate::ast::InlineNode::Text("Long Heading\n===".to_string())])
+            Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                "Long Heading\n===".to_string()
+            )])
         );
     }
 
@@ -347,7 +357,10 @@ mod tests {
                 text: "Heading".to_string()
             }
         );
-        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Next".to_string())]));
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Next".to_string())])
+        );
     }
 
     #[test]
@@ -360,9 +373,18 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 3);
-        assert_eq!(doc.nodes[0], Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 1".to_string())]));
-        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 2".to_string())]));
-        assert_eq!(doc.nodes[2], Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 3".to_string())]));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 1".to_string())])
+        );
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 2".to_string())])
+        );
+        assert_eq!(
+            doc.nodes[2],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Para 3".to_string())])
+        );
     }
 
     #[test]
@@ -382,7 +404,12 @@ mod tests {
                 text: "Heading".to_string()
             }
         );
-        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Para\nline 2".to_string())]));
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                "Para\nline 2".to_string()
+            )])
+        );
     }
 
     #[test]
@@ -524,7 +551,10 @@ mod tests {
                 paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
             })
         );
-        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Next Para".to_string())]));
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Next Para".to_string())])
+        );
     }
 
     #[test]
@@ -557,7 +587,10 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(doc.nodes[0], Node::Target("my-target".to_string()));
-        assert_eq!(doc.nodes[1], Node::Paragraph(vec![crate::ast::InlineNode::Text("Some text.".to_string())]));
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Some text.".to_string())])
+        );
     }
 
     #[test]

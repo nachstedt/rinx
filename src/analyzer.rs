@@ -65,10 +65,13 @@ mod tests {
     #[test]
     fn test_analyze_returns_default_index_for_populated_document() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![Node::Heading {
-            level: 1,
-            text: "Title".to_string(),
-        }]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Heading {
+                level: 1,
+                text: "Title".to_string(),
+            }],
+        );
 
         // When
         let index = analyze(&doc);
@@ -81,7 +84,10 @@ mod tests {
     #[test]
     fn test_analyze_many_returns_default_index_for_multiple_documents() {
         // Given
-        let docs = vec![Document::new("test1.rst".to_string(), vec![]), Document::new("test2.rst".to_string(), vec![])];
+        let docs = vec![
+            Document::new("test1.rst".to_string(), vec![]),
+            Document::new("test2.rst".to_string(), vec![]),
+        ];
 
         // When
         let index = analyze_many(&docs);
@@ -107,10 +113,13 @@ mod tests {
     #[test]
     fn test_analyze_populates_targets_for_target_nodes() {
         // Given
-        let doc = Document::new("docs/my-file.rst".to_string(), vec![
-            Node::Target("section-1".to_string()),
-            Node::Paragraph(vec![crate::ast::InlineNode::Text("some text".to_string())]),
-        ]);
+        let doc = Document::new(
+            "docs/my-file.rst".to_string(),
+            vec![
+                Node::Target("section-1".to_string()),
+                Node::Paragraph(vec![crate::ast::InlineNode::Text("some text".to_string())]),
+            ],
+        );
 
         // When
         let index = analyze(&doc);

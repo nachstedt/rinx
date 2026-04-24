@@ -24,19 +24,24 @@ fn test_parser_step() {
     );
     assert_eq!(
         ast.nodes[1],
-        ast::Node::Paragraph(vec![ast::InlineNode::Text("Paragraph text here.\nMore text.".to_string())])
+        ast::Node::Paragraph(vec![ast::InlineNode::Text(
+            "Paragraph text here.\nMore text.".to_string()
+        )])
     );
 }
 
 #[test]
 fn test_renderer_step() {
-    let doc = ast::Document::new("test.rst".to_string(), vec![
-        ast::Node::Heading {
-            level: 1,
-            text: "Section".to_string(),
-        },
-        ast::Node::Paragraph(vec![ast::InlineNode::Text("A line of text.".to_string())]),
-    ]);
+    let doc = ast::Document::new(
+        "test.rst".to_string(),
+        vec![
+            ast::Node::Heading {
+                level: 1,
+                text: "Section".to_string(),
+            },
+            ast::Node::Paragraph(vec![ast::InlineNode::Text("A line of text.".to_string())]),
+        ],
+    );
     let index = analyzer::analyze(&doc);
     let html = renderer::render(&doc, &index);
 

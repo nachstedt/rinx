@@ -254,7 +254,9 @@ mod tests {
     #[test]
     fn test_process_index_returns_serialized_project_index() {
         // Given
-        let docs = vec![r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#.to_string()];
+        let docs = vec![
+            r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#.to_string(),
+        ];
 
         // When
         let index = process_index(&docs).unwrap();

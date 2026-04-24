@@ -30,17 +30,23 @@ pub fn render(doc: &Document, _index: &ProjectIndex) -> String {
                                 let current_dir = std::path::Path::new(&doc.path)
                                     .parent()
                                     .unwrap_or(std::path::Path::new(""));
-                                let target_html_path = std::path::Path::new(target_path).with_extension("html");
-                                
-                                let relative_path = pathdiff::diff_paths(&target_html_path, current_dir)
-                                    .unwrap_or(target_html_path);
-                                    
+                                let target_html_path =
+                                    std::path::Path::new(target_path).with_extension("html");
+
+                                let relative_path =
+                                    pathdiff::diff_paths(&target_html_path, current_dir)
+                                        .unwrap_or(target_html_path);
+
                                 // display() on Unix uses `/`, so it maps correctly to URLs
-                                let href = format!("{}#{}", relative_path.display(), target_escaped);
+                                let href =
+                                    format!("{}#{}", relative_path.display(), target_escaped);
                                 let _ = write!(html, "<a href=\"{href}\">{target_escaped}</a>");
                             } else {
                                 // Fallback, could print warning
-                                let _ = write!(html, "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>");
+                                let _ = write!(
+                                    html,
+                                    "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>"
+                                );
                             }
                         }
                     }
@@ -89,17 +95,20 @@ mod tests {
     #[test]
     fn test_render_formats_heading_and_paragraph_nodes() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![
-            Node::Heading {
-                level: 1,
-                text: "Title".to_string(),
-            },
-            Node::Paragraph(vec![crate::ast::InlineNode::Text("Paragraph".to_string())]),
-            Node::Heading {
-                level: 1,
-                text: "Another Heading".to_string(),
-            },
-        ]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Heading {
+                    level: 1,
+                    text: "Title".to_string(),
+                },
+                Node::Paragraph(vec![crate::ast::InlineNode::Text("Paragraph".to_string())]),
+                Node::Heading {
+                    level: 1,
+                    text: "Another Heading".to_string(),
+                },
+            ],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -115,13 +124,16 @@ mod tests {
     #[test]
     fn test_render_escapes_html_special_characters() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![
-            Node::Heading {
-                level: 1,
-                text: "Title <script>".to_string(),
-            },
-            Node::Paragraph(vec![crate::ast::InlineNode::Text("A & B > C".to_string())]),
-        ]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Heading {
+                    level: 1,
+                    text: "Title <script>".to_string(),
+                },
+                Node::Paragraph(vec![crate::ast::InlineNode::Text("A & B > C".to_string())]),
+            ],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -137,9 +149,12 @@ mod tests {
     #[test]
     fn test_render_formats_toctree_as_html_list() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![Node::Directive(Directive::Toctree {
-            paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
-        })]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
+            })],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -155,10 +170,13 @@ mod tests {
     #[test]
     fn test_render_formats_heading_level_1_as_h1() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![Node::Heading {
-            level: 1,
-            text: "Top".to_string(),
-        }]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Heading {
+                level: 1,
+                text: "Top".to_string(),
+            }],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -171,10 +189,13 @@ mod tests {
     #[test]
     fn test_render_formats_heading_level_2_as_h2() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![Node::Heading {
-            level: 2,
-            text: "Sub".to_string(),
-        }]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Heading {
+                level: 2,
+                text: "Sub".to_string(),
+            }],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -187,10 +208,13 @@ mod tests {
     #[test]
     fn test_render_formats_heading_level_6_as_h6() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![Node::Heading {
-            level: 6,
-            text: "Deep".to_string(),
-        }]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Heading {
+                level: 6,
+                text: "Deep".to_string(),
+            }],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -203,10 +227,13 @@ mod tests {
     #[test]
     fn test_render_clamps_heading_level_above_6_to_h6() {
         // Given — level 7 exceeds the HTML maximum of 6
-        let doc = Document::new("test.rst".to_string(), vec![Node::Heading {
-            level: 7,
-            text: "VeryDeep".to_string(),
-        }]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Heading {
+                level: 7,
+                text: "VeryDeep".to_string(),
+            }],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -218,7 +245,10 @@ mod tests {
     #[test]
     fn test_render_formats_target_node_as_html_anchor() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![Node::Target("section-1".to_string())]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Target("section-1".to_string())],
+        );
         let index = ProjectIndex::default();
 
         // When
@@ -231,33 +261,50 @@ mod tests {
     #[test]
     fn test_render_formats_inline_reference_using_project_index() {
         // Given
-        let doc = Document::new("test.rst".to_string(), vec![Node::Paragraph(vec![
-            crate::ast::InlineNode::Reference("other-section".to_string())
-        ])]);
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![crate::ast::InlineNode::Reference(
+                "other-section".to_string(),
+            )])],
+        );
         let mut index = ProjectIndex::default();
-        index.targets.insert("other-section".to_string(), "other_file.rst".to_string());
+        index
+            .targets
+            .insert("other-section".to_string(), "other_file.rst".to_string());
 
         // When
         let result = render(&doc, &index);
 
         // Then
-        assert_eq!(result, "<p><a href=\"other_file.html#other-section\">other-section</a></p>\n");
+        assert_eq!(
+            result,
+            "<p><a href=\"other_file.html#other-section\">other-section</a></p>\n"
+        );
     }
 
     #[test]
     fn test_render_resolves_cross_directory_references_as_relative_links() {
         // Given a document in a subdirectory
-        let doc = Document::new("examples/team_b/index.rst".to_string(), vec![Node::Paragraph(vec![
-            crate::ast::InlineNode::Reference("target-in-a".to_string())
-        ])]);
-        
+        let doc = Document::new(
+            "examples/team_b/index.rst".to_string(),
+            vec![Node::Paragraph(vec![crate::ast::InlineNode::Reference(
+                "target-in-a".to_string(),
+            )])],
+        );
+
         let mut index = ProjectIndex::default();
-        index.targets.insert("target-in-a".to_string(), "examples/team_a/index.rst".to_string());
+        index.targets.insert(
+            "target-in-a".to_string(),
+            "examples/team_a/index.rst".to_string(),
+        );
 
         // When
         let result = render(&doc, &index);
 
         // Then the link should point backwards up out of team_b/ and into team_a/
-        assert_eq!(result, "<p><a href=\"../team_a/index.html#target-in-a\">target-in-a</a></p>\n");
+        assert_eq!(
+            result,
+            "<p><a href=\"../team_a/index.html#target-in-a\">target-in-a</a></p>\n"
+        );
     }
 }
