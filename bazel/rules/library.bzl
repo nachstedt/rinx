@@ -9,7 +9,9 @@ load("//:providers.bzl", "RustySphinxInfo")
 
 def _rusty_sphinx_library_impl(ctx):
     worker = ctx.executable._worker
+    plantuml = ctx.executable._plantuml
     ast_files = []
+    svg_dirs = []
 
     local_doc_names = [src.short_path.removesuffix(".rst") for src in ctx.files.srcs]
     
@@ -53,14 +55,58 @@ def _rusty_sphinx_library_impl(ctx):
         )
         ast_files.append(ast_out)
 
+        # Phase 1.8: Extract PlantUML diagrams
+        puml_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_puml")
+        args_puml = ctx.actions.args()
+        args_puml.add("extract_diagrams")
+        args_puml.add("--input", ast_out.path)
+        args_puml.add("--outdir", puml_dir.path)
+        
+        ctx.actions.run(
+            executable = worker,
+            arguments = [args_puml],
+            inputs = [ast_out],
+            outputs = [puml_dir],
+            mnemonic = "RustySphinxExtractPuml",
+            progress_message = "Extracting diagram definitions from %s" % src.short_path,
+        )
+
+        # Phase 1.9: Compile PlantUML
+        svg_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_svgs")
+        
+        # We use a shell script wrapper if plantuml needs specific args, 
+        # but if we assume the provided tool handles it: "tool <dir_with_pumls> <output_dir>"
+        # Actually it's standard java plantuml args.
+        args_svg = ctx.actions.args()
+        args_svg.add("-tsvg")
+        args_svg.add("-nometadata")
+        # PlantUML resolves -o relative to the input file directory, which is annoying.
+        # We wrap in a shell to pass an absolute output path ($PWD/...).
+        # By passing plantuml in 'tools', Bazel safely aggregates the Java runfiles!
+        ctx.actions.run_shell(
+            tools = [plantuml],
+            command = "\"{plantuml}\" -tsvg -nometadata -o \"$PWD/{svg_dir}\" \"{puml_dir}/\"*.puml".format(
+                plantuml = plantuml.path,
+                svg_dir = svg_dir.path,
+                puml_dir = puml_dir.path,
+            ),
+            inputs = [puml_dir],
+            outputs = [svg_dir],
+            mnemonic = "PlantUMLCompile",
+            progress_message = "Generating Diagrams for %s" % src.short_path,
+        )
+        svg_dirs.append(svg_dir)
+
     # Collect .ast files from deps (other rusty_sphinx_library targets).
     transitive_asts = [dep[RustySphinxInfo].ast_files for dep in ctx.attr.deps]
+    transitive_svg_dirs = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps]
 
     return [
         DefaultInfo(files = depset(ast_files)),
         RustySphinxInfo(
             ast_files = depset(ast_files, transitive = transitive_asts),
             direct_doc_names = local_doc_names,
+            svg_dirs = depset(svg_dirs, transitive = transitive_svg_dirs),
         ),
     ]
 
@@ -80,6 +126,12 @@ rusty_sphinx_library = rule(
             executable = True,
             cfg = "exec",
             doc = "The rusty-sphinx binary. Defaults to //:rusty_sphinx_worker in the consuming workspace.",
+        ),
+        "_plantuml": attr.label(
+            default = Label("@@//:plantuml_tool"),
+            executable = True,
+            cfg = "exec",
+            doc = "The PlantUML executable or wrapper.",
         ),
     },
     doc = """

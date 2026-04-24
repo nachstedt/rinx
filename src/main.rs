@@ -86,6 +86,28 @@ fn process_render(ast_json: &str, index_json: &str) -> Result<String> {
     Ok(renderer::render(&doc, &index))
 }
 
+fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Result<()> {
+    let doc: ast::Document = serde_json::from_str(ast_json).context("Failed to deserialize AST")?;
+    let mut count = 0;
+
+    fs::create_dir_all(outdir_path).with_context(|| format!("Error creating '{outdir_path}'"))?;
+
+    for node in &doc.nodes {
+        if let ast::Node::Directive(ast::Directive::PlantUml(content)) = node {
+            let path = std::path::Path::new(outdir_path).join(format!("{}.puml", content.hash()));
+            fs::write(&path, content.body())
+                .with_context(|| format!("Error writing {}", path.display()))?;
+            count += 1;
+        }
+    }
+
+    if count == 0 {
+        let path = std::path::Path::new(outdir_path).join(".dummy.puml");
+        fs::write(path, "@startuml\n@enduml\n").ok();
+    }
+    Ok(())
+}
+
 // ── Subcommand Handlers (with IO) ────────────────────────────────────────────
 
 fn cmd_parse(args: &[String]) -> Result<()> {
@@ -143,6 +165,16 @@ fn cmd_validate_toctree(args: &[String]) -> Result<()> {
     Ok(())
 }
 
+fn cmd_extract_diagrams(args: &[String]) -> Result<()> {
+    let input = flag_value(args, "--input")?;
+    let outdir = flag_value(args, "--outdir")?;
+
+    let ast_json =
+        fs::read_to_string(&input).with_context(|| format!("Error reading '{input}'"))?;
+    process_extract_diagrams(&ast_json, &outdir)?;
+    Ok(())
+}
+
 fn cmd_legacy(path: &str) -> Result<()> {
     let rst = fs::read_to_string(path).with_context(|| format!("Error reading '{path}'"))?;
     let html = process_rst(path, &rst);
@@ -156,6 +188,7 @@ fn run(args: &[String]) -> Result<()> {
     match args.get(1).map(String::as_str) {
         Some("parse") => cmd_parse(&args[2..]),
         Some("validate_toctree") => cmd_validate_toctree(&args[2..]),
+        Some("extract_diagrams") => cmd_extract_diagrams(&args[2..]),
         Some("index") => cmd_index(&args[2..]),
         Some("render") => cmd_render(&args[2..]),
         Some(path) if !path.starts_with('-') => cmd_legacy(path),
@@ -165,6 +198,7 @@ fn run(args: &[String]) -> Result<()> {
                 "Usage:\n\
                    {program} <file.rst>                                   (legacy preview)\n\
                    {program} parse  --input <file.rst> --output <file.ast>\n\
+                   {program} extract_diagrams --input <file.ast> --outdir <puml_dir>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
                    {program} render --input <file.ast> --index <project.index> --output <file.html>"
@@ -312,5 +346,60 @@ mod tests {
 
         // Then
         assert_eq!(html, "<h1>Title</h1>\n");
+    }
+
+    #[test]
+    fn test_process_extract_diagrams_creates_files() {
+        // Given
+        let content = ast::HashedContent::new("A -> B".to_string());
+        let expected_hash = content.hash().to_string();
+        let doc = ast::Document::new(
+            "test.rst".to_string(),
+            vec![ast::Node::Directive(ast::Directive::PlantUml(content))],
+        );
+        let ast_json = serde_json::to_string(&doc).unwrap();
+        let outdir = std::env::temp_dir().join(format!(
+            "puml_test_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+
+        // When
+        process_extract_diagrams(&ast_json, outdir.to_str().unwrap()).unwrap();
+
+        // Then
+        let path = outdir.join(format!("{expected_hash}.puml"));
+        assert!(path.exists());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "A -> B");
+
+        let _ = std::fs::remove_dir_all(outdir);
+    }
+
+    #[test]
+    fn test_process_extract_diagrams_creates_dummy_file_when_no_diagrams() {
+        // Given
+        let ast_json = r#"{"path":"test.rst","nodes":[]}"#;
+        let outdir = std::env::temp_dir().join(format!(
+            "puml_test_dummy_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+
+        // When
+        process_extract_diagrams(ast_json, outdir.to_str().unwrap()).unwrap();
+
+        // Then
+        let path = outdir.join(".dummy.puml");
+        assert!(path.exists());
+        assert_eq!(
+            std::fs::read_to_string(&path).unwrap(),
+            "@startuml\n@enduml\n"
+        );
+
+        let _ = std::fs::remove_dir_all(outdir);
     }
 }

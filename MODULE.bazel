@@ -54,3 +54,16 @@ crate.from_cargo(
 )
 
 use_repo(crate, "crates")
+
+# ── Java toolchain & PlantUML ──────────────────────────────────────────────────
+
+bazel_dep(name = "rules_java", version = "9.6.0")
+
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+    name = "plantuml_jar",
+    urls = ["https://repo1.maven.org/maven2/net/sourceforge/plantuml/plantuml/1.2024.4/plantuml-1.2024.4.jar"],
+    sha256 = "a79ce5f149778886ef41d39738a28cae54eeb4a847def2ac771fccbf97ebdc5e",
+    downloaded_file_path = "plantuml.jar",
+)

@@ -1,6 +1,6 @@
 //! The parser module converts RST text into an Abstract Syntax Tree (Document).
 
-use crate::ast::{Directive, Document, Node};
+use crate::ast::{Directive, Document, HashedContent, Node};
 
 /// Parses an RST-formatted string into a Document.
 ///
@@ -111,6 +111,15 @@ fn try_parse_directive(lines: &[&str], i: usize) -> Option<(usize, Node)> {
             .filter(|l| !l.is_empty())
             .collect();
         Directive::Toctree { paths }
+    } else if name == "plantuml" {
+        let mut body = String::new();
+        for l in &body_lines[start..] {
+            if !body.is_empty() {
+                body.push('\n');
+            }
+            body.push_str(l.trim_start());
+        }
+        Directive::PlantUml(HashedContent::new(body))
     } else {
         let mut body = String::new();
         for l in &body_lines[start..] {
@@ -576,6 +585,26 @@ mod tests {
             })
         );
     }
+
+    #[test]
+    fn test_parse_creates_plantuml_directive_with_hash() {
+        // Given
+        let input = ".. plantuml::\n\n   A -> B\n   B -> C\n\nNext Para";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+
+        let expected = HashedContent::new("A -> B\nB -> C".to_string());
+        assert_eq!(doc.nodes[0], Node::Directive(Directive::PlantUml(expected)));
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Next Para".to_string())])
+        );
+    }
+
     #[test]
     fn test_parse_creates_target_node_for_explicit_target() {
         // Given
