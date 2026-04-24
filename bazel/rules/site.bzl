@@ -34,11 +34,20 @@ def _rusty_sphinx_site_impl(ctx):
     )
 
     # ── Phase 3: render ───────────────────────────────────────────────────────
+    template_file = ctx.file.template
+    config_file = ctx.file.config
+    css_file = ctx.file.css
+
     html_files = []
+    pkg_prefix = ctx.label.package + "/"
     for ast_file in ast_list:
-        # Namespace HTML outputs under the site's target name to prevent action conflicts
+        # Compute path relative to current package for intuitive output structure
+        rel_path = ast_file.short_path
+        if rel_path.startswith(pkg_prefix):
+            rel_path = rel_path[len(pkg_prefix):]
+        
         html_out = ctx.actions.declare_file(
-            ctx.label.name + "_site_out/" + ast_file.short_path.removesuffix(".ast") + ".html",
+            ctx.label.name + "_site_out/" + rel_path.removesuffix(".ast") + ".html",
         )
         ctx.actions.run(
             executable = worker,
@@ -47,8 +56,10 @@ def _rusty_sphinx_site_impl(ctx):
                 "--input", ast_file.path,
                 "--index", index_out.path,
                 "--output", html_out.path,
+                "--config", config_file.path,
+                "--template", template_file.path,
             ],
-            inputs = [ast_file, index_out],
+            inputs = [ast_file, index_out, template_file, config_file],
             outputs = [html_out],
             mnemonic = "RustySphinxRender",
             progress_message = "Rendering %s" % ast_file.short_path,
@@ -82,6 +93,18 @@ def _rusty_sphinx_site_impl(ctx):
         )
         final_outputs.append(images_out)
 
+    # ── Phase 5: Copy CSS ─────────────────────────────────────────────────────
+    css_out = ctx.actions.declare_file(ctx.label.name + "_site_out/default.css")
+    ctx.actions.run_shell(
+        command = "cp \"$1\" \"$2\"",
+        arguments = [css_file.path, css_out.path],
+        inputs = [css_file],
+        outputs = [css_out],
+        mnemonic = "RustySphinxCopyCSS",
+        progress_message = "Copying default.css",
+    )
+    final_outputs.append(css_out)
+
     return [DefaultInfo(files = depset(final_outputs))]
 
 rusty_sphinx_site = rule(
@@ -90,6 +113,21 @@ rusty_sphinx_site = rule(
         "deps": attr.label_list(
             providers = [RustySphinxInfo],
             doc = "rusty_sphinx_library targets to include in this site.",
+        ),
+        "template": attr.label(
+            allow_single_file = [".html"],
+            default = Label("@@//:templates/default.html"),
+            doc = "The HTML template file used for page rendering. Passed as --template to the render action.",
+        ),
+        "config": attr.label(
+            allow_single_file = [".toml"],
+            default = Label("@@//:templates/default_config.toml"),
+            doc = "The rusty_sphinx.toml configuration file for the site.",
+        ),
+        "css": attr.label(
+            allow_single_file = [".css"],
+            default = Label("@@//:assets/default.css"),
+            doc = "The CSS stylesheet to include in the site output.",
         ),
         "_worker": attr.label(
             default = Label("@@//:rusty_sphinx_worker"),

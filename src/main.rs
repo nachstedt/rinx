@@ -19,7 +19,7 @@
 //! ```
 
 use anyhow::{Context, Result, anyhow};
-use rusty_sphinx::{analyzer, ast, parser, process_rst, renderer, validator};
+use rusty_sphinx::{analyzer, ast, config, parser, process_rst, renderer, validator};
 use std::env;
 use std::fs;
 
@@ -73,17 +73,46 @@ fn process_index(ast_jsons: &[String]) -> Result<String> {
         .map(|json| serde_json::from_str(json).context("Failed to deserialize AST"))
         .collect::<Result<_>>()?;
 
-    let index = analyzer::analyze_many(&docs);
+    let index = analyzer::build_project_index(&docs);
     serde_json::to_string(&index).context("Serialization error")
 }
 
-fn process_render(ast_json: &str, index_json: &str) -> Result<String> {
+fn process_render(
+    ast_json: &str,
+    index_json: &str,
+    config: &config::SiteConfig,
+    template_str: &str,
+) -> Result<String> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
     let index: analyzer::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
 
-    Ok(renderer::render(&doc, &index))
+    let body = renderer::render(&doc, &index);
+
+    // Extract page title from the first H1 heading, if any.
+    let page_title = doc
+        .nodes
+        .iter()
+        .find_map(|n| {
+            if let ast::Node::Heading { level: 1, text } = n {
+                Some(text.as_str())
+            } else {
+                None
+            }
+        })
+        .unwrap_or("");
+
+    let css_path = renderer::css_relative_path(&doc.path, "default.css");
+    renderer::render_page(
+        &body,
+        template_str,
+        config,
+        &css_path,
+        page_title,
+        &doc.path,
+        &index.nav_tree,
+    )
 }
 
 fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Result<()> {
@@ -138,13 +167,23 @@ fn cmd_render(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let index_path = flag_value(args, "--index")?;
     let output = flag_value(args, "--output")?;
+    let config_path = flag_value(args, "--config")?;
+    let template_path = flag_value(args, "--template")?;
+
+    let config_str = fs::read_to_string(&config_path)
+        .with_context(|| format!("Error reading config '{config_path}'"))?;
+    let site_config: config::SiteConfig = toml::from_str(&config_str)
+        .with_context(|| format!("Error parsing config '{config_path}'"))?;
+
+    let template_str = fs::read_to_string(&template_path)
+        .with_context(|| format!("Error reading template '{template_path}'"))?;
 
     let ast_json =
         fs::read_to_string(&input).with_context(|| format!("Error reading '{input}'"))?;
     let index_json =
         fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
 
-    let html = process_render(&ast_json, &index_json)?;
+    let html = process_render(&ast_json, &index_json, &site_config, &template_str)?;
     fs::write(&output, html).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
@@ -201,7 +240,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} extract_diagrams --input <file.ast> --outdir <puml_dir>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
-                   {program} render --input <file.ast> --index <project.index> --output <file.html>"
+                   {program} render --input <file.ast> --index <project.index> --output <file.html> --config <config.toml> --template <template.html>"
             );
             Err(anyhow!(msg))
         }
@@ -331,7 +370,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"document_titles":{"test.rst":"Title"}}"#
+            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}]}"#
         );
     }
 
@@ -340,12 +379,14 @@ mod tests {
         // Given
         let doc = r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#;
         let index = r#"{"targets":{},"document_titles":{}}"#;
+        let config = config::SiteConfig::default();
+        let template = "{{ body }}";
 
         // When
-        let html = process_render(doc, index).unwrap();
+        let html = process_render(doc, index, &config, template).unwrap();
 
         // Then
-        assert_eq!(html, "<h1>Title</h1>\n");
+        assert!(html.contains("<h1>Title</h1>"));
     }
 
     #[test]

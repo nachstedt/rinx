@@ -20,6 +20,8 @@ rusty_sphinx_library(
 
 rusty_sphinx_site(
     name = "site",
+    config = "rusty_sphinx.toml",
+    template = "custom_template.html",
     deps = [
         ":root_docs",
         "//examples/team_a:docs",

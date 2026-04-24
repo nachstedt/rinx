@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CUSTOM TEMPLATE: {% if page_title %}{{ page_title }} — {% endif %}{{ project }}</title>
+  <style>
+    body { font-family: monospace; background: #fafafa; color: #333; padding: 2rem; }
+    header { border-bottom: 2px solid #ccc; margin-bottom: 2rem; }
+    .content { display: flex; gap: 4rem; }
+    .sidebar { flex: 0 0 250px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{ project }} <small>{{ version }}</small></h1>
+  </header>
+  <div class="content">
+    <aside class="sidebar">
+      <h3>Table of Contents</h3>
+      {% if nav_tree %}
+      <ul>
+      {% for entry in nav_tree recursive %}
+        <li>
+          <a href="{{ entry.href }}">{{ entry.title }}</a>
+          {% if entry.children %}
+          <ul>
+            {{ loop(entry.children) }}
+          </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+      {% endif %}
+    </aside>
+    <main>
+      {{ body }}
+    </main>
+  </div>
+</body>
+</html>

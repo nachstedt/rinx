@@ -7,6 +7,7 @@ rust_library(
     srcs = [
         "src/analyzer.rs",
         "src/ast.rs",
+        "src/config.rs",
         "src/lib.rs",
         "src/parser.rs",
         "src/renderer.rs",
@@ -42,3 +43,9 @@ java_binary(
     runtime_deps = [":plantuml_import"],
     visibility = ["//visibility:public"],
 )
+
+exports_files([
+    "templates/default.html",
+    "templates/default_config.toml",
+    "assets/default.css",
+])

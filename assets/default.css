@@ -1,0 +1,269 @@
+/* Rusty-Sphinx Default Theme
+ * A modern, premium documentation theme for Rusty-Sphinx.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg-main: #ffffff;
+  --bg-sidebar: #f8fafc;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-header: #0f172a;
+  --border: #e2e8f0;
+  --sidebar-width: 280px;
+  --radius: 8px;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* ── Reset & Base ──────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-main);
+  background: var(--bg-main);
+}
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+
+.document-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────── */
+
+.sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  padding: 2rem 1.5rem;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+.sidebar-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.project-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-header);
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.project-version {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: #eff6ff;
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
+  margin-top: 0.5rem;
+  border: 1px solid #dbeafe;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-nav ul ul {
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+  border-left: 1px solid var(--border);
+}
+
+.sidebar-nav li {
+  margin: 0.25rem 0;
+}
+
+.sidebar-nav a {
+  display: block;
+  padding: 0.4rem 0.75rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.925rem;
+  font-weight: 500;
+  border-radius: var(--radius);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-nav a:hover {
+  background: #f1f5f9;
+  color: var(--primary);
+  transform: translateX(2px);
+}
+
+.sidebar-placeholder {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 1rem;
+  background: #f1f5f9;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+/* ── Main Content ──────────────────────────────────────────────────── */
+
+.document {
+  flex: 1;
+  max-width: 64rem;
+  padding: 4rem 5rem;
+  margin: 0 auto;
+}
+
+.document h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-header);
+  margin-bottom: 2rem;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.document h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-header);
+  margin-top: 3rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.document h3 {
+  font-size: 1.5rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.document p {
+  margin-bottom: 1.25rem;
+  color: #334155;
+  font-size: 1.05rem;
+}
+
+.document a {
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.document a:hover {
+  border-bottom-color: var(--primary);
+}
+
+.document ul, .document ol {
+  margin-bottom: 1.5rem;
+  padding-left: 2rem;
+}
+
+.document li {
+  margin-bottom: 0.5rem;
+}
+
+.document code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.document pre {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  box-shadow: var(--shadow);
+}
+
+/* ── PlantUML Diagrams ─────────────────────────────────────────────── */
+
+.plantuml-diagram {
+  margin: 2.5rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.plantuml-diagram:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.plantuml-diagram img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .document {
+    padding: 3rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .document-wrapper {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem;
+  }
+
+  .document {
+    padding: 2rem 1.5rem;
+  }
+}
