@@ -262,14 +262,17 @@ mod tests {
         let index = process_index(&docs).unwrap();
 
         // Then
-        assert_eq!(index, r#"{"targets":{}}"#);
+        assert_eq!(
+            index,
+            r#"{"targets":{},"document_titles":{"test.rst":"Title"}}"#
+        );
     }
 
     #[test]
     fn test_process_render_returns_html_string() {
         // Given
         let doc = r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#;
-        let index = r#"{"targets":{}}"#;
+        let index = r#"{"targets":{},"document_titles":{}}"#;
 
         // When
         let html = process_render(doc, index).unwrap();

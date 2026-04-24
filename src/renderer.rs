@@ -60,9 +60,21 @@ pub fn render(doc: &Document, index: &ProjectIndex) -> String {
             Node::Directive(directive) => match directive {
                 Directive::Toctree { paths } => {
                     let _ = writeln!(html, "<ul>");
+                    let current_dir = std::path::Path::new(&doc.path)
+                        .parent()
+                        .unwrap_or(std::path::Path::new(""));
                     for path in paths {
-                        let href = format!("{path}.html");
-                        let escaped_text = html_escape::encode_text(path);
+                        let target_rst = current_dir.join(path).with_extension("rst");
+                        let target_entry = target_rst.display().to_string();
+
+                        let link_text = index.document_titles.get(&target_entry).unwrap_or(path);
+
+                        let target_html = current_dir.join(path).with_extension("html");
+                        let relative_path =
+                            pathdiff::diff_paths(&target_html, current_dir).unwrap_or(target_html);
+
+                        let href = format!("{}", relative_path.display());
+                        let escaped_text = html_escape::encode_text(link_text);
                         let _ = writeln!(html, "  <li><a href=\"{href}\">{escaped_text}</a></li>");
                     }
                     let _ = writeln!(html, "</ul>");
@@ -155,7 +167,11 @@ mod tests {
                 paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
             })],
         );
-        let index = ProjectIndex::default();
+        let mut index = ProjectIndex::default();
+        index
+            .document_titles
+            .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
+        // team_b is missing, so it should fallback
 
         // When
         let result = render(&doc, &index);
@@ -163,7 +179,7 @@ mod tests {
         // Then
         assert_eq!(
             result,
-            "<ul>\n  <li><a href=\"team_a/index.html\">team_a/index</a></li>\n  <li><a href=\"team_b/index.html\">team_b/index</a></li>\n</ul>\n"
+            "<ul>\n  <li><a href=\"team_a/index.html\">Team A Module</a></li>\n  <li><a href=\"team_b/index.html\">team_b/index</a></li>\n</ul>\n"
         );
     }
 
