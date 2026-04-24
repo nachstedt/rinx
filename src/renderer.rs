@@ -6,7 +6,7 @@ use std::fmt::Write as _;
 
 /// Renders a Document into an HTML string.
 #[must_use]
-pub fn render(doc: &Document, _index: &ProjectIndex) -> String {
+pub fn render(doc: &Document, index: &ProjectIndex) -> String {
     let mut html = String::new();
 
     for node in &doc.nodes {
@@ -26,7 +26,7 @@ pub fn render(doc: &Document, _index: &ProjectIndex) -> String {
                         }
                         crate::ast::InlineNode::Reference(target) => {
                             let target_escaped = html_escape::encode_text(target);
-                            if let Some(target_path) = _index.targets.get(target) {
+                            if let Some(target_path) = index.targets.get(target) {
                                 let current_dir = std::path::Path::new(&doc.path)
                                     .parent()
                                     .unwrap_or(std::path::Path::new(""));
