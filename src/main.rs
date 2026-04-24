@@ -7,6 +7,7 @@
 //!
 //! ```text
 //! rusty-sphinx parse  --input <file.rst>  --output <file.ast>
+//! rusty-sphinx validate_toctree --input <file.ast>  [--allowed <path>...]
 //! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
 //! rusty-sphinx render --input <file.ast>  --index <project.index>  --output <file.html>
 //! ```
@@ -18,7 +19,7 @@
 //! ```
 
 use anyhow::{Context, Result, anyhow};
-use rusty_sphinx::{analyzer, ast, parser, process_rst, renderer};
+use rusty_sphinx::{analyzer, ast, parser, process_rst, renderer, validator};
 use std::env;
 use std::fs;
 
@@ -45,6 +46,20 @@ fn flag_values(args: &[String], flag: &str) -> Result<Vec<String>> {
         .collect();
 
     Ok(values)
+}
+
+/// Returns all values that follow `flag` until the next flag, returning empty vector if flag is missing.
+fn flag_values_opt(args: &[String], flag: &str) -> Vec<String> {
+    args.iter()
+        .position(|a| a == flag)
+        .map(|start| {
+            args[start + 1..]
+                .iter()
+                .take_while(|a| !a.starts_with("--"))
+                .cloned()
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 fn process_parse(path: &str, rst_content: &str) -> Result<String> {
@@ -112,6 +127,22 @@ fn cmd_render(args: &[String]) -> Result<()> {
     Ok(())
 }
 
+fn cmd_validate_toctree(args: &[String]) -> Result<()> {
+    let input = flag_value(args, "--input")?;
+    let output = flag_value(args, "--output")?;
+    let allowed: std::collections::HashSet<String> =
+        flag_values_opt(args, "--allowed").into_iter().collect();
+
+    let ast_json =
+        fs::read_to_string(&input).with_context(|| format!("Error reading '{input}'"))?;
+    let doc: ast::Document =
+        serde_json::from_str(&ast_json).context("Failed to deserialize AST")?;
+
+    validator::validate_toctree(&doc, &allowed)?;
+    fs::write(&output, &ast_json).with_context(|| format!("Error writing '{output}'"))?;
+    Ok(())
+}
+
 fn cmd_legacy(path: &str) -> Result<()> {
     let rst = fs::read_to_string(path).with_context(|| format!("Error reading '{path}'"))?;
     let html = process_rst(path, &rst);
@@ -124,6 +155,7 @@ fn cmd_legacy(path: &str) -> Result<()> {
 fn run(args: &[String]) -> Result<()> {
     match args.get(1).map(String::as_str) {
         Some("parse") => cmd_parse(&args[2..]),
+        Some("validate_toctree") => cmd_validate_toctree(&args[2..]),
         Some("index") => cmd_index(&args[2..]),
         Some("render") => cmd_render(&args[2..]),
         Some(path) if !path.starts_with('-') => cmd_legacy(path),
@@ -133,6 +165,7 @@ fn run(args: &[String]) -> Result<()> {
                 "Usage:\n\
                    {program} <file.rst>                                   (legacy preview)\n\
                    {program} parse  --input <file.rst> --output <file.ast>\n\
+                   {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
                    {program} render --input <file.ast> --index <project.index> --output <file.html>"
             );

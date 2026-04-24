@@ -9,5 +9,6 @@ RustySphinxInfo = provider(
     doc = "Carries compiled .ast files from a rusty_sphinx_library target.",
     fields = {
         "ast_files": "A depset of compiled .ast File objects.",
+        "direct_doc_names": "A list of string names for documents directly explicitly exported by just this library.",
     },
 )
