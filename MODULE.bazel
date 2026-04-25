@@ -67,3 +67,22 @@ http_file(
     sha256 = "a79ce5f149778886ef41d39738a28cae54eeb4a847def2ac771fccbf97ebdc5e",
     downloaded_file_path = "plantuml.jar",
 )
+
+# ── Python toolchain ──────────────────────────────────────────────────────────
+
+bazel_dep(name = "rules_python", version = "0.31.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    python_version = "3.11",
+    is_default = True,
+)
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pypi",
+    python_version = "3.11",
+    requirements_lock = "//scripts:requirements.txt",
+)
+use_repo(pip, "pypi")
+
