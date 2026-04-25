@@ -117,7 +117,6 @@ fn process_render(
 
 fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Result<()> {
     let doc: ast::Document = serde_json::from_str(ast_json).context("Failed to deserialize AST")?;
-    let mut count = 0;
 
     fs::create_dir_all(outdir_path).with_context(|| format!("Error creating '{outdir_path}'"))?;
 
@@ -126,14 +125,9 @@ fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Result<()> {
             let path = std::path::Path::new(outdir_path).join(format!("{}.puml", content.hash()));
             fs::write(&path, content.body())
                 .with_context(|| format!("Error writing {}", path.display()))?;
-            count += 1;
         }
     }
 
-    if count == 0 {
-        let path = std::path::Path::new(outdir_path).join(".dummy.puml");
-        fs::write(path, "@startuml\n@enduml\n").ok();
-    }
     Ok(())
 }
 
@@ -419,7 +413,7 @@ mod tests {
     }
 
     #[test]
-    fn test_process_extract_diagrams_creates_dummy_file_when_no_diagrams() {
+    fn test_process_extract_diagrams_leaves_empty_dir_when_no_diagrams() {
         // Given
         let ast_json = r#"{"path":"test.rst","nodes":[]}"#;
         let outdir = std::env::temp_dir().join(format!(
@@ -434,12 +428,9 @@ mod tests {
         process_extract_diagrams(ast_json, outdir.to_str().unwrap()).unwrap();
 
         // Then
+        assert!(outdir.exists());
         let path = outdir.join(".dummy.puml");
-        assert!(path.exists());
-        assert_eq!(
-            std::fs::read_to_string(&path).unwrap(),
-            "@startuml\n@enduml\n"
-        );
+        assert!(!path.exists());
 
         let _ = std::fs::remove_dir_all(outdir);
     }

@@ -56,7 +56,7 @@ def _rusty_sphinx_library_impl(ctx):
         ast_files.append(ast_out)
 
         # Phase 1.8: Extract PlantUML diagrams
-        puml_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_puml")
+        puml_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_puml", sibling = src)
         args_puml = ctx.actions.args()
         args_puml.add("extract_diagrams")
         args_puml.add("--input", ast_out.path)
@@ -72,24 +72,27 @@ def _rusty_sphinx_library_impl(ctx):
         )
 
         # Phase 1.9: Compile PlantUML
-        svg_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_svgs")
+        svg_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_svgs", sibling = src)
         
-        # We use a shell script wrapper if plantuml needs specific args, 
-        # but if we assume the provided tool handles it: "tool <dir_with_pumls> <output_dir>"
-        # Actually it's standard java plantuml args.
-        args_svg = ctx.actions.args()
-        args_svg.add("-tsvg")
-        args_svg.add("-nometadata")
-        # PlantUML resolves -o relative to the input file directory, which is annoying.
-        # We wrap in a shell to pass an absolute output path ($PWD/...).
+        # We wrap in a shell to pass an absolute output path ($PWD/...) and check for empty directories.
         # By passing plantuml in 'tools', Bazel safely aggregates the Java runfiles!
+        command_script = """
+set -e
+shopt -s nullglob
+files=("{puml_dir}/"*.puml)
+mkdir -p "$PWD/{svg_dir}"
+if [ ${{#files[@]}} -gt 0 ]; then
+  "{plantuml}" -tsvg -nometadata -o "$PWD/{svg_dir}" "${{files[@]}}"
+fi
+""".format(
+            plantuml = plantuml.path,
+            svg_dir = svg_dir.path,
+            puml_dir = puml_dir.path,
+        )
+
         ctx.actions.run_shell(
             tools = [plantuml],
-            command = "\"{plantuml}\" -tsvg -nometadata -o \"$PWD/{svg_dir}\" \"{puml_dir}/\"*.puml".format(
-                plantuml = plantuml.path,
-                svg_dir = svg_dir.path,
-                puml_dir = puml_dir.path,
-            ),
+            command = command_script,
             inputs = [puml_dir],
             outputs = [svg_dir],
             mnemonic = "PlantUMLCompile",

@@ -44,10 +44,20 @@ pub fn validate_toctree<S: ::std::hash::BuildHasher>(
         if let Node::Directive(Directive::Toctree { paths }) = node {
             for path in paths {
                 let resolved = resolve_relative_path(&doc.path, path);
-                if !allowed_paths.contains(&resolved) {
+                let path_buf = std::path::Path::new(&resolved);
+                let resolved_stripped = if path_buf
+                    .extension()
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("rst"))
+                {
+                    path_buf.with_extension("").to_string_lossy().into_owned()
+                } else {
+                    resolved.clone()
+                };
+
+                if !allowed_paths.contains(&resolved_stripped) {
                     errors.push(format!(
                         "Toctree entry '{}' (resolved to '{}') in document '{}' is not explicitly declared as a dependency.",
-                        path, resolved, doc.path
+                        path, resolved_stripped, doc.path
                     ));
                 }
             }
@@ -117,5 +127,20 @@ mod tests {
         let err_msg = result.unwrap_err().to_string();
         assert!(err_msg.contains("not explicitly declared as a dependency"));
         assert!(err_msg.contains("team_a/index"));
+    }
+
+    #[test]
+    fn test_validate_toctree_success_with_rst_suffix() {
+        let doc = Document::new(
+            "docs/index.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["team_a/index.rst".to_string()],
+            })],
+        );
+        let mut allowed = HashSet::new();
+        // The allowed paths are stripped of .rst by the bazel rule, so we test with the stripped path.
+        allowed.insert("docs/team_a/index".to_string());
+
+        assert!(validate_toctree(&doc, &allowed).is_ok());
     }
 }
