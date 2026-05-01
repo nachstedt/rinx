@@ -9,3 +9,4 @@
 - Function names should describe what the function concretely does, not just reflect its abstract role (e.g., prefer `build_project_index()` over `analyze_many()`).
 - Guidelines are beliefs, preferences and style choices, not factual statements about tools or technologies.
 - After every code modification session, run `cargo clippy --tests` and resolve all warnings before finishing.
+- After every code modification session, run `cargo fmt`.
