@@ -8,7 +8,7 @@ use crate::ast::{Directive, Document, Node};
 use crate::utils::normalize_path;
 use serde::{Deserialize, Serialize};
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// One node in the navigation tree, matching Sphinx's sidebar nesting behavior.
 ///
@@ -29,9 +29,9 @@ pub struct NavEntry {
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct ProjectIndex {
     /// Maps target names to document paths.
-    pub targets: HashMap<String, String>,
+    pub targets: BTreeMap<String, String>,
     /// Maps document paths to their top-level title.
-    pub document_titles: HashMap<String, String>,
+    pub document_titles: BTreeMap<String, String>,
     /// Hierarchical navigation tree derived from toctree directives.
     #[serde(default)]
     pub nav_tree: Vec<NavEntry>,
@@ -101,8 +101,8 @@ fn extract_toctree_paths(doc: &Document) -> Vec<String> {
 /// can legitimately appear in different branches of the tree.
 fn build_nav_subtree(
     doc_path: &str,
-    toctrees: &HashMap<String, Vec<String>>,
-    titles: &HashMap<String, String>,
+    toctrees: &BTreeMap<String, Vec<String>>,
+    titles: &BTreeMap<String, String>,
     visited: &mut std::collections::HashSet<String>,
 ) -> NavEntry {
     let title = titles.get(doc_path).cloned().unwrap_or_else(|| {
@@ -155,7 +155,7 @@ pub fn build_project_index(docs: &[Document]) -> ProjectIndex {
     }
 
     // Step 2: Collect toctree relationships (parent path → child paths)
-    let mut toctrees: HashMap<String, Vec<String>> = HashMap::new();
+    let mut toctrees: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for doc in docs {
         let children = extract_toctree_paths(doc);
         if !children.is_empty() {
