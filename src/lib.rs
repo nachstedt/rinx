@@ -8,6 +8,7 @@ pub mod ast;
 pub mod config;
 pub mod parser;
 pub mod renderer;
+pub mod utils;
 pub mod validator;
 
 /// Returns a welcoming greeting for the Rusty Sphinx application.

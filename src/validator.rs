@@ -1,22 +1,8 @@
 use crate::ast::{Directive, Document, Node};
+use crate::utils::normalize_path;
 use anyhow::{Result, anyhow};
 use std::collections::HashSet;
-use std::path::{Component, Path, PathBuf};
-
-/// Normalizes a path, resolving `.` and `..` components.
-fn normalize_path(path: &Path) -> PathBuf {
-    let mut normalized = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::ParentDir => {
-                normalized.pop();
-            }
-            Component::CurDir => {}
-            _ => normalized.push(component),
-        }
-    }
-    normalized
-}
+use std::path::Path;
 
 /// Resolves a `toctree` entry relative to the current document's path.
 fn resolve_relative_path(doc_path: &str, toctree_entry: &str) -> String {
@@ -74,13 +60,6 @@ pub fn validate_toctree<S: ::std::hash::BuildHasher>(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_normalize_path() {
-        assert_eq!(normalize_path(Path::new("a/b/../c")), PathBuf::from("a/c"));
-        assert_eq!(normalize_path(Path::new("a/./b")), PathBuf::from("a/b"));
-        assert_eq!(normalize_path(Path::new("a/b/c")), PathBuf::from("a/b/c"));
-    }
 
     #[test]
     fn test_resolve_relative_path() {

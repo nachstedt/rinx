@@ -5,6 +5,7 @@
 //! toctree directives.
 
 use crate::ast::{Directive, Document, Node};
+use crate::utils::normalize_path;
 use serde::{Deserialize, Serialize};
 
 use std::collections::HashMap;
@@ -92,20 +93,6 @@ fn extract_toctree_paths(doc: &Document) -> Vec<String> {
 }
 
 /// Normalizes a path, resolving `.` and `..` components.
-pub(crate) fn normalize_path(path: &std::path::Path) -> std::path::PathBuf {
-    let mut normalized = std::path::PathBuf::new();
-    for component in path.components() {
-        match component {
-            std::path::Component::ParentDir => {
-                normalized.pop();
-            }
-            std::path::Component::CurDir => {}
-            _ => normalized.push(component),
-        }
-    }
-    normalized
-}
-
 /// Recursively builds a navigation tree for a given document.
 ///
 /// `visited` tracks the current ancestor chain to detect and break cycles:
