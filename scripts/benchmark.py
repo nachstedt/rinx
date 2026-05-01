@@ -67,7 +67,7 @@ alias(
     doc_dir = TARGET_DIR / "Doc"
     
     # Create config
-    (doc_dir / "rusty_sphinx.toml").write_text('project = "CPython Benchmark"\n')
+    (doc_dir / "rusty_sphinx.toml").write_text('[project]\nname = "CPython Benchmark"\n')
     
     # Create template
     (doc_dir / "custom_template.html").write_text('<!DOCTYPE html><html><body><h1>CPython Benchmark</h1>{{ body }}</body></html>\n')
@@ -112,7 +112,7 @@ def run_benchmark():
         print(f"Bazel build succeeded in {duration:.2f} seconds.")
     
     # Inform the user where the HTML is
-    html_out = TARGET_DIR / "bazel-bin/Doc/site_site_out"
+    html_out = TARGET_DIR / "bazel-bin/Doc/site"
     print(f"\nHTML output is located at: {html_out}/")
 
 def analyze_results():
