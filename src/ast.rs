@@ -172,4 +172,46 @@ mod tests {
         // Then
         assert_eq!(original, deserialized);
     }
+
+    #[test]
+    fn test_hashed_content_try_from_success() {
+        // Given
+        let body = "Valid body".to_string();
+        let valid_hash = HashedContent::new(body.clone()).hash.to_string();
+        let raw = HashedContentRaw {
+            hash: valid_hash.clone(),
+            body: body.clone(),
+        };
+
+        // When
+        let result = HashedContent::try_from(raw);
+
+        // Then
+        assert!(result.is_ok());
+        let content = result.unwrap();
+        assert_eq!(content.hash, valid_hash);
+        assert_eq!(content.body, body);
+    }
+
+    #[test]
+    fn test_hashed_content_try_from_mismatch() {
+        // Given
+        let body = "Valid body".to_string();
+        let valid_hash = HashedContent::new(body.clone()).hash.to_string();
+        let invalid_hash = "0000000000000000000000000000000000000000000000000000000000000000".to_string();
+        let raw = HashedContentRaw {
+            hash: invalid_hash.clone(),
+            body: body.clone(),
+        };
+
+        // When
+        let result = HashedContent::try_from(raw);
+
+        // Then
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            format!("Hash mismatch: expected {}, got {}", valid_hash, invalid_hash)
+        );
+    }
 }
