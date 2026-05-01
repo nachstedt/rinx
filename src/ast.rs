@@ -68,6 +68,8 @@ impl TryFrom<HashedContentRaw> for HashedContent {
 pub enum Directive {
     Toctree {
         paths: Vec<String>,
+        maxdepth: Option<usize>,
+        ignored_options: Vec<String>,
     },
     PlantUml(HashedContent),
     Unknown {
@@ -95,12 +97,18 @@ pub enum Node {
 pub struct Document {
     pub path: String,
     pub nodes: Vec<Node>,
+    #[serde(default)]
+    pub diagnostics: Vec<String>,
 }
 
 impl Document {
     #[must_use]
     pub fn new(path: String, nodes: Vec<Node>) -> Self {
-        Self { path, nodes }
+        Self {
+            path,
+            nodes,
+            diagnostics: Vec::new(),
+        }
     }
 }
 

@@ -41,7 +41,7 @@ pub fn validate_toctree<S: ::std::hash::BuildHasher>(
     let mut errors = Vec::new();
 
     for node in &doc.nodes {
-        if let Node::Directive(Directive::Toctree { paths }) = node {
+        if let Node::Directive(Directive::Toctree { paths, .. }) = node {
             for path in paths {
                 let resolved = resolve_relative_path(&doc.path, path);
                 let path_buf = std::path::Path::new(&resolved);
@@ -104,6 +104,8 @@ mod tests {
             "docs/index.rst".to_string(),
             vec![Node::Directive(Directive::Toctree {
                 paths: vec!["team_a/index".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
             })],
         );
         let mut allowed = HashSet::new();
@@ -118,6 +120,8 @@ mod tests {
             "docs/index.rst".to_string(),
             vec![Node::Directive(Directive::Toctree {
                 paths: vec!["team_a/index".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
             })],
         );
         let allowed = HashSet::new(); // empty
@@ -135,6 +139,8 @@ mod tests {
             "docs/index.rst".to_string(),
             vec![Node::Directive(Directive::Toctree {
                 paths: vec!["team_a/index.rst".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
             })],
         );
         let mut allowed = HashSet::new();

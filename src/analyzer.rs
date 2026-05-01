@@ -73,7 +73,7 @@ fn extract_toctree_paths(doc: &Document) -> Vec<String> {
 
     let mut paths = Vec::new();
     for node in &doc.nodes {
-        if let Node::Directive(Directive::Toctree { paths: entries }) = node {
+        if let Node::Directive(Directive::Toctree { paths: entries, .. }) = node {
             for entry in entries {
                 let combined = doc_parent.join(entry);
                 let normalized = normalize_path(&combined);
@@ -92,7 +92,7 @@ fn extract_toctree_paths(doc: &Document) -> Vec<String> {
 }
 
 /// Normalizes a path, resolving `.` and `..` components.
-fn normalize_path(path: &std::path::Path) -> std::path::PathBuf {
+pub(crate) fn normalize_path(path: &std::path::Path) -> std::path::PathBuf {
     let mut normalized = std::path::PathBuf::new();
     for component in path.components() {
         match component {
@@ -107,10 +107,16 @@ fn normalize_path(path: &std::path::Path) -> std::path::PathBuf {
 }
 
 /// Recursively builds a navigation tree for a given document.
+///
+/// `visited` tracks the current ancestor chain to detect and break cycles:
+/// a document already in the chain cannot be its own descendant.
+/// It is restored after each recursive call so that the same document
+/// can legitimately appear in different branches of the tree.
 fn build_nav_subtree(
     doc_path: &str,
     toctrees: &HashMap<String, Vec<String>>,
     titles: &HashMap<String, String>,
+    visited: &mut std::collections::HashSet<String>,
 ) -> NavEntry {
     let title = titles.get(doc_path).cloned().unwrap_or_else(|| {
         doc_path
@@ -119,15 +125,27 @@ fn build_nav_subtree(
             .to_string()
     });
 
+    // Cycle detected: this path is already an ancestor — emit a leaf.
+    if !visited.insert(doc_path.to_string()) {
+        return NavEntry {
+            title,
+            path: doc_path.to_string(),
+            children: Vec::new(),
+        };
+    }
+
     let children = toctrees
         .get(doc_path)
         .map(|child_paths| {
             child_paths
                 .iter()
-                .map(|child| build_nav_subtree(child, toctrees, titles))
+                .map(|child| build_nav_subtree(child, toctrees, titles, visited))
                 .collect()
         })
         .unwrap_or_default();
+
+    // Remove from visited so sibling branches can visit this document.
+    visited.remove(doc_path);
 
     NavEntry {
         title,
@@ -172,9 +190,10 @@ pub fn build_project_index(docs: &[Document]) -> ProjectIndex {
     roots.sort_unstable();
 
     // Step 4: Build nav tree recursively from roots
+    let mut visited = std::collections::HashSet::new();
     index.nav_tree = roots
         .iter()
-        .map(|root| build_nav_subtree(root, &toctrees, &index.document_titles))
+        .map(|root| build_nav_subtree(root, &toctrees, &index.document_titles, &mut visited))
         .collect();
 
     index
@@ -327,6 +346,8 @@ mod tests {
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
+                        maxdepth: None,
+                        ignored_options: vec![],
                     }),
                 ],
             ),
@@ -374,6 +395,8 @@ mod tests {
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["about".to_string()],
+                        maxdepth: None,
+                        ignored_options: vec![],
                     }),
                 ],
             ),
@@ -405,6 +428,8 @@ mod tests {
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["section/index".to_string()],
+                        maxdepth: None,
+                        ignored_options: vec![],
                     }),
                 ],
             ),
@@ -417,6 +442,8 @@ mod tests {
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["sub/page".to_string()],
+                        maxdepth: None,
+                        ignored_options: vec![],
                     }),
                 ],
             ),
@@ -456,6 +483,8 @@ mod tests {
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["child".to_string()],
+                        maxdepth: None,
+                        ignored_options: vec![],
                     }),
                 ],
             ),
@@ -477,5 +506,101 @@ mod tests {
         assert_eq!(deserialized.nav_tree.len(), 1);
         assert_eq!(deserialized.nav_tree[0].children.len(), 1);
         assert_eq!(deserialized.nav_tree[0].children[0].title, "Child");
+    }
+
+    #[test]
+    fn test_build_project_index_breaks_direct_cycle_in_toctree() {
+        // Given — root references A, A references B, B references A (B→A creates a cycle)
+        let docs = vec![
+            Document::new(
+                "root.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree {
+                    paths: vec!["a".to_string()],
+                    maxdepth: None,
+                    ignored_options: vec![],
+                })],
+            ),
+            Document::new(
+                "a.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree {
+                    paths: vec!["b".to_string()],
+                    maxdepth: None,
+                    ignored_options: vec![],
+                })],
+            ),
+            Document::new(
+                "b.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree {
+                    paths: vec!["a".to_string()], // cycle back to a
+                    maxdepth: None,
+                    ignored_options: vec![],
+                })],
+            ),
+        ];
+
+        // When
+        let index = build_project_index(&docs);
+
+        // Then — root → a → b → a(leaf). The second occurrence of a.rst must be childless.
+        assert_eq!(index.nav_tree.len(), 1);
+        let root = &index.nav_tree[0];
+        assert_eq!(root.path, "root.rst");
+        assert_eq!(root.children.len(), 1);
+        let a = &root.children[0];
+        assert_eq!(a.path, "a.rst");
+        assert_eq!(a.children.len(), 1);
+        let b = &a.children[0];
+        assert_eq!(b.path, "b.rst");
+        // b references a, but a is already an ancestor — cycle must be broken
+        assert_eq!(b.children.len(), 1);
+        assert_eq!(b.children[0].path, "a.rst");
+        assert!(b.children[0].children.is_empty(), "cycle must be broken: a.rst must appear as a leaf");
+    }
+
+    #[test]
+    fn test_build_project_index_allows_shared_node_in_multiple_branches() {
+        // Given — root → left, root → right, both left and right reference shared.
+        // shared appears in two branches but creates no cycle.
+        let docs = vec![
+            Document::new(
+                "index.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree {
+                    paths: vec!["left".to_string(), "right".to_string()],
+                    maxdepth: None,
+                    ignored_options: vec![],
+                })],
+            ),
+            Document::new(
+                "left.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree {
+                    paths: vec!["shared".to_string()],
+                    maxdepth: None,
+                    ignored_options: vec![],
+                })],
+            ),
+            Document::new(
+                "right.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree {
+                    paths: vec!["shared".to_string()],
+                    maxdepth: None,
+                    ignored_options: vec![],
+                })],
+            ),
+            Document::new("shared.rst".to_string(), vec![]),
+        ];
+
+        // When
+        let index = build_project_index(&docs);
+
+        // Then — shared.rst appears as a child of both left and right
+        let root = &index.nav_tree[0];
+        assert_eq!(root.children.len(), 2);
+        let left = &root.children[0];
+        let right = &root.children[1];
+        assert_eq!(left.children.len(), 1);
+        assert_eq!(left.children[0].path, "shared.rst");
+        assert_eq!(right.children.len(), 1);
+        assert_eq!(right.children[0].path, "shared.rst",
+            "shared.rst must appear in both branches, not be truncated as a false cycle");
     }
 }
