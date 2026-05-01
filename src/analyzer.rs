@@ -554,7 +554,10 @@ mod tests {
         // b references a, but a is already an ancestor — cycle must be broken
         assert_eq!(b.children.len(), 1);
         assert_eq!(b.children[0].path, "a.rst");
-        assert!(b.children[0].children.is_empty(), "cycle must be broken: a.rst must appear as a leaf");
+        assert!(
+            b.children[0].children.is_empty(),
+            "cycle must be broken: a.rst must appear as a leaf"
+        );
     }
 
     #[test]
@@ -600,7 +603,9 @@ mod tests {
         assert_eq!(left.children.len(), 1);
         assert_eq!(left.children[0].path, "shared.rst");
         assert_eq!(right.children.len(), 1);
-        assert_eq!(right.children[0].path, "shared.rst",
-            "shared.rst must appear in both branches, not be truncated as a false cycle");
+        assert_eq!(
+            right.children[0].path, "shared.rst",
+            "shared.rst must appear in both branches, not be truncated as a false cycle"
+        );
     }
 }

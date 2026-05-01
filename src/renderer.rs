@@ -159,14 +159,7 @@ pub fn render(doc: &Document, index: &ProjectIndex) -> String {
                     // for this document — use them directly instead of re-deriving paths.
                     if let Some(current_entry) = find_nav_entry(&index.nav_tree, &doc.path) {
                         for child in &current_entry.children {
-                            render_nav_entry(
-                                &mut html,
-                                child,
-                                index,
-                                current_dir,
-                                1,
-                                *maxdepth,
-                            );
+                            render_nav_entry(&mut html, child, index, current_dir, 1, *maxdepth);
                         }
                     }
                     let _ = writeln!(html, "</ul>");
@@ -207,7 +200,10 @@ fn render_nav_entry(
         return;
     }
 
-    let link_text = index.document_titles.get(&entry.path).unwrap_or(&entry.path);
+    let link_text = index
+        .document_titles
+        .get(&entry.path)
+        .unwrap_or(&entry.path);
 
     let target_html = std::path::PathBuf::from(&entry.path).with_extension("html");
     let relative_path = pathdiff::diff_paths(&target_html, current_dir).unwrap_or(target_html);
@@ -220,14 +216,7 @@ fn render_nav_entry(
     if !entry.children.is_empty() && maxdepth.is_none_or(|m| current_depth < m) {
         let _ = writeln!(html, "\n<ul>");
         for child in &entry.children {
-            render_nav_entry(
-                html,
-                child,
-                index,
-                current_dir,
-                current_depth + 1,
-                maxdepth,
-            );
+            render_nav_entry(html, child, index, current_dir, current_depth + 1, maxdepth);
         }
         let _ = write!(html, "</ul>\n  ");
     }
@@ -629,8 +618,8 @@ mod tests {
             vec![Node::Directive(Directive::Toctree {
                 paths: vec!["cycle".to_string()],
                 maxdepth: None,
-ignored_options: vec![],
-})],
+                ignored_options: vec![],
+            })],
         );
 
         // And a ProjectIndex that represents this cycle but is truncated by the analyzer
@@ -716,12 +705,18 @@ ignored_options: vec![],
 
         // Then — child appears but grandchild is suppressed by maxdepth: 1
         assert!(result.contains("Child"), "child should be rendered");
-        assert!(!result.contains("Grandchild"), "grandchild must be suppressed by maxdepth:1");
+        assert!(
+            !result.contains("Grandchild"),
+            "grandchild must be suppressed by maxdepth:1"
+        );
     }
 
     // ── find_nav_entry ────────────────────────────────────────────────────────
 
-    fn make_entry(path: &str, children: Vec<crate::analyzer::NavEntry>) -> crate::analyzer::NavEntry {
+    fn make_entry(
+        path: &str,
+        children: Vec<crate::analyzer::NavEntry>,
+    ) -> crate::analyzer::NavEntry {
         crate::analyzer::NavEntry {
             title: path.to_string(),
             path: path.to_string(),
@@ -769,7 +764,9 @@ ignored_options: vec![],
         // Given
         let entry = make_entry("page.rst", vec![]);
         let mut index = ProjectIndex::default();
-        index.document_titles.insert("page.rst".to_string(), "My Page".to_string());
+        index
+            .document_titles
+            .insert("page.rst".to_string(), "My Page".to_string());
         let current_dir = std::path::Path::new("");
         let mut html = String::new();
 
@@ -792,8 +789,14 @@ ignored_options: vec![],
         render_nav_entry(&mut html, &entry, &index, current_dir, 1, None);
 
         // Then — path is used as fallback link text
-        assert!(html.contains("section/page.rst"), "path should be used as fallback title");
-        assert!(html.contains("section/page.html"), "href should point to html");
+        assert!(
+            html.contains("section/page.rst"),
+            "path should be used as fallback title"
+        );
+        assert!(
+            html.contains("section/page.html"),
+            "href should point to html"
+        );
     }
 
     #[test]
@@ -802,8 +805,12 @@ ignored_options: vec![],
         let child = make_entry("child.rst", vec![]);
         let entry = make_entry("parent.rst", vec![child]);
         let mut index = ProjectIndex::default();
-        index.document_titles.insert("parent.rst".to_string(), "Parent".to_string());
-        index.document_titles.insert("child.rst".to_string(), "Child".to_string());
+        index
+            .document_titles
+            .insert("parent.rst".to_string(), "Parent".to_string());
+        index
+            .document_titles
+            .insert("child.rst".to_string(), "Child".to_string());
         let current_dir = std::path::Path::new("");
         let mut html = String::new();
 
@@ -822,8 +829,12 @@ ignored_options: vec![],
         let child = make_entry("child.rst", vec![]);
         let entry = make_entry("parent.rst", vec![child]);
         let mut index = ProjectIndex::default();
-        index.document_titles.insert("parent.rst".to_string(), "Parent".to_string());
-        index.document_titles.insert("child.rst".to_string(), "Child".to_string());
+        index
+            .document_titles
+            .insert("parent.rst".to_string(), "Parent".to_string());
+        index
+            .document_titles
+            .insert("child.rst".to_string(), "Child".to_string());
         let current_dir = std::path::Path::new("");
         let mut html = String::new();
 
@@ -832,8 +843,14 @@ ignored_options: vec![],
 
         // Then
         assert!(html.contains("Parent"));
-        assert!(!html.contains("Child"), "child must be suppressed when depth == maxdepth");
-        assert!(!html.contains("<ul>"), "nested list must not be emitted when depth == maxdepth");
+        assert!(
+            !html.contains("Child"),
+            "child must be suppressed when depth == maxdepth"
+        );
+        assert!(
+            !html.contains("<ul>"),
+            "nested list must not be emitted when depth == maxdepth"
+        );
     }
 
     #[test]
@@ -848,7 +865,10 @@ ignored_options: vec![],
         render_nav_entry(&mut html, &entry, &index, current_dir, 2, Some(1));
 
         // Then — nothing rendered
-        assert!(html.is_empty(), "nothing should be rendered when depth > maxdepth");
+        assert!(
+            html.is_empty(),
+            "nothing should be rendered when depth > maxdepth"
+        );
     }
 
     #[test]
@@ -856,7 +876,9 @@ ignored_options: vec![],
         // Given — the current document is inside a subdirectory
         let entry = make_entry("page.rst", vec![]);
         let mut index = ProjectIndex::default();
-        index.document_titles.insert("page.rst".to_string(), "Top Page".to_string());
+        index
+            .document_titles
+            .insert("page.rst".to_string(), "Top Page".to_string());
         let current_dir = std::path::Path::new("sub/dir");
         let mut html = String::new();
 
@@ -864,6 +886,9 @@ ignored_options: vec![],
         render_nav_entry(&mut html, &entry, &index, current_dir, 1, None);
 
         // Then — href should be relative (../../page.html)
-        assert!(html.contains("../../page.html"), "href must be relative to current_dir");
+        assert!(
+            html.contains("../../page.html"),
+            "href must be relative to current_dir"
+        );
     }
 }
