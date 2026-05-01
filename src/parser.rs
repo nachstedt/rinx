@@ -58,9 +58,9 @@ pub fn parse(path: &str, input: &str) -> Document {
     }
 
     if !diagnostics.is_empty() {
-        eprintln!("Diagnostics for '{}':", path);
+        eprintln!("Diagnostics for '{path}':");
         for diag in &diagnostics {
-            eprintln!("  - {}", diag);
+            eprintln!("  - {diag}");
         }
     }
 
@@ -133,11 +133,10 @@ fn try_parse_directive(
                 let opt_name = line.split(':').nth(1).unwrap_or("");
                 match opt_name {
                     "maxdepth" => {
-                        if let Some(rest) = line.strip_prefix(":maxdepth:") {
-                            if let Ok(depth) = rest.trim().parse::<usize>() {
+                        if let Some(rest) = line.strip_prefix(":maxdepth:")
+                            && let Ok(depth) = rest.trim().parse::<usize>() {
                                 maxdepth = Some(depth);
                             }
-                        }
                     }
                     "numbered" | "caption" | "name" | "titlesonly" | "glob" | "reversed"
                     | "hidden" | "includehidden" => {
@@ -145,8 +144,7 @@ fn try_parse_directive(
                     }
                     _ => {
                         diagnostics.push(format!(
-                            "Invalid or non-standard Sphinx toctree option encountered: {}",
-                            line
+                            "Invalid or non-standard Sphinx toctree option encountered: {line}"
                         ));
                     }
                 }
@@ -759,7 +757,7 @@ mod tests {
 
         for opt in standard_options {
             // Given
-            let input = format!(".. toctree::\n   :{}:\n\n   foo", opt);
+            let input = format!(".. toctree::\n   :{opt}:\n\n   foo");
 
             // When
             let doc = parse("test.rst", &input);
@@ -767,8 +765,7 @@ mod tests {
             // Then
             assert!(
                 doc.diagnostics.is_empty(),
-                "Option :{} generated a diagnostic!",
-                opt
+                "Option :{opt} generated a diagnostic!"
             );
 
             if let Node::Directive(Directive::Toctree {
@@ -776,7 +773,7 @@ mod tests {
             }) = &doc.nodes[0]
             {
                 assert_eq!(ignored_options.len(), 1);
-                assert_eq!(ignored_options[0], format!(":{}:", opt));
+                assert_eq!(ignored_options[0], format!(":{opt}:"));
             } else {
                 panic!("Expected Toctree directive");
             }

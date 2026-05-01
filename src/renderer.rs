@@ -624,19 +624,21 @@ mod tests {
 
         // And a ProjectIndex that represents this cycle but is truncated by the analyzer
         // to a finite depth (e.g. depth 2)
-        let mut index = ProjectIndex::default();
-        index.nav_tree = vec![crate::analyzer::NavEntry {
-            path: "cycle.rst".to_string(),
-            title: "Cycle".to_string(),
-            children: vec![crate::analyzer::NavEntry {
-                path: "cycle.rst".to_string(), // Cycle back to the same path
+        let index = ProjectIndex {
+            nav_tree: vec![crate::analyzer::NavEntry {
+                path: "cycle.rst".to_string(),
                 title: "Cycle".to_string(),
-                children: vec![], // Truncated here
+                children: vec![crate::analyzer::NavEntry {
+                    path: "cycle.rst".to_string(), // Cycle back to the same path
+                    title: "Cycle".to_string(),
+                    children: vec![], // Truncated here
+                }],
             }],
-        }];
-        index
-            .document_titles
-            .insert("cycle.rst".to_string(), "Cycle".to_string());
+            document_titles: [("cycle.rst".to_string(), "Cycle".to_string())]
+                .into_iter()
+                .collect(),
+            ..ProjectIndex::default()
+        };
 
         // When
         // This would stack overflow if the renderer searched from the root for every child
