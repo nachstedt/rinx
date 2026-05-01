@@ -63,7 +63,7 @@ pub fn render_page(
 struct ResolvedNavEntry {
     title: String,
     href: String,
-    children: Vec<ResolvedNavEntry>,
+    children: Vec<Self>,
 }
 
 /// Converts a nav tree's `.rst` paths into relative `.html` hrefs
@@ -119,7 +119,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
                             if let Some(target_path) = index.targets.get(target) {
                                 let current_dir = std::path::Path::new(doc_path)
                                     .parent()
-                                    .unwrap_or(std::path::Path::new(""));
+                                    .unwrap_or_else(|| std::path::Path::new(""));
                                 let target_html_path =
                                     std::path::Path::new(target_path).with_extension("html");
 
@@ -152,7 +152,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
                     let _ = writeln!(html, "<ul>");
                     let current_dir = std::path::Path::new(doc_path)
                         .parent()
-                        .unwrap_or(std::path::Path::new(""));
+                        .unwrap_or_else(|| std::path::Path::new(""));
                     // The nav tree already contains pre-resolved, normalized children
                     // for this document — use them directly instead of re-deriving paths.
                     if let Some(current_entry) = find_nav_entry(&index.nav_tree, &doc.path) {
@@ -167,7 +167,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
 
                     let current_dir = std::path::Path::new(doc_path)
                         .parent()
-                        .unwrap_or(std::path::Path::new(""));
+                        .unwrap_or_else(|| std::path::Path::new(""));
                     let image_path =
                         std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
                     let relative_path =
@@ -632,8 +632,7 @@ mod tests {
                     children: vec![], // Truncated here
                 }],
             }],
-            document_titles: [("cycle.rst".to_string(), "Cycle".to_string())]
-                .into_iter()
+            document_titles: std::iter::once(("cycle.rst".to_string(), "Cycle".to_string()))
                 .collect(),
             ..ProjectIndex::default()
         };

@@ -202,12 +202,10 @@ fn try_parse_heading(
         && next_line.len() >= line.trim().len()
     {
         let adornment_char = next_line.chars().next().expect("non-empty underline");
-        let level = if let Some(pos) = adornment_order.iter().position(|&c| c == adornment_char) {
-            pos + 1
-        } else {
+        let level = adornment_order.iter().position(|&c| c == adornment_char).map_or_else(|| {
             adornment_order.push(adornment_char);
             adornment_order.len()
-        };
+        }, |pos| pos + 1);
 
         #[allow(clippy::cast_possible_truncation)]
         let level = level as u8;
