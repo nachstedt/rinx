@@ -12,3 +12,4 @@
 - After every code modification session, run `cargo clippy --tests` and resolve all warnings before finishing.
 - After every code modification session, run `cargo fmt`.
 - Documentation builds should fail loudly if content invariants (like missing diagram images) are violated.
+- Tests should always follow the Given-When-Then pattern.

@@ -88,4 +88,36 @@ version = "1.0"
         assert_eq!(config.project, "Overridden");
         assert_eq!(config.version, "");
     }
+
+    #[test]
+    fn test_deserialize_rejects_project_table_section() {
+        // Given
+        // Regression: benchmark.py previously generated '[project]\nname = "..."\n'
+        // which TOML parses as a table, causing "invalid type: map, expected a string".
+        // The correct flat format must be used instead.
+        let toml_str = "[project]\nname = \"CPython Benchmark\"\n";
+
+        // When
+        let result: Result<SiteConfig, _> = toml::from_str(toml_str);
+
+        // Then
+        assert!(
+            result.is_err(),
+            "A [project] section should be rejected; use flat 'project = \"...\"' format"
+        );
+    }
+
+    #[test]
+    fn test_deserialize_benchmark_generated_format() {
+        // Given
+        // Regression: this is the exact string benchmark.py writes to rusty_sphinx.toml.
+        // If this test breaks, the benchmark config generation must be updated to match.
+        let toml_str = "project = \"CPython Benchmark\"\n";
+
+        // When
+        let config: SiteConfig = toml::from_str(toml_str).unwrap();
+
+        // Then
+        assert_eq!(config.project, "CPython Benchmark");
+    }
 }
