@@ -30,7 +30,7 @@ pub fn greeting(name: &str) -> String {
 pub fn process_rst(path: &str, input: &str) -> String {
     let doc = parser::parse(path, input);
     let index = analyzer::analyze(&doc);
-    renderer::render(&doc, &index)
+    renderer::render(&doc, &index, path)
 }
 
 #[cfg(test)]
