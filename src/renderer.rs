@@ -82,10 +82,8 @@ fn resolve_nav_hrefs(
             let path_without_ext = entry.path.strip_suffix(".rst").unwrap_or(&entry.path);
             let target_html = format!("{path_without_ext}.html");
             let target = std::path::Path::new(&target_html);
-            let href = pathdiff::diff_paths(target, doc_dir).map_or_else(
-                || target_html.clone(),
-                |p| p.to_string_lossy().replace('\\', "/"),
-            );
+            let href = pathdiff::diff_paths(target, doc_dir)
+                .map_or_else(|| target_html, |p| p.to_string_lossy().replace('\\', "/"));
 
             ResolvedNavEntry {
                 title: entry.title.clone(),
