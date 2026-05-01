@@ -24,6 +24,8 @@ pub fn parse(path: &str, input: &str) -> Document {
     let mut adornment_order: Vec<char> = Vec::new();
 
     let mut i = 0;
+    let mut diagnostics = Vec::new();
+
     while i < lines.len() {
         let line = lines[i].trim_end();
 
@@ -32,7 +34,7 @@ pub fn parse(path: &str, input: &str) -> Document {
             continue;
         }
 
-        if let Some((consumed, node)) = try_parse_directive(&lines, i) {
+        if let Some((consumed, node)) = try_parse_directive(&lines, i, &mut diagnostics) {
             nodes.push(node);
             i += consumed;
             continue;
@@ -55,7 +57,16 @@ pub fn parse(path: &str, input: &str) -> Document {
         i += consumed;
     }
 
-    Document::new(path.to_string(), nodes)
+    if !diagnostics.is_empty() {
+        eprintln!("Diagnostics for '{path}':");
+        for diag in &diagnostics {
+            eprintln!("  - {diag}");
+        }
+    }
+
+    let mut doc = Document::new(path.to_string(), nodes);
+    doc.diagnostics = diagnostics;
+    doc
 }
 
 fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)> {
@@ -69,7 +80,11 @@ fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)> {
     None
 }
 
-fn try_parse_directive(lines: &[&str], i: usize) -> Option<(usize, Node)> {
+fn try_parse_directive(
+    lines: &[&str],
+    i: usize,
+    diagnostics: &mut Vec<String>,
+) -> Option<(usize, Node)> {
     let line = lines[i].trim_end();
     if !(line.trim().starts_with(".. ") && line.contains("::")) {
         return None;
@@ -105,12 +120,44 @@ fn try_parse_directive(lines: &[&str], i: usize) -> Option<(usize, Node)> {
     }
 
     let directive = if name == "toctree" {
-        let paths = body_lines[start..]
-            .iter()
-            .map(|l| l.trim_start().to_string())
-            .filter(|l| !l.is_empty())
-            .collect();
-        Directive::Toctree { paths }
+        let mut paths = Vec::new();
+        let mut maxdepth = None;
+        let mut ignored_options = Vec::new();
+
+        for l in &body_lines[start..] {
+            let line = l.trim();
+            if line.is_empty() {
+                continue;
+            }
+            if line.starts_with(':') {
+                let opt_name = line.split(':').nth(1).unwrap_or("");
+                match opt_name {
+                    "maxdepth" => {
+                        if let Some(rest) = line.strip_prefix(":maxdepth:")
+                            && let Ok(depth) = rest.trim().parse::<usize>()
+                        {
+                            maxdepth = Some(depth);
+                        }
+                    }
+                    "numbered" | "caption" | "name" | "titlesonly" | "glob" | "reversed"
+                    | "hidden" | "includehidden" => {
+                        ignored_options.push(line.to_string());
+                    }
+                    _ => {
+                        diagnostics.push(format!(
+                            "Invalid or non-standard Sphinx toctree option encountered: {line}"
+                        ));
+                    }
+                }
+                continue;
+            }
+            paths.push(line.to_string());
+        }
+        Directive::Toctree {
+            paths,
+            maxdepth,
+            ignored_options,
+        }
     } else if name == "plantuml" {
         let mut body = String::new();
         for l in &body_lines[start..] {
@@ -558,6 +605,33 @@ mod tests {
             doc.nodes[0],
             Node::Directive(Directive::Toctree {
                 paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
+            })
+        );
+        assert_eq!(
+            doc.nodes[1],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Next Para".to_string())])
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_directive_with_maxdepth() {
+        // Given
+        let input =
+            ".. toctree::\n   :maxdepth: 2\n   \n   team_a/index\n   team_b/index\n\nNext Para";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Directive(Directive::Toctree {
+                paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
+                maxdepth: Some(2),
+                ignored_options: vec![],
             })
         );
         assert_eq!(
@@ -640,5 +714,70 @@ mod tests {
                 crate::ast::InlineNode::Text(" link.".to_string()),
             ])
         );
+    }
+
+    #[test]
+    fn test_parse_toctree_collects_diagnostic_for_invalid_option() {
+        // Given
+        let input = ".. toctree::\n   :invalid_opt:\n\n   foo";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.diagnostics.len(), 1);
+        assert!(doc.diagnostics[0].contains("Invalid or non-standard Sphinx toctree option"));
+        assert!(doc.diagnostics[0].contains(":invalid_opt:"));
+
+        if let Node::Directive(Directive::Toctree {
+            paths,
+            ignored_options,
+            ..
+        }) = &doc.nodes[0]
+        {
+            assert_eq!(paths.len(), 1);
+            assert_eq!(paths[0], "foo");
+            assert!(ignored_options.is_empty());
+        } else {
+            panic!("Expected Toctree directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_toctree_whitelists_standard_options() {
+        let standard_options = vec![
+            "numbered",
+            "caption: My Caption",
+            "name: myname",
+            "titlesonly",
+            "glob",
+            "reversed",
+            "hidden",
+            "includehidden",
+        ];
+
+        for opt in standard_options {
+            // Given
+            let input = format!(".. toctree::\n   :{opt}:\n\n   foo");
+
+            // When
+            let doc = parse("test.rst", &input);
+
+            // Then
+            assert!(
+                doc.diagnostics.is_empty(),
+                "Option :{opt} generated a diagnostic!"
+            );
+
+            if let Node::Directive(Directive::Toctree {
+                ignored_options, ..
+            }) = &doc.nodes[0]
+            {
+                assert_eq!(ignored_options.len(), 1);
+                assert_eq!(ignored_options[0], format!(":{opt}:"));
+            } else {
+                panic!("Expected Toctree directive");
+            }
+        }
     }
 }
