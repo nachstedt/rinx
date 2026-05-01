@@ -67,7 +67,7 @@ alias(
     doc_dir = TARGET_DIR / "Doc"
     
     # Create config
-    (doc_dir / "rusty_sphinx.toml").write_text('[project]\nname = "CPython Benchmark"\n')
+    (doc_dir / "rusty_sphinx.toml").write_text('project = "CPython Benchmark"\n')
     
     # Create template
     (doc_dir / "custom_template.html").write_text('<!DOCTYPE html><html><body><h1>CPython Benchmark</h1>{{ body }}</body></html>\n')
