@@ -134,9 +134,10 @@ fn try_parse_directive(
                 match opt_name {
                     "maxdepth" => {
                         if let Some(rest) = line.strip_prefix(":maxdepth:")
-                            && let Ok(depth) = rest.trim().parse::<usize>() {
-                                maxdepth = Some(depth);
-                            }
+                            && let Ok(depth) = rest.trim().parse::<usize>()
+                        {
+                            maxdepth = Some(depth);
+                        }
                     }
                     "numbered" | "caption" | "name" | "titlesonly" | "glob" | "reversed"
                     | "hidden" | "includehidden" => {
