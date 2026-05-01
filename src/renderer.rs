@@ -98,7 +98,7 @@ fn resolve_nav_hrefs(
 
 /// Renders a Document into an HTML string.
 #[must_use]
-pub fn render(doc: &Document, index: &ProjectIndex) -> String {
+pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
     let mut html = String::new();
 
     for node in &doc.nodes {
@@ -119,7 +119,7 @@ pub fn render(doc: &Document, index: &ProjectIndex) -> String {
                         crate::ast::InlineNode::Reference(target) => {
                             let target_escaped = html_escape::encode_text(target);
                             if let Some(target_path) = index.targets.get(target) {
-                                let current_dir = std::path::Path::new(&doc.path)
+                                let current_dir = std::path::Path::new(doc_path)
                                     .parent()
                                     .unwrap_or(std::path::Path::new(""));
                                 let target_html_path =
@@ -152,7 +152,7 @@ pub fn render(doc: &Document, index: &ProjectIndex) -> String {
             Node::Directive(directive) => match directive {
                 Directive::Toctree { maxdepth, .. } => {
                     let _ = writeln!(html, "<ul>");
-                    let current_dir = std::path::Path::new(&doc.path)
+                    let current_dir = std::path::Path::new(doc_path)
                         .parent()
                         .unwrap_or(std::path::Path::new(""));
                     // The nav tree already contains pre-resolved, normalized children
@@ -167,7 +167,7 @@ pub fn render(doc: &Document, index: &ProjectIndex) -> String {
                 Directive::PlantUml(content) => {
                     let escaped_hash = html_escape::encode_text(content.hash());
 
-                    let current_dir = std::path::Path::new(&doc.path)
+                    let current_dir = std::path::Path::new(doc_path)
                         .parent()
                         .unwrap_or(std::path::Path::new(""));
                     let image_path =
@@ -250,7 +250,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(result, "");
@@ -276,7 +276,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(
@@ -301,7 +301,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(
@@ -344,7 +344,7 @@ mod tests {
         }];
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(
@@ -366,7 +366,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(result, "<h1>Top</h1>\n");
@@ -385,7 +385,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(result, "<h2>Sub</h2>\n");
@@ -404,7 +404,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(result, "<h6>Deep</h6>\n");
@@ -423,7 +423,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(result, "<h6>VeryDeep</h6>\n");
@@ -438,7 +438,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(result, "<a name=\"section-1\"></a>\n");
@@ -459,7 +459,7 @@ mod tests {
             .insert("other-section".to_string(), "other_file.rst".to_string());
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then
         assert_eq!(
@@ -485,7 +485,7 @@ mod tests {
         );
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then the link should point backwards up out of team_b/ and into team_a/
         assert_eq!(
@@ -507,7 +507,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then the image src should point backwards up out of team_b/ and examples/ and into _images/
         let expected = format!(
@@ -642,7 +642,7 @@ mod tests {
 
         // When
         // This would stack overflow if the renderer searched from the root for every child
-        let html = render(&doc, &index);
+        let html = render(&doc, &index, &doc.path);
 
         // Then
         // The output should contain nested lists reflecting the finite depth of nav_tree
@@ -664,7 +664,7 @@ mod tests {
         let index = ProjectIndex::default(); // empty nav_tree
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then — no crash, just an empty list
         assert_eq!(result, "<ul>\n</ul>\n");
@@ -703,7 +703,7 @@ mod tests {
         }];
 
         // When
-        let result = render(&doc, &index);
+        let result = render(&doc, &index, &doc.path);
 
         // Then — child appears but grandchild is suppressed by maxdepth: 1
         assert!(result.contains("Child"), "child should be rendered");

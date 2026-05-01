@@ -55,6 +55,7 @@ def _rusty_sphinx_site_impl(ctx):
                 "render",
                 "--input", ast_file.path,
                 "--index", index_out.path,
+                "--doc-path", rel_path,
                 "--output", html_out.path,
                 "--config", config_file.path,
                 "--template", template_file.path,
@@ -92,6 +93,27 @@ def _rusty_sphinx_site_impl(ctx):
             progress_message = "Bundling Site Images",
         )
         final_outputs.append(images_out)
+
+        # ── Phase 4.5: Validate Images ────────────────────────────────────────
+        # This action ensures that all PlantUML diagrams referenced in ASTs
+        # have corresponding SVG files in the bundle.
+        validation_sentinel = ctx.actions.declare_file(ctx.label.name + ".images.validated")
+        val_args = ctx.actions.args()
+        val_args.add("validate_images")
+        val_args.add("--image-dir", images_out.path)
+        val_args.add("--output", validation_sentinel.path)
+        val_args.add("--inputs")
+        val_args.add_all(ast_list)
+
+        ctx.actions.run(
+            executable = worker,
+            arguments = [val_args],
+            inputs = ast_list + [images_out],
+            outputs = [validation_sentinel],
+            mnemonic = "RustySphinxValidateImages",
+            progress_message = "Validating diagram images for %s" % ctx.label.name,
+        )
+        final_outputs.append(validation_sentinel)
 
     # ── Phase 5: Copy CSS ─────────────────────────────────────────────────────
     css_out = ctx.actions.declare_file(ctx.label.name + "_site_out/default.css")

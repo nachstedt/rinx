@@ -9,7 +9,8 @@
 //! rusty-sphinx parse  --input <file.rst>  --output <file.ast>
 //! rusty-sphinx validate_toctree --input <file.ast>  [--allowed <path>...]
 //! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
-//! rusty-sphinx render --input <file.ast>  --index <project.index>  --output <file.html>
+//! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html>
+//! rusty-sphinx validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>
 //! ```
 //!
 //! # Legacy mode (quick preview)
@@ -82,13 +83,14 @@ fn process_render(
     index_json: &str,
     config: &config::SiteConfig,
     template_str: &str,
+    doc_path: &str,
 ) -> Result<String> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
     let index: analyzer::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
 
-    let body = renderer::render(&doc, &index);
+    let body = renderer::render(&doc, &index, doc_path);
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -103,16 +105,46 @@ fn process_render(
         })
         .unwrap_or("");
 
-    let css_path = renderer::css_relative_path(&doc.path, "default.css");
+    let css_path = renderer::css_relative_path(doc_path, "default.css");
     renderer::render_page(
         &body,
         template_str,
         config,
         &css_path,
         page_title,
-        &doc.path,
+        doc_path,
         &index.nav_tree,
     )
+}
+
+fn process_validate_images(ast_jsons: &[String], image_dir: &str) -> Result<()> {
+    let mut missing_images = Vec::new();
+
+    for json in ast_jsons {
+        let doc: ast::Document = serde_json::from_str(json).context("Failed to deserialize AST")?;
+        for node in &doc.nodes {
+            if let ast::Node::Directive(ast::Directive::PlantUml(content)) = node {
+                let hash = content.hash();
+                let svg_name = format!("{hash}.svg");
+                let svg_path = std::path::Path::new(image_dir).join(&svg_name);
+                if !svg_path.exists() {
+                    missing_images.push(format!(
+                        "Image {svg_name} missing for document {}",
+                        doc.path
+                    ));
+                }
+            }
+        }
+    }
+
+    if missing_images.is_empty() {
+        Ok(())
+    } else {
+        Err(anyhow!(
+            "Image validation failed:\n{}",
+            missing_images.join("\n")
+        ))
+    }
 }
 
 fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Result<()> {
@@ -163,6 +195,7 @@ fn cmd_render(args: &[String]) -> Result<()> {
     let output = flag_value(args, "--output")?;
     let config_path = flag_value(args, "--config")?;
     let template_path = flag_value(args, "--template")?;
+    let doc_path = flag_value(args, "--doc-path")?;
 
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Error reading config '{config_path}'"))?;
@@ -177,7 +210,13 @@ fn cmd_render(args: &[String]) -> Result<()> {
     let index_json =
         fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
 
-    let html = process_render(&ast_json, &index_json, &site_config, &template_str)?;
+    let html = process_render(
+        &ast_json,
+        &index_json,
+        &site_config,
+        &template_str,
+        &doc_path,
+    )?;
     fs::write(&output, html).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
@@ -208,6 +247,25 @@ fn cmd_extract_diagrams(args: &[String]) -> Result<()> {
     Ok(())
 }
 
+fn cmd_validate_images(args: &[String]) -> Result<()> {
+    let inputs = flag_values(args, "--inputs")?;
+    let image_dir = flag_value(args, "--image-dir")?;
+    let output = flag_value(args, "--output").ok();
+
+    let ast_jsons: Vec<String> = inputs
+        .iter()
+        .map(|p| fs::read_to_string(p).with_context(|| format!("Error reading '{p}'")))
+        .collect::<Result<_>>()?;
+
+    process_validate_images(&ast_jsons, &image_dir)?;
+
+    if let Some(out_path) = output {
+        fs::write(&out_path, "OK").with_context(|| format!("Error writing '{out_path}'"))?;
+    }
+
+    Ok(())
+}
+
 fn cmd_legacy(path: &str) -> Result<()> {
     let rst = fs::read_to_string(path).with_context(|| format!("Error reading '{path}'"))?;
     let html = process_rst(path, &rst);
@@ -222,6 +280,7 @@ fn run(args: &[String]) -> Result<()> {
         Some("parse") => cmd_parse(&args[2..]),
         Some("validate_toctree") => cmd_validate_toctree(&args[2..]),
         Some("extract_diagrams") => cmd_extract_diagrams(&args[2..]),
+        Some("validate_images") => cmd_validate_images(&args[2..]),
         Some("index") => cmd_index(&args[2..]),
         Some("render") => cmd_render(&args[2..]),
         Some(path) if !path.starts_with('-') => cmd_legacy(path),
@@ -234,7 +293,8 @@ fn run(args: &[String]) -> Result<()> {
                    {program} extract_diagrams --input <file.ast> --outdir <puml_dir>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
-                   {program} render --input <file.ast> --index <project.index> --output <file.html> --config <config.toml> --template <template.html>"
+                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html>\n\
+                   {program} validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>"
             );
             Err(anyhow!(msg))
         }
@@ -377,7 +437,7 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let html = process_render(doc, index, &config, template).unwrap();
+        let html = process_render(doc, index, &config, template, "test.rst").unwrap();
 
         // Then
         assert!(html.contains("<h1>Title</h1>"));
@@ -433,5 +493,188 @@ mod tests {
         assert!(!path.exists());
 
         let _ = std::fs::remove_dir_all(outdir);
+    }
+
+    // ── process_validate_images ───────────────────────────────────────────────
+
+    fn make_plantuml_ast(doc_path: &str, body: &str) -> String {
+        let content = ast::HashedContent::new(body.to_string());
+        let doc = ast::Document::new(
+            doc_path.to_string(),
+            vec![ast::Node::Directive(ast::Directive::PlantUml(content))],
+        );
+        serde_json::to_string(&doc).unwrap()
+    }
+
+    fn make_empty_ast(doc_path: &str) -> String {
+        let doc = ast::Document::new(doc_path.to_string(), vec![]);
+        serde_json::to_string(&doc).unwrap()
+    }
+
+    fn temp_image_dir() -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "validate_images_test_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn test_process_validate_images_succeeds_when_no_diagrams_present() {
+        // Given — a document with no PlantUML directives
+        let ast_json = make_empty_ast("test.rst");
+        let image_dir = temp_image_dir();
+
+        // When
+        let result = process_validate_images(&[ast_json], image_dir.to_str().unwrap());
+
+        // Then — no diagrams means nothing to validate, should pass
+        assert!(result.is_ok());
+
+        let _ = std::fs::remove_dir_all(image_dir);
+    }
+
+    #[test]
+    fn test_process_validate_images_succeeds_when_all_svgs_present() {
+        // Given — a document with a PlantUML diagram whose SVG exists in image_dir
+        let body = "A -> B";
+        let content = ast::HashedContent::new(body.to_string());
+        let expected_hash = content.hash().to_string();
+        let ast_json = make_plantuml_ast("team_a/index.rst", body);
+
+        let image_dir = temp_image_dir();
+        std::fs::write(image_dir.join(format!("{expected_hash}.svg")), "<svg/>").unwrap();
+
+        // When
+        let result = process_validate_images(&[ast_json], image_dir.to_str().unwrap());
+
+        // Then
+        assert!(result.is_ok());
+
+        let _ = std::fs::remove_dir_all(image_dir);
+    }
+
+    #[test]
+    fn test_process_validate_images_fails_when_svg_is_missing() {
+        // Given — a PlantUML diagram but the image_dir is empty
+        let body = "A -> B";
+        let content = ast::HashedContent::new(body.to_string());
+        let expected_hash = content.hash().to_string();
+        let ast_json = make_plantuml_ast("team_a/index.rst", body);
+
+        let image_dir = temp_image_dir();
+        // Do NOT write the .svg file
+
+        // When
+        let result = process_validate_images(&[ast_json], image_dir.to_str().unwrap());
+
+        // Then
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains(&expected_hash),
+            "error should mention the missing hash"
+        );
+        assert!(
+            msg.contains("team_a/index.rst"),
+            "error should mention the source document"
+        );
+
+        let _ = std::fs::remove_dir_all(image_dir);
+    }
+
+    #[test]
+    fn test_process_validate_images_reports_all_missing_svgs() {
+        // Given — two documents each with a distinct diagram, neither SVG present
+        let body_a = "A -> B";
+        let body_b = "C -> D";
+        let hash_a = ast::HashedContent::new(body_a.to_string())
+            .hash()
+            .to_string();
+        let hash_b = ast::HashedContent::new(body_b.to_string())
+            .hash()
+            .to_string();
+        let ast_a = make_plantuml_ast("team_a/index.rst", body_a);
+        let ast_b = make_plantuml_ast("team_b/index.rst", body_b);
+
+        let image_dir = temp_image_dir();
+
+        // When
+        let result = process_validate_images(&[ast_a, ast_b], image_dir.to_str().unwrap());
+
+        // Then — both missing images are reported in a single error
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains(&hash_a), "hash_a should be mentioned");
+        assert!(msg.contains(&hash_b), "hash_b should be mentioned");
+        assert!(
+            msg.contains("team_a/index.rst"),
+            "doc a should be mentioned"
+        );
+        assert!(
+            msg.contains("team_b/index.rst"),
+            "doc b should be mentioned"
+        );
+
+        let _ = std::fs::remove_dir_all(image_dir);
+    }
+
+    #[test]
+    fn test_process_validate_images_succeeds_with_empty_input_list() {
+        // Given — no AST files at all
+        let image_dir = temp_image_dir();
+
+        // When
+        let result = process_validate_images(&[], image_dir.to_str().unwrap());
+
+        // Then — nothing to validate
+        assert!(result.is_ok());
+
+        let _ = std::fs::remove_dir_all(image_dir);
+    }
+
+    #[test]
+    fn test_process_validate_images_returns_error_for_invalid_ast_json() {
+        // Given — invalid JSON
+        let bad_json = "not valid json".to_string();
+
+        let image_dir = temp_image_dir();
+
+        // When
+        let result = process_validate_images(&[bad_json], image_dir.to_str().unwrap());
+
+        // Then — deserialisation failure is surfaced as an error
+        assert!(result.is_err());
+
+        let _ = std::fs::remove_dir_all(image_dir);
+    }
+
+    #[test]
+    fn test_process_validate_images_ignores_non_plantuml_nodes() {
+        // Given — a document with only headings and paragraphs, no diagrams
+        let doc = ast::Document::new(
+            "test.rst".to_string(),
+            vec![
+                ast::Node::Heading {
+                    level: 1,
+                    text: "Title".to_string(),
+                },
+                ast::Node::Paragraph(vec![ast::InlineNode::Text("text".to_string())]),
+            ],
+        );
+        let ast_json = serde_json::to_string(&doc).unwrap();
+        let image_dir = temp_image_dir();
+
+        // When
+        let result = process_validate_images(&[ast_json], image_dir.to_str().unwrap());
+
+        // Then — non-diagram nodes are ignored, validation passes
+        assert!(result.is_ok());
+
+        let _ = std::fs::remove_dir_all(image_dir);
     }
 }

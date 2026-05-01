@@ -3,6 +3,7 @@
 - Name types after what they do, not what they are used for.
 - Enforce invariants at the type level using opaque types with smart constructors ("parse, don't validate").
 - In a build system, deserialization should validate invariants strictly and return errors on violations.
+- All functions — including private and helper functions — should be thoroughly unit tested.
 - Prefer a single configuration file over accumulating individual CLI flags; adding future fields requires no interface changes.
 - Configuration files should contain metadata and settings, not file paths; sandboxed build systems relocate files, breaking embedded paths.
 - Relative file paths work correctly for offline viewing; do not use inlining as a workaround for path computation.
@@ -10,3 +11,4 @@
 - Guidelines are beliefs, preferences and style choices, not factual statements about tools or technologies.
 - After every code modification session, run `cargo clippy --tests` and resolve all warnings before finishing.
 - After every code modification session, run `cargo fmt`.
+- Documentation builds should fail loudly if content invariants (like missing diagram images) are violated.
