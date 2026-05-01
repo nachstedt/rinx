@@ -1,7 +1,8 @@
 .. _home-index:
 
+#########################
 Rusty-Sphinx Example Site
-=========================
+#########################
 
 Welcome to the Rusty-Sphinx example.
 

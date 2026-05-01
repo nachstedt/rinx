@@ -21,7 +21,7 @@ use crate::ast::{Directive, Document, HashedContent, Node};
 pub fn parse(path: &str, input: &str) -> Document {
     let lines: Vec<&str> = input.lines().collect();
     let mut nodes = Vec::new();
-    let mut adornment_order: Vec<char> = Vec::new();
+    let mut adornment_order: Vec<Adornment> = Vec::new();
 
     let mut i = 0;
     let mut diagnostics = Vec::new();
@@ -185,43 +185,84 @@ fn try_parse_directive(
     Some((current - i, Node::Directive(directive)))
 }
 
-fn try_parse_heading(
-    lines: &[&str],
-    i: usize,
-    adornment_order: &mut Vec<char>,
-) -> Option<(usize, Node)> {
-    if i + 1 >= lines.len() {
-        return None;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AdornmentStyle {
+    Underline,
+    Overline,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Adornment {
+    character: char,
+    style: AdornmentStyle,
+}
+
+fn detect_adornment(lines: &[&str], i: usize) -> Option<(usize, Adornment, String)> {
+    // 1. Try 3-line pattern (Overline + Text + Underline)
+    if i + 2 < lines.len() {
+        let overline = lines[i].trim();
+        let text = lines[i + 1].trim();
+        let underline = lines[i + 2].trim();
+
+        if !overline.is_empty()
+            && overline.chars().all(|c| c.is_ascii_punctuation())
+            && overline == underline
+            && overline.len() >= text.len()
+        {
+            let adornment_char = overline.chars().next().expect("non-empty adornment");
+            return Some((
+                3,
+                Adornment {
+                    character: adornment_char,
+                    style: AdornmentStyle::Overline,
+                },
+                text.to_string(),
+            ));
+        }
     }
 
-    let line = lines[i].trim_end();
-    let next_line = lines[i + 1].trim();
+    // 2. Try 2-line pattern (Text + Underline)
+    if i + 1 < lines.len() {
+        let text = lines[i].trim();
+        let underline = lines[i + 1].trim();
 
-    if !next_line.is_empty()
-        && next_line.chars().all(|c| c.is_ascii_punctuation())
-        && next_line.len() >= line.trim().len()
-    {
-        let adornment_char = next_line.chars().next().expect("non-empty underline");
-        let level = if let Some(pos) = adornment_order.iter().position(|&c| c == adornment_char) {
-            pos + 1
-        } else {
-            adornment_order.push(adornment_char);
-            adornment_order.len()
-        };
-
-        #[allow(clippy::cast_possible_truncation)]
-        let level = level as u8;
-
-        return Some((
-            2,
-            Node::Heading {
-                level,
-                text: line.trim().to_string(),
-            },
-        ));
+        if !underline.is_empty()
+            && underline.chars().all(|c| c.is_ascii_punctuation())
+            && underline.len() >= text.len()
+        {
+            let adornment_char = underline.chars().next().expect("non-empty underline");
+            return Some((
+                2,
+                Adornment {
+                    character: adornment_char,
+                    style: AdornmentStyle::Underline,
+                },
+                text.to_string(),
+            ));
+        }
     }
 
     None
+}
+
+fn try_parse_heading(
+    lines: &[&str],
+    i: usize,
+    adornment_order: &mut Vec<Adornment>,
+) -> Option<(usize, Node)> {
+    let (consumed, adornment, text) = detect_adornment(lines, i)?;
+
+    let level = if let Some(pos) = adornment_order.iter().position(|&a| a == adornment) {
+        pos + 1
+    } else {
+        adornment_order.push(adornment);
+        adornment_order.len()
+    };
+
+    #[allow(clippy::cast_possible_truncation)]
+    let level = level as u8;
+
+    Some((consumed, Node::Heading { level, text }))
 }
 
 fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
@@ -234,22 +275,16 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
             break;
         }
 
-        // Peek at next line to ensure we don't consume a heading's text line
-        if current_pos_line + 1 < lines.len() {
-            let peek_next = lines[current_pos_line + 1].trim();
-            let is_heading = !peek_next.is_empty()
-                && peek_next.chars().all(|c| c.is_ascii_punctuation())
-                && peek_next.len() >= line.trim().len();
-            if is_heading && !paragraph_text.is_empty() {
-                break;
-            }
-        }
-
         if !paragraph_text.is_empty() {
             paragraph_text.push('\n');
         }
         paragraph_text.push_str(line.trim());
         current_pos_line += 1;
+
+        // Peek at next line to ensure we don't consume a heading's text line or overline
+        if current_pos_line < lines.len() && detect_adornment(lines, current_pos_line).is_some() {
+            break;
+        }
     }
 
     // split paragraph text by `:ref:\`target\``
@@ -779,5 +814,113 @@ mod tests {
                 panic!("Expected Toctree directive");
             }
         }
+    }
+
+    #[test]
+    fn test_parse_creates_heading_with_overline() {
+        // Given
+        let input = "#######\nHeading\n#######";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "Heading".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_overline_and_underline_distinct_levels() {
+        // Given — same char '#' but different styles
+        let input = "##########\nOverline\n##########\n\nUnderline\n#########";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: "Overline".to_string()
+            }
+        );
+        assert_eq!(
+            doc.nodes[1],
+            Node::Heading {
+                level: 2,
+                text: "Underline".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_overline_requires_exact_match_with_underline() {
+        // Given — mismatched overline/underline length
+        let input = "#######\nHeading\n######";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — should not be a heading
+        assert_eq!(doc.nodes.len(), 1);
+        match &doc.nodes[0] {
+            Node::Paragraph(_) => {}
+            _ => panic!("Expected paragraph for mismatched overline/underline"),
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_breaks_at_overline() {
+        // Given
+        let input = "Para text.\n#######\nHeading\n#######";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![crate::ast::InlineNode::Text("Para text.".to_string())])
+        );
+        assert_eq!(
+            doc.nodes[1],
+            Node::Heading {
+                level: 1,
+                text: "Heading".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_detect_adornment_overline() {
+        let lines = vec!["#######", "Heading", "#######"];
+        let result = detect_adornment(&lines, 0);
+        assert!(result.is_some());
+        let (consumed, adornment, text) = result.unwrap();
+        assert_eq!(consumed, 3);
+        assert_eq!(adornment.character, '#');
+        assert_eq!(adornment.style, AdornmentStyle::Overline);
+        assert_eq!(text, "Heading");
+    }
+
+    #[test]
+    fn test_detect_adornment_underline() {
+        let lines = vec!["Heading", "#######"];
+        let result = detect_adornment(&lines, 0);
+        assert!(result.is_some());
+        let (consumed, adornment, text) = result.unwrap();
+        assert_eq!(consumed, 2);
+        assert_eq!(adornment.character, '#');
+        assert_eq!(adornment.style, AdornmentStyle::Underline);
+        assert_eq!(text, "Heading");
     }
 }
