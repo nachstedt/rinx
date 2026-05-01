@@ -11,6 +11,7 @@ rust_library(
         "src/lib.rs",
         "src/parser.rs",
         "src/renderer.rs",
+        "src/utils.rs",
         "src/validator.rs",
     ],
     deps = all_crate_deps(

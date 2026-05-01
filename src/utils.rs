@@ -1,6 +1,7 @@
 use std::path::{Component, Path, PathBuf};
 
 /// Normalizes a path, resolving `.` and `..` components.
+#[must_use]
 pub fn normalize_path(path: &Path) -> PathBuf {
     let mut normalized = PathBuf::new();
     for component in path.components() {
