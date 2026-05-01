@@ -23,14 +23,18 @@ use anyhow::{Context, Result, anyhow};
 use rusty_sphinx::{analyzer, ast, config, parser, process_rst, renderer, validator};
 use std::env;
 use std::fs;
+use std::io::{self, Read};
 
 // ── Pure functions for arguments and logic ───────────────────────────────────
 
 fn flag_value(args: &[String], flag: &str) -> Result<String> {
+    flag_value_opt(args, flag).ok_or_else(|| anyhow!("Missing required flag '{flag}'"))
+}
+
+fn flag_value_opt(args: &[String], flag: &str) -> Option<String> {
     args.windows(2)
         .find(|w| w[0] == flag)
         .and_then(|w| w.get(1).cloned())
-        .ok_or_else(|| anyhow!("Missing required flag '{flag}'"))
 }
 
 /// Returns all values that follow `flag` until the next flag (starting with `--`).
@@ -76,6 +80,56 @@ fn process_index(ast_jsons: &[String]) -> Result<String> {
 
     let index = analyzer::build_project_index(&docs);
     serde_json::to_string(&index).context("Serialization error")
+}
+
+fn process_preview(
+    rst: &str,
+    index_json: Option<&str>,
+    config: &config::SiteConfig,
+    template_str: &str,
+    doc_path: &str,
+) -> Result<String> {
+    let doc = parser::parse(doc_path, rst);
+    let mut index = if let Some(json) = index_json {
+        serde_json::from_str(json).context("Failed to deserialize global index")?
+    } else {
+        analyzer::ProjectIndex::default()
+    };
+
+    let local_index = analyzer::analyze(&doc);
+    index.merge(local_index);
+
+    let body = renderer::render(&doc, &index, doc_path);
+
+    // Extract page title from the first H1 heading, if any.
+    let page_title = doc
+        .nodes
+        .iter()
+        .find_map(|n| {
+            if let ast::Node::Heading { level: 1, text } = n {
+                Some(text.clone())
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| doc_path.to_string());
+
+    let depth = doc_path.matches('/').count();
+    let css_path = if depth == 0 {
+        "default.css".to_string()
+    } else {
+        format!("{}default.css", "../".repeat(depth))
+    };
+
+    renderer::render_page(
+        &body,
+        template_str,
+        config,
+        &css_path,
+        &page_title,
+        doc_path,
+        &index.nav_tree,
+    )
 }
 
 fn process_render(
@@ -266,6 +320,44 @@ fn cmd_validate_images(args: &[String]) -> Result<()> {
     Ok(())
 }
 
+fn cmd_preview(args: &[String]) -> Result<()> {
+    let index_path = flag_value_opt(args, "--index");
+    let doc_path = flag_value(args, "--doc-path")?;
+    let config_path = flag_value(args, "--config")?;
+    let template_path = flag_value(args, "--template")?;
+
+    // Read RST from stdin
+    let mut rst = String::new();
+    io::stdin()
+        .read_to_string(&mut rst)
+        .context("Failed to read from stdin")?;
+
+    let index_json = if let Some(p) = index_path {
+        Some(fs::read_to_string(&p).with_context(|| format!("Error reading index '{p}'"))?)
+    } else {
+        None
+    };
+
+    let config_str = fs::read_to_string(&config_path)
+        .with_context(|| format!("Error reading config '{config_path}'"))?;
+    let site_config: config::SiteConfig = toml::from_str(&config_str)
+        .with_context(|| format!("Error parsing config '{config_path}'"))?;
+
+    let template_str = fs::read_to_string(&template_path)
+        .with_context(|| format!("Error reading template '{template_path}'"))?;
+
+    let html = process_preview(
+        &rst,
+        index_json.as_deref(),
+        &site_config,
+        &template_str,
+        &doc_path,
+    )?;
+
+    println!("{html}");
+    Ok(())
+}
+
 fn cmd_legacy(path: &str) -> Result<()> {
     let rst = fs::read_to_string(path).with_context(|| format!("Error reading '{path}'"))?;
     let html = process_rst(path, &rst);
@@ -283,6 +375,7 @@ fn run(args: &[String]) -> Result<()> {
         Some("validate_images") => cmd_validate_images(&args[2..]),
         Some("index") => cmd_index(&args[2..]),
         Some("render") => cmd_render(&args[2..]),
+        Some("preview") => cmd_preview(&args[2..]),
         Some(path) if !path.starts_with('-') => cmd_legacy(path),
         _ => {
             let program = args.first().map_or("rusty-sphinx", String::as_str);
@@ -294,6 +387,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
                    {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html>\n\
+                   {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>]\n\
                    {program} validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>"
             );
             Err(anyhow!(msg))
@@ -349,6 +443,30 @@ mod tests {
 
         // Then
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_flag_value_opt_returns_some_when_flag_exists() {
+        // Given
+        let args = vec!["--input".to_string(), "a.rst".to_string()];
+
+        // When
+        let result = flag_value_opt(&args, "--input");
+
+        // Then
+        assert_eq!(result.unwrap(), "a.rst");
+    }
+
+    #[test]
+    fn test_flag_value_opt_returns_none_when_flag_is_missing() {
+        // Given
+        let args = vec!["--input".to_string(), "a.rst".to_string()];
+
+        // When
+        let result = flag_value_opt(&args, "--output");
+
+        // Then
+        assert!(result.is_none());
     }
 
     #[test]
@@ -441,6 +559,39 @@ mod tests {
 
         // Then
         assert!(html.contains("<h1>Title</h1>"));
+    }
+
+    #[test]
+    fn test_process_preview_renders_html_with_merged_index() {
+        // Given
+        let rst = "Section A\n=========\n\nSee :ref:`section-b`";
+        // Global index only knows about section-b in another file
+        let global_index =
+            r#"{"targets":{"section-b":"other.rst"},"document_titles":{"other.rst":"Other"}}"#;
+        let config = config::SiteConfig::default();
+        let template = "<html>{{ body }}</html>";
+
+        // When
+        let html = process_preview(rst, Some(global_index), &config, template, "test.rst").unwrap();
+
+        // Then
+        assert!(html.contains("<h1>Section A</h1>"));
+        // Cross-reference to other file should be resolved
+        assert!(html.contains("href=\"other.html#section-b\""));
+    }
+
+    #[test]
+    fn test_process_preview_works_without_global_index() {
+        // Given
+        let rst = "Section A\n=========";
+        let config = config::SiteConfig::default();
+        let template = "<html>{{ body }}</html>";
+
+        // When
+        let html = process_preview(rst, None, &config, template, "test.rst").unwrap();
+
+        // Then
+        assert!(html.contains("<h1>Section A</h1>"));
     }
 
     #[test]

@@ -10,12 +10,16 @@ TARGET_DIR = Path(tempfile.gettempdir()) / "rusty_sphinx_benchmark_cpython"
 REPO_URL = "https://github.com/python/cpython.git"
 
 def clone_repo():
-    print(f"Cloning {REPO_URL} into {TARGET_DIR}...")
+    print(f"Target directory: {TARGET_DIR}")
     if TARGET_DIR.exists():
-        print("Directory already exists. Removing it for a fresh clone.")
-        shutil.rmtree(TARGET_DIR)
-
+        print("Directory already exists. Removing it for a fresh clone...")
+        shutil.rmtree(TARGET_DIR, ignore_errors=False)
+        if TARGET_DIR.exists():
+            # This could happen on some filesystems due to latency or locks
+            print("Warning: Directory still exists after rmtree, attempting one more time...")
+            shutil.rmtree(TARGET_DIR, ignore_errors=True)
     
+    print(f"Cloning {REPO_URL}...")
     TARGET_DIR.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(["git", "clone", "--depth", "1", REPO_URL, str(TARGET_DIR)], check=True)
 
@@ -28,38 +32,20 @@ def generate_bazel_project(workspace_root: str):
 bazel_dep(name = "rusty_sphinx", version = "0.0.0")
 local_path_override(
     module_name = "rusty_sphinx",
-    path = "{workspace_root}/bazel",
-)
-
-bazel_dep(name = "rusty_sphinx_workspace", version = "0.0.0")
-local_path_override(
-    module_name = "rusty_sphinx_workspace",
     path = "{workspace_root}",
 )
 """
     (TARGET_DIR / "MODULE.bazel").write_text(module_bazel)
     
-    # Create root BUILD.bazel for aliases
-    root_build_bazel = """alias(
-    name = "rusty_sphinx_worker",
-    actual = "@rusty_sphinx_workspace//:rusty_sphinx_worker",
-    visibility = ["//visibility:public"],
-)
-
-alias(
-    name = "plantuml_tool",
-    actual = "@rusty_sphinx_workspace//:plantuml_tool",
-    visibility = ["//visibility:public"],
-)
-"""
-    (TARGET_DIR / "BUILD.bazel").write_text(root_build_bazel)
+    # Create root BUILD.bazel (empty, as aliases are no longer needed)
+    (TARGET_DIR / "BUILD.bazel").write_text("")
 
     # Create assets/BUILD.bazel for the CSS dependency
     assets_dir = TARGET_DIR / "assets"
     assets_dir.mkdir(exist_ok=True)
     (assets_dir / "BUILD.bazel").write_text("""alias(
     name = "default.css",
-    actual = "@rusty_sphinx_workspace//:assets/default.css",
+    actual = "@rusty_sphinx//:assets/default.css",
     visibility = ["//visibility:public"],
 )
 """)
@@ -112,7 +98,7 @@ def run_benchmark():
         print(f"Bazel build succeeded in {duration:.2f} seconds.")
     
     # Inform the user where the HTML is
-    html_out = TARGET_DIR / "bazel-bin/Doc/site"
+    html_out = TARGET_DIR / "bazel-bin/Doc/site_site_out"
     print(f"\nHTML output is located at: {html_out}/")
 
 def analyze_results():
