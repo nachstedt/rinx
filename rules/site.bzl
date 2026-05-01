@@ -39,15 +39,10 @@ def _rusty_sphinx_site_impl(ctx):
     css_file = ctx.file.css
 
     html_files = []
-    pkg_prefix = ctx.label.package + "/"
     for ast_file in ast_list:
-        # Compute path relative to current package for intuitive output structure
-        rel_path = ast_file.short_path
-        if rel_path.startswith(pkg_prefix):
-            rel_path = rel_path[len(pkg_prefix):]
-        
+        doc_path = ast_file.short_path.removesuffix(".ast")
         html_out = ctx.actions.declare_file(
-            ctx.label.name + "_site_out/" + rel_path.removesuffix(".ast") + ".html",
+            ctx.label.name + "_site_out/" + doc_path + ".html",
         )
         ctx.actions.run(
             executable = worker,
@@ -55,7 +50,7 @@ def _rusty_sphinx_site_impl(ctx):
                 "render",
                 "--input", ast_file.path,
                 "--index", index_out.path,
-                "--doc-path", rel_path,
+                "--doc-path", doc_path,
                 "--output", html_out.path,
                 "--config", config_file.path,
                 "--template", template_file.path,
@@ -138,24 +133,24 @@ rusty_sphinx_site = rule(
         ),
         "template": attr.label(
             allow_single_file = [".html"],
-            default = Label("@@//:templates/default.html"),
+            default = Label("//:templates/default.html"),
             doc = "The HTML template file used for page rendering. Passed as --template to the render action.",
         ),
         "config": attr.label(
             allow_single_file = [".toml"],
-            default = Label("@@//:templates/default_config.toml"),
+            default = Label("//:templates/default_config.toml"),
             doc = "The rusty_sphinx.toml configuration file for the site.",
         ),
         "css": attr.label(
             allow_single_file = [".css"],
-            default = Label("@@//:assets/default.css"),
+            default = Label("//:assets/default.css"),
             doc = "The CSS stylesheet to include in the site output.",
         ),
         "_worker": attr.label(
-            default = Label("@@//:rusty_sphinx_worker"),
+            default = Label("//:rusty_sphinx_worker"),
             executable = True,
             cfg = "exec",
-            doc = "The rusty-sphinx binary. Defaults to //:rusty_sphinx_worker in the consuming workspace.",
+            doc = "The rusty-sphinx binary.",
         ),
     },
     doc = """

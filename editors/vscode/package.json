@@ -1,0 +1,83 @@
+{
+  "name": "rusty-sphinx",
+  "displayName": "Rusty-Sphinx",
+  "description": "Live preview for Rusty-Sphinx documentation",
+  "version": "0.1.0",
+  "publisher": "nachstedt",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:rusty-sphinx.showPreview"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rusty-sphinx.showPreview",
+        "title": "Rusty-Sphinx: Show Preview",
+        "category": "Rusty-Sphinx"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Rusty-Sphinx",
+      "properties": {
+        "rusty-sphinx.binaryPath": {
+          "type": "string",
+          "default": "rusty-sphinx",
+          "description": "Path to the rusty-sphinx binary. Can be a bare command (if in PATH) or an absolute path (e.g., /usr/local/bin/rusty-sphinx)."
+        },
+        "rusty-sphinx.autoDiscover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically discover configuration from Bazel. Requires `bazel` to be on the PATH."
+        },
+        "rusty-sphinx.configPath": {
+          "type": "string",
+          "default": "rusty_sphinx.toml",
+          "description": "Fallback path to the rusty_sphinx.toml config file (used when autoDiscover is disabled or fails)"
+        },
+        "rusty-sphinx.templatePath": {
+          "type": "string",
+          "default": "templates/default.html",
+          "description": "Fallback path to the HTML template used for rendering (used when autoDiscover is disabled or fails)"
+        },
+        "rusty-sphinx.indexPath": {
+          "type": "string",
+          "default": "bazel-bin/Doc/site.project.index",
+          "description": "Fallback path to the global project index (used when autoDiscover is disabled or fails)"
+        },
+        "rusty-sphinx.previewMode": {
+          "type": "string",
+          "enum": [
+            "onSave",
+            "onType"
+          ],
+          "default": "onType",
+          "description": "When to update the preview"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/node": "^16.11.7",
+    "@types/mocha": "^10.0.1",
+    "@types/glob": "^8.1.0",
+    "typescript": "^4.9.5",
+    "mocha": "^10.2.0",
+    "glob": "^8.1.0",
+    "@vscode/test-electron": "^2.3.0"
+  }
+}

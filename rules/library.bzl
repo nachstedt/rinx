@@ -125,13 +125,13 @@ rusty_sphinx_library = rule(
             doc = "Other rusty_sphinx_library targets that are structurally included via `.. toctree::`. Not required for standard cross-references.",
         ),
         "_worker": attr.label(
-            default = Label("@@//:rusty_sphinx_worker"),
+            default = Label("//:rusty_sphinx_worker"),
             executable = True,
             cfg = "exec",
-            doc = "The rusty-sphinx binary. Defaults to //:rusty_sphinx_worker in the consuming workspace.",
+            doc = "The rusty-sphinx binary.",
         ),
         "_plantuml": attr.label(
-            default = Label("@@//:plantuml_tool"),
+            default = Label("//:plantuml_tool"),
             executable = True,
             cfg = "exec",
             doc = "The PlantUML executable or wrapper.",

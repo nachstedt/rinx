@@ -177,7 +177,7 @@ mod tests {
     fn test_hashed_content_try_from_success() {
         // Given
         let body = "Valid body".to_string();
-        let valid_hash = HashedContent::new(body.clone()).hash.to_string();
+        let valid_hash = HashedContent::new(body.clone()).hash.clone();
         let raw = HashedContentRaw {
             hash: valid_hash.clone(),
             body: body.clone(),
@@ -197,7 +197,7 @@ mod tests {
     fn test_hashed_content_try_from_mismatch() {
         // Given
         let body = "Valid body".to_string();
-        let valid_hash = HashedContent::new(body.clone()).hash.to_string();
+        let valid_hash = HashedContent::new(body.clone()).hash.clone();
         let invalid_hash =
             "0000000000000000000000000000000000000000000000000000000000000000".to_string();
         let raw = HashedContentRaw {
@@ -212,10 +212,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
-            format!(
-                "Hash mismatch: expected {}, got {}",
-                valid_hash, invalid_hash
-            )
+            format!("Hash mismatch: expected {valid_hash}, got {invalid_hash}")
         );
     }
 }

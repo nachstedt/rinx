@@ -13,17 +13,8 @@ Quick start:
 """
 
 module(
-    name = "rusty_sphinx_workspace",
+    name = "rusty_sphinx",
     version = "0.0.0",
-)
-
-# ── Local rules module ────────────────────────────────────────────────────────
-
-bazel_dep(name = "rusty_sphinx", version = "0.0.0")
-
-local_path_override(
-    module_name = "rusty_sphinx",
-    path = "bazel",
 )
 
 # ── Rust toolchain ────────────────────────────────────────────────────────────
