@@ -197,11 +197,7 @@ struct Adornment {
     style: AdornmentStyle,
 }
 
-fn try_parse_heading(
-    lines: &[&str],
-    i: usize,
-    adornment_order: &mut Vec<Adornment>,
-) -> Option<(usize, Node)> {
+fn detect_adornment(lines: &[&str], i: usize) -> Option<(usize, Adornment, String)> {
     // 1. Try 3-line pattern (Overline + Text + Underline)
     if i + 2 < lines.len() {
         let overline = lines[i].trim();
@@ -214,27 +210,13 @@ fn try_parse_heading(
             && overline.len() >= text.len()
         {
             let adornment_char = overline.chars().next().expect("non-empty adornment");
-            let adornment = Adornment {
-                character: adornment_char,
-                style: AdornmentStyle::Overline,
-            };
-
-            let level = if let Some(pos) = adornment_order.iter().position(|&a| a == adornment) {
-                pos + 1
-            } else {
-                adornment_order.push(adornment);
-                adornment_order.len()
-            };
-
-            #[allow(clippy::cast_possible_truncation)]
-            let level = level as u8;
-
             return Some((
                 3,
-                Node::Heading {
-                    level,
-                    text: text.to_string(),
+                Adornment {
+                    character: adornment_char,
+                    style: AdornmentStyle::Overline,
                 },
+                text.to_string(),
             ));
         }
     }
@@ -249,32 +231,38 @@ fn try_parse_heading(
             && underline.len() >= text.len()
         {
             let adornment_char = underline.chars().next().expect("non-empty underline");
-            let adornment = Adornment {
-                character: adornment_char,
-                style: AdornmentStyle::Underline,
-            };
-
-            let level = if let Some(pos) = adornment_order.iter().position(|&a| a == adornment) {
-                pos + 1
-            } else {
-                adornment_order.push(adornment);
-                adornment_order.len()
-            };
-
-            #[allow(clippy::cast_possible_truncation)]
-            let level = level as u8;
-
             return Some((
                 2,
-                Node::Heading {
-                    level,
-                    text: text.to_string(),
+                Adornment {
+                    character: adornment_char,
+                    style: AdornmentStyle::Underline,
                 },
+                text.to_string(),
             ));
         }
     }
 
     None
+}
+
+fn try_parse_heading(
+    lines: &[&str],
+    i: usize,
+    adornment_order: &mut Vec<Adornment>,
+) -> Option<(usize, Node)> {
+    let (consumed, adornment, text) = detect_adornment(lines, i)?;
+
+    let level = if let Some(pos) = adornment_order.iter().position(|&a| a == adornment) {
+        pos + 1
+    } else {
+        adornment_order.push(adornment);
+        adornment_order.len()
+    };
+
+    #[allow(clippy::cast_possible_truncation)]
+    let level = level as u8;
+
+    Some((consumed, Node::Heading { level, text }))
 }
 
 fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
@@ -294,35 +282,8 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
         current_pos_line += 1;
 
         // Peek at next line to ensure we don't consume a heading's text line or overline
-        if current_pos_line < lines.len() {
-            // Check for 2-line heading (underline) starting at current_pos_line
-            let is_2_line_heading = if current_pos_line + 1 < lines.len() {
-                let h_text = lines[current_pos_line].trim();
-                let h_underline = lines[current_pos_line + 1].trim();
-                !h_underline.is_empty()
-                    && h_underline.chars().all(|c| c.is_ascii_punctuation())
-                    && h_underline.len() >= h_text.len()
-            } else {
-                false
-            };
-
-            // Check for 3-line heading (overline) starting at current_pos_line
-            let is_3_line_heading = if current_pos_line + 2 < lines.len() {
-                let overline = lines[current_pos_line].trim();
-                let text = lines[current_pos_line + 1].trim();
-                let underline = lines[current_pos_line + 2].trim();
-                !overline.is_empty()
-                    && overline.chars().all(|c| c.is_ascii_punctuation())
-                    && !text.is_empty()
-                    && overline == underline
-                    && overline.len() >= text.len()
-            } else {
-                false
-            };
-
-            if is_2_line_heading || is_3_line_heading {
-                break;
-            }
+        if current_pos_line < lines.len() && detect_adornment(lines, current_pos_line).is_some() {
+            break;
         }
     }
 
@@ -937,5 +898,29 @@ mod tests {
                 text: "Heading".to_string()
             }
         );
+    }
+
+    #[test]
+    fn test_detect_adornment_overline() {
+        let lines = vec!["#######", "Heading", "#######"];
+        let result = detect_adornment(&lines, 0);
+        assert!(result.is_some());
+        let (consumed, adornment, text) = result.unwrap();
+        assert_eq!(consumed, 3);
+        assert_eq!(adornment.character, '#');
+        assert_eq!(adornment.style, AdornmentStyle::Overline);
+        assert_eq!(text, "Heading");
+    }
+
+    #[test]
+    fn test_detect_adornment_underline() {
+        let lines = vec!["Heading", "#######"];
+        let result = detect_adornment(&lines, 0);
+        assert!(result.is_some());
+        let (consumed, adornment, text) = result.unwrap();
+        assert_eq!(consumed, 2);
+        assert_eq!(adornment.character, '#');
+        assert_eq!(adornment.style, AdornmentStyle::Underline);
+        assert_eq!(text, "Heading");
     }
 }
