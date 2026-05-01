@@ -205,6 +205,66 @@ mod tests {
     use crate::ast::{InlineNode, Node};
 
     #[test]
+    fn test_normalize_path_basic() {
+        assert_eq!(
+            normalize_path(std::path::Path::new("a/b/c")),
+            std::path::PathBuf::from("a/b/c")
+        );
+    }
+
+    #[test]
+    fn test_normalize_path_current_dir() {
+        assert_eq!(
+            normalize_path(std::path::Path::new("a/./c")),
+            std::path::PathBuf::from("a/c")
+        );
+        assert_eq!(
+            normalize_path(std::path::Path::new("./a/b")),
+            std::path::PathBuf::from("a/b")
+        );
+    }
+
+    #[test]
+    fn test_normalize_path_parent_dir() {
+        assert_eq!(
+            normalize_path(std::path::Path::new("a/b/../c")),
+            std::path::PathBuf::from("a/c")
+        );
+        assert_eq!(
+            normalize_path(std::path::Path::new("a/b/../../c")),
+            std::path::PathBuf::from("c")
+        );
+    }
+
+    #[test]
+    fn test_normalize_path_complex() {
+        assert_eq!(
+            normalize_path(std::path::Path::new("a/./b/../c/d/./../e")),
+            std::path::PathBuf::from("a/c/e")
+        );
+        assert_eq!(
+            normalize_path(std::path::Path::new("/a/b/../c")),
+            std::path::PathBuf::from("/a/c")
+        );
+    }
+
+    #[test]
+    fn test_normalize_path_above_root() {
+        assert_eq!(
+            normalize_path(std::path::Path::new("../a")),
+            std::path::PathBuf::from("a")
+        );
+        assert_eq!(
+            normalize_path(std::path::Path::new("a/../../b")),
+            std::path::PathBuf::from("b")
+        );
+        assert_eq!(
+            normalize_path(std::path::Path::new("/../a")),
+            std::path::PathBuf::from("/a")
+        );
+    }
+
+    #[test]
     fn test_analyze_returns_default_index_for_empty_document() {
         // Given
         let doc = Document::new("test.rst".to_string(), vec![]);
