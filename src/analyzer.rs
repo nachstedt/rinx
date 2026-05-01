@@ -206,62 +206,77 @@ mod tests {
 
     #[test]
     fn test_normalize_path_basic() {
-        assert_eq!(
-            normalize_path(std::path::Path::new("a/b/c")),
-            std::path::PathBuf::from("a/b/c")
-        );
+        // Given
+        let path = std::path::Path::new("a/b/c");
+
+        // When
+        let normalized = normalize_path(path);
+
+        // Then
+        assert_eq!(normalized, std::path::PathBuf::from("a/b/c"));
     }
 
     #[test]
     fn test_normalize_path_current_dir() {
-        assert_eq!(
-            normalize_path(std::path::Path::new("a/./c")),
-            std::path::PathBuf::from("a/c")
-        );
-        assert_eq!(
-            normalize_path(std::path::Path::new("./a/b")),
-            std::path::PathBuf::from("a/b")
-        );
+        // Given
+        let path1 = std::path::Path::new("a/./c");
+        let path2 = std::path::Path::new("./a/b");
+
+        // When
+        let normalized1 = normalize_path(path1);
+        let normalized2 = normalize_path(path2);
+
+        // Then
+        assert_eq!(normalized1, std::path::PathBuf::from("a/c"));
+        assert_eq!(normalized2, std::path::PathBuf::from("a/b"));
     }
 
     #[test]
     fn test_normalize_path_parent_dir() {
-        assert_eq!(
-            normalize_path(std::path::Path::new("a/b/../c")),
-            std::path::PathBuf::from("a/c")
-        );
-        assert_eq!(
-            normalize_path(std::path::Path::new("a/b/../../c")),
-            std::path::PathBuf::from("c")
-        );
+        // Given
+        let path1 = std::path::Path::new("a/b/../c");
+        let path2 = std::path::Path::new("a/b/../../c");
+
+        // When
+        let normalized1 = normalize_path(path1);
+        let normalized2 = normalize_path(path2);
+
+        // Then
+        assert_eq!(normalized1, std::path::PathBuf::from("a/c"));
+        assert_eq!(normalized2, std::path::PathBuf::from("c"));
     }
 
     #[test]
     fn test_normalize_path_complex() {
-        assert_eq!(
-            normalize_path(std::path::Path::new("a/./b/../c/d/./../e")),
-            std::path::PathBuf::from("a/c/e")
-        );
-        assert_eq!(
-            normalize_path(std::path::Path::new("/a/b/../c")),
-            std::path::PathBuf::from("/a/c")
-        );
+        // Given
+        let path1 = std::path::Path::new("a/./b/../c/d/./../e");
+        let path2 = std::path::Path::new("/a/b/../c");
+
+        // When
+        let normalized1 = normalize_path(path1);
+        let normalized2 = normalize_path(path2);
+
+        // Then
+        assert_eq!(normalized1, std::path::PathBuf::from("a/c/e"));
+        assert_eq!(normalized2, std::path::PathBuf::from("/a/c"));
     }
 
     #[test]
     fn test_normalize_path_above_root() {
-        assert_eq!(
-            normalize_path(std::path::Path::new("../a")),
-            std::path::PathBuf::from("a")
-        );
-        assert_eq!(
-            normalize_path(std::path::Path::new("a/../../b")),
-            std::path::PathBuf::from("b")
-        );
-        assert_eq!(
-            normalize_path(std::path::Path::new("/../a")),
-            std::path::PathBuf::from("/a")
-        );
+        // Given
+        let path1 = std::path::Path::new("../a");
+        let path2 = std::path::Path::new("a/../../b");
+        let path3 = std::path::Path::new("/../a");
+
+        // When
+        let normalized1 = normalize_path(path1);
+        let normalized2 = normalize_path(path2);
+        let normalized3 = normalize_path(path3);
+
+        // Then
+        assert_eq!(normalized1, std::path::PathBuf::from("a"));
+        assert_eq!(normalized2, std::path::PathBuf::from("b"));
+        assert_eq!(normalized3, std::path::PathBuf::from("/a"));
     }
 
     #[test]
