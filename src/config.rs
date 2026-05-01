@@ -41,6 +41,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_default() {
+        let config = SiteConfig::default();
+        assert_eq!(config.project, "Documentation");
+        assert_eq!(config.version, "");
+    }
+
+    #[test]
     fn test_deserialize_full_config() {
         // Given
         let toml_str = r#"
