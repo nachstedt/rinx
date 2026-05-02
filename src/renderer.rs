@@ -757,6 +757,63 @@ mod tests {
         assert!(find_nav_entry(&tree, "missing.rst").is_none());
     }
 
+    // ── resolve_nav_hrefs ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_resolve_nav_hrefs_same_directory() {
+        let entries = vec![crate::analyzer::NavEntry {
+            title: "Index".to_string(),
+            path: "index.rst".to_string(),
+            children: vec![],
+        }];
+        let resolved = resolve_nav_hrefs(&entries, "doc.rst");
+        assert_eq!(resolved.len(), 1);
+        assert_eq!(resolved[0].title, "Index");
+        assert_eq!(resolved[0].href, "index.html");
+    }
+
+    #[test]
+    fn test_resolve_nav_hrefs_document_in_subdirectory() {
+        let entries = vec![crate::analyzer::NavEntry {
+            title: "Index".to_string(),
+            path: "index.rst".to_string(),
+            children: vec![],
+        }];
+        let resolved = resolve_nav_hrefs(&entries, "sub/doc.rst");
+        assert_eq!(resolved.len(), 1);
+        assert_eq!(resolved[0].href, "../index.html");
+    }
+
+    #[test]
+    fn test_resolve_nav_hrefs_target_in_subdirectory() {
+        let entries = vec![crate::analyzer::NavEntry {
+            title: "Nested".to_string(),
+            path: "sub/nested.rst".to_string(),
+            children: vec![],
+        }];
+        let resolved = resolve_nav_hrefs(&entries, "doc.rst");
+        assert_eq!(resolved.len(), 1);
+        assert_eq!(resolved[0].href, "sub/nested.html");
+    }
+
+    #[test]
+    fn test_resolve_nav_hrefs_nested_entries() {
+        let entries = vec![crate::analyzer::NavEntry {
+            title: "Root".to_string(),
+            path: "root.rst".to_string(),
+            children: vec![crate::analyzer::NavEntry {
+                title: "Child".to_string(),
+                path: "sub/child.rst".to_string(),
+                children: vec![],
+            }],
+        }];
+        let resolved = resolve_nav_hrefs(&entries, "doc.rst");
+        assert_eq!(resolved.len(), 1);
+        assert_eq!(resolved[0].href, "root.html");
+        assert_eq!(resolved[0].children.len(), 1);
+        assert_eq!(resolved[0].children[0].href, "sub/child.html");
+    }
+
     // ── render_nav_entry ──────────────────────────────────────────────────────
 
     #[test]
