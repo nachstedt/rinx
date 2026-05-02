@@ -1,7 +1,7 @@
 //! The renderer module converts the AST and `ProjectIndex` into HTML.
 
-use crate::analyzer::ProjectIndex;
-use crate::ast::{Directive, Document, Node};
+use crate::analyzer::{ProjectIndex, TargetLocation};
+use crate::ast::{Directive, Document, Node, TargetName};
 use crate::config::SiteConfig;
 use anyhow::{Context, Result};
 use std::fmt::Write as _;
@@ -99,6 +99,20 @@ fn resolve_nav_hrefs(
 pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
     let mut html = String::new();
 
+    // Collect anonymous targets for local resolution
+    let anon_targets: Vec<String> = doc
+        .nodes
+        .iter()
+        .filter_map(|n| {
+            if let Node::AnonymousTarget { uri } = n {
+                Some(uri.clone())
+            } else {
+                None
+            }
+        })
+        .collect();
+    let mut anon_index = 0;
+
     for node in &doc.nodes {
         match node {
             Node::Heading { level, text } => {
@@ -109,44 +123,24 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
             Node::Paragraph(inlines) => {
                 let _ = write!(html, "<p>");
                 for inline in inlines {
-                    match inline {
-                        crate::ast::InlineNode::Text(text) => {
-                            let escaped = html_escape::encode_text(text);
-                            let _ = write!(html, "{escaped}");
-                        }
-                        crate::ast::InlineNode::Reference(target) => {
-                            let target_escaped = html_escape::encode_text(target);
-                            if let Some(target_path) = index.targets.get(target) {
-                                let current_dir = std::path::Path::new(doc_path)
-                                    .parent()
-                                    .unwrap_or(std::path::Path::new(""));
-                                let target_html_path =
-                                    std::path::Path::new(target_path).with_extension("html");
-
-                                let relative_path =
-                                    pathdiff::diff_paths(&target_html_path, current_dir)
-                                        .unwrap_or(target_html_path);
-
-                                // display() on Unix uses `/`, so it maps correctly to URLs
-                                let href =
-                                    format!("{}#{}", relative_path.display(), target_escaped);
-                                let _ = write!(html, "<a href=\"{href}\">{target_escaped}</a>");
-                            } else {
-                                // Fallback, could print warning
-                                let _ = write!(
-                                    html,
-                                    "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>"
-                                );
-                            }
-                        }
-                    }
+                    render_inline(
+                        &mut html,
+                        inline,
+                        index,
+                        doc_path,
+                        &anon_targets,
+                        &mut anon_index,
+                    );
                 }
                 let _ = writeln!(html, "</p>");
             }
-            Node::Target(name) => {
-                let escaped_name = html_escape::encode_text(name);
-                let _ = writeln!(html, "<a name=\"{escaped_name}\"></a>");
+            Node::Target { name, uri } => {
+                if uri.is_none() {
+                    let escaped_name = html_escape::encode_text(name.as_str());
+                    let _ = writeln!(html, "<a id=\"{escaped_name}\"></a>");
+                }
             }
+            Node::AnonymousTarget { .. } => {}
             Node::Directive(directive) => match directive {
                 Directive::Toctree { maxdepth, .. } => {
                     let _ = writeln!(html, "<ul>");
@@ -184,6 +178,103 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
     }
 
     html
+}
+
+fn render_inline(
+    html: &mut String,
+    inline: &crate::ast::InlineNode,
+    index: &ProjectIndex,
+    doc_path: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+) {
+    match inline {
+        crate::ast::InlineNode::Text(text) => {
+            let escaped = html_escape::encode_text(text);
+            let _ = write!(html, "{escaped}");
+        }
+        crate::ast::InlineNode::Reference(target) => {
+            let target_escaped = html_escape::encode_text(target);
+            // Legacy :ref: behavior (still supported)
+            let target_name = TargetName::new(target);
+            if let Some(TargetLocation::Internal(target_path)) = index.targets.get(&target_name) {
+                let current_dir = std::path::Path::new(doc_path)
+                    .parent()
+                    .unwrap_or(std::path::Path::new(""));
+                let target_html_path = std::path::Path::new(target_path).with_extension("html");
+
+                let relative_path = pathdiff::diff_paths(&target_html_path, current_dir)
+                    .unwrap_or(target_html_path);
+
+                // display() on Unix uses `/`, so it maps correctly to URLs
+                let href = format!("{}#{}", relative_path.display(), target_name.as_str());
+                let _ = write!(html, "<a href=\"{href}\">{target_escaped}</a>");
+            } else {
+                // Fallback, could print warning
+                let _ = write!(
+                    html,
+                    "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>"
+                );
+            }
+        }
+        crate::ast::InlineNode::Hyperlink { text, target } => {
+            let text_escaped = html_escape::encode_text(text);
+            // 1. Is it a direct URI?
+            if target.starts_with("http://")
+                || target.starts_with("https://")
+                || target.starts_with("mailto:")
+            {
+                let _ = write!(html, "<a href=\"{target}\">{text_escaped}</a>");
+            } else {
+                // 2. Lookup in index
+                let target_name = TargetName::new(target);
+                if let Some(location) = index.targets.get(&target_name) {
+                    match location {
+                        TargetLocation::External(url) => {
+                            let _ = write!(html, "<a href=\"{url}\">{text_escaped}</a>");
+                        }
+                        TargetLocation::Internal(target_path) => {
+                            let current_dir = std::path::Path::new(doc_path)
+                                .parent()
+                                .unwrap_or(std::path::Path::new(""));
+                            let target_html_path =
+                                std::path::Path::new(target_path).with_extension("html");
+
+                            let relative_path =
+                                pathdiff::diff_paths(&target_html_path, current_dir)
+                                    .unwrap_or(target_html_path);
+
+                            let href =
+                                format!("{}#{}", relative_path.display(), target_name.as_str());
+                            let _ = write!(html, "<a href=\"{href}\">{text_escaped}</a>");
+                        }
+                    }
+                } else {
+                    // Broken link
+                    let _ = write!(
+                        html,
+                        "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
+                    );
+                }
+            }
+        }
+        crate::ast::InlineNode::AnonymousReference(text) => {
+            let text_escaped = html_escape::encode_text(text);
+            if let Some(uri) = anon_targets.get(*anon_index) {
+                let _ = write!(html, "<a href=\"{uri}\">{text_escaped}</a>");
+                *anon_index += 1;
+            } else {
+                let _ = write!(
+                    html,
+                    "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
+                );
+            }
+        }
+        crate::ast::InlineNode::AnonymousHyperlink { text, target } => {
+            let text_escaped = html_escape::encode_text(text);
+            let _ = write!(html, "<a href=\"{target}\">{text_escaped}</a>");
+        }
+    }
 }
 
 fn render_nav_entry(
@@ -239,7 +330,7 @@ fn find_nav_entry<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::HashedContent;
+    use crate::ast::{HashedContent, InlineNode};
 
     #[test]
     fn test_render_returns_empty_string_for_empty_document() {
@@ -431,7 +522,10 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Target("section-1".to_string())],
+            vec![Node::Target {
+                name: TargetName::new("section-1"),
+                uri: None,
+            }],
         );
         let index = ProjectIndex::default();
 
@@ -439,7 +533,26 @@ mod tests {
         let result = render(&doc, &index, &doc.path);
 
         // Then
-        assert_eq!(result, "<a name=\"section-1\"></a>\n");
+        assert_eq!(result, "<a id=\"section-1\"></a>\n");
+    }
+
+    #[test]
+    fn test_render_suppresses_anchor_for_external_target() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Target {
+                name: TargetName::new("google"),
+                uri: Some("https://google.com".to_string()),
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(result, "");
     }
 
     #[test]
@@ -452,9 +565,10 @@ mod tests {
             )])],
         );
         let mut index = ProjectIndex::default();
-        index
-            .targets
-            .insert("other-section".to_string(), "other_file.rst".to_string());
+        index.targets.insert(
+            TargetName::new("other-section"),
+            TargetLocation::Internal("other_file.rst".to_string()),
+        );
 
         // When
         let result = render(&doc, &index, &doc.path);
@@ -478,8 +592,8 @@ mod tests {
 
         let mut index = ProjectIndex::default();
         index.targets.insert(
-            "target-in-a".to_string(),
-            "examples/team_a/index.rst".to_string(),
+            TargetName::new("target-in-a"),
+            TargetLocation::Internal("examples/team_a/index.rst".to_string()),
         );
 
         // When
@@ -490,6 +604,48 @@ mod tests {
             result,
             "<p><a href=\"../team_a/index.html#target-in-a\">target-in-a</a></p>\n"
         );
+    }
+
+    #[test]
+    fn test_render_formats_external_hyperlink() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![crate::ast::InlineNode::Hyperlink {
+                text: "Python".to_string(),
+                target: "Python".to_string(),
+            }])],
+        );
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("Python"),
+            TargetLocation::External("https://python.org".to_string()),
+        );
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(result, "<p><a href=\"https://python.org\">Python</a></p>\n");
+    }
+
+    #[test]
+    fn test_render_formats_direct_uri_hyperlink() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![crate::ast::InlineNode::Hyperlink {
+                text: "Google".to_string(),
+                target: "https://google.com".to_string(),
+            }])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(result, "<p><a href=\"https://google.com\">Google</a></p>\n");
     }
 
     #[test]
@@ -886,9 +1042,87 @@ mod tests {
         render_nav_entry(&mut html, &entry, &index, current_dir, 1, None);
 
         // Then — href should be relative (../../page.html)
+        // Then — href should be relative (../../page.html)
         assert!(
             html.contains("../../page.html"),
             "href must be relative to current_dir"
         );
+    }
+
+    #[test]
+    fn test_render_resolves_anonymous_links_in_order() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Paragraph(vec![
+                    InlineNode::AnonymousReference("First".to_string()),
+                    InlineNode::Text(" and ".to_string()),
+                    InlineNode::AnonymousReference("Second".to_string()),
+                ]),
+                Node::AnonymousTarget {
+                    uri: "https://first.com".to_string(),
+                },
+                Node::AnonymousTarget {
+                    uri: "https://second.com".to_string(),
+                },
+            ],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<a href=\"https://first.com\">First</a>"));
+        assert!(result.contains("<a href=\"https://second.com\">Second</a>"));
+    }
+
+    #[test]
+    fn test_render_anonymous_hyperlink_with_embedded_uri_does_not_consume_targets() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Paragraph(vec![
+                    InlineNode::AnonymousHyperlink {
+                        text: "Embedded".to_string(),
+                        target: "https://embedded.com".to_string(),
+                    },
+                    InlineNode::Text(" then ".to_string()),
+                    InlineNode::AnonymousReference("Reference".to_string()),
+                ]),
+                Node::AnonymousTarget {
+                    uri: "https://target.com".to_string(),
+                },
+            ],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<a href=\"https://embedded.com\">Embedded</a>"));
+        assert!(result.contains("<a href=\"https://target.com\">Reference</a>"));
+    }
+
+    #[test]
+    fn test_render_broken_anonymous_link_fallback() {
+        // Given — more references than targets
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Paragraph(vec![InlineNode::AnonymousReference("Missing".to_string())]),
+                // No targets
+            ],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("class=\"broken-link\""));
     }
 }

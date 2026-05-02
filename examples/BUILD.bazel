@@ -11,7 +11,7 @@ load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
 
 rusty_sphinx_library(
     name = "root_docs",
-    srcs = ["index.rst"],
+    srcs = ["index.rst", "hyperlinks.rst"],
     deps = [
         "//examples/team_a:docs",
         "//examples/team_b:docs",

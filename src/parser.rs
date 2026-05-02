@@ -1,6 +1,21 @@
 //! The parser module converts RST text into an Abstract Syntax Tree (Document).
 
-use crate::ast::{Directive, Document, HashedContent, Node};
+use crate::ast::{Directive, Document, HashedContent, InlineNode, Node, TargetName};
+use regex::Regex;
+use std::sync::LazyLock;
+
+static REF_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":ref:`(?P<target>[^`]+)`").unwrap());
+static PHRASED_LINK_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
+static SIMPLE_LINK_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)_").unwrap());
+static EMBEDDED_URI_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(?P<text>.*)\s+<(?P<uri>[^>]+)>$").unwrap());
+static ANONYMOUS_PHRASED_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`__").unwrap());
+static ANONYMOUS_SIMPLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)__").unwrap());
 
 /// Parses an RST-formatted string into a Document.
 ///
@@ -71,12 +86,58 @@ pub fn parse(path: &str, input: &str) -> Document {
 
 fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)> {
     let line = lines[i].trim();
-    if line.starts_with(".. _") && line.ends_with(':') {
-        let name = &line[4..line.len() - 1];
-        if !name.is_empty() {
-            return Some((1, Node::Target(name.trim().to_string())));
+    if let Some(rest) = line.strip_prefix(".. __:") {
+        let mut uri = rest.trim().to_string();
+        let mut consumed = 1;
+
+        if uri.is_empty() && i + 1 < lines.len() {
+            let next_line = lines[i + 1];
+            if next_line.starts_with(' ') || next_line.starts_with('\t') {
+                uri = next_line.trim().to_string();
+                consumed = 2;
+            }
+        }
+
+        if !uri.is_empty() {
+            return Some((consumed, Node::AnonymousTarget { uri }));
         }
     }
+
+    if !line.starts_with(".. _") {
+        return None;
+    }
+
+    // Try to find the colon that ends the target name
+    if let Some(colon_pos) = line[4..].find(':') {
+        let absolute_colon_pos = 4 + colon_pos;
+        let name_str = &line[4..absolute_colon_pos].trim();
+        if name_str.is_empty() {
+            return None;
+        }
+
+        let mut uri = line[absolute_colon_pos + 1..].trim().to_string();
+        let mut consumed = 1;
+
+        // If URI is empty on the same line, check the next line for an indented block
+        if uri.is_empty() && i + 1 < lines.len() {
+            let next_line = lines[i + 1];
+            if next_line.starts_with(' ') || next_line.starts_with('\t') {
+                uri = next_line.trim().to_string();
+                consumed = 2;
+            }
+        }
+
+        let uri_opt = if uri.is_empty() { None } else { Some(uri) };
+
+        return Some((
+            consumed,
+            Node::Target {
+                name: TargetName::new(name_str),
+                uri: uri_opt,
+            },
+        ));
+    }
+
     None
 }
 
@@ -287,32 +348,92 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
         }
     }
 
-    // split paragraph text by `:ref:\`target\``
     let mut inlines = Vec::new();
-    let mut current_pos = 0;
-    while let Some(start) = paragraph_text[current_pos..].find(":ref:`") {
-        let absolute_start = current_pos + start;
-        let search_start = absolute_start + 6; // length of ":ref:`"
-        if let Some(end) = paragraph_text[search_start..].find('`') {
-            let absolute_end = search_start + end;
-            // push text before
-            if absolute_start > current_pos {
-                inlines.push(crate::ast::InlineNode::Text(
-                    paragraph_text[current_pos..absolute_start].to_string(),
-                ));
+    let mut last_match_end = 0;
+
+    // We need to find the earliest match among all regexes
+    while last_match_end < paragraph_text.len() {
+        let remaining = &paragraph_text[last_match_end..];
+
+        let ref_match = REF_REGEX.find(remaining);
+        let phrased_match = PHRASED_LINK_REGEX.find(remaining);
+        let simple_match = SIMPLE_LINK_REGEX.find(remaining);
+        let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
+        let anon_simple_match = ANONYMOUS_SIMPLE_REGEX.find(remaining);
+
+        // Find the one that starts earliest. If multiple start at the same pos, pick the longest.
+        let matches = vec![
+            ref_match.map(|m| (m, "ref")),
+            anon_phrased_match.map(|m| (m, "anon_phrased")),
+            phrased_match.map(|m| (m, "phrased")),
+            anon_simple_match.map(|m| (m, "anon_simple")),
+            simple_match.map(|m| (m, "simple")),
+        ];
+
+        let earliest = matches
+            .into_iter()
+            .flatten()
+            .min_by_key(|(m, _)| (m.start(), std::cmp::Reverse(m.end())));
+
+        if let Some((m, kind)) = earliest {
+            // Push text before the match
+            if m.start() > 0 {
+                inlines.push(InlineNode::Text(remaining[..m.start()].to_string()));
             }
-            // push reference
-            let target = paragraph_text[search_start..absolute_end].to_string();
-            inlines.push(crate::ast::InlineNode::Reference(target));
-            current_pos = absolute_end + 1;
+
+            match kind {
+                "ref" => {
+                    let caps = REF_REGEX.captures(m.as_str()).unwrap();
+                    inlines.push(InlineNode::Reference(caps["target"].to_string()));
+                }
+                "phrased" => {
+                    let caps = PHRASED_LINK_REGEX.captures(m.as_str()).unwrap();
+                    let text_full = &caps["text"];
+                    if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
+                        inlines.push(InlineNode::Hyperlink {
+                            text: embedded["text"].trim().to_string(),
+                            target: embedded["uri"].to_string(),
+                        });
+                    } else {
+                        inlines.push(InlineNode::Hyperlink {
+                            text: text_full.to_string(),
+                            target: text_full.to_string(),
+                        });
+                    }
+                }
+                "simple" => {
+                    let caps = SIMPLE_LINK_REGEX.captures(m.as_str()).unwrap();
+                    let name = &caps["name"];
+                    inlines.push(InlineNode::Hyperlink {
+                        text: name.to_string(),
+                        target: name.to_string(),
+                    });
+                }
+                "anon_phrased" => {
+                    let caps = ANONYMOUS_PHRASED_REGEX.captures(m.as_str()).unwrap();
+                    let text_full = &caps["text"];
+                    if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
+                        inlines.push(InlineNode::AnonymousHyperlink {
+                            text: embedded["text"].trim().to_string(),
+                            target: embedded["uri"].to_string(),
+                        });
+                    } else {
+                        inlines.push(InlineNode::AnonymousReference(text_full.to_string()));
+                    }
+                }
+                "anon_simple" => {
+                    let caps = ANONYMOUS_SIMPLE_REGEX.captures(m.as_str()).unwrap();
+                    let name = &caps["name"];
+                    inlines.push(InlineNode::AnonymousReference(name.to_string()));
+                }
+                _ => unreachable!(),
+            }
+            last_match_end += m.end();
         } else {
+            // No more matches
+            inlines.push(InlineNode::Text(remaining.to_string()));
             break;
         }
-    }
-    if current_pos < paragraph_text.len() {
-        inlines.push(crate::ast::InlineNode::Text(
-            paragraph_text[current_pos..].to_string(),
-        ));
     }
 
     (current_pos_line - i, Node::Paragraph(inlines))
@@ -321,6 +442,7 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ast::InlineNode;
 
     #[test]
     fn test_parse_returns_empty_document_for_empty_input() {
@@ -724,10 +846,54 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
-        assert_eq!(doc.nodes[0], Node::Target("my-target".to_string()));
+        assert_eq!(
+            doc.nodes[0],
+            Node::Target {
+                name: TargetName::new("my-target"),
+                uri: None
+            }
+        );
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![crate::ast::InlineNode::Text("Some text.".to_string())])
+            Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())])
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_external_target_node() {
+        // Given
+        let input = ".. _my-link: https://example.com\n\nSome text.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Target {
+                name: TargetName::new("my-link"),
+                uri: Some("https://example.com".to_string())
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_indented_external_target_node() {
+        // Given
+        let input = ".. _my-link:\n   https://example.com\n\nSome text.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Target {
+                name: TargetName::new("my-link"),
+                uri: Some("https://example.com".to_string())
+            }
         );
     }
 
@@ -744,9 +910,78 @@ mod tests {
         assert_eq!(
             doc.nodes[0],
             Node::Paragraph(vec![
-                crate::ast::InlineNode::Text("Here is a ".to_string()),
-                crate::ast::InlineNode::Reference("my-target".to_string()),
-                crate::ast::InlineNode::Text(" link.".to_string()),
+                InlineNode::Text("Here is a ".to_string()),
+                InlineNode::Reference("my-target".to_string()),
+                InlineNode::Text(" link.".to_string()),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_phrased_hyperlink_node() {
+        // Given
+        let input = "Check the `Python Guide`_ for more.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![
+                InlineNode::Text("Check the ".to_string()),
+                InlineNode::Hyperlink {
+                    text: "Python Guide".to_string(),
+                    target: "Python Guide".to_string(),
+                },
+                InlineNode::Text(" for more.".to_string()),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_embedded_uri_hyperlink_node() {
+        // Given
+        let input = "Check `Google <https://google.com>`_ now.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![
+                InlineNode::Text("Check ".to_string()),
+                InlineNode::Hyperlink {
+                    text: "Google".to_string(),
+                    target: "https://google.com".to_string(),
+                },
+                InlineNode::Text(" now.".to_string()),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_simple_link_node() {
+        // Given
+        let input = "Refer to target_ for details.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![
+                InlineNode::Text("Refer to ".to_string()),
+                InlineNode::Hyperlink {
+                    text: "target".to_string(),
+                    target: "target".to_string(),
+                },
+                InlineNode::Text(" for details.".to_string()),
             ])
         );
     }
@@ -922,5 +1157,72 @@ mod tests {
         assert_eq!(adornment.character, '#');
         assert_eq!(adornment.style, AdornmentStyle::Underline);
         assert_eq!(text, "Heading");
+    }
+
+    #[test]
+    fn test_parse_creates_anonymous_target_node() {
+        // Given
+        let input = ".. __: https://example.com\n\nText";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(
+            doc.nodes[0],
+            Node::AnonymousTarget {
+                uri: "https://example.com".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_anonymous_reference() {
+        // Given
+        let input = "See `Example`__ and link__";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 4);
+            assert_eq!(
+                inlines[1],
+                InlineNode::AnonymousReference("Example".to_string())
+            );
+            assert_eq!(
+                inlines[3],
+                InlineNode::AnonymousReference("link".to_string())
+            );
+        } else {
+            panic!("Expected paragraph");
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_anonymous_hyperlink_with_embedded_uri() {
+        // Given
+        let input = "See `Google <https://google.com>`__";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 2);
+            assert_eq!(
+                inlines[1],
+                InlineNode::AnonymousHyperlink {
+                    text: "Google".to_string(),
+                    target: "https://google.com".to_string(),
+                }
+            );
+        } else {
+            panic!("Expected paragraph");
+        }
     }
 }

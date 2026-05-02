@@ -14,3 +14,4 @@
 - Documentation builds should fail loudly if content invariants (like missing diagram images) are violated.
 - Tests should always follow the Given-When-Then pattern.
 - Do not commit changes unless explicitly requested by the user.
+- Always add examples for all variants of a new feature to the example project.
