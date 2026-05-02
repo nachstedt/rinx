@@ -265,7 +265,7 @@ fn try_parse_heading(
     Some((consumed, Node::Heading { level, text }))
 }
 
-fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
+fn extract_paragraph_block(lines: &[&str], i: usize) -> (usize, String) {
     let mut paragraph_text = String::new();
     let mut current_pos_line = i;
 
@@ -287,35 +287,44 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
         }
     }
 
-    // split paragraph text by `:ref:\`target\``
+    (current_pos_line - i, paragraph_text)
+}
+
+fn parse_inline_elements(text: &str) -> Vec<crate::ast::InlineNode> {
     let mut inlines = Vec::new();
     let mut current_pos = 0;
-    while let Some(start) = paragraph_text[current_pos..].find(":ref:`") {
+    while let Some(start) = text[current_pos..].find(":ref:`") {
         let absolute_start = current_pos + start;
         let search_start = absolute_start + 6; // length of ":ref:`"
-        if let Some(end) = paragraph_text[search_start..].find('`') {
+        if let Some(end) = text[search_start..].find('`') {
             let absolute_end = search_start + end;
             // push text before
             if absolute_start > current_pos {
                 inlines.push(crate::ast::InlineNode::Text(
-                    paragraph_text[current_pos..absolute_start].to_string(),
+                    text[current_pos..absolute_start].to_string(),
                 ));
             }
             // push reference
-            let target = paragraph_text[search_start..absolute_end].to_string();
+            let target = text[search_start..absolute_end].to_string();
             inlines.push(crate::ast::InlineNode::Reference(target));
             current_pos = absolute_end + 1;
         } else {
             break;
         }
     }
-    if current_pos < paragraph_text.len() {
+    if current_pos < text.len() {
         inlines.push(crate::ast::InlineNode::Text(
-            paragraph_text[current_pos..].to_string(),
+            text[current_pos..].to_string(),
         ));
     }
+    inlines
+}
 
-    (current_pos_line - i, Node::Paragraph(inlines))
+fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
+    let (consumed_lines, paragraph_text) = extract_paragraph_block(lines, i);
+    let inlines = parse_inline_elements(&paragraph_text);
+
+    (consumed_lines, Node::Paragraph(inlines))
 }
 
 #[cfg(test)]
