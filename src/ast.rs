@@ -64,7 +64,32 @@ impl TryFrom<HashedContentRaw> for HashedContent {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// A normalized reST target name.
+///
+/// reST target names are case-insensitive and all internal whitespace
+/// is collapsed to a single space. This opaque type enforces that invariant.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct TargetName(String);
+
+impl TargetName {
+    /// Creates a new `TargetName`, applying whitespace collapse and lowercasing.
+    #[must_use]
+    pub fn new(raw: &str) -> Self {
+        let normalized = raw
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_lowercase();
+        Self(normalized)
+    }
+
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Directive {
     Toctree {
         paths: Vec<String>,
@@ -79,18 +104,30 @@ pub enum Directive {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum InlineNode {
     Text(String),
     Reference(String),
+    Hyperlink { text: String, target: String },
+    AnonymousReference(String),
+    AnonymousHyperlink { text: String, target: String },
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
-    Heading { level: u8, text: String },
+    Heading {
+        level: u8,
+        text: String,
+    },
     Paragraph(Vec<InlineNode>),
     Directive(Directive),
-    Target(String),
+    Target {
+        name: TargetName,
+        uri: Option<String>,
+    },
+    AnonymousTarget {
+        uri: String,
+    },
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -115,6 +152,7 @@ impl Document {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ast::{HashedContent, InlineNode};
 
     #[test]
     fn test_new_creates_document_with_given_nodes() {
@@ -214,5 +252,17 @@ mod tests {
             result.unwrap_err(),
             format!("Hash mismatch: expected {valid_hash}, got {invalid_hash}")
         );
+    }
+
+    #[test]
+    fn test_target_name_normalization() {
+        // Given
+        let raw = "  My   Target  Name  ";
+
+        // When
+        let target = TargetName::new(raw);
+
+        // Then
+        assert_eq!(target.as_str(), "my target name");
     }
 }

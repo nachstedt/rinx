@@ -4,7 +4,7 @@
 //! targets, document titles, and a hierarchical navigation tree derived from
 //! toctree directives.
 
-use crate::ast::{Directive, Document, Node};
+use crate::ast::{Directive, Document, Node, TargetName};
 use crate::utils::normalize_path;
 use serde::{Deserialize, Serialize};
 
@@ -25,11 +25,17 @@ pub struct NavEntry {
     pub children: Vec<NavEntry>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TargetLocation {
+    Internal(String), // doc_path
+    External(String), // URL
+}
+
 /// A global symbol table built from all documents in the project.
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct ProjectIndex {
     /// Maps target names to document paths.
-    pub targets: BTreeMap<String, String>,
+    pub targets: BTreeMap<TargetName, TargetLocation>,
     /// Maps document paths to their top-level title.
     pub document_titles: BTreeMap<String, String>,
     /// Hierarchical navigation tree derived from toctree directives.
@@ -55,8 +61,13 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     let mut index = ProjectIndex::default();
     let mut found_title = false;
     for node in &doc.nodes {
-        if let Node::Target(name) = node {
-            index.targets.insert(name.clone(), doc.path.clone());
+        if let Node::Target { name, uri } = node {
+            let location = if let Some(url) = uri {
+                TargetLocation::External(url.clone())
+            } else {
+                TargetLocation::Internal(doc.path.clone())
+            };
+            index.targets.insert(name.clone(), location);
         }
         if !found_title && let Node::Heading { level: 1, text } = node {
             index.document_titles.insert(doc.path.clone(), text.clone());
@@ -332,7 +343,10 @@ mod tests {
         let doc = Document::new(
             "docs/my-file.rst".to_string(),
             vec![
-                Node::Target("section-1".to_string()),
+                Node::Target {
+                    name: TargetName::new("section-1"),
+                    uri: None,
+                },
                 Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
             ],
         );
@@ -342,7 +356,10 @@ mod tests {
 
         // Then
         assert_eq!(index.targets.len(), 1);
-        assert_eq!(index.targets.get("section-1").unwrap(), "docs/my-file.rst");
+        assert_eq!(
+            index.targets.get(&TargetName::new("section-1")).unwrap(),
+            &TargetLocation::Internal("docs/my-file.rst".to_string())
+        );
     }
 
     #[test]

@@ -550,7 +550,7 @@ mod tests {
     fn test_process_render_returns_html_string() {
         // Given
         let doc = r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#;
-        let index = r#"{"targets":{},"document_titles":{}}"#;
+        let index = r#"{"targets":{},"document_titles":{},"nav_tree":[]}"#;
         let config = config::SiteConfig::default();
         let template = "{{ body }}";
 
@@ -566,8 +566,7 @@ mod tests {
         // Given
         let rst = "Section A\n=========\n\nSee :ref:`section-b`";
         // Global index only knows about section-b in another file
-        let global_index =
-            r#"{"targets":{"section-b":"other.rst"},"document_titles":{"other.rst":"Other"}}"#;
+        let global_index = r#"{"targets":{"section-b":{"Internal":"other.rst"}},"document_titles":{"other.rst":"Other"},"nav_tree":[]}"#;
         let config = config::SiteConfig::default();
         let template = "<html>{{ body }}</html>";
 
