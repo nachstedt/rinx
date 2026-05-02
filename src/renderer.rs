@@ -99,21 +99,46 @@ fn resolve_nav_hrefs(
 pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
     let mut html = String::new();
 
-    // Collect anonymous targets for local resolution
-    let anon_targets: Vec<String> = doc
-        .nodes
-        .iter()
-        .filter_map(|n| {
-            if let Node::AnonymousTarget { uri } = n {
-                Some(uri.clone())
-            } else {
-                None
-            }
-        })
-        .collect();
+    // Collect anonymous targets for local resolution recursively
+    let mut anon_targets = Vec::new();
+    collect_anonymous_targets(&doc.nodes, &mut anon_targets);
     let mut anon_index = 0;
 
-    for node in &doc.nodes {
+    render_nodes(
+        &mut html,
+        &doc.nodes,
+        index,
+        doc_path,
+        &anon_targets,
+        &mut anon_index,
+        &doc.path,
+    );
+
+    html
+}
+
+fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
+    for node in nodes {
+        match node {
+            Node::AnonymousTarget { uri } => targets.push(uri.clone()),
+            Node::Directive(Directive::Admonition { body, .. }) => {
+                collect_anonymous_targets(body, targets);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn render_nodes(
+    html: &mut String,
+    nodes: &[Node],
+    index: &ProjectIndex,
+    doc_path: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+    original_doc_path: &str,
+) {
+    for node in nodes {
         match node {
             Node::Heading { level, text } => {
                 let tag = format!("h{}", (*level).clamp(1, 6));
@@ -123,14 +148,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
             Node::Paragraph(inlines) => {
                 let _ = write!(html, "<p>");
                 for inline in inlines {
-                    render_inline(
-                        &mut html,
-                        inline,
-                        index,
-                        doc_path,
-                        &anon_targets,
-                        &mut anon_index,
-                    );
+                    render_inline(html, inline, index, doc_path, anon_targets, anon_index);
                 }
                 let _ = writeln!(html, "</p>");
             }
@@ -141,43 +159,139 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
                 }
             }
             Node::AnonymousTarget { .. } => {}
-            Node::Directive(directive) => match directive {
-                Directive::Toctree { maxdepth, .. } => {
-                    let _ = writeln!(html, "<ul>");
-                    let current_dir = std::path::Path::new(doc_path)
-                        .parent()
-                        .unwrap_or(std::path::Path::new(""));
-                    // The nav tree already contains pre-resolved, normalized children
-                    // for this document — use them directly instead of re-deriving paths.
-                    if let Some(current_entry) = find_nav_entry(&index.nav_tree, &doc.path) {
-                        for child in &current_entry.children {
-                            render_nav_entry(&mut html, child, index, current_dir, 1, *maxdepth);
-                        }
-                    }
-                    let _ = writeln!(html, "</ul>");
-                }
-                Directive::PlantUml(content) => {
-                    let escaped_hash = html_escape::encode_text(content.hash());
-
-                    let current_dir = std::path::Path::new(doc_path)
-                        .parent()
-                        .unwrap_or(std::path::Path::new(""));
-                    let image_path =
-                        std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
-                    let relative_path =
-                        pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
-                    let src = format!("{}", relative_path.display());
-
-                    let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
-                    let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
-                    let _ = writeln!(html, "</div>");
-                }
-                Directive::Unknown { .. } => {}
-            },
+            Node::Directive(directive) => render_directive(
+                html,
+                directive,
+                index,
+                doc_path,
+                anon_targets,
+                anon_index,
+                original_doc_path,
+            ),
         }
     }
+}
 
-    html
+fn render_directive(
+    html: &mut String,
+    directive: &Directive,
+    index: &ProjectIndex,
+    doc_path: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+    original_doc_path: &str,
+) {
+    match directive {
+        Directive::Toctree { maxdepth, .. } => {
+            let _ = writeln!(html, "<ul>");
+            let current_dir = std::path::Path::new(doc_path)
+                .parent()
+                .unwrap_or(std::path::Path::new(""));
+            if let Some(current_entry) = find_nav_entry(&index.nav_tree, original_doc_path) {
+                for child in &current_entry.children {
+                    render_nav_entry(html, child, index, current_dir, 1, *maxdepth);
+                }
+            }
+            let _ = writeln!(html, "</ul>");
+        }
+        Directive::PlantUml(content) => {
+            let escaped_hash = html_escape::encode_text(content.hash());
+
+            let current_dir = std::path::Path::new(doc_path)
+                .parent()
+                .unwrap_or(std::path::Path::new(""));
+            let image_path = std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
+            let relative_path =
+                pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
+            let src = relative_path.display();
+
+            let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
+            let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
+            let _ = writeln!(html, "</div>");
+        }
+        Directive::Admonition {
+            kind,
+            title,
+            collapsible,
+            body,
+        } => render_admonition(
+            html,
+            *kind,
+            title.as_deref(),
+            *collapsible,
+            body,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        ),
+        Directive::Unknown { .. } => {}
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn render_admonition(
+    html: &mut String,
+    kind: crate::ast::AdmonitionKind,
+    title: Option<&str>,
+    collapsible: Option<bool>,
+    body: &[Node],
+    index: &ProjectIndex,
+    doc_path: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+    original_doc_path: &str,
+) {
+    let kind_str = kind.as_str();
+    let title_text = title.map_or_else(
+        || {
+            let mut chars = kind_str.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+            }
+        },
+        String::from,
+    );
+
+    let kind_escaped = html_escape::encode_text(kind_str);
+    let title_escaped = html_escape::encode_text(&title_text);
+
+    if let Some(open) = collapsible {
+        let open_attr = if open { " open" } else { "" };
+        let _ = writeln!(
+            html,
+            "<details class=\"admonition {kind_escaped}\"{open_attr}>"
+        );
+        let _ = writeln!(
+            html,
+            "  <summary class=\"admonition-title\">{title_escaped}</summary>"
+        );
+        render_nodes(
+            html,
+            body,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        );
+        let _ = writeln!(html, "</details>");
+    } else {
+        let _ = writeln!(html, "<div class=\"admonition {kind_escaped}\">");
+        let _ = writeln!(html, "  <p class=\"admonition-title\">{title_escaped}</p>");
+        render_nodes(
+            html,
+            body,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        );
+        let _ = writeln!(html, "</div>");
+    }
 }
 
 fn render_inline(
@@ -1028,6 +1142,56 @@ mod tests {
     }
 
     #[test]
+    fn test_render_formats_admonition() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::Admonition {
+                kind: crate::ast::AdmonitionKind::Note,
+                title: None,
+                collapsible: None,
+                body: vec![Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                    "Note body".to_string(),
+                )])],
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<div class=\"admonition note\">"));
+        assert!(result.contains("<p class=\"admonition-title\">Note</p>"));
+        assert!(result.contains("<p>Note body</p>"));
+    }
+
+    #[test]
+    fn test_render_formats_collapsible_admonition() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::Admonition {
+                kind: crate::ast::AdmonitionKind::Warning,
+                title: Some("Custom Warning".to_string()),
+                collapsible: Some(false),
+                body: vec![Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                    "Warning body".to_string(),
+                )])],
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<details class=\"admonition warning\">"));
+        assert!(result.contains("<summary class=\"admonition-title\">Custom Warning</summary>"));
+        assert!(result.contains("<p>Warning body</p>"));
+    }
+
+    #[test]
     fn test_render_nav_entry_computes_relative_path_from_subdirectory() {
         // Given — the current document is inside a subdirectory
         let entry = make_entry("page.rst", vec![]);
@@ -1105,6 +1269,109 @@ mod tests {
         // Then
         assert!(result.contains("<a href=\"https://embedded.com\">Embedded</a>"));
         assert!(result.contains("<a href=\"https://target.com\">Reference</a>"));
+    }
+
+    #[test]
+    fn test_render_admonition_static() {
+        // Given
+        let mut html = String::new();
+        let kind = crate::ast::AdmonitionKind::Note;
+        let title: Option<String> = None;
+        let collapsible: Option<bool> = None;
+        let body = vec![Node::Paragraph(vec![crate::ast::InlineNode::Text(
+            "Body".to_string(),
+        )])];
+        let index = ProjectIndex::default();
+        let doc_path = "test.rst";
+        let anon_targets = vec![];
+        let mut anon_index = 0;
+        let original_doc_path = "test.rst";
+
+        // When
+        render_admonition(
+            &mut html,
+            kind,
+            title.as_deref(),
+            collapsible,
+            &body,
+            &index,
+            doc_path,
+            &anon_targets,
+            &mut anon_index,
+            original_doc_path,
+        );
+
+        // Then
+        assert!(html.contains("<div class=\"admonition note\">"));
+        assert!(html.contains("<p class=\"admonition-title\">Note</p>"));
+        assert!(html.contains("<p>Body</p>"));
+    }
+
+    #[test]
+    fn test_render_admonition_collapsible_open() {
+        // Given
+        let mut html = String::new();
+        let kind = crate::ast::AdmonitionKind::Warning;
+        let title = Some("Custom Title".to_string());
+        let collapsible = Some(true);
+        let body = vec![];
+        let index = ProjectIndex::default();
+        let doc_path = "test.rst";
+        let anon_targets = vec![];
+        let mut anon_index = 0;
+        let original_doc_path = "test.rst";
+
+        // When
+        render_admonition(
+            &mut html,
+            kind,
+            title.as_deref(),
+            collapsible,
+            &body,
+            &index,
+            doc_path,
+            &anon_targets,
+            &mut anon_index,
+            original_doc_path,
+        );
+
+        // Then
+        assert!(html.contains("<details class=\"admonition warning\" open>"));
+        assert!(html.contains("<summary class=\"admonition-title\">Custom Title</summary>"));
+    }
+
+    #[test]
+    fn test_render_admonition_collapsible_closed() {
+        // Given
+        let mut html = String::new();
+        let kind = crate::ast::AdmonitionKind::Hint;
+        let title: Option<String> = None;
+        let collapsible = Some(false);
+        let body = vec![];
+        let index = ProjectIndex::default();
+        let doc_path = "test.rst";
+        let anon_targets = vec![];
+        let mut anon_index = 0;
+        let original_doc_path = "test.rst";
+
+        // When
+        render_admonition(
+            &mut html,
+            kind,
+            title.as_deref(),
+            collapsible,
+            &body,
+            &index,
+            doc_path,
+            &anon_targets,
+            &mut anon_index,
+            original_doc_path,
+        );
+
+        // Then
+        assert!(html.contains("<details class=\"admonition hint\">"));
+        assert!(!html.contains(" open>"));
+        assert!(html.contains("<summary class=\"admonition-title\">Hint</summary>"));
     }
 
     #[test]

@@ -15,3 +15,5 @@
 - Tests should always follow the Given-When-Then pattern.
 - Do not commit changes unless explicitly requested by the user.
 - Always add examples for all variants of a new feature to the example project.
+- Always create unit tests for new functions introduced during refactoring.
+- Use enums for fields with a fixed set of predefined values to ensure type safety.
