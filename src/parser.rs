@@ -923,4 +923,45 @@ mod tests {
         assert_eq!(adornment.style, AdornmentStyle::Underline);
         assert_eq!(text, "Heading");
     }
+
+    #[test]
+    fn test_try_parse_directive_not_a_directive() {
+        let lines = vec![
+            "Not a directive",
+            ".. comment",
+            ".. :missing: argument",
+        ];
+        let mut diagnostics = vec![];
+        for i in 0..lines.len() {
+            let res = try_parse_directive(&lines, i, &mut diagnostics);
+            assert!(res.is_none());
+        }
+    }
+
+    #[test]
+    fn test_try_parse_directive_basic() {
+        let lines = vec![
+            ".. my-dir:: my-arg",
+            "   ",
+            "   body line 1",
+            "   body line 2",
+            "",
+            "   body line 3",
+            "",
+            "Not a body line",
+        ];
+        let mut diagnostics = vec![];
+        let res = try_parse_directive(&lines, 0, &mut diagnostics);
+        assert!(res.is_some());
+        let (consumed, node) = res.unwrap();
+        assert_eq!(consumed, 7); // consumes index 0 to 6
+        match node {
+            Node::Directive(Directive::Unknown { name, argument, body }) => {
+                assert_eq!(name, "my-dir");
+                assert_eq!(argument, "my-arg");
+                assert_eq!(body, "body line 1\nbody line 2\n\nbody line 3");
+            }
+            _ => panic!("Expected Unknown directive"),
+        }
+    }
 }
