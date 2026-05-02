@@ -35,42 +35,10 @@ static ANONYMOUS_SIMPLE_REGEX: LazyLock<Regex> =
 #[must_use]
 pub fn parse(path: &str, input: &str) -> Document {
     let lines: Vec<&str> = input.lines().collect();
-    let mut nodes = Vec::new();
     let mut adornment_order: Vec<Adornment> = Vec::new();
-
-    let mut i = 0;
     let mut diagnostics = Vec::new();
 
-    while i < lines.len() {
-        let line = lines[i].trim_end();
-
-        if line.trim().is_empty() {
-            i += 1;
-            continue;
-        }
-
-        if let Some((consumed, node)) = try_parse_directive(&lines, i, &mut diagnostics) {
-            nodes.push(node);
-            i += consumed;
-            continue;
-        }
-
-        if let Some((consumed, node)) = try_parse_target(&lines, i) {
-            nodes.push(node);
-            i += consumed;
-            continue;
-        }
-
-        if let Some((consumed, node)) = try_parse_heading(&lines, i, &mut adornment_order) {
-            nodes.push(node);
-            i += consumed;
-            continue;
-        }
-
-        let (consumed, node) = parse_paragraph(&lines, i);
-        nodes.push(node);
-        i += consumed;
-    }
+    let nodes = parse_blocks(&lines, &mut adornment_order, &mut diagnostics);
 
     if !diagnostics.is_empty() {
         eprintln!("Diagnostics for '{path}':");
@@ -141,9 +109,52 @@ fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)> {
     None
 }
 
+fn parse_blocks(
+    lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+) -> Vec<Node> {
+    let mut nodes = Vec::new();
+    let mut i = 0;
+
+    while i < lines.len() {
+        let line = lines[i].trim_end();
+
+        if line.trim().is_empty() {
+            i += 1;
+            continue;
+        }
+
+        if let Some((consumed, node)) = try_parse_directive(lines, i, adornment_order, diagnostics)
+        {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
+        if let Some((consumed, node)) = try_parse_target(lines, i) {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
+        if let Some((consumed, node)) = try_parse_heading(lines, i, adornment_order) {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
+        let (consumed, node) = parse_paragraph(lines, i);
+        nodes.push(node);
+        i += consumed;
+    }
+    nodes
+}
+
 fn try_parse_directive(
     lines: &[&str],
     i: usize,
+    adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
 ) -> Option<(usize, Node)> {
     let line = lines[i].trim_end();
@@ -228,6 +239,14 @@ fn try_parse_directive(
             body.push_str(l.trim_start());
         }
         Directive::PlantUml(HashedContent::new(body))
+    } else if let Ok(kind) = name.parse::<crate::ast::AdmonitionKind>() {
+        parse_admonition(
+            kind,
+            argument,
+            &body_lines[start..],
+            adornment_order,
+            diagnostics,
+        )
     } else {
         let mut body = String::new();
         for l in &body_lines[start..] {
@@ -437,6 +456,88 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
     }
 
     (current_pos_line - i, Node::Paragraph(inlines))
+}
+
+fn parse_admonition(
+    kind: crate::ast::AdmonitionKind,
+    argument: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+) -> Directive {
+    let title = if kind == crate::ast::AdmonitionKind::Admonition {
+        if argument.is_empty() {
+            diagnostics
+                .push("Generic 'admonition' directive requires a title argument.".to_string());
+            Some("Admonition".to_string())
+        } else {
+            Some(argument)
+        }
+    } else {
+        None
+    };
+
+    let mut collapsible = None;
+
+    // Strip common indentation and parse options
+    if let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) {
+        let indent = first.chars().take_while(|c| c.is_whitespace()).count();
+        let unindented_lines: Vec<String> = body_lines
+            .iter()
+            .map(|l| {
+                if l.len() >= indent {
+                    l[indent..].to_string()
+                } else {
+                    l.trim().to_string()
+                }
+            })
+            .collect();
+
+        // Parse options (specifically :collapsible:)
+        let mut opt_idx = 0;
+        while opt_idx < unindented_lines.len() {
+            let line = unindented_lines[opt_idx].trim();
+            if line.is_empty() {
+                opt_idx += 1;
+                continue;
+            }
+            if line.starts_with(':') && line.contains(':') {
+                if line.starts_with(":collapsible:") {
+                    let arg = line.strip_prefix(":collapsible:").unwrap().trim();
+                    if arg == "open" {
+                        collapsible = Some(true);
+                    } else {
+                        // Default to closed if ":collapsible:" or ":collapsible: close"
+                        collapsible = Some(false);
+                    }
+                }
+                opt_idx += 1;
+            } else {
+                break;
+            }
+        }
+
+        // The rest is the body
+        let body_content: Vec<&str> = unindented_lines[opt_idx..]
+            .iter()
+            .map(String::as_str)
+            .collect();
+        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics);
+
+        Directive::Admonition {
+            kind,
+            title,
+            collapsible,
+            body: body_nodes,
+        }
+    } else {
+        Directive::Admonition {
+            kind,
+            title,
+            collapsible: None,
+            body: vec![],
+        }
+    }
 }
 
 #[cfg(test)]
@@ -746,6 +847,80 @@ mod tests {
                 text: "H3".to_string()
             }
         );
+    }
+
+    #[test]
+    fn test_parse_creates_admonition() {
+        // Given
+        let input = ".. note::\n\n   This is a note.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::Admonition {
+            kind, title, body, ..
+        }) = &doc.nodes[0]
+        {
+            assert_eq!(kind, &crate::ast::AdmonitionKind::Note);
+            assert_eq!(title, &None);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected Admonition directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_admonition_with_title() {
+        // Given
+        let input = ".. admonition:: My Title\n\n   Custom content.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::Admonition { kind, title, .. }) = &doc.nodes[0] {
+            assert_eq!(kind, &crate::ast::AdmonitionKind::Admonition);
+            assert_eq!(title, &Some("My Title".to_string()));
+        } else {
+            panic!("Expected Admonition directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_collapsible_admonition() {
+        // Given
+        let input = ".. note::\n   :collapsible:\n\n   Content.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::Admonition { collapsible, .. }) = &doc.nodes[0] {
+            assert_eq!(collapsible, &Some(false));
+        } else {
+            panic!("Expected Admonition directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_collapsible_open_admonition() {
+        // Given
+        let input = ".. note::\n   :collapsible: open\n\n   Content.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::Admonition { collapsible, .. }) = &doc.nodes[0] {
+            assert_eq!(collapsible, &Some(true));
+        } else {
+            panic!("Expected Admonition directive");
+        }
     }
 
     #[test]
@@ -1224,5 +1399,166 @@ mod tests {
         } else {
             panic!("Expected paragraph");
         }
+    }
+
+    #[test]
+    fn test_parse_blocks_empty_input() {
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+        let nodes = parse_blocks(&[], &mut adornment_order, &mut diagnostics);
+        assert!(nodes.is_empty());
+    }
+
+    #[test]
+    fn test_parse_blocks_simple_paragraph() {
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+        let lines = vec!["Hello world"];
+        let nodes = parse_blocks(&lines, &mut adornment_order, &mut diagnostics);
+        assert_eq!(nodes.len(), 1);
+        match &nodes[0] {
+            Node::Paragraph(inlines) => {
+                assert_eq!(inlines.len(), 1);
+                assert_eq!(inlines[0], InlineNode::Text("Hello world".to_string()));
+            }
+            _ => panic!("Expected paragraph"),
+        }
+    }
+
+    #[test]
+    fn test_parse_blocks_maintains_adornment_order() {
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        let lines1 = vec!["Title 1", "======="];
+        let nodes1 = parse_blocks(&lines1, &mut adornment_order, &mut diagnostics);
+        assert_eq!(nodes1.len(), 1);
+
+        let lines2 = vec!["Title 2", "-------"];
+        let nodes2 = parse_blocks(&lines2, &mut adornment_order, &mut diagnostics);
+        assert_eq!(nodes2.len(), 1);
+
+        assert_eq!(adornment_order.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_blocks_collects_diagnostics() {
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // This will trigger a diagnostic because of the unknown option
+        let lines = vec![".. toctree::", "   :unknown_option: value"];
+        let nodes = parse_blocks(&lines, &mut adornment_order, &mut diagnostics);
+
+        assert_eq!(nodes.len(), 1);
+        assert!(!diagnostics.is_empty());
+        assert!(diagnostics[0].contains("Invalid or non-standard Sphinx toctree option"));
+    }
+
+    #[test]
+    fn test_parse_admonition_basic() {
+        // Given
+        let kind = crate::ast::AdmonitionKind::Note;
+        let argument = String::new();
+        let body_lines = vec!["   Body line"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When
+        let directive = parse_admonition(
+            kind,
+            argument,
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+        );
+
+        // Then
+        if let Directive::Admonition {
+            kind, title, body, ..
+        } = directive
+        {
+            assert_eq!(kind, crate::ast::AdmonitionKind::Note);
+            assert_eq!(title, None);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected Admonition directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_admonition_generic_with_title() {
+        // Given
+        let kind = crate::ast::AdmonitionKind::Admonition;
+        let argument = "Custom Title".to_string();
+        let body_lines = vec!["   Body line"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When
+        let directive = parse_admonition(
+            kind,
+            argument,
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+        );
+
+        // Then
+        if let Directive::Admonition { kind, title, .. } = directive {
+            assert_eq!(kind, crate::ast::AdmonitionKind::Admonition);
+            assert_eq!(title, Some("Custom Title".to_string()));
+        } else {
+            panic!("Expected Admonition directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_admonition_collapsible() {
+        // Given
+        let kind = crate::ast::AdmonitionKind::Warning;
+        let argument = String::new();
+        let body_lines = vec!["   :collapsible: open", "", "   Content"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When
+        let directive = parse_admonition(
+            kind,
+            argument,
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+        );
+
+        // Then
+        if let Directive::Admonition { collapsible, .. } = directive {
+            assert_eq!(collapsible, Some(true));
+        } else {
+            panic!("Expected Admonition directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_admonition_generic_requires_title_diagnostic() {
+        // Given
+        let kind = crate::ast::AdmonitionKind::Admonition;
+        let argument = String::new();
+        let body_lines = vec!["   Body line"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When
+        let _ = parse_admonition(
+            kind,
+            argument,
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+        );
+
+        // Then
+        assert!(!diagnostics.is_empty());
+        assert!(diagnostics[0].contains("requires a title argument"));
     }
 }

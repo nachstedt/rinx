@@ -9,6 +9,7 @@ Welcome to the Rusty-Sphinx example.
 .. toctree::
 
    hyperlinks
+   admonitions
    team_a/index
    team_b/index
 
