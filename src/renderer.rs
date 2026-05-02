@@ -326,13 +326,11 @@ mod tests {
         index.nav_tree = vec![crate::analyzer::NavEntry {
             title: "test".to_string(),
             path: "test.rst".to_string(),
-            children: vec![
-                crate::analyzer::NavEntry {
-                    title: "Team A Module".to_string(),
-                    path: "team_a/index.rst".to_string(),
-                    children: vec![],
-                },
-            ],
+            children: vec![crate::analyzer::NavEntry {
+                title: "Team A Module".to_string(),
+                path: "team_a/index.rst".to_string(),
+                children: vec![],
+            }],
         }];
 
         // When
