@@ -63,7 +63,7 @@ pub fn render_page(
 struct ResolvedNavEntry {
     title: String,
     href: String,
-    children: Vec<ResolvedNavEntry>,
+    children: Vec<Self>,
 }
 
 /// Converts a nav tree's `.rst` paths into relative `.html` hrefs
@@ -168,6 +168,23 @@ fn render_nodes(
                 anon_index,
                 original_doc_path,
             ),
+            Node::BulletList { items, .. } => {
+                let _ = writeln!(html, "<ul>");
+                for item in items {
+                    let _ = write!(html, "<li>");
+                    render_nodes(
+                        html,
+                        &item.nodes,
+                        index,
+                        doc_path,
+                        anon_targets,
+                        anon_index,
+                        original_doc_path,
+                    );
+                    let _ = writeln!(html, "</li>");
+                }
+                let _ = writeln!(html, "</ul>");
+            }
         }
     }
 }
@@ -186,7 +203,7 @@ fn render_directive(
             let _ = writeln!(html, "<ul>");
             let current_dir = std::path::Path::new(doc_path)
                 .parent()
-                .unwrap_or(std::path::Path::new(""));
+                .unwrap_or_else(|| std::path::Path::new(""));
             if let Some(current_entry) = find_nav_entry(&index.nav_tree, original_doc_path) {
                 for child in &current_entry.children {
                     render_nav_entry(html, child, index, current_dir, 1, *maxdepth);
@@ -199,7 +216,7 @@ fn render_directive(
 
             let current_dir = std::path::Path::new(doc_path)
                 .parent()
-                .unwrap_or(std::path::Path::new(""));
+                .unwrap_or_else(|| std::path::Path::new(""));
             let image_path = std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
             let relative_path =
                 pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
@@ -247,10 +264,9 @@ fn render_admonition(
     let title_text = title.map_or_else(
         || {
             let mut chars = kind_str.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
-            }
+            chars.next().map_or_else(String::new, |c| {
+                c.to_uppercase().collect::<String>() + chars.as_str()
+            })
         },
         String::from,
     );
@@ -314,7 +330,7 @@ fn render_inline(
             if let Some(TargetLocation::Internal(target_path)) = index.targets.get(&target_name) {
                 let current_dir = std::path::Path::new(doc_path)
                     .parent()
-                    .unwrap_or(std::path::Path::new(""));
+                    .unwrap_or_else(|| std::path::Path::new(""));
                 let target_html_path = std::path::Path::new(target_path).with_extension("html");
 
                 let relative_path = pathdiff::diff_paths(&target_html_path, current_dir)
@@ -350,7 +366,7 @@ fn render_inline(
                         TargetLocation::Internal(target_path) => {
                             let current_dir = std::path::Path::new(doc_path)
                                 .parent()
-                                .unwrap_or(std::path::Path::new(""));
+                                .unwrap_or_else(|| std::path::Path::new(""));
                             let target_html_path =
                                 std::path::Path::new(target_path).with_extension("html");
 
@@ -785,6 +801,81 @@ mod tests {
     }
 
     #[test]
+    fn test_render_bullet_list() {
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::BulletList {
+                bullet: '*',
+                items: vec![
+                    crate::ast::BulletListItem {
+                        nodes: vec![Node::Paragraph(vec![InlineNode::Text(
+                            "Item 1".to_string(),
+                        )])],
+                    },
+                    crate::ast::BulletListItem {
+                        nodes: vec![Node::Paragraph(vec![InlineNode::Text(
+                            "Item 2".to_string(),
+                        )])],
+                    },
+                ],
+            }],
+        );
+        let index = ProjectIndex::default();
+        let result = render(&doc, &index, &doc.path);
+        assert_eq!(
+            result,
+            "<ul>\n<li><p>Item 1</p>\n</li>\n<li><p>Item 2</p>\n</li>\n</ul>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_bullet_list_nested() {
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::BulletList {
+                bullet: '*',
+                items: vec![crate::ast::BulletListItem {
+                    nodes: vec![
+                        Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
+                        Node::BulletList {
+                            bullet: '-',
+                            items: vec![crate::ast::BulletListItem {
+                                nodes: vec![Node::Paragraph(vec![InlineNode::Text(
+                                    "Child".to_string(),
+                                )])],
+                            }],
+                        },
+                    ],
+                }],
+            }],
+        );
+        let index = ProjectIndex::default();
+        let result = render(&doc, &index, &doc.path);
+        assert!(result.contains(
+            "<ul>\n<li><p>Parent</p>\n<ul>\n<li><p>Child</p>\n</li>\n</ul>\n</li>\n</ul>"
+        ));
+    }
+
+    #[test]
+    fn test_render_bullet_list_multi_paragraph() {
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::BulletList {
+                bullet: '*',
+                items: vec![crate::ast::BulletListItem {
+                    nodes: vec![
+                        Node::Paragraph(vec![InlineNode::Text("Para 1".to_string())]),
+                        Node::Paragraph(vec![InlineNode::Text("Para 2".to_string())]),
+                    ],
+                }],
+            }],
+        );
+        let index = ProjectIndex::default();
+        let result = render(&doc, &index, &doc.path);
+        assert!(result.contains("<li><p>Para 1</p>\n<p>Para 2</p>\n</li>"));
+    }
+
+    #[test]
     fn test_css_relative_path_returns_filename_for_root_document() {
         // Given a document at the root level
         let doc_path = "index.rst";
@@ -902,8 +993,7 @@ mod tests {
                     children: vec![], // Truncated here
                 }],
             }],
-            document_titles: [("cycle.rst".to_string(), "Cycle".to_string())]
-                .into_iter()
+            document_titles: std::iter::once(("cycle.rst".to_string(), "Cycle".to_string()))
                 .collect(),
             ..ProjectIndex::default()
         };

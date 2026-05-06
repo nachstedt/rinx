@@ -22,7 +22,7 @@ pub struct NavEntry {
     /// The `.rst` path (used to compute relative HTML links).
     pub path: String,
     /// Child entries from this document's toctree directive.
-    pub children: Vec<NavEntry>,
+    pub children: Vec<Self>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -32,7 +32,7 @@ pub enum TargetLocation {
 }
 
 /// A global symbol table built from all documents in the project.
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProjectIndex {
     /// Maps target names to document paths.
     pub targets: BTreeMap<TargetName, TargetLocation>,
@@ -45,7 +45,7 @@ pub struct ProjectIndex {
 
 impl ProjectIndex {
     /// Merge another `ProjectIndex` into this one.
-    pub fn merge(&mut self, other: ProjectIndex) {
+    pub fn merge(&mut self, other: Self) {
         self.targets.extend(other.targets);
         self.document_titles.extend(other.document_titles);
         // nav_tree is built globally, not merged per-document
@@ -62,11 +62,10 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     let mut found_title = false;
     for node in &doc.nodes {
         if let Node::Target { name, uri } = node {
-            let location = if let Some(url) = uri {
-                TargetLocation::External(url.clone())
-            } else {
-                TargetLocation::Internal(doc.path.clone())
-            };
+            let location = uri.as_ref().map_or_else(
+                || TargetLocation::Internal(doc.path.clone()),
+                |url| TargetLocation::External(url.clone()),
+            );
             index.targets.insert(name.clone(), location);
         }
         if !found_title && let Node::Heading { level: 1, text } = node {
