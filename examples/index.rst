@@ -14,3 +14,18 @@ Welcome to the Rusty-Sphinx example.
    team_b/index
 
 See also :ref:`home-index`, :ref:`team-a-index`, and :ref:`team-b-index`.
+
+Bullet List Examples
+--------------------
+
+* Simple item 1
+* Simple item 2
+
+  * Nested item A
+  * Nested item B
+* Simple item 3
+
+Another list with different bullet:
+
++ Plus item 1
++ Plus item 2

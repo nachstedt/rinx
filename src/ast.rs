@@ -106,7 +106,7 @@ pub enum AdmonitionKind {
 
 impl AdmonitionKind {
     #[must_use]
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Attention => "attention",
             Self::Caution => "caution",
@@ -179,6 +179,11 @@ pub enum InlineNode {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BulletListItem {
+    pub nodes: Vec<Node>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
     Heading {
         level: u8,
@@ -193,6 +198,10 @@ pub enum Node {
     AnonymousTarget {
         uri: String,
     },
+    BulletList {
+        bullet: char,
+        items: Vec<BulletListItem>,
+    },
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -205,7 +214,7 @@ pub struct Document {
 
 impl Document {
     #[must_use]
-    pub fn new(path: String, nodes: Vec<Node>) -> Self {
+    pub const fn new(path: String, nodes: Vec<Node>) -> Self {
         Self {
             path,
             nodes,
@@ -280,7 +289,7 @@ mod tests {
     fn test_hashed_content_try_from_success() {
         // Given
         let body = "Valid body".to_string();
-        let valid_hash = HashedContent::new(body.clone()).hash.clone();
+        let valid_hash = HashedContent::new(body.clone()).hash;
         let raw = HashedContentRaw {
             hash: valid_hash.clone(),
             body: body.clone(),
@@ -300,12 +309,12 @@ mod tests {
     fn test_hashed_content_try_from_mismatch() {
         // Given
         let body = "Valid body".to_string();
-        let valid_hash = HashedContent::new(body.clone()).hash.clone();
+        let valid_hash = HashedContent::new(body.clone()).hash;
         let invalid_hash =
             "0000000000000000000000000000000000000000000000000000000000000000".to_string();
         let raw = HashedContentRaw {
             hash: invalid_hash.clone(),
-            body: body.clone(),
+            body,
         };
 
         // When
