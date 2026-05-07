@@ -404,6 +404,14 @@ fn render_inline(
             let text_escaped = html_escape::encode_text(text);
             let _ = write!(html, "<a href=\"{target}\">{text_escaped}</a>");
         }
+        crate::ast::InlineNode::Emphasis(text) => {
+            let escaped = html_escape::encode_text(text);
+            let _ = write!(html, "<em>{escaped}</em>");
+        }
+        crate::ast::InlineNode::Strong(text) => {
+            let escaped = html_escape::encode_text(text);
+            let _ = write!(html, "<strong>{escaped}</strong>");
+        }
     }
 }
 
@@ -1481,5 +1489,30 @@ mod tests {
 
         // Then
         assert!(result.contains("class=\"broken-link\""));
+    }
+
+    #[test]
+    fn test_render_formats_emphasis_and_strong_nodes() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![
+                InlineNode::Text("Go to ".to_string()),
+                InlineNode::Emphasis("emphasis".to_string()),
+                InlineNode::Text(" or ".to_string()),
+                InlineNode::Strong("strong".to_string()),
+                InlineNode::Text(".".to_string()),
+            ])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(
+            result,
+            "<p>Go to <em>emphasis</em> or <strong>strong</strong>.</p>\n"
+        );
     }
 }

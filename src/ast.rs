@@ -176,6 +176,8 @@ pub enum InlineNode {
     Hyperlink { text: String, target: String },
     AnonymousReference(String),
     AnonymousHyperlink { text: String, target: String },
+    Emphasis(String),
+    Strong(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -29,3 +29,6 @@ Another list with different bullet:
 
 + Plus item 1
 + Plus item 2
+
+This is an *emphasized* word and this is **strong emphasis**.
+You can even use (*parentheses*) or punctuation like **bold**!
