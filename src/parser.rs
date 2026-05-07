@@ -391,75 +391,42 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
         let anon_simple_match = ANONYMOUS_SIMPLE_REGEX.find(remaining);
+        let inline_markup_match = find_inline_markup(&paragraph_text, last_match_end);
 
         // Find the one that starts earliest. If multiple start at the same pos, pick the longest.
-        let matches = vec![
-            ref_match.map(|m| (m, "ref")),
-            anon_phrased_match.map(|m| (m, "anon_phrased")),
-            phrased_match.map(|m| (m, "phrased")),
-            anon_simple_match.map(|m| (m, "anon_simple")),
-            simple_match.map(|m| (m, "simple")),
-        ];
+        let mut all_matches = Vec::new();
+        if let Some(m) = ref_match {
+            all_matches.push((m.start(), m.end(), "ref", None));
+        }
+        if let Some(m) = anon_phrased_match {
+            all_matches.push((m.start(), m.end(), "anon_phrased", None));
+        }
+        if let Some(m) = phrased_match {
+            all_matches.push((m.start(), m.end(), "phrased", None));
+        }
+        if let Some(m) = anon_simple_match {
+            all_matches.push((m.start(), m.end(), "anon_simple", None));
+        }
+        if let Some(m) = simple_match {
+            all_matches.push((m.start(), m.end(), "simple", None));
+        }
+        if let Some((start, end, node)) = inline_markup_match {
+            all_matches.push((start, end, "inline", Some(node)));
+        }
 
-        let earliest = matches
+        let earliest = all_matches
             .into_iter()
-            .flatten()
-            .min_by_key(|(m, _)| (m.start(), std::cmp::Reverse(m.end())));
+            .min_by_key(|(start, end, _, _)| (*start, std::cmp::Reverse(*end)));
 
-        if let Some((m, kind)) = earliest {
+        if let Some((start, end, kind, node_opt)) = earliest {
             // Push text before the match
-            if m.start() > 0 {
-                inlines.push(InlineNode::Text(remaining[..m.start()].to_string()));
+            if start > 0 {
+                inlines.push(InlineNode::Text(remaining[..start].to_string()));
             }
 
-            match kind {
-                "ref" => {
-                    let caps = REF_REGEX.captures(m.as_str()).unwrap();
-                    inlines.push(InlineNode::Reference(caps["target"].to_string()));
-                }
-                "phrased" => {
-                    let caps = PHRASED_LINK_REGEX.captures(m.as_str()).unwrap();
-                    let text_full = &caps["text"];
-                    if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
-                        inlines.push(InlineNode::Hyperlink {
-                            text: embedded["text"].trim().to_string(),
-                            target: embedded["uri"].to_string(),
-                        });
-                    } else {
-                        inlines.push(InlineNode::Hyperlink {
-                            text: text_full.to_string(),
-                            target: text_full.to_string(),
-                        });
-                    }
-                }
-                "simple" => {
-                    let caps = SIMPLE_LINK_REGEX.captures(m.as_str()).unwrap();
-                    let name = &caps["name"];
-                    inlines.push(InlineNode::Hyperlink {
-                        text: name.to_string(),
-                        target: name.to_string(),
-                    });
-                }
-                "anon_phrased" => {
-                    let caps = ANONYMOUS_PHRASED_REGEX.captures(m.as_str()).unwrap();
-                    let text_full = &caps["text"];
-                    if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
-                        inlines.push(InlineNode::AnonymousHyperlink {
-                            text: embedded["text"].trim().to_string(),
-                            target: embedded["uri"].to_string(),
-                        });
-                    } else {
-                        inlines.push(InlineNode::AnonymousReference(text_full.to_string()));
-                    }
-                }
-                "anon_simple" => {
-                    let caps = ANONYMOUS_SIMPLE_REGEX.captures(m.as_str()).unwrap();
-                    let name = &caps["name"];
-                    inlines.push(InlineNode::AnonymousReference(name.to_string()));
-                }
-                _ => unreachable!(),
-            }
-            last_match_end += m.end();
+            let m_str = &remaining[start..end];
+            inlines.push(handle_inline_match(kind, m_str, node_opt));
+            last_match_end += end;
         } else {
             // No more matches
             inlines.push(InlineNode::Text(remaining.to_string()));
@@ -468,6 +435,185 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
     }
 
     (current_pos_line - i, Node::Paragraph(inlines))
+}
+
+fn handle_inline_match(kind: &str, m_str: &str, node_opt: Option<InlineNode>) -> InlineNode {
+    match kind {
+        "inline" => node_opt.expect("inline node should be present"),
+        "ref" => {
+            let caps = REF_REGEX.captures(m_str).unwrap();
+            InlineNode::Reference(caps["target"].to_string())
+        }
+        "phrased" => {
+            let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
+            let text_full = &caps["text"];
+            if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
+                InlineNode::Hyperlink {
+                    text: embedded["text"].trim().to_string(),
+                    target: embedded["uri"].to_string(),
+                }
+            } else {
+                InlineNode::Hyperlink {
+                    text: text_full.to_string(),
+                    target: text_full.to_string(),
+                }
+            }
+        }
+        "simple" => {
+            let caps = SIMPLE_LINK_REGEX.captures(m_str).unwrap();
+            let name = &caps["name"];
+            InlineNode::Hyperlink {
+                text: name.to_string(),
+                target: name.to_string(),
+            }
+        }
+        "anon_phrased" => {
+            let caps = ANONYMOUS_PHRASED_REGEX.captures(m_str).unwrap();
+            let text_full = &caps["text"];
+            if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
+                InlineNode::AnonymousHyperlink {
+                    text: embedded["text"].trim().to_string(),
+                    target: embedded["uri"].to_string(),
+                }
+            } else {
+                InlineNode::AnonymousReference(text_full.to_string())
+            }
+        }
+        "anon_simple" => {
+            let caps = ANONYMOUS_SIMPLE_REGEX.captures(m_str).unwrap();
+            let name = &caps["name"];
+            InlineNode::AnonymousReference(name.to_string())
+        }
+        _ => unreachable!(),
+    }
+}
+
+fn find_inline_markup(full_text: &str, start_offset: usize) -> Option<(usize, usize, InlineNode)> {
+    let text = &full_text[start_offset..];
+    let mut best_match: Option<(usize, usize, InlineNode)> = None;
+
+    for (i, _) in text.char_indices() {
+        let abs_i = start_offset + i;
+
+        // Check for escaping
+        if abs_i > 0 && full_text.as_bytes()[abs_i - 1] == b'\\' {
+            // Count backslashes to see if it's escaped or the backslash itself is escaped
+            let mut bs_count = 0;
+            let mut j = abs_i - 1;
+            while full_text.as_bytes()[j] == b'\\' {
+                bs_count += 1;
+                if j == 0 {
+                    break;
+                }
+                j -= 1;
+            }
+            if bs_count % 2 != 0 {
+                continue;
+            }
+        }
+
+        // Try Strong Emphasis first (**)
+        if text[i..].starts_with("**")
+            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 2)
+        {
+            let m = (i, i + (end_pos - abs_i), InlineNode::Strong(content));
+            if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
+                best_match = Some(m);
+                break; // Found the earliest match
+            }
+        }
+
+        // Try Emphasis (*)
+        if text[i..].starts_with('*')
+            && !text[i..].starts_with("**")
+            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 1)
+        {
+            let m = (i, i + (end_pos - abs_i), InlineNode::Emphasis(content));
+            if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
+                best_match = Some(m);
+                break; // Found the earliest match
+            }
+        }
+    }
+
+    best_match
+}
+
+fn try_match_inline(
+    full_text: &str,
+    start_pos: usize,
+    marker_len: usize,
+) -> Option<(usize, String)> {
+    // Start context check
+    if start_pos > 0 {
+        let prev_char = full_text[..start_pos].chars().next_back().unwrap();
+        if !prev_char.is_whitespace() && !"-:/'\"<([{".contains(prev_char) {
+            return None;
+        }
+    }
+
+    let after_start = start_pos + marker_len;
+    if after_start >= full_text.len() {
+        return None;
+    }
+
+    let first_inner = full_text[after_start..].chars().next().unwrap();
+    if first_inner.is_whitespace() {
+        return None;
+    }
+
+    // Find end marker
+    let marker = &full_text[start_pos..start_pos + marker_len];
+    let mut search_pos = after_start + 1;
+
+    while let Some(end_marker_pos) = full_text[search_pos..].find(marker) {
+        let abs_end_pos = search_pos + end_marker_pos;
+
+        // End context check
+        let last_inner = full_text[..abs_end_pos].chars().next_back().unwrap();
+        if last_inner.is_whitespace() {
+            search_pos = abs_end_pos + 1;
+            continue;
+        }
+
+        // Check character after end marker
+        let after_end = abs_end_pos + marker_len;
+        if after_end < full_text.len() {
+            let next_char = full_text[after_end..].chars().next().unwrap();
+            if !next_char.is_whitespace() && !"-.,:;!?\\/ '\" >)]}".contains(next_char) {
+                search_pos = abs_end_pos + 1;
+                continue;
+            }
+        }
+
+        // Check for escaping of end marker
+        if full_text.as_bytes()[abs_end_pos - 1] == b'\\' {
+            let mut bs_count = 0;
+            let mut j = abs_end_pos - 1;
+            while full_text.as_bytes()[j] == b'\\' {
+                bs_count += 1;
+                if j == 0 {
+                    break;
+                }
+                j -= 1;
+            }
+            if bs_count % 2 != 0 {
+                search_pos = abs_end_pos + 1;
+                continue;
+            }
+        }
+
+        // Success!
+        let content = full_text[after_start..abs_end_pos].to_string();
+        if content.is_empty() {
+            search_pos = abs_end_pos + 1;
+            continue;
+        }
+
+        return Some((abs_end_pos + marker_len, content));
+    }
+
+    None
 }
 
 fn parse_admonition(
@@ -1727,6 +1873,25 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_paragraph_with_emphasis() {
+        // Given
+        let input = "*emphasized* text";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 2);
+            assert_eq!(inlines[0], InlineNode::Emphasis("emphasized".to_string()));
+            assert_eq!(inlines[1], InlineNode::Text(" text".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
     fn test_parse_bullet_list_nested() {
         let input = "* Item 1\n\n  * Subitem 1\n\n* Item 2";
         let doc = parse("test.rst", input);
@@ -1739,6 +1904,26 @@ mod tests {
             assert!(matches!(items[0].nodes[1], Node::BulletList { .. }));
         } else {
             panic!("Expected BulletList, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_with_strong_emphasis() {
+        // Given
+        let input = "some **strong** text";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 3);
+            assert_eq!(inlines[0], InlineNode::Text("some ".to_string()));
+            assert_eq!(inlines[1], InlineNode::Strong("strong".to_string()));
+            assert_eq!(inlines[2], InlineNode::Text(" text".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
         }
     }
 
@@ -1762,6 +1947,28 @@ mod tests {
             }
         } else {
             panic!("Expected BulletList, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_with_mixed_markup() {
+        // Given
+        let input = "Go to *emphasis* or **strong** link.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 5);
+            assert_eq!(inlines[0], InlineNode::Text("Go to ".to_string()));
+            assert_eq!(inlines[1], InlineNode::Emphasis("emphasis".to_string()));
+            assert_eq!(inlines[2], InlineNode::Text(" or ".to_string()));
+            assert_eq!(inlines[3], InlineNode::Strong("strong".to_string()));
+            assert_eq!(inlines[4], InlineNode::Text(" link.".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
         }
     }
 
@@ -1844,5 +2051,134 @@ mod tests {
                 assert_eq!(l2_items[0].nodes.len(), 2); // Paragraph and Level 3 BulletList
             }
         }
+    }
+
+    #[test]
+    fn test_parse_paragraph_with_escaped_markup() {
+        // Given
+        let input = r"Keep \*stars\* as is and **strong** text.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 3);
+            assert_eq!(
+                inlines[0],
+                InlineNode::Text(r"Keep \*stars\* as is and ".to_string())
+            );
+            assert_eq!(inlines[1], InlineNode::Strong("strong".to_string()));
+            assert_eq!(inlines[2], InlineNode::Text(" text.".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_rejects_invalid_boundary_markup() {
+        // Given - markup requires specific boundaries
+        let input = "a*text* *text*b";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 1);
+            assert_eq!(inlines[0], InlineNode::Text("a*text* *text*b".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_with_punctuation_boundaries() {
+        // Given
+        let input = "(*emphasis*), [**strong**];";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 5);
+            assert_eq!(inlines[0], InlineNode::Text("(".to_string()));
+            assert_eq!(inlines[1], InlineNode::Emphasis("emphasis".to_string()));
+            assert_eq!(inlines[2], InlineNode::Text("), [".to_string()));
+            assert_eq!(inlines[3], InlineNode::Strong("strong".to_string()));
+            assert_eq!(inlines[4], InlineNode::Text("];".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
+    fn test_handle_inline_match() {
+        use crate::ast::InlineNode;
+
+        // Test "inline" variant
+        let node = InlineNode::Emphasis("text".to_string());
+        let result = handle_inline_match("inline", "", Some(node.clone()));
+        assert_eq!(result, node);
+
+        // Test "ref" variant
+        let result = handle_inline_match("ref", ":ref:`target`", None);
+        assert_eq!(result, InlineNode::Reference("target".to_string()));
+
+        // Test "phrased" variant
+        let result = handle_inline_match("phrased", "`text <http://uri>`_", None);
+        assert_eq!(
+            result,
+            InlineNode::Hyperlink {
+                text: "text".to_string(),
+                target: "http://uri".to_string(),
+            }
+        );
+
+        let result = handle_inline_match("phrased", "`just text`_", None);
+        assert_eq!(
+            result,
+            InlineNode::Hyperlink {
+                text: "just text".to_string(),
+                target: "just text".to_string(),
+            }
+        );
+
+        // Test "simple" variant
+        let result = handle_inline_match("simple", "name_", None);
+        assert_eq!(
+            result,
+            InlineNode::Hyperlink {
+                text: "name".to_string(),
+                target: "name".to_string(),
+            }
+        );
+
+        // Test "anon_phrased" variant
+        let result = handle_inline_match("anon_phrased", "`text <http://uri>`__", None);
+        assert_eq!(
+            result,
+            InlineNode::AnonymousHyperlink {
+                text: "text".to_string(),
+                target: "http://uri".to_string(),
+            }
+        );
+
+        let result = handle_inline_match("anon_phrased", "`anon text`__", None);
+        assert_eq!(
+            result,
+            InlineNode::AnonymousReference("anon text".to_string())
+        );
+
+        // Test "anon_simple" variant
+        let result = handle_inline_match("anon_simple", "anon_name__", None);
+        assert_eq!(
+            result,
+            InlineNode::AnonymousReference("anon_name".to_string())
+        );
     }
 }
