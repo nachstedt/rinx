@@ -512,9 +512,20 @@ fn find_inline_markup(full_text: &str, start_offset: usize) -> Option<(usize, us
             }
         }
 
-        // Try Strong Emphasis first (**)
+        // Try Inline Literal first (``)
+        if text[i..].starts_with("``")
+            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 2, true)
+        {
+            let m = (i, i + (end_pos - abs_i), InlineNode::Literal(content));
+            if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
+                best_match = Some(m);
+                break; // Found the earliest match
+            }
+        }
+
+        // Try Strong Emphasis next (**)
         if text[i..].starts_with("**")
-            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 2)
+            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 2, false)
         {
             let m = (i, i + (end_pos - abs_i), InlineNode::Strong(content));
             if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
@@ -526,7 +537,7 @@ fn find_inline_markup(full_text: &str, start_offset: usize) -> Option<(usize, us
         // Try Emphasis (*)
         if text[i..].starts_with('*')
             && !text[i..].starts_with("**")
-            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 1)
+            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 1, false)
         {
             let m = (i, i + (end_pos - abs_i), InlineNode::Emphasis(content));
             if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
@@ -543,6 +554,7 @@ fn try_match_inline(
     full_text: &str,
     start_pos: usize,
     marker_len: usize,
+    is_literal: bool,
 ) -> Option<(usize, String)> {
     // Start context check
     if start_pos > 0 {
@@ -586,8 +598,8 @@ fn try_match_inline(
             }
         }
 
-        // Check for escaping of end marker
-        if full_text.as_bytes()[abs_end_pos - 1] == b'\\' {
+        // Check for escaping of end marker (skip if is_literal)
+        if !is_literal && full_text.as_bytes()[abs_end_pos - 1] == b'\\' {
             let mut bs_count = 0;
             let mut j = abs_end_pos - 1;
             while full_text.as_bytes()[j] == b'\\' {
@@ -1928,6 +1940,62 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_paragraph_with_inline_literal() {
+        // Given
+        let input = "some ``venv`` text";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 3);
+            assert_eq!(inlines[0], InlineNode::Text("some ".to_string()));
+            assert_eq!(inlines[1], InlineNode::Literal("venv".to_string()));
+            assert_eq!(inlines[2], InlineNode::Text(" text".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
+    fn test_parse_inline_literal_with_backslash() {
+        // Given
+        let input = "``some\\path``";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 1);
+            assert_eq!(inlines[0], InlineNode::Literal("some\\path".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
+    fn test_parse_inline_literal_ignoring_inner_markup() {
+        // Given
+        let input = "``**bold**``";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 1);
+            assert_eq!(inlines[0], InlineNode::Literal("**bold**".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
     fn test_parse_bullet_list_paragraph_continuation() {
         let input = "* Item 1\n  * Subitem 1\n* Item 2";
         let doc = parse("test.rst", input);
@@ -2188,7 +2256,7 @@ mod tests {
         let input = "*π*";
 
         // When
-        let res = try_match_inline(input, 0, 1);
+        let res = try_match_inline(input, 0, 1, false);
 
         // Then
         assert_eq!(res, Some((4, "π".to_string())));

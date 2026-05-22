@@ -32,3 +32,6 @@ Another list with different bullet:
 
 This is an *emphasized* word and this is **strong emphasis**.
 You can even use (*parentheses*) or punctuation like **bold**!
+
+Here is an inline literal: ``venv`` or ``cargo build``. 
+Inside the literal, backslashes and other symbols are preserved literally, like ``**not_bold**`` or ``some\path``.

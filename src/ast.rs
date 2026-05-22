@@ -178,6 +178,7 @@ pub enum InlineNode {
     AnonymousHyperlink { text: String, target: String },
     Emphasis(String),
     Strong(String),
+    Literal(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

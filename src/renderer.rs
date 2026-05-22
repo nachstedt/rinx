@@ -412,6 +412,10 @@ fn render_inline(
             let escaped = html_escape::encode_text(text);
             let _ = write!(html, "<strong>{escaped}</strong>");
         }
+        crate::ast::InlineNode::Literal(text) => {
+            let escaped = html_escape::encode_text(text);
+            let _ = write!(html, "<code>{escaped}</code>");
+        }
     }
 }
 
@@ -1514,5 +1518,43 @@ mod tests {
             result,
             "<p>Go to <em>emphasis</em> or <strong>strong</strong>.</p>\n"
         );
+    }
+
+    #[test]
+    fn test_render_formats_literal_nodes() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![
+                InlineNode::Text("Run ".to_string()),
+                InlineNode::Literal("cargo build".to_string()),
+                InlineNode::Text(" now.".to_string()),
+            ])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(result, "<p>Run <code>cargo build</code> now.</p>\n");
+    }
+
+    #[test]
+    fn test_render_literal_nodes_escapes_html() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::Literal(
+                "Vec<T>".to_string(),
+            )])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(result, "<p><code>Vec&lt;T&gt;</code></p>\n");
     }
 }
