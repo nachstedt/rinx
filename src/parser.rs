@@ -564,7 +564,7 @@ fn try_match_inline(
 
     // Find end marker
     let marker = &full_text[start_pos..start_pos + marker_len];
-    let mut search_pos = after_start + 1;
+    let mut search_pos = after_start + first_inner.len_utf8();
 
     while let Some(end_marker_pos) = full_text[search_pos..].find(marker) {
         let abs_end_pos = search_pos + end_marker_pos;
@@ -2180,5 +2180,36 @@ mod tests {
             result,
             InlineNode::AnonymousReference("anon_name".to_string())
         );
+    }
+
+    #[test]
+    fn test_try_match_inline_multibyte_first_inner() {
+        // Given
+        let input = "*π*";
+
+        // When
+        let res = try_match_inline(input, 0, 1);
+
+        // Then
+        assert_eq!(res, Some((4, "π".to_string())));
+    }
+
+    #[test]
+    fn test_parse_paragraph_with_emphasis_multibyte() {
+        // Given
+        let input = "*π* text";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 2);
+            assert_eq!(inlines[0], InlineNode::Emphasis("π".to_string()));
+            assert_eq!(inlines[1], InlineNode::Text(" text".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
     }
 }
