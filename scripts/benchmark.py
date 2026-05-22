@@ -77,12 +77,17 @@ rusty_sphinx_site(
     (doc_dir / "BUILD.bazel").write_text(build_bazel)
 
 def run_benchmark():
+    # Run bazel clean to avoid caching from previous runs
+    print("Cleaning Bazel cache...")
+    subprocess.run(["bazel", "clean"], cwd=str(TARGET_DIR), capture_output=True)
+
     print("Running Bazel build...")
+
     start_time = time.time()
     
     # Run bazel build inside the decoupled workspace
     result = subprocess.run(
-        ["bazel", "build", "--keep_going", "//Doc:site"],
+        ["bazel", "build", "-c", "opt", "--host_compilation_mode=opt", "--keep_going", "--spawn_strategy=local", "--profile=profile.json.gz", "//Doc:site"],
         cwd=str(TARGET_DIR),
         capture_output=True,
         text=True
@@ -100,6 +105,11 @@ def run_benchmark():
     # Inform the user where the HTML is
     html_out = TARGET_DIR / "bazel-bin/Doc/site_site_out"
     print(f"\nHTML output is located at: {html_out}/")
+    
+    # Inform the user where the Bazel profile is
+    profile_out = TARGET_DIR / "profile.json.gz"
+    print(f"Bazel profile is located at: {profile_out}")
+    print("You can view it by dropping the file into https://ui.perfetto.dev/ or chrome://tracing")
 
 def analyze_results():
     print("Analyzing AST output for unsupported constructs...")
