@@ -32,7 +32,7 @@ fn flag_value(args: &[String], flag: &str) -> Result<String> {
         if pos + 1 < args.len() {
             Ok(args[pos + 1].clone())
         } else {
-            Err(anyhow!("Missing value for flag {}", flag))
+            Err(anyhow!("Missing value for flag {flag}"))
         }
     } else {
         Err(anyhow!("Missing required flag '{flag}'"))
