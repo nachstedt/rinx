@@ -342,4 +342,26 @@ mod tests {
         // Then
         assert_eq!(target.as_str(), "my target name");
     }
+
+    #[test]
+    fn test_target_name_equality() {
+        // Given
+        let raw1 = "My Target";
+        let raw2 = "my   target";
+        let raw3 = "  MY TARGET  ";
+        let raw4 = "Different Target";
+
+        // When
+        let target1 = TargetName::new(raw1);
+        let target2 = TargetName::new(raw2);
+        let target3 = TargetName::new(raw3);
+        let target4 = TargetName::new(raw4);
+
+        // Then
+        assert_eq!(target1, target2);
+        assert_eq!(target1, target3);
+        assert_eq!(target2, target3);
+
+        assert_ne!(target1, target4);
+    }
 }
