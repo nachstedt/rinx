@@ -472,7 +472,11 @@ mod tests {
     #[test]
     fn test_flag_value_opt_returns_none_when_flag_at_end_without_value() {
         // Given
-        let args = vec!["--input".to_string(), "a.rst".to_string(), "--output".to_string()];
+        let args = vec![
+            "--input".to_string(),
+            "a.rst".to_string(),
+            "--output".to_string(),
+        ];
 
         // When
         let result = flag_value_opt(&args, "--output");
