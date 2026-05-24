@@ -28,7 +28,15 @@ use std::io::{self, Read};
 // ── Pure functions for arguments and logic ───────────────────────────────────
 
 fn flag_value(args: &[String], flag: &str) -> Result<String> {
-    flag_value_opt(args, flag).ok_or_else(|| anyhow!("Missing required flag '{flag}'"))
+    if let Some(pos) = args.iter().position(|a| a == flag) {
+        if pos + 1 < args.len() {
+            Ok(args[pos + 1].clone())
+        } else {
+            Err(anyhow!("Missing value for flag {}", flag))
+        }
+    } else {
+        Err(anyhow!("Missing required flag '{flag}'"))
+    }
 }
 
 fn flag_value_opt(args: &[String], flag: &str) -> Option<String> {
@@ -431,6 +439,10 @@ mod tests {
 
         // Then
         assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Missing required flag '--output'"
+        );
     }
 
     #[test]
@@ -443,6 +455,10 @@ mod tests {
 
         // Then
         assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Missing value for flag --input"
+        );
     }
 
     #[test]
