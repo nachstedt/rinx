@@ -342,7 +342,7 @@ fn render_inline(
                 let _ = write!(html, "<a href=\"{href}\">{target_escaped}</a>");
             } else {
                 // Fallback, could print warning
-                let raw_href = format!("#{}", target_escaped);
+                let raw_href = format!("#{target_escaped}");
                 let href = html_escape::encode_double_quoted_attribute(&raw_href);
                 let _ = write!(
                     html,
