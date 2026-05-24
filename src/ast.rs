@@ -342,4 +342,17 @@ mod tests {
         // Then
         assert_eq!(target.as_str(), "my target name");
     }
+
+    #[test]
+    fn test_new_initializes_diagnostics_to_empty() {
+        // Given
+        let path = "test.rst".to_string();
+        let nodes = vec![];
+
+        // When
+        let doc = Document::new(path, nodes);
+
+        // Then
+        assert!(doc.diagnostics.is_empty());
+    }
 }
