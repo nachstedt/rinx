@@ -102,17 +102,7 @@ fn process_preview(
     let body = renderer::render(&doc, &index, doc_path);
 
     // Extract page title from the first H1 heading, if any.
-    let page_title = doc
-        .nodes
-        .iter()
-        .find_map(|n| {
-            if let ast::Node::Heading { level: 1, text } = n {
-                Some(text.clone())
-            } else {
-                None
-            }
-        })
-        .unwrap_or_else(|| doc_path.to_string());
+    let page_title = doc.title().unwrap_or(doc_path).to_string();
 
     let depth = doc_path.matches('/').count();
     let css_path = if depth == 0 {
@@ -147,17 +137,7 @@ fn process_render(
     let body = renderer::render(&doc, &index, doc_path);
 
     // Extract page title from the first H1 heading, if any.
-    let page_title = doc
-        .nodes
-        .iter()
-        .find_map(|n| {
-            if let ast::Node::Heading { level: 1, text } = n {
-                Some(text.as_str())
-            } else {
-                None
-            }
-        })
-        .unwrap_or("");
+    let page_title = doc.title().unwrap_or("");
 
     let css_path = renderer::css_relative_path(doc_path, "default.css");
     renderer::render_page(

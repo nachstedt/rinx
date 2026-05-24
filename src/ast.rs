@@ -224,6 +224,18 @@ impl Document {
             diagnostics: Vec::new(),
         }
     }
+
+    /// Returns the text of the first level 1 heading, if any.
+    #[must_use]
+    pub fn title(&self) -> Option<&str> {
+        self.nodes.iter().find_map(|n| {
+            if let Node::Heading { level: 1, text } = n {
+                Some(text.as_str())
+            } else {
+                None
+            }
+        })
+    }
 }
 
 #[cfg(test)]

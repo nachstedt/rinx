@@ -59,7 +59,6 @@ impl ProjectIndex {
 #[must_use]
 pub fn analyze(doc: &Document) -> ProjectIndex {
     let mut index = ProjectIndex::default();
-    let mut found_title = false;
     for node in &doc.nodes {
         if let Node::Target { name, uri } = node {
             let location = uri.as_ref().map_or_else(
@@ -68,10 +67,11 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             );
             index.targets.insert(name.clone(), location);
         }
-        if !found_title && let Node::Heading { level: 1, text } = node {
-            index.document_titles.insert(doc.path.clone(), text.clone());
-            found_title = true;
-        }
+    }
+    if let Some(title) = doc.title() {
+        index
+            .document_titles
+            .insert(doc.path.clone(), title.to_string());
     }
     index
 }
