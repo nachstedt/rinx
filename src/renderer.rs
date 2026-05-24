@@ -154,7 +154,7 @@ fn render_nodes(
             }
             Node::Target { name, uri } => {
                 if uri.is_none() {
-                    let escaped_name = html_escape::encode_text(name.as_str());
+                    let escaped_name = html_escape::encode_double_quoted_attribute(name.as_str());
                     let _ = writeln!(html, "<a id=\"{escaped_name}\"></a>");
                 }
             }
@@ -212,7 +212,8 @@ fn render_directive(
             let _ = writeln!(html, "</ul>");
         }
         Directive::PlantUml(content) => {
-            let escaped_hash = html_escape::encode_text(content.hash());
+            let hash_str = content.hash();
+            let escaped_hash = html_escape::encode_double_quoted_attribute(&hash_str);
 
             let current_dir = std::path::Path::new(doc_path)
                 .parent()
@@ -220,7 +221,8 @@ fn render_directive(
             let image_path = std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
             let relative_path =
                 pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
-            let src = relative_path.display();
+            let src_str = format!("{}", relative_path.display());
+            let src = html_escape::encode_double_quoted_attribute(&src_str);
 
             let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
             let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
@@ -271,7 +273,7 @@ fn render_admonition(
         String::from,
     );
 
-    let kind_escaped = html_escape::encode_text(kind_str);
+    let kind_escaped = html_escape::encode_double_quoted_attribute(kind_str);
     let title_escaped = html_escape::encode_text(&title_text);
 
     if let Some(open) = collapsible {
@@ -341,9 +343,10 @@ fn render_inline(
                 let _ = write!(html, "<a href=\"{href}\">{target_escaped}</a>");
             } else {
                 // Fallback, could print warning
+                let target_href_escaped = html_escape::encode_double_quoted_attribute(target);
                 let _ = write!(
                     html,
-                    "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>"
+                    "<a href=\"#{target_href_escaped}\" class=\"broken-link\">{target_escaped}</a>"
                 );
             }
         }
@@ -354,14 +357,16 @@ fn render_inline(
                 || target.starts_with("https://")
                 || target.starts_with("mailto:")
             {
-                let _ = write!(html, "<a href=\"{target}\">{text_escaped}</a>");
+                let target_escaped = html_escape::encode_double_quoted_attribute(target);
+                let _ = write!(html, "<a href=\"{target_escaped}\">{text_escaped}</a>");
             } else {
                 // 2. Lookup in index
                 let target_name = TargetName::new(target);
                 if let Some(location) = index.targets.get(&target_name) {
                     match location {
                         TargetLocation::External(url) => {
-                            let _ = write!(html, "<a href=\"{url}\">{text_escaped}</a>");
+                            let url_escaped = html_escape::encode_double_quoted_attribute(url);
+                            let _ = write!(html, "<a href=\"{url_escaped}\">{text_escaped}</a>");
                         }
                         TargetLocation::Internal(target_path) => {
                             let current_dir = std::path::Path::new(doc_path)
@@ -376,7 +381,8 @@ fn render_inline(
 
                             let href =
                                 format!("{}#{}", relative_path.display(), target_name.as_str());
-                            let _ = write!(html, "<a href=\"{href}\">{text_escaped}</a>");
+                            let href_escaped = html_escape::encode_double_quoted_attribute(&href);
+                            let _ = write!(html, "<a href=\"{href_escaped}\">{text_escaped}</a>");
                         }
                     }
                 } else {
@@ -391,7 +397,8 @@ fn render_inline(
         crate::ast::InlineNode::AnonymousReference(text) => {
             let text_escaped = html_escape::encode_text(text);
             if let Some(uri) = anon_targets.get(*anon_index) {
-                let _ = write!(html, "<a href=\"{uri}\">{text_escaped}</a>");
+                let uri_escaped = html_escape::encode_double_quoted_attribute(uri);
+                let _ = write!(html, "<a href=\"{uri_escaped}\">{text_escaped}</a>");
                 *anon_index += 1;
             } else {
                 let _ = write!(
@@ -402,7 +409,8 @@ fn render_inline(
         }
         crate::ast::InlineNode::AnonymousHyperlink { text, target } => {
             let text_escaped = html_escape::encode_text(text);
-            let _ = write!(html, "<a href=\"{target}\">{text_escaped}</a>");
+            let target_escaped = html_escape::encode_double_quoted_attribute(target);
+            let _ = write!(html, "<a href=\"{target_escaped}\">{text_escaped}</a>");
         }
         crate::ast::InlineNode::Emphasis(text) => {
             let escaped = html_escape::encode_text(text);
@@ -440,9 +448,10 @@ fn render_nav_entry(
     let relative_path = pathdiff::diff_paths(&target_html, current_dir).unwrap_or(target_html);
 
     let href = format!("{}", relative_path.display());
+    let href_escaped = html_escape::encode_double_quoted_attribute(&href);
     let escaped_text = html_escape::encode_text(link_text);
 
-    let _ = write!(html, "  <li><a href=\"{href}\">{escaped_text}</a>");
+    let _ = write!(html, "  <li><a href=\"{href_escaped}\">{escaped_text}</a>");
 
     if !entry.children.is_empty() && maxdepth.is_none_or(|m| current_depth < m) {
         let _ = writeln!(html, "\n<ul>");
@@ -1556,5 +1565,64 @@ mod tests {
 
         // Then
         assert_eq!(result, "<p><code>Vec&lt;T&gt;</code></p>\n");
+    }
+
+    #[test]
+    fn test_render_escapes_html_attributes_in_anonymous_references() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Paragraph(vec![InlineNode::AnonymousReference("EvilLink".to_string())]),
+                Node::AnonymousTarget {
+                    uri: "https://example.com\" onmouseover=\"alert(1)".to_string(),
+                },
+            ],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("href=\"https://example.com&quot; onmouseover=&quot;alert(1)\""));
+    }
+
+    #[test]
+    fn test_render_escapes_html_attributes_in_hyperlinks() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::Hyperlink {
+                text: "EvilHyperlink".to_string(),
+                target: "http://example.com\" onload=\"alert(1)".to_string(),
+            }])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("href=\"http://example.com&quot; onload=&quot;alert(1)\""));
+    }
+
+    #[test]
+    fn test_render_escapes_html_attributes_in_targets() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Target {
+                name: crate::ast::TargetName::new("target\" onclick=\"alert(1)"),
+                uri: None,
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<a id=\"target&quot; onclick=&quot;alert(1)\"></a>\n"));
     }
 }
