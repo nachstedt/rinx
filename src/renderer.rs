@@ -338,7 +338,8 @@ fn render_inline(
 
                 // display() on Unix uses `/`, so it maps correctly to URLs
                 let href = format!("{}#{}", relative_path.display(), target_name.as_str());
-                let _ = write!(html, "<a href=\"{href}\">{target_escaped}</a>");
+                let href_attr = html_escape::encode_double_quoted_attribute(&href);
+                let _ = write!(html, "<a href=\"{href_attr}\">{target_escaped}</a>");
             } else {
                 // Fallback, could print warning
                 let _ = write!(
@@ -354,14 +355,16 @@ fn render_inline(
                 || target.starts_with("https://")
                 || target.starts_with("mailto:")
             {
-                let _ = write!(html, "<a href=\"{target}\">{text_escaped}</a>");
+                let target_attr = html_escape::encode_double_quoted_attribute(target);
+                let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
             } else {
                 // 2. Lookup in index
                 let target_name = TargetName::new(target);
                 if let Some(location) = index.targets.get(&target_name) {
                     match location {
                         TargetLocation::External(url) => {
-                            let _ = write!(html, "<a href=\"{url}\">{text_escaped}</a>");
+                            let url_attr = html_escape::encode_double_quoted_attribute(&url);
+                            let _ = write!(html, "<a href=\"{url_attr}\">{text_escaped}</a>");
                         }
                         TargetLocation::Internal(target_path) => {
                             let current_dir = std::path::Path::new(doc_path)
@@ -376,7 +379,8 @@ fn render_inline(
 
                             let href =
                                 format!("{}#{}", relative_path.display(), target_name.as_str());
-                            let _ = write!(html, "<a href=\"{href}\">{text_escaped}</a>");
+                            let href_attr = html_escape::encode_double_quoted_attribute(&href);
+                            let _ = write!(html, "<a href=\"{href_attr}\">{text_escaped}</a>");
                         }
                     }
                 } else {
@@ -391,7 +395,8 @@ fn render_inline(
         crate::ast::InlineNode::AnonymousReference(text) => {
             let text_escaped = html_escape::encode_text(text);
             if let Some(uri) = anon_targets.get(*anon_index) {
-                let _ = write!(html, "<a href=\"{uri}\">{text_escaped}</a>");
+                let uri_attr = html_escape::encode_double_quoted_attribute(uri);
+                let _ = write!(html, "<a href=\"{uri_attr}\">{text_escaped}</a>");
                 *anon_index += 1;
             } else {
                 let _ = write!(
@@ -402,7 +407,8 @@ fn render_inline(
         }
         crate::ast::InlineNode::AnonymousHyperlink { text, target } => {
             let text_escaped = html_escape::encode_text(text);
-            let _ = write!(html, "<a href=\"{target}\">{text_escaped}</a>");
+            let target_attr = html_escape::encode_double_quoted_attribute(target);
+            let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
         }
         crate::ast::InlineNode::Emphasis(text) => {
             let escaped = html_escape::encode_text(text);
@@ -442,7 +448,8 @@ fn render_nav_entry(
     let href = format!("{}", relative_path.display());
     let escaped_text = html_escape::encode_text(link_text);
 
-    let _ = write!(html, "  <li><a href=\"{href}\">{escaped_text}</a>");
+    let href_attr = html_escape::encode_double_quoted_attribute(&href);
+    let _ = write!(html, "  <li><a href=\"{href_attr}\">{escaped_text}</a>");
 
     if !entry.children.is_empty() && maxdepth.is_none_or(|m| current_depth < m) {
         let _ = writeln!(html, "\n<ul>");
@@ -1556,5 +1563,24 @@ mod tests {
 
         // Then
         assert_eq!(result, "<p><code>Vec&lt;T&gt;</code></p>\n");
+    }
+
+    #[test]
+    fn test_render_escapes_xss_in_hyperlink_target() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![crate::ast::InlineNode::Hyperlink {
+                text: "Click Here".to_string(),
+                target: "https://example.com/\"><script>alert('xss')</script>".to_string(),
+            }])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<a href=\"https://example.com/&quot;&gt;&lt;script&gt;alert('xss')&lt;/script&gt;\">Click Here</a>"));
     }
 }
