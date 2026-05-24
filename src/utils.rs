@@ -25,5 +25,10 @@ mod tests {
         assert_eq!(normalize_path(Path::new("a/b/../c")), PathBuf::from("a/c"));
         assert_eq!(normalize_path(Path::new("a/./b")), PathBuf::from("a/b"));
         assert_eq!(normalize_path(Path::new("a/b/c")), PathBuf::from("a/b/c"));
+
+        // Edge cases with excessive ParentDir
+        assert_eq!(normalize_path(Path::new("..")), PathBuf::from(""));
+        assert_eq!(normalize_path(Path::new("a/../../b")), PathBuf::from("b"));
+        assert_eq!(normalize_path(Path::new("../a/b")), PathBuf::from("a/b"));
     }
 }
