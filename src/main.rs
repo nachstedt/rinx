@@ -115,12 +115,12 @@ fn process_preview(
         .iter()
         .find_map(|n| {
             if let ast::Node::Heading { level: 1, text } = n {
-                Some(text.clone())
+                Some(text.as_str())
             } else {
                 None
             }
         })
-        .unwrap_or_else(|| doc_path.to_string());
+        .unwrap_or(doc_path);
 
     let depth = doc_path.matches('/').count();
     let css_path = if depth == 0 {
@@ -134,7 +134,7 @@ fn process_preview(
         template_str,
         config,
         &css_path,
-        &page_title,
+        page_title,
         doc_path,
         &index.nav_tree,
     )
