@@ -549,6 +549,41 @@ mod tests {
     }
 
     #[test]
+    fn test_render_toctree_with_target_entries() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["team_a/index".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .document_titles
+            .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
+        index.nav_tree = vec![crate::analyzer::NavEntry {
+            title: "test".to_string(),
+            path: "test.rst".to_string(),
+            children: vec![crate::analyzer::NavEntry {
+                title: "Team A Module".to_string(),
+                path: "team_a/index.rst".to_string(),
+                children: vec![],
+            }],
+        }];
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(
+            result,
+            "<ul>\n  <li><a href=\"team_a/index.html\">Team A Module</a></li>\n</ul>\n"
+        );
+    }
+
+    #[test]
     fn test_render_formats_toctree_as_html_list() {
         // Given
         let doc = Document::new(
@@ -666,6 +701,27 @@ mod tests {
         // Then
         assert_eq!(result, "<h6>VeryDeep</h6>\n");
     }
+
+    #[test]
+    fn test_render_ignores_unknown_directive() {
+        // Given a document with an unknown directive
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::Unknown {
+                name: "some-unknown".to_string(),
+                argument: "arg".to_string(),
+                body: "body".to_string(),
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then the output should be empty, as unknown directives are ignored
+        assert_eq!(result, "");
+    }
+
     #[test]
     fn test_render_formats_target_node_as_html_anchor() {
         // Given
