@@ -533,6 +533,67 @@ mod tests {
     }
 
     #[test]
+    fn test_flag_values_opt_returns_list_of_values() {
+        // Given
+        let args = vec![
+            "--inputs".to_string(),
+            "a.ast".to_string(),
+            "b.ast".to_string(),
+            "--output".to_string(),
+            "c.idx".to_string(),
+        ];
+
+        // When
+        let result = flag_values_opt(&args, "--inputs");
+
+        // Then
+        assert_eq!(result, vec!["a.ast", "b.ast"]);
+    }
+
+    #[test]
+    fn test_flag_values_opt_returns_empty_list_when_no_values_follow_flag() {
+        // Given
+        let args = vec![
+            "--inputs".to_string(),
+            "--output".to_string(),
+            "c.idx".to_string(),
+        ];
+
+        // When
+        let result = flag_values_opt(&args, "--inputs");
+
+        // Then
+        let expected: Vec<String> = vec![];
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_flag_values_opt_returns_empty_list_when_flag_is_missing() {
+        // Given
+        let args = vec!["--output".to_string(), "c.idx".to_string()];
+
+        // When
+        let result = flag_values_opt(&args, "--inputs");
+
+        // Then
+        let expected: Vec<String> = vec![];
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_flag_values_opt_returns_empty_list_when_args_is_empty() {
+        // Given
+        let args: Vec<String> = vec![];
+
+        // When
+        let result = flag_values_opt(&args, "--inputs");
+
+        // Then
+        let expected: Vec<String> = vec![];
+        assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_process_parse_returns_serialized_ast() {
         // Given
         let rst = "Title\n=====";
