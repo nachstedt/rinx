@@ -722,6 +722,27 @@ mod tests {
         let _ = std::fs::remove_dir_all(outdir);
     }
 
+    #[test]
+    fn test_process_extract_diagrams_returns_error_for_invalid_ast_json() {
+        // Given
+        let bad_json = "not valid json";
+        let outdir = std::env::temp_dir().join(format!(
+            "puml_test_bad_json_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+
+        // When
+        let result = process_extract_diagrams(bad_json, outdir.to_str().unwrap());
+
+        // Then
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("Failed to deserialize AST"));
+    }
+
     // ── process_validate_images ───────────────────────────────────────────────
 
     fn make_plantuml_ast(doc_path: &str, body: &str) -> String {
