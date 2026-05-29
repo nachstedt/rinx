@@ -60,18 +60,18 @@ pub fn render_page(
 
 /// A nav entry with its path resolved to a relative HTML href.
 #[derive(Debug, serde::Serialize)]
-struct ResolvedNavEntry {
-    title: String,
+struct ResolvedNavEntry<'a> {
+    title: &'a str,
     href: String,
-    children: Vec<Self>,
+    children: Vec<ResolvedNavEntry<'a>>,
 }
 
 /// Converts a nav tree's `.rst` paths into relative `.html` hrefs
 /// based on the current document's location.
-fn resolve_nav_hrefs(
-    entries: &[crate::analyzer::NavEntry],
+fn resolve_nav_hrefs<'a>(
+    entries: &'a [crate::analyzer::NavEntry],
     doc_path: &str,
-) -> Vec<ResolvedNavEntry> {
+) -> Vec<ResolvedNavEntry<'a>> {
     let doc_dir = std::path::Path::new(doc_path)
         .parent()
         .unwrap_or_else(|| std::path::Path::new(""));
@@ -86,7 +86,7 @@ fn resolve_nav_hrefs(
                 .map_or_else(|| target_html, |p| p.to_string_lossy().replace('\\', "/"));
 
             ResolvedNavEntry {
-                title: entry.title.clone(),
+                title: &entry.title,
                 href,
                 children: resolve_nav_hrefs(&entry.children, doc_path),
             }
