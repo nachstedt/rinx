@@ -332,6 +332,26 @@ mod tests {
     }
 
     #[test]
+    fn test_hashed_content_try_from_empty_body() {
+        // Given
+        let body = String::new();
+        let valid_hash = HashedContent::new(body.clone()).hash;
+        let raw = HashedContentRaw {
+            hash: valid_hash.clone(),
+            body: body.clone(),
+        };
+
+        // When
+        let result = HashedContent::try_from(raw);
+
+        // Then
+        assert!(result.is_ok());
+        let content = result.unwrap();
+        assert_eq!(content.hash, valid_hash);
+        assert_eq!(content.body, body);
+    }
+
+    #[test]
     fn test_target_name_normalization() {
         // Given
         let raw = "  My   Target  Name  ";
