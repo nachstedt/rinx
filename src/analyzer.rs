@@ -747,4 +747,68 @@ mod tests {
             "shared.rst must appear in both branches, not be truncated as a false cycle"
         );
     }
+
+    #[test]
+    fn test_extract_toctree_paths_empty_document() {
+        let doc = Document::new("index.rst".to_string(), vec![]);
+        let paths = extract_toctree_paths(&doc);
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_extract_toctree_paths_single_entry_appends_rst() {
+        let doc = Document::new(
+            "index.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["chapter1".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+        let paths = extract_toctree_paths(&doc);
+        assert_eq!(paths.len(), 1);
+        assert_eq!(paths[0], "chapter1.rst");
+    }
+
+    #[test]
+    fn test_extract_toctree_paths_multiple_entries_mixed_extensions() {
+        let doc = Document::new(
+            "index.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec![
+                    "chapter1".to_string(),
+                    "chapter2.rst".to_string(),
+                    "chapter3.RST".to_string(),
+                ],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+        let paths = extract_toctree_paths(&doc);
+        assert_eq!(paths.len(), 3);
+        assert_eq!(paths[0], "chapter1.rst");
+        assert_eq!(paths[1], "chapter2.rst");
+        assert_eq!(paths[2], "chapter3.RST");
+    }
+
+    #[test]
+    fn test_extract_toctree_paths_resolves_relative_to_parent() {
+        let doc = Document::new(
+            "docs/index.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec![
+                    "chapter1".to_string(),
+                    "../readme".to_string(),
+                    "sub/chapter2.rst".to_string(),
+                ],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+        let paths = extract_toctree_paths(&doc);
+        assert_eq!(paths.len(), 3);
+        assert_eq!(paths[0], "docs/chapter1.rst");
+        assert_eq!(paths[1], "readme.rst");
+        assert_eq!(paths[2], "docs/sub/chapter2.rst");
+    }
 }
