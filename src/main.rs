@@ -486,6 +486,51 @@ mod tests {
     }
 
     #[test]
+    fn test_flag_value_opt_returns_none_when_flag_at_end_without_value() {
+        // Given
+        let args = vec![
+            "--input".to_string(),
+            "a.rst".to_string(),
+            "--output".to_string(),
+        ];
+
+        // When
+        let result = flag_value_opt(&args, "--output");
+
+        // Then
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_flag_value_opt_returns_none_when_args_is_empty() {
+        // Given
+        let args: Vec<String> = vec![];
+
+        // When
+        let result = flag_value_opt(&args, "--output");
+
+        // Then
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_flag_value_opt_returns_first_value_when_flag_appears_multiple_times() {
+        // Given
+        let args = vec![
+            "--input".to_string(),
+            "a.rst".to_string(),
+            "--input".to_string(),
+            "b.rst".to_string(),
+        ];
+
+        // When
+        let result = flag_value_opt(&args, "--input");
+
+        // Then
+        assert_eq!(result.unwrap(), "a.rst");
+    }
+
+    #[test]
     fn test_flag_values_returns_list_of_values() {
         // Given
         let args = vec![
