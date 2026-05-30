@@ -202,6 +202,67 @@ mod tests {
     use crate::ast::{InlineNode, Node};
 
     #[test]
+    fn test_build_nav_subtree_basic() {
+        let mut toctrees = BTreeMap::new();
+        toctrees.insert("index.rst".to_string(), vec!["child.rst".to_string()]);
+
+        let mut titles = BTreeMap::new();
+        titles.insert("index.rst".to_string(), "Index Title".to_string());
+        titles.insert("child.rst".to_string(), "Child Title".to_string());
+
+        let mut visited = std::collections::HashSet::new();
+        let nav = build_nav_subtree("index.rst", &toctrees, &titles, &mut visited);
+
+        assert_eq!(nav.title, "Index Title");
+        assert_eq!(nav.path, "index.rst");
+        assert_eq!(nav.children.len(), 1);
+        assert_eq!(nav.children[0].title, "Child Title");
+        assert_eq!(nav.children[0].path, "child.rst");
+        assert!(nav.children[0].children.is_empty());
+    }
+
+    #[test]
+    fn test_build_nav_subtree_missing_title() {
+        let toctrees = BTreeMap::new();
+        let titles = BTreeMap::new();
+        let mut visited = std::collections::HashSet::new();
+
+        let nav = build_nav_subtree("untitled.rst", &toctrees, &titles, &mut visited);
+
+        assert_eq!(nav.title, "untitled");
+        assert_eq!(nav.path, "untitled.rst");
+        assert!(nav.children.is_empty());
+    }
+
+    #[test]
+    fn test_build_nav_subtree_cycle_prevention() {
+        let mut toctrees = BTreeMap::new();
+        // index -> child -> index
+        toctrees.insert("index.rst".to_string(), vec!["child.rst".to_string()]);
+        toctrees.insert("child.rst".to_string(), vec!["index.rst".to_string()]);
+
+        let titles = BTreeMap::new();
+        let mut visited = std::collections::HashSet::new();
+
+        let nav = build_nav_subtree("index.rst", &toctrees, &titles, &mut visited);
+
+        assert_eq!(nav.title, "index");
+        assert_eq!(nav.path, "index.rst");
+        assert_eq!(nav.children.len(), 1);
+
+        let child = &nav.children[0];
+        assert_eq!(child.title, "child");
+        assert_eq!(child.path, "child.rst");
+        assert_eq!(child.children.len(), 1);
+
+        // Cycle broken here
+        let cycle_leaf = &child.children[0];
+        assert_eq!(cycle_leaf.title, "index");
+        assert_eq!(cycle_leaf.path, "index.rst");
+        assert!(cycle_leaf.children.is_empty());
+    }
+
+    #[test]
     fn test_normalize_path_basic() {
         // Given
         let path = std::path::Path::new("a/b/c");
