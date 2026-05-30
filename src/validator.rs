@@ -128,4 +128,19 @@ mod tests {
 
         assert!(validate_toctree(&doc, &allowed).is_ok());
     }
+
+    #[test]
+    fn test_validate_toctree_empty_paths() {
+        let doc = Document::new(
+            "docs/index.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec![],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+        let allowed = HashSet::new(); // empty
+
+        assert!(validate_toctree(&doc, &allowed).is_ok());
+    }
 }
