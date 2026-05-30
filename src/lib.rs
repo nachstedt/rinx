@@ -11,20 +11,6 @@ pub mod renderer;
 pub mod utils;
 pub mod validator;
 
-/// Returns a welcoming greeting for the Rusty Sphinx application.
-///
-/// # Examples
-///
-/// ```
-/// use rusty_sphinx::greeting;
-/// let message = greeting("World");
-/// assert_eq!(message, "Hello, World!");
-/// ```
-#[must_use]
-pub fn greeting(name: &str) -> String {
-    format!("Hello, {name}!")
-}
-
 /// Processes an RST text block through the full pipeline (parse, analyze, render)
 /// and outputs an HTML string.
 #[must_use]
@@ -37,18 +23,6 @@ pub fn process_rst(path: &str, input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_greeting_returns_formatted_message() {
-        // Given
-        let name = "Rustacean";
-
-        // When
-        let result = greeting(name);
-
-        // Then
-        assert_eq!(result, "Hello, Rustacean!");
-    }
 
     #[test]
     fn test_process_rst_renders_html_from_rst() {
