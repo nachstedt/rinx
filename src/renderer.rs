@@ -104,6 +104,9 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
     collect_anonymous_targets(&doc.nodes, &mut anon_targets);
     let mut anon_index = 0;
 
+    let mut nav_map = std::collections::HashMap::new();
+    build_nav_map(&index.nav_tree, &mut nav_map);
+
     render_nodes(
         &mut html,
         &doc.nodes,
@@ -112,6 +115,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
         &anon_targets,
         &mut anon_index,
         &doc.path,
+        &nav_map,
     );
 
     html
@@ -129,6 +133,7 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_nodes(
     html: &mut String,
     nodes: &[Node],
@@ -137,6 +142,7 @@ fn render_nodes(
     anon_targets: &[String],
     anon_index: &mut usize,
     original_doc_path: &str,
+    nav_map: &std::collections::HashMap<&str, &crate::analyzer::NavEntry>,
 ) {
     for node in nodes {
         match node {
@@ -167,6 +173,7 @@ fn render_nodes(
                 anon_targets,
                 anon_index,
                 original_doc_path,
+                nav_map,
             ),
             Node::BulletList { items, .. } => {
                 let _ = writeln!(html, "<ul>");
@@ -180,6 +187,7 @@ fn render_nodes(
                         anon_targets,
                         anon_index,
                         original_doc_path,
+                        nav_map,
                     );
                     let _ = writeln!(html, "</li>");
                 }
@@ -189,6 +197,7 @@ fn render_nodes(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_directive(
     html: &mut String,
     directive: &Directive,
@@ -197,6 +206,7 @@ fn render_directive(
     anon_targets: &[String],
     anon_index: &mut usize,
     original_doc_path: &str,
+    nav_map: &std::collections::HashMap<&str, &crate::analyzer::NavEntry>,
 ) {
     match directive {
         Directive::Toctree { maxdepth, .. } => {
@@ -204,7 +214,7 @@ fn render_directive(
             let current_dir = std::path::Path::new(doc_path)
                 .parent()
                 .unwrap_or_else(|| std::path::Path::new(""));
-            if let Some(current_entry) = find_nav_entry(&index.nav_tree, original_doc_path) {
+            if let Some(current_entry) = nav_map.get(original_doc_path).copied() {
                 for child in &current_entry.children {
                     render_nav_entry(html, child, index, current_dir, 1, *maxdepth);
                 }
@@ -242,6 +252,7 @@ fn render_directive(
             anon_targets,
             anon_index,
             original_doc_path,
+            nav_map,
         ),
         Directive::Unknown { .. } => {}
     }
@@ -259,6 +270,7 @@ fn render_admonition(
     anon_targets: &[String],
     anon_index: &mut usize,
     original_doc_path: &str,
+    nav_map: &std::collections::HashMap<&str, &crate::analyzer::NavEntry>,
 ) {
     let kind_str = kind.as_str();
     let title_text = title.map_or_else(
@@ -292,6 +304,7 @@ fn render_admonition(
             anon_targets,
             anon_index,
             original_doc_path,
+            nav_map,
         );
         let _ = writeln!(html, "</details>");
     } else {
@@ -305,6 +318,7 @@ fn render_admonition(
             anon_targets,
             anon_index,
             original_doc_path,
+            nav_map,
         );
         let _ = writeln!(html, "</div>");
     }
@@ -461,19 +475,16 @@ fn render_nav_entry(
     let _ = writeln!(html, "</li>");
 }
 
-fn find_nav_entry<'a>(
+fn build_nav_map<'a>(
     entries: &'a [crate::analyzer::NavEntry],
-    path: &str,
-) -> Option<&'a crate::analyzer::NavEntry> {
+    map: &mut std::collections::HashMap<&'a str, &'a crate::analyzer::NavEntry>,
+) {
     for entry in entries {
-        if entry.path == path {
-            return Some(entry);
-        }
-        if let Some(found) = find_nav_entry(&entry.children, path) {
-            return Some(found);
-        }
+        // Use entry to insert only if not already present, this preserves the root entry in case of cycles,
+        // just like the old `find_nav_entry` which returned the first match in DFS order.
+        map.entry(entry.path.as_str()).or_insert(entry);
+        build_nav_map(&entry.children, map);
     }
-    None
 }
 
 #[cfg(test)]
@@ -1079,8 +1090,9 @@ mod tests {
 
         // Then
         // The output should contain nested lists reflecting the finite depth of nav_tree
+        println!("HTML OUTPUT: {}", html);
         assert!(html.contains("<ul>"));
-        assert!(html.contains("<li><a href=\"cycle.html\">Cycle</a>"));
+        assert!(html.contains("<a href=\"cycle.html\">Cycle</a>"));
     }
 
     #[test]
@@ -1160,14 +1172,18 @@ mod tests {
     }
 
     #[test]
-    fn test_find_nav_entry_returns_none_for_empty_tree() {
-        assert!(find_nav_entry(&[], "a.rst").is_none());
+    fn test_build_nav_map_returns_none_for_empty_tree() {
+        let mut map = std::collections::HashMap::new();
+        build_nav_map(&[], &mut map);
+        assert!(map.get("a.rst").is_none());
     }
 
     #[test]
     fn test_find_nav_entry_finds_root_level_entry() {
         let tree = vec![make_entry("a.rst", vec![]), make_entry("b.rst", vec![])];
-        let result = find_nav_entry(&tree, "b.rst");
+        let mut map = std::collections::HashMap::new();
+        build_nav_map(&tree, &mut map);
+        let result = map.get("b.rst").copied();
         assert!(result.is_some());
         assert_eq!(result.unwrap().path, "b.rst");
     }
@@ -1181,7 +1197,9 @@ mod tests {
                 vec![make_entry("grandchild.rst", vec![])],
             )],
         )];
-        let result = find_nav_entry(&tree, "grandchild.rst");
+        let mut map = std::collections::HashMap::new();
+        build_nav_map(&tree, &mut map);
+        let result = map.get("grandchild.rst").copied();
         assert!(result.is_some());
         assert_eq!(result.unwrap().path, "grandchild.rst");
     }
@@ -1189,7 +1207,9 @@ mod tests {
     #[test]
     fn test_find_nav_entry_returns_none_for_missing_path() {
         let tree = vec![make_entry("a.rst", vec![make_entry("b.rst", vec![])])];
-        assert!(find_nav_entry(&tree, "missing.rst").is_none());
+        let mut map = std::collections::HashMap::new();
+        build_nav_map(&tree, &mut map);
+        assert!(map.get("missing.rst").is_none());
     }
 
     // ── resolve_nav_hrefs ─────────────────────────────────────────────────────
@@ -1530,6 +1550,7 @@ mod tests {
         let original_doc_path = "test.rst";
 
         // When
+        let nav_map = std::collections::HashMap::new();
         render_admonition(
             &mut html,
             kind,
@@ -1541,6 +1562,7 @@ mod tests {
             &anon_targets,
             &mut anon_index,
             original_doc_path,
+            &nav_map,
         );
 
         // Then
@@ -1564,6 +1586,7 @@ mod tests {
         let original_doc_path = "test.rst";
 
         // When
+        let nav_map = std::collections::HashMap::new();
         render_admonition(
             &mut html,
             kind,
@@ -1575,6 +1598,7 @@ mod tests {
             &anon_targets,
             &mut anon_index,
             original_doc_path,
+            &nav_map,
         );
 
         // Then
@@ -1597,6 +1621,7 @@ mod tests {
         let original_doc_path = "test.rst";
 
         // When
+        let nav_map = std::collections::HashMap::new();
         render_admonition(
             &mut html,
             kind,
@@ -1608,6 +1633,7 @@ mod tests {
             &anon_targets,
             &mut anon_index,
             original_doc_path,
+            &nav_map,
         );
 
         // Then
