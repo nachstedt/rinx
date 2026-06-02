@@ -22,7 +22,7 @@ the corresponding feature is implemented.
 | Bold (`**text**`) | ❌ Not implemented | Emitted as plain text |
 | Italic (`*text*`) | ❌ Not implemented | Emitted as plain text |
 | Inline code (`` `text` ``) | ❌ Not implemented | Emitted as plain text |
-| Interpreted text roles (e.g. `` :ref:`label` ``) | ❌ Not implemented | — |
+| Interpreted text roles (e.g. `` :ref:`label` ``) | 🔶 Partial | `:ref:` (resolves to references) and `:program:` (renders as `<strong class="program">`) are implemented. |
 | Hyperlink references (`link text <URL>`_) | ❌ Not implemented | — |
 | Anonymous hyperlinks (`link text <URL>`__) | ❌ Not implemented | — |
 

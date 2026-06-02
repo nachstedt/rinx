@@ -179,6 +179,7 @@ pub enum InlineNode {
     Emphasis(String),
     Strong(String),
     Literal(String),
+    Program(String),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -383,5 +384,18 @@ mod tests {
         assert_eq!(target2, target3);
 
         assert_ne!(target1, target4);
+    }
+
+    #[test]
+    fn test_inline_node_program_serialization_roundtrip() {
+        // Given
+        let node = InlineNode::Program("curl".to_string());
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
     }
 }

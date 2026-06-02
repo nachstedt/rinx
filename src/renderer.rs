@@ -422,6 +422,10 @@ fn render_inline(
             let escaped = html_escape::encode_text(text);
             let _ = write!(html, "<code>{escaped}</code>");
         }
+        crate::ast::InlineNode::Program(text) => {
+            let escaped = html_escape::encode_text(text);
+            let _ = write!(html, "<strong class=\"program\">{escaped}</strong>");
+        }
     }
 }
 
@@ -1715,5 +1719,49 @@ mod tests {
 
         // Then
         assert!(result.contains("<a href=\"https://example.com/&quot;&gt;&lt;script&gt;alert('xss')&lt;/script&gt;\">Click Here</a>"));
+    }
+
+    #[test]
+    fn test_render_program_nodes() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![
+                InlineNode::Text("Run ".to_string()),
+                InlineNode::Program("curl".to_string()),
+                InlineNode::Text(" now.".to_string()),
+            ])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(
+            result,
+            "<p>Run <strong class=\"program\">curl</strong> now.</p>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_program_nodes_escapes_html() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::Program(
+                "my-tool <script>".to_string(),
+            )])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(
+            result,
+            "<p><strong class=\"program\">my-tool &lt;script&gt;</strong></p>\n"
+        );
     }
 }

@@ -10,6 +10,7 @@ Welcome to the Rusty-Sphinx example.
 
    hyperlinks
    admonitions
+   inline_roles
    team_a/index
    team_b/index
 

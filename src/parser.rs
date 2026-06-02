@@ -6,6 +6,8 @@ use std::sync::LazyLock;
 
 static REF_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":ref:`(?P<target>[^`]+)`").unwrap());
+static PROGRAM_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":program:`(?P<name>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -387,6 +389,7 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
         let remaining = &paragraph_text[last_match_end..];
 
         let ref_match = REF_REGEX.find(remaining);
+        let program_match = PROGRAM_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -397,6 +400,9 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
         let mut all_matches = Vec::new();
         if let Some(m) = ref_match {
             all_matches.push((m.start(), m.end(), "ref", None));
+        }
+        if let Some(m) = program_match {
+            all_matches.push((m.start(), m.end(), "program", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -443,6 +449,10 @@ fn handle_inline_match(kind: &str, m_str: &str, node_opt: Option<InlineNode>) ->
         "ref" => {
             let caps = REF_REGEX.captures(m_str).unwrap();
             InlineNode::Reference(caps["target"].to_string())
+        }
+        "program" => {
+            let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
+            InlineNode::Program(caps["name"].to_string())
         }
         "phrased" => {
             let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
@@ -2197,6 +2207,10 @@ mod tests {
         let result = handle_inline_match("ref", ":ref:`target`", None);
         assert_eq!(result, InlineNode::Reference("target".to_string()));
 
+        // Test "program" variant
+        let result = handle_inline_match("program", ":program:`curl`", None);
+        assert_eq!(result, InlineNode::Program("curl".to_string()));
+
         // Test "phrased" variant
         let result = handle_inline_match("phrased", "`text <http://uri>`_", None);
         assert_eq!(
@@ -2276,6 +2290,51 @@ mod tests {
             assert_eq!(inlines.len(), 2);
             assert_eq!(inlines[0], InlineNode::Emphasis("π".to_string()));
             assert_eq!(inlines[1], InlineNode::Text(" text".to_string()));
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_with_program_role() {
+        // Given
+        let input = "Run :program:`curl` to download files.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 3);
+            assert_eq!(inlines[0], InlineNode::Text("Run ".to_string()));
+            assert_eq!(inlines[1], InlineNode::Program("curl".to_string()));
+            assert_eq!(
+                inlines[2],
+                InlineNode::Text(" to download files.".to_string())
+            );
+        } else {
+            panic!("Expected Paragraph node");
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_with_multiple_program_roles_and_punctuation() {
+        // Given
+        let input = "Use :program:`git` or :program:`hg` to manage code.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(inlines.len(), 5);
+            assert_eq!(inlines[0], InlineNode::Text("Use ".to_string()));
+            assert_eq!(inlines[1], InlineNode::Program("git".to_string()));
+            assert_eq!(inlines[2], InlineNode::Text(" or ".to_string()));
+            assert_eq!(inlines[3], InlineNode::Program("hg".to_string()));
+            assert_eq!(inlines[4], InlineNode::Text(" to manage code.".to_string()));
         } else {
             panic!("Expected Paragraph node");
         }
