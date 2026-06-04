@@ -55,8 +55,10 @@ local_path_override(
     # Create config
     (doc_dir / "rusty_sphinx.toml").write_text('project = "CPython Benchmark"\n')
     
-    # Create template
-    (doc_dir / "custom_template.html").write_text('<!DOCTYPE html><html><body><h1>CPython Benchmark</h1>{{ body }}</body></html>\n')
+    # Create template — use the project's default template for a nicely formatted output
+    default_template_path = Path(workspace_root) / "templates" / "default.html"
+    template_content = default_template_path.read_text()
+    (doc_dir / "custom_template.html").write_text(template_content)
     
     # Create BUILD.bazel in Doc
     build_bazel = """load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
