@@ -121,8 +121,7 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
     for node in nodes {
         match node {
             Node::AnonymousTarget { uri } => targets.push(uri.clone()),
-            Node::Directive(Directive::Admonition { body, .. })
-            | Node::Directive(Directive::VersionChange { body, .. }) => {
+            Node::Directive(Directive::Admonition { body, .. } | Directive::VersionChange { body, .. }) => {
                 collect_anonymous_targets(body, targets);
             }
             _ => {}
@@ -342,12 +341,12 @@ fn render_version_change(
     let version_escaped = html_escape::encode_text(version);
 
     let label = match kind {
-        crate::ast::VersionChangeKind::Added => format!("New in version {}:", version_escaped),
+        crate::ast::VersionChangeKind::Added => format!("New in version {version_escaped}:"),
         crate::ast::VersionChangeKind::Changed => {
-            format!("Changed in version {}:", version_escaped)
+            format!("Changed in version {version_escaped}:")
         }
         crate::ast::VersionChangeKind::Deprecated => {
-            format!("Deprecated since version {}:", version_escaped)
+            format!("Deprecated since version {version_escaped}:")
         }
     };
 
@@ -357,12 +356,11 @@ fn render_version_change(
         crate::ast::VersionChangeKind::Deprecated => "deprecated",
     };
 
-    let _ = writeln!(html, "<div class=\"{}\">", kind_str);
-    let _ = write!(html, "  <p class=\"versionmodified {}\">", inner_class);
+    let _ = writeln!(html, "<div class=\"{kind_str}\">");
+    let _ = write!(html, "  <p class=\"versionmodified {inner_class}\">");
     let _ = write!(
         html,
-        "<span class=\"versionmodified-label\">{}</span>",
-        label
+        "<span class=\"versionmodified-label\">{label}</span>"
     );
 
     if body.is_empty() {

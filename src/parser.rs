@@ -161,6 +161,86 @@ fn parse_blocks(
     nodes
 }
 
+fn collect_directive_body<'a>(lines: &[&'a str], start_index: usize) -> (usize, Vec<&'a str>) {
+    let mut body_lines = Vec::new();
+    let mut current = start_index;
+    while current < lines.len() {
+        let next_line = lines[current].trim_end();
+        if next_line.trim().is_empty() || next_line.starts_with(' ') || next_line.starts_with('\t') {
+            body_lines.push(next_line);
+        } else {
+            break;
+        }
+        current += 1;
+    }
+
+    let consumed = current - start_index;
+
+    // Remove trailing empty lines
+    while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
+        body_lines.pop();
+    }
+    
+    let mut start = 0;
+    while start < body_lines.len() && body_lines[start].trim().is_empty() {
+        start += 1;
+    }
+
+    (consumed, body_lines[start..].to_vec())
+}
+
+fn join_body_lines(body_lines: &[&str]) -> String {
+    let mut body = String::new();
+    for l in body_lines {
+        if !body.is_empty() {
+            body.push('\n');
+        }
+        body.push_str(l.trim_start());
+    }
+    body
+}
+
+fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
+    let mut paths = Vec::new();
+    let mut maxdepth = None;
+    let mut ignored_options = Vec::new();
+
+    for l in body_lines {
+        let line = l.trim();
+        if line.is_empty() {
+            continue;
+        }
+        if line.starts_with(':') {
+            let opt_name = line.split(':').nth(1).unwrap_or("");
+            match opt_name {
+                "maxdepth" => {
+                    if let Some(rest) = line.strip_prefix(":maxdepth:")
+                        && let Ok(depth) = rest.trim().parse::<usize>()
+                    {
+                        maxdepth = Some(depth);
+                    }
+                }
+                "numbered" | "caption" | "name" | "titlesonly" | "glob" | "reversed"
+                | "hidden" | "includehidden" => {
+                    ignored_options.push(line.to_string());
+                }
+                _ => {
+                    diagnostics.push(format!(
+                        "Invalid or non-standard Sphinx toctree option encountered: {line}"
+                    ));
+                }
+            }
+            continue;
+        }
+        paths.push(line.to_string());
+    }
+    Directive::Toctree {
+        paths,
+        maxdepth,
+        ignored_options,
+    }
+}
+
 fn try_parse_directive(
     lines: &[&str],
     i: usize,
@@ -174,86 +254,20 @@ fn try_parse_directive(
 
     let trimmed = line.trim();
     let (name_part, arg_part) = trimmed.split_once("::")?;
-    let name_inner = name_part.strip_prefix(".. ")?;
-
-    let name = name_inner.trim().to_string();
+    let name = name_part.strip_prefix(".. ")?.trim().to_string();
     let argument = arg_part.trim().to_string();
 
-    let mut body_lines = Vec::new();
-    let mut current = i + 1;
-    while current < lines.len() {
-        let next_line = lines[current].trim_end();
-        if next_line.trim().is_empty() || next_line.starts_with(' ') || next_line.starts_with('\t')
-        {
-            body_lines.push(next_line);
-        } else {
-            break;
-        }
-        current += 1;
-    }
-
-    // Remove trailing and leading empty lines
-    while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
-        body_lines.pop();
-    }
-    let mut start = 0;
-    while start < body_lines.len() && body_lines[start].trim().is_empty() {
-        start += 1;
-    }
+    let (consumed_lines, body_lines) = collect_directive_body(lines, i + 1);
 
     let directive = if name == "toctree" {
-        let mut paths = Vec::new();
-        let mut maxdepth = None;
-        let mut ignored_options = Vec::new();
-
-        for l in &body_lines[start..] {
-            let line = l.trim();
-            if line.is_empty() {
-                continue;
-            }
-            if line.starts_with(':') {
-                let opt_name = line.split(':').nth(1).unwrap_or("");
-                match opt_name {
-                    "maxdepth" => {
-                        if let Some(rest) = line.strip_prefix(":maxdepth:")
-                            && let Ok(depth) = rest.trim().parse::<usize>()
-                        {
-                            maxdepth = Some(depth);
-                        }
-                    }
-                    "numbered" | "caption" | "name" | "titlesonly" | "glob" | "reversed"
-                    | "hidden" | "includehidden" => {
-                        ignored_options.push(line.to_string());
-                    }
-                    _ => {
-                        diagnostics.push(format!(
-                            "Invalid or non-standard Sphinx toctree option encountered: {line}"
-                        ));
-                    }
-                }
-                continue;
-            }
-            paths.push(line.to_string());
-        }
-        Directive::Toctree {
-            paths,
-            maxdepth,
-            ignored_options,
-        }
+        parse_toctree(&body_lines, diagnostics)
     } else if name == "plantuml" {
-        let mut body = String::new();
-        for l in &body_lines[start..] {
-            if !body.is_empty() {
-                body.push('\n');
-            }
-            body.push_str(l.trim_start());
-        }
-        Directive::PlantUml(HashedContent::new(body))
+        Directive::PlantUml(HashedContent::new(join_body_lines(&body_lines)))
     } else if let Ok(kind) = name.parse::<crate::ast::VersionChangeKind>() {
         parse_version_change(
             kind,
             argument,
-            &body_lines[start..],
+            &body_lines,
             adornment_order,
             diagnostics,
         )
@@ -261,26 +275,19 @@ fn try_parse_directive(
         parse_admonition(
             kind,
             argument,
-            &body_lines[start..],
+            &body_lines,
             adornment_order,
             diagnostics,
         )
     } else {
-        let mut body = String::new();
-        for l in &body_lines[start..] {
-            if !body.is_empty() {
-                body.push('\n');
-            }
-            body.push_str(l.trim_start());
-        }
         Directive::Unknown {
             name,
             argument,
-            body,
+            body: join_body_lines(&body_lines),
         }
     };
 
-    Some((current - i, Node::Directive(directive)))
+    Some((1 + consumed_lines, Node::Directive(directive)))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2488,6 +2495,173 @@ mod tests {
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected VersionChange directive");
+        }
+    }
+    #[test]
+    fn test_join_body_lines_with_empty_input() {
+        // Given
+        let input: &[&str] = &[];
+        // When
+        let result = super::join_body_lines(input);
+        // Then
+        assert_eq!(result, "");
+    }
+
+    #[test]
+    fn test_join_body_lines_with_single_line() {
+        // Given
+        let input = vec!["   hello"];
+        // When
+        let result = super::join_body_lines(&input);
+        // Then
+        assert_eq!(result, "hello");
+    }
+
+    #[test]
+    fn test_join_body_lines_with_multiple_lines() {
+        // Given
+        let input = vec!["   line1", "  line2", "line3"];
+        // When
+        let result = super::join_body_lines(&input);
+        // Then
+        assert_eq!(result, "line1\nline2\nline3");
+    }
+
+    #[test]
+    fn test_collect_directive_body_collects_indented_lines() {
+        // Given
+        let lines = vec![".. note::", "   body1", "   body2"];
+        // When
+        let (consumed, body) = super::collect_directive_body(&lines, 1);
+        // Then
+        assert_eq!(consumed, 2);
+        assert_eq!(body, vec!["   body1", "   body2"]);
+    }
+
+    #[test]
+    fn test_collect_directive_body_stops_at_unindented_line() {
+        // Given
+        let lines = vec![".. note::", "   body1", "unindented", "   body2"];
+        // When
+        let (consumed, body) = super::collect_directive_body(&lines, 1);
+        // Then
+        assert_eq!(consumed, 1);
+        assert_eq!(body, vec!["   body1"]);
+    }
+
+    #[test]
+    fn test_collect_directive_body_strips_leading_and_trailing_blank_lines() {
+        // Given
+        let lines = vec![".. note::", "  ", "   body1", "  ", "   body2", "   ", ""];
+        // When
+        let (consumed, body) = super::collect_directive_body(&lines, 1);
+        // Then
+        assert_eq!(consumed, 6);
+        assert_eq!(body, vec!["   body1", "", "   body2"]);
+    }
+
+    #[test]
+    fn test_collect_directive_body_returns_empty_when_no_body() {
+        // Given
+        let lines = vec![".. note::", "unindented"];
+        // When
+        let (consumed, body) = super::collect_directive_body(&lines, 1);
+        // Then
+        assert_eq!(consumed, 0);
+        assert!(body.is_empty());
+    }
+
+    #[test]
+    fn test_collect_directive_body_returns_correct_consumed_count() {
+        // Given
+        let lines = vec![".. note::", "   body", "  "];
+        // When
+        let (consumed, body) = super::collect_directive_body(&lines, 1);
+        // Then
+        assert_eq!(consumed, 2);
+        assert_eq!(body, vec!["   body"]);
+    }
+
+    #[test]
+    fn test_parse_toctree_collects_paths() {
+        // Given
+        let body_lines = vec!["path1", "path2/index"];
+        let mut diagnostics = vec![];
+        // When
+        let directive = super::parse_toctree(&body_lines, &mut diagnostics);
+        // Then
+        if let Directive::Toctree { paths, maxdepth, ignored_options } = directive {
+            assert_eq!(paths, vec!["path1", "path2/index"]);
+            assert_eq!(maxdepth, None);
+            assert!(ignored_options.is_empty());
+        } else {
+            panic!("Expected Toctree");
+        }
+    }
+
+    #[test]
+    fn test_parse_toctree_parses_maxdepth_option() {
+        // Given
+        let body_lines = vec![":maxdepth: 2", "path1"];
+        let mut diagnostics = vec![];
+        // When
+        let directive = super::parse_toctree(&body_lines, &mut diagnostics);
+        // Then
+        if let Directive::Toctree { paths, maxdepth, ignored_options } = directive {
+            assert_eq!(paths, vec!["path1"]);
+            assert_eq!(maxdepth, Some(2));
+            assert!(ignored_options.is_empty());
+        } else {
+            panic!("Expected Toctree");
+        }
+    }
+
+    #[test]
+    fn test_parse_toctree_ignores_known_options() {
+        // Given
+        let body_lines = vec![":hidden:", ":caption: Some text", "path1"];
+        let mut diagnostics = vec![];
+        // When
+        let directive = super::parse_toctree(&body_lines, &mut diagnostics);
+        // Then
+        if let Directive::Toctree { paths, maxdepth, ignored_options } = directive {
+            assert_eq!(paths, vec!["path1"]);
+            assert_eq!(maxdepth, None);
+            assert_eq!(ignored_options.len(), 2);
+        } else {
+            panic!("Expected Toctree");
+        }
+    }
+
+    #[test]
+    fn test_parse_toctree_emits_diagnostic_for_unknown_option() {
+        // Given
+        let body_lines = vec![":unknown_opt:", "path1"];
+        let mut diagnostics = vec![];
+        // When
+        let directive = super::parse_toctree(&body_lines, &mut diagnostics);
+        // Then
+        assert_eq!(diagnostics.len(), 1);
+        assert!(diagnostics[0].contains("Invalid or non-standard Sphinx toctree option"));
+        if let Directive::Toctree { paths, .. } = directive {
+            assert_eq!(paths, vec!["path1"]);
+        } else {
+            panic!("Expected Toctree");
+        }
+    }
+
+    #[test]
+    fn test_parse_toctree_skips_blank_lines() {
+        // Given
+        let body_lines = vec!["path1", "  ", "", "path2"];
+        let mut diagnostics = vec![];
+        // When
+        let directive = super::parse_toctree(&body_lines, &mut diagnostics);
+        // Then
+        if let Directive::Toctree { paths, .. } = directive {
+            assert_eq!(paths, vec!["path1", "path2"]);
+        } else {
+            panic!("Expected Toctree");
         }
     }
 }
