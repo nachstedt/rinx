@@ -11,6 +11,7 @@ Welcome to the Rusty-Sphinx example.
    hyperlinks
    admonitions
    inline_roles
+   version_changes
    team_a/index
    team_b/index
 

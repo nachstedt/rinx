@@ -241,6 +241,40 @@ body {
   height: auto;
 }
 
+/* ── Version-Change Directives ─────────────────────────────────────── */
+
+.versionadded,
+.versionchanged,
+.deprecated {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border-left: 4px solid;
+  font-size: 0.95rem;
+}
+
+.versionadded {
+  background: #f0fdf4;
+  border-color: #22c55e;
+  color: #14532d;
+}
+
+.versionchanged {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1e3a8a;
+}
+
+.deprecated {
+  background: #fefce8;
+  border-color: #eab308;
+  color: #713f12;
+}
+
+.versionmodified-label {
+  font-weight: 600;
+}
+
 /* ── Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {

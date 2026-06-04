@@ -17,3 +17,5 @@
 - Always add examples for all variants of a new feature to the example project.
 - Always create unit tests for new functions introduced during refactoring.
 - Use enums for fields with a fixed set of predefined values to ensure type safety.
+- When adding new `.rst` files to the example project, always declare them in `srcs` in the corresponding `BUILD.bazel` file.
+- After every code modification session, verify `bazel build //examples:site` succeeds.
