@@ -122,7 +122,9 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
         match node {
             Node::AnonymousTarget { uri } => targets.push(uri.clone()),
             Node::Directive(
-                Directive::Admonition { body, .. } | Directive::VersionChange { body, .. },
+                Directive::Admonition { body, .. }
+                | Directive::VersionChange { body, .. }
+                | Directive::SeeAlso { body },
             ) => {
                 collect_anonymous_targets(body, targets);
             }
@@ -260,6 +262,15 @@ fn render_directive(
             anon_index,
             original_doc_path,
         ),
+        Directive::SeeAlso { body } => render_seealso(
+            html,
+            body,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        ),
         Directive::Unknown { .. } => {}
     }
 }
@@ -369,6 +380,30 @@ fn render_version_change(
     }
 
     let _ = writeln!(html, "</p>");
+    render_nodes(
+        html,
+        body,
+        index,
+        doc_path,
+        anon_targets,
+        anon_index,
+        original_doc_path,
+    );
+    let _ = writeln!(html, "</div>");
+}
+
+#[allow(clippy::too_many_arguments)]
+fn render_seealso(
+    html: &mut String,
+    body: &[Node],
+    index: &ProjectIndex,
+    doc_path: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+    original_doc_path: &str,
+) {
+    let _ = writeln!(html, "<div class=\"admonition seealso\">");
+    let _ = writeln!(html, "  <p class=\"admonition-title\">See also</p>");
     render_nodes(
         html,
         body,
@@ -1924,5 +1959,59 @@ mod tests {
         // Then
         let expected = "<div class=\"versionchanged\">\n  <p class=\"versionmodified changed\"><span class=\"versionmodified-label\">Changed in version 2.0:</span></p>\n</div>\n";
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_render_formats_seealso_with_title_and_body() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::SeeAlso {
+                body: vec![Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                    "The other page.".to_string(),
+                )])],
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<div class=\"admonition seealso\">"));
+        assert!(result.contains("<p class=\"admonition-title\">See also</p>"));
+        assert!(result.contains("<p>The other page.</p>"));
+        assert!(result.contains("</div>"));
+    }
+
+    #[test]
+    fn test_render_seealso_static() {
+        // Given
+        let mut html = String::new();
+        let body = vec![Node::Paragraph(vec![crate::ast::InlineNode::Text(
+            "See related.".to_string(),
+        )])];
+        let index = ProjectIndex::default();
+        let doc_path = "test.rst";
+        let anon_targets = vec![];
+        let mut anon_index = 0;
+        let original_doc_path = "test.rst";
+
+        // When
+        render_seealso(
+            &mut html,
+            &body,
+            &index,
+            doc_path,
+            &anon_targets,
+            &mut anon_index,
+            original_doc_path,
+        );
+
+        // Then
+        assert!(html.contains("<div class=\"admonition seealso\">"));
+        assert!(html.contains("<p class=\"admonition-title\">See also</p>"));
+        assert!(html.contains("<p>See related.</p>"));
+        assert!(html.contains("</div>"));
     }
 }

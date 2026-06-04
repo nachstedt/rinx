@@ -245,6 +245,7 @@ body {
 .admonition.tip { border-left-color: #22c55e; background: #f0fdf4; }
 .admonition.important { border-left-color: #a855f7; background: #faf5ff; }
 .admonition.caution { border-left-color: #f97316; background: #fff7ed; }
+.admonition.seealso { border-left-color: #06b6d4; background: #ecfeff; }
 
 details.admonition summary {
   cursor: pointer;
