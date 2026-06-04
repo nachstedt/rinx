@@ -249,6 +249,14 @@ fn try_parse_directive(
             body.push_str(l.trim_start());
         }
         Directive::PlantUml(HashedContent::new(body))
+    } else if let Ok(kind) = name.parse::<crate::ast::VersionChangeKind>() {
+        parse_version_change(
+            kind,
+            argument,
+            &body_lines[start..],
+            adornment_order,
+            diagnostics,
+        )
     } else if let Ok(kind) = name.parse::<crate::ast::AdmonitionKind>() {
         parse_admonition(
             kind,
@@ -715,6 +723,50 @@ fn parse_admonition(
             kind,
             title,
             collapsible: None,
+            body: vec![],
+        }
+    }
+}
+
+fn parse_version_change(
+    kind: crate::ast::VersionChangeKind,
+    argument: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+) -> Directive {
+    let version = if argument.is_empty() {
+        diagnostics.push(format!("'{}' requires a version argument.", kind.as_str()));
+        "unknown".to_string()
+    } else {
+        argument
+    };
+
+    if let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) {
+        let indent = first.chars().take_while(|c| c.is_whitespace()).count();
+        let unindented_lines: Vec<String> = body_lines
+            .iter()
+            .map(|l| {
+                if l.len() >= indent {
+                    l[indent..].to_string()
+                } else {
+                    l.trim().to_string()
+                }
+            })
+            .collect();
+
+        let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
+        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics);
+
+        Directive::VersionChange {
+            kind,
+            version,
+            body: body_nodes,
+        }
+    } else {
+        Directive::VersionChange {
+            kind,
+            version,
             body: vec![],
         }
     }
@@ -2337,6 +2389,105 @@ mod tests {
             assert_eq!(inlines[4], InlineNode::Text(" to manage code.".to_string()));
         } else {
             panic!("Expected Paragraph node");
+        }
+    }
+    #[test]
+    fn test_parse_versionchanged_creates_directive() {
+        // Given
+        let input = ".. versionchanged:: 2.3\n\n   Added async support.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::VersionChange {
+            kind,
+            version,
+            body,
+        }) = &doc.nodes[0]
+        {
+            assert_eq!(*kind, crate::ast::VersionChangeKind::Changed);
+            assert_eq!(version, "2.3");
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected VersionChange directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_versionadded_creates_directive() {
+        // Given
+        let input = ".. versionadded:: 1.0\n\n   Initial release.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::VersionChange {
+            kind,
+            version,
+            body,
+        }) = &doc.nodes[0]
+        {
+            assert_eq!(*kind, crate::ast::VersionChangeKind::Added);
+            assert_eq!(version, "1.0");
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected VersionChange directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_deprecated_creates_directive() {
+        // Given
+        let input = ".. deprecated:: 3.0\n\n   Use new API.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::VersionChange {
+            kind,
+            version,
+            body,
+        }) = &doc.nodes[0]
+        {
+            assert_eq!(*kind, crate::ast::VersionChangeKind::Deprecated);
+            assert_eq!(version, "3.0");
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected VersionChange directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_version_change_emits_diagnostic_for_missing_version() {
+        // Given
+        let input = ".. versionchanged::\n\n   Missing version.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.diagnostics.len(), 1);
+        assert_eq!(
+            doc.diagnostics[0],
+            "'versionchanged' requires a version argument."
+        );
+        if let Node::Directive(Directive::VersionChange {
+            kind,
+            version,
+            body,
+        }) = &doc.nodes[0]
+        {
+            assert_eq!(*kind, crate::ast::VersionChangeKind::Changed);
+            assert_eq!(version, "unknown");
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected VersionChange directive");
         }
     }
 }

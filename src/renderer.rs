@@ -121,7 +121,8 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
     for node in nodes {
         match node {
             Node::AnonymousTarget { uri } => targets.push(uri.clone()),
-            Node::Directive(Directive::Admonition { body, .. }) => {
+            Node::Directive(Directive::Admonition { body, .. })
+            | Node::Directive(Directive::VersionChange { body, .. }) => {
                 collect_anonymous_targets(body, targets);
             }
             _ => {}
@@ -243,6 +244,21 @@ fn render_directive(
             anon_index,
             original_doc_path,
         ),
+        Directive::VersionChange {
+            kind,
+            version,
+            body,
+        } => render_version_change(
+            html,
+            *kind,
+            version,
+            body,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        ),
         Directive::Unknown { .. } => {}
     }
 }
@@ -308,6 +324,64 @@ fn render_admonition(
         );
         let _ = writeln!(html, "</div>");
     }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn render_version_change(
+    html: &mut String,
+    kind: crate::ast::VersionChangeKind,
+    version: &str,
+    body: &[Node],
+    index: &ProjectIndex,
+    doc_path: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+    original_doc_path: &str,
+) {
+    let kind_str = kind.as_str();
+    let version_escaped = html_escape::encode_text(version);
+
+    let label = match kind {
+        crate::ast::VersionChangeKind::Added => format!("New in version {}:", version_escaped),
+        crate::ast::VersionChangeKind::Changed => {
+            format!("Changed in version {}:", version_escaped)
+        }
+        crate::ast::VersionChangeKind::Deprecated => {
+            format!("Deprecated since version {}:", version_escaped)
+        }
+    };
+
+    let inner_class = match kind {
+        crate::ast::VersionChangeKind::Added => "added",
+        crate::ast::VersionChangeKind::Changed => "changed",
+        crate::ast::VersionChangeKind::Deprecated => "deprecated",
+    };
+
+    let _ = writeln!(html, "<div class=\"{}\">", kind_str);
+    let _ = write!(html, "  <p class=\"versionmodified {}\">", inner_class);
+    let _ = write!(
+        html,
+        "<span class=\"versionmodified-label\">{}</span>",
+        label
+    );
+
+    if body.is_empty() {
+        let _ = writeln!(html, "</p>");
+        let _ = writeln!(html, "</div>");
+        return;
+    }
+
+    let _ = writeln!(html, "</p>");
+    render_nodes(
+        html,
+        body,
+        index,
+        doc_path,
+        anon_targets,
+        anon_index,
+        original_doc_path,
+    );
+    let _ = writeln!(html, "</div>");
 }
 
 fn render_inline(
@@ -1763,5 +1837,95 @@ mod tests {
             result,
             "<p><strong class=\"program\">my-tool &lt;script&gt;</strong></p>\n"
         );
+    }
+
+    #[test]
+    fn test_render_versionchanged_produces_correct_html() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::VersionChange {
+                kind: crate::ast::VersionChangeKind::Changed,
+                version: "2.3".to_string(),
+                body: vec![Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                    "Async support added.".to_string(),
+                )])],
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        let expected = "<div class=\"versionchanged\">\n  <p class=\"versionmodified changed\"><span class=\"versionmodified-label\">Changed in version 2.3:</span></p>\n<p>Async support added.</p>\n</div>\n";
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_render_versionadded_produces_correct_html() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::VersionChange {
+                kind: crate::ast::VersionChangeKind::Added,
+                version: "1.0".to_string(),
+                body: vec![Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                    "Initial release.".to_string(),
+                )])],
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        let expected = "<div class=\"versionadded\">\n  <p class=\"versionmodified added\"><span class=\"versionmodified-label\">New in version 1.0:</span></p>\n<p>Initial release.</p>\n</div>\n";
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_render_deprecated_produces_correct_html() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::VersionChange {
+                kind: crate::ast::VersionChangeKind::Deprecated,
+                version: "3.0".to_string(),
+                body: vec![Node::Paragraph(vec![crate::ast::InlineNode::Text(
+                    "Use new API.".to_string(),
+                )])],
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        let expected = "<div class=\"deprecated\">\n  <p class=\"versionmodified deprecated\"><span class=\"versionmodified-label\">Deprecated since version 3.0:</span></p>\n<p>Use new API.</p>\n</div>\n";
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_render_versionchanged_with_empty_body() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::VersionChange {
+                kind: crate::ast::VersionChangeKind::Changed,
+                version: "2.0".to_string(),
+                body: vec![],
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        let expected = "<div class=\"versionchanged\">\n  <p class=\"versionmodified changed\"><span class=\"versionmodified-label\">Changed in version 2.0:</span></p>\n</div>\n";
+        assert_eq!(result, expected);
     }
 }
