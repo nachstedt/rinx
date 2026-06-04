@@ -206,6 +206,9 @@ pub enum Directive {
         version: String,
         body: Vec<Node>,
     },
+    SeeAlso {
+        body: Vec<Node>,
+    },
     Unknown {
         name: String,
         argument: String,

@@ -266,6 +266,8 @@ fn try_parse_directive(
         Directive::PlantUml(HashedContent::new(join_body_lines(&body_lines)))
     } else if let Ok(kind) = name.parse::<crate::ast::VersionChangeKind>() {
         parse_version_change(kind, argument, &body_lines, adornment_order, diagnostics)
+    } else if name == "seealso" {
+        parse_seealso(&body_lines, adornment_order, diagnostics)
     } else if let Ok(kind) = name.parse::<crate::ast::AdmonitionKind>() {
         parse_admonition(kind, argument, &body_lines, adornment_order, diagnostics)
     } else {
@@ -765,6 +767,33 @@ fn parse_version_change(
             version,
             body: vec![],
         }
+    }
+}
+
+fn parse_seealso(
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+) -> Directive {
+    if let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) {
+        let indent = first.chars().take_while(|c| c.is_whitespace()).count();
+        let unindented_lines: Vec<String> = body_lines
+            .iter()
+            .map(|l| {
+                if l.len() >= indent {
+                    l[indent..].to_string()
+                } else {
+                    l.trim().to_string()
+                }
+            })
+            .collect();
+
+        let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
+        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics);
+
+        Directive::SeeAlso { body: body_nodes }
+    } else {
+        Directive::SeeAlso { body: vec![] }
     }
 }
 
@@ -2667,5 +2696,78 @@ mod tests {
         } else {
             panic!("Expected Toctree");
         }
+    }
+
+    #[test]
+    fn test_parse_creates_seealso_with_paragraph_body() {
+        // Given
+        let input = ".. seealso::\n\n   Related information here.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::SeeAlso { body }) = &doc.nodes[0] {
+            assert_eq!(body.len(), 1);
+            assert!(matches!(body[0], Node::Paragraph(_)));
+        } else {
+            panic!("Expected SeeAlso directive, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_seealso_with_empty_body() {
+        // Given
+        let input = ".. seealso::";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::SeeAlso { body }) = &doc.nodes[0] {
+            assert!(body.is_empty());
+        } else {
+            panic!("Expected SeeAlso directive, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_seealso_with_bullet_list_body() {
+        // Given
+        let input = ".. seealso::\n\n   * Item A\n   * Item B";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::SeeAlso { body }) = &doc.nodes[0] {
+            assert_eq!(body.len(), 1);
+            assert!(matches!(body[0], Node::BulletList { .. }));
+        } else {
+            panic!("Expected SeeAlso directive, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_seealso_basic() {
+        // Given
+        let body_lines = vec!["   See the other page."];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When
+        let directive = parse_seealso(&body_lines, &mut adornment_order, &mut diagnostics);
+
+        // Then
+        if let Directive::SeeAlso { body } = directive {
+            assert_eq!(body.len(), 1);
+            assert!(matches!(body[0], Node::Paragraph(_)));
+        } else {
+            panic!("Expected SeeAlso directive");
+        }
+        assert!(diagnostics.is_empty());
     }
 }

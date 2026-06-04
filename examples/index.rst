@@ -12,6 +12,7 @@ Welcome to the Rusty-Sphinx example.
    admonitions
    inline_roles
    version_changes
+   seealso
    team_a/index
    team_b/index
 
