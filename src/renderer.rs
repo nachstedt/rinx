@@ -121,7 +121,9 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
     for node in nodes {
         match node {
             Node::AnonymousTarget { uri } => targets.push(uri.clone()),
-            Node::Directive(Directive::Admonition { body, .. } | Directive::VersionChange { body, .. }) => {
+            Node::Directive(
+                Directive::Admonition { body, .. } | Directive::VersionChange { body, .. },
+            ) => {
                 collect_anonymous_targets(body, targets);
             }
             _ => {}
@@ -358,10 +360,7 @@ fn render_version_change(
 
     let _ = writeln!(html, "<div class=\"{kind_str}\">");
     let _ = write!(html, "  <p class=\"versionmodified {inner_class}\">");
-    let _ = write!(
-        html,
-        "<span class=\"versionmodified-label\">{label}</span>"
-    );
+    let _ = write!(html, "<span class=\"versionmodified-label\">{label}</span>");
 
     if body.is_empty() {
         let _ = writeln!(html, "</p>");

@@ -166,7 +166,8 @@ fn collect_directive_body<'a>(lines: &[&'a str], start_index: usize) -> (usize, 
     let mut current = start_index;
     while current < lines.len() {
         let next_line = lines[current].trim_end();
-        if next_line.trim().is_empty() || next_line.starts_with(' ') || next_line.starts_with('\t') {
+        if next_line.trim().is_empty() || next_line.starts_with(' ') || next_line.starts_with('\t')
+        {
             body_lines.push(next_line);
         } else {
             break;
@@ -180,7 +181,7 @@ fn collect_directive_body<'a>(lines: &[&'a str], start_index: usize) -> (usize, 
     while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
         body_lines.pop();
     }
-    
+
     let mut start = 0;
     while start < body_lines.len() && body_lines[start].trim().is_empty() {
         start += 1;
@@ -220,8 +221,8 @@ fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directiv
                         maxdepth = Some(depth);
                     }
                 }
-                "numbered" | "caption" | "name" | "titlesonly" | "glob" | "reversed"
-                | "hidden" | "includehidden" => {
+                "numbered" | "caption" | "name" | "titlesonly" | "glob" | "reversed" | "hidden"
+                | "includehidden" => {
                     ignored_options.push(line.to_string());
                 }
                 _ => {
@@ -264,21 +265,9 @@ fn try_parse_directive(
     } else if name == "plantuml" {
         Directive::PlantUml(HashedContent::new(join_body_lines(&body_lines)))
     } else if let Ok(kind) = name.parse::<crate::ast::VersionChangeKind>() {
-        parse_version_change(
-            kind,
-            argument,
-            &body_lines,
-            adornment_order,
-            diagnostics,
-        )
+        parse_version_change(kind, argument, &body_lines, adornment_order, diagnostics)
     } else if let Ok(kind) = name.parse::<crate::ast::AdmonitionKind>() {
-        parse_admonition(
-            kind,
-            argument,
-            &body_lines,
-            adornment_order,
-            diagnostics,
-        )
+        parse_admonition(kind, argument, &body_lines, adornment_order, diagnostics)
     } else {
         Directive::Unknown {
             name,
@@ -2590,7 +2579,12 @@ mod tests {
         // When
         let directive = super::parse_toctree(&body_lines, &mut diagnostics);
         // Then
-        if let Directive::Toctree { paths, maxdepth, ignored_options } = directive {
+        if let Directive::Toctree {
+            paths,
+            maxdepth,
+            ignored_options,
+        } = directive
+        {
             assert_eq!(paths, vec!["path1", "path2/index"]);
             assert_eq!(maxdepth, None);
             assert!(ignored_options.is_empty());
@@ -2607,7 +2601,12 @@ mod tests {
         // When
         let directive = super::parse_toctree(&body_lines, &mut diagnostics);
         // Then
-        if let Directive::Toctree { paths, maxdepth, ignored_options } = directive {
+        if let Directive::Toctree {
+            paths,
+            maxdepth,
+            ignored_options,
+        } = directive
+        {
             assert_eq!(paths, vec!["path1"]);
             assert_eq!(maxdepth, Some(2));
             assert!(ignored_options.is_empty());
@@ -2624,7 +2623,12 @@ mod tests {
         // When
         let directive = super::parse_toctree(&body_lines, &mut diagnostics);
         // Then
-        if let Directive::Toctree { paths, maxdepth, ignored_options } = directive {
+        if let Directive::Toctree {
+            paths,
+            maxdepth,
+            ignored_options,
+        } = directive
+        {
             assert_eq!(paths, vec!["path1"]);
             assert_eq!(maxdepth, None);
             assert_eq!(ignored_options.len(), 2);
