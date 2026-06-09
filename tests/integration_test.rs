@@ -1,14 +1,7 @@
 //! Integration tests for Rusty Sphinx public API.
 
-use rusty_sphinx::greeting;
 use rusty_sphinx::process_rst;
 use rusty_sphinx::{analyzer, ast, parser, renderer};
-
-#[test]
-fn integration_greeting() {
-    let result = greeting("Integration");
-    assert_eq!(result, "Hello, Integration!");
-}
 
 #[test]
 fn test_parser_step() {
