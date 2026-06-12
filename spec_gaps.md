@@ -35,6 +35,7 @@ the corresponding feature is implemented.
 | Definition lists | ❌ Not implemented | — |
 | Field lists (`:field: value`) | ❌ Not implemented | — |
 | Option lists | ❌ Not implemented | — |
+| Literal blocks (``::`` paragraph ending or standalone ``::``) | ✅ Implemented | Rendered as ``<pre><code>...</code></pre>`` |
 | Block quotes (indented paragraphs without a directive) | ❌ Not implemented | — |
 | Line blocks (`| line`) | ❌ Not implemented | — |
 
@@ -43,7 +44,7 @@ the corresponding feature is implemented.
 | Feature | Status | Notes |
 |---------|--------|-------|
 | `.. toctree::` | ✅ Implemented | Rendered as an `<ul>` list of links |
-| `.. code-block::` | 🔶 Partial | Parsed into AST as `Directive::Unknown`; not rendered to HTML |
+| `.. code-block::` | ✅ Implemented | Rendered as ``<pre><code class="language-...">...</code></pre>`` |
 | `.. note::`, `.. warning::`, `.. tip::` (admonitions) | ❌ Not implemented | Parsed as `Directive::Unknown`; no HTML output |
 | `.. image::` | ❌ Not implemented | — |
 | `.. include::` | ❌ Not implemented | — |

@@ -219,6 +219,16 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* Reset inline code styles inside literal blocks */
+.document pre > code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  font-size: inherit;
+}
+
 /* ── Admonitions ───────────────────────────────────────────────────── */
 
 .admonition {
