@@ -189,6 +189,18 @@ fn render_nodes(
                 }
                 let _ = writeln!(html, "</ul>");
             }
+            Node::LiteralBlock { language, content } => {
+                let escaped = html_escape::encode_text(content);
+                if let Some(lang) = language {
+                    let lang_attr = html_escape::encode_double_quoted_attribute(lang);
+                    let _ = writeln!(
+                        html,
+                        "<pre><code class=\"language-{lang_attr}\">{escaped}</code></pre>"
+                    );
+                } else {
+                    let _ = writeln!(html, "<pre><code>{escaped}</code></pre>");
+                }
+            }
         }
     }
 }
@@ -2013,5 +2025,67 @@ mod tests {
         assert!(html.contains("<p class=\"admonition-title\">See also</p>"));
         assert!(html.contains("<p>See related.</p>"));
         assert!(html.contains("</div>"));
+    }
+
+    // --- LiteralBlock render tests ---
+
+    #[test]
+    fn test_render_literal_block_without_language() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::LiteralBlock {
+                language: None,
+                content: "def hello():\n    pass".to_string(),
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(result, "<pre><code>def hello():\n    pass</code></pre>\n");
+    }
+
+    #[test]
+    fn test_render_literal_block_with_language() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::LiteralBlock {
+                language: Some("python".to_string()),
+                content: "x = 1".to_string(),
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(
+            result,
+            "<pre><code class=\"language-python\">x = 1</code></pre>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_literal_block_escapes_html() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::LiteralBlock {
+                language: None,
+                content: "a < b && b > c".to_string(),
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("a &lt; b &amp;&amp; b &gt; c"));
     }
 }

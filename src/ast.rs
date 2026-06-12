@@ -253,6 +253,13 @@ pub enum Node {
         bullet: char,
         items: Vec<BulletListItem>,
     },
+    LiteralBlock {
+        /// The language hint (e.g. `"python"`), if specified via `.. code-block:: lang`.
+        /// `None` for plain `::` paragraph-introduced blocks.
+        language: Option<String>,
+        /// Verbatim content with common leading indentation stripped.
+        content: String,
+    },
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]

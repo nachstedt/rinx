@@ -13,6 +13,7 @@ Welcome to the Rusty-Sphinx example.
    inline_roles
    version_changes
    seealso
+   literal_blocks
    team_a/index
    team_b/index
 

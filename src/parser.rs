@@ -154,8 +154,8 @@ fn parse_blocks(
             continue;
         }
 
-        let (consumed, node) = parse_paragraph(lines, i);
-        nodes.push(node);
+        let (consumed, new_nodes) = parse_paragraph(lines, i);
+        nodes.extend(new_nodes);
         i += consumed;
     }
     nodes
@@ -199,6 +199,83 @@ fn join_body_lines(body_lines: &[&str]) -> String {
         body.push_str(l.trim_start());
     }
     body
+}
+
+/// Collects a literal block body starting at `start_index`.
+///
+/// - Skips a leading blank line (mandatory after `::`).
+/// - Collects contiguous lines until indentation drops to (or below) the base level.
+/// - Strips the *minimum* common indentation from all non-blank lines, preserving relative
+///   indentation within the block (RST spec behaviour).
+///
+/// Returns `(lines_consumed, verbatim_content)`.
+fn collect_literal_block_body(lines: &[&str], start_index: usize) -> (usize, String) {
+    let mut current = start_index;
+
+    // Skip the mandatory blank line after `::`
+    if current < lines.len() && lines[current].trim().is_empty() {
+        current += 1;
+    }
+
+    // Find the first non-blank line to establish the base indentation level
+    let Some(first_non_blank) = lines[current..].iter().find(|l| !l.trim().is_empty()) else {
+        return (current - start_index, String::new());
+    };
+    let base_indent = first_non_blank
+        .chars()
+        .take_while(|c| c.is_whitespace())
+        .count();
+
+    if base_indent == 0 {
+        // No indented block follows
+        return (current - start_index, String::new());
+    }
+
+    // Collect lines that belong to the block; blank lines are kept as separators
+    let mut body_lines: Vec<&str> = Vec::new();
+    while current < lines.len() {
+        let line = lines[current];
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            body_lines.push("");
+            current += 1;
+            continue;
+        }
+        let indent = line.chars().take_while(|c| c.is_whitespace()).count();
+        if indent < base_indent {
+            break;
+        }
+        body_lines.push(line);
+        current += 1;
+    }
+
+    // Remove trailing blank lines
+    while body_lines.last().is_some_and(|l| l.trim().is_empty()) {
+        body_lines.pop();
+    }
+
+    // Compute the minimum indentation of all non-blank lines
+    let min_indent = body_lines
+        .iter()
+        .filter(|l| !l.trim().is_empty())
+        .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
+        .min()
+        .unwrap_or(0);
+
+    // Strip the common indent; leave blank lines as empty strings
+    let content = body_lines
+        .iter()
+        .map(|l| {
+            if l.trim().is_empty() {
+                String::new()
+            } else {
+                l.chars().skip(min_indent).collect()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    (current - start_index, content)
 }
 
 fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
@@ -260,24 +337,59 @@ fn try_parse_directive(
 
     let (consumed_lines, body_lines) = collect_directive_body(lines, i + 1);
 
-    let directive = if name == "toctree" {
-        parse_toctree(&body_lines, diagnostics)
-    } else if name == "plantuml" {
-        Directive::PlantUml(HashedContent::new(join_body_lines(&body_lines)))
-    } else if let Ok(kind) = name.parse::<crate::ast::VersionChangeKind>() {
-        parse_version_change(kind, argument, &body_lines, adornment_order, diagnostics)
-    } else if name == "seealso" {
-        parse_seealso(&body_lines, adornment_order, diagnostics)
-    } else if let Ok(kind) = name.parse::<crate::ast::AdmonitionKind>() {
-        parse_admonition(kind, argument, &body_lines, adornment_order, diagnostics)
-    } else {
-        Directive::Unknown {
-            name,
-            argument,
-            body: join_body_lines(&body_lines),
-        }
+    if name == "toctree" {
+        let directive = parse_toctree(&body_lines, diagnostics);
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
+    if name == "plantuml" {
+        let directive = Directive::PlantUml(HashedContent::new(join_body_lines(&body_lines)));
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
+    if name == "code-block" {
+        let language = if argument.is_empty() {
+            None
+        } else {
+            Some(argument)
+        };
+        // body_lines was collected by collect_directive_body; strip common indentation
+        // to preserve relative indentation within the block (RST spec behaviour).
+        let min_indent = body_lines
+            .iter()
+            .filter(|l| !l.trim().is_empty())
+            .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
+            .min()
+            .unwrap_or(0);
+        let content = body_lines
+            .iter()
+            .map(|l| {
+                if l.trim().is_empty() {
+                    String::new()
+                } else {
+                    l.chars().skip(min_indent).collect()
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        return Some((1 + consumed_lines, Node::LiteralBlock { language, content }));
+    }
+    if let Ok(kind) = name.parse::<crate::ast::VersionChangeKind>() {
+        let directive =
+            parse_version_change(kind, argument, &body_lines, adornment_order, diagnostics);
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
+    if name == "seealso" {
+        let directive = parse_seealso(&body_lines, adornment_order, diagnostics);
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
+    if let Ok(kind) = name.parse::<crate::ast::AdmonitionKind>() {
+        let directive = parse_admonition(kind, argument, &body_lines, adornment_order, diagnostics);
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
+    let directive = Directive::Unknown {
+        name,
+        argument,
+        body: join_body_lines(&body_lines),
     };
-
     Some((1 + consumed_lines, Node::Directive(directive)))
 }
 
@@ -365,32 +477,11 @@ fn try_parse_heading(
     Some((consumed, Node::Heading { level, text }))
 }
 
-fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
-    let mut paragraph_text = String::new();
-    let mut current_pos_line = i;
-
-    while current_pos_line < lines.len() {
-        let line = lines[current_pos_line].trim_end();
-        if line.trim().is_empty() {
-            break;
-        }
-
-        if !paragraph_text.is_empty() {
-            paragraph_text.push('\n');
-        }
-        paragraph_text.push_str(line.trim());
-        current_pos_line += 1;
-
-        // Peek at next line to ensure we don't consume a heading's text line or overline
-        if current_pos_line < lines.len() && detect_adornment(lines, current_pos_line).is_some() {
-            break;
-        }
-    }
-
+/// Parses a plain text string into a list of [`InlineNode`]s.
+fn parse_inline_text(paragraph_text: &str) -> Vec<crate::ast::InlineNode> {
     let mut inlines = Vec::new();
     let mut last_match_end = 0;
 
-    // We need to find the earliest match among all regexes
     while last_match_end < paragraph_text.len() {
         let remaining = &paragraph_text[last_match_end..];
 
@@ -400,9 +491,8 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
         let anon_simple_match = ANONYMOUS_SIMPLE_REGEX.find(remaining);
-        let inline_markup_match = find_inline_markup(&paragraph_text, last_match_end);
+        let inline_markup_match = find_inline_markup(paragraph_text, last_match_end);
 
-        // Find the one that starts earliest. If multiple start at the same pos, pick the longest.
         let mut all_matches = Vec::new();
         if let Some(m) = ref_match {
             all_matches.push((m.start(), m.end(), "ref", None));
@@ -431,22 +521,68 @@ fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Node) {
             .min_by_key(|(start, end, _, _)| (*start, std::cmp::Reverse(*end)));
 
         if let Some((start, end, kind, node_opt)) = earliest {
-            // Push text before the match
             if start > 0 {
                 inlines.push(InlineNode::Text(remaining[..start].to_string()));
             }
-
             let m_str = &remaining[start..end];
             inlines.push(handle_inline_match(kind, m_str, node_opt));
             last_match_end += end;
         } else {
-            // No more matches
             inlines.push(InlineNode::Text(remaining.to_string()));
             break;
         }
     }
+    inlines
+}
 
-    (current_pos_line - i, Node::Paragraph(inlines))
+fn parse_paragraph(lines: &[&str], i: usize) -> (usize, Vec<Node>) {
+    let mut paragraph_text = String::new();
+    let mut current_pos_line = i;
+
+    while current_pos_line < lines.len() {
+        let line = lines[current_pos_line].trim_end();
+        if line.trim().is_empty() {
+            break;
+        }
+
+        if !paragraph_text.is_empty() {
+            paragraph_text.push('\n');
+        }
+        paragraph_text.push_str(line.trim());
+        current_pos_line += 1;
+
+        // Peek at next line to ensure we don't consume a heading's text line or overline
+        if current_pos_line < lines.len() && detect_adornment(lines, current_pos_line).is_some() {
+            break;
+        }
+    }
+
+    let inlines = parse_inline_text(&paragraph_text);
+
+    // Detect trailing "::" to introduce a literal block
+    let trailing_double_colon = paragraph_text.trim_end().ends_with("::");
+    if trailing_double_colon {
+        let trimmed = paragraph_text.trim_end();
+        // Determine whether the whole paragraph is just "::" (standalone introducer)
+        let only_colon = trimmed.trim() == "::";
+        let lit_start = current_pos_line;
+        let (lit_consumed, content) = collect_literal_block_body(lines, lit_start);
+        let total_consumed = current_pos_line - i + lit_consumed;
+        let literal_node = Node::LiteralBlock {
+            language: None,
+            content,
+        };
+        if only_colon {
+            // The "::" line itself is suppressed; emit only the literal block
+            return (total_consumed, vec![literal_node]);
+        }
+        // Strip trailing "::" → ":" and emit paragraph + literal block
+        let stripped = trimmed[..trimmed.len() - 1].trim_end().to_string();
+        let inlines = parse_inline_text(&stripped);
+        return (total_consumed, vec![Node::Paragraph(inlines), literal_node]);
+    }
+
+    (current_pos_line - i, vec![Node::Paragraph(inlines)])
 }
 
 fn handle_inline_match(kind: &str, m_str: &str, node_opt: Option<InlineNode>) -> InlineNode {
@@ -1376,11 +1512,10 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert_eq!(
             doc.nodes[0],
-            Node::Directive(Directive::Unknown {
-                name: "code-block".to_string(),
-                argument: "rust".to_string(),
-                body: "let x = 1;\n\nlet y = 2;".to_string(),
-            })
+            Node::LiteralBlock {
+                language: Some("rust".to_string()),
+                content: "let x = 1;\n\nlet y = 2;".to_string(),
+            }
         );
     }
 
@@ -2769,5 +2904,183 @@ mod tests {
             panic!("Expected SeeAlso directive");
         }
         assert!(diagnostics.is_empty());
+    }
+
+    // --- Literal block tests ---
+
+    #[test]
+    fn test_parse_double_colon_paragraph_emits_literal_block() {
+        // Given: a paragraph ending with :: followed by an indented block
+        let input = "Here is some code::
+
+    def hello():
+        pass
+";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then: two nodes — paragraph (with :: reduced to :) and LiteralBlock
+        assert_eq!(doc.nodes.len(), 2);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            let text = match &inlines[0] {
+                crate::ast::InlineNode::Text(t) => t.as_str(),
+                other => panic!("Expected Text inline, got {other:?}"),
+            };
+            assert_eq!(text, "Here is some code:");
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+        if let Node::LiteralBlock { language, content } = &doc.nodes[1] {
+            assert!(language.is_none());
+            assert_eq!(
+                content,
+                "def hello():
+    pass"
+            );
+        } else {
+            panic!("Expected LiteralBlock, got {:?}", doc.nodes[1]);
+        }
+    }
+
+    #[test]
+    fn test_parse_standalone_double_colon_suppresses_paragraph() {
+        // Given: a line of only "::" introduces a literal block with no visible paragraph
+        let input = "::
+
+    verbatim content
+";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then: only the LiteralBlock is emitted (no paragraph)
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
+            assert!(language.is_none());
+            assert_eq!(content, "verbatim content");
+        } else {
+            panic!("Expected LiteralBlock, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_double_colon_strips_to_single_colon() {
+        // Given: text followed by "::" — the "::" becomes ":"
+        let input = "Example::
+
+    content
+";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            let text = match &inlines[0] {
+                crate::ast::InlineNode::Text(t) => t.as_str(),
+                other => panic!("Expected Text, got {other:?}"),
+            };
+            assert_eq!(text, "Example:");
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_code_block_directive_with_language() {
+        // Given
+        let input = ".. code-block:: python
+
+    x = 1
+";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
+            assert_eq!(language.as_deref(), Some("python"));
+            assert_eq!(content, "x = 1");
+        } else {
+            panic!("Expected LiteralBlock, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_code_block_directive_without_language() {
+        // Given
+        let input = ".. code-block::
+
+    x = 1
+";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
+            assert!(language.is_none());
+            assert_eq!(content, "x = 1");
+        } else {
+            panic!("Expected LiteralBlock, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_literal_block_preserves_internal_blank_lines() {
+        // Given: blank lines inside the block must be kept
+        let input = "Example::
+
+    line one
+
+    line three
+";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        if let Node::LiteralBlock { content, .. } = &doc.nodes[1] {
+            assert_eq!(
+                content,
+                "line one
+
+line three"
+            );
+        } else {
+            panic!("Expected LiteralBlock, got {:?}", doc.nodes[1]);
+        }
+    }
+
+    #[test]
+    fn test_parse_literal_block_strips_common_indentation() {
+        // Given: all lines indented 4 spaces; inner block adds 4 more
+        let input = "Example::
+
+    outer
+        inner
+    outer again
+";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then: 4 spaces stripped from all lines; inner keeps its extra 4
+        assert_eq!(doc.nodes.len(), 2);
+        if let Node::LiteralBlock { content, .. } = &doc.nodes[1] {
+            assert_eq!(
+                content,
+                "outer
+    inner
+outer again"
+            );
+        } else {
+            panic!("Expected LiteralBlock, got {:?}", doc.nodes[1]);
+        }
     }
 }
