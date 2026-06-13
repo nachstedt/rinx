@@ -343,6 +343,110 @@ details.admonition[open] summary {
   font-weight: 600;
 }
 
+/* ── Glossary ──────────────────────────────────────────────────────── */
+
+dl.glossary {
+  margin: 2rem 0;
+  display: block;
+}
+
+dl.glossary dt {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-header);
+  margin-top: 1.75rem;
+  padding: 0.25rem 0.5rem;
+  display: inline-block;
+  position: relative;
+  scroll-margin-top: 2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius);
+}
+
+dl.glossary dt:first-of-type {
+  margin-top: 0.5rem;
+}
+
+dl.glossary dd {
+  margin-left: 1.5rem;
+  margin-bottom: 1.75rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
+  color: #475569;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+dl.glossary dd p:last-child {
+  margin-bottom: 0;
+}
+
+/* Hover effect on glossary terms to show link anchor */
+dl.glossary dt::after {
+  content: ' #';
+  color: var(--primary);
+  opacity: 0;
+  font-size: 0.85em;
+  font-weight: 400;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+  transform: translateX(-4px);
+  pointer-events: none;
+}
+
+dl.glossary dt:hover::after {
+  opacity: 0.6;
+  transform: translateX(2px);
+}
+
+/* Active targeted term via #term-xyz in URL */
+dl.glossary dt:target {
+  color: var(--primary);
+  background-color: #eff6ff;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+dl.glossary dt:target + dd {
+  border-left-color: var(--primary);
+  background: linear-gradient(90deg, #eff6ff 0%, transparent 100%);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+/* Inline term references (:term:) */
+a.reference.internal .xref.std-term {
+  border-bottom: 1px dashed var(--primary);
+  padding-bottom: 1px;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+a.reference.internal:hover .xref.std-term {
+  border-bottom-style: solid;
+  border-bottom-color: var(--primary-hover);
+  color: var(--primary-hover);
+}
+
+a.reference.internal {
+  border-bottom: none !important;
+}
+
+/* Broken glossary term references */
+a.broken-link {
+  color: #ef4444 !important;
+  border-bottom: 1px dashed #ef4444 !important;
+  cursor: help;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+a.broken-link:hover {
+  border-bottom-style: solid !important;
+  border-bottom-color: #dc2626 !important;
+  color: #dc2626 !important;
+}
+
 /* ── Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {

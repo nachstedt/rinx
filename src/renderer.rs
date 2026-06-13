@@ -128,6 +128,11 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
             ) => {
                 collect_anonymous_targets(body, targets);
             }
+            Node::Directive(Directive::Glossary { entries, .. }) => {
+                for entry in entries {
+                    collect_anonymous_targets(&entry.definition, targets);
+                }
+            }
             _ => {}
         }
     }
@@ -283,6 +288,15 @@ fn render_directive(
             anon_index,
             original_doc_path,
         ),
+        Directive::Glossary { entries, .. } => render_glossary(
+            html,
+            entries,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        ),
         Directive::Unknown { .. } => {}
     }
 }
@@ -428,6 +442,39 @@ fn render_seealso(
     let _ = writeln!(html, "</div>");
 }
 
+#[allow(clippy::too_many_arguments)]
+fn render_glossary(
+    html: &mut String,
+    entries: &[crate::ast::GlossaryEntry],
+    index: &ProjectIndex,
+    doc_path: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+    original_doc_path: &str,
+) {
+    let _ = writeln!(html, "<dl class=\"glossary\">");
+    for entry in entries {
+        for term in &entry.terms {
+            let term_escaped = html_escape::encode_text(term);
+            let id = crate::ast::term_id(term);
+            let id_attr = html_escape::encode_double_quoted_attribute(&id);
+            let _ = writeln!(html, "  <dt id=\"{id_attr}\">{term_escaped}</dt>");
+        }
+        let _ = write!(html, "  <dd>");
+        render_nodes(
+            html,
+            &entry.definition,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        );
+        let _ = writeln!(html, "</dd>");
+    }
+    let _ = writeln!(html, "</dl>");
+}
+
 fn render_inline(
     html: &mut String,
     inline: &crate::ast::InlineNode,
@@ -438,90 +485,16 @@ fn render_inline(
 ) {
     match inline {
         crate::ast::InlineNode::Text(text) => {
-            let escaped = html_escape::encode_text(text);
-            let _ = write!(html, "{escaped}");
+            let _ = write!(html, "{}", html_escape::encode_text(text));
         }
         crate::ast::InlineNode::Reference(target) => {
-            let target_escaped = html_escape::encode_text(target);
-            // Legacy :ref: behavior (still supported)
-            let target_name = TargetName::new(target);
-            if let Some(TargetLocation::Internal(target_path)) = index.targets.get(&target_name) {
-                let current_dir = std::path::Path::new(doc_path)
-                    .parent()
-                    .unwrap_or_else(|| std::path::Path::new(""));
-                let target_html_path = std::path::Path::new(target_path).with_extension("html");
-
-                let relative_path = pathdiff::diff_paths(&target_html_path, current_dir)
-                    .unwrap_or(target_html_path);
-
-                // display() on Unix uses `/`, so it maps correctly to URLs
-                let href = format!("{}#{}", relative_path.display(), target_name.as_str());
-                let href_attr = html_escape::encode_double_quoted_attribute(&href);
-                let _ = write!(html, "<a href=\"{href_attr}\">{target_escaped}</a>");
-            } else {
-                // Fallback, could print warning
-                let _ = write!(
-                    html,
-                    "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>"
-                );
-            }
+            render_inline_reference(html, target, index, doc_path);
         }
         crate::ast::InlineNode::Hyperlink { text, target } => {
-            let text_escaped = html_escape::encode_text(text);
-            // 1. Is it a direct URI?
-            if target.starts_with("http://")
-                || target.starts_with("https://")
-                || target.starts_with("mailto:")
-            {
-                let target_attr = html_escape::encode_double_quoted_attribute(target);
-                let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
-            } else {
-                // 2. Lookup in index
-                let target_name = TargetName::new(target);
-                if let Some(location) = index.targets.get(&target_name) {
-                    match location {
-                        TargetLocation::External(url) => {
-                            let url_attr = html_escape::encode_double_quoted_attribute(&url);
-                            let _ = write!(html, "<a href=\"{url_attr}\">{text_escaped}</a>");
-                        }
-                        TargetLocation::Internal(target_path) => {
-                            let current_dir = std::path::Path::new(doc_path)
-                                .parent()
-                                .unwrap_or_else(|| std::path::Path::new(""));
-                            let target_html_path =
-                                std::path::Path::new(target_path).with_extension("html");
-
-                            let relative_path =
-                                pathdiff::diff_paths(&target_html_path, current_dir)
-                                    .unwrap_or(target_html_path);
-
-                            let href =
-                                format!("{}#{}", relative_path.display(), target_name.as_str());
-                            let href_attr = html_escape::encode_double_quoted_attribute(&href);
-                            let _ = write!(html, "<a href=\"{href_attr}\">{text_escaped}</a>");
-                        }
-                    }
-                } else {
-                    // Broken link
-                    let _ = write!(
-                        html,
-                        "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
-                    );
-                }
-            }
+            render_inline_hyperlink(html, text, target, index, doc_path);
         }
         crate::ast::InlineNode::AnonymousReference(text) => {
-            let text_escaped = html_escape::encode_text(text);
-            if let Some(uri) = anon_targets.get(*anon_index) {
-                let uri_attr = html_escape::encode_double_quoted_attribute(uri);
-                let _ = write!(html, "<a href=\"{uri_attr}\">{text_escaped}</a>");
-                *anon_index += 1;
-            } else {
-                let _ = write!(
-                    html,
-                    "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
-                );
-            }
+            render_inline_anonymous_reference(html, text, anon_targets, anon_index);
         }
         crate::ast::InlineNode::AnonymousHyperlink { text, target } => {
             let text_escaped = html_escape::encode_text(text);
@@ -529,21 +502,150 @@ fn render_inline(
             let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
         }
         crate::ast::InlineNode::Emphasis(text) => {
-            let escaped = html_escape::encode_text(text);
-            let _ = write!(html, "<em>{escaped}</em>");
+            let _ = write!(html, "<em>{}</em>", html_escape::encode_text(text));
         }
         crate::ast::InlineNode::Strong(text) => {
-            let escaped = html_escape::encode_text(text);
-            let _ = write!(html, "<strong>{escaped}</strong>");
+            let _ = write!(html, "<strong>{}</strong>", html_escape::encode_text(text));
         }
         crate::ast::InlineNode::Literal(text) => {
-            let escaped = html_escape::encode_text(text);
-            let _ = write!(html, "<code>{escaped}</code>");
+            let _ = write!(html, "<code>{}</code>", html_escape::encode_text(text));
         }
         crate::ast::InlineNode::Program(text) => {
-            let escaped = html_escape::encode_text(text);
-            let _ = write!(html, "<strong class=\"program\">{escaped}</strong>");
+            let _ = write!(
+                html,
+                "<strong class=\"program\">{}</strong>",
+                html_escape::encode_text(text)
+            );
         }
+        crate::ast::InlineNode::TermReference { display, term } => {
+            render_inline_term_reference(html, display, term, index, doc_path);
+        }
+    }
+}
+
+/// Renders a named `:ref:` reference. Resolves the target via the project index
+/// and emits a relative HTML link, or a broken-link fallback if not found.
+fn render_inline_reference(html: &mut String, target: &str, index: &ProjectIndex, doc_path: &str) {
+    let target_escaped = html_escape::encode_text(target);
+    let target_name = TargetName::new(target);
+    if let Some(TargetLocation::Internal(target_path)) = index.targets.get(&target_name) {
+        let current_dir = std::path::Path::new(doc_path)
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new(""));
+        let target_html_path = std::path::Path::new(target_path).with_extension("html");
+        let relative_path =
+            pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
+        let href = format!("{}#{}", relative_path.display(), target_name.as_str());
+        let href_attr = html_escape::encode_double_quoted_attribute(&href);
+        let _ = write!(html, "<a href=\"{href_attr}\">{target_escaped}</a>");
+    } else {
+        let _ = write!(
+            html,
+            "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>"
+        );
+    }
+}
+
+/// Renders a named hyperlink. Resolution order:
+/// 1. Direct URI (http/https/mailto) — emitted as-is.
+/// 2. External target in the project index — emitted as an external link.
+/// 3. Internal target in the project index — converted to a relative HTML href.
+/// 4. No match — broken-link fallback.
+fn render_inline_hyperlink(
+    html: &mut String,
+    text: &str,
+    target: &str,
+    index: &ProjectIndex,
+    doc_path: &str,
+) {
+    let text_escaped = html_escape::encode_text(text);
+    if target.starts_with("http://")
+        || target.starts_with("https://")
+        || target.starts_with("mailto:")
+    {
+        let target_attr = html_escape::encode_double_quoted_attribute(target);
+        let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
+        return;
+    }
+
+    let target_name = TargetName::new(target);
+    match index.targets.get(&target_name) {
+        Some(TargetLocation::External(url)) => {
+            let url_attr = html_escape::encode_double_quoted_attribute(url);
+            let _ = write!(html, "<a href=\"{url_attr}\">{text_escaped}</a>");
+        }
+        Some(TargetLocation::Internal(target_path)) => {
+            let current_dir = std::path::Path::new(doc_path)
+                .parent()
+                .unwrap_or_else(|| std::path::Path::new(""));
+            let target_html_path = std::path::Path::new(target_path).with_extension("html");
+            let relative_path =
+                pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
+            let href = format!("{}#{}", relative_path.display(), target_name.as_str());
+            let href_attr = html_escape::encode_double_quoted_attribute(&href);
+            let _ = write!(html, "<a href=\"{href_attr}\">{text_escaped}</a>");
+        }
+        None => {
+            let _ = write!(
+                html,
+                "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
+            );
+        }
+    }
+}
+
+/// Renders an anonymous `__` reference by consuming the next URI from `anon_targets`.
+/// Emits a broken-link fallback if the anonymous target list is exhausted.
+fn render_inline_anonymous_reference(
+    html: &mut String,
+    text: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+) {
+    let text_escaped = html_escape::encode_text(text);
+    if let Some(uri) = anon_targets.get(*anon_index) {
+        let uri_attr = html_escape::encode_double_quoted_attribute(uri);
+        let _ = write!(html, "<a href=\"{uri_attr}\">{text_escaped}</a>");
+        *anon_index += 1;
+    } else {
+        let _ = write!(
+            html,
+            "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
+        );
+    }
+}
+
+/// Renders a glossary term reference (`:term:`). Resolves the term via the project
+/// index and emits a relative link with the appropriate CSS classes, or a
+/// broken-link fallback if the term is not found in the index.
+fn render_inline_term_reference(
+    html: &mut String,
+    display: &str,
+    term: &str,
+    index: &ProjectIndex,
+    doc_path: &str,
+) {
+    let display_escaped = html_escape::encode_text(display);
+    let term_name = crate::ast::TargetName::new(term);
+    if let Some(glossary_doc_path) = index.glossary_terms.get(&term_name) {
+        let current_dir = std::path::Path::new(doc_path)
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new(""));
+        let target_html_path = std::path::Path::new(glossary_doc_path).with_extension("html");
+        let relative_path =
+            pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
+        let anchor = crate::ast::term_id(term);
+        let href = format!("{}#{}", relative_path.display(), anchor);
+        let href_attr = html_escape::encode_double_quoted_attribute(&href);
+        let _ = write!(
+            html,
+            "<a class=\"reference internal\" href=\"{href_attr}\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
+        );
+    } else {
+        let _ = write!(
+            html,
+            "<a href=\"#\" class=\"broken-link\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
+        );
     }
 }
 
@@ -2087,5 +2189,447 @@ mod tests {
 
         // Then
         assert!(result.contains("a &lt; b &amp;&amp; b &gt; c"));
+    }
+
+    // ── Glossary rendering tests ──────────────────────────────────────────────
+
+    #[test]
+    fn test_render_glossary_single_entry() {
+        // Given
+        let doc = Document::new(
+            "glossary.rst".to_string(),
+            vec![Node::Directive(Directive::Glossary {
+                entries: vec![crate::ast::GlossaryEntry {
+                    terms: vec!["environment".to_string()],
+                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "A structure.".to_string(),
+                    )])],
+                }],
+                sorted: false,
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<dl class=\"glossary\">"));
+        assert!(result.contains("<dt id=\"term-environment\">environment</dt>"));
+        assert!(result.contains("<dd>"));
+        assert!(result.contains("A structure."));
+        assert!(result.contains("</dl>"));
+    }
+
+    #[test]
+    fn test_render_glossary_multi_term_entry_produces_multiple_dt() {
+        // Given
+        let doc = Document::new(
+            "glossary.rst".to_string(),
+            vec![Node::Directive(Directive::Glossary {
+                entries: vec![crate::ast::GlossaryEntry {
+                    terms: vec!["term 1".to_string(), "term 2".to_string()],
+                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Shared.".to_string(),
+                    )])],
+                }],
+                sorted: false,
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<dt id=\"term-term-1\">term 1</dt>"));
+        assert!(result.contains("<dt id=\"term-term-2\">term 2</dt>"));
+        assert_eq!(result.matches("<dd>").count(), 1);
+    }
+
+    #[test]
+    fn test_render_glossary_escapes_html_in_terms() {
+        // Given
+        let doc = Document::new(
+            "glossary.rst".to_string(),
+            vec![Node::Directive(Directive::Glossary {
+                entries: vec![crate::ast::GlossaryEntry {
+                    terms: vec!["a < b".to_string()],
+                    definition: vec![],
+                }],
+                sorted: false,
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("a &lt; b"));
+        assert!(!result.contains("a < b"));
+    }
+
+    #[test]
+    fn test_render_term_reference_resolved_links_to_glossary_doc() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::TermReference {
+                display: "environment".to_string(),
+                term: "environment".to_string(),
+            }])],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("environment"), "glossary.rst".to_string());
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("href=\"glossary.html#term-environment\""));
+        assert!(result.contains("class=\"xref std std-term\""));
+        assert!(result.contains(">environment<"));
+    }
+
+    #[test]
+    fn test_render_term_reference_with_custom_display_text() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::TermReference {
+                display: "the env".to_string(),
+                term: "environment".to_string(),
+            }])],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("environment"), "glossary.rst".to_string());
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("href=\"glossary.html#term-environment\""));
+        assert!(result.contains(">the env<"));
+    }
+
+    #[test]
+    fn test_render_term_reference_broken_link_when_term_not_found() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::TermReference {
+                display: "unknown".to_string(),
+                term: "unknown".to_string(),
+            }])],
+        );
+        let index = ProjectIndex::default(); // empty — no glossary terms
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("class=\"broken-link\""));
+        assert!(result.contains(">unknown<"));
+    }
+
+    #[test]
+    fn test_render_term_reference_computes_relative_path_across_directories() {
+        // Given — document is in a subdirectory, glossary is at root
+        let doc = Document::new(
+            "guide/page.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::TermReference {
+                display: "foo".to_string(),
+                term: "foo".to_string(),
+            }])],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("foo"), "glossary.rst".to_string());
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then — href should traverse up one directory
+        assert!(result.contains("href=\"../glossary.html#term-foo\""));
+    }
+
+    // -------------------------------------------------------------------------
+    // Unit tests for render_inline_reference
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_render_inline_reference_resolved_internal_target() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("my-section"),
+            TargetLocation::Internal("other.rst".to_string()),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_reference(&mut html, "my-section", &index, "doc.rst");
+
+        // Then
+        assert_eq!(html, "<a href=\"other.html#my-section\">my-section</a>");
+    }
+
+    #[test]
+    fn test_render_inline_reference_broken_link_when_target_missing() {
+        // Given
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+
+        // When
+        render_inline_reference(&mut html, "missing", &index, "doc.rst");
+
+        // Then
+        assert_eq!(
+            html,
+            "<a href=\"#missing\" class=\"broken-link\">missing</a>"
+        );
+    }
+
+    #[test]
+    fn test_render_inline_reference_resolves_cross_directory_path() {
+        // Given — document in a subdir, target in another subdir
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("target-a"),
+            TargetLocation::Internal("team_a/index.rst".to_string()),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_reference(&mut html, "target-a", &index, "team_b/index.rst");
+
+        // Then
+        assert_eq!(
+            html,
+            "<a href=\"../team_a/index.html#target-a\">target-a</a>"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // Unit tests for render_inline_hyperlink
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_render_inline_hyperlink_direct_http_uri() {
+        // Given
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+
+        // When
+        render_inline_hyperlink(
+            &mut html,
+            "Click here",
+            "https://example.com",
+            &index,
+            "doc.rst",
+        );
+
+        // Then
+        assert_eq!(html, "<a href=\"https://example.com\">Click here</a>");
+    }
+
+    #[test]
+    fn test_render_inline_hyperlink_direct_mailto_uri() {
+        // Given
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+
+        // When
+        render_inline_hyperlink(
+            &mut html,
+            "Email us",
+            "mailto:hello@example.com",
+            &index,
+            "doc.rst",
+        );
+
+        // Then
+        assert_eq!(html, "<a href=\"mailto:hello@example.com\">Email us</a>");
+    }
+
+    #[test]
+    fn test_render_inline_hyperlink_external_index_target() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("Python"),
+            TargetLocation::External("https://python.org".to_string()),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_hyperlink(&mut html, "Python", "Python", &index, "doc.rst");
+
+        // Then
+        assert_eq!(html, "<a href=\"https://python.org\">Python</a>");
+    }
+
+    #[test]
+    fn test_render_inline_hyperlink_internal_index_target() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("my-label"),
+            TargetLocation::Internal("other.rst".to_string()),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_hyperlink(&mut html, "See other", "my-label", &index, "doc.rst");
+
+        // Then
+        assert_eq!(html, "<a href=\"other.html#my-label\">See other</a>");
+    }
+
+    #[test]
+    fn test_render_inline_hyperlink_broken_link_when_not_found() {
+        // Given
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+
+        // When
+        render_inline_hyperlink(&mut html, "No target", "no-target", &index, "doc.rst");
+
+        // Then
+        assert_eq!(html, "<a href=\"#\" class=\"broken-link\">No target</a>");
+    }
+
+    // -------------------------------------------------------------------------
+    // Unit tests for render_inline_anonymous_reference
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_render_inline_anonymous_reference_resolved() {
+        // Given
+        let anon_targets = vec!["https://example.com".to_string()];
+        let mut anon_index = 0;
+        let mut html = String::new();
+
+        // When
+        render_inline_anonymous_reference(&mut html, "link text", &anon_targets, &mut anon_index);
+
+        // Then
+        assert_eq!(html, "<a href=\"https://example.com\">link text</a>");
+        assert_eq!(anon_index, 1);
+    }
+
+    #[test]
+    fn test_render_inline_anonymous_reference_broken_when_index_exhausted() {
+        // Given — no anonymous targets available
+        let anon_targets: Vec<String> = vec![];
+        let mut anon_index = 0;
+        let mut html = String::new();
+
+        // When
+        render_inline_anonymous_reference(&mut html, "broken", &anon_targets, &mut anon_index);
+
+        // Then
+        assert_eq!(html, "<a href=\"#\" class=\"broken-link\">broken</a>");
+        assert_eq!(anon_index, 0);
+    }
+
+    #[test]
+    fn test_render_inline_anonymous_reference_advances_index_per_call() {
+        // Given — two sequential calls consume targets in order
+        let anon_targets = vec![
+            "https://first.com".to_string(),
+            "https://second.com".to_string(),
+        ];
+        let mut anon_index = 0;
+        let mut html = String::new();
+
+        // When
+        render_inline_anonymous_reference(&mut html, "first", &anon_targets, &mut anon_index);
+        render_inline_anonymous_reference(&mut html, "second", &anon_targets, &mut anon_index);
+
+        // Then
+        assert_eq!(
+            html,
+            "<a href=\"https://first.com\">first</a><a href=\"https://second.com\">second</a>"
+        );
+        assert_eq!(anon_index, 2);
+    }
+
+    // -------------------------------------------------------------------------
+    // Unit tests for render_inline_term_reference
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_render_inline_term_reference_resolved_with_css_classes() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("widget"), "glossary.rst".to_string());
+        let mut html = String::new();
+
+        // When
+        render_inline_term_reference(&mut html, "widget", "widget", &index, "doc.rst");
+
+        // Then
+        assert!(html.contains("class=\"reference internal\""));
+        assert!(html.contains("href=\"glossary.html#term-widget\""));
+        assert!(html.contains("class=\"xref std std-term\""));
+        assert!(html.contains(">widget<"));
+    }
+
+    #[test]
+    fn test_render_inline_term_reference_broken_link_when_term_not_found() {
+        // Given
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+
+        // When
+        render_inline_term_reference(&mut html, "unknown term", "unknown", &index, "doc.rst");
+
+        // Then
+        assert!(html.contains("class=\"broken-link\""));
+        assert!(html.contains("class=\"xref std std-term\""));
+        assert!(html.contains(">unknown term<"));
+    }
+
+    #[test]
+    fn test_render_inline_term_reference_resolves_cross_directory_path() {
+        // Given — document is two levels deep, glossary at root
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("api"), "reference/glossary.rst".to_string());
+        let mut html = String::new();
+
+        // When
+        render_inline_term_reference(&mut html, "API", "api", &index, "guide/intro.rst");
+
+        // Then
+        assert!(html.contains("href=\"../reference/glossary.html#term-api\""));
+        assert!(html.contains(">API<"));
+    }
+
+    #[test]
+    fn test_render_inline_term_reference_custom_display_differs_from_term() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("environment"), "glossary.rst".to_string());
+        let mut html = String::new();
+
+        // When
+        render_inline_term_reference(&mut html, "the env", "environment", &index, "doc.rst");
+
+        // Then
+        assert!(html.contains("href=\"glossary.html#term-environment\""));
+        assert!(html.contains(">the env<"));
     }
 }

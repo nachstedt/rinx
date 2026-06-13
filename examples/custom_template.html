@@ -55,6 +55,96 @@
       padding-bottom: 0.5rem;
       margin-bottom: 1rem;
     }
+    
+    /* Glossary */
+    dl.glossary {
+      margin: 2rem 0;
+      display: block;
+    }
+    dl.glossary dt {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-top: 1.75rem;
+      padding: 0.25rem 0.5rem;
+      display: inline-block;
+      position: relative;
+      scroll-margin-top: 2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 8px;
+    }
+    dl.glossary dt:first-of-type {
+      margin-top: 0.5rem;
+    }
+    dl.glossary dd {
+      margin-left: 1.5rem;
+      margin-bottom: 1.75rem;
+      padding-left: 1rem;
+      border-left: 2px solid #bdc3c7;
+      color: #5a738e;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    dl.glossary dd p:last-child {
+      margin-bottom: 0;
+    }
+    /* Hover effect to show link anchor */
+    dl.glossary dt::after {
+      content: ' #';
+      color: #3498db;
+      opacity: 0;
+      font-size: 0.85em;
+      font-weight: 400;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      display: inline-block;
+      transform: translateX(-4px);
+      pointer-events: none;
+    }
+    dl.glossary dt:hover::after {
+      opacity: 0.6;
+      transform: translateX(2px);
+    }
+    /* Active targeted term */
+    dl.glossary dt:target {
+      color: #2980b9;
+      background-color: #ebf5fb;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    dl.glossary dt:target + dd {
+      border-left-color: #3498db;
+      background: linear-gradient(90deg, #ebf5fb 0%, transparent 100%);
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-radius: 0 8px 8px 0;
+    }
+    /* Inline term references (:term:) */
+    a .xref.std-term {
+      border-bottom: 1px dashed #3498db;
+      padding-bottom: 1px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    a:hover .xref.std-term {
+      border-bottom-style: solid;
+      border-bottom-color: #2980b9;
+      color: #2980b9;
+    }
+    a:has(.xref.std-term) {
+      text-decoration: none !important;
+    }
+    /* Broken glossary term references */
+    a.broken-link {
+      color: #e74c3c !important;
+      border-bottom: 1px dashed #e74c3c !important;
+      cursor: help;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    a.broken-link:hover {
+      border-bottom-style: solid !important;
+      border-bottom-color: #c0392b !important;
+      color: #c0392b !important;
+    }
   </style>
 </head>
 <body>

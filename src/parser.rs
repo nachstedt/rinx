@@ -8,6 +8,8 @@ static REF_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":ref:`(?P<target>[^`]+)`").unwrap());
 static PROGRAM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":program:`(?P<name>[^`]+)`").unwrap());
+static TERM_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":term:`(?P<content>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -385,6 +387,10 @@ fn try_parse_directive(
         let directive = parse_admonition(kind, argument, &body_lines, adornment_order, diagnostics);
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
+    if name == "glossary" {
+        let directive = parse_glossary(&body_lines, adornment_order, diagnostics);
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
     let directive = Directive::Unknown {
         name,
         argument,
@@ -487,6 +493,7 @@ fn parse_inline_text(paragraph_text: &str) -> Vec<crate::ast::InlineNode> {
 
         let ref_match = REF_REGEX.find(remaining);
         let program_match = PROGRAM_ROLE_REGEX.find(remaining);
+        let term_match = TERM_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -499,6 +506,9 @@ fn parse_inline_text(paragraph_text: &str) -> Vec<crate::ast::InlineNode> {
         }
         if let Some(m) = program_match {
             all_matches.push((m.start(), m.end(), "program", None));
+        }
+        if let Some(m) = term_match {
+            all_matches.push((m.start(), m.end(), "term", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -595,6 +605,24 @@ fn handle_inline_match(kind: &str, m_str: &str, node_opt: Option<InlineNode>) ->
         "program" => {
             let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
             InlineNode::Program(caps["name"].to_string())
+        }
+        "term" => {
+            let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
+            let content = &caps["content"];
+            // Support :term:`display text <actual term>` syntax
+            if let Some(angle_start) = content.rfind('<')
+                && let Some(angle_end) = content[angle_start..].find('>')
+            {
+                let display = content[..angle_start].trim().to_string();
+                let term = content[angle_start + 1..angle_start + angle_end]
+                    .trim()
+                    .to_string();
+                return InlineNode::TermReference { display, term };
+            }
+            InlineNode::TermReference {
+                display: content.to_string(),
+                term: content.to_string(),
+            }
         }
         "phrased" => {
             let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
@@ -931,6 +959,138 @@ fn parse_seealso(
     } else {
         Directive::SeeAlso { body: vec![] }
     }
+}
+
+/// Parses the body of a `.. glossary::` directive into a [`Directive::Glossary`].
+///
+/// The body follows definition-list markup:
+/// - Non-blank lines at the base indentation level are **terms**.
+/// - Consecutive terms (all at base indentation) before an indented block share one definition.
+/// - Indented lines form the **definition** body, parsed recursively.
+/// - Blank lines separate entries.
+/// - The `:sorted:` option causes entries to be sorted alphabetically by first term.
+fn parse_glossary(
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+) -> Directive {
+    // Determine the base indentation of the body (first non-blank line).
+    let Some(first_non_blank) = body_lines.iter().find(|l| !l.trim().is_empty()) else {
+        return Directive::Glossary {
+            entries: vec![],
+            sorted: false,
+        };
+    };
+    let base_indent = first_non_blank
+        .chars()
+        .take_while(|c| c.is_whitespace())
+        .count();
+
+    // Strip the base indentation from all lines.
+    let unindented: Vec<String> = body_lines
+        .iter()
+        .map(|l| {
+            if l.len() >= base_indent {
+                l[base_indent..].to_string()
+            } else {
+                l.trim().to_string()
+            }
+        })
+        .collect();
+
+    // Parse the :sorted: option from the leading option lines.
+    let mut sorted = false;
+    let mut body_start = 0;
+    for (idx, line) in unindented.iter().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            body_start = idx + 1;
+            continue;
+        }
+        if trimmed == ":sorted:" {
+            sorted = true;
+            body_start = idx + 1;
+            continue;
+        }
+        // First non-option, non-blank line: definition body starts here.
+        body_start = idx;
+        break;
+    }
+
+    // Parse definition-list entries from the remaining lines.
+    // A line with NO leading whitespace (after base-indent stripping) is a term.
+    // A line WITH leading whitespace is part of the definition.
+    let mut entries: Vec<crate::ast::GlossaryEntry> = Vec::new();
+    let mut current_terms: Vec<String> = Vec::new();
+    let mut definition_lines: Vec<String> = Vec::new();
+    let mut in_definition = false;
+
+    let body_slice = &unindented[body_start..];
+
+    for line in body_slice {
+        let is_blank = line.trim().is_empty();
+        let is_indented = line.starts_with(' ') || line.starts_with('\t');
+
+        if is_blank {
+            if in_definition {
+                // Blank line may end the current definition or be part of it.
+                // We flush on the next term; accumulate for now.
+                definition_lines.push(String::new());
+            }
+            // Between entries: do nothing
+            continue;
+        }
+
+        if is_indented {
+            // Part of the current definition body.
+            in_definition = true;
+            definition_lines.push(line.clone());
+        } else {
+            // Non-indented: this is a term.
+            if in_definition {
+                // Flush the completed entry.
+                let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
+                let mut dummy_adorn = adornment_order.clone();
+                let def_nodes = parse_blocks(&def_strs, &mut dummy_adorn, diagnostics);
+                entries.push(crate::ast::GlossaryEntry {
+                    terms: std::mem::take(&mut current_terms),
+                    definition: def_nodes,
+                });
+                definition_lines.clear();
+                in_definition = false;
+            }
+            current_terms.push(line.trim().to_string());
+        }
+    }
+
+    // Flush any remaining entry.
+    if !current_terms.is_empty() {
+        let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
+        let def_nodes = parse_blocks(&def_strs, adornment_order, diagnostics);
+        entries.push(crate::ast::GlossaryEntry {
+            terms: current_terms,
+            definition: def_nodes,
+        });
+    }
+
+    // Sort alphabetically by the first term (case-insensitive) if :sorted: was set.
+    if sorted {
+        entries.sort_by(|a, b| {
+            let a_key = a
+                .terms
+                .first()
+                .map(|s| s.to_lowercase())
+                .unwrap_or_default();
+            let b_key = b
+                .terms
+                .first()
+                .map(|s| s.to_lowercase())
+                .unwrap_or_default();
+            a_key.cmp(&b_key)
+        });
+    }
+
+    Directive::Glossary { entries, sorted }
 }
 
 fn strip_indent(s: &str, indent_chars: usize) -> &str {
@@ -3081,6 +3241,185 @@ outer again"
             );
         } else {
             panic!("Expected LiteralBlock, got {:?}", doc.nodes[1]);
+        }
+    }
+
+    // ── Glossary directive tests ──────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_glossary_single_entry() {
+        // Given
+        let input =
+            ".. glossary::\n\n   environment\n      A structure where information is saved.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::Glossary { entries, sorted }) = &doc.nodes[0] {
+            assert!(!sorted);
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].terms, vec!["environment"]);
+            assert!(!entries[0].definition.is_empty());
+        } else {
+            panic!("Expected Glossary directive, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_glossary_multiple_entries() {
+        // Given
+        let input = ".. glossary::\n\n   builder\n      Produces output.\n\n   environment\n      Stores information.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::Glossary { entries, .. }) = &doc.nodes[0] {
+            assert_eq!(entries.len(), 2);
+            assert_eq!(entries[0].terms, vec!["builder"]);
+            assert_eq!(entries[1].terms, vec!["environment"]);
+        } else {
+            panic!("Expected Glossary, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_glossary_multi_term_entry() {
+        // Given
+        let input = ".. glossary::\n\n   term 1\n   term 2\n      Shared definition.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::Glossary { entries, .. }) = &doc.nodes[0] {
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].terms, vec!["term 1", "term 2"]);
+        } else {
+            panic!("Expected Glossary, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_glossary_sorted_option_orders_entries_alphabetically() {
+        // Given
+        let input = ".. glossary::\n   :sorted:\n\n   zebra\n      Z entry.\n\n   apple\n      A entry.\n\n   mango\n      M entry.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::Glossary { entries, sorted }) = &doc.nodes[0] {
+            assert!(sorted);
+            assert_eq!(entries.len(), 3);
+            assert_eq!(entries[0].terms[0], "apple");
+            assert_eq!(entries[1].terms[0], "mango");
+            assert_eq!(entries[2].terms[0], "zebra");
+        } else {
+            panic!("Expected Glossary, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_glossary_sorted_is_case_insensitive() {
+        // Given — "Banana" should sort between "apple" and "cherry"
+        let input = ".. glossary::\n   :sorted:\n\n   cherry\n      C.\n\n   Banana\n      B.\n\n   apple\n      A.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::Glossary { entries, .. }) = &doc.nodes[0] {
+            assert_eq!(entries[0].terms[0], "apple");
+            assert_eq!(entries[1].terms[0], "Banana");
+            assert_eq!(entries[2].terms[0], "cherry");
+        } else {
+            panic!("Expected Glossary, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_glossary_empty_body_returns_empty_entries() {
+        // Given
+        let input = ".. glossary::\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::Glossary { entries, sorted }) = &doc.nodes[0] {
+            assert!(!sorted);
+            assert!(entries.is_empty());
+        } else {
+            panic!("Expected Glossary, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    // ── :term: role tests ─────────────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_term_role_basic() {
+        // Given
+        let input = "See :term:`environment` for details.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            let term_ref = inlines
+                .iter()
+                .find(|n| matches!(n, InlineNode::TermReference { .. }));
+            assert!(term_ref.is_some(), "Expected TermReference in paragraph");
+            if let Some(InlineNode::TermReference { display, term }) = term_ref {
+                assert_eq!(display, "environment");
+                assert_eq!(term, "environment");
+            }
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_term_role_with_display_text() {
+        // Given
+        let input = "See :term:`the env <environment>` here.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            let term_ref = inlines
+                .iter()
+                .find(|n| matches!(n, InlineNode::TermReference { .. }));
+            assert!(term_ref.is_some());
+            if let Some(InlineNode::TermReference { display, term }) = term_ref {
+                assert_eq!(display, "the env");
+                assert_eq!(term, "environment");
+            }
+        } else {
+            panic!("Expected Paragraph");
+        }
+    }
+
+    #[test]
+    fn test_parse_term_role_mixed_with_surrounding_text() {
+        // Given
+        let input = "Before :term:`foo` after.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.len() >= 3, "Expected text + term + text");
+            assert!(matches!(&inlines[0], InlineNode::Text(t) if t == "Before "));
+            assert!(matches!(&inlines[1], InlineNode::TermReference { term, .. } if term == "foo"));
+        } else {
+            panic!("Expected Paragraph");
         }
     }
 }

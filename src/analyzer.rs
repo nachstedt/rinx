@@ -41,21 +41,40 @@ pub struct ProjectIndex {
     /// Hierarchical navigation tree derived from toctree directives.
     #[serde(default)]
     pub nav_tree: Vec<NavEntry>,
+    /// Maps normalized glossary term names to the document path containing their definition.
+    #[serde(default)]
+    pub glossary_terms: BTreeMap<TargetName, String>,
 }
 
 impl ProjectIndex {
     /// Merge another `ProjectIndex` into this one.
-    pub fn merge(&mut self, other: Self) {
+    ///
+    /// Emits a diagnostic string for each glossary term defined in both indices
+    /// (case-insensitive duplicate detection). Last-writer-wins for the mapping value.
+    pub fn merge(&mut self, other: Self) -> Vec<String> {
         self.targets.extend(other.targets);
         self.document_titles.extend(other.document_titles);
         // nav_tree is built globally, not merged per-document
+        let mut diagnostics = Vec::new();
+        for (term, path) in other.glossary_terms {
+            if let Some(existing) = self.glossary_terms.get(&term) {
+                diagnostics.push(format!(
+                    "Duplicate glossary term '{}': defined in '{}' and '{}'. The latter definition wins.",
+                    term.as_str(),
+                    existing,
+                    path,
+                ));
+            }
+            self.glossary_terms.insert(term, path);
+        }
+        diagnostics
     }
 }
 
 /// Analyzes a single `Document` and returns a local `ProjectIndex`.
 ///
-/// This extracts targets and document titles. The `nav_tree` is not populated
-/// here — it is built globally by [`build_project_index()`].
+/// This extracts targets, document titles, and glossary terms. The `nav_tree` is not
+/// populated here — it is built globally by [`build_project_index()`].
 #[must_use]
 pub fn analyze(doc: &Document) -> ProjectIndex {
     let mut index = ProjectIndex::default();
@@ -71,6 +90,15 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
         if !found_title && let Node::Heading { level: 1, text } = node {
             index.document_titles.insert(doc.path.clone(), text.clone());
             found_title = true;
+        }
+        if let Node::Directive(Directive::Glossary { entries, .. }) = node {
+            for entry in entries {
+                for term in &entry.terms {
+                    index
+                        .glossary_terms
+                        .insert(TargetName::new(term), doc.path.clone());
+                }
+            }
         }
     }
     index
@@ -161,7 +189,7 @@ pub fn build_project_index(docs: &[Document]) -> ProjectIndex {
     // Step 1: Build per-document index (targets, titles)
     let mut index = ProjectIndex::default();
     for doc in docs {
-        index.merge(analyze(doc));
+        let _ = index.merge(analyze(doc));
     }
 
     // Step 2: Collect toctree relationships (parent path → child paths)
@@ -810,5 +838,127 @@ mod tests {
         assert_eq!(paths[0], "docs/chapter1.rst");
         assert_eq!(paths[1], "readme.rst");
         assert_eq!(paths[2], "docs/sub/chapter2.rst");
+    }
+
+    // ── Glossary analyzer tests ───────────────────────────────────────────────
+
+    #[test]
+    fn test_analyze_registers_glossary_terms() {
+        // Given
+        let doc = Document::new(
+            "glossary.rst".to_string(),
+            vec![Node::Directive(Directive::Glossary {
+                entries: vec![crate::ast::GlossaryEntry {
+                    terms: vec!["environment".to_string()],
+                    definition: vec![],
+                }],
+                sorted: false,
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.glossary_terms.len(), 1);
+        assert_eq!(
+            index.glossary_terms.get(&TargetName::new("environment")),
+            Some(&"glossary.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_all_terms_in_multi_term_entry() {
+        // Given
+        let doc = Document::new(
+            "glossary.rst".to_string(),
+            vec![Node::Directive(Directive::Glossary {
+                entries: vec![crate::ast::GlossaryEntry {
+                    terms: vec!["term 1".to_string(), "term 2".to_string()],
+                    definition: vec![],
+                }],
+                sorted: false,
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.glossary_terms.len(), 2);
+        assert!(
+            index
+                .glossary_terms
+                .contains_key(&TargetName::new("term 1"))
+        );
+        assert!(
+            index
+                .glossary_terms
+                .contains_key(&TargetName::new("term 2"))
+        );
+    }
+
+    #[test]
+    fn test_merge_combines_glossary_terms_from_two_documents() {
+        // Given
+        let mut idx1 = ProjectIndex::default();
+        idx1.glossary_terms
+            .insert(TargetName::new("foo"), "glossary_a.rst".to_string());
+
+        let mut idx2 = ProjectIndex::default();
+        idx2.glossary_terms
+            .insert(TargetName::new("bar"), "glossary_b.rst".to_string());
+
+        // When
+        let diagnostics = idx1.merge(idx2);
+
+        // Then
+        assert!(diagnostics.is_empty());
+        assert_eq!(idx1.glossary_terms.len(), 2);
+        assert!(idx1.glossary_terms.contains_key(&TargetName::new("foo")));
+        assert!(idx1.glossary_terms.contains_key(&TargetName::new("bar")));
+    }
+
+    #[test]
+    fn test_merge_emits_diagnostic_for_duplicate_glossary_term() {
+        // Given
+        let mut idx1 = ProjectIndex::default();
+        idx1.glossary_terms
+            .insert(TargetName::new("environment"), "glossary.rst".to_string());
+
+        let mut idx2 = ProjectIndex::default();
+        idx2.glossary_terms
+            .insert(TargetName::new("environment"), "other.rst".to_string());
+
+        // When
+        let diagnostics = idx1.merge(idx2);
+
+        // Then
+        assert_eq!(diagnostics.len(), 1);
+        assert!(diagnostics[0].contains("Duplicate glossary term"));
+        assert!(diagnostics[0].contains("environment"));
+        // Last-writer-wins: idx2's path should be kept
+        assert_eq!(
+            idx1.glossary_terms.get(&TargetName::new("environment")),
+            Some(&"other.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_merge_duplicate_detection_is_case_insensitive() {
+        // Given — "Environment" and "environment" should collide
+        let mut idx1 = ProjectIndex::default();
+        idx1.glossary_terms
+            .insert(TargetName::new("Environment"), "a.rst".to_string());
+
+        let mut idx2 = ProjectIndex::default();
+        idx2.glossary_terms
+            .insert(TargetName::new("environment"), "b.rst".to_string());
+
+        // When
+        let diagnostics = idx1.merge(idx2);
+
+        // Then
+        assert_eq!(diagnostics.len(), 1, "Expected duplicate diagnostic");
     }
 }

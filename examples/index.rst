@@ -14,6 +14,7 @@ Welcome to the Rusty-Sphinx example.
    version_changes
    seealso
    literal_blocks
+   glossary
    team_a/index
    team_b/index
 

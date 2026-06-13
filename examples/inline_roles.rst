@@ -22,3 +22,13 @@ Here are some more examples of program names in different contexts:
 * Program name with internal spaces: Run :program:`git status` to see unstaged changes.
 * Program name adjacent to punctuation: Run (:program:`wget`), or search for :program:`tar`.
 * Multiple program names in one sentence: You can use either :program:`gzip` or :program:`bzip2` to compress the output.
+
+Term References (``:term:``)
+-----------------------------
+
+The ``:term:`` role creates a cross-reference to a term defined in a
+``.. glossary::`` directive.
+
+* Basic term reference: The :term:`environment` stores document metadata.
+* Multi-word term: The :term:`configuration directory` holds project settings.
+* Custom display text: :term:`the build tool <builder>` processes the RST files.
