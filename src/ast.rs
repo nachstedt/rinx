@@ -187,6 +187,40 @@ impl std::fmt::Display for VersionChangeKind {
     }
 }
 
+/// A single entry in a `.. glossary::` directive.
+///
+/// Each entry groups one or more terms (all sharing the same definition)
+/// together with the parsed definition body.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GlossaryEntry {
+    /// One or more terms that share this definition.
+    pub terms: Vec<String>,
+    /// The definition body, parsed as block-level RST nodes.
+    pub definition: Vec<Node>,
+}
+
+/// Generates the HTML anchor `id` for a glossary term.
+///
+/// Lowercases the term and replaces runs of whitespace with hyphens,
+/// then prepends `"term-"`. This is consistent with Sphinx's HTML output.
+///
+/// # Examples
+///
+/// ```
+/// use rusty_sphinx::ast::term_id;
+/// assert_eq!(term_id("Environment Variable"), "term-environment-variable");
+/// assert_eq!(term_id("python"), "term-python");
+/// ```
+#[must_use]
+pub fn term_id(term: &str) -> String {
+    let normalized = term
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("-")
+        .to_lowercase();
+    format!("term-{normalized}")
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Directive {
     Toctree {
@@ -209,6 +243,10 @@ pub enum Directive {
     SeeAlso {
         body: Vec<Node>,
     },
+    Glossary {
+        entries: Vec<GlossaryEntry>,
+        sorted: bool,
+    },
     Unknown {
         name: String,
         argument: String,
@@ -220,13 +258,27 @@ pub enum Directive {
 pub enum InlineNode {
     Text(String),
     Reference(String),
-    Hyperlink { text: String, target: String },
+    Hyperlink {
+        text: String,
+        target: String,
+    },
     AnonymousReference(String),
-    AnonymousHyperlink { text: String, target: String },
+    AnonymousHyperlink {
+        text: String,
+        target: String,
+    },
     Emphasis(String),
     Strong(String),
     Literal(String),
     Program(String),
+    /// A `:term:` cross-reference to a glossary entry.
+    ///
+    /// `display` is the visible link text; `term` is the glossary term to look up.
+    /// They differ when using `:term:`display text <actual term>`` syntax.
+    TermReference {
+        display: String,
+        term: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -466,5 +518,126 @@ mod tests {
         // Then
         assert_eq!(json, "\"deprecated\"");
         assert_eq!(kind, deserialized);
+    }
+
+    #[test]
+    fn test_term_id_single_word() {
+        // Given
+        let term = "python";
+
+        // When
+        let id = term_id(term);
+
+        // Then
+        assert_eq!(id, "term-python");
+    }
+
+    #[test]
+    fn test_term_id_multi_word_joins_with_hyphens() {
+        // Given
+        let term = "Environment Variable";
+
+        // When
+        let id = term_id(term);
+
+        // Then
+        assert_eq!(id, "term-environment-variable");
+    }
+
+    #[test]
+    fn test_term_id_normalizes_to_lowercase() {
+        // Given
+        let term = "MY TERM";
+
+        // When
+        let id = term_id(term);
+
+        // Then
+        assert_eq!(id, "term-my-term");
+    }
+
+    #[test]
+    fn test_term_id_collapses_extra_whitespace() {
+        // Given
+        let term = "  term   with   spaces  ";
+
+        // When
+        let id = term_id(term);
+
+        // Then
+        assert_eq!(id, "term-term-with-spaces");
+    }
+
+    #[test]
+    fn test_glossary_entry_serialization_roundtrip() {
+        // Given
+        let entry = GlossaryEntry {
+            terms: vec!["foo".to_string(), "bar".to_string()],
+            definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                "A definition.".to_string(),
+            )])],
+        };
+
+        // When
+        let json = serde_json::to_string(&entry).expect("Failed to serialize");
+        let deserialized: GlossaryEntry =
+            serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(entry, deserialized);
+    }
+
+    #[test]
+    fn test_glossary_directive_serialization_roundtrip() {
+        // Given
+        let directive = Directive::Glossary {
+            entries: vec![GlossaryEntry {
+                terms: vec!["term".to_string()],
+                definition: vec![],
+            }],
+            sorted: true,
+        };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_term_reference_serialization_roundtrip() {
+        // Given
+        let node = InlineNode::TermReference {
+            display: "the environment".to_string(),
+            term: "environment".to_string(),
+        };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_term_reference_display_equals_term_when_no_alias() {
+        // Given
+        let term_text = "environment";
+
+        // When
+        let node = InlineNode::TermReference {
+            display: term_text.to_string(),
+            term: term_text.to_string(),
+        };
+
+        // Then
+        if let InlineNode::TermReference { display, term } = node {
+            assert_eq!(display, term);
+        } else {
+            panic!("Expected TermReference");
+        }
     }
 }

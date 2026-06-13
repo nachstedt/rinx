@@ -105,7 +105,7 @@ fn process_preview(
     };
 
     let local_index = analyzer::analyze(&doc);
-    index.merge(local_index);
+    let _ = index.merge(local_index);
 
     let body = renderer::render(&doc, &index, doc_path);
 
@@ -664,7 +664,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}]}"#
+            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}],"glossary_terms":{}}"#
         );
     }
 

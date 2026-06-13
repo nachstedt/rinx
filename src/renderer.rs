@@ -128,6 +128,11 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
             ) => {
                 collect_anonymous_targets(body, targets);
             }
+            Node::Directive(Directive::Glossary { entries, .. }) => {
+                for entry in entries {
+                    collect_anonymous_targets(&entry.definition, targets);
+                }
+            }
             _ => {}
         }
     }
@@ -283,6 +288,15 @@ fn render_directive(
             anon_index,
             original_doc_path,
         ),
+        Directive::Glossary { entries, .. } => render_glossary(
+            html,
+            entries,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        ),
         Directive::Unknown { .. } => {}
     }
 }
@@ -428,6 +442,39 @@ fn render_seealso(
     let _ = writeln!(html, "</div>");
 }
 
+#[allow(clippy::too_many_arguments)]
+fn render_glossary(
+    html: &mut String,
+    entries: &[crate::ast::GlossaryEntry],
+    index: &ProjectIndex,
+    doc_path: &str,
+    anon_targets: &[String],
+    anon_index: &mut usize,
+    original_doc_path: &str,
+) {
+    let _ = writeln!(html, "<dl class=\"glossary\">");
+    for entry in entries {
+        for term in &entry.terms {
+            let term_escaped = html_escape::encode_text(term);
+            let id = crate::ast::term_id(term);
+            let id_attr = html_escape::encode_double_quoted_attribute(&id);
+            let _ = writeln!(html, "  <dt id=\"{id_attr}\">{term_escaped}</dt>");
+        }
+        let _ = write!(html, "  <dd>");
+        render_nodes(
+            html,
+            &entry.definition,
+            index,
+            doc_path,
+            anon_targets,
+            anon_index,
+            original_doc_path,
+        );
+        let _ = writeln!(html, "</dd>");
+    }
+    let _ = writeln!(html, "</dl>");
+}
+
 fn render_inline(
     html: &mut String,
     inline: &crate::ast::InlineNode,
@@ -543,6 +590,32 @@ fn render_inline(
         crate::ast::InlineNode::Program(text) => {
             let escaped = html_escape::encode_text(text);
             let _ = write!(html, "<strong class=\"program\">{escaped}</strong>");
+        }
+        crate::ast::InlineNode::TermReference { display, term } => {
+            let display_escaped = html_escape::encode_text(display);
+            let term_name = crate::ast::TargetName::new(term);
+            if let Some(glossary_doc_path) = index.glossary_terms.get(&term_name) {
+                let current_dir = std::path::Path::new(doc_path)
+                    .parent()
+                    .unwrap_or_else(|| std::path::Path::new(""));
+                let target_html_path =
+                    std::path::Path::new(glossary_doc_path).with_extension("html");
+                let relative_path = pathdiff::diff_paths(&target_html_path, current_dir)
+                    .unwrap_or(target_html_path);
+                let anchor = crate::ast::term_id(term);
+                let href = format!("{}#{}", relative_path.display(), anchor);
+                let href_attr = html_escape::encode_double_quoted_attribute(&href);
+                let _ = write!(
+                    html,
+                    "<a class=\"reference internal\" href=\"{href_attr}\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
+                );
+            } else {
+                // Term not found — render as broken link
+                let _ = write!(
+                    html,
+                    "<a href=\"#\" class=\"broken-link\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
+                );
+            }
         }
     }
 }
@@ -2087,5 +2160,173 @@ mod tests {
 
         // Then
         assert!(result.contains("a &lt; b &amp;&amp; b &gt; c"));
+    }
+
+    // ── Glossary rendering tests ──────────────────────────────────────────────
+
+    #[test]
+    fn test_render_glossary_single_entry() {
+        // Given
+        let doc = Document::new(
+            "glossary.rst".to_string(),
+            vec![Node::Directive(Directive::Glossary {
+                entries: vec![crate::ast::GlossaryEntry {
+                    terms: vec!["environment".to_string()],
+                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "A structure.".to_string(),
+                    )])],
+                }],
+                sorted: false,
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<dl class=\"glossary\">"));
+        assert!(result.contains("<dt id=\"term-environment\">environment</dt>"));
+        assert!(result.contains("<dd>"));
+        assert!(result.contains("A structure."));
+        assert!(result.contains("</dl>"));
+    }
+
+    #[test]
+    fn test_render_glossary_multi_term_entry_produces_multiple_dt() {
+        // Given
+        let doc = Document::new(
+            "glossary.rst".to_string(),
+            vec![Node::Directive(Directive::Glossary {
+                entries: vec![crate::ast::GlossaryEntry {
+                    terms: vec!["term 1".to_string(), "term 2".to_string()],
+                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Shared.".to_string(),
+                    )])],
+                }],
+                sorted: false,
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("<dt id=\"term-term-1\">term 1</dt>"));
+        assert!(result.contains("<dt id=\"term-term-2\">term 2</dt>"));
+        assert_eq!(result.matches("<dd>").count(), 1);
+    }
+
+    #[test]
+    fn test_render_glossary_escapes_html_in_terms() {
+        // Given
+        let doc = Document::new(
+            "glossary.rst".to_string(),
+            vec![Node::Directive(Directive::Glossary {
+                entries: vec![crate::ast::GlossaryEntry {
+                    terms: vec!["a < b".to_string()],
+                    definition: vec![],
+                }],
+                sorted: false,
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("a &lt; b"));
+        assert!(!result.contains("a < b"));
+    }
+
+    #[test]
+    fn test_render_term_reference_resolved_links_to_glossary_doc() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::TermReference {
+                display: "environment".to_string(),
+                term: "environment".to_string(),
+            }])],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("environment"), "glossary.rst".to_string());
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("href=\"glossary.html#term-environment\""));
+        assert!(result.contains("class=\"xref std std-term\""));
+        assert!(result.contains(">environment<"));
+    }
+
+    #[test]
+    fn test_render_term_reference_with_custom_display_text() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::TermReference {
+                display: "the env".to_string(),
+                term: "environment".to_string(),
+            }])],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("environment"), "glossary.rst".to_string());
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("href=\"glossary.html#term-environment\""));
+        assert!(result.contains(">the env<"));
+    }
+
+    #[test]
+    fn test_render_term_reference_broken_link_when_term_not_found() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::TermReference {
+                display: "unknown".to_string(),
+                term: "unknown".to_string(),
+            }])],
+        );
+        let index = ProjectIndex::default(); // empty — no glossary terms
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.contains("class=\"broken-link\""));
+        assert!(result.contains(">unknown<"));
+    }
+
+    #[test]
+    fn test_render_term_reference_computes_relative_path_across_directories() {
+        // Given — document is in a subdirectory, glossary is at root
+        let doc = Document::new(
+            "guide/page.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::TermReference {
+                display: "foo".to_string(),
+                term: "foo".to_string(),
+            }])],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .glossary_terms
+            .insert(TargetName::new("foo"), "glossary.rst".to_string());
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then — href should traverse up one directory
+        assert!(result.contains("href=\"../glossary.html#term-foo\""));
     }
 }
