@@ -271,10 +271,12 @@ pub enum InlineNode {
     Strong(String),
     Literal(String),
     Program(String),
-    /// A `:term:` cross-reference to a glossary entry.
+    /// An inline cross-reference produced by the term role, linking to a glossary entry.
     ///
-    /// `display` is the visible link text; `term` is the glossary term to look up.
-    /// They differ when using `:term:`display text <actual term>`` syntax.
+    /// The `display` field is the visible link text and `term` is the glossary key.
+    /// They differ when the role is written with an explicit display-text override,
+    /// i.e. the angle-bracket form where the text before the angle bracket is shown
+    /// and the text inside the angle brackets is looked up in the glossary index.
     TermReference {
         display: String,
         term: String,

@@ -19,3 +19,4 @@
 - Use enums for fields with a fixed set of predefined values to ensure type safety.
 - When adding new `.rst` files to the example project, always declare them in `srcs` in the corresponding `BUILD.bazel` file.
 - After every code modification session, verify `bazel build //examples:site` succeeds.
+- Treat clippy warnings as refactoring opportunities; do not suppress them with `#[allow(...)]` attributes.

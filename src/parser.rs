@@ -610,14 +610,14 @@ fn handle_inline_match(kind: &str, m_str: &str, node_opt: Option<InlineNode>) ->
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let content = &caps["content"];
             // Support :term:`display text <actual term>` syntax
-            if let Some(angle_start) = content.rfind('<') {
-                if let Some(angle_end) = content[angle_start..].find('>') {
-                    let display = content[..angle_start].trim().to_string();
-                    let term = content[angle_start + 1..angle_start + angle_end]
-                        .trim()
-                        .to_string();
-                    return InlineNode::TermReference { display, term };
-                }
+            if let Some(angle_start) = content.rfind('<')
+                && let Some(angle_end) = content[angle_start..].find('>')
+            {
+                let display = content[..angle_start].trim().to_string();
+                let term = content[angle_start + 1..angle_start + angle_end]
+                    .trim()
+                    .to_string();
+                return InlineNode::TermReference { display, term };
             }
             InlineNode::TermReference {
                 display: content.to_string(),
@@ -1053,7 +1053,7 @@ fn parse_glossary(
                 let mut dummy_adorn = adornment_order.clone();
                 let def_nodes = parse_blocks(&def_strs, &mut dummy_adorn, diagnostics);
                 entries.push(crate::ast::GlossaryEntry {
-                    terms: current_terms.drain(..).collect(),
+                    terms: std::mem::take(&mut current_terms),
                     definition: def_nodes,
                 });
                 definition_lines.clear();
