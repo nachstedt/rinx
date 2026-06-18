@@ -4,16 +4,10 @@ load("@rules_java//java:defs.bzl", "java_binary", "java_import")
 
 rust_library(
     name = "rusty_sphinx",
-    srcs = [
-        "src/analyzer.rs",
-        "src/ast.rs",
-        "src/config.rs",
-        "src/lib.rs",
-        "src/parser.rs",
-        "src/renderer.rs",
-        "src/utils.rs",
-        "src/validator.rs",
-    ],
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/main.rs"],
+    ),
     deps = all_crate_deps(
         normal = True,
     ),

@@ -20,3 +20,4 @@
 - When adding new `.rst` files to the example project, always declare them in `srcs` in the corresponding `BUILD.bazel` file.
 - After every code modification session, verify `bazel build //examples:site` succeeds.
 - Treat clippy warnings as refactoring opportunities; do not suppress them with `#[allow(...)]` attributes.
+- Prefer co-locating unit tests natively using inline `#[cfg(test)]` modules over splitting them into separate files with `include!` macros to satisfy arbitrary line-limit constraints.
