@@ -1,3 +1,4 @@
+import argparse
 import subprocess
 import time
 import json
@@ -78,10 +79,11 @@ rusty_sphinx_site(
 """
     (doc_dir / "BUILD.bazel").write_text(build_bazel)
 
-def run_benchmark():
-    # Run bazel clean to avoid caching from previous runs
-    print("Cleaning Bazel cache...")
-    subprocess.run(["bazel", "clean"], cwd=str(TARGET_DIR), capture_output=True)
+def run_benchmark(clean: bool = False):
+    if clean:
+        # Run bazel clean to avoid caching from previous runs
+        print("Cleaning Bazel cache...")
+        subprocess.run(["bazel", "clean"], cwd=str(TARGET_DIR), capture_output=True)
 
     print("Running Bazel build...")
 
@@ -190,6 +192,10 @@ def analyze_results():
             print(f"{msg}: {count}")
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--clean", action="store_true", help="Clear the Bazel cache before building")
+    args = parser.parse_args()
+
     # If run via `bazel run`, change to the workspace root
     workspace_dir = os.environ.get("BUILD_WORKSPACE_DIRECTORY", os.getcwd())
     os.chdir(workspace_dir)
@@ -201,7 +207,7 @@ def main():
         
     clone_repo()
     generate_bazel_project(workspace_dir)
-    run_benchmark()
+    run_benchmark(clean=args.clean)
     analyze_results()
 
 if __name__ == "__main__":
