@@ -95,7 +95,8 @@ pub(super) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                     let _ = writeln!(html, "<a id=\"{escaped_name}\"></a>");
                 }
             }
-            Node::AnonymousTarget { .. } => {}
+            // Anonymous targets and comments produce no HTML output.
+            Node::AnonymousTarget { .. } | Node::Comment => {}
             Node::Directive(directive) => render_directive(html, directive, ctx),
             Node::BulletList { items, .. } => {
                 let _ = writeln!(html, "<ul>");
@@ -773,6 +774,19 @@ mod tests {
 
         // Then — no crash, just an empty list
         assert_eq!(result, "<ul>\n</ul>\n");
+    }
+
+    #[test]
+    fn test_render_comment_produces_no_html() {
+        // Given
+        let doc = Document::new("test.rst".to_string(), vec![Node::Comment]);
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(result, "");
     }
 
     #[test]

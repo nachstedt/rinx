@@ -314,6 +314,9 @@ pub enum Node {
         /// Verbatim content with common leading indentation stripped.
         content: String,
     },
+    /// An RST comment (`.. text` or `..` followed by an indented body).
+    /// Comments produce no output and are discarded during rendering.
+    Comment,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
