@@ -15,6 +15,7 @@ Welcome to the Rusty-Sphinx example.
    seealso
    literal_blocks
    glossary
+   comments
    team_a/index
    team_b/index
 

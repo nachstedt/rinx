@@ -57,6 +57,6 @@ the corresponding feature is implemented.
 |---------|--------|-------|
 | Sections and document tree (nested sections) | 🔶 Partial | Heading levels are detected; no explicit section nesting in the AST |
 | Transitions (`----`) | ❌ Not implemented | A line of 4+ punctuation chars with blank lines on both sides; currently parsed as a heading |
-| Comments (`.. comment text`) | ❌ Not implemented | Treated as an unknown directive |
+| Comments (`.. comment text`) | ✅ Implemented | Parsed as `Node::Comment`; produces no HTML output |
 | Substitution definitions (`.. |name| replace::`) | ❌ Not implemented | — |
 | Footnotes and citations | ❌ Not implemented | — |
