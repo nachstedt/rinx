@@ -511,6 +511,9 @@ pub enum Node {
     /// An RST comment (`.. text` or `..` followed by an indented body).
     /// Comments produce no output and are discarded during rendering.
     Comment,
+    /// A transition (horizontal rule): 4+ repeated punctuation characters on their own
+    /// line, blank-line-delimited. Renders as `<hr />`.
+    Transition,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]

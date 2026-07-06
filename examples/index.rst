@@ -17,6 +17,7 @@ Welcome to the Rusty-Sphinx example.
    glossary
    comments
    domains
+   transitions
    team_a/index
    team_b/index
 
