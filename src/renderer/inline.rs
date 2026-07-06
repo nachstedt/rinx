@@ -1,7 +1,7 @@
 //! Inline node rendering helpers.
 
 use crate::analyzer::{ProjectIndex, TargetLocation};
-use crate::ast::TargetName;
+use crate::ast::{ObjectType, TargetName};
 use std::fmt::Write as _;
 
 /// Renders a single inline node into `html`.
@@ -49,6 +49,9 @@ pub(super) fn render_inline(
         }
         crate::ast::InlineNode::TermReference { display, term } => {
             render_inline_term_reference(html, display, term, index, doc_path);
+        }
+        crate::ast::InlineNode::DomainObjectReference { object_type, name } => {
+            render_inline_domain_object_reference(html, *object_type, name, index, doc_path);
         }
     }
 }
@@ -180,6 +183,41 @@ pub(super) fn render_inline_term_reference(
         let _ = write!(
             html,
             "<a href=\"#\" class=\"broken-link\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
+        );
+    }
+}
+
+/// Renders a domain object cross-reference (`:func:`, `:py:func:`, `:c:func:`).
+/// Resolves the domain-qualified key via the project index and emits a
+/// relative link, or a broken-link fallback if the object is not found.
+pub(super) fn render_inline_domain_object_reference(
+    html: &mut String,
+    object_type: ObjectType,
+    name: &str,
+    index: &ProjectIndex,
+    doc_path: &str,
+) {
+    let name_escaped = html_escape::encode_text(name);
+    let domain_str = object_type.domain().as_str();
+    let objtype_str = object_type.as_str();
+    let key = crate::ast::build_domain_object_key(object_type, name);
+    if let Some(target_doc_path) = index.domain_objects.get(&key) {
+        let current_dir = std::path::Path::new(doc_path)
+            .parent()
+            .unwrap_or_else(|| std::path::Path::new(""));
+        let target_html_path = std::path::Path::new(target_doc_path).with_extension("html");
+        let relative_path =
+            pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
+        let href = format!("{}#{}", relative_path.display(), key.as_str());
+        let href_attr = html_escape::encode_double_quoted_attribute(&href);
+        let _ = write!(
+            html,
+            "<a class=\"reference internal\" href=\"{href_attr}\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{name_escaped}</code></a>"
+        );
+    } else {
+        let _ = write!(
+            html,
+            "<a href=\"#\" class=\"broken-link\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{name_escaped}</code></a>"
         );
     }
 }
@@ -446,5 +484,107 @@ mod tests {
         // Then
         assert!(html.contains("href=\"glossary.html#term-environment\""));
         assert!(html.contains(">the env<"));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_resolved_py_domain() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.domain_objects.insert(
+            crate::ast::build_domain_object_key(
+                ObjectType::Py(crate::ast::PyObjectType::Function),
+                "greet",
+            ),
+            "api.rst".to_string(),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            ObjectType::Py(crate::ast::PyObjectType::Function),
+            "greet",
+            &index,
+            "doc.rst",
+        );
+
+        // Then
+        assert!(html.contains("class=\"reference internal\""));
+        assert!(html.contains("href=\"api.html#py:function:greet\""));
+        assert!(html.contains("class=\"xref py function docutils literal\""));
+        assert!(html.contains(">greet<"));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_resolved_c_domain() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.domain_objects.insert(
+            crate::ast::build_domain_object_key(
+                ObjectType::C(crate::ast::CObjectType::Function),
+                "add",
+            ),
+            "api.rst".to_string(),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            ObjectType::C(crate::ast::CObjectType::Function),
+            "add",
+            &index,
+            "doc.rst",
+        );
+
+        // Then
+        assert!(html.contains("href=\"api.html#c:function:add\""));
+        assert!(html.contains("class=\"xref c function docutils literal\""));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_broken_link_when_missing() {
+        // Given
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            ObjectType::Py(crate::ast::PyObjectType::Function),
+            "missing",
+            &index,
+            "doc.rst",
+        );
+
+        // Then
+        assert!(html.contains("class=\"broken-link\""));
+        assert!(html.contains(">missing<"));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_resolves_cross_directory_path() {
+        // Given — document is nested, object defined at root
+        let mut index = ProjectIndex::default();
+        index.domain_objects.insert(
+            crate::ast::build_domain_object_key(
+                ObjectType::Py(crate::ast::PyObjectType::Function),
+                "greet",
+            ),
+            "api.rst".to_string(),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            ObjectType::Py(crate::ast::PyObjectType::Function),
+            "greet",
+            &index,
+            "guide/intro.rst",
+        );
+
+        // Then
+        assert!(html.contains("href=\"../api.html#py:function:greet\""));
     }
 }

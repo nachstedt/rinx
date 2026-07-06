@@ -1,6 +1,6 @@
 use super::blocks::parse_blocks;
 use super::headings::Adornment;
-use crate::ast::Node;
+use crate::ast::{Domain, Node};
 
 pub(super) fn strip_indent(s: &str, indent_chars: usize) -> &str {
     let mut indices = s.char_indices();
@@ -48,6 +48,7 @@ pub(super) fn try_parse_bullet_list(
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
+    default_domain: Domain,
 ) -> Option<(usize, Node)> {
     let mut items = Vec::new();
     let mut i = start_i;
@@ -116,7 +117,7 @@ pub(super) fn try_parse_bullet_list(
             }
 
             let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-            let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics);
+            let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, default_domain);
 
             items.push(crate::ast::BulletListItem { nodes: body_nodes });
         } else {

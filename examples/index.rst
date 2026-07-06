@@ -16,6 +16,7 @@ Welcome to the Rusty-Sphinx example.
    literal_blocks
    glossary
    comments
+   domains
    team_a/index
    team_b/index
 

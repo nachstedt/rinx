@@ -44,6 +44,10 @@ pub struct ProjectIndex {
     /// Maps normalized glossary term names to the document path containing their definition.
     #[serde(default)]
     pub glossary_terms: BTreeMap<TargetName, String>,
+    /// Maps domain-qualified object keys (e.g. `py:function:foo`) to the
+    /// document path containing their `Directive::DomainObject` definition.
+    #[serde(default)]
+    pub domain_objects: BTreeMap<TargetName, String>,
 }
 
 impl ProjectIndex {
@@ -54,6 +58,7 @@ impl ProjectIndex {
     pub fn merge(&mut self, other: Self) -> Vec<String> {
         self.targets.extend(other.targets);
         self.document_titles.extend(other.document_titles);
+        self.domain_objects.extend(other.domain_objects);
         // nav_tree is built globally, not merged per-document
         let mut diagnostics = Vec::new();
         for (term, path) in other.glossary_terms {
@@ -99,6 +104,16 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
                         .insert(TargetName::new(term), doc.path.clone());
                 }
             }
+        }
+        if let Node::Directive(Directive::DomainObject {
+            object_type,
+            signature,
+            ..
+        }) = node
+        {
+            let name = crate::ast::extract_object_name(signature);
+            let key = crate::ast::build_domain_object_key(*object_type, &name);
+            index.domain_objects.insert(key, doc.path.clone());
         }
     }
     index
@@ -941,6 +956,112 @@ mod tests {
         assert_eq!(
             idx1.glossary_terms.get(&TargetName::new("environment")),
             Some(&"other.rst".to_string())
+        );
+    }
+
+    // ── Domain object analyzer tests ──────────────────────────────────────────
+
+    #[test]
+    fn test_analyze_registers_domain_object() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject {
+                object_type: crate::ast::ObjectType::Py(crate::ast::PyObjectType::Function),
+                signature: "greet(name)".to_string(),
+                body: vec![],
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.domain_objects.len(), 1);
+        assert_eq!(
+            index
+                .domain_objects
+                .get(&TargetName::new("py:function:greet")),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
+        // Given — same object name "add" declared under both py and c domains
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject {
+                    object_type: crate::ast::ObjectType::Py(crate::ast::PyObjectType::Function),
+                    signature: "add(a, b)".to_string(),
+                    body: vec![],
+                }),
+                Node::Directive(Directive::DomainObject {
+                    object_type: crate::ast::ObjectType::C(crate::ast::CObjectType::Function),
+                    signature: "int add(int a, int b)".to_string(),
+                    body: vec![],
+                }),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.domain_objects.len(), 2);
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:function:add"))
+        );
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("c:function:add"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_leaves_domain_objects_empty_for_plain_document() {
+        // Given
+        let doc = Document::new(
+            "plain.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::Text(
+                "No domain objects here.".to_string(),
+            )])],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(index.domain_objects.is_empty());
+    }
+
+    #[test]
+    fn test_merge_combines_domain_objects_from_two_documents() {
+        // Given
+        let mut idx1 = ProjectIndex::default();
+        idx1.domain_objects
+            .insert(TargetName::new("py:function:foo"), "a.rst".to_string());
+
+        let mut idx2 = ProjectIndex::default();
+        idx2.domain_objects
+            .insert(TargetName::new("c:function:bar"), "b.rst".to_string());
+
+        // When
+        idx1.merge(idx2);
+
+        // Then
+        assert_eq!(idx1.domain_objects.len(), 2);
+        assert!(
+            idx1.domain_objects
+                .contains_key(&TargetName::new("py:function:foo"))
+        );
+        assert!(
+            idx1.domain_objects
+                .contains_key(&TargetName::new("c:function:bar"))
         );
     }
 

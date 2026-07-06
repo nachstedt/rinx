@@ -1,6 +1,6 @@
 use super::blocks::parse_blocks;
 use super::headings::Adornment;
-use crate::ast::Directive;
+use crate::ast::{Directive, Domain};
 
 pub(super) fn parse_admonition(
     kind: crate::ast::AdmonitionKind,
@@ -8,6 +8,7 @@ pub(super) fn parse_admonition(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
+    default_domain: Domain,
 ) -> Directive {
     let title = if kind == crate::ast::AdmonitionKind::Admonition {
         if argument.is_empty() {
@@ -66,7 +67,7 @@ pub(super) fn parse_admonition(
             .iter()
             .map(String::as_str)
             .collect();
-        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics);
+        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
         Directive::Admonition {
             kind,
@@ -90,6 +91,7 @@ pub(super) fn parse_version_change(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
+    default_domain: Domain,
 ) -> Directive {
     let version = if argument.is_empty() {
         diagnostics.push(format!("'{}' requires a version argument.", kind.as_str()));
@@ -112,7 +114,7 @@ pub(super) fn parse_version_change(
             .collect();
 
         let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
-        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics);
+        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
         Directive::VersionChange {
             kind,
@@ -132,6 +134,7 @@ pub(super) fn parse_seealso(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
+    default_domain: Domain,
 ) -> Directive {
     if let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) {
         let indent = first.chars().take_while(|c| c.is_whitespace()).count();
@@ -147,7 +150,7 @@ pub(super) fn parse_seealso(
             .collect();
 
         let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
-        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics);
+        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
         Directive::SeeAlso { body: body_nodes }
     } else {
@@ -177,6 +180,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
+            Domain::Py,
         );
 
         // Then
@@ -208,6 +212,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
+            Domain::Py,
         );
 
         // Then
@@ -235,6 +240,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
+            Domain::Py,
         );
 
         // Then
@@ -261,6 +267,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
+            Domain::Py,
         );
 
         // Then
@@ -429,7 +436,12 @@ mod tests {
         let mut diagnostics = Vec::new();
 
         // When
-        let directive = parse_seealso(&body_lines, &mut adornment_order, &mut diagnostics);
+        let directive = parse_seealso(
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
 
         // Then
         if let Directive::SeeAlso { body } = directive {

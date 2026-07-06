@@ -1,4 +1,4 @@
-use crate::ast::InlineNode;
+use crate::ast::{Domain, InlineNode, ObjectType};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -8,6 +8,8 @@ static PROGRAM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":program:`(?P<name>[^`]+)`").unwrap());
 static TERM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":term:`(?P<content>[^`]+)`").unwrap());
+static FUNC_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py|c):)?func:`(?P<name>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -20,7 +22,10 @@ static ANONYMOUS_SIMPLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)__").unwrap());
 
 /// Parses a plain text string into a list of [`InlineNode`]s.
-pub(super) fn parse_inline_text(paragraph_text: &str) -> Vec<InlineNode> {
+///
+/// `default_domain` resolves any bare (unprefixed) domain role, e.g. `:func:`,
+/// to a concrete [`Domain`] — mirroring how bare directives are resolved.
+pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) -> Vec<InlineNode> {
     let mut inlines = Vec::new();
     let mut last_match_end = 0;
 
@@ -30,6 +35,7 @@ pub(super) fn parse_inline_text(paragraph_text: &str) -> Vec<InlineNode> {
         let ref_match = REF_REGEX.find(remaining);
         let program_match = PROGRAM_ROLE_REGEX.find(remaining);
         let term_match = TERM_ROLE_REGEX.find(remaining);
+        let func_match = FUNC_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -45,6 +51,9 @@ pub(super) fn parse_inline_text(paragraph_text: &str) -> Vec<InlineNode> {
         }
         if let Some(m) = term_match {
             all_matches.push((m.start(), m.end(), "term", None));
+        }
+        if let Some(m) = func_match {
+            all_matches.push((m.start(), m.end(), "func", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -71,7 +80,7 @@ pub(super) fn parse_inline_text(paragraph_text: &str) -> Vec<InlineNode> {
                 inlines.push(InlineNode::Text(remaining[..start].to_string()));
             }
             let m_str = &remaining[start..end];
-            inlines.push(handle_inline_match(kind, m_str, node_opt));
+            inlines.push(handle_inline_match(kind, m_str, node_opt, default_domain));
             last_match_end += end;
         } else {
             inlines.push(InlineNode::Text(remaining.to_string()));
@@ -85,6 +94,7 @@ pub(super) fn handle_inline_match(
     kind: &str,
     m_str: &str,
     node_opt: Option<InlineNode>,
+    default_domain: Domain,
 ) -> InlineNode {
     match kind {
         "inline" => node_opt.expect("inline node should be present"),
@@ -95,6 +105,18 @@ pub(super) fn handle_inline_match(
         "program" => {
             let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
             InlineNode::Program(caps["name"].to_string())
+        }
+        "func" => {
+            let caps = FUNC_ROLE_REGEX.captures(m_str).unwrap();
+            let domain = caps
+                .name("domain")
+                .and_then(|m| m.as_str().parse::<Domain>().ok())
+                .unwrap_or(default_domain);
+            let name = caps["name"].to_string();
+            // Both domains currently define "func", so this always resolves.
+            let object_type = ObjectType::from_role_name(domain, "func")
+                .expect("every domain defines a 'func' role");
+            InlineNode::DomainObjectReference { object_type, name }
         }
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
@@ -310,26 +332,62 @@ mod tests {
         // Given
         let node = InlineNode::Emphasis("text".to_string());
         // When
-        let result = handle_inline_match("inline", "", Some(node.clone()));
+        let result = handle_inline_match("inline", "", Some(node.clone()), Domain::Py);
         // Then
         assert_eq!(result, node);
     }
 
     #[test]
     fn test_handle_inline_match_ref_variant() {
-        let result = handle_inline_match("ref", ":ref:`target`", None);
+        let result = handle_inline_match("ref", ":ref:`target`", None, Domain::Py);
         assert_eq!(result, InlineNode::Reference("target".to_string()));
     }
 
     #[test]
     fn test_handle_inline_match_program_variant() {
-        let result = handle_inline_match("program", ":program:`curl`", None);
+        let result = handle_inline_match("program", ":program:`curl`", None, Domain::Py);
         assert_eq!(result, InlineNode::Program("curl".to_string()));
     }
 
     #[test]
+    fn test_handle_inline_match_func_variant_bare_uses_default_domain() {
+        let result = handle_inline_match("func", ":func:`foo`", None, Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(crate::ast::CObjectType::Function),
+                name: "foo".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_func_variant_explicit_py_domain() {
+        let result = handle_inline_match("func", ":py:func:`foo`", None, Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(crate::ast::PyObjectType::Function),
+                name: "foo".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_func_variant_explicit_c_domain() {
+        let result = handle_inline_match("func", ":c:func:`add`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(crate::ast::CObjectType::Function),
+                name: "add".to_string(),
+            }
+        );
+    }
+
+    #[test]
     fn test_handle_inline_match_phrased_with_embedded_uri() {
-        let result = handle_inline_match("phrased", "`text <http://uri>`_", None);
+        let result = handle_inline_match("phrased", "`text <http://uri>`_", None, Domain::Py);
         assert_eq!(
             result,
             InlineNode::Hyperlink {
@@ -341,7 +399,7 @@ mod tests {
 
     #[test]
     fn test_handle_inline_match_phrased_without_uri() {
-        let result = handle_inline_match("phrased", "`just text`_", None);
+        let result = handle_inline_match("phrased", "`just text`_", None, Domain::Py);
         assert_eq!(
             result,
             InlineNode::Hyperlink {
@@ -353,7 +411,7 @@ mod tests {
 
     #[test]
     fn test_handle_inline_match_simple_variant() {
-        let result = handle_inline_match("simple", "name_", None);
+        let result = handle_inline_match("simple", "name_", None, Domain::Py);
         assert_eq!(
             result,
             InlineNode::Hyperlink {
@@ -365,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_handle_inline_match_anon_phrased_with_embedded_uri() {
-        let result = handle_inline_match("anon_phrased", "`text <http://uri>`__", None);
+        let result = handle_inline_match("anon_phrased", "`text <http://uri>`__", None, Domain::Py);
         assert_eq!(
             result,
             InlineNode::AnonymousHyperlink {
@@ -377,7 +435,7 @@ mod tests {
 
     #[test]
     fn test_handle_inline_match_anon_phrased_without_uri() {
-        let result = handle_inline_match("anon_phrased", "`anon text`__", None);
+        let result = handle_inline_match("anon_phrased", "`anon text`__", None, Domain::Py);
         assert_eq!(
             result,
             InlineNode::AnonymousReference("anon text".to_string())
@@ -386,7 +444,7 @@ mod tests {
 
     #[test]
     fn test_handle_inline_match_anon_simple_variant() {
-        let result = handle_inline_match("anon_simple", "anon_name__", None);
+        let result = handle_inline_match("anon_simple", "anon_name__", None, Domain::Py);
         assert_eq!(
             result,
             InlineNode::AnonymousReference("anon_name".to_string())
@@ -426,9 +484,9 @@ mod tests {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::ast::InlineNode;
     use crate::ast::Node;
-    use crate::parser::parse;
+    use crate::ast::{CObjectType, Domain, InlineNode, ObjectType, PyObjectType};
+    use crate::parser::{parse, parse_with_domain};
 
     #[test]
     fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
@@ -781,6 +839,76 @@ mod integration_tests {
             assert!(matches!(&inlines[1], InlineNode::TermReference { term, .. } if term == "foo"));
         } else {
             panic!("Expected Paragraph");
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_func_role_resolves_via_default_domain() {
+        // Given
+        let input = "See :func:`greet` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(
+                inlines[1],
+                InlineNode::DomainObjectReference {
+                    object_type: ObjectType::C(CObjectType::Function),
+                    name: "greet".to_string(),
+                }
+            );
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_prefixed_func_role_ignores_default_domain() {
+        // Given
+        let input = "See :py:func:`greet` and :c:func:`add`.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Function),
+                name: "greet".to_string(),
+            }));
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(CObjectType::Function),
+                name: "add".to_string(),
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_mixed_term_and_func_roles_in_one_paragraph() {
+        // Given
+        let input = "The :term:`environment` affects :func:`greet`.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(
+                inlines
+                    .iter()
+                    .any(|n| matches!(n, InlineNode::TermReference { .. }))
+            );
+            assert!(
+                inlines
+                    .iter()
+                    .any(|n| matches!(n, InlineNode::DomainObjectReference { .. }))
+            );
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
         }
     }
 }
