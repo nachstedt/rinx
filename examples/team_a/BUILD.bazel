@@ -6,5 +6,6 @@ rusty_sphinx_library(
     name = "docs",
     srcs = glob(["*.rst"]),
     deps = [],
+    default_domain = "c",
     visibility = ["//visibility:public"],
 )

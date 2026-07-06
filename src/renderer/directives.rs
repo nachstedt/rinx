@@ -98,6 +98,34 @@ pub(super) fn render_seealso(html: &mut String, body: &[Node], ctx: &mut RenderC
     let _ = writeln!(html, "</div>");
 }
 
+/// Renders a domain object directive (e.g. `.. py:function::`, `.. c:function::`)
+/// as a Sphinx-style object description (`<dl class="{domain} {objtype}">`),
+/// using the same qualified key as the analyzer for the anchor `id`.
+pub(super) fn render_domain_object(
+    html: &mut String,
+    object_type: crate::ast::ObjectType,
+    signature: &str,
+    body: &[Node],
+    ctx: &mut RenderCtx<'_>,
+) {
+    let name = crate::ast::extract_object_name(signature);
+    let key = crate::ast::build_domain_object_key(object_type, &name);
+    let domain_str = object_type.domain().as_str();
+    let objtype_str = object_type.as_str();
+    let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
+    let sig_escaped = html_escape::encode_text(signature);
+
+    let _ = writeln!(html, "<dl class=\"{domain_str} {objtype_str}\">");
+    let _ = writeln!(
+        html,
+        "  <dt id=\"{id_attr}\"><code class=\"sig-name\">{sig_escaped}</code></dt>"
+    );
+    let _ = write!(html, "  <dd>");
+    super::render_nodes(html, body, ctx);
+    let _ = writeln!(html, "</dd>");
+    let _ = writeln!(html, "</dl>");
+}
+
 /// Renders a `glossary` directive as a definition list (`<dl>`).
 pub(super) fn render_glossary(
     html: &mut String,
@@ -558,6 +586,80 @@ mod tests {
         // Then
         assert!(result.contains("class=\"broken-link\""));
         assert!(result.contains(">unknown<"));
+    }
+
+    #[test]
+    fn test_render_formats_py_function_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject {
+                object_type: crate::ast::ObjectType::Py(crate::ast::PyObjectType::Function),
+                signature: "greet(name)".to_string(),
+                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                    "Greets the given name.".to_string(),
+                )])],
+            })],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"py function\">"));
+        assert!(result.contains("<dt id=\"py:function:greet\">"));
+        assert!(result.contains("<code class=\"sig-name\">greet(name)</code>"));
+        assert!(result.contains("<p>Greets the given name.</p>"));
+    }
+
+    #[test]
+    fn test_render_formats_c_function_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject {
+                object_type: crate::ast::ObjectType::C(crate::ast::CObjectType::Function),
+                signature: "int add(int a, int b)".to_string(),
+                body: vec![Node::Paragraph(vec![InlineNode::Text(
+                    "Adds two numbers.".to_string(),
+                )])],
+            })],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"c function\">"));
+        assert!(result.contains("<dt id=\"c:function:add\">"));
+        assert!(result.contains("<code class=\"sig-name\">int add(int a, int b)</code>"));
+    }
+
+    #[test]
+    fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
+        // Given — regression test for the collect_anonymous_targets catch-all:
+        // an anonymous reference nested inside a DomainObject body must still resolve.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject {
+                    object_type: crate::ast::ObjectType::Py(crate::ast::PyObjectType::Function),
+                    signature: "greet(name)".to_string(),
+                    body: vec![Node::Paragraph(vec![InlineNode::AnonymousReference(
+                        "See more".to_string(),
+                    )])],
+                }),
+                Node::AnonymousTarget {
+                    uri: "https://example.com".to_string(),
+                },
+            ],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<a href=\"https://example.com\">See more</a>"));
     }
 
     #[test]

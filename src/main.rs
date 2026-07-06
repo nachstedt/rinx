@@ -6,7 +6,7 @@
 //! # Subcommands (Bazel phases)
 //!
 //! ```text
-//! rusty-sphinx parse  --input <file.rst>  --output <file.ast>
+//! rusty-sphinx parse  --input <file.rst>  --output <file.ast>  [--default-domain <py|c>]
 //! rusty-sphinx validate_toctree --input <file.ast>  [--allowed <path>...]
 //! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
 //! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html>
@@ -75,9 +75,21 @@ fn flag_values_opt(args: &[String], flag: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn process_parse(path: &str, rst_content: &str) -> Result<String> {
-    let doc = parser::parse(path, rst_content);
+fn process_parse(path: &str, rst_content: &str, default_domain: ast::Domain) -> Result<String> {
+    let doc = parser::parse_with_domain(path, rst_content, default_domain);
     serde_json::to_string(&doc).context("Serialization error")
+}
+
+/// Parses the optional `--default-domain` flag, defaulting to `py` — this is
+/// how `rusty_sphinx_library`'s Bazel attribute reaches the `parse`/`preview`
+/// subcommands (see `rules/library.bzl`).
+fn parse_default_domain_flag(args: &[String]) -> Result<ast::Domain> {
+    match flag_value_opt(args, "--default-domain") {
+        Some(s) => s
+            .parse::<ast::Domain>()
+            .map_err(|()| anyhow!("Invalid --default-domain '{s}', expected 'py' or 'c'")),
+        None => Ok(ast::Domain::Py),
+    }
 }
 
 fn process_index(ast_jsons: &[String]) -> Result<String> {
@@ -96,8 +108,9 @@ fn process_preview(
     config: &config::SiteConfig,
     template_str: &str,
     doc_path: &str,
+    default_domain: ast::Domain,
 ) -> Result<String> {
-    let doc = parser::parse(doc_path, rst);
+    let doc = parser::parse_with_domain(doc_path, rst, default_domain);
     let mut index = if let Some(json) = index_json {
         serde_json::from_str(json).context("Failed to deserialize global index")?
     } else {
@@ -230,9 +243,10 @@ fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Result<()> {
 fn cmd_parse(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let output = flag_value(args, "--output")?;
+    let default_domain = parse_default_domain_flag(args)?;
 
     let rst = fs::read_to_string(&input).with_context(|| format!("Error reading '{input}'"))?;
-    let json = process_parse(&input, &rst)?;
+    let json = process_parse(&input, &rst, default_domain)?;
     fs::write(&output, json).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
@@ -333,6 +347,7 @@ fn cmd_preview(args: &[String]) -> Result<()> {
     let doc_path = flag_value(args, "--doc-path")?;
     let config_path = flag_value(args, "--config")?;
     let template_path = flag_value(args, "--template")?;
+    let default_domain = parse_default_domain_flag(args)?;
 
     // Read RST from stdin
     let mut rst = String::new();
@@ -360,6 +375,7 @@ fn cmd_preview(args: &[String]) -> Result<()> {
         &site_config,
         &template_str,
         &doc_path,
+        default_domain,
     )?;
 
     println!("{html}");
@@ -390,12 +406,12 @@ fn run(args: &[String]) -> Result<()> {
             let msg = format!(
                 "Usage:\n\
                    {program} <file.rst>                                   (legacy preview)\n\
-                   {program} parse  --input <file.rst> --output <file.ast>\n\
+                   {program} parse  --input <file.rst> --output <file.ast> [--default-domain <py|c>]\n\
                    {program} extract_diagrams --input <file.ast> --outdir <puml_dir>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
                    {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html>\n\
-                   {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>]\n\
+                   {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
                    {program} validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>"
             );
             Err(anyhow!(msg))
@@ -644,11 +660,65 @@ mod tests {
         let rst = "Title\n=====";
 
         // When
-        let json = process_parse("team_a/index.rst", rst).unwrap();
+        let json = process_parse("team_a/index.rst", rst, ast::Domain::Py).unwrap();
 
         // Then
         assert!(json.contains("Title"));
         assert!(json.contains(r#""path":"team_a/index.rst""#));
+    }
+
+    #[test]
+    fn test_process_parse_resolves_bare_directive_via_default_domain() {
+        // Given
+        let rst = ".. function:: greet(name)\n\n   Greets the given name.";
+
+        // When
+        let json = process_parse("api.rst", rst, ast::Domain::C).unwrap();
+
+        // Then
+        assert!(json.contains(r#""c":"function""#));
+    }
+
+    #[test]
+    fn test_parse_default_domain_flag_defaults_to_py_when_absent() {
+        // Given
+        let args: Vec<String> = vec![];
+
+        // When
+        let result = parse_default_domain_flag(&args).unwrap();
+
+        // Then
+        assert_eq!(result, ast::Domain::Py);
+    }
+
+    #[test]
+    fn test_parse_default_domain_flag_parses_explicit_c() {
+        // Given
+        let args = vec!["--default-domain".to_string(), "c".to_string()];
+
+        // When
+        let result = parse_default_domain_flag(&args).unwrap();
+
+        // Then
+        assert_eq!(result, ast::Domain::C);
+    }
+
+    #[test]
+    fn test_parse_default_domain_flag_rejects_invalid_value() {
+        // Given
+        let args = vec!["--default-domain".to_string(), "rust".to_string()];
+
+        // When
+        let result = parse_default_domain_flag(&args);
+
+        // Then
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid --default-domain")
+        );
     }
 
     #[test]
@@ -664,7 +734,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}],"glossary_terms":{}}"#
+            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}],"glossary_terms":{},"domain_objects":{}}"#
         );
     }
 
@@ -693,7 +763,15 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let html = process_preview(rst, Some(global_index), &config, template, "test.rst").unwrap();
+        let html = process_preview(
+            rst,
+            Some(global_index),
+            &config,
+            template,
+            "test.rst",
+            ast::Domain::Py,
+        )
+        .unwrap();
 
         // Then
         assert!(html.contains("<h1>Section A</h1>"));
@@ -709,7 +787,8 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let html = process_preview(rst, None, &config, template, "test.rst").unwrap();
+        let html =
+            process_preview(rst, None, &config, template, "test.rst", ast::Domain::Py).unwrap();
 
         // Then
         assert!(html.contains("<h1>Section A</h1>"));

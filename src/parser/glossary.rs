@@ -2,13 +2,14 @@
 
 use super::blocks::parse_blocks;
 use super::headings::Adornment;
-use crate::ast::Directive;
+use crate::ast::{Directive, Domain};
 
 /// Parses a `.. glossary::` directive body into a `Directive::Glossary` node.
 pub(super) fn parse_glossary(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
+    default_domain: Domain,
 ) -> Directive {
     // Determine the base indentation of the body (first non-blank line).
     let Some(first_non_blank) = body_lines.iter().find(|l| !l.trim().is_empty()) else {
@@ -87,7 +88,8 @@ pub(super) fn parse_glossary(
                 // Flush the completed entry.
                 let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
                 let mut dummy_adorn = adornment_order.clone();
-                let def_nodes = parse_blocks(&def_strs, &mut dummy_adorn, diagnostics);
+                let def_nodes =
+                    parse_blocks(&def_strs, &mut dummy_adorn, diagnostics, default_domain);
                 entries.push(crate::ast::GlossaryEntry {
                     terms: std::mem::take(&mut current_terms),
                     definition: def_nodes,
@@ -102,7 +104,7 @@ pub(super) fn parse_glossary(
     // Flush any remaining entry.
     if !current_terms.is_empty() {
         let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
-        let def_nodes = parse_blocks(&def_strs, adornment_order, diagnostics);
+        let def_nodes = parse_blocks(&def_strs, adornment_order, diagnostics, default_domain);
         entries.push(crate::ast::GlossaryEntry {
             terms: current_terms,
             definition: def_nodes,

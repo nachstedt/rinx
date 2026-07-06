@@ -9,7 +9,9 @@ pub use page::{css_relative_path, render_page};
 
 use crate::analyzer::ProjectIndex;
 use crate::ast::{Directive, Document, Node};
-use directives::{render_admonition, render_glossary, render_seealso, render_version_change};
+use directives::{
+    render_admonition, render_domain_object, render_glossary, render_seealso, render_version_change,
+};
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use std::fmt::Write as _;
@@ -53,7 +55,8 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
-                | Directive::SeeAlso { body },
+                | Directive::SeeAlso { body }
+                | Directive::DomainObject { body, .. },
             ) => {
                 collect_anonymous_targets(body, targets);
             }
@@ -166,6 +169,11 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         } => render_version_change(html, *kind, version, body, ctx),
         Directive::SeeAlso { body } => render_seealso(html, body, ctx),
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
+        Directive::DomainObject {
+            object_type,
+            signature,
+            body,
+        } => render_domain_object(html, *object_type, signature, body, ctx),
         Directive::Unknown { .. } => {}
     }
 }

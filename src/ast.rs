@@ -187,6 +187,184 @@ impl std::fmt::Display for VersionChangeKind {
     }
 }
 
+/// A Sphinx-style documentation domain (e.g. `py`, `c`).
+///
+/// Domains namespace directives and cross-reference roles so the same
+/// object-type name (e.g. `function`) can mean different things in
+/// different languages.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Domain {
+    Py,
+    C,
+}
+
+impl Domain {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Py => "py",
+            Self::C => "c",
+        }
+    }
+}
+
+impl std::str::FromStr for Domain {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "py" => Ok(Self::Py),
+            "c" => Ok(Self::C),
+            _ => Err(()),
+        }
+    }
+}
+
+impl std::fmt::Display for Domain {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
+
+/// Object types defined by the `py` domain.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PyObjectType {
+    Function,
+}
+
+impl PyObjectType {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Function => "function",
+        }
+    }
+}
+
+impl std::str::FromStr for PyObjectType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "function" => Ok(Self::Function),
+            _ => Err(()),
+        }
+    }
+}
+
+/// Object types defined by the `c` domain.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CObjectType {
+    Function,
+}
+
+impl CObjectType {
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Function => "function",
+        }
+    }
+}
+
+impl std::str::FromStr for CObjectType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "function" => Ok(Self::Function),
+            _ => Err(()),
+        }
+    }
+}
+
+/// A domain together with one of its object types.
+///
+/// Each domain owns an independent object-type vocabulary (a `PyObjectType`
+/// can never be mistaken for a `CObjectType`), and the domain is always
+/// recoverable from the value itself via [`ObjectType::domain`] — there is
+/// no separate `domain` field that could drift out of sync with the object
+/// type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ObjectType {
+    Py(PyObjectType),
+    C(CObjectType),
+}
+
+impl ObjectType {
+    #[must_use]
+    pub const fn domain(&self) -> Domain {
+        match self {
+            Self::Py(_) => Domain::Py,
+            Self::C(_) => Domain::C,
+        }
+    }
+
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Py(t) => t.as_str(),
+            Self::C(t) => t.as_str(),
+        }
+    }
+
+    /// Parses a directive-style object-type name (e.g. `"function"` from
+    /// `.. py:function::`) within a known domain.
+    #[must_use]
+    pub fn from_directive_name(domain: Domain, name: &str) -> Option<Self> {
+        match domain {
+            Domain::Py => name.parse::<PyObjectType>().ok().map(Self::Py),
+            Domain::C => name.parse::<CObjectType>().ok().map(Self::C),
+        }
+    }
+
+    /// Parses a role-style abbreviation (e.g. `"func"` from `:func:`) within
+    /// a known domain. Roles use different (often abbreviated) names than
+    /// their directive counterparts, matching real Sphinx.
+    #[must_use]
+    pub fn from_role_name(domain: Domain, role: &str) -> Option<Self> {
+        match (domain, role) {
+            (Domain::Py, "func") => Some(Self::Py(PyObjectType::Function)),
+            (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
+            _ => None,
+        }
+    }
+}
+
+/// Extracts the referenceable name from a domain object signature.
+///
+/// Takes the text before the first `(` (or the whole string if there is
+/// none), then its last whitespace-separated token — e.g. `"foo(bar)"` ->
+/// `"foo"`, `"int foo(int bar)"` -> `"foo"`. A pointer return type like
+/// `"char *foo(void)"` naively yields `"*foo"`, since real C declarator
+/// parsing is out of scope (tracked in `spec_gaps.md`).
+#[must_use]
+pub fn extract_object_name(signature: &str) -> String {
+    let before_parens = signature.split('(').next().unwrap_or(signature).trim();
+    before_parens
+        .split_whitespace()
+        .next_back()
+        .unwrap_or(before_parens)
+        .to_string()
+}
+
+/// Builds the qualified [`TargetName`] key shared by domain object
+/// registration (analyzer) and cross-reference resolution (renderer), so
+/// both always agree on the key for the same object.
+#[must_use]
+pub fn build_domain_object_key(object_type: ObjectType, name: &str) -> TargetName {
+    TargetName::new(&format!(
+        "{}:{}:{}",
+        object_type.domain().as_str(),
+        object_type.as_str(),
+        name
+    ))
+}
+
 /// A single entry in a `.. glossary::` directive.
 ///
 /// Each entry groups one or more terms (all sharing the same definition)
@@ -247,6 +425,11 @@ pub enum Directive {
         entries: Vec<GlossaryEntry>,
         sorted: bool,
     },
+    DomainObject {
+        object_type: ObjectType,
+        signature: String,
+        body: Vec<Node>,
+    },
     Unknown {
         name: String,
         argument: String,
@@ -280,6 +463,17 @@ pub enum InlineNode {
     TermReference {
         display: String,
         term: String,
+    },
+    /// An inline cross-reference produced by a domain role (e.g. `:func:`,
+    /// `:py:func:`, `:c:func:`), linking to a `Directive::DomainObject`.
+    ///
+    /// `object_type` is always concrete by the time this node exists — the
+    /// parser resolves a bare (unprefixed) role via the file's default
+    /// domain immediately, mirroring how `Directive::DomainObject` is
+    /// resolved.
+    DomainObjectReference {
+        object_type: ObjectType,
+        name: String,
     },
 }
 
@@ -644,5 +838,327 @@ mod tests {
         } else {
             panic!("Expected TermReference");
         }
+    }
+
+    #[test]
+    fn test_domain_from_str_accepts_known_domains() {
+        // Given / When / Then
+        assert_eq!("py".parse::<Domain>(), Ok(Domain::Py));
+        assert_eq!("c".parse::<Domain>(), Ok(Domain::C));
+    }
+
+    #[test]
+    fn test_domain_from_str_rejects_unknown_domain() {
+        // Given
+        let input = "rust";
+
+        // When
+        let result = input.parse::<Domain>();
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_domain_as_str_and_display_round_trip() {
+        // Given
+        let domain = Domain::C;
+
+        // When
+        let s = domain.as_str();
+        let displayed = domain.to_string();
+
+        // Then
+        assert_eq!(s, "c");
+        assert_eq!(displayed, "c");
+        assert_eq!(s.parse::<Domain>().unwrap(), domain);
+    }
+
+    #[test]
+    fn test_domain_serialization_roundtrip() {
+        // Given
+        let domain = Domain::Py;
+
+        // When
+        let json = serde_json::to_string(&domain).expect("Failed to serialize");
+        let deserialized: Domain = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(json, "\"py\"");
+        assert_eq!(domain, deserialized);
+    }
+
+    #[test]
+    fn test_py_object_type_from_str_accepts_function() {
+        // Given / When / Then
+        assert_eq!(
+            "function".parse::<PyObjectType>(),
+            Ok(PyObjectType::Function)
+        );
+    }
+
+    #[test]
+    fn test_py_object_type_from_str_rejects_unknown() {
+        // Given
+        let input = "class";
+
+        // When
+        let result = input.parse::<PyObjectType>();
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_c_object_type_from_str_accepts_function() {
+        // Given / When / Then
+        assert_eq!("function".parse::<CObjectType>(), Ok(CObjectType::Function));
+    }
+
+    #[test]
+    fn test_c_object_type_from_str_rejects_unknown() {
+        // Given
+        let input = "struct";
+
+        // When
+        let result = input.parse::<CObjectType>();
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_object_type_domain_recovers_originating_domain() {
+        // Given
+        let py_type = ObjectType::Py(PyObjectType::Function);
+        let c_type = ObjectType::C(CObjectType::Function);
+
+        // When / Then
+        assert_eq!(py_type.domain(), Domain::Py);
+        assert_eq!(c_type.domain(), Domain::C);
+    }
+
+    #[test]
+    fn test_object_type_as_str_returns_object_type_name() {
+        // Given
+        let object_type = ObjectType::Py(PyObjectType::Function);
+
+        // When
+        let s = object_type.as_str();
+
+        // Then
+        assert_eq!(s, "function");
+    }
+
+    #[test]
+    fn test_object_type_from_directive_name_resolves_per_domain() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_directive_name(Domain::Py, "function"),
+            Some(ObjectType::Py(PyObjectType::Function))
+        );
+        assert_eq!(
+            ObjectType::from_directive_name(Domain::C, "function"),
+            Some(ObjectType::C(CObjectType::Function))
+        );
+    }
+
+    #[test]
+    fn test_object_type_from_directive_name_rejects_unknown_object_type() {
+        // Given
+        let domain = Domain::Py;
+        let name = "class";
+
+        // When
+        let result = ObjectType::from_directive_name(domain, name);
+
+        // Then
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_per_domain() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Py, "func"),
+            Some(ObjectType::Py(PyObjectType::Function))
+        );
+        assert_eq!(
+            ObjectType::from_role_name(Domain::C, "func"),
+            Some(ObjectType::C(CObjectType::Function))
+        );
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_rejects_unknown_role() {
+        // Given
+        let domain = Domain::Py;
+        let role = "meth";
+
+        // When
+        let result = ObjectType::from_role_name(domain, role);
+
+        // Then
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_object_type_serialization_roundtrip() {
+        // Given
+        let object_type = ObjectType::C(CObjectType::Function);
+
+        // When
+        let json = serde_json::to_string(&object_type).expect("Failed to serialize");
+        let deserialized: ObjectType = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(object_type, deserialized);
+    }
+
+    #[test]
+    fn test_extract_object_name_simple_call() {
+        // Given
+        let signature = "foo(bar)";
+
+        // When
+        let name = extract_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_object_name_no_parens() {
+        // Given
+        let signature = "foo";
+
+        // When
+        let name = extract_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_object_name_no_args() {
+        // Given
+        let signature = "foo()";
+
+        // When
+        let name = extract_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_object_name_c_style_return_type_prefix() {
+        // Given
+        let signature = "int foo(int bar)";
+
+        // When
+        let name = extract_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_object_name_extra_whitespace() {
+        // Given
+        let signature = "  foo   (bar)";
+
+        // When
+        let name = extract_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_object_name_empty_string() {
+        // Given
+        let signature = "";
+
+        // When
+        let name = extract_object_name(signature);
+
+        // Then
+        assert_eq!(name, "");
+    }
+
+    #[test]
+    fn test_extract_object_name_pointer_return_type_is_naive() {
+        // Given — documented limitation: no real C declarator parsing
+        let signature = "char *foo(void)";
+
+        // When
+        let name = extract_object_name(signature);
+
+        // Then
+        assert_eq!(name, "*foo");
+    }
+
+    #[test]
+    fn test_build_domain_object_key_produces_expected_format() {
+        // Given
+        let object_type = ObjectType::Py(PyObjectType::Function);
+        let name = "foo";
+
+        // When
+        let key = build_domain_object_key(object_type, name);
+
+        // Then
+        assert_eq!(key.as_str(), "py:function:foo");
+    }
+
+    #[test]
+    fn test_build_domain_object_key_distinguishes_domains() {
+        // Given
+        let py_type = ObjectType::Py(PyObjectType::Function);
+        let c_type = ObjectType::C(CObjectType::Function);
+        let name = "foo";
+
+        // When
+        let py_key = build_domain_object_key(py_type, name);
+        let c_key = build_domain_object_key(c_type, name);
+
+        // Then
+        assert_ne!(py_key, c_key);
+    }
+
+    #[test]
+    fn test_domain_object_reference_serialization_roundtrip() {
+        // Given
+        let node = InlineNode::DomainObjectReference {
+            object_type: ObjectType::Py(PyObjectType::Function),
+            name: "foo".to_string(),
+        };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_domain_object_directive_serialization_roundtrip() {
+        // Given
+        let directive = Directive::DomainObject {
+            object_type: ObjectType::C(CObjectType::Function),
+            signature: "int add(int a, int b)".to_string(),
+            body: vec![Node::Paragraph(vec![InlineNode::Text(
+                "Adds two numbers.".to_string(),
+            )])],
+        };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
     }
 }

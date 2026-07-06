@@ -1,8 +1,9 @@
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::blocks::{collect_directive_body, join_body_lines};
+use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
 use super::headings::Adornment;
-use crate::ast::{Directive, Node};
+use crate::ast::{Directive, Domain, Node, ObjectType};
 
 pub(super) fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
     let mut paths = Vec::new();
@@ -50,6 +51,7 @@ pub(super) fn try_parse_directive(
     i: usize,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
+    default_domain: Domain,
 ) -> Option<(usize, Node)> {
     let line = lines[i].trim_end();
     if !(line.trim().starts_with(".. ") && line.contains("::")) {
@@ -100,20 +102,44 @@ pub(super) fn try_parse_directive(
         return Some((1 + consumed_lines, Node::LiteralBlock { language, content }));
     }
     if let Ok(kind) = name.parse::<crate::ast::VersionChangeKind>() {
-        let directive =
-            parse_version_change(kind, argument, &body_lines, adornment_order, diagnostics);
+        let directive = parse_version_change(
+            kind,
+            argument,
+            &body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        );
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if name == "seealso" {
-        let directive = parse_seealso(&body_lines, adornment_order, diagnostics);
+        let directive = parse_seealso(&body_lines, adornment_order, diagnostics, default_domain);
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if let Ok(kind) = name.parse::<crate::ast::AdmonitionKind>() {
-        let directive = parse_admonition(kind, argument, &body_lines, adornment_order, diagnostics);
+        let directive = parse_admonition(
+            kind,
+            argument,
+            &body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        );
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if name == "glossary" {
-        let directive = parse_glossary(&body_lines, adornment_order, diagnostics);
+        let directive = parse_glossary(&body_lines, adornment_order, diagnostics, default_domain);
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
+    if let Some(object_type) = resolve_domain_object_type(&name, default_domain) {
+        let directive = parse_domain_object(
+            object_type,
+            argument,
+            &body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        );
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     let directive = Directive::Unknown {
@@ -122,6 +148,17 @@ pub(super) fn try_parse_directive(
         body: join_body_lines(&body_lines),
     };
     Some((1 + consumed_lines, Node::Directive(directive)))
+}
+
+/// Resolves a directive name to a domain object type: either an explicit
+/// `domain:objtype` form (e.g. `py:function`), or a bare `objtype` name
+/// (e.g. `function`) resolved via `default_domain`.
+fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<ObjectType> {
+    if let Some((domain_str, objtype_str)) = name.split_once(':') {
+        let domain = domain_str.parse::<Domain>().ok()?;
+        return ObjectType::from_directive_name(domain, objtype_str);
+    }
+    ObjectType::from_directive_name(default_domain, name)
 }
 
 #[cfg(test)]
@@ -494,5 +531,59 @@ mod tests {
         } else {
             panic!("Expected LiteralBlock, got {:?}", doc.nodes[0]);
         }
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_explicit_prefix_ignores_default_domain() {
+        // Given
+        let name = "c:function";
+
+        // When
+        let result = resolve_domain_object_type(name, crate::ast::Domain::Py);
+
+        // Then
+        assert_eq!(
+            result,
+            Some(crate::ast::ObjectType::C(crate::ast::CObjectType::Function))
+        );
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_name_uses_default_domain() {
+        // Given
+        let name = "function";
+
+        // When
+        let result = resolve_domain_object_type(name, crate::ast::Domain::C);
+
+        // Then
+        assert_eq!(
+            result,
+            Some(crate::ast::ObjectType::C(crate::ast::CObjectType::Function))
+        );
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_rejects_unknown_domain_prefix() {
+        // Given
+        let name = "rust:function";
+
+        // When
+        let result = resolve_domain_object_type(name, crate::ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_rejects_unknown_object_type() {
+        // Given
+        let name = "py:class";
+
+        // When
+        let result = resolve_domain_object_type(name, crate::ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, None);
     }
 }
