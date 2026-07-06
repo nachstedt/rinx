@@ -1,6 +1,6 @@
-use crate::ast::{Directive, Document, Node};
-use crate::utils::normalize_path;
 use anyhow::{Result, anyhow};
+use rusty_sphinx_analyzer::normalize_path;
+use rusty_sphinx_ast::{Directive, Document, Node};
 use std::collections::HashSet;
 use std::path::Path;
 

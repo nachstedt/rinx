@@ -3,21 +3,15 @@
 //! This module provides the foundational pieces for building a high-performance,
 //! Bazel-compatible re-implementation of the Sphinx documentation framework.
 
-pub mod analyzer;
-pub mod ast;
-pub mod config;
-pub mod parser;
-pub mod renderer;
-pub mod utils;
 pub mod validator;
 
 /// Processes an RST text block through the full pipeline (parse, analyze, render)
 /// and outputs an HTML string.
 #[must_use]
 pub fn process_rst(path: &str, input: &str) -> String {
-    let doc = parser::parse(path, input);
-    let index = analyzer::analyze(&doc);
-    renderer::render(&doc, &index, path)
+    let doc = rusty_sphinx_parser::parse(path, input);
+    let index = rusty_sphinx_analyzer::analyze(&doc);
+    rusty_sphinx_renderer::render(&doc, &index, path)
 }
 
 #[cfg(test)]

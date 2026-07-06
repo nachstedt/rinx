@@ -1,56 +1,56 @@
 //! Inline node rendering helpers.
 
-use crate::analyzer::{ProjectIndex, TargetLocation};
-use crate::ast::{ObjectType, TargetName};
+use rusty_sphinx_analyzer::{ProjectIndex, TargetLocation};
+use rusty_sphinx_ast::{ObjectType, TargetName};
 use std::fmt::Write as _;
 
 /// Renders a single inline node into `html`.
 pub(super) fn render_inline(
     html: &mut String,
-    inline: &crate::ast::InlineNode,
+    inline: &rusty_sphinx_ast::InlineNode,
     index: &ProjectIndex,
     doc_path: &str,
     anon_targets: &[String],
     anon_index: &mut usize,
 ) {
     match inline {
-        crate::ast::InlineNode::Text(text) => {
+        rusty_sphinx_ast::InlineNode::Text(text) => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
         }
-        crate::ast::InlineNode::Reference(target) => {
+        rusty_sphinx_ast::InlineNode::Reference(target) => {
             render_inline_reference(html, target, index, doc_path);
         }
-        crate::ast::InlineNode::Hyperlink { text, target } => {
+        rusty_sphinx_ast::InlineNode::Hyperlink { text, target } => {
             render_inline_hyperlink(html, text, target, index, doc_path);
         }
-        crate::ast::InlineNode::AnonymousReference(text) => {
+        rusty_sphinx_ast::InlineNode::AnonymousReference(text) => {
             render_inline_anonymous_reference(html, text, anon_targets, anon_index);
         }
-        crate::ast::InlineNode::AnonymousHyperlink { text, target } => {
+        rusty_sphinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
             let text_escaped = html_escape::encode_text(text);
             let target_attr = html_escape::encode_double_quoted_attribute(target);
             let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
         }
-        crate::ast::InlineNode::Emphasis(text) => {
+        rusty_sphinx_ast::InlineNode::Emphasis(text) => {
             let _ = write!(html, "<em>{}</em>", html_escape::encode_text(text));
         }
-        crate::ast::InlineNode::Strong(text) => {
+        rusty_sphinx_ast::InlineNode::Strong(text) => {
             let _ = write!(html, "<strong>{}</strong>", html_escape::encode_text(text));
         }
-        crate::ast::InlineNode::Literal(text) => {
+        rusty_sphinx_ast::InlineNode::Literal(text) => {
             let _ = write!(html, "<code>{}</code>", html_escape::encode_text(text));
         }
-        crate::ast::InlineNode::Program(text) => {
+        rusty_sphinx_ast::InlineNode::Program(text) => {
             let _ = write!(
                 html,
                 "<strong class=\"program\">{}</strong>",
                 html_escape::encode_text(text)
             );
         }
-        crate::ast::InlineNode::TermReference { display, term } => {
+        rusty_sphinx_ast::InlineNode::TermReference { display, term } => {
             render_inline_term_reference(html, display, term, index, doc_path);
         }
-        crate::ast::InlineNode::DomainObjectReference { object_type, name } => {
+        rusty_sphinx_ast::InlineNode::DomainObjectReference { object_type, name } => {
             render_inline_domain_object_reference(html, *object_type, name, index, doc_path);
         }
     }
@@ -164,7 +164,7 @@ pub(super) fn render_inline_term_reference(
     doc_path: &str,
 ) {
     let display_escaped = html_escape::encode_text(display);
-    let term_name = crate::ast::TargetName::new(term);
+    let term_name = rusty_sphinx_ast::TargetName::new(term);
     if let Some(glossary_doc_path) = index.glossary_terms.get(&term_name) {
         let current_dir = std::path::Path::new(doc_path)
             .parent()
@@ -172,7 +172,7 @@ pub(super) fn render_inline_term_reference(
         let target_html_path = std::path::Path::new(glossary_doc_path).with_extension("html");
         let relative_path =
             pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
-        let anchor = crate::ast::term_id(term);
+        let anchor = rusty_sphinx_ast::term_id(term);
         let href = format!("{}#{}", relative_path.display(), anchor);
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
         let _ = write!(
@@ -200,7 +200,7 @@ pub(super) fn render_inline_domain_object_reference(
     let name_escaped = html_escape::encode_text(name);
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
-    let key = crate::ast::build_domain_object_key(object_type, name);
+    let key = rusty_sphinx_ast::build_domain_object_key(object_type, name);
     if let Some(target_doc_path) = index.domain_objects.get(&key) {
         let current_dir = std::path::Path::new(doc_path)
             .parent()
@@ -225,8 +225,8 @@ pub(super) fn render_inline_domain_object_reference(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::analyzer::ProjectIndex;
-    use crate::ast::TargetName;
+    use rusty_sphinx_analyzer::ProjectIndex;
+    use rusty_sphinx_ast::TargetName;
 
     #[test]
     fn test_render_inline_reference_resolved_internal_target() {
@@ -491,8 +491,8 @@ mod tests {
         // Given
         let mut index = ProjectIndex::default();
         index.domain_objects.insert(
-            crate::ast::build_domain_object_key(
-                ObjectType::Py(crate::ast::PyObjectType::Function),
+            rusty_sphinx_ast::build_domain_object_key(
+                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
                 "greet",
             ),
             "api.rst".to_string(),
@@ -502,7 +502,7 @@ mod tests {
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(crate::ast::PyObjectType::Function),
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
             "greet",
             &index,
             "doc.rst",
@@ -520,8 +520,8 @@ mod tests {
         // Given
         let mut index = ProjectIndex::default();
         index.domain_objects.insert(
-            crate::ast::build_domain_object_key(
-                ObjectType::C(crate::ast::CObjectType::Function),
+            rusty_sphinx_ast::build_domain_object_key(
+                ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
                 "add",
             ),
             "api.rst".to_string(),
@@ -531,7 +531,7 @@ mod tests {
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::C(crate::ast::CObjectType::Function),
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
             "add",
             &index,
             "doc.rst",
@@ -551,7 +551,7 @@ mod tests {
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(crate::ast::PyObjectType::Function),
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
             "missing",
             &index,
             "doc.rst",
@@ -567,8 +567,8 @@ mod tests {
         // Given — document is nested, object defined at root
         let mut index = ProjectIndex::default();
         index.domain_objects.insert(
-            crate::ast::build_domain_object_key(
-                ObjectType::Py(crate::ast::PyObjectType::Function),
+            rusty_sphinx_ast::build_domain_object_key(
+                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
                 "greet",
             ),
             "api.rst".to_string(),
@@ -578,7 +578,7 @@ mod tests {
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(crate::ast::PyObjectType::Function),
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
             "greet",
             &index,
             "guide/intro.rst",

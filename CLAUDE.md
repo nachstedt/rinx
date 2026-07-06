@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `rusty-sphinx` is a Rust re-implementation of (a subset of) the Sphinx documentation generator, designed to be fast and to integrate natively with Bazel as a first-class, cache-friendly build step (not a wrapped external tool). It parses reStructuredText (`.rst`) into HTML documentation sites, with cross-file references, toctree-based navigation, and PlantUML diagram rendering.
 
-Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. Note `architecture.md` describes a future multi-crate split (`rusty_sphinx_parser`, `rusty_sphinx_ast`, etc.); the current implementation is a single crate (`src/`) with modules of the same names — treat the multi-crate framing as directional, not current state.
+Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`), matching architecture.md's crate split; the `rusty_sphinx_lsp` crate it also describes is not yet built.
 
 ## Commands
 
@@ -14,10 +14,10 @@ Development uses plain Cargo; the Bazel build is the production/integration path
 
 ```bash
 cargo build
-cargo test                       # unit tests (co-located #[cfg(test)] modules) + tests/integration_test.rs
+cargo test --workspace            # unit tests (co-located #[cfg(test)] modules) + crates/worker/tests/integration_test.rs
 cargo test <substring>           # run a single test by name substring
 cargo test --test integration_test
-cargo clippy --tests             # must be warning-free before finishing any change (pedantic lints are on, see Cargo.toml)
+cargo clippy --workspace --tests  # must be warning-free before finishing any change (pedantic lints are on, see workspace Cargo.toml)
 cargo fmt
 
 bazel build //:rusty_sphinx_worker    # build the CLI binary via Bazel
@@ -29,13 +29,13 @@ bazel run //scripts:benchmark         # clone CPython docs and benchmark the pip
 
 There are no `rust_test` Bazel targets — tests are run through Cargo only.
 
-After any code change: run `cargo clippy --tests` (fix all warnings, don't `#[allow(...)]` them — treat them as refactor signals) and `cargo fmt`, then verify `bazel build //examples:site` still succeeds.
+After any code change: run `cargo clippy --workspace --tests` (fix all warnings, don't `#[allow(...)]` them — treat them as refactor signals) and `cargo fmt`, then verify `bazel build //examples:site` still succeeds.
 
 ## Architecture
 
 ### Pipeline: parse → analyze/index → render
 
-The binary (`src/main.rs`) is a multi-subcommand CLI, one subcommand per pipeline phase, because Bazel needs each phase as a separately cacheable action:
+The binary (`crates/worker/src/main.rs`) is a multi-subcommand CLI, one subcommand per pipeline phase, because Bazel needs each phase as a separately cacheable action:
 
 - `parse --input file.rst --output file.ast` — RST text to a serialized `ast::Document` (JSON).
 - `validate_toctree --input file.ast --output file.ast [--allowed <doc>...]` — checks toctree entries only reference declared docs.
@@ -43,18 +43,19 @@ The binary (`src/main.rs`) is a multi-subcommand CLI, one subcommand per pipelin
 - `index --inputs a.ast b.ast ... --output project.index` — merges all documents' local analysis (`analyzer::analyze`) into one global `analyzer::ProjectIndex` (targets, document titles, nav tree, glossary terms).
 - `render --input file.ast --index project.index --doc-path rel/path --output file.html --config site.toml --template layout.html` — turns one AST + the global index into a final HTML page.
 - `preview` — collapses parse+local-analyze+merge+render into one process reading RST from stdin, for low-latency editor use (see "Live preview" below).
-- Legacy: `rusty-sphinx <file.rst>` prints HTML straight to stdout (used by `process_rst()` in `src/lib.rs`, mostly for quick manual checks).
+- Legacy: `rusty-sphinx <file.rst>` prints HTML straight to stdout (used by `process_rst()` in `crates/worker/src/lib.rs`, mostly for quick manual checks).
 
 Each subcommand handler in `main.rs` is split into a pure `process_*` function (testable without file I/O) and a thin `cmd_*` wrapper that does the file reads/writes — keep new subcommands following that split.
 
-### Module layout (`src/`)
+### Crate layout (`crates/`)
 
-- `ast.rs` — AST node types. Note `HashedContent` and `TargetName`: both are "parse, don't validate" opaque types (smart constructors + custom `Deserialize` that re-validates the invariant on load, e.g. `HashedContent`'s stored hash must match `sha256(body)`). Follow this pattern for new invariants rather than validating ad hoc at call sites.
-- `parser/` — one file per construct (`headings.rs`, `blocks.rs`, `bullet_list.rs`, `directives.rs`, `admonitions.rs`, `glossary.rs`, `inline.rs`); `parser::parse()` is the entry point. The parser is meant to be error-resilient (bad input becomes an error/unknown node, not a panic/abort) to support live preview over incomplete documents.
-- `analyzer.rs` — builds the per-document and project-wide index: cross-reference targets, document titles, the toctree-derived nav tree, glossary terms. `ProjectIndex::merge` is what lets the `preview` subcommand and the VS Code extension combine a fresh local analysis with a stale global index.
-- `renderer/` — AST + `ProjectIndex` to HTML. `mod.rs` renders body content; `page.rs` wraps it in the MiniJinja-templated page chrome (nav sidebar, CSS link); `nav.rs` builds sidebar markup from the nav tree; `directives.rs`/`inline.rs` handle directive- and inline-markup-specific rendering.
-- `config.rs` — `SiteConfig`, deserialized from `rusty_sphinx.toml`. Deliberately holds only metadata (project name/version), never file paths — see "Config vs CLI flags" below.
-- `validator.rs` — toctree/allowed-docs validation used by the `validate_toctree` subcommand.
+Each crate is a workspace member with its own `Cargo.toml` and `BUILD.bazel`; dependencies between them flow strictly `ast → parser`/`analyzer` → `renderer` → `worker`.
+
+- `rusty_sphinx_ast` (`crates/ast/src/lib.rs`) — AST node types. Note `HashedContent` and `TargetName`: both are "parse, don't validate" opaque types (smart constructors + custom `Deserialize` that re-validates the invariant on load, e.g. `HashedContent`'s stored hash must match `sha256(body)`). Follow this pattern for new invariants rather than validating ad hoc at call sites.
+- `rusty_sphinx_parser` (`crates/parser/src/`) — one file per construct (`headings.rs`, `blocks.rs`, `bullet_list.rs`, `directives.rs`, `admonitions.rs`, `glossary.rs`, `inline.rs`); `parser::parse()` is the entry point. The parser is meant to be error-resilient (bad input becomes an error/unknown node, not a panic/abort) to support live preview over incomplete documents.
+- `rusty_sphinx_analyzer` (`crates/analyzer/src/lib.rs`) — builds the per-document and project-wide index: cross-reference targets, document titles, the toctree-derived nav tree, glossary terms. `ProjectIndex::merge` is what lets the `preview` subcommand and the VS Code extension combine a fresh local analysis with a stale global index.
+- `rusty_sphinx_renderer` (`crates/renderer/src/`) — AST + `ProjectIndex` to HTML. `lib.rs` renders body content; `page.rs` wraps it in the MiniJinja-templated page chrome (nav sidebar, CSS link); `nav.rs` builds sidebar markup from the nav tree; `directives.rs`/`inline.rs` handle directive- and inline-markup-specific rendering; `config.rs` holds `SiteConfig`, deserialized from `rusty_sphinx.toml` — deliberately only metadata (project name/version), never file paths, see "Config vs CLI flags" below.
+- `rusty_sphinx_worker` (`crates/worker/src/`) — `main.rs` is the CLI entry point; `lib.rs` holds `process_rst()` and `validator.rs` (toctree/allowed-docs validation used by the `validate_toctree` subcommand).
 
 ### Bazel rule pair: library vs. site (`rules/library.bzl`, `rules/site.bzl`, `defs.bzl`)
 
@@ -68,7 +69,7 @@ See `examples/BUILD.bazel` + `examples/team_a`, `examples/team_b` for a concrete
 
 ### Config vs. CLI flags (see `docs/decisions/001-template-system.md`)
 
-`rusty_sphinx.toml` (`config.rs`) holds only metadata — never file paths. Template/CSS/index paths are always passed as separate CLI flags / Bazel rule attributes (`--template`, `--config`, `template =`, `css =`). This is deliberate: Bazel sandboxes relocate files, so a path baked into the config would break; keeping paths out of the config also means new metadata fields don't require CLI changes. Don't "fix" this by inlining paths into the TOML.
+`rusty_sphinx.toml` (`rusty_sphinx_renderer::config`) holds only metadata — never file paths. Template/CSS/index paths are always passed as separate CLI flags / Bazel rule attributes (`--template`, `--config`, `template =`, `css =`). This is deliberate: Bazel sandboxes relocate files, so a path baked into the config would break; keeping paths out of the config also means new metadata fields don't require CLI changes. Don't "fix" this by inlining paths into the TOML.
 
 Templates are rendered with MiniJinja (chosen over compile-time Rust templates or reusing Sphinx's Python/Jinja2 templates directly — see the ADR for why). Changing the default template invalidates every cached page render, which is expected.
 
@@ -86,7 +87,7 @@ These come from `guidelines.md`, which is actively maintained (an agent rule aut
 
 - Enforce invariants at the type level with opaque types + smart constructors ("parse, don't validate") rather than validating at call sites.
 - All functions, including private/helper ones, should have unit tests; new functions introduced during refactoring need tests too.
-- Tests follow Given-When-Then (see the inline `#[cfg(test)]` modules throughout `src/` for the expected shape/comment style).
+- Tests follow Given-When-Then (see the inline `#[cfg(test)]` modules throughout `crates/*/src/` for the expected shape/comment style).
 - Name functions after what they concretely do (`build_project_index()`, not `analyze_many()`).
 - New `.rst` files added under `examples/` must be added to the corresponding `BUILD.bazel` `srcs`, and new features should get an example added to the example project covering all variants.
 - Don't commit unless explicitly asked.

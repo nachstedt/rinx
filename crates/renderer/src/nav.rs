@@ -1,12 +1,12 @@
 //! Navigation tree rendering helpers.
 
-use crate::analyzer::ProjectIndex;
+use rusty_sphinx_analyzer::ProjectIndex;
 use std::fmt::Write as _;
 
 /// Renders a single nav entry (and its children recursively) as HTML list items.
 pub(super) fn render_nav_entry(
     html: &mut String,
-    entry: &crate::analyzer::NavEntry,
+    entry: &rusty_sphinx_analyzer::NavEntry,
     index: &ProjectIndex,
     current_dir: &std::path::Path,
     current_depth: usize,
@@ -42,9 +42,9 @@ pub(super) fn render_nav_entry(
 
 /// Searches a nav tree recursively for an entry matching `path`.
 pub(super) fn find_nav_entry<'a>(
-    entries: &'a [crate::analyzer::NavEntry],
+    entries: &'a [rusty_sphinx_analyzer::NavEntry],
     path: &str,
-) -> Option<&'a crate::analyzer::NavEntry> {
+) -> Option<&'a rusty_sphinx_analyzer::NavEntry> {
     for entry in entries {
         if entry.path == path {
             return Some(entry);
@@ -59,13 +59,13 @@ pub(super) fn find_nav_entry<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::analyzer::ProjectIndex;
+    use rusty_sphinx_analyzer::ProjectIndex;
 
     fn make_entry(
         path: &str,
-        children: Vec<crate::analyzer::NavEntry>,
-    ) -> crate::analyzer::NavEntry {
-        crate::analyzer::NavEntry {
+        children: Vec<rusty_sphinx_analyzer::NavEntry>,
+    ) -> rusty_sphinx_analyzer::NavEntry {
+        rusty_sphinx_analyzer::NavEntry {
             title: path.to_string(),
             path: path.to_string(),
             children,

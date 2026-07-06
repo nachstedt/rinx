@@ -1,6 +1,6 @@
 use super::blocks::parse_blocks;
 use super::headings::Adornment;
-use crate::ast::{Directive, Domain, ObjectType};
+use rusty_sphinx_ast::{Directive, Domain, ObjectType};
 
 /// Parses a domain object directive body (e.g. `.. py:function::`,
 /// `.. c:function::`) into a `Directive::DomainObject` node.
@@ -45,8 +45,8 @@ pub(super) fn parse_domain_object(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{CObjectType, Node, PyObjectType};
-    use crate::parser::parse;
+    use crate::parse;
+    use rusty_sphinx_ast::{CObjectType, Node, PyObjectType};
 
     #[test]
     fn test_parse_domain_object_with_paragraph_body() {
@@ -162,7 +162,7 @@ mod tests {
             if let Node::Paragraph(inlines) = &body[0] {
                 assert_eq!(
                     inlines[0],
-                    crate::ast::InlineNode::Text("Indented more than needed.".to_string())
+                    rusty_sphinx_ast::InlineNode::Text("Indented more than needed.".to_string())
                 );
             } else {
                 panic!("Expected Paragraph, got {:?}", body[0]);
@@ -225,7 +225,7 @@ mod tests {
         let input = ".. function:: greet(name)\n\n   Greets the given name.";
 
         // When
-        let doc = crate::parser::parse_with_domain("test.rst", input, Domain::C);
+        let doc = crate::parse_with_domain("test.rst", input, Domain::C);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);

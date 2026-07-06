@@ -1,16 +1,16 @@
 use super::blocks::parse_blocks;
 use super::headings::Adornment;
-use crate::ast::{Directive, Domain};
+use rusty_sphinx_ast::{Directive, Domain};
 
 pub(super) fn parse_admonition(
-    kind: crate::ast::AdmonitionKind,
+    kind: rusty_sphinx_ast::AdmonitionKind,
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
     default_domain: Domain,
 ) -> Directive {
-    let title = if kind == crate::ast::AdmonitionKind::Admonition {
+    let title = if kind == rusty_sphinx_ast::AdmonitionKind::Admonition {
         if argument.is_empty() {
             diagnostics
                 .push("Generic 'admonition' directive requires a title argument.".to_string());
@@ -86,7 +86,7 @@ pub(super) fn parse_admonition(
 }
 
 pub(super) fn parse_version_change(
-    kind: crate::ast::VersionChangeKind,
+    kind: rusty_sphinx_ast::VersionChangeKind,
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
@@ -161,13 +161,13 @@ pub(super) fn parse_seealso(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::Node;
-    use crate::parser::parse;
+    use crate::parse;
+    use rusty_sphinx_ast::Node;
 
     #[test]
     fn test_parse_admonition_basic() {
         // Given
-        let kind = crate::ast::AdmonitionKind::Note;
+        let kind = rusty_sphinx_ast::AdmonitionKind::Note;
         let argument = String::new();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
@@ -188,7 +188,7 @@ mod tests {
             kind, title, body, ..
         } = directive
         {
-            assert_eq!(kind, crate::ast::AdmonitionKind::Note);
+            assert_eq!(kind, rusty_sphinx_ast::AdmonitionKind::Note);
             assert_eq!(title, None);
             assert_eq!(body.len(), 1);
         } else {
@@ -199,7 +199,7 @@ mod tests {
     #[test]
     fn test_parse_admonition_generic_with_title() {
         // Given
-        let kind = crate::ast::AdmonitionKind::Admonition;
+        let kind = rusty_sphinx_ast::AdmonitionKind::Admonition;
         let argument = "Custom Title".to_string();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
@@ -217,7 +217,7 @@ mod tests {
 
         // Then
         if let Directive::Admonition { kind, title, .. } = directive {
-            assert_eq!(kind, crate::ast::AdmonitionKind::Admonition);
+            assert_eq!(kind, rusty_sphinx_ast::AdmonitionKind::Admonition);
             assert_eq!(title, Some("Custom Title".to_string()));
         } else {
             panic!("Expected Admonition directive");
@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn test_parse_admonition_collapsible() {
         // Given
-        let kind = crate::ast::AdmonitionKind::Warning;
+        let kind = rusty_sphinx_ast::AdmonitionKind::Warning;
         let argument = String::new();
         let body_lines = vec!["   :collapsible: open", "", "   Content"];
         let mut adornment_order = Vec::new();
@@ -254,7 +254,7 @@ mod tests {
     #[test]
     fn test_parse_admonition_generic_requires_title_diagnostic() {
         // Given
-        let kind = crate::ast::AdmonitionKind::Admonition;
+        let kind = rusty_sphinx_ast::AdmonitionKind::Admonition;
         let argument = String::new();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
@@ -291,7 +291,7 @@ mod tests {
             body,
         }) = &doc.nodes[0]
         {
-            assert_eq!(*kind, crate::ast::VersionChangeKind::Changed);
+            assert_eq!(*kind, rusty_sphinx_ast::VersionChangeKind::Changed);
             assert_eq!(version, "2.3");
             assert_eq!(body.len(), 1);
         } else {
@@ -315,7 +315,7 @@ mod tests {
             body,
         }) = &doc.nodes[0]
         {
-            assert_eq!(*kind, crate::ast::VersionChangeKind::Added);
+            assert_eq!(*kind, rusty_sphinx_ast::VersionChangeKind::Added);
             assert_eq!(version, "1.0");
             assert_eq!(body.len(), 1);
         } else {
@@ -339,7 +339,7 @@ mod tests {
             body,
         }) = &doc.nodes[0]
         {
-            assert_eq!(*kind, crate::ast::VersionChangeKind::Deprecated);
+            assert_eq!(*kind, rusty_sphinx_ast::VersionChangeKind::Deprecated);
             assert_eq!(version, "3.0");
             assert_eq!(body.len(), 1);
         } else {
@@ -367,7 +367,7 @@ mod tests {
             body,
         }) = &doc.nodes[0]
         {
-            assert_eq!(*kind, crate::ast::VersionChangeKind::Changed);
+            assert_eq!(*kind, rusty_sphinx_ast::VersionChangeKind::Changed);
             assert_eq!(version, "unknown");
             assert_eq!(body.len(), 1);
         } else {

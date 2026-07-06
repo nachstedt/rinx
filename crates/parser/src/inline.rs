@@ -1,5 +1,5 @@
-use crate::ast::{Domain, InlineNode, ObjectType};
 use regex::Regex;
+use rusty_sphinx_ast::{Domain, InlineNode, ObjectType};
 use std::sync::LazyLock;
 
 static REF_REGEX: LazyLock<Regex> =
@@ -355,7 +355,7 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(crate::ast::CObjectType::Function),
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
                 name: "foo".to_string(),
             }
         );
@@ -367,7 +367,7 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(crate::ast::PyObjectType::Function),
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
                 name: "foo".to_string(),
             }
         );
@@ -379,7 +379,7 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(crate::ast::CObjectType::Function),
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
                 name: "add".to_string(),
             }
         );
@@ -484,9 +484,9 @@ mod tests {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::ast::Node;
-    use crate::ast::{CObjectType, Domain, InlineNode, ObjectType, PyObjectType};
-    use crate::parser::{parse, parse_with_domain};
+    use crate::{parse, parse_with_domain};
+    use rusty_sphinx_ast::Node;
+    use rusty_sphinx_ast::{CObjectType, Domain, InlineNode, ObjectType, PyObjectType};
 
     #[test]
     fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
