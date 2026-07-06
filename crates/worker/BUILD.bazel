@@ -1,0 +1,36 @@
+load("@crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+
+rust_library(
+    name = "rusty_sphinx_worker_lib",
+    srcs = [
+        "src/lib.rs",
+        "src/validator.rs",
+    ],
+    crate_name = "rusty_sphinx_worker",
+    edition = "2024",
+    deps = all_crate_deps(
+        normal = True,
+    ) + [
+        "//crates/analyzer:rusty_sphinx_analyzer",
+        "//crates/ast:rusty_sphinx_ast",
+        "//crates/parser:rusty_sphinx_parser",
+        "//crates/renderer:rusty_sphinx_renderer",
+    ],
+)
+
+rust_binary(
+    name = "rusty_sphinx_worker",
+    srcs = ["src/main.rs"],
+    edition = "2024",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+    ) + [
+        ":rusty_sphinx_worker_lib",
+        "//crates/analyzer:rusty_sphinx_analyzer",
+        "//crates/ast:rusty_sphinx_ast",
+        "//crates/parser:rusty_sphinx_parser",
+        "//crates/renderer:rusty_sphinx_renderer",
+    ],
+)

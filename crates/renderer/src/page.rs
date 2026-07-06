@@ -36,7 +36,7 @@ pub fn render_page(
     css_path: &str,
     page_title: &str,
     doc_path: &str,
-    nav_tree: &[crate::analyzer::NavEntry],
+    nav_tree: &[rusty_sphinx_analyzer::NavEntry],
 ) -> Result<String> {
     let resolved_nav = resolve_nav_hrefs(nav_tree, doc_path);
 
@@ -66,7 +66,7 @@ struct ResolvedNavEntry<'a> {
 /// Converts a nav tree's `.rst` paths into relative `.html` hrefs
 /// based on the current document's location.
 fn resolve_nav_hrefs<'a>(
-    entries: &'a [crate::analyzer::NavEntry],
+    entries: &'a [rusty_sphinx_analyzer::NavEntry],
     doc_path: &str,
 ) -> Vec<ResolvedNavEntry<'a>> {
     let doc_dir = std::path::Path::new(doc_path)
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn test_resolve_nav_hrefs_same_directory() {
         // Given
-        let entries = vec![crate::analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_analyzer::NavEntry {
             title: "Index".to_string(),
             path: "index.rst".to_string(),
             children: vec![],
@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn test_resolve_nav_hrefs_document_in_subdirectory() {
         // Given
-        let entries = vec![crate::analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_analyzer::NavEntry {
             title: "Index".to_string(),
             path: "index.rst".to_string(),
             children: vec![],
@@ -228,7 +228,7 @@ mod tests {
     #[test]
     fn test_resolve_nav_hrefs_target_in_subdirectory() {
         // Given
-        let entries = vec![crate::analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_analyzer::NavEntry {
             title: "Nested".to_string(),
             path: "sub/nested.rst".to_string(),
             children: vec![],
@@ -245,10 +245,10 @@ mod tests {
     #[test]
     fn test_resolve_nav_hrefs_nested_entries() {
         // Given
-        let entries = vec![crate::analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_analyzer::NavEntry {
             title: "Root".to_string(),
             path: "root.rst".to_string(),
-            children: vec![crate::analyzer::NavEntry {
+            children: vec![rusty_sphinx_analyzer::NavEntry {
                 title: "Child".to_string(),
                 path: "sub/child.rst".to_string(),
                 children: vec![],

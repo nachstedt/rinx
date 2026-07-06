@@ -2,7 +2,7 @@ use super::bullet_list::try_parse_bullet_list;
 use super::directives::try_parse_directive;
 use super::headings::{Adornment, detect_adornment, try_parse_heading};
 use super::inline::parse_inline_text;
-use crate::ast::{Document, Domain, Node, TargetName};
+use rusty_sphinx_ast::{Document, Domain, Node, TargetName};
 
 /// Tries to parse an RST comment starting at line `i`.
 ///
@@ -388,7 +388,7 @@ fn parse_paragraph(lines: &[&str], i: usize, default_domain: Domain) -> (usize, 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::InlineNode;
+    use rusty_sphinx_ast::InlineNode;
 
     #[test]
     fn test_parse_blocks_empty_input() {
@@ -656,9 +656,9 @@ mod tests {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::ast::TargetName;
-    use crate::ast::{InlineNode, Node};
-    use crate::parser::parse;
+    use crate::parse;
+    use rusty_sphinx_ast::TargetName;
+    use rusty_sphinx_ast::{InlineNode, Node};
 
     #[test]
     fn test_parse_returns_empty_document_for_empty_input() {

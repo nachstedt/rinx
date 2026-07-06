@@ -1,29 +1,12 @@
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
-load("@crates//:defs.bzl", "all_crate_deps")
 load("@rules_java//java:defs.bzl", "java_binary", "java_import")
 
-rust_library(
-    name = "rusty_sphinx",
-    srcs = glob(
-        ["src/**/*.rs"],
-        exclude = ["src/main.rs"],
-    ),
-    deps = all_crate_deps(
-        normal = True,
-    ),
-    edition = "2024",
-    visibility = ["//visibility:public"],
-)
-
-rust_binary(
+# The worker binary itself now lives at //crates/worker, split out into a
+# Cargo workspace mirroring architecture.md's crate layout. This alias keeps
+# the label stable for rules/library.bzl and rules/site.bzl, which reference
+# it as a black-box CLI executable.
+alias(
     name = "rusty_sphinx_worker",
-    srcs = ["src/main.rs"],
-    deps = all_crate_deps(
-        normal = True,
-    ) + [
-        ":rusty_sphinx",
-    ],
-    edition = "2024",
+    actual = "//crates/worker:rusty_sphinx_worker",
     visibility = ["//visibility:public"],
 )
 

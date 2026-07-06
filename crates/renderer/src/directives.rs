@@ -1,6 +1,6 @@
 //! Directive-specific rendering helpers (admonitions, version changes, see-also, glossary).
 
-use crate::ast::Node;
+use rusty_sphinx_ast::Node;
 use std::fmt::Write as _;
 
 use super::RenderCtx;
@@ -8,7 +8,7 @@ use super::RenderCtx;
 /// Renders an admonition directive (note, warning, hint, etc.) as HTML.
 pub(super) fn render_admonition(
     html: &mut String,
-    kind: crate::ast::AdmonitionKind,
+    kind: rusty_sphinx_ast::AdmonitionKind,
     title: Option<&str>,
     collapsible: Option<bool>,
     body: &[Node],
@@ -51,7 +51,7 @@ pub(super) fn render_admonition(
 /// Renders a versionadded / versionchanged / deprecated directive as HTML.
 pub(super) fn render_version_change(
     html: &mut String,
-    kind: crate::ast::VersionChangeKind,
+    kind: rusty_sphinx_ast::VersionChangeKind,
     version: &str,
     body: &[Node],
     ctx: &mut RenderCtx<'_>,
@@ -60,19 +60,19 @@ pub(super) fn render_version_change(
     let version_escaped = html_escape::encode_text(version);
 
     let label = match kind {
-        crate::ast::VersionChangeKind::Added => format!("New in version {version_escaped}:"),
-        crate::ast::VersionChangeKind::Changed => {
+        rusty_sphinx_ast::VersionChangeKind::Added => format!("New in version {version_escaped}:"),
+        rusty_sphinx_ast::VersionChangeKind::Changed => {
             format!("Changed in version {version_escaped}:")
         }
-        crate::ast::VersionChangeKind::Deprecated => {
+        rusty_sphinx_ast::VersionChangeKind::Deprecated => {
             format!("Deprecated since version {version_escaped}:")
         }
     };
 
     let inner_class = match kind {
-        crate::ast::VersionChangeKind::Added => "added",
-        crate::ast::VersionChangeKind::Changed => "changed",
-        crate::ast::VersionChangeKind::Deprecated => "deprecated",
+        rusty_sphinx_ast::VersionChangeKind::Added => "added",
+        rusty_sphinx_ast::VersionChangeKind::Changed => "changed",
+        rusty_sphinx_ast::VersionChangeKind::Deprecated => "deprecated",
     };
 
     let _ = writeln!(html, "<div class=\"{kind_str}\">");
@@ -103,13 +103,13 @@ pub(super) fn render_seealso(html: &mut String, body: &[Node], ctx: &mut RenderC
 /// using the same qualified key as the analyzer for the anchor `id`.
 pub(super) fn render_domain_object(
     html: &mut String,
-    object_type: crate::ast::ObjectType,
+    object_type: rusty_sphinx_ast::ObjectType,
     signature: &str,
     body: &[Node],
     ctx: &mut RenderCtx<'_>,
 ) {
-    let name = crate::ast::extract_object_name(signature);
-    let key = crate::ast::build_domain_object_key(object_type, &name);
+    let name = rusty_sphinx_ast::extract_object_name(signature);
+    let key = rusty_sphinx_ast::build_domain_object_key(object_type, &name);
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
     let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
@@ -129,14 +129,14 @@ pub(super) fn render_domain_object(
 /// Renders a `glossary` directive as a definition list (`<dl>`).
 pub(super) fn render_glossary(
     html: &mut String,
-    entries: &[crate::ast::GlossaryEntry],
+    entries: &[rusty_sphinx_ast::GlossaryEntry],
     ctx: &mut RenderCtx<'_>,
 ) {
     let _ = writeln!(html, "<dl class=\"glossary\">");
     for entry in entries {
         for term in &entry.terms {
             let term_escaped = html_escape::encode_text(term);
-            let id = crate::ast::term_id(term);
+            let id = rusty_sphinx_ast::term_id(term);
             let id_attr = html_escape::encode_double_quoted_attribute(&id);
             let _ = writeln!(html, "  <dt id=\"{id_attr}\">{term_escaped}</dt>");
         }
@@ -151,12 +151,12 @@ pub(super) fn render_glossary(
 mod tests {
     use super::super::RenderCtx;
     use super::*;
-    use crate::analyzer::ProjectIndex;
-    use crate::ast::{Directive, Document, InlineNode, Node, TargetName};
+    use rusty_sphinx_analyzer::ProjectIndex;
+    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, TargetName};
 
     fn render_doc(doc: &Document) -> String {
         let index = ProjectIndex::default();
-        crate::renderer::render(doc, &index, &doc.path)
+        crate::render(doc, &index, &doc.path)
     }
 
     #[test]
@@ -165,7 +165,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::Admonition {
-                kind: crate::ast::AdmonitionKind::Note,
+                kind: rusty_sphinx_ast::AdmonitionKind::Note,
                 title: None,
                 collapsible: None,
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
@@ -189,7 +189,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::Admonition {
-                kind: crate::ast::AdmonitionKind::Warning,
+                kind: rusty_sphinx_ast::AdmonitionKind::Warning,
                 title: Some("Custom Warning".to_string()),
                 collapsible: Some(false),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
@@ -211,7 +211,7 @@ mod tests {
     fn test_render_admonition_static() {
         // Given
         let mut html = String::new();
-        let kind = crate::ast::AdmonitionKind::Note;
+        let kind = rusty_sphinx_ast::AdmonitionKind::Note;
         let title: Option<String> = None;
         let collapsible: Option<bool> = None;
         let body = vec![Node::Paragraph(vec![InlineNode::Text("Body".to_string())])];
@@ -246,7 +246,7 @@ mod tests {
     fn test_render_admonition_collapsible_open() {
         // Given
         let mut html = String::new();
-        let kind = crate::ast::AdmonitionKind::Warning;
+        let kind = rusty_sphinx_ast::AdmonitionKind::Warning;
         let title = Some("Custom Title".to_string());
         let collapsible = Some(true);
         let body = vec![];
@@ -282,7 +282,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::VersionChange {
-                kind: crate::ast::VersionChangeKind::Added,
+                kind: rusty_sphinx_ast::VersionChangeKind::Added,
                 version: "1.0".to_string(),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
                     "Initial release.".to_string(),
@@ -304,7 +304,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::VersionChange {
-                kind: crate::ast::VersionChangeKind::Deprecated,
+                kind: rusty_sphinx_ast::VersionChangeKind::Deprecated,
                 version: "3.0".to_string(),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
                     "Use new API.".to_string(),
@@ -326,7 +326,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::VersionChange {
-                kind: crate::ast::VersionChangeKind::Changed,
+                kind: rusty_sphinx_ast::VersionChangeKind::Changed,
                 version: "2.0".to_string(),
                 body: vec![],
             })],
@@ -453,7 +453,7 @@ mod tests {
         let doc = Document::new(
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
-                entries: vec![crate::ast::GlossaryEntry {
+                entries: vec![rusty_sphinx_ast::GlossaryEntry {
                     terms: vec!["environment".to_string()],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(
                         "A structure.".to_string(),
@@ -480,7 +480,7 @@ mod tests {
         let doc = Document::new(
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
-                entries: vec![crate::ast::GlossaryEntry {
+                entries: vec![rusty_sphinx_ast::GlossaryEntry {
                     terms: vec!["term 1".to_string(), "term 2".to_string()],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Shared.".to_string(),
@@ -505,7 +505,7 @@ mod tests {
         let doc = Document::new(
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
-                entries: vec![crate::ast::GlossaryEntry {
+                entries: vec![rusty_sphinx_ast::GlossaryEntry {
                     terms: vec!["a < b".to_string()],
                     definition: vec![],
                 }],
@@ -537,7 +537,7 @@ mod tests {
             .insert(TargetName::new("environment"), "glossary.rst".to_string());
 
         // When
-        let result = crate::renderer::render(&doc, &index, &doc.path);
+        let result = crate::render(&doc, &index, &doc.path);
 
         // Then
         assert!(result.contains("href=\"glossary.html#term-environment\""));
@@ -561,7 +561,7 @@ mod tests {
             .insert(TargetName::new("environment"), "glossary.rst".to_string());
 
         // When
-        let result = crate::renderer::render(&doc, &index, &doc.path);
+        let result = crate::render(&doc, &index, &doc.path);
 
         // Then
         assert!(result.contains("href=\"glossary.html#term-environment\""));
@@ -581,7 +581,7 @@ mod tests {
         let index = ProjectIndex::default(); // empty — no glossary terms
 
         // When
-        let result = crate::renderer::render(&doc, &index, &doc.path);
+        let result = crate::render(&doc, &index, &doc.path);
 
         // Then
         assert!(result.contains("class=\"broken-link\""));
@@ -594,7 +594,9 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject {
-                object_type: crate::ast::ObjectType::Py(crate::ast::PyObjectType::Function),
+                object_type: rusty_sphinx_ast::ObjectType::Py(
+                    rusty_sphinx_ast::PyObjectType::Function,
+                ),
                 signature: "greet(name)".to_string(),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
                     "Greets the given name.".to_string(),
@@ -618,7 +620,9 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject {
-                object_type: crate::ast::ObjectType::C(crate::ast::CObjectType::Function),
+                object_type: rusty_sphinx_ast::ObjectType::C(
+                    rusty_sphinx_ast::CObjectType::Function,
+                ),
                 signature: "int add(int a, int b)".to_string(),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
                     "Adds two numbers.".to_string(),
@@ -643,7 +647,9 @@ mod tests {
             "test.rst".to_string(),
             vec![
                 Node::Directive(Directive::DomainObject {
-                    object_type: crate::ast::ObjectType::Py(crate::ast::PyObjectType::Function),
+                    object_type: rusty_sphinx_ast::ObjectType::Py(
+                        rusty_sphinx_ast::PyObjectType::Function,
+                    ),
                     signature: "greet(name)".to_string(),
                     body: vec![Node::Paragraph(vec![InlineNode::AnonymousReference(
                         "See more".to_string(),
@@ -678,7 +684,7 @@ mod tests {
             .insert(TargetName::new("foo"), "glossary.rst".to_string());
 
         // When
-        let result = crate::renderer::render(&doc, &index, &doc.path);
+        let result = crate::render(&doc, &index, &doc.path);
 
         // Then — href should traverse up one directory
         assert!(result.contains("href=\"../glossary.html#term-foo\""));

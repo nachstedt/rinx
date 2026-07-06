@@ -4,8 +4,11 @@
 //! targets, document titles, and a hierarchical navigation tree derived from
 //! toctree directives.
 
-use crate::ast::{Directive, Document, Node, TargetName};
-use crate::utils::normalize_path;
+mod utils;
+
+pub use utils::normalize_path;
+
+use rusty_sphinx_ast::{Directive, Document, Node, TargetName};
 use serde::{Deserialize, Serialize};
 
 use std::collections::BTreeMap;
@@ -111,8 +114,8 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             ..
         }) = node
         {
-            let name = crate::ast::extract_object_name(signature);
-            let key = crate::ast::build_domain_object_key(*object_type, &name);
+            let name = rusty_sphinx_ast::extract_object_name(signature);
+            let key = rusty_sphinx_ast::build_domain_object_key(*object_type, &name);
             index.domain_objects.insert(key, doc.path.clone());
         }
     }
@@ -242,7 +245,7 @@ pub fn build_project_index(docs: &[Document]) -> ProjectIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{InlineNode, Node};
+    use rusty_sphinx_ast::{InlineNode, Node};
 
     #[test]
     fn test_build_nav_subtree_basic() {
@@ -863,7 +866,7 @@ mod tests {
         let doc = Document::new(
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
-                entries: vec![crate::ast::GlossaryEntry {
+                entries: vec![rusty_sphinx_ast::GlossaryEntry {
                     terms: vec!["environment".to_string()],
                     definition: vec![],
                 }],
@@ -888,7 +891,7 @@ mod tests {
         let doc = Document::new(
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
-                entries: vec![crate::ast::GlossaryEntry {
+                entries: vec![rusty_sphinx_ast::GlossaryEntry {
                     terms: vec!["term 1".to_string(), "term 2".to_string()],
                     definition: vec![],
                 }],
@@ -967,7 +970,9 @@ mod tests {
         let doc = Document::new(
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject {
-                object_type: crate::ast::ObjectType::Py(crate::ast::PyObjectType::Function),
+                object_type: rusty_sphinx_ast::ObjectType::Py(
+                    rusty_sphinx_ast::PyObjectType::Function,
+                ),
                 signature: "greet(name)".to_string(),
                 body: vec![],
             })],
@@ -993,12 +998,16 @@ mod tests {
             "api.rst".to_string(),
             vec![
                 Node::Directive(Directive::DomainObject {
-                    object_type: crate::ast::ObjectType::Py(crate::ast::PyObjectType::Function),
+                    object_type: rusty_sphinx_ast::ObjectType::Py(
+                        rusty_sphinx_ast::PyObjectType::Function,
+                    ),
                     signature: "add(a, b)".to_string(),
                     body: vec![],
                 }),
                 Node::Directive(Directive::DomainObject {
-                    object_type: crate::ast::ObjectType::C(crate::ast::CObjectType::Function),
+                    object_type: rusty_sphinx_ast::ObjectType::C(
+                        rusty_sphinx_ast::CObjectType::Function,
+                    ),
                     signature: "int add(int a, int b)".to_string(),
                     body: vec![],
                 }),

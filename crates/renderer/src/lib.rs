@@ -1,5 +1,6 @@
 //! The renderer module converts the AST and `ProjectIndex` into HTML.
 
+pub mod config;
 mod directives;
 mod inline;
 mod nav;
@@ -7,17 +8,17 @@ mod page;
 
 pub use page::{css_relative_path, render_page};
 
-use crate::analyzer::ProjectIndex;
-use crate::ast::{Directive, Document, Node};
 use directives::{
     render_admonition, render_domain_object, render_glossary, render_seealso, render_version_change,
 };
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
+use rusty_sphinx_analyzer::ProjectIndex;
+use rusty_sphinx_ast::{Directive, Document, Node};
 use std::fmt::Write as _;
 
 /// Shared rendering state threaded through the node traversal.
-pub(super) struct RenderCtx<'a> {
+pub(crate) struct RenderCtx<'a> {
     pub index: &'a ProjectIndex,
     pub doc_path: &'a str,
     pub anon_targets: &'a [String],
@@ -70,7 +71,7 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
     }
 }
 
-pub(super) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCtx<'_>) {
+pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCtx<'_>) {
     for node in nodes {
         match node {
             Node::Heading { level, text } => {
@@ -181,7 +182,7 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{HashedContent, InlineNode, TargetName};
+    use rusty_sphinx_ast::{HashedContent, InlineNode, TargetName};
 
     #[test]
     fn test_render_returns_empty_string_for_empty_document() {
@@ -206,7 +207,9 @@ mod tests {
                     level: 1,
                     text: "Title".to_string(),
                 },
-                Node::Paragraph(vec![crate::ast::InlineNode::Text("Paragraph".to_string())]),
+                Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
+                    "Paragraph".to_string(),
+                )]),
                 Node::Heading {
                     level: 1,
                     text: "Another Heading".to_string(),
@@ -235,7 +238,9 @@ mod tests {
                     level: 1,
                     text: "Title <script>".to_string(),
                 },
-                Node::Paragraph(vec![crate::ast::InlineNode::Text("A & B > C".to_string())]),
+                Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
+                    "A & B > C".to_string(),
+                )]),
             ],
         );
         let index = ProjectIndex::default();
@@ -265,10 +270,10 @@ mod tests {
         index
             .document_titles
             .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
-        index.nav_tree = vec![crate::analyzer::NavEntry {
+        index.nav_tree = vec![rusty_sphinx_analyzer::NavEntry {
             title: "test".to_string(),
             path: "test.rst".to_string(),
-            children: vec![crate::analyzer::NavEntry {
+            children: vec![rusty_sphinx_analyzer::NavEntry {
                 title: "Team A Module".to_string(),
                 path: "team_a/index.rst".to_string(),
                 children: vec![],
@@ -301,16 +306,16 @@ mod tests {
             .document_titles
             .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
         // Build a nav_tree so the renderer can look up children by doc path.
-        index.nav_tree = vec![crate::analyzer::NavEntry {
+        index.nav_tree = vec![rusty_sphinx_analyzer::NavEntry {
             title: "test".to_string(),
             path: "test.rst".to_string(),
             children: vec![
-                crate::analyzer::NavEntry {
+                rusty_sphinx_analyzer::NavEntry {
                     title: "Team A Module".to_string(),
                     path: "team_a/index.rst".to_string(),
                     children: vec![],
                 },
-                crate::analyzer::NavEntry {
+                rusty_sphinx_analyzer::NavEntry {
                     title: "team_b/index".to_string(),
                     path: "team_b/index.rst".to_string(),
                     children: vec![],
@@ -467,14 +472,14 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![crate::ast::InlineNode::Reference(
-                "other-section".to_string(),
-            )])],
+            vec![Node::Paragraph(vec![
+                rusty_sphinx_ast::InlineNode::Reference("other-section".to_string()),
+            ])],
         );
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("other-section"),
-            crate::analyzer::TargetLocation::Internal("other_file.rst".to_string()),
+            rusty_sphinx_analyzer::TargetLocation::Internal("other_file.rst".to_string()),
         );
 
         // When
@@ -492,15 +497,17 @@ mod tests {
         // Given a document in a subdirectory
         let doc = Document::new(
             "examples/team_b/index.rst".to_string(),
-            vec![Node::Paragraph(vec![crate::ast::InlineNode::Reference(
-                "target-in-a".to_string(),
-            )])],
+            vec![Node::Paragraph(vec![
+                rusty_sphinx_ast::InlineNode::Reference("target-in-a".to_string()),
+            ])],
         );
 
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("target-in-a"),
-            crate::analyzer::TargetLocation::Internal("examples/team_a/index.rst".to_string()),
+            rusty_sphinx_analyzer::TargetLocation::Internal(
+                "examples/team_a/index.rst".to_string(),
+            ),
         );
 
         // When
@@ -518,15 +525,17 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![crate::ast::InlineNode::Hyperlink {
-                text: "Python".to_string(),
-                target: "Python".to_string(),
-            }])],
+            vec![Node::Paragraph(vec![
+                rusty_sphinx_ast::InlineNode::Hyperlink {
+                    text: "Python".to_string(),
+                    target: "Python".to_string(),
+                },
+            ])],
         );
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("Python"),
-            crate::analyzer::TargetLocation::External("https://python.org".to_string()),
+            rusty_sphinx_analyzer::TargetLocation::External("https://python.org".to_string()),
         );
 
         // When
@@ -541,10 +550,12 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![crate::ast::InlineNode::Hyperlink {
-                text: "Google".to_string(),
-                target: "https://google.com".to_string(),
-            }])],
+            vec![Node::Paragraph(vec![
+                rusty_sphinx_ast::InlineNode::Hyperlink {
+                    text: "Google".to_string(),
+                    target: "https://google.com".to_string(),
+                },
+            ])],
         );
         let index = ProjectIndex::default();
 
@@ -585,12 +596,12 @@ mod tests {
             vec![Node::BulletList {
                 bullet: '*',
                 items: vec![
-                    crate::ast::BulletListItem {
+                    rusty_sphinx_ast::BulletListItem {
                         nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                             "Item 1".to_string(),
                         )])],
                     },
-                    crate::ast::BulletListItem {
+                    rusty_sphinx_ast::BulletListItem {
                         nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                             "Item 2".to_string(),
                         )])],
@@ -617,12 +628,12 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::BulletList {
                 bullet: '*',
-                items: vec![crate::ast::BulletListItem {
+                items: vec![rusty_sphinx_ast::BulletListItem {
                     nodes: vec![
                         Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
                         Node::BulletList {
                             bullet: '-',
-                            items: vec![crate::ast::BulletListItem {
+                            items: vec![rusty_sphinx_ast::BulletListItem {
                                 nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                                     "Child".to_string(),
                                 )])],
@@ -650,7 +661,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::BulletList {
                 bullet: '*',
-                items: vec![crate::ast::BulletListItem {
+                items: vec![rusty_sphinx_ast::BulletListItem {
                     nodes: vec![
                         Node::Paragraph(vec![InlineNode::Text("Para 1".to_string())]),
                         Node::Paragraph(vec![InlineNode::Text("Para 2".to_string())]),
@@ -740,10 +751,10 @@ mod tests {
         // And a ProjectIndex that represents this cycle but is truncated by the analyzer
         // to a finite depth (e.g. depth 2)
         let index = ProjectIndex {
-            nav_tree: vec![crate::analyzer::NavEntry {
+            nav_tree: vec![rusty_sphinx_analyzer::NavEntry {
                 path: "cycle.rst".to_string(),
                 title: "Cycle".to_string(),
-                children: vec![crate::analyzer::NavEntry {
+                children: vec![rusty_sphinx_analyzer::NavEntry {
                     path: "cycle.rst".to_string(), // Cycle back to the same path
                     title: "Cycle".to_string(),
                     children: vec![], // Truncated here
@@ -815,13 +826,13 @@ mod tests {
         index
             .document_titles
             .insert("grandchild.rst".to_string(), "Grandchild".to_string());
-        index.nav_tree = vec![crate::analyzer::NavEntry {
+        index.nav_tree = vec![rusty_sphinx_analyzer::NavEntry {
             title: "Root".to_string(),
             path: "index.rst".to_string(),
-            children: vec![crate::analyzer::NavEntry {
+            children: vec![rusty_sphinx_analyzer::NavEntry {
                 title: "Child".to_string(),
                 path: "child.rst".to_string(),
-                children: vec![crate::analyzer::NavEntry {
+                children: vec![rusty_sphinx_analyzer::NavEntry {
                     title: "Grandchild".to_string(),
                     path: "grandchild.rst".to_string(),
                     children: vec![],

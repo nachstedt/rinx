@@ -3,7 +3,7 @@ use super::blocks::{collect_directive_body, join_body_lines};
 use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
 use super::headings::Adornment;
-use crate::ast::{Directive, Domain, Node, ObjectType};
+use rusty_sphinx_ast::{Directive, Domain, Node, ObjectType};
 
 pub(super) fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
     let mut paths = Vec::new();
@@ -70,8 +70,9 @@ pub(super) fn try_parse_directive(
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if name == "plantuml" {
-        let directive =
-            Directive::PlantUml(crate::ast::HashedContent::new(join_body_lines(&body_lines)));
+        let directive = Directive::PlantUml(rusty_sphinx_ast::HashedContent::new(join_body_lines(
+            &body_lines,
+        )));
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if name == "code-block" {
@@ -101,7 +102,7 @@ pub(super) fn try_parse_directive(
             .join("\n");
         return Some((1 + consumed_lines, Node::LiteralBlock { language, content }));
     }
-    if let Ok(kind) = name.parse::<crate::ast::VersionChangeKind>() {
+    if let Ok(kind) = name.parse::<rusty_sphinx_ast::VersionChangeKind>() {
         let directive = parse_version_change(
             kind,
             argument,
@@ -116,7 +117,7 @@ pub(super) fn try_parse_directive(
         let directive = parse_seealso(&body_lines, adornment_order, diagnostics, default_domain);
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
-    if let Ok(kind) = name.parse::<crate::ast::AdmonitionKind>() {
+    if let Ok(kind) = name.parse::<rusty_sphinx_ast::AdmonitionKind>() {
         let directive = parse_admonition(
             kind,
             argument,
@@ -164,8 +165,8 @@ fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<Obje
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::HashedContent;
-    use crate::parser::parse;
+    use crate::parse;
+    use rusty_sphinx_ast::HashedContent;
 
     #[test]
     fn test_parse_creates_admonition() {
@@ -181,7 +182,7 @@ mod tests {
             kind, title, body, ..
         }) = &doc.nodes[0]
         {
-            assert_eq!(kind, &crate::ast::AdmonitionKind::Note);
+            assert_eq!(kind, &rusty_sphinx_ast::AdmonitionKind::Note);
             assert_eq!(title, &None);
             assert_eq!(body.len(), 1);
         } else {
@@ -200,7 +201,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::Admonition { kind, title, .. }) = &doc.nodes[0] {
-            assert_eq!(kind, &crate::ast::AdmonitionKind::Admonition);
+            assert_eq!(kind, &rusty_sphinx_ast::AdmonitionKind::Admonition);
             assert_eq!(title, &Some("My Title".to_string()));
         } else {
             panic!("Expected Admonition directive");
@@ -261,7 +262,9 @@ mod tests {
         );
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![crate::ast::InlineNode::Text("Next Para".to_string())])
+            Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
+                "Next Para".to_string()
+            )])
         );
     }
 
@@ -286,7 +289,9 @@ mod tests {
         );
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![crate::ast::InlineNode::Text("Next Para".to_string())])
+            Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
+                "Next Para".to_string()
+            )])
         );
     }
 
@@ -324,7 +329,9 @@ mod tests {
         assert_eq!(doc.nodes[0], Node::Directive(Directive::PlantUml(expected)));
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![crate::ast::InlineNode::Text("Next Para".to_string())])
+            Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
+                "Next Para".to_string()
+            )])
         );
     }
 
@@ -539,12 +546,14 @@ mod tests {
         let name = "c:function";
 
         // When
-        let result = resolve_domain_object_type(name, crate::ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
 
         // Then
         assert_eq!(
             result,
-            Some(crate::ast::ObjectType::C(crate::ast::CObjectType::Function))
+            Some(rusty_sphinx_ast::ObjectType::C(
+                rusty_sphinx_ast::CObjectType::Function
+            ))
         );
     }
 
@@ -554,12 +563,14 @@ mod tests {
         let name = "function";
 
         // When
-        let result = resolve_domain_object_type(name, crate::ast::Domain::C);
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
 
         // Then
         assert_eq!(
             result,
-            Some(crate::ast::ObjectType::C(crate::ast::CObjectType::Function))
+            Some(rusty_sphinx_ast::ObjectType::C(
+                rusty_sphinx_ast::CObjectType::Function
+            ))
         );
     }
 
@@ -569,7 +580,7 @@ mod tests {
         let name = "rust:function";
 
         // When
-        let result = resolve_domain_object_type(name, crate::ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, None);
@@ -581,7 +592,7 @@ mod tests {
         let name = "py:class";
 
         // When
-        let result = resolve_domain_object_type(name, crate::ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, None);

@@ -1,0 +1,16 @@
+[package]
+name = "rusty_sphinx_worker"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+rusty_sphinx_ast = { path = "../ast" }
+rusty_sphinx_parser = { path = "../parser" }
+rusty_sphinx_analyzer = { path = "../analyzer" }
+rusty_sphinx_renderer = { path = "../renderer" }
+anyhow = "1.0.102"
+serde_json = "1"
+toml = "0.8"
+
+[lints]
+workspace = true

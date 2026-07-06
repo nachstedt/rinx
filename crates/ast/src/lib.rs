@@ -385,7 +385,7 @@ pub struct GlossaryEntry {
 /// # Examples
 ///
 /// ```
-/// use rusty_sphinx::ast::term_id;
+/// use rusty_sphinx_ast::term_id;
 /// assert_eq!(term_id("Environment Variable"), "term-environment-variable");
 /// assert_eq!(term_id("python"), "term-python");
 /// ```
@@ -535,7 +535,6 @@ impl Document {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{HashedContent, InlineNode};
 
     #[test]
     fn test_new_creates_document_with_given_nodes() {

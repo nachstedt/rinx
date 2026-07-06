@@ -1,4 +1,4 @@
-use crate::ast::Node;
+use rusty_sphinx_ast::Node;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum AdornmentStyle {
@@ -87,7 +87,7 @@ pub(super) fn try_parse_heading(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::parser::parse;
+    use crate::parse;
 
     #[test]
     fn test_detect_adornment_overline() {

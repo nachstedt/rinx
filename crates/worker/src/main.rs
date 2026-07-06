@@ -20,7 +20,11 @@
 //! ```
 
 use anyhow::{Context, Result, anyhow};
-use rusty_sphinx::{analyzer, ast, config, parser, process_rst, renderer, validator};
+use rusty_sphinx_analyzer as analyzer;
+use rusty_sphinx_ast as ast;
+use rusty_sphinx_parser as parser;
+use rusty_sphinx_renderer::{self as renderer, config};
+use rusty_sphinx_worker::{process_rst, validator};
 use std::env;
 use std::fs;
 use std::io::{self, Read};

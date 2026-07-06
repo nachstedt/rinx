@@ -1,6 +1,6 @@
 use super::blocks::parse_blocks;
 use super::headings::Adornment;
-use crate::ast::{Domain, Node};
+use rusty_sphinx_ast::{Domain, Node};
 
 pub(super) fn strip_indent(s: &str, indent_chars: usize) -> &str {
     let mut indices = s.char_indices();
@@ -119,7 +119,7 @@ pub(super) fn try_parse_bullet_list(
             let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
             let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, default_domain);
 
-            items.push(crate::ast::BulletListItem { nodes: body_nodes });
+            items.push(rusty_sphinx_ast::BulletListItem { nodes: body_nodes });
         } else {
             break;
         }
@@ -141,8 +141,8 @@ pub(super) fn try_parse_bullet_list(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::InlineNode;
-    use crate::parser::parse;
+    use crate::parse;
+    use rusty_sphinx_ast::InlineNode;
 
     #[test]
     fn test_parse_bullet_list_simple() {
