@@ -101,6 +101,9 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
             }
             // Anonymous targets and comments produce no HTML output.
             Node::AnonymousTarget { .. } | Node::Comment => {}
+            Node::Transition => {
+                let _ = writeln!(html, "<hr />");
+            }
             Node::Directive(directive) => render_directive(html, directive, ctx),
             Node::BulletList { items, .. } => {
                 let _ = writeln!(html, "<ul>");
@@ -446,6 +449,19 @@ mod tests {
 
         // Then
         assert_eq!(result, "<a id=\"section-1\"></a>\n");
+    }
+
+    #[test]
+    fn test_render_formats_transition_node_as_horizontal_rule() {
+        // Given
+        let doc = Document::new("test.rst".to_string(), vec![Node::Transition]);
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(result, "<hr />\n");
     }
 
     #[test]

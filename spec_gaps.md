@@ -66,7 +66,7 @@ the corresponding feature is implemented.
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Sections and document tree (nested sections) | 🔶 Partial | Heading levels are detected; no explicit section nesting in the AST |
-| Transitions (`----`) | ❌ Not implemented | A line of 4+ punctuation chars with blank lines on both sides; currently parsed as a heading |
+| Transitions (`----`) | ✅ Implemented | A line of 4+ repeated punctuation chars with blank lines on both sides, rendered as `<hr />`. Diagnostics are emitted if a transition begins/ends the document or immediately follows another transition; no section-level check since sections aren't yet nested in the AST |
 | Comments (`.. comment text`) | ✅ Implemented | Parsed as `Node::Comment`; produces no HTML output |
 | Substitution definitions (`.. |name| replace::`) | ❌ Not implemented | — |
 | Footnotes and citations | ❌ Not implemented | — |
