@@ -9,5 +9,6 @@ pub(crate) mod domains;
 pub(crate) mod glossary;
 pub(crate) mod headings;
 pub(crate) mod inline;
+pub(crate) mod typography;
 
 pub use blocks::{parse, parse_with_domain};
