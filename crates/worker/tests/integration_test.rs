@@ -15,7 +15,7 @@ fn test_parser_step() {
         ast.nodes[0],
         ast::Node::Heading {
             level: 1,
-            text: "Title".to_string()
+            text: vec![ast::InlineNode::Text("Title".to_string())]
         }
     );
     assert_eq!(
@@ -33,7 +33,7 @@ fn test_renderer_step() {
         vec![
             ast::Node::Heading {
                 level: 1,
-                text: "Section".to_string(),
+                text: vec![ast::InlineNode::Text("Section".to_string())],
             },
             ast::Node::Paragraph(vec![ast::InlineNode::Text("A line of text.".to_string())]),
         ],

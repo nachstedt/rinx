@@ -133,7 +133,7 @@ pub(super) fn try_parse_directive(
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if let Some(object_type) = resolve_domain_object_type(&name, default_domain) {
-        let directive = parse_domain_object(
+        let domain_object = parse_domain_object(
             object_type,
             argument,
             &body_lines,
@@ -141,7 +141,10 @@ pub(super) fn try_parse_directive(
             diagnostics,
             default_domain,
         );
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        return Some((
+            1 + consumed_lines,
+            Node::Directive(Directive::DomainObject(domain_object)),
+        ));
     }
     let directive = Directive::Unknown {
         name,
