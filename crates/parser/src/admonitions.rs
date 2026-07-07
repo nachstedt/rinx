@@ -429,6 +429,49 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_creates_seealso_with_definition_list_body() {
+        // Given the CPython benchmark's `curses` seealso block: a definition
+        // list where each term carries a :mod:/:ref: role.
+        let input = concat!(
+            ".. seealso::\n",
+            "\n",
+            "   Module :mod:`curses.ascii`\n",
+            "      Utilities for working with ASCII characters, regardless of your locale settings.\n",
+            "\n",
+            "   Module :mod:`curses.panel`\n",
+            "      A panel stack extension that adds depth to  curses windows.\n",
+            "\n",
+            "   :ref:`curses-howto`\n",
+            "      Tutorial material on using curses with Python, by Andrew Kuchling and Eric\n",
+            "      Raymond.",
+        );
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then the body is a single DefinitionList with three term/definition items
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::SeeAlso { body }) = &doc.nodes[0] {
+            assert_eq!(body.len(), 1);
+            if let Node::DefinitionList { items } = &body[0] {
+                assert_eq!(items.len(), 3);
+                assert!(matches!(
+                    items[0].term[1],
+                    rusty_sphinx_ast::InlineNode::DomainObjectReference { .. }
+                ));
+                assert!(matches!(
+                    items[2].term[0],
+                    rusty_sphinx_ast::InlineNode::Reference(_)
+                ));
+            } else {
+                panic!("Expected DefinitionList, got {:?}", body[0]);
+            }
+        } else {
+            panic!("Expected SeeAlso directive, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
     fn test_parse_seealso_basic() {
         // Given
         let body_lines = vec!["   See the other page."];

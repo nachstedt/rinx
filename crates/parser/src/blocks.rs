@@ -1,4 +1,5 @@
 use super::bullet_list::try_parse_bullet_list;
+use super::definition_list::try_parse_definition_list;
 use super::directives::try_parse_directive;
 use super::headings::{Adornment, detect_adornment, try_parse_heading};
 use super::inline::parse_inline_text;
@@ -252,6 +253,14 @@ pub(super) fn parse_blocks(
 
         if let Some((consumed, node)) =
             try_parse_bullet_list(lines, i, adornment_order, diagnostics, default_domain)
+        {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
+        if let Some((consumed, node)) =
+            try_parse_definition_list(lines, i, adornment_order, diagnostics, default_domain)
         {
             nodes.push(node);
             i += consumed;
