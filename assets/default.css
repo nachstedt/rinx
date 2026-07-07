@@ -453,6 +453,43 @@ a.broken-link:hover {
   color: #dc2626 !important;
 }
 
+/* ── Tables ────────────────────────────────────────────────────────── */
+
+table {
+  border-collapse: collapse;
+  margin: 1.75rem 0;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+/* `--border` (#e2e8f0) is tuned for subtle single-line dividers elsewhere on
+ * the page; against a full grid of table lines it reads as nearly invisible,
+ * so tables use a darker, clearly-visible line of their own. */
+table th,
+table td {
+  border: 1px solid #94a3b8;
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+table thead th {
+  background: var(--bg-sidebar);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: var(--text-header);
+  border-bottom: 2px solid var(--text-muted);
+}
+
+table tbody tr:nth-child(even) {
+  background: var(--bg-sidebar);
+}
+
+table th p:last-child,
+table td p:last-child {
+  margin-bottom: 0;
+}
+
 /* ── Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {
