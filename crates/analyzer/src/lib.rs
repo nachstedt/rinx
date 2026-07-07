@@ -88,34 +88,78 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     let mut index = ProjectIndex::default();
     let mut found_title = false;
     for node in &doc.nodes {
-        if let Node::Target { name, uri } = node {
-            let location = uri.as_ref().map_or_else(
-                || TargetLocation::Internal(doc.path.clone()),
-                |url| TargetLocation::External(url.clone()),
-            );
-            index.targets.insert(name.clone(), location);
-        }
         if !found_title && let Node::Heading { level: 1, text } = node {
             index
                 .document_titles
                 .insert(doc.path.clone(), rusty_sphinx_ast::inline_plain_text(text));
             found_title = true;
         }
-        if let Node::Directive(Directive::Glossary { entries, .. }) = node {
-            for entry in entries {
-                for term in &entry.terms {
-                    index
-                        .glossary_terms
-                        .insert(TargetName::new(term), doc.path.clone());
+    }
+    index_nodes(&doc.nodes, &doc.path, &mut index);
+    index
+}
+
+/// Recursively registers targets, glossary terms, and domain objects found
+/// anywhere in `nodes`, including inside table cells, list items, and
+/// directive bodies — not just at the document's top level. This mirrors
+/// the recursion shape `render_nodes` (in the renderer crate) uses, since a
+/// definition nested in a container still needs to be indexed for
+/// cross-references to resolve, exactly like it's still rendered with a
+/// working anchor.
+fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
+    for node in nodes {
+        match node {
+            Node::Target { name, uri } => {
+                let location = uri.as_ref().map_or_else(
+                    || TargetLocation::Internal(doc_path.to_string()),
+                    |url| TargetLocation::External(url.clone()),
+                );
+                index.targets.insert(name.clone(), location);
+            }
+            Node::Directive(Directive::Glossary { entries, .. }) => {
+                for entry in entries {
+                    for term in &entry.terms {
+                        index
+                            .glossary_terms
+                            .insert(TargetName::new(term), doc_path.to_string());
+                    }
                 }
             }
-        }
-        if let Node::Directive(Directive::DomainObject(obj)) = node {
-            let key = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &obj.name());
-            index.domain_objects.insert(key, doc.path.clone());
+            Node::Directive(Directive::DomainObject(obj)) => {
+                let key = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &obj.name());
+                index.domain_objects.insert(key, doc_path.to_string());
+                index_nodes(obj.body(), doc_path, index);
+            }
+            Node::Directive(
+                Directive::Admonition { body, .. }
+                | Directive::VersionChange { body, .. }
+                | Directive::SeeAlso { body },
+            ) => {
+                index_nodes(body, doc_path, index);
+            }
+            Node::BulletList { items, .. } => {
+                for item in items {
+                    index_nodes(&item.nodes, doc_path, index);
+                }
+            }
+            Node::DefinitionList { items } => {
+                for item in items {
+                    index_nodes(&item.definition, doc_path, index);
+                }
+            }
+            Node::Table {
+                header_rows,
+                body_rows,
+            } => {
+                for row in header_rows.iter().chain(body_rows) {
+                    for cell in &row.cells {
+                        index_nodes(&cell.content, doc_path, index);
+                    }
+                }
+            }
+            _ => {}
         }
     }
-    index
 }
 
 /// Extracts toctree entries from a document, resolved to absolute paths.
@@ -1046,6 +1090,35 @@ mod tests {
     }
 
     #[test]
+    fn test_analyze_registers_data_domain_object() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyData {
+                    name: "DEFAULT_TIMEOUT".to_string(),
+                    type_: Some("int".to_string()),
+                    value: Some("30".to_string()),
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — registered under the canonical "py:data:..." key, the same
+        // one both `:py:data:` and `:py:const:` roles resolve against.
+        assert_eq!(index.domain_objects.len(), 1);
+        assert_eq!(
+            index
+                .domain_objects
+                .get(&TargetName::new("py:data:DEFAULT_TIMEOUT")),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
     fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
         // Given — same object name "add" declared under both py and c domains
         let doc = Document::new(
@@ -1123,6 +1196,201 @@ mod tests {
         assert!(
             idx1.domain_objects
                 .contains_key(&TargetName::new("c:function:bar"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_domain_object_nested_in_table_cell() {
+        // Given — a `.. data::` directive nested inside a grid-table cell,
+        // mirroring CPython's `curses.rst` attribute table (`A_NORMAL` etc.)
+        let doc = Document::new(
+            "curses.rst".to_string(),
+            vec![Node::Table {
+                header_rows: vec![],
+                body_rows: vec![rusty_sphinx_ast::TableRow {
+                    cells: vec![rusty_sphinx_ast::TableCell {
+                        colspan: 1,
+                        rowspan: 1,
+                        content: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::PyData {
+                                name: "A_NORMAL".to_string(),
+                                type_: None,
+                                value: None,
+                                body: vec![],
+                            },
+                        ))],
+                    }],
+                }],
+            }],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            index
+                .domain_objects
+                .get(&TargetName::new("py:data:A_NORMAL")),
+            Some(&"curses.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_target_nested_in_table_cell() {
+        // Given — a target nested inside a grid-table cell
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Table {
+                header_rows: vec![],
+                body_rows: vec![rusty_sphinx_ast::TableRow {
+                    cells: vec![rusty_sphinx_ast::TableCell {
+                        colspan: 1,
+                        rowspan: 1,
+                        content: vec![Node::Target {
+                            name: TargetName::new("nested-target"),
+                            uri: None,
+                        }],
+                    }],
+                }],
+            }],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            index.targets.get(&TargetName::new("nested-target")),
+            Some(&TargetLocation::Internal("test.rst".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_domain_object_nested_in_bullet_list() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::BulletList {
+                bullet: '-',
+                items: vec![rusty_sphinx_ast::BulletListItem {
+                    nodes: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                            signature: "greet(name)".to_string(),
+                            body: vec![],
+                        },
+                    ))],
+                }],
+            }],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            index
+                .domain_objects
+                .get(&TargetName::new("py:function:greet")),
+            Some(&"test.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_domain_object_nested_in_definition_list() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::DefinitionList {
+                items: vec![rusty_sphinx_ast::DefinitionListItem {
+                    term: vec![InlineNode::Text("term".to_string())],
+                    definition: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                            signature: "greet(name)".to_string(),
+                            body: vec![],
+                        },
+                    ))],
+                }],
+            }],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            index
+                .domain_objects
+                .get(&TargetName::new("py:function:greet")),
+            Some(&"test.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_domain_object_nested_in_admonition_body() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::Admonition {
+                kind: rusty_sphinx_ast::AdmonitionKind::Note,
+                title: None,
+                collapsible: None,
+                body: vec![Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                        signature: "greet(name)".to_string(),
+                        body: vec![],
+                    },
+                ))],
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            index
+                .domain_objects
+                .get(&TargetName::new("py:function:greet")),
+            Some(&"test.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_domain_object_nested_in_another_domain_objects_body() {
+        // Given — a `py:module` whose body contains a nested `py:function`
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                    name: "greetings".to_string(),
+                    platform: None,
+                    synopsis: None,
+                    deprecated: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                            signature: "greet(name)".to_string(),
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — both the outer module and the nested function are indexed
+        assert_eq!(index.domain_objects.len(), 2);
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:module:greetings"))
+        );
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:function:greet"))
         );
     }
 

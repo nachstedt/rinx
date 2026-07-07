@@ -99,17 +99,17 @@ pub(super) fn render_seealso(html: &mut String, body: &[Node], ctx: &mut RenderC
 }
 
 /// Renders a domain object directive (e.g. `.. py:function::`, `.. c:function::`,
-/// `.. py:module::`) as a Sphinx-style object description
+/// `.. py:module::`, `.. py:data::`) as a Sphinx-style object description
 /// (`<dl class="{domain} {objtype}">`), using the same qualified key as the
 /// analyzer for the anchor `id`.
 ///
 /// The shared `<dl>`/`<dt>` wrapper and cross-reference key are built
 /// generically via `obj`'s accessors; any option specific to one object type
-/// (currently only `py:module`'s `platform`/`synopsis`/`deprecated` — real
-/// Sphinx has no equivalent module index page here, so they're rendered
-/// inline as leading `<dd>` paragraphs rather than dropped) is matched
-/// explicitly, so adding a new object type with its own options can't be
-/// forgotten here.
+/// (`py:module`'s `platform`/`synopsis`/`deprecated` and `py:data`'s
+/// `type`/`value` — real Sphinx has no equivalent module/data index page
+/// here, so they're rendered inline as leading `<dd>` paragraphs rather than
+/// dropped) is matched explicitly, so adding a new object type with its own
+/// options can't be forgotten here.
 pub(super) fn render_domain_object(
     html: &mut String,
     obj: &rusty_sphinx_ast::DomainObjectBody,
@@ -152,6 +152,22 @@ pub(super) fn render_domain_object(
             }
             if *deprecated {
                 let _ = write!(html, "<p class=\"deprecated\">Deprecated.</p>");
+            }
+        }
+        rusty_sphinx_ast::DomainObjectBody::PyData { type_, value, .. } => {
+            if let Some(type_) = type_ {
+                let _ = write!(
+                    html,
+                    "<p class=\"type\">Type: {}</p>",
+                    html_escape::encode_text(type_)
+                );
+            }
+            if let Some(value) = value {
+                let _ = write!(
+                    html,
+                    "<p class=\"value\">Value: {}</p>",
+                    html_escape::encode_text(value)
+                );
             }
         }
         rusty_sphinx_ast::DomainObjectBody::PyFunction { .. }
@@ -774,6 +790,55 @@ mod tests {
         assert!(result.contains("<p class=\"platform\">Platform: Unix, Windows</p>"));
         assert!(result.contains("<p class=\"synopsis\">Greeting utilities.</p>"));
         assert!(result.contains("<p class=\"deprecated\">Deprecated.</p>"));
+    }
+
+    #[test]
+    fn test_render_formats_py_data_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyData {
+                    name: "DEFAULT_TIMEOUT".to_string(),
+                    type_: None,
+                    value: None,
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "The default timeout in seconds.".to_string(),
+                    )])],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"py data\">"));
+        assert!(result.contains("<dt id=\"py:data:default_timeout\">"));
+        assert!(result.contains("<code class=\"sig-name\">DEFAULT_TIMEOUT</code>"));
+    }
+
+    #[test]
+    fn test_render_formats_py_data_type_and_value() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyData {
+                    name: "DEFAULT_TIMEOUT".to_string(),
+                    type_: Some("int".to_string()),
+                    value: Some("30".to_string()),
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<p class=\"type\">Type: int</p>"));
+        assert!(result.contains("<p class=\"value\">Value: 30</p>"));
     }
 
     #[test]

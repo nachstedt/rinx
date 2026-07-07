@@ -794,6 +794,56 @@ mod tests {
     }
 
     #[test]
+    fn test_render_inline_domain_object_reference_resolved_py_data_via_data_and_const_roles() {
+        // Given — a single `.. py:data::` definition registered under its
+        // canonical `ObjectType::Py(PyObjectType::Data)` key.
+        let mut index = ProjectIndex::default();
+        index.domain_objects.insert(
+            rusty_sphinx_ast::build_domain_object_key(
+                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+                "DEFAULT_TIMEOUT",
+            ),
+            "api.rst".to_string(),
+        );
+
+        // When — both `:py:data:` and `:py:const:` roles parse down to the
+        // same `ObjectType`, so rendering either must resolve identically.
+        let mut data_html = String::new();
+        let mut broken_links = Vec::new();
+        render_inline_domain_object_reference(
+            &mut data_html,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+                name: "DEFAULT_TIMEOUT",
+                display: "DEFAULT_TIMEOUT",
+                link: true,
+            },
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
+        let mut const_html = String::new();
+        render_inline_domain_object_reference(
+            &mut const_html,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+                name: "DEFAULT_TIMEOUT",
+                display: "DEFAULT_TIMEOUT",
+                link: true,
+            },
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
+
+        // Then
+        assert_eq!(data_html, const_html);
+        assert!(data_html.contains("class=\"reference internal\""));
+        assert!(data_html.contains("href=\"api.html#py:data:default_timeout\""));
+        assert!(data_html.contains("class=\"xref py data docutils literal\""));
+    }
+
+    #[test]
     fn test_render_inline_domain_object_reference_broken_link_when_missing() {
         // Given
         let index = ProjectIndex::default();
