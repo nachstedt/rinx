@@ -192,7 +192,7 @@ mod tests {
 
     fn render_doc(doc: &Document) -> String {
         let index = ProjectIndex::default();
-        crate::render(doc, &index, &doc.path)
+        crate::render(doc, &index, &doc.path).html
     }
 
     #[test]
@@ -260,6 +260,7 @@ mod tests {
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
+            broken_links: &mut Vec::new(),
         };
 
         // When
@@ -295,6 +296,7 @@ mod tests {
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
+            broken_links: &mut Vec::new(),
         };
 
         // When
@@ -462,6 +464,7 @@ mod tests {
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
+            broken_links: &mut Vec::new(),
         };
 
         // When
@@ -621,7 +624,7 @@ mod tests {
             .insert(TargetName::new("environment"), "glossary.rst".to_string());
 
         // When
-        let result = crate::render(&doc, &index, &doc.path);
+        let result = crate::render(&doc, &index, &doc.path).html;
 
         // Then
         assert!(result.contains("href=\"glossary.html#term-environment\""));
@@ -645,7 +648,7 @@ mod tests {
             .insert(TargetName::new("environment"), "glossary.rst".to_string());
 
         // When
-        let result = crate::render(&doc, &index, &doc.path);
+        let result = crate::render(&doc, &index, &doc.path).html;
 
         // Then
         assert!(result.contains("href=\"glossary.html#term-environment\""));
@@ -665,7 +668,7 @@ mod tests {
         let index = ProjectIndex::default(); // empty — no glossary terms
 
         // When
-        let result = crate::render(&doc, &index, &doc.path);
+        let result = crate::render(&doc, &index, &doc.path).html;
 
         // Then
         assert!(result.contains("class=\"broken-link\""));
@@ -817,7 +820,7 @@ mod tests {
             .insert(TargetName::new("foo"), "glossary.rst".to_string());
 
         // When
-        let result = crate::render(&doc, &index, &doc.path);
+        let result = crate::render(&doc, &index, &doc.path).html;
 
         // Then — href should traverse up one directory
         assert!(result.contains("href=\"../glossary.html#term-foo\""));

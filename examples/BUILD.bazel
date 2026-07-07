@@ -22,6 +22,7 @@ rusty_sphinx_site(
     name = "site",
     config = "rusty_sphinx.toml",
     template = "custom_template.html",
+    strict_links = True,
     deps = [
         ":root_docs",
         "//examples/team_a:docs",

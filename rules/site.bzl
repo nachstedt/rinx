@@ -44,17 +44,21 @@ def _rusty_sphinx_site_impl(ctx):
         html_out = ctx.actions.declare_file(
             ctx.label.name + "_site_out/" + doc_path + ".html",
         )
+        render_args = [
+            "render",
+            "--input", ast_file.path,
+            "--index", index_out.path,
+            "--doc-path", doc_path,
+            "--output", html_out.path,
+            "--config", config_file.path,
+            "--template", template_file.path,
+        ]
+        if ctx.attr.strict_links:
+            render_args.append("--strict-links")
+
         ctx.actions.run(
             executable = worker,
-            arguments = [
-                "render",
-                "--input", ast_file.path,
-                "--index", index_out.path,
-                "--doc-path", doc_path,
-                "--output", html_out.path,
-                "--config", config_file.path,
-                "--template", template_file.path,
-            ],
+            arguments = render_args,
             inputs = [ast_file, index_out, template_file, config_file],
             outputs = [html_out],
             mnemonic = "RustySphinxRender",
@@ -145,6 +149,12 @@ rusty_sphinx_site = rule(
             allow_single_file = [".css"],
             default = Label("//:assets/default.css"),
             doc = "The CSS stylesheet to include in the site output.",
+        ),
+        "strict_links": attr.bool(
+            default = False,
+            doc = "If True, a broken cross-reference (:ref:, hyperlink, :term:, or domain-object " +
+                  "role) fails the render action for that page instead of only printing a " +
+                  "warning. Off by default so existing sites are unaffected.",
         ),
         "_worker": attr.label(
             default = Label("//:rusty_sphinx_worker"),

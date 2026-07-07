@@ -1,3 +1,5 @@
+.. _admonitions:
+
 Admonitions Showcase
 =====================
 

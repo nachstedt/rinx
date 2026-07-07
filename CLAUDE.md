@@ -24,6 +24,7 @@ bazel build //:rusty_sphinx_worker    # build the CLI binary via Bazel
 bazel build //examples:site           # build the example multi-team site end-to-end
 bazel build //examples/team_a:docs    # build one team's library in isolation
 bash tests/test_strict_deps.sh        # verifies Bazel fails the build when a toctree dep is missing from BUILD.bazel
+bash tests/test_strict_links.sh       # verifies broken links only warn by default, and fail the build when strict_links = True
 bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.md)
 ```
 
