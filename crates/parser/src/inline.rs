@@ -1,3 +1,4 @@
+use crate::typography::apply_smart_typography;
 use regex::Regex;
 use rusty_sphinx_ast::{Domain, InlineNode, ObjectType};
 use std::sync::LazyLock;
@@ -83,13 +84,15 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
 
         if let Some((start, end, kind, node_opt)) = earliest {
             if start > 0 {
-                inlines.push(InlineNode::Text(remaining[..start].to_string()));
+                inlines.push(InlineNode::Text(apply_smart_typography(
+                    &remaining[..start],
+                )));
             }
             let m_str = &remaining[start..end];
             inlines.push(handle_inline_match(kind, m_str, node_opt, default_domain));
             last_match_end += end;
         } else {
-            inlines.push(InlineNode::Text(remaining.to_string()));
+            inlines.push(InlineNode::Text(apply_smart_typography(remaining)));
             break;
         }
     }
@@ -295,7 +298,11 @@ pub(super) fn find_inline_markup(
         if text[i..].starts_with("**")
             && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 2, false)
         {
-            let m = (i, i + (end_pos - abs_i), InlineNode::Strong(content));
+            let m = (
+                i,
+                i + (end_pos - abs_i),
+                InlineNode::Strong(apply_smart_typography(&content)),
+            );
             if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
                 best_match = Some(m);
                 break; // Found the earliest match
@@ -307,7 +314,11 @@ pub(super) fn find_inline_markup(
             && !text[i..].starts_with("**")
             && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 1, false)
         {
-            let m = (i, i + (end_pos - abs_i), InlineNode::Emphasis(content));
+            let m = (
+                i,
+                i + (end_pos - abs_i),
+                InlineNode::Emphasis(apply_smart_typography(&content)),
+            );
             if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
                 best_match = Some(m);
                 break; // Found the earliest match
@@ -1237,6 +1248,89 @@ mod integration_tests {
                     .iter()
                     .any(|n| matches!(n, InlineNode::DomainObjectReference { .. }))
             );
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_converts_triple_hyphen_to_em_dash() {
+        // Given
+        let input = "wait---no, that's wrong.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![InlineNode::Text(
+                "wait\u{2014}no, that's wrong.".to_string()
+            )])
+        );
+    }
+
+    #[test]
+    fn test_parse_paragraph_converts_double_hyphen_to_en_dash() {
+        // Given
+        let input = "See pages 10--20.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![InlineNode::Text(
+                "See pages 10\u{2013}20.".to_string()
+            )])
+        );
+    }
+
+    #[test]
+    fn test_parse_paragraph_converts_triple_dot_to_ellipsis() {
+        // Given
+        let input = "Wait... what happened?";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![InlineNode::Text(
+                "Wait\u{2026} what happened?".to_string()
+            )])
+        );
+    }
+
+    #[test]
+    fn test_parse_paragraph_applies_smart_typography_inside_strong_emphasis() {
+        // Given
+        let input = "This is **really---important**.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::Strong("really\u{2014}important".to_string())));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_paragraph_does_not_apply_smart_typography_inside_inline_literal() {
+        // Given — literal/code content must not be transformed
+        let input = "Run ``git log a---b``.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::Literal("git log a---b".to_string())));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
         }

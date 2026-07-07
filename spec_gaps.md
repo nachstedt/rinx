@@ -27,6 +27,7 @@ the corresponding feature is implemented.
 | Domain-object role target modifiers `!target` (suppress link) and `~target` (shorten display to last dotted component) | ✅ Implemented | Applies to `:func:`/`:mod:` (and any future domain role) via `InlineNode::DomainObjectReference`'s `name`/`display`/`link` fields, parsed by the shared `parse_domain_object_target` helper in `crates/parser/src/inline.rs`. The separate `` :role:`title <target>` `` explicit-title override (already supported for `:term:`) is **not** yet supported for domain-object roles — tracked as a follow-up below. |
 | Hyperlink references (`link text <URL>`_) | ❌ Not implemented | — |
 | Anonymous hyperlinks (`link text <URL>`__) | ❌ Not implemented | — |
+| Smart typography (`---` → em dash, `--` → en dash, `...` → ellipsis) | ✅ Implemented | Mirrors docutils' `smartquotes` transform (on by default in Sphinx); always on, no config toggle. Applied in `crates/parser/src/typography.rs::apply_smart_typography`, hooked into `parse_inline_text`'s plain-text runs and `find_inline_markup`'s `Emphasis`/`Strong` content, so it covers paragraphs, headings, and definition-list terms (all of which route through `parse_inline_text`), but not inline literals/`:program:`/code blocks. Glossary term strings (`GlossaryEntry.terms: Vec<String>`) bypass `parse_inline_text` and are not yet covered — same pre-existing gap as glossary not supporting inline markup in terms. |
 
 ## Block-Level Elements
 

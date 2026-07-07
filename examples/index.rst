@@ -19,6 +19,7 @@ Welcome to the Rusty-Sphinx example.
    comments
    domains
    transitions
+   typography
    team_a/index
    team_b/index
 

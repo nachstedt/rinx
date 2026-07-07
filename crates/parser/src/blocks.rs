@@ -1255,7 +1255,7 @@ mod integration_tests {
             Node::Heading {
                 level: 1,
                 text: vec![InlineNode::Text(
-                    "... install scientific Python packages?".to_string()
+                    "\u{2026} install scientific Python packages?".to_string()
                 )]
             }
         );
@@ -1272,7 +1272,7 @@ mod integration_tests {
         assert_eq!(
             doc.nodes[0],
             Node::Paragraph(vec![InlineNode::Text(
-                "...continued from above.".to_string()
+                "\u{2026}continued from above.".to_string()
             )])
         );
     }
