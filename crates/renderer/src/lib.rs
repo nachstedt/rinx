@@ -14,7 +14,7 @@ use directives::{
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use rusty_sphinx_analyzer::ProjectIndex;
-use rusty_sphinx_ast::{Directive, Document, Node};
+use rusty_sphinx_ast::{Directive, Document, InlineNode, Node};
 use std::fmt::Write as _;
 
 /// Shared rendering state threaded through the node traversal.
@@ -56,10 +56,12 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
-                | Directive::SeeAlso { body }
-                | Directive::DomainObject { body, .. },
+                | Directive::SeeAlso { body },
             ) => {
                 collect_anonymous_targets(body, targets);
+            }
+            Node::Directive(Directive::DomainObject(obj)) => {
+                collect_anonymous_targets(obj.body(), targets);
             }
             Node::Directive(Directive::Glossary { entries, .. }) => {
                 for entry in entries {
@@ -71,26 +73,34 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
     }
 }
 
+/// Renders a sequence of inline nodes in order, sharing the same `ctx`
+/// (index/anon-target state) across calls. Used for both heading text and
+/// paragraph content, which are both just a `Vec<InlineNode>`.
+fn render_inlines(html: &mut String, inlines: &[InlineNode], ctx: &mut RenderCtx<'_>) {
+    for inline in inlines {
+        render_inline(
+            html,
+            inline,
+            ctx.index,
+            ctx.doc_path,
+            ctx.anon_targets,
+            ctx.anon_index,
+        );
+    }
+}
+
 pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCtx<'_>) {
     for node in nodes {
         match node {
             Node::Heading { level, text } => {
                 let tag = format!("h{}", (*level).clamp(1, 6));
-                let escaped_text = html_escape::encode_text(text);
-                let _ = writeln!(html, "<{tag}>{escaped_text}</{tag}>");
+                let _ = write!(html, "<{tag}>");
+                render_inlines(html, text, ctx);
+                let _ = writeln!(html, "</{tag}>");
             }
             Node::Paragraph(inlines) => {
                 let _ = write!(html, "<p>");
-                for inline in inlines {
-                    render_inline(
-                        html,
-                        inline,
-                        ctx.index,
-                        ctx.doc_path,
-                        ctx.anon_targets,
-                        ctx.anon_index,
-                    );
-                }
+                render_inlines(html, inlines, ctx);
                 let _ = writeln!(html, "</p>");
             }
             Node::Target { name, uri } => {
@@ -173,11 +183,7 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         } => render_version_change(html, *kind, version, body, ctx),
         Directive::SeeAlso { body } => render_seealso(html, body, ctx),
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
-        Directive::DomainObject {
-            object_type,
-            signature,
-            body,
-        } => render_domain_object(html, *object_type, signature, body, ctx),
+        Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
         Directive::Unknown { .. } => {}
     }
 }
@@ -208,14 +214,14 @@ mod tests {
             vec![
                 Node::Heading {
                     level: 1,
-                    text: "Title".to_string(),
+                    text: vec![InlineNode::Text("Title".to_string())],
                 },
                 Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
                     "Paragraph".to_string(),
                 )]),
                 Node::Heading {
                     level: 1,
-                    text: "Another Heading".to_string(),
+                    text: vec![InlineNode::Text("Another Heading".to_string())],
                 },
             ],
         );
@@ -232,6 +238,48 @@ mod tests {
     }
 
     #[test]
+    fn test_render_heading_resolves_domain_object_reference_as_link() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Heading {
+                level: 1,
+                text: vec![
+                    InlineNode::Text("The ".to_string()),
+                    InlineNode::DomainObjectReference {
+                        object_type: rusty_sphinx_ast::ObjectType::Py(
+                            rusty_sphinx_ast::PyObjectType::Module,
+                        ),
+                        name: "greetings".to_string(),
+                        display: "greetings".to_string(),
+                        link: true,
+                    },
+                    InlineNode::Text(" Module".to_string()),
+                ],
+            }],
+        );
+        let mut index = ProjectIndex::default();
+        index.domain_objects.insert(
+            rusty_sphinx_ast::build_domain_object_key(
+                rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                "greetings",
+            ),
+            "api.rst".to_string(),
+        );
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.starts_with("<h1>The "));
+        assert!(
+            result
+                .contains("<a class=\"reference internal\" href=\"api.html#py:module:greetings\">")
+        );
+        assert!(result.ends_with(" Module</h1>\n"));
+    }
+
+    #[test]
     fn test_render_escapes_html_special_characters() {
         // Given
         let doc = Document::new(
@@ -239,7 +287,7 @@ mod tests {
             vec![
                 Node::Heading {
                     level: 1,
-                    text: "Title <script>".to_string(),
+                    text: vec![InlineNode::Text("Title <script>".to_string())],
                 },
                 Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
                     "A & B > C".to_string(),
@@ -343,7 +391,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Heading {
                 level: 1,
-                text: "Top".to_string(),
+                text: vec![InlineNode::Text("Top".to_string())],
             }],
         );
         let index = ProjectIndex::default();
@@ -362,7 +410,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Heading {
                 level: 2,
-                text: "Sub".to_string(),
+                text: vec![InlineNode::Text("Sub".to_string())],
             }],
         );
         let index = ProjectIndex::default();
@@ -381,7 +429,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Heading {
                 level: 6,
-                text: "Deep".to_string(),
+                text: vec![InlineNode::Text("Deep".to_string())],
             }],
         );
         let index = ProjectIndex::default();
@@ -400,7 +448,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Heading {
                 level: 7,
-                text: "VeryDeep".to_string(),
+                text: vec![InlineNode::Text("VeryDeep".to_string())],
             }],
         );
         let index = ProjectIndex::default();

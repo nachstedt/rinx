@@ -19,6 +19,25 @@ Python Domain
    prefix — this library's default domain is ``py`` (the default), so this
    resolves to ``py:function``.
 
+.. py:module:: greetings
+   :platform: Unix, Windows
+   :synopsis: Greeting utilities.
+   :deprecated:
+
+   A module holding the ``greet`` and ``farewell`` functions.
+
+.. py:function:: greetings.shout(name)
+
+   Greets the given name loudly.
+
+The :py:mod:`greetings` Module
+""""""""""""""""""""""""""""""
+
+This heading's title itself contains a cross-reference role, proving that
+inline markup and domain-object roles resolve inside headings, not just in
+paragraph text — the heading text above renders as a working link to the
+module definition, not literal ``:py:mod:`greetings``` text.
+
 C Domain
 --------
 
@@ -31,7 +50,15 @@ Cross-References
 
 Call :py:func:`greet` to greet someone, or :c:func:`add` to add two numbers.
 The bare role :func:`farewell` also resolves to the ``py`` domain, since
-that is this library's default.
+that is this library's default. The :py:mod:`greetings` module holds both
+of them.
 
 See also Team A's :c:func:`subtract`, defined in a library whose
 ``default_domain`` is set to ``c``.
+
+A domain-object role's target may be prefixed with ``!`` to suppress the
+link entirely — e.g. :py:func:`!not_a_real_function` renders as plain text
+with no warning, even though no such function is defined. A ``~`` prefix
+instead keeps the link but shortens the displayed text to the last dotted
+component — e.g. :py:func:`~greetings.shout` links to ``greetings.shout``
+but displays only ``shout``.

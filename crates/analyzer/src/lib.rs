@@ -96,7 +96,9 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             index.targets.insert(name.clone(), location);
         }
         if !found_title && let Node::Heading { level: 1, text } = node {
-            index.document_titles.insert(doc.path.clone(), text.clone());
+            index
+                .document_titles
+                .insert(doc.path.clone(), rusty_sphinx_ast::inline_plain_text(text));
             found_title = true;
         }
         if let Node::Directive(Directive::Glossary { entries, .. }) = node {
@@ -108,14 +110,8 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
                 }
             }
         }
-        if let Node::Directive(Directive::DomainObject {
-            object_type,
-            signature,
-            ..
-        }) = node
-        {
-            let name = rusty_sphinx_ast::extract_object_name(signature);
-            let key = rusty_sphinx_ast::build_domain_object_key(*object_type, &name);
+        if let Node::Directive(Directive::DomainObject(obj)) = node {
+            let key = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &obj.name());
             index.domain_objects.insert(key, doc.path.clone());
         }
     }
@@ -245,7 +241,7 @@ pub fn build_project_index(docs: &[Document]) -> ProjectIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{InlineNode, Node};
+    use rusty_sphinx_ast::{InlineNode, Node, ObjectType, PyObjectType};
 
     #[test]
     fn test_build_nav_subtree_basic() {
@@ -402,7 +398,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Heading {
                 level: 1,
-                text: "Title".to_string(),
+                text: vec![InlineNode::Text("Title".to_string())],
             }],
         );
 
@@ -477,11 +473,11 @@ mod tests {
                 Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
                 Node::Heading {
                     level: 1,
-                    text: "My Title".to_string(),
+                    text: vec![InlineNode::Text("My Title".to_string())],
                 },
                 Node::Heading {
                     level: 1,
-                    text: "Ignored Second H1".to_string(),
+                    text: vec![InlineNode::Text("Ignored Second H1".to_string())],
                 },
             ],
         );
@@ -498,13 +494,43 @@ mod tests {
     }
 
     #[test]
+    fn test_analyze_extracts_h1_title_as_plain_text_when_heading_has_domain_object_reference() {
+        // Given — a heading containing a `~`-shortened domain-object reference
+        let doc = Document::new(
+            "docs/greetings.rst".to_string(),
+            vec![Node::Heading {
+                level: 1,
+                text: vec![
+                    InlineNode::Text("The ".to_string()),
+                    InlineNode::DomainObjectReference {
+                        object_type: ObjectType::Py(PyObjectType::Module),
+                        name: "pkg.greetings".to_string(),
+                        display: "greetings".to_string(),
+                        link: true,
+                    },
+                    InlineNode::Text(" Module".to_string()),
+                ],
+            }],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — the title is flattened to plain text, using the shortened display
+        assert_eq!(
+            index.document_titles.get("docs/greetings.rst").unwrap(),
+            "The greetings Module"
+        );
+    }
+
+    #[test]
     fn test_build_project_index_creates_flat_nav_for_single_document() {
         // Given — a single document with no toctree
         let docs = vec![Document::new(
             "index.rst".to_string(),
             vec![Node::Heading {
                 level: 1,
-                text: "Root".to_string(),
+                text: vec![InlineNode::Text("Root".to_string())],
             }],
         )];
 
@@ -527,7 +553,7 @@ mod tests {
                 vec![
                     Node::Heading {
                         level: 1,
-                        text: "Home".to_string(),
+                        text: vec![InlineNode::Text("Home".to_string())],
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
@@ -540,14 +566,14 @@ mod tests {
                 "team_a/index.rst".to_string(),
                 vec![Node::Heading {
                     level: 1,
-                    text: "Team A".to_string(),
+                    text: vec![InlineNode::Text("Team A".to_string())],
                 }],
             ),
             Document::new(
                 "team_b/index.rst".to_string(),
                 vec![Node::Heading {
                     level: 1,
-                    text: "Team B".to_string(),
+                    text: vec![InlineNode::Text("Team B".to_string())],
                 }],
             ),
         ];
@@ -576,7 +602,7 @@ mod tests {
                 vec![
                     Node::Heading {
                         level: 1,
-                        text: "Home".to_string(),
+                        text: vec![InlineNode::Text("Home".to_string())],
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["about".to_string()],
@@ -609,7 +635,7 @@ mod tests {
                 vec![
                     Node::Heading {
                         level: 1,
-                        text: "Root".to_string(),
+                        text: vec![InlineNode::Text("Root".to_string())],
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["section/index".to_string()],
@@ -623,7 +649,7 @@ mod tests {
                 vec![
                     Node::Heading {
                         level: 1,
-                        text: "Section".to_string(),
+                        text: vec![InlineNode::Text("Section".to_string())],
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["sub/page".to_string()],
@@ -636,7 +662,7 @@ mod tests {
                 "section/sub/page.rst".to_string(),
                 vec![Node::Heading {
                     level: 1,
-                    text: "Deep Page".to_string(),
+                    text: vec![InlineNode::Text("Deep Page".to_string())],
                 }],
             ),
         ];
@@ -664,7 +690,7 @@ mod tests {
                 vec![
                     Node::Heading {
                         level: 1,
-                        text: "Home".to_string(),
+                        text: vec![InlineNode::Text("Home".to_string())],
                     },
                     Node::Directive(Directive::Toctree {
                         paths: vec!["child".to_string()],
@@ -677,7 +703,7 @@ mod tests {
                 "child.rst".to_string(),
                 vec![Node::Heading {
                     level: 1,
-                    text: "Child".to_string(),
+                    text: vec![InlineNode::Text("Child".to_string())],
                 }],
             ),
         ];
@@ -969,13 +995,12 @@ mod tests {
         // Given
         let doc = Document::new(
             "api.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject {
-                object_type: rusty_sphinx_ast::ObjectType::Py(
-                    rusty_sphinx_ast::PyObjectType::Function,
-                ),
-                signature: "greet(name)".to_string(),
-                body: vec![],
-            })],
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                    signature: "greet(name)".to_string(),
+                    body: vec![],
+                },
+            ))],
         );
 
         // When
@@ -992,25 +1017,52 @@ mod tests {
     }
 
     #[test]
+    fn test_analyze_registers_module_domain_object() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                    name: "greetings".to_string(),
+                    platform: None,
+                    synopsis: None,
+                    deprecated: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.domain_objects.len(), 1);
+        assert_eq!(
+            index
+                .domain_objects
+                .get(&TargetName::new("py:module:greetings")),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
     fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
         // Given — same object name "add" declared under both py and c domains
         let doc = Document::new(
             "api.rst".to_string(),
             vec![
-                Node::Directive(Directive::DomainObject {
-                    object_type: rusty_sphinx_ast::ObjectType::Py(
-                        rusty_sphinx_ast::PyObjectType::Function,
-                    ),
-                    signature: "add(a, b)".to_string(),
-                    body: vec![],
-                }),
-                Node::Directive(Directive::DomainObject {
-                    object_type: rusty_sphinx_ast::ObjectType::C(
-                        rusty_sphinx_ast::CObjectType::Function,
-                    ),
-                    signature: "int add(int a, int b)".to_string(),
-                    body: vec![],
-                }),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                        signature: "add(a, b)".to_string(),
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::CFunction {
+                        signature: "int add(int a, int b)".to_string(),
+                        body: vec![],
+                    },
+                )),
             ],
         );
 

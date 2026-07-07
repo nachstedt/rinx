@@ -232,6 +232,7 @@ impl std::fmt::Display for Domain {
 #[serde(rename_all = "lowercase")]
 pub enum PyObjectType {
     Function,
+    Module,
 }
 
 impl PyObjectType {
@@ -239,6 +240,7 @@ impl PyObjectType {
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Function => "function",
+            Self::Module => "module",
         }
     }
 }
@@ -249,6 +251,7 @@ impl std::str::FromStr for PyObjectType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "function" => Ok(Self::Function),
+            "module" => Ok(Self::Module),
             _ => Err(()),
         }
     }
@@ -329,6 +332,7 @@ impl ObjectType {
     pub fn from_role_name(domain: Domain, role: &str) -> Option<Self> {
         match (domain, role) {
             (Domain::Py, "func") => Some(Self::Py(PyObjectType::Function)),
+            (Domain::Py, "mod") => Some(Self::Py(PyObjectType::Module)),
             (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
             _ => None,
         }
@@ -363,6 +367,80 @@ pub fn build_domain_object_key(object_type: ObjectType, name: &str) -> TargetNam
         object_type.as_str(),
         name
     ))
+}
+
+/// The body of a domain object *definition* directive (e.g. `.. py:function::`,
+/// `.. py:module::`, `.. c:function::`) — one variant per concrete object
+/// type, each carrying exactly the fields/options meaningful to it.
+///
+/// This is deliberately separate from [`ObjectType`]: `ObjectType` is a
+/// lightweight tag shared with cross-reference roles (`InlineNode::
+/// DomainObjectReference`), which never carry options — only definitions do.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DomainObjectBody {
+    PyFunction {
+        signature: String,
+        body: Vec<Node>,
+    },
+    PyModule {
+        name: String,
+        /// Comma-separated platform identifiers (e.g. `"Unix, Windows"`).
+        platform: Option<String>,
+        /// One-sentence module summary.
+        synopsis: Option<String>,
+        /// Marks the module as deprecated.
+        deprecated: bool,
+        body: Vec<Node>,
+    },
+    CFunction {
+        signature: String,
+        body: Vec<Node>,
+    },
+}
+
+impl DomainObjectBody {
+    /// The [`ObjectType`] this definition belongs to.
+    #[must_use]
+    pub const fn object_type(&self) -> ObjectType {
+        match self {
+            Self::PyFunction { .. } => ObjectType::Py(PyObjectType::Function),
+            Self::PyModule { .. } => ObjectType::Py(PyObjectType::Module),
+            Self::CFunction { .. } => ObjectType::C(CObjectType::Function),
+        }
+    }
+
+    /// The referenceable name used to build the cross-reference key
+    /// ([`build_domain_object_key`]) — extracted from the signature for
+    /// function-like objects, or the dotted name directly for modules.
+    #[must_use]
+    pub fn name(&self) -> String {
+        match self {
+            Self::PyFunction { signature, .. } | Self::CFunction { signature, .. } => {
+                extract_object_name(signature)
+            }
+            Self::PyModule { name, .. } => name.clone(),
+        }
+    }
+
+    /// The raw text shown in the rendered `<dt>` — the full signature for
+    /// function-like objects, or the bare dotted name for modules.
+    #[must_use]
+    pub fn signature_text(&self) -> &str {
+        match self {
+            Self::PyFunction { signature, .. } | Self::CFunction { signature, .. } => signature,
+            Self::PyModule { name, .. } => name,
+        }
+    }
+
+    /// The parsed docstring body shared by every object type.
+    #[must_use]
+    pub fn body(&self) -> &[Node] {
+        match self {
+            Self::PyFunction { body, .. }
+            | Self::PyModule { body, .. }
+            | Self::CFunction { body, .. } => body,
+        }
+    }
 }
 
 /// A single entry in a `.. glossary::` directive.
@@ -425,11 +503,7 @@ pub enum Directive {
         entries: Vec<GlossaryEntry>,
         sorted: bool,
     },
-    DomainObject {
-        object_type: ObjectType,
-        signature: String,
-        body: Vec<Node>,
-    },
+    DomainObject(DomainObjectBody),
     Unknown {
         name: String,
         argument: String,
@@ -471,10 +545,45 @@ pub enum InlineNode {
     /// parser resolves a bare (unprefixed) role via the file's default
     /// domain immediately, mirroring how `Directive::DomainObject` is
     /// resolved.
+    ///
+    /// `name` and `display` differ when the role target uses a `~` prefix
+    /// (e.g. `~pkg.mod.func`): `name` is the full name used to resolve the
+    /// cross-reference, `display` is the shortened text shown to the reader
+    /// (just the last dotted component). A `!` prefix instead sets `link`
+    /// to `false`, suppressing the hyperlink entirely (the target is never
+    /// looked up, so a missing target produces no broken-link warning).
     DomainObjectReference {
         object_type: ObjectType,
         name: String,
+        display: String,
+        link: bool,
     },
+}
+
+/// Flattens a sequence of inline nodes down to the plain text a reader would
+/// see, discarding all markup/links. Used where a data field requires a
+/// plain `String` — e.g. a nav-sidebar label or an HTML `<title>` — rather
+/// than for rendering visible HTML body content (which uses `InlineNode`
+/// directly so links/emphasis are preserved).
+#[must_use]
+pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
+    nodes
+        .iter()
+        .map(|node| match node {
+            InlineNode::Text(text)
+            | InlineNode::Emphasis(text)
+            | InlineNode::Strong(text)
+            | InlineNode::Literal(text)
+            | InlineNode::Program(text)
+            | InlineNode::AnonymousReference(text)
+            | InlineNode::Reference(text) => text.as_str(),
+            InlineNode::Hyperlink { text, .. } | InlineNode::AnonymousHyperlink { text, .. } => {
+                text.as_str()
+            }
+            InlineNode::TermReference { display, .. }
+            | InlineNode::DomainObjectReference { display, .. } => display.as_str(),
+        })
+        .collect()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -486,7 +595,7 @@ pub struct BulletListItem {
 pub enum Node {
     Heading {
         level: u8,
-        text: String,
+        text: Vec<InlineNode>,
     },
     Paragraph(Vec<InlineNode>),
     Directive(Directive),
@@ -545,7 +654,7 @@ mod tests {
         let nodes = vec![
             Node::Heading {
                 level: 1,
-                text: "Title".to_string(),
+                text: vec![InlineNode::Text("Title".to_string())],
             },
             Node::Paragraph(vec![InlineNode::Text("Body".to_string())]),
         ];
@@ -912,6 +1021,12 @@ mod tests {
     }
 
     #[test]
+    fn test_py_object_type_from_str_accepts_module() {
+        // Given / When / Then
+        assert_eq!("module".parse::<PyObjectType>(), Ok(PyObjectType::Module));
+    }
+
+    #[test]
     fn test_c_object_type_from_str_accepts_function() {
         // Given / When / Then
         assert_eq!("function".parse::<CObjectType>(), Ok(CObjectType::Function));
@@ -989,6 +1104,16 @@ mod tests {
             ObjectType::from_role_name(Domain::C, "func"),
             Some(ObjectType::C(CObjectType::Function))
         );
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_mod_only_for_py() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Py, "mod"),
+            Some(ObjectType::Py(PyObjectType::Module))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::C, "mod"), None);
     }
 
     #[test]
@@ -1130,11 +1255,26 @@ mod tests {
     }
 
     #[test]
+    fn test_build_domain_object_key_for_module() {
+        // Given
+        let object_type = ObjectType::Py(PyObjectType::Module);
+        let name = "mypackage.mymodule";
+
+        // When
+        let key = build_domain_object_key(object_type, name);
+
+        // Then
+        assert_eq!(key.as_str(), "py:module:mypackage.mymodule");
+    }
+
+    #[test]
     fn test_domain_object_reference_serialization_roundtrip() {
         // Given
         let node = InlineNode::DomainObjectReference {
             object_type: ObjectType::Py(PyObjectType::Function),
             name: "foo".to_string(),
+            display: "foo".to_string(),
+            link: true,
         };
 
         // When
@@ -1146,15 +1286,66 @@ mod tests {
     }
 
     #[test]
+    fn test_inline_plain_text_concatenates_plain_text_nodes() {
+        // Given
+        let nodes = vec![
+            InlineNode::Text("Hello ".to_string()),
+            InlineNode::Strong("world".to_string()),
+        ];
+
+        // When
+        let text = inline_plain_text(&nodes);
+
+        // Then
+        assert_eq!(text, "Hello world");
+    }
+
+    #[test]
+    fn test_inline_plain_text_uses_shortened_display_for_domain_object_reference() {
+        // Given — a `~`-shortened domain-object reference
+        let nodes = vec![InlineNode::DomainObjectReference {
+            object_type: ObjectType::Py(PyObjectType::Module),
+            name: "pkg.submodule".to_string(),
+            display: "submodule".to_string(),
+            link: true,
+        }];
+
+        // When
+        let text = inline_plain_text(&nodes);
+
+        // Then
+        assert_eq!(text, "submodule");
+    }
+
+    #[test]
+    fn test_inline_plain_text_uses_display_for_term_reference() {
+        // Given
+        let nodes = vec![InlineNode::TermReference {
+            display: "the env".to_string(),
+            term: "environment".to_string(),
+        }];
+
+        // When
+        let text = inline_plain_text(&nodes);
+
+        // Then
+        assert_eq!(text, "the env");
+    }
+
+    #[test]
+    fn test_inline_plain_text_returns_empty_string_for_empty_input() {
+        assert_eq!(inline_plain_text(&[]), "");
+    }
+
+    #[test]
     fn test_domain_object_directive_serialization_roundtrip() {
         // Given
-        let directive = Directive::DomainObject {
-            object_type: ObjectType::C(CObjectType::Function),
+        let directive = Directive::DomainObject(DomainObjectBody::CFunction {
             signature: "int add(int a, int b)".to_string(),
             body: vec![Node::Paragraph(vec![InlineNode::Text(
                 "Adds two numbers.".to_string(),
             )])],
-        };
+        });
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");
@@ -1162,5 +1353,136 @@ mod tests {
 
         // Then
         assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_domain_object_directive_serialization_roundtrip_with_module_options() {
+        // Given
+        let directive = Directive::DomainObject(DomainObjectBody::PyModule {
+            name: "greetings".to_string(),
+            platform: Some("Unix, Windows".to_string()),
+            synopsis: Some("Greeting utilities.".to_string()),
+            deprecated: true,
+            body: vec![],
+        });
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_domain_object_body_object_type_matches_variant() {
+        // Given / When / Then
+        assert_eq!(
+            DomainObjectBody::PyFunction {
+                signature: "greet(name)".to_string(),
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::Py(PyObjectType::Function)
+        );
+        assert_eq!(
+            DomainObjectBody::PyModule {
+                name: "greetings".to_string(),
+                platform: None,
+                synopsis: None,
+                deprecated: false,
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::Py(PyObjectType::Module)
+        );
+        assert_eq!(
+            DomainObjectBody::CFunction {
+                signature: "int add(int a, int b)".to_string(),
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::C(CObjectType::Function)
+        );
+    }
+
+    #[test]
+    fn test_domain_object_body_name_extracts_from_signature_for_functions() {
+        // Given
+        let function = DomainObjectBody::PyFunction {
+            signature: "greet(name)".to_string(),
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(function.name(), "greet");
+    }
+
+    #[test]
+    fn test_domain_object_body_name_uses_bare_name_for_modules() {
+        // Given
+        let module = DomainObjectBody::PyModule {
+            name: "mypackage.mymodule".to_string(),
+            platform: None,
+            synopsis: None,
+            deprecated: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(module.name(), "mypackage.mymodule");
+    }
+
+    #[test]
+    fn test_domain_object_body_signature_text_shows_full_signature_for_functions() {
+        // Given
+        let function = DomainObjectBody::CFunction {
+            signature: "int add(int a, int b)".to_string(),
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(function.signature_text(), "int add(int a, int b)");
+    }
+
+    #[test]
+    fn test_domain_object_body_signature_text_shows_bare_name_for_modules() {
+        // Given
+        let module = DomainObjectBody::PyModule {
+            name: "greetings".to_string(),
+            platform: None,
+            synopsis: None,
+            deprecated: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(module.signature_text(), "greetings");
+    }
+
+    #[test]
+    fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
+        // Given
+        let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
+        let function = DomainObjectBody::PyFunction {
+            signature: "greet(name)".to_string(),
+            body: vec![paragraph.clone()],
+        };
+        let module = DomainObjectBody::PyModule {
+            name: "greetings".to_string(),
+            platform: None,
+            synopsis: None,
+            deprecated: false,
+            body: vec![paragraph.clone()],
+        };
+        let c_function = DomainObjectBody::CFunction {
+            signature: "int add(int a, int b)".to_string(),
+            body: vec![paragraph.clone()],
+        };
+
+        // When / Then
+        assert_eq!(function.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(module.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(c_function.body(), std::slice::from_ref(&paragraph));
     }
 }

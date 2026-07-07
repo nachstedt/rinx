@@ -132,12 +132,12 @@ fn process_preview(
         .iter()
         .find_map(|n| {
             if let ast::Node::Heading { level: 1, text } = n {
-                Some(text.as_str())
+                Some(ast::inline_plain_text(text))
             } else {
                 None
             }
         })
-        .unwrap_or(doc_path);
+        .unwrap_or_else(|| doc_path.to_string());
 
     let depth = doc_path.matches('/').count();
     let css_path = if depth == 0 {
@@ -151,7 +151,7 @@ fn process_preview(
         template_str,
         config,
         &css_path,
-        page_title,
+        &page_title,
         doc_path,
         &index.nav_tree,
     )
@@ -177,12 +177,12 @@ fn process_render(
         .iter()
         .find_map(|n| {
             if let ast::Node::Heading { level: 1, text } = n {
-                Some(text.as_str())
+                Some(ast::inline_plain_text(text))
             } else {
                 None
             }
         })
-        .unwrap_or("");
+        .unwrap_or_default();
 
     let css_path = renderer::css_relative_path(doc_path, "default.css");
     renderer::render_page(
@@ -190,7 +190,7 @@ fn process_render(
         template_str,
         config,
         &css_path,
-        page_title,
+        &page_title,
         doc_path,
         &index.nav_tree,
     )
@@ -680,7 +680,7 @@ mod tests {
         let json = process_parse("api.rst", rst, ast::Domain::C).unwrap();
 
         // Then
-        assert!(json.contains(r#""c":"function""#));
+        assert!(json.contains(r#""CFunction""#));
     }
 
     #[test]
@@ -729,7 +729,8 @@ mod tests {
     fn test_process_index_returns_serialized_project_index() {
         // Given
         let docs = vec![
-            r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#.to_string(),
+            r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":[{"Text":"Title"}]}}]}"#
+                .to_string(),
         ];
 
         // When
@@ -745,7 +746,8 @@ mod tests {
     #[test]
     fn test_process_render_returns_html_string() {
         // Given
-        let doc = r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":"Title"}}]}"#;
+        let doc =
+            r#"{"path":"test.rst","nodes":[{"Heading":{"level":1,"text":[{"Text":"Title"}]}}]}"#;
         let index = r#"{"targets":{},"document_titles":{},"nav_tree":[]}"#;
         let config = config::SiteConfig::default();
         let template = "{{ body }}";
@@ -1037,7 +1039,7 @@ mod tests {
             vec![
                 ast::Node::Heading {
                     level: 1,
-                    text: "Title".to_string(),
+                    text: vec![ast::InlineNode::Text("Title".to_string())],
                 },
                 ast::Node::Paragraph(vec![ast::InlineNode::Text("text".to_string())]),
             ],

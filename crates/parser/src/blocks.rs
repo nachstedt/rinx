@@ -243,7 +243,8 @@ pub(super) fn parse_blocks(
             continue;
         }
 
-        if let Some((consumed, node)) = try_parse_heading(lines, i, adornment_order) {
+        if let Some((consumed, node)) = try_parse_heading(lines, i, adornment_order, default_domain)
+        {
             nodes.push(node);
             i += consumed;
             continue;
@@ -895,7 +896,7 @@ mod integration_tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Title".to_string()
+                text: vec![InlineNode::Text("Title".to_string())]
             }
         );
         assert_eq!(
@@ -930,7 +931,7 @@ mod integration_tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Heading".to_string()
+                text: vec![InlineNode::Text("Heading".to_string())]
             }
         );
         assert_eq!(
@@ -973,7 +974,7 @@ mod integration_tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Heading".to_string()
+                text: vec![InlineNode::Text("Heading".to_string())]
             }
         );
         assert_eq!(
@@ -1053,7 +1054,7 @@ mod integration_tests {
             doc.nodes[1],
             Node::Heading {
                 level: 1,
-                text: "Heading".to_string()
+                text: vec![InlineNode::Text("Heading".to_string())]
             }
         );
     }
@@ -1210,7 +1211,7 @@ mod integration_tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Title".to_string()
+                text: vec![InlineNode::Text("Title".to_string())]
             }
         );
         assert_eq!(doc.nodes[1], Node::Comment);
@@ -1244,7 +1245,9 @@ mod integration_tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "... install scientific Python packages?".to_string()
+                text: vec![InlineNode::Text(
+                    "... install scientific Python packages?".to_string()
+                )]
             }
         );
     }
@@ -1327,7 +1330,7 @@ mod integration_tests {
             vec![
                 Node::Heading {
                     level: 1,
-                    text: "Heading".to_string()
+                    text: vec![InlineNode::Text("Heading".to_string())]
                 },
                 Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())]),
             ]

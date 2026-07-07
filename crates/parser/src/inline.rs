@@ -10,6 +10,8 @@ static TERM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":term:`(?P<content>[^`]+)`").unwrap());
 static FUNC_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py|c):)?func:`(?P<name>[^`]+)`").unwrap());
+static MOD_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?mod:`(?P<name>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -36,6 +38,7 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         let program_match = PROGRAM_ROLE_REGEX.find(remaining);
         let term_match = TERM_ROLE_REGEX.find(remaining);
         let func_match = FUNC_ROLE_REGEX.find(remaining);
+        let mod_match = MOD_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -54,6 +57,9 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         }
         if let Some(m) = func_match {
             all_matches.push((m.start(), m.end(), "func", None));
+        }
+        if let Some(m) = mod_match {
+            all_matches.push((m.start(), m.end(), "mod", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -90,6 +96,83 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
     inlines
 }
 
+/// The name/display/link-behavior of a domain-object role target, after
+/// stripping an optional `!` (suppress link) or `~` (shorten display to the
+/// last dotted component) prefix.
+struct DomainObjectTarget {
+    name: String,
+    display: String,
+    link: bool,
+}
+
+/// Parses a domain-object role's raw backtick-quoted target, resolving the
+/// `!`/`~` prefix modifiers documented at
+/// <https://www.sphinx-doc.org/en/master/usage/referencing.html>.
+fn parse_domain_object_target(raw: &str) -> DomainObjectTarget {
+    if let Some(name) = raw.strip_prefix('!') {
+        DomainObjectTarget {
+            name: name.to_string(),
+            display: name.to_string(),
+            link: false,
+        }
+    } else if let Some(name) = raw.strip_prefix('~') {
+        let display = name.rsplit('.').next().unwrap_or(name).to_string();
+        DomainObjectTarget {
+            name: name.to_string(),
+            display,
+            link: true,
+        }
+    } else {
+        DomainObjectTarget {
+            name: raw.to_string(),
+            display: raw.to_string(),
+            link: true,
+        }
+    }
+}
+
+/// Builds the `InlineNode` for a matched `:func:`/`:py:func:`/`:c:func:` role.
+fn handle_func_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = FUNC_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    let target = parse_domain_object_target(&caps["name"]);
+    // Both domains currently define "func", so this always resolves.
+    let object_type =
+        ObjectType::from_role_name(domain, "func").expect("every domain defines a 'func' role");
+    InlineNode::DomainObjectReference {
+        object_type,
+        name: target.name,
+        display: target.display,
+        link: target.link,
+    }
+}
+
+/// Builds the `InlineNode` for a matched `:mod:`/`:py:mod:` role, falling
+/// back to plain text if the role doesn't resolve for the given domain
+/// (`mod` is Python-only, so a bare role under a `c` default domain fails).
+fn handle_mod_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = MOD_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, "mod") {
+        Some(object_type) => {
+            let target = parse_domain_object_target(&caps["name"]);
+            InlineNode::DomainObjectReference {
+                object_type,
+                name: target.name,
+                display: target.display,
+                link: target.link,
+            }
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
 pub(super) fn handle_inline_match(
     kind: &str,
     m_str: &str,
@@ -106,18 +189,8 @@ pub(super) fn handle_inline_match(
             let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
             InlineNode::Program(caps["name"].to_string())
         }
-        "func" => {
-            let caps = FUNC_ROLE_REGEX.captures(m_str).unwrap();
-            let domain = caps
-                .name("domain")
-                .and_then(|m| m.as_str().parse::<Domain>().ok())
-                .unwrap_or(default_domain);
-            let name = caps["name"].to_string();
-            // Both domains currently define "func", so this always resolves.
-            let object_type = ObjectType::from_role_name(domain, "func")
-                .expect("every domain defines a 'func' role");
-            InlineNode::DomainObjectReference { object_type, name }
-        }
+        "func" => handle_func_match(m_str, default_domain),
+        "mod" => handle_mod_match(m_str, default_domain),
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let content = &caps["content"];
@@ -328,6 +401,72 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_parse_domain_object_target_plain_name() {
+        let target = parse_domain_object_target("foo");
+        assert_eq!(target.name, "foo");
+        assert_eq!(target.display, "foo");
+        assert!(target.link);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_bang_prefix_suppresses_link() {
+        let target = parse_domain_object_target("!foo");
+        assert_eq!(target.name, "foo");
+        assert_eq!(target.display, "foo");
+        assert!(!target.link);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_tilde_prefix_shortens_dotted_name() {
+        let target = parse_domain_object_target("~pkg.mod.foo");
+        assert_eq!(target.name, "pkg.mod.foo");
+        assert_eq!(target.display, "foo");
+        assert!(target.link);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_tilde_prefix_on_bare_name_is_a_no_op() {
+        let target = parse_domain_object_target("~foo");
+        assert_eq!(target.name, "foo");
+        assert_eq!(target.display, "foo");
+        assert!(target.link);
+    }
+
+    #[test]
+    fn test_handle_func_match_resolves_via_given_domain() {
+        let result = handle_func_match(":func:`foo`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                name: "foo".to_string(),
+                display: "foo".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_mod_match_resolves_when_domain_defines_mod_role() {
+        let result = handle_mod_match(":mod:`greetings`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                name: "greetings".to_string(),
+                display: "greetings".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_mod_match_falls_back_to_text_when_domain_lacks_mod_role() {
+        let result = handle_mod_match(":mod:`greetings`", Domain::C);
+        assert_eq!(result, InlineNode::Text(":mod:`greetings`".to_string()));
+    }
+
+    #[test]
     fn test_handle_inline_match_inline_variant() {
         // Given
         let node = InlineNode::Emphasis("text".to_string());
@@ -357,6 +496,8 @@ mod tests {
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
                 name: "foo".to_string(),
+                display: "foo".to_string(),
+                link: true,
             }
         );
     }
@@ -369,6 +510,8 @@ mod tests {
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
                 name: "foo".to_string(),
+                display: "foo".to_string(),
+                link: true,
             }
         );
     }
@@ -381,8 +524,102 @@ mod tests {
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
                 name: "add".to_string(),
+                display: "add".to_string(),
+                link: true,
             }
         );
+    }
+
+    #[test]
+    fn test_handle_inline_match_func_variant_bang_prefix_suppresses_link() {
+        let result = handle_inline_match("func", ":func:`!foo`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                name: "foo".to_string(),
+                display: "foo".to_string(),
+                link: false,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_func_variant_tilde_prefix_shortens_display() {
+        let result = handle_inline_match("func", ":func:`~pkg.mod.foo`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                name: "pkg.mod.foo".to_string(),
+                display: "foo".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_mod_variant_bare_uses_default_domain() {
+        let result = handle_inline_match("mod", ":mod:`greetings`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                name: "greetings".to_string(),
+                display: "greetings".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_mod_variant_explicit_py_domain() {
+        let result = handle_inline_match("mod", ":py:mod:`greetings`", None, Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                name: "greetings".to_string(),
+                display: "greetings".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_mod_variant_bang_prefix_suppresses_link() {
+        let result = handle_inline_match("mod", ":mod:`!curses`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                name: "curses".to_string(),
+                display: "curses".to_string(),
+                link: false,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_mod_variant_tilde_prefix_shortens_display() {
+        let result = handle_inline_match("mod", ":mod:`~pkg.submodule`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                name: "pkg.submodule".to_string(),
+                display: "submodule".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_mod_variant_falls_back_to_text_when_unresolvable() {
+        // Given — the `mod` role is Python-only, so a bare `:mod:` role in a
+        // library whose default domain is `c` doesn't resolve to any object type.
+        let result = handle_inline_match("mod", ":mod:`greetings`", None, Domain::C);
+        assert_eq!(result, InlineNode::Text(":mod:`greetings`".to_string()));
     }
 
     #[test]
@@ -857,6 +1094,8 @@ mod integration_tests {
                 InlineNode::DomainObjectReference {
                     object_type: ObjectType::C(CObjectType::Function),
                     name: "greet".to_string(),
+                    display: "greet".to_string(),
+                    link: true,
                 }
             );
         } else {
@@ -877,10 +1116,101 @@ mod integration_tests {
             assert!(inlines.contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Function),
                 name: "greet".to_string(),
+                display: "greet".to_string(),
+                link: true,
             }));
             assert!(inlines.contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::C(CObjectType::Function),
                 name: "add".to_string(),
+                display: "add".to_string(),
+                link: true,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_mod_role_resolves_via_default_domain() {
+        // Given
+        let input = "See :mod:`greetings` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(
+                inlines[1],
+                InlineNode::DomainObjectReference {
+                    object_type: ObjectType::Py(PyObjectType::Module),
+                    name: "greetings".to_string(),
+                    display: "greetings".to_string(),
+                    link: true,
+                }
+            );
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_prefixed_mod_role_ignores_default_domain() {
+        // Given
+        let input = "See :py:mod:`greetings`.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Module),
+                name: "greetings".to_string(),
+                display: "greetings".to_string(),
+                link: true,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_mod_role_with_bang_prefix_suppresses_link_end_to_end() {
+        // Given
+        let input = "See :mod:`!curses` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Module),
+                name: "curses".to_string(),
+                display: "curses".to_string(),
+                link: false,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_func_role_with_tilde_prefix_shortens_display_end_to_end() {
+        // Given
+        let input = "See :func:`~greetings.shout` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Function),
+                name: "greetings.shout".to_string(),
+                display: "shout".to_string(),
+                link: true,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);

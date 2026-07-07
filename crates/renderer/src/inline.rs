@@ -50,8 +50,21 @@ pub(super) fn render_inline(
         rusty_sphinx_ast::InlineNode::TermReference { display, term } => {
             render_inline_term_reference(html, display, term, index, doc_path);
         }
-        rusty_sphinx_ast::InlineNode::DomainObjectReference { object_type, name } => {
-            render_inline_domain_object_reference(html, *object_type, name, index, doc_path);
+        rusty_sphinx_ast::InlineNode::DomainObjectReference {
+            object_type,
+            name,
+            display,
+            link,
+        } => {
+            render_inline_domain_object_reference(
+                html,
+                *object_type,
+                name,
+                display,
+                *link,
+                index,
+                doc_path,
+            );
         }
     }
 }
@@ -190,16 +203,32 @@ pub(super) fn render_inline_term_reference(
 /// Renders a domain object cross-reference (`:func:`, `:py:func:`, `:c:func:`).
 /// Resolves the domain-qualified key via the project index and emits a
 /// relative link, or a broken-link fallback if the object is not found.
+///
+/// When `link` is `false` (the role target used a `!` prefix), the index is
+/// never consulted — the target is rendered as plain text with no hyperlink
+/// and no broken-link fallback, matching Sphinx's "suppress cross-reference"
+/// semantics.
 pub(super) fn render_inline_domain_object_reference(
     html: &mut String,
     object_type: ObjectType,
     name: &str,
+    display: &str,
+    link: bool,
     index: &ProjectIndex,
     doc_path: &str,
 ) {
-    let name_escaped = html_escape::encode_text(name);
+    let display_escaped = html_escape::encode_text(display);
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
+
+    if !link {
+        let _ = write!(
+            html,
+            "<code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code>"
+        );
+        return;
+    }
+
     let key = rusty_sphinx_ast::build_domain_object_key(object_type, name);
     if let Some(target_doc_path) = index.domain_objects.get(&key) {
         let current_dir = std::path::Path::new(doc_path)
@@ -212,12 +241,12 @@ pub(super) fn render_inline_domain_object_reference(
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
         let _ = write!(
             html,
-            "<a class=\"reference internal\" href=\"{href_attr}\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{name_escaped}</code></a>"
+            "<a class=\"reference internal\" href=\"{href_attr}\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code></a>"
         );
     } else {
         let _ = write!(
             html,
-            "<a href=\"#\" class=\"broken-link\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{name_escaped}</code></a>"
+            "<a href=\"#\" class=\"broken-link\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code></a>"
         );
     }
 }
@@ -504,6 +533,8 @@ mod tests {
             &mut html,
             ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
             "greet",
+            "greet",
+            true,
             &index,
             "doc.rst",
         );
@@ -533,6 +564,8 @@ mod tests {
             &mut html,
             ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
             "add",
+            "add",
+            true,
             &index,
             "doc.rst",
         );
@@ -540,6 +573,37 @@ mod tests {
         // Then
         assert!(html.contains("href=\"api.html#c:function:add\""));
         assert!(html.contains("class=\"xref c function docutils literal\""));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_resolved_py_module() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.domain_objects.insert(
+            rusty_sphinx_ast::build_domain_object_key(
+                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                "greetings",
+            ),
+            "api.rst".to_string(),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+            "greetings",
+            "greetings",
+            true,
+            &index,
+            "doc.rst",
+        );
+
+        // Then
+        assert!(html.contains("class=\"reference internal\""));
+        assert!(html.contains("href=\"api.html#py:module:greetings\""));
+        assert!(html.contains("class=\"xref py module docutils literal\""));
+        assert!(html.contains(">greetings<"));
     }
 
     #[test]
@@ -553,6 +617,8 @@ mod tests {
             &mut html,
             ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
             "missing",
+            "missing",
+            true,
             &index,
             "doc.rst",
         );
@@ -580,11 +646,68 @@ mod tests {
             &mut html,
             ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
             "greet",
+            "greet",
+            true,
             &index,
             "guide/intro.rst",
         );
 
         // Then
         assert!(html.contains("href=\"../api.html#py:function:greet\""));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_suppressed_link_renders_plain_text() {
+        // Given — an empty index; a real `!`-suppressed reference never
+        // performs a lookup, so this also proves no lookup is attempted.
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+            "curses",
+            "curses",
+            false,
+            &index,
+            "doc.rst",
+        );
+
+        // Then
+        assert_eq!(
+            html,
+            "<code class=\"xref py module docutils literal\">curses</code>"
+        );
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_shortened_display_resolves_via_full_name() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.domain_objects.insert(
+            rusty_sphinx_ast::build_domain_object_key(
+                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                "greetings.shout",
+            ),
+            "api.rst".to_string(),
+        );
+        let mut html = String::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            "greetings.shout",
+            "shout",
+            true,
+            &index,
+            "doc.rst",
+        );
+
+        // Then
+        assert!(html.contains("href=\"api.html#py:function:greetings.shout\""));
+        assert!(html.contains(">shout<"));
+        assert!(!html.contains("greetings.shout<"));
     }
 }

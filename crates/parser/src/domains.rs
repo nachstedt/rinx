@@ -1,52 +1,191 @@
 use super::blocks::parse_blocks;
 use super::headings::Adornment;
-use rusty_sphinx_ast::{Directive, Domain, ObjectType};
+use rusty_sphinx_ast::{CObjectType, Domain, DomainObjectBody, Node, ObjectType, PyObjectType};
 
 /// Parses a domain object directive body (e.g. `.. py:function::`,
-/// `.. c:function::`) into a `Directive::DomainObject` node.
+/// `.. py:module::`, `.. c:function::`) into the matching [`DomainObjectBody`]
+/// variant, dispatching on `object_type` since each object type has its own
+/// shape (only `py:module` has `platform`/`synopsis`/`deprecated`, for
+/// instance).
 pub(super) fn parse_domain_object(
     object_type: ObjectType,
-    signature: String,
+    argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
     default_domain: Domain,
-) -> Directive {
-    if let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) {
-        let indent = first.chars().take_while(|c| c.is_whitespace()).count();
-        let unindented_lines: Vec<String> = body_lines
-            .iter()
-            .map(|l| {
-                if l.len() >= indent {
-                    l[indent..].to_string()
-                } else {
-                    l.trim().to_string()
-                }
-            })
-            .collect();
-
-        let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
-        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
-
-        Directive::DomainObject {
-            object_type,
-            signature,
-            body: body_nodes,
-        }
-    } else {
-        Directive::DomainObject {
-            object_type,
-            signature,
-            body: vec![],
-        }
+) -> DomainObjectBody {
+    match object_type {
+        ObjectType::Py(PyObjectType::Function) => DomainObjectBody::PyFunction {
+            signature: argument,
+            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+        },
+        ObjectType::C(CObjectType::Function) => DomainObjectBody::CFunction {
+            signature: argument,
+            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+        },
+        ObjectType::Py(PyObjectType::Module) => parse_py_module(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
     }
+}
+
+/// Strips the body's common leading indentation and parses the remaining
+/// lines as block-level nodes. Shared by every domain object type that has
+/// no directive-specific options to strip out first.
+fn parse_body(
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> Vec<Node> {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
+    parse_blocks(&body_content, adornment_order, diagnostics, default_domain)
+}
+
+/// Parses a `.. py:module::` body: strips `:platform:`/`:synopsis:`/
+/// `:deprecated:` option lines off the front before parsing the rest as the
+/// docstring body.
+fn parse_py_module(
+    name: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (platform, synopsis, deprecated, options_consumed) =
+        extract_module_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::PyModule {
+        name,
+        platform,
+        synopsis,
+        deprecated,
+        body,
+    }
+}
+
+/// Strips the common leading indentation off a directive's body lines.
+/// Returns an empty vec if the body has no non-blank line.
+fn unindent_body_lines(body_lines: &[&str]) -> Vec<String> {
+    let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) else {
+        return Vec::new();
+    };
+
+    let indent = first.chars().take_while(|c| c.is_whitespace()).count();
+    body_lines
+        .iter()
+        .map(|l| {
+            if l.len() >= indent {
+                l[indent..].to_string()
+            } else {
+                l.trim().to_string()
+            }
+        })
+        .collect()
+}
+
+/// Extracts `.. py:module::`-specific options (`:platform:`, `:synopsis:`,
+/// `:deprecated:`) from the leading lines of a domain object's body.
+///
+/// Scans from the start and stops at the first line that isn't one of these
+/// recognized options (e.g. a blank line or the start of the docstring body),
+/// returning how many leading lines were consumed as options so the caller
+/// can slice them off before parsing the remaining body content.
+fn extract_module_options(lines: &[String]) -> (Option<String>, Option<String>, bool, usize) {
+    let mut platform = None;
+    let mut synopsis = None;
+    let mut deprecated = false;
+    let mut consumed = 0;
+
+    for line in lines {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix(":platform:") {
+            platform = Some(rest.trim().to_string());
+        } else if let Some(rest) = trimmed.strip_prefix(":synopsis:") {
+            synopsis = Some(rest.trim().to_string());
+        } else if trimmed == ":deprecated:" {
+            deprecated = true;
+        } else {
+            break;
+        }
+        consumed += 1;
+    }
+
+    (platform, synopsis, deprecated, consumed)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{CObjectType, Node, PyObjectType};
+    use rusty_sphinx_ast::Directive;
+
+    #[test]
+    fn test_extract_module_options_parses_all_three_options() {
+        // Given
+        let lines = vec![
+            ":platform: Unix, Windows".to_string(),
+            ":synopsis: Greeting utilities.".to_string(),
+            ":deprecated:".to_string(),
+            String::new(),
+            "A module of greetings.".to_string(),
+        ];
+
+        // When
+        let (platform, synopsis, deprecated, consumed) = extract_module_options(&lines);
+
+        // Then
+        assert_eq!(platform.as_deref(), Some("Unix, Windows"));
+        assert_eq!(synopsis.as_deref(), Some("Greeting utilities."));
+        assert!(deprecated);
+        assert_eq!(consumed, 3);
+    }
+
+    #[test]
+    fn test_extract_module_options_stops_at_first_non_option_line() {
+        // Given
+        let lines = vec![
+            ":platform: Unix".to_string(),
+            "A module of greetings.".to_string(),
+        ];
+
+        // When
+        let (platform, synopsis, deprecated, consumed) = extract_module_options(&lines);
+
+        // Then
+        assert_eq!(platform.as_deref(), Some("Unix"));
+        assert_eq!(synopsis, None);
+        assert!(!deprecated);
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_extract_module_options_returns_defaults_when_no_options_present() {
+        // Given
+        let lines = vec!["A module of greetings.".to_string()];
+
+        // When
+        let (platform, synopsis, deprecated, consumed) = extract_module_options(&lines);
+
+        // Then
+        assert_eq!(platform, None);
+        assert_eq!(synopsis, None);
+        assert!(!deprecated);
+        assert_eq!(consumed, 0);
+    }
 
     #[test]
     fn test_parse_domain_object_with_paragraph_body() {
@@ -58,7 +197,7 @@ mod tests {
         let mut diagnostics = Vec::new();
 
         // When
-        let directive = parse_domain_object(
+        let domain_object = parse_domain_object(
             object_type,
             signature.clone(),
             &body_lines,
@@ -68,18 +207,16 @@ mod tests {
         );
 
         // Then
-        if let Directive::DomainObject {
-            object_type,
+        if let DomainObjectBody::PyFunction {
             signature: sig,
             body,
-        } = directive
+        } = domain_object
         {
-            assert_eq!(object_type, ObjectType::Py(PyObjectType::Function));
             assert_eq!(sig, signature);
             assert_eq!(body.len(), 1);
             assert!(matches!(body[0], Node::Paragraph(_)));
         } else {
-            panic!("Expected DomainObject directive");
+            panic!("Expected PyFunction, got {domain_object:?}");
         }
     }
 
@@ -93,7 +230,7 @@ mod tests {
         let mut diagnostics = Vec::new();
 
         // When
-        let directive = parse_domain_object(
+        let domain_object = parse_domain_object(
             object_type,
             signature,
             &body_lines,
@@ -103,11 +240,11 @@ mod tests {
         );
 
         // Then
-        if let Directive::DomainObject { body, .. } = directive {
+        if let DomainObjectBody::CFunction { body, .. } = domain_object {
             assert_eq!(body.len(), 1);
             assert!(matches!(body[0], Node::BulletList { .. }));
         } else {
-            panic!("Expected DomainObject directive");
+            panic!("Expected CFunction, got {domain_object:?}");
         }
     }
 
@@ -121,7 +258,7 @@ mod tests {
         let mut diagnostics = Vec::new();
 
         // When
-        let directive = parse_domain_object(
+        let domain_object = parse_domain_object(
             object_type,
             signature,
             &body_lines,
@@ -131,10 +268,10 @@ mod tests {
         );
 
         // Then
-        if let Directive::DomainObject { body, .. } = directive {
+        if let DomainObjectBody::PyFunction { body, .. } = domain_object {
             assert!(body.is_empty());
         } else {
-            panic!("Expected DomainObject directive");
+            panic!("Expected PyFunction, got {domain_object:?}");
         }
     }
 
@@ -148,7 +285,7 @@ mod tests {
         let mut diagnostics = Vec::new();
 
         // When
-        let directive = parse_domain_object(
+        let domain_object = parse_domain_object(
             object_type,
             signature,
             &body_lines,
@@ -158,7 +295,7 @@ mod tests {
         );
 
         // Then
-        if let Directive::DomainObject { body, .. } = directive {
+        if let DomainObjectBody::PyFunction { body, .. } = domain_object {
             if let Node::Paragraph(inlines) = &body[0] {
                 assert_eq!(
                     inlines[0],
@@ -168,7 +305,7 @@ mod tests {
                 panic!("Expected Paragraph, got {:?}", body[0]);
             }
         } else {
-            panic!("Expected DomainObject directive");
+            panic!("Expected PyFunction, got {domain_object:?}");
         }
     }
 
@@ -182,17 +319,119 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object_type,
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signature,
             body,
-        }) = &doc.nodes[0]
+        })) = &doc.nodes[0]
         {
-            assert_eq!(object_type, &ObjectType::Py(PyObjectType::Function));
             assert_eq!(signature, "greet(name)");
             assert_eq!(body.len(), 1);
         } else {
-            panic!("Expected DomainObject directive, got {:?}", doc.nodes[0]);
+            panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_py_module_domain_object() {
+        // Given
+        let input = ".. py:module:: greetings\n\n   A module of greetings.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyModule {
+            name,
+            platform,
+            synopsis,
+            deprecated,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(name, "greetings");
+            assert_eq!(platform, &None);
+            assert_eq!(synopsis, &None);
+            assert!(!deprecated);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyModule, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_module_with_platform_synopsis_and_deprecated_options() {
+        // Given
+        let input = ".. py:module:: greetings\n   :platform: Unix, Windows\n   :synopsis: Greeting utilities.\n   :deprecated:\n\n   A module of greetings.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyModule {
+            platform,
+            synopsis,
+            deprecated,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(platform.as_deref(), Some("Unix, Windows"));
+            assert_eq!(synopsis.as_deref(), Some("Greeting utilities."));
+            assert!(*deprecated);
+            assert_eq!(body.len(), 1);
+            assert!(matches!(body[0], Node::Paragraph(_)));
+        } else {
+            panic!("Expected PyModule, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_module_options_in_any_order_with_no_body() {
+        // Given — synopsis and deprecated before platform, and no docstring body
+        let input = ".. py:module:: greetings\n   :synopsis: Greeting utilities.\n   :deprecated:\n   :platform: Unix";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyModule {
+            platform,
+            synopsis,
+            deprecated,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(platform.as_deref(), Some("Unix"));
+            assert_eq!(synopsis.as_deref(), Some("Greeting utilities."));
+            assert!(*deprecated);
+            assert!(body.is_empty());
+        } else {
+            panic!("Expected PyModule, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_function_ignores_module_only_options() {
+        // Given — platform/synopsis/deprecated are py:module-only per Sphinx's
+        // spec (and, since `PyFunction` has no such fields at all, it's a
+        // compile error for a function to carry them) — so on a py:function
+        // this text must remain part of the docstring body instead.
+        let input = ".. py:function:: greet(name)\n\n   :platform: Unix";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
+            body, ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
         }
     }
 
@@ -206,16 +445,14 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject {
-            object_type,
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CFunction {
             signature,
             ..
-        }) = &doc.nodes[0]
+        })) = &doc.nodes[0]
         {
-            assert_eq!(object_type, &ObjectType::C(CObjectType::Function));
             assert_eq!(signature, "int add(int a, int b)");
         } else {
-            panic!("Expected DomainObject directive, got {:?}", doc.nodes[0]);
+            panic!("Expected CFunction, got {:?}", doc.nodes[0]);
         }
     }
 
@@ -229,11 +466,10 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::Directive(Directive::DomainObject { object_type, .. }) = &doc.nodes[0] {
-            assert_eq!(object_type, &ObjectType::C(CObjectType::Function));
-        } else {
-            panic!("Expected DomainObject directive, got {:?}", doc.nodes[0]);
-        }
+        assert!(matches!(
+            &doc.nodes[0],
+            Node::Directive(Directive::DomainObject(DomainObjectBody::CFunction { .. }))
+        ));
     }
 
     #[test]

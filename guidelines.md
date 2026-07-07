@@ -21,3 +21,4 @@
 - After every code modification session, verify `bazel build //examples:site` succeeds.
 - Treat clippy warnings as refactoring opportunities; do not suppress them with `#[allow(...)]` attributes.
 - Prefer co-locating unit tests natively using inline `#[cfg(test)]` modules over splitting them into separate files with `include!` macros to satisfy arbitrary line-limit constraints.
+- When a family of related kinds needs different options per kind, give each kind its own explicit variant/type with only its own fields, rather than one shared struct/variant carrying the union of every kind's options (most of them meaningless on most instances).

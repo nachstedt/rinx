@@ -98,22 +98,30 @@ pub(super) fn render_seealso(html: &mut String, body: &[Node], ctx: &mut RenderC
     let _ = writeln!(html, "</div>");
 }
 
-/// Renders a domain object directive (e.g. `.. py:function::`, `.. c:function::`)
-/// as a Sphinx-style object description (`<dl class="{domain} {objtype}">`),
-/// using the same qualified key as the analyzer for the anchor `id`.
+/// Renders a domain object directive (e.g. `.. py:function::`, `.. c:function::`,
+/// `.. py:module::`) as a Sphinx-style object description
+/// (`<dl class="{domain} {objtype}">`), using the same qualified key as the
+/// analyzer for the anchor `id`.
+///
+/// The shared `<dl>`/`<dt>` wrapper and cross-reference key are built
+/// generically via `obj`'s accessors; any option specific to one object type
+/// (currently only `py:module`'s `platform`/`synopsis`/`deprecated` — real
+/// Sphinx has no equivalent module index page here, so they're rendered
+/// inline as leading `<dd>` paragraphs rather than dropped) is matched
+/// explicitly, so adding a new object type with its own options can't be
+/// forgotten here.
 pub(super) fn render_domain_object(
     html: &mut String,
-    object_type: rusty_sphinx_ast::ObjectType,
-    signature: &str,
-    body: &[Node],
+    obj: &rusty_sphinx_ast::DomainObjectBody,
     ctx: &mut RenderCtx<'_>,
 ) {
-    let name = rusty_sphinx_ast::extract_object_name(signature);
+    let object_type = obj.object_type();
+    let name = obj.name();
     let key = rusty_sphinx_ast::build_domain_object_key(object_type, &name);
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
     let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
-    let sig_escaped = html_escape::encode_text(signature);
+    let sig_escaped = html_escape::encode_text(obj.signature_text());
 
     let _ = writeln!(html, "<dl class=\"{domain_str} {objtype_str}\">");
     let _ = writeln!(
@@ -121,7 +129,35 @@ pub(super) fn render_domain_object(
         "  <dt id=\"{id_attr}\"><code class=\"sig-name\">{sig_escaped}</code></dt>"
     );
     let _ = write!(html, "  <dd>");
-    super::render_nodes(html, body, ctx);
+    match obj {
+        rusty_sphinx_ast::DomainObjectBody::PyModule {
+            platform,
+            synopsis,
+            deprecated,
+            ..
+        } => {
+            if let Some(platform) = platform {
+                let _ = write!(
+                    html,
+                    "<p class=\"platform\">Platform: {}</p>",
+                    html_escape::encode_text(platform)
+                );
+            }
+            if let Some(synopsis) = synopsis {
+                let _ = write!(
+                    html,
+                    "<p class=\"synopsis\">{}</p>",
+                    html_escape::encode_text(synopsis)
+                );
+            }
+            if *deprecated {
+                let _ = write!(html, "<p class=\"deprecated\">Deprecated.</p>");
+            }
+        }
+        rusty_sphinx_ast::DomainObjectBody::PyFunction { .. }
+        | rusty_sphinx_ast::DomainObjectBody::CFunction { .. } => {}
+    }
+    super::render_nodes(html, obj.body(), ctx);
     let _ = writeln!(html, "</dd>");
     let _ = writeln!(html, "</dl>");
 }
@@ -593,15 +629,14 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject {
-                object_type: rusty_sphinx_ast::ObjectType::Py(
-                    rusty_sphinx_ast::PyObjectType::Function,
-                ),
-                signature: "greet(name)".to_string(),
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
-                    "Greets the given name.".to_string(),
-                )])],
-            })],
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                    signature: "greet(name)".to_string(),
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Greets the given name.".to_string(),
+                    )])],
+                },
+            ))],
         );
 
         // When
@@ -619,15 +654,14 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject {
-                object_type: rusty_sphinx_ast::ObjectType::C(
-                    rusty_sphinx_ast::CObjectType::Function,
-                ),
-                signature: "int add(int a, int b)".to_string(),
-                body: vec![Node::Paragraph(vec![InlineNode::Text(
-                    "Adds two numbers.".to_string(),
-                )])],
-            })],
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CFunction {
+                    signature: "int add(int a, int b)".to_string(),
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Adds two numbers.".to_string(),
+                    )])],
+                },
+            ))],
         );
 
         // When
@@ -640,21 +674,72 @@ mod tests {
     }
 
     #[test]
+    fn test_render_formats_py_module_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                    name: "greetings".to_string(),
+                    platform: None,
+                    synopsis: None,
+                    deprecated: false,
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "A module of greetings.".to_string(),
+                    )])],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"py module\">"));
+        assert!(result.contains("<dt id=\"py:module:greetings\">"));
+        assert!(result.contains("<code class=\"sig-name\">greetings</code>"));
+    }
+
+    #[test]
+    fn test_render_formats_py_module_platform_synopsis_and_deprecated() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                    name: "greetings".to_string(),
+                    platform: Some("Unix, Windows".to_string()),
+                    synopsis: Some("Greeting utilities.".to_string()),
+                    deprecated: true,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<p class=\"platform\">Platform: Unix, Windows</p>"));
+        assert!(result.contains("<p class=\"synopsis\">Greeting utilities.</p>"));
+        assert!(result.contains("<p class=\"deprecated\">Deprecated.</p>"));
+    }
+
+    #[test]
     fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
         // Given — regression test for the collect_anonymous_targets catch-all:
         // an anonymous reference nested inside a DomainObject body must still resolve.
         let doc = Document::new(
             "test.rst".to_string(),
             vec![
-                Node::Directive(Directive::DomainObject {
-                    object_type: rusty_sphinx_ast::ObjectType::Py(
-                        rusty_sphinx_ast::PyObjectType::Function,
-                    ),
-                    signature: "greet(name)".to_string(),
-                    body: vec![Node::Paragraph(vec![InlineNode::AnonymousReference(
-                        "See more".to_string(),
-                    )])],
-                }),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                        signature: "greet(name)".to_string(),
+                        body: vec![Node::Paragraph(vec![InlineNode::AnonymousReference(
+                            "See more".to_string(),
+                        )])],
+                    },
+                )),
                 Node::AnonymousTarget {
                     uri: "https://example.com".to_string(),
                 },

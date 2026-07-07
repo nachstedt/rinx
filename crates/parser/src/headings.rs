@@ -1,4 +1,5 @@
-use rusty_sphinx_ast::Node;
+use super::inline::parse_inline_text;
+use rusty_sphinx_ast::{Domain, Node};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum AdornmentStyle {
@@ -64,6 +65,7 @@ pub(super) fn try_parse_heading(
     lines: &[&str],
     i: usize,
     adornment_order: &mut Vec<Adornment>,
+    default_domain: Domain,
 ) -> Option<(usize, Node)> {
     let (consumed, adornment, text) = detect_adornment(lines, i)?;
 
@@ -81,6 +83,8 @@ pub(super) fn try_parse_heading(
     #[allow(clippy::cast_possible_truncation)]
     let level = level as u8;
 
+    let text = parse_inline_text(&text, default_domain);
+
     Some((consumed, Node::Heading { level, text }))
 }
 
@@ -88,6 +92,7 @@ pub(super) fn try_parse_heading(
 mod tests {
     use super::*;
     use crate::parse;
+    use rusty_sphinx_ast::InlineNode;
 
     #[test]
     fn test_detect_adornment_overline() {
@@ -127,7 +132,7 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Heading".to_string()
+                text: vec![InlineNode::Text("Heading".to_string())]
             }
         );
     }
@@ -146,7 +151,7 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "===".to_string()
+                text: vec![InlineNode::Text("===".to_string())]
             }
         );
     }
@@ -165,7 +170,7 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Title".to_string()
+                text: vec![InlineNode::Text("Title".to_string())]
             }
         );
     }
@@ -184,14 +189,14 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "H1".to_string()
+                text: vec![InlineNode::Text("H1".to_string())]
             }
         );
         assert_eq!(
             doc.nodes[1],
             Node::Heading {
                 level: 2,
-                text: "H2".to_string()
+                text: vec![InlineNode::Text("H2".to_string())]
             }
         );
     }
@@ -210,14 +215,14 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "First".to_string()
+                text: vec![InlineNode::Text("First".to_string())]
             }
         );
         assert_eq!(
             doc.nodes[1],
             Node::Heading {
                 level: 1,
-                text: "Second".to_string()
+                text: vec![InlineNode::Text("Second".to_string())]
             }
         );
     }
@@ -236,21 +241,21 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "H1".to_string()
+                text: vec![InlineNode::Text("H1".to_string())]
             }
         );
         assert_eq!(
             doc.nodes[1],
             Node::Heading {
                 level: 2,
-                text: "H2".to_string()
+                text: vec![InlineNode::Text("H2".to_string())]
             }
         );
         assert_eq!(
             doc.nodes[2],
             Node::Heading {
                 level: 3,
-                text: "H3".to_string()
+                text: vec![InlineNode::Text("H3".to_string())]
             }
         );
     }
@@ -269,7 +274,7 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Sub Title".to_string()
+                text: vec![InlineNode::Text("Sub Title".to_string())]
             }
         );
     }
@@ -288,7 +293,7 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Heading".to_string()
+                text: vec![InlineNode::Text("Heading".to_string())]
             }
         );
     }
@@ -307,14 +312,14 @@ mod tests {
             doc.nodes[0],
             Node::Heading {
                 level: 1,
-                text: "Overline".to_string()
+                text: vec![InlineNode::Text("Overline".to_string())]
             }
         );
         assert_eq!(
             doc.nodes[1],
             Node::Heading {
                 level: 2,
-                text: "Underline".to_string()
+                text: vec![InlineNode::Text("Underline".to_string())]
             }
         );
     }
@@ -333,5 +338,58 @@ mod tests {
             Node::Paragraph(_) => {}
             _ => panic!("Expected paragraph for mismatched overline/underline"),
         }
+    }
+
+    #[test]
+    fn test_parse_heading_resolves_domain_object_role() {
+        // Given
+        let input = "The :mod:`greetings` Module\n============================";
+
+        // When
+        let doc = crate::parse_with_domain("test.rst", input, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: vec![
+                    InlineNode::Text("The ".to_string()),
+                    InlineNode::DomainObjectReference {
+                        object_type: rusty_sphinx_ast::ObjectType::Py(
+                            rusty_sphinx_ast::PyObjectType::Module
+                        ),
+                        name: "greetings".to_string(),
+                        display: "greetings".to_string(),
+                        link: true,
+                    },
+                    InlineNode::Text(" Module".to_string()),
+                ]
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_heading_resolves_strong_emphasis() {
+        // Given
+        let input = "A **Bold** Heading\n===================";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Heading {
+                level: 1,
+                text: vec![
+                    InlineNode::Text("A ".to_string()),
+                    InlineNode::Strong("Bold".to_string()),
+                    InlineNode::Text(" Heading".to_string()),
+                ]
+            }
+        );
     }
 }
