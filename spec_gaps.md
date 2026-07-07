@@ -32,9 +32,9 @@ the corresponding feature is implemented.
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Bullet lists (`-`, `*`, `+`) | ❌ Not implemented | — |
+| Bullet lists (`-`, `*`, `+`) | ✅ Implemented | Rendered as `<ul>`/`<li>`; nested lists and multi-paragraph items supported via recursion into `parse_blocks` (`crates/parser/src/bullet_list.rs`) |
 | Enumerated lists (`1.`, `a.`, `i.`, …) | ❌ Not implemented | — |
-| Definition lists | ❌ Not implemented | — |
+| Definition lists | ✅ Implemented | A non-blank line immediately followed (no blank line) by a more-indented non-blank line starts an entry; rendered as `<dl><dt>term</dt><dd>definition</dd></dl>` (`crates/parser/src/definition_list.rs`, `Node::DefinitionList`). Term text is `Vec<InlineNode>`, so roles like `:mod:`/`:ref:` inside terms resolve normally — this is what the CPython benchmark's `seealso` blocks use. Term **classifiers** (`term : classifier`) and glossary's "multiple terms share one definition" quirk are not supported by this generic construct (glossary keeps its own separate implementation, see `crates/parser/src/glossary.rs`) |
 | Field lists (`:field: value`) | ❌ Not implemented | — |
 | Option lists | ❌ Not implemented | — |
 | Literal blocks (``::`` paragraph ending or standalone ``::``) | ✅ Implemented | Rendered as ``<pre><code>...</code></pre>`` |

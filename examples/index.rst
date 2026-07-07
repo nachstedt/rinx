@@ -15,6 +15,7 @@ Welcome to the Rusty-Sphinx example.
    seealso
    literal_blocks
    glossary
+   definition_lists
    comments
    domains
    transitions

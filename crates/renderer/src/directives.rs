@@ -399,6 +399,54 @@ mod tests {
     }
 
     #[test]
+    fn test_render_formats_seealso_with_definition_list_body() {
+        // Given a seealso body containing a definition list, matching the
+        // CPython benchmark's `curses` seealso block
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::SeeAlso {
+                body: vec![Node::DefinitionList {
+                    items: vec![
+                        rusty_sphinx_ast::DefinitionListItem {
+                            term: vec![
+                                InlineNode::Text("Module ".to_string()),
+                                InlineNode::DomainObjectReference {
+                                    object_type: rusty_sphinx_ast::ObjectType::Py(
+                                        rusty_sphinx_ast::PyObjectType::Module,
+                                    ),
+                                    name: "curses.ascii".to_string(),
+                                    display: "curses.ascii".to_string(),
+                                    link: true,
+                                },
+                            ],
+                            definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                                "Utilities for working with ASCII characters.".to_string(),
+                            )])],
+                        },
+                        rusty_sphinx_ast::DefinitionListItem {
+                            term: vec![InlineNode::Reference("curses-howto".to_string())],
+                            definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                                "Tutorial material.".to_string(),
+                            )])],
+                        },
+                    ],
+                }],
+            })],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then the seealso admonition wraps a proper <dl>/<dt>/<dd> structure
+        assert!(result.contains("<div class=\"admonition seealso\">"));
+        assert!(result.contains("<dl>"));
+        assert!(result.contains("<dt>Module "));
+        assert!(result.contains("curses.ascii"));
+        assert!(result.contains("<dd><p>Utilities for working with ASCII characters.</p>\n</dd>"));
+        assert!(result.contains("</dl>"));
+    }
+
+    #[test]
     fn test_render_seealso_static() {
         // Given
         let mut html = String::new();

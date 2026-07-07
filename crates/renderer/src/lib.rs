@@ -124,6 +124,18 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                 }
                 let _ = writeln!(html, "</ul>");
             }
+            Node::DefinitionList { items } => {
+                let _ = writeln!(html, "<dl>");
+                for item in items {
+                    let _ = write!(html, "<dt>");
+                    render_inlines(html, &item.term, ctx);
+                    let _ = writeln!(html, "</dt>");
+                    let _ = write!(html, "<dd>");
+                    render_nodes(html, &item.definition, ctx);
+                    let _ = writeln!(html, "</dd>");
+                }
+                let _ = writeln!(html, "</dl>");
+            }
             Node::LiteralBlock { language, content } => {
                 let escaped = html_escape::encode_text(content);
                 if let Some(lang) = language {
@@ -740,6 +752,76 @@ mod tests {
 
         // Then
         assert!(result.contains("<li><p>Para 1</p>\n<p>Para 2</p>\n</li>"));
+    }
+
+    #[test]
+    fn test_render_definition_list() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::DefinitionList {
+                items: vec![
+                    rusty_sphinx_ast::DefinitionListItem {
+                        term: vec![InlineNode::Text("Term 1".to_string())],
+                        definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                            "Def 1".to_string(),
+                        )])],
+                    },
+                    rusty_sphinx_ast::DefinitionListItem {
+                        term: vec![InlineNode::Text("Term 2".to_string())],
+                        definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                            "Def 2".to_string(),
+                        )])],
+                    },
+                ],
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(
+            result,
+            "<dl>\n<dt>Term 1</dt>\n<dd><p>Def 1</p>\n</dd>\n<dt>Term 2</dt>\n<dd><p>Def 2</p>\n</dd>\n</dl>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_definition_list_escapes_and_renders_inline_markup_in_term() {
+        // Given a term containing a domain-object reference, mirroring the
+        // CPython benchmark's `seealso` definition-list content
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::DefinitionList {
+                items: vec![rusty_sphinx_ast::DefinitionListItem {
+                    term: vec![
+                        InlineNode::Text("Module ".to_string()),
+                        InlineNode::DomainObjectReference {
+                            object_type: rusty_sphinx_ast::ObjectType::Py(
+                                rusty_sphinx_ast::PyObjectType::Module,
+                            ),
+                            name: "curses.ascii".to_string(),
+                            display: "curses.ascii".to_string(),
+                            link: true,
+                        },
+                    ],
+                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Utilities for ASCII characters.".to_string(),
+                    )])],
+                }],
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then the <dt> contains the rendered inline markup, not raw text
+        assert!(result.starts_with("<dl>\n<dt>Module "));
+        assert!(result.contains("curses.ascii"));
+        assert!(result.contains("<dd><p>Utilities for ASCII characters.</p>\n</dd>"));
     }
 
     #[test]
