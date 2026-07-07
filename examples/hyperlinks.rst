@@ -35,6 +35,11 @@ Simple links are just a word followed by an underscore: Sphinx_.
 .. _Python Website: https://www.python.org
 .. _Sphinx: https://www.sphinx-doc.org
 
+Ordinary identifiers that merely contain underscores, such as
+``my_variable_name`` or ``foo_bar_baz``, are left as plain text and are not
+treated as references, since they don't end in a trailing underscore at a
+word boundary.
+
 Case Insensitivity and Normalization
 ====================================
 
