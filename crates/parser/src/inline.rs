@@ -16,13 +16,13 @@ static MOD_ROLE_REGEX: LazyLock<Regex> =
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)_").unwrap());
+    LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)_\b").unwrap());
 static EMBEDDED_URI_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(?P<text>.*)\s+<(?P<uri>[^>]+)>$").unwrap());
 static ANONYMOUS_PHRASED_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`__").unwrap());
 static ANONYMOUS_SIMPLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)__").unwrap());
+    LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)__\b").unwrap());
 
 /// Parses a plain text string into a list of [`InlineNode`]s.
 ///
@@ -802,6 +802,71 @@ mod integration_tests {
                 },
                 InlineNode::Text(" for details.".to_string()),
             ])
+        );
+    }
+
+    #[test]
+    fn test_parse_does_not_treat_snake_case_word_as_hyperlink() {
+        // Given: a plain identifier with underscores but no trailing one
+        let input = "Use my_variable_name in code.";
+        // When
+        let doc = parse("test.rst", input);
+        // Then: the whole sentence stays a single Text node, no Hyperlink
+        assert_eq!(doc.nodes.len(), 1);
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![InlineNode::Text(
+                "Use my_variable_name in code.".to_string()
+            )])
+        );
+    }
+
+    #[test]
+    fn test_parse_does_not_treat_multi_underscore_word_as_hyperlink() {
+        // Given: several internal underscores but no trailing underscore
+        let input = "call foo_bar_baz here";
+        // When
+        let doc = parse("test.rst", input);
+        // Then
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![InlineNode::Text("call foo_bar_baz here".to_string())])
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_simple_link_node_for_target_name_containing_underscore() {
+        // Given: the target name itself contains an underscore, and ends
+        // with the triggering trailing underscore
+        let input = "See my_target_ here.";
+        // When
+        let doc = parse("test.rst", input);
+        // Then: still recognized as a reference to "my_target"
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![
+                InlineNode::Text("See ".to_string()),
+                InlineNode::Hyperlink {
+                    text: "my_target".to_string(),
+                    target: "my_target".to_string()
+                },
+                InlineNode::Text(" here.".to_string()),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_parse_does_not_treat_word_with_underscores_as_anonymous_reference() {
+        // Given: no trailing double underscore
+        let input = "word_with_underscores stays text";
+        // When
+        let doc = parse("test.rst", input);
+        // Then
+        assert_eq!(
+            doc.nodes[0],
+            Node::Paragraph(vec![InlineNode::Text(
+                "word_with_underscores stays text".to_string()
+            )])
         );
     }
 
