@@ -1,5 +1,6 @@
 //! Inline node rendering helpers.
 
+use crate::{BrokenLink, BrokenLinkKind};
 use rusty_sphinx_analyzer::{ProjectIndex, TargetLocation};
 use rusty_sphinx_ast::{ObjectType, TargetName};
 use std::fmt::Write as _;
@@ -12,19 +13,20 @@ pub(super) fn render_inline(
     doc_path: &str,
     anon_targets: &[String],
     anon_index: &mut usize,
+    broken_links: &mut Vec<BrokenLink>,
 ) {
     match inline {
         rusty_sphinx_ast::InlineNode::Text(text) => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
         }
         rusty_sphinx_ast::InlineNode::Reference(target) => {
-            render_inline_reference(html, target, index, doc_path);
+            render_inline_reference(html, target, index, doc_path, broken_links);
         }
         rusty_sphinx_ast::InlineNode::Hyperlink { text, target } => {
-            render_inline_hyperlink(html, text, target, index, doc_path);
+            render_inline_hyperlink(html, text, target, index, doc_path, broken_links);
         }
         rusty_sphinx_ast::InlineNode::AnonymousReference(text) => {
-            render_inline_anonymous_reference(html, text, anon_targets, anon_index);
+            render_inline_anonymous_reference(html, text, anon_targets, anon_index, broken_links);
         }
         rusty_sphinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
             let text_escaped = html_escape::encode_text(text);
@@ -48,7 +50,7 @@ pub(super) fn render_inline(
             );
         }
         rusty_sphinx_ast::InlineNode::TermReference { display, term } => {
-            render_inline_term_reference(html, display, term, index, doc_path);
+            render_inline_term_reference(html, display, term, index, doc_path, broken_links);
         }
         rusty_sphinx_ast::InlineNode::DomainObjectReference {
             object_type,
@@ -58,12 +60,15 @@ pub(super) fn render_inline(
         } => {
             render_inline_domain_object_reference(
                 html,
-                *object_type,
-                name,
-                display,
-                *link,
+                DomainObjectRef {
+                    object_type: *object_type,
+                    name,
+                    display,
+                    link: *link,
+                },
                 index,
                 doc_path,
+                broken_links,
             );
         }
     }
@@ -76,6 +81,7 @@ pub(super) fn render_inline_reference(
     target: &str,
     index: &ProjectIndex,
     doc_path: &str,
+    broken_links: &mut Vec<BrokenLink>,
 ) {
     let target_escaped = html_escape::encode_text(target);
     let target_name = TargetName::new(target);
@@ -94,6 +100,10 @@ pub(super) fn render_inline_reference(
             html,
             "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>"
         );
+        broken_links.push(BrokenLink {
+            kind: BrokenLinkKind::Reference,
+            target: target.to_string(),
+        });
     }
 }
 
@@ -108,6 +118,7 @@ pub(super) fn render_inline_hyperlink(
     target: &str,
     index: &ProjectIndex,
     doc_path: &str,
+    broken_links: &mut Vec<BrokenLink>,
 ) {
     let text_escaped = html_escape::encode_text(text);
     if target.starts_with("http://")
@@ -141,6 +152,10 @@ pub(super) fn render_inline_hyperlink(
                 html,
                 "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
             );
+            broken_links.push(BrokenLink {
+                kind: BrokenLinkKind::Hyperlink,
+                target: target.to_string(),
+            });
         }
     }
 }
@@ -152,6 +167,7 @@ pub(super) fn render_inline_anonymous_reference(
     text: &str,
     anon_targets: &[String],
     anon_index: &mut usize,
+    broken_links: &mut Vec<BrokenLink>,
 ) {
     let text_escaped = html_escape::encode_text(text);
     if let Some(uri) = anon_targets.get(*anon_index) {
@@ -163,6 +179,10 @@ pub(super) fn render_inline_anonymous_reference(
             html,
             "<a href=\"#\" class=\"broken-link\">{text_escaped}</a>"
         );
+        broken_links.push(BrokenLink {
+            kind: BrokenLinkKind::AnonymousReference,
+            target: text.to_string(),
+        });
     }
 }
 
@@ -175,6 +195,7 @@ pub(super) fn render_inline_term_reference(
     term: &str,
     index: &ProjectIndex,
     doc_path: &str,
+    broken_links: &mut Vec<BrokenLink>,
 ) {
     let display_escaped = html_escape::encode_text(display);
     let term_name = rusty_sphinx_ast::TargetName::new(term);
@@ -197,6 +218,10 @@ pub(super) fn render_inline_term_reference(
             html,
             "<a href=\"#\" class=\"broken-link\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
         );
+        broken_links.push(BrokenLink {
+            kind: BrokenLinkKind::TermReference,
+            target: term.to_string(),
+        });
     }
 }
 
@@ -208,15 +233,30 @@ pub(super) fn render_inline_term_reference(
 /// never consulted — the target is rendered as plain text with no hyperlink
 /// and no broken-link fallback, matching Sphinx's "suppress cross-reference"
 /// semantics.
+/// The fields of `InlineNode::DomainObjectReference` needed to render it,
+/// bundled to keep [`render_inline_domain_object_reference`] within clippy's
+/// argument-count limit.
+#[derive(Clone, Copy)]
+pub(super) struct DomainObjectRef<'a> {
+    pub object_type: ObjectType,
+    pub name: &'a str,
+    pub display: &'a str,
+    pub link: bool,
+}
+
 pub(super) fn render_inline_domain_object_reference(
     html: &mut String,
-    object_type: ObjectType,
-    name: &str,
-    display: &str,
-    link: bool,
+    obj_ref: DomainObjectRef<'_>,
     index: &ProjectIndex,
     doc_path: &str,
+    broken_links: &mut Vec<BrokenLink>,
 ) {
+    let DomainObjectRef {
+        object_type,
+        name,
+        display,
+        link,
+    } = obj_ref;
     let display_escaped = html_escape::encode_text(display);
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
@@ -248,6 +288,10 @@ pub(super) fn render_inline_domain_object_reference(
             html,
             "<a href=\"#\" class=\"broken-link\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code></a>"
         );
+        broken_links.push(BrokenLink {
+            kind: BrokenLinkKind::DomainObjectReference,
+            target: name.to_string(),
+        });
     }
 }
 
@@ -266,12 +310,20 @@ mod tests {
             TargetLocation::Internal("other.rst".to_string()),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_reference(&mut html, "my-section", &index, "doc.rst");
+        render_inline_reference(
+            &mut html,
+            "my-section",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(html, "<a href=\"other.html#my-section\">my-section</a>");
+        assert!(broken_links.is_empty());
     }
 
     #[test]
@@ -279,14 +331,22 @@ mod tests {
         // Given
         let index = ProjectIndex::default();
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_reference(&mut html, "missing", &index, "doc.rst");
+        render_inline_reference(&mut html, "missing", &index, "doc.rst", &mut broken_links);
 
         // Then
         assert_eq!(
             html,
             "<a href=\"#missing\" class=\"broken-link\">missing</a>"
+        );
+        assert_eq!(
+            broken_links,
+            vec![BrokenLink {
+                kind: BrokenLinkKind::Reference,
+                target: "missing".to_string(),
+            }]
         );
     }
 
@@ -299,9 +359,16 @@ mod tests {
             TargetLocation::Internal("team_a/index.rst".to_string()),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_reference(&mut html, "target-a", &index, "team_b/index.rst");
+        render_inline_reference(
+            &mut html,
+            "target-a",
+            &index,
+            "team_b/index.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(
@@ -315,6 +382,7 @@ mod tests {
         // Given
         let index = ProjectIndex::default();
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_hyperlink(
@@ -323,6 +391,7 @@ mod tests {
             "https://example.com",
             &index,
             "doc.rst",
+            &mut broken_links,
         );
 
         // Then
@@ -334,6 +403,7 @@ mod tests {
         // Given
         let index = ProjectIndex::default();
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_hyperlink(
@@ -342,6 +412,7 @@ mod tests {
             "mailto:hello@example.com",
             &index,
             "doc.rst",
+            &mut broken_links,
         );
 
         // Then
@@ -357,9 +428,17 @@ mod tests {
             TargetLocation::External("https://python.org".to_string()),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_hyperlink(&mut html, "Python", "Python", &index, "doc.rst");
+        render_inline_hyperlink(
+            &mut html,
+            "Python",
+            "Python",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(html, "<a href=\"https://python.org\">Python</a>");
@@ -374,9 +453,17 @@ mod tests {
             TargetLocation::Internal("other.rst".to_string()),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_hyperlink(&mut html, "See other", "my-label", &index, "doc.rst");
+        render_inline_hyperlink(
+            &mut html,
+            "See other",
+            "my-label",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(html, "<a href=\"other.html#my-label\">See other</a>");
@@ -387,12 +474,27 @@ mod tests {
         // Given
         let index = ProjectIndex::default();
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_hyperlink(&mut html, "No target", "no-target", &index, "doc.rst");
+        render_inline_hyperlink(
+            &mut html,
+            "No target",
+            "no-target",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(html, "<a href=\"#\" class=\"broken-link\">No target</a>");
+        assert_eq!(
+            broken_links,
+            vec![BrokenLink {
+                kind: BrokenLinkKind::Hyperlink,
+                target: "no-target".to_string(),
+            }]
+        );
     }
 
     #[test]
@@ -401,9 +503,16 @@ mod tests {
         let anon_targets = vec!["https://example.com".to_string()];
         let mut anon_index = 0;
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_anonymous_reference(&mut html, "link text", &anon_targets, &mut anon_index);
+        render_inline_anonymous_reference(
+            &mut html,
+            "link text",
+            &anon_targets,
+            &mut anon_index,
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(html, "<a href=\"https://example.com\">link text</a>");
@@ -416,13 +525,27 @@ mod tests {
         let anon_targets: Vec<String> = vec![];
         let mut anon_index = 0;
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_anonymous_reference(&mut html, "broken", &anon_targets, &mut anon_index);
+        render_inline_anonymous_reference(
+            &mut html,
+            "broken",
+            &anon_targets,
+            &mut anon_index,
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(html, "<a href=\"#\" class=\"broken-link\">broken</a>");
         assert_eq!(anon_index, 0);
+        assert_eq!(
+            broken_links,
+            vec![BrokenLink {
+                kind: BrokenLinkKind::AnonymousReference,
+                target: "broken".to_string(),
+            }]
+        );
     }
 
     #[test]
@@ -434,10 +557,23 @@ mod tests {
         ];
         let mut anon_index = 0;
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_anonymous_reference(&mut html, "first", &anon_targets, &mut anon_index);
-        render_inline_anonymous_reference(&mut html, "second", &anon_targets, &mut anon_index);
+        render_inline_anonymous_reference(
+            &mut html,
+            "first",
+            &anon_targets,
+            &mut anon_index,
+            &mut broken_links,
+        );
+        render_inline_anonymous_reference(
+            &mut html,
+            "second",
+            &anon_targets,
+            &mut anon_index,
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(
@@ -455,9 +591,17 @@ mod tests {
             .glossary_terms
             .insert(TargetName::new("widget"), "glossary.rst".to_string());
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_term_reference(&mut html, "widget", "widget", &index, "doc.rst");
+        render_inline_term_reference(
+            &mut html,
+            "widget",
+            "widget",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert!(html.contains("class=\"reference internal\""));
@@ -471,14 +615,29 @@ mod tests {
         // Given
         let index = ProjectIndex::default();
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_term_reference(&mut html, "unknown term", "unknown", &index, "doc.rst");
+        render_inline_term_reference(
+            &mut html,
+            "unknown term",
+            "unknown",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert!(html.contains("class=\"broken-link\""));
         assert!(html.contains("class=\"xref std std-term\""));
         assert!(html.contains(">unknown term<"));
+        assert_eq!(
+            broken_links,
+            vec![BrokenLink {
+                kind: BrokenLinkKind::TermReference,
+                target: "unknown".to_string(),
+            }]
+        );
     }
 
     #[test]
@@ -489,9 +648,17 @@ mod tests {
             .glossary_terms
             .insert(TargetName::new("api"), "reference/glossary.rst".to_string());
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_term_reference(&mut html, "API", "api", &index, "guide/intro.rst");
+        render_inline_term_reference(
+            &mut html,
+            "API",
+            "api",
+            &index,
+            "guide/intro.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert!(html.contains("href=\"../reference/glossary.html#term-api\""));
@@ -506,9 +673,17 @@ mod tests {
             .glossary_terms
             .insert(TargetName::new("environment"), "glossary.rst".to_string());
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
-        render_inline_term_reference(&mut html, "the env", "environment", &index, "doc.rst");
+        render_inline_term_reference(
+            &mut html,
+            "the env",
+            "environment",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert!(html.contains("href=\"glossary.html#term-environment\""));
@@ -527,16 +702,20 @@ mod tests {
             "api.rst".to_string(),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-            "greet",
-            "greet",
-            true,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                name: "greet",
+                display: "greet",
+                link: true,
+            },
             &index,
             "doc.rst",
+            &mut broken_links,
         );
 
         // Then
@@ -558,16 +737,20 @@ mod tests {
             "api.rst".to_string(),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
-            "add",
-            "add",
-            true,
+            DomainObjectRef {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                name: "add",
+                display: "add",
+                link: true,
+            },
             &index,
             "doc.rst",
+            &mut broken_links,
         );
 
         // Then
@@ -587,16 +770,20 @@ mod tests {
             "api.rst".to_string(),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
-            "greetings",
-            "greetings",
-            true,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                name: "greetings",
+                display: "greetings",
+                link: true,
+            },
             &index,
             "doc.rst",
+            &mut broken_links,
         );
 
         // Then
@@ -611,21 +798,32 @@ mod tests {
         // Given
         let index = ProjectIndex::default();
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-            "missing",
-            "missing",
-            true,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                name: "missing",
+                display: "missing",
+                link: true,
+            },
             &index,
             "doc.rst",
+            &mut broken_links,
         );
 
         // Then
         assert!(html.contains("class=\"broken-link\""));
         assert!(html.contains(">missing<"));
+        assert_eq!(
+            broken_links,
+            vec![BrokenLink {
+                kind: BrokenLinkKind::DomainObjectReference,
+                target: "missing".to_string(),
+            }]
+        );
     }
 
     #[test]
@@ -640,16 +838,20 @@ mod tests {
             "api.rst".to_string(),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-            "greet",
-            "greet",
-            true,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                name: "greet",
+                display: "greet",
+                link: true,
+            },
             &index,
             "guide/intro.rst",
+            &mut broken_links,
         );
 
         // Then
@@ -662,16 +864,20 @@ mod tests {
         // performs a lookup, so this also proves no lookup is attempted.
         let index = ProjectIndex::default();
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
-            "curses",
-            "curses",
-            false,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+                name: "curses",
+                display: "curses",
+                link: false,
+            },
             &index,
             "doc.rst",
+            &mut broken_links,
         );
 
         // Then
@@ -679,6 +885,7 @@ mod tests {
             html,
             "<code class=\"xref py module docutils literal\">curses</code>"
         );
+        assert!(broken_links.is_empty());
     }
 
     #[test]
@@ -693,16 +900,20 @@ mod tests {
             "api.rst".to_string(),
         );
         let mut html = String::new();
+        let mut broken_links = Vec::new();
 
         // When
         render_inline_domain_object_reference(
             &mut html,
-            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-            "greetings.shout",
-            "shout",
-            true,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                name: "greetings.shout",
+                display: "shout",
+                link: true,
+            },
             &index,
             "doc.rst",
+            &mut broken_links,
         );
 
         // Then

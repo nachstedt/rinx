@@ -1,3 +1,5 @@
+.. _version-changes:
+
 Version Change Directives
 =========================
 

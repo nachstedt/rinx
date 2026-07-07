@@ -11,7 +11,7 @@ pub mod validator;
 pub fn process_rst(path: &str, input: &str) -> String {
     let doc = rusty_sphinx_parser::parse(path, input);
     let index = rusty_sphinx_analyzer::analyze(&doc);
-    rusty_sphinx_renderer::render(&doc, &index, path)
+    rusty_sphinx_renderer::render(&doc, &index, path).html
 }
 
 #[cfg(test)]

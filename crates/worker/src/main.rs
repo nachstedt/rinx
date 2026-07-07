@@ -9,7 +9,7 @@
 //! rusty-sphinx parse  --input <file.rst>  --output <file.ast>  [--default-domain <py|c>]
 //! rusty-sphinx validate_toctree --input <file.ast>  [--allowed <path>...]
 //! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
-//! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html>
+//! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links]
 //! rusty-sphinx validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>
 //! ```
 //!
@@ -113,7 +113,7 @@ fn process_preview(
     template_str: &str,
     doc_path: &str,
     default_domain: ast::Domain,
-) -> Result<String> {
+) -> Result<(String, Vec<renderer::BrokenLink>)> {
     let doc = parser::parse_with_domain(doc_path, rst, default_domain);
     let mut index = if let Some(json) = index_json {
         serde_json::from_str(json).context("Failed to deserialize global index")?
@@ -124,7 +124,7 @@ fn process_preview(
     let local_index = analyzer::analyze(&doc);
     let _ = index.merge(local_index);
 
-    let body = renderer::render(&doc, &index, doc_path);
+    let render_output = renderer::render(&doc, &index, doc_path);
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -146,15 +146,16 @@ fn process_preview(
         format!("{}default.css", "../".repeat(depth))
     };
 
-    renderer::render_page(
-        &body,
+    let html = renderer::render_page(
+        &render_output.html,
         template_str,
         config,
         &css_path,
         &page_title,
         doc_path,
         &index.nav_tree,
-    )
+    )?;
+    Ok((html, render_output.broken_links))
 }
 
 fn process_render(
@@ -163,13 +164,13 @@ fn process_render(
     config: &config::SiteConfig,
     template_str: &str,
     doc_path: &str,
-) -> Result<String> {
+) -> Result<(String, Vec<renderer::BrokenLink>)> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
     let index: analyzer::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
 
-    let body = renderer::render(&doc, &index, doc_path);
+    let render_output = renderer::render(&doc, &index, doc_path);
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -185,15 +186,47 @@ fn process_render(
         .unwrap_or_default();
 
     let css_path = renderer::css_relative_path(doc_path, "default.css");
-    renderer::render_page(
-        &body,
+    let html = renderer::render_page(
+        &render_output.html,
         template_str,
         config,
         &css_path,
         &page_title,
         doc_path,
         &index.nav_tree,
+    )?;
+    Ok((html, render_output.broken_links))
+}
+
+/// Formats a single broken-link diagnostic as a human-readable warning line.
+fn format_broken_link_warning(doc_path: &str, link: &renderer::BrokenLink) -> String {
+    format!(
+        "warning: broken {} '{}' in {doc_path}",
+        link.kind.as_str(),
+        link.target
     )
+}
+
+/// Returns an error listing every broken link when `strict` is true and
+/// `broken_links` is non-empty. Diagnostics are always reported to stderr by
+/// the caller regardless of `strict` — this only controls whether they also
+/// fail the render.
+fn check_broken_links_strict(
+    strict: bool,
+    doc_path: &str,
+    broken_links: &[renderer::BrokenLink],
+) -> Result<()> {
+    if !strict || broken_links.is_empty() {
+        return Ok(());
+    }
+    let messages: Vec<String> = broken_links
+        .iter()
+        .map(|link| format_broken_link_warning(doc_path, link))
+        .collect();
+    Err(anyhow!(
+        "Broken link validation failed:\n{}",
+        messages.join("\n")
+    ))
 }
 
 fn process_validate_images(ast_jsons: &[String], image_dir: &str) -> Result<()> {
@@ -276,6 +309,7 @@ fn cmd_render(args: &[String]) -> Result<()> {
     let config_path = flag_value(args, "--config")?;
     let template_path = flag_value(args, "--template")?;
     let doc_path = flag_value(args, "--doc-path")?;
+    let strict_links = args.iter().any(|a| a == "--strict-links");
 
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Error reading config '{config_path}'"))?;
@@ -290,13 +324,19 @@ fn cmd_render(args: &[String]) -> Result<()> {
     let index_json =
         fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
 
-    let html = process_render(
+    let (html, broken_links) = process_render(
         &ast_json,
         &index_json,
         &site_config,
         &template_str,
         &doc_path,
     )?;
+
+    for link in &broken_links {
+        eprintln!("{}", format_broken_link_warning(&doc_path, link));
+    }
+    check_broken_links_strict(strict_links, &doc_path, &broken_links)?;
+
     fs::write(&output, html).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
@@ -373,7 +413,7 @@ fn cmd_preview(args: &[String]) -> Result<()> {
     let template_str = fs::read_to_string(&template_path)
         .with_context(|| format!("Error reading template '{template_path}'"))?;
 
-    let html = process_preview(
+    let (html, broken_links) = process_preview(
         &rst,
         index_json.as_deref(),
         &site_config,
@@ -381,6 +421,12 @@ fn cmd_preview(args: &[String]) -> Result<()> {
         &doc_path,
         default_domain,
     )?;
+
+    // Preview is deliberately lenient (it renders over incomplete/WIP
+    // documents), so broken links are always warnings, never a failure.
+    for link in &broken_links {
+        eprintln!("{}", format_broken_link_warning(&doc_path, link));
+    }
 
     println!("{html}");
     Ok(())
@@ -414,7 +460,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} extract_diagrams --input <file.ast> --outdir <puml_dir>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
-                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html>\n\
+                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--strict-links]\n\
                    {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
                    {program} validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>"
             );
@@ -726,6 +772,69 @@ mod tests {
     }
 
     #[test]
+    fn test_format_broken_link_warning_includes_kind_target_and_doc_path() {
+        // Given
+        let link = renderer::BrokenLink {
+            kind: renderer::BrokenLinkKind::Reference,
+            target: "missing-section".to_string(),
+        };
+
+        // When
+        let message = format_broken_link_warning("guide/intro.rst", &link);
+
+        // Then
+        assert_eq!(
+            message,
+            "warning: broken ref 'missing-section' in guide/intro.rst"
+        );
+    }
+
+    #[test]
+    fn test_check_broken_links_strict_passes_when_not_strict() {
+        // Given
+        let broken_links = vec![renderer::BrokenLink {
+            kind: renderer::BrokenLinkKind::Reference,
+            target: "missing".to_string(),
+        }];
+
+        // When
+        let result = check_broken_links_strict(false, "doc.rst", &broken_links);
+
+        // Then
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_broken_links_strict_passes_when_no_broken_links() {
+        // Given
+        let broken_links: Vec<renderer::BrokenLink> = vec![];
+
+        // When
+        let result = check_broken_links_strict(true, "doc.rst", &broken_links);
+
+        // Then
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_check_broken_links_strict_fails_when_strict_and_broken_links_present() {
+        // Given
+        let broken_links = vec![renderer::BrokenLink {
+            kind: renderer::BrokenLinkKind::Reference,
+            target: "missing".to_string(),
+        }];
+
+        // When
+        let result = check_broken_links_strict(true, "doc.rst", &broken_links);
+
+        // Then
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("Broken link validation failed"));
+        assert!(msg.contains("missing"));
+    }
+
+    #[test]
     fn test_process_index_returns_serialized_project_index() {
         // Given
         let docs = vec![
@@ -753,10 +862,28 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let html = process_render(doc, index, &config, template, "test.rst").unwrap();
+        let (html, broken_links) =
+            process_render(doc, index, &config, template, "test.rst").unwrap();
 
         // Then
         assert!(html.contains("<h1>Title</h1>"));
+        assert!(broken_links.is_empty());
+    }
+
+    #[test]
+    fn test_process_render_reports_broken_reference() {
+        // Given
+        let doc = r#"{"path":"test.rst","nodes":[{"Paragraph":[{"Reference":"missing"}]}]}"#;
+        let index = r#"{"targets":{},"document_titles":{},"nav_tree":[]}"#;
+        let config = config::SiteConfig::default();
+        let template = "{{ body }}";
+
+        // When
+        let (_, broken_links) = process_render(doc, index, &config, template, "test.rst").unwrap();
+
+        // Then
+        assert_eq!(broken_links.len(), 1);
+        assert_eq!(broken_links[0].target, "missing");
     }
 
     #[test]
@@ -769,7 +896,7 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let html = process_preview(
+        let (html, broken_links) = process_preview(
             rst,
             Some(global_index),
             &config,
@@ -783,6 +910,7 @@ mod tests {
         assert!(html.contains("<h1>Section A</h1>"));
         // Cross-reference to other file should be resolved
         assert!(html.contains("href=\"other.html#section-b\""));
+        assert!(broken_links.is_empty());
     }
 
     #[test]
@@ -793,11 +921,29 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let html =
+        let (html, broken_links) =
             process_preview(rst, None, &config, template, "test.rst", ast::Domain::Py).unwrap();
 
         // Then
         assert!(html.contains("<h1>Section A</h1>"));
+        assert!(broken_links.is_empty());
+    }
+
+    #[test]
+    fn test_process_preview_reports_broken_reference_without_failing() {
+        // Given — preview is lenient: an unresolved :ref: is a diagnostic, not an error
+        let rst = "Section A\n=========\n\nSee :ref:`missing`";
+        let config = config::SiteConfig::default();
+        let template = "<html>{{ body }}</html>";
+
+        // When
+        let (html, broken_links) =
+            process_preview(rst, None, &config, template, "test.rst", ast::Domain::Py).unwrap();
+
+        // Then
+        assert!(html.contains("class=\"broken-link\""));
+        assert_eq!(broken_links.len(), 1);
+        assert_eq!(broken_links[0].target, "missing");
     }
 
     #[test]

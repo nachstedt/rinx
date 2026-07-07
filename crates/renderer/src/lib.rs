@@ -17,6 +17,50 @@ use rusty_sphinx_analyzer::ProjectIndex;
 use rusty_sphinx_ast::{Directive, Document, InlineNode, Node};
 use std::fmt::Write as _;
 
+/// The kind of cross-reference role that produced a [`BrokenLink`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BrokenLinkKind {
+    /// A `:ref:` role (`InlineNode::Reference`).
+    Reference,
+    /// A named hyperlink (`InlineNode::Hyperlink`).
+    Hyperlink,
+    /// An anonymous `__` reference with no matching anonymous target left.
+    AnonymousReference,
+    /// A `:term:` role (`InlineNode::TermReference`).
+    TermReference,
+    /// A domain-object role (`:func:`, `:py:func:`, etc.).
+    DomainObjectReference,
+}
+
+impl BrokenLinkKind {
+    /// Returns a short, human-readable label for this kind, used in CLI diagnostics.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Reference => "ref",
+            Self::Hyperlink => "hyperlink",
+            Self::AnonymousReference => "anonymous reference",
+            Self::TermReference => "term",
+            Self::DomainObjectReference => "domain object",
+        }
+    }
+}
+
+/// A cross-reference that failed to resolve while rendering a document.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BrokenLink {
+    pub kind: BrokenLinkKind,
+    pub target: String,
+}
+
+/// The result of rendering a document: the body HTML plus any cross-references
+/// that failed to resolve against the [`ProjectIndex`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RenderOutput {
+    pub html: String,
+    pub broken_links: Vec<BrokenLink>,
+}
+
 /// Shared rendering state threaded through the node traversal.
 pub(crate) struct RenderCtx<'a> {
     pub index: &'a ProjectIndex,
@@ -24,17 +68,19 @@ pub(crate) struct RenderCtx<'a> {
     pub anon_targets: &'a [String],
     pub anon_index: &'a mut usize,
     pub original_doc_path: &'a str,
+    pub broken_links: &'a mut Vec<BrokenLink>,
 }
 
-/// Renders a Document into an HTML string.
+/// Renders a Document into HTML, reporting any cross-references that failed to resolve.
 #[must_use]
-pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
+pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOutput {
     let mut html = String::new();
 
     // Collect anonymous targets for local resolution recursively
     let mut anon_targets = Vec::new();
     collect_anonymous_targets(&doc.nodes, &mut anon_targets);
     let mut anon_index = 0;
+    let mut broken_links = Vec::new();
 
     let mut ctx = RenderCtx {
         index,
@@ -42,11 +88,12 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> String {
         anon_targets: &anon_targets,
         anon_index: &mut anon_index,
         original_doc_path: &doc.path,
+        broken_links: &mut broken_links,
     };
 
     render_nodes(&mut html, &doc.nodes, &mut ctx);
 
-    html
+    RenderOutput { html, broken_links }
 }
 
 fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
@@ -85,6 +132,7 @@ fn render_inlines(html: &mut String, inlines: &[InlineNode], ctx: &mut RenderCtx
             ctx.doc_path,
             ctx.anon_targets,
             ctx.anon_index,
+            ctx.broken_links,
         );
     }
 }
@@ -212,7 +260,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "");
@@ -240,7 +288,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(
@@ -280,7 +328,7 @@ mod tests {
         );
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert!(result.starts_with("<h1>The "));
@@ -309,7 +357,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(
@@ -344,7 +392,7 @@ mod tests {
         }];
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(
@@ -387,7 +435,7 @@ mod tests {
         }];
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(
@@ -409,7 +457,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "<h1>Top</h1>\n");
@@ -428,7 +476,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "<h2>Sub</h2>\n");
@@ -447,7 +495,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "<h6>Deep</h6>\n");
@@ -466,7 +514,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "<h6>VeryDeep</h6>\n");
@@ -486,7 +534,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then the output should be empty, as unknown directives are ignored
         assert_eq!(result, "");
@@ -505,7 +553,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "<a id=\"section-1\"></a>\n");
@@ -518,7 +566,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "<hr />\n");
@@ -537,7 +585,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "");
@@ -559,12 +607,68 @@ mod tests {
         );
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(
             result,
             "<p><a href=\"other_file.html#other-section\">other-section</a></p>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_reports_no_broken_links_when_all_references_resolve() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![
+                rusty_sphinx_ast::InlineNode::Reference("other-section".to_string()),
+            ])],
+        );
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("other-section"),
+            rusty_sphinx_analyzer::TargetLocation::Internal("other_file.rst".to_string()),
+        );
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(result.broken_links.is_empty());
+    }
+
+    #[test]
+    fn test_render_collects_broken_links_across_multiple_reference_kinds() {
+        // Given a document with a broken :ref: and a broken :term:
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![
+                rusty_sphinx_ast::InlineNode::Reference("missing-ref".to_string()),
+                rusty_sphinx_ast::InlineNode::TermReference {
+                    display: "missing term".to_string(),
+                    term: "missing-term".to_string(),
+                },
+            ])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(
+            result.broken_links,
+            vec![
+                crate::BrokenLink {
+                    kind: crate::BrokenLinkKind::Reference,
+                    target: "missing-ref".to_string(),
+                },
+                crate::BrokenLink {
+                    kind: crate::BrokenLinkKind::TermReference,
+                    target: "missing-term".to_string(),
+                },
+            ]
         );
     }
 
@@ -587,7 +691,7 @@ mod tests {
         );
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then the link should point backwards up out of team_b/ and into team_a/
         assert_eq!(
@@ -615,7 +719,7 @@ mod tests {
         );
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "<p><a href=\"https://python.org\">Python</a></p>\n");
@@ -636,7 +740,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "<p><a href=\"https://google.com\">Google</a></p>\n");
@@ -655,7 +759,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then the image src should point backwards up out of team_b/ and examples/ and into _images/
         let expected = format!(
@@ -688,7 +792,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(
@@ -722,7 +826,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert!(result.contains(
@@ -748,7 +852,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert!(result.contains("<li><p>Para 1</p>\n<p>Para 2</p>\n</li>"));
@@ -779,7 +883,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(
@@ -816,7 +920,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then the <dt> contains the rendered inline markup, not raw text
         assert!(result.starts_with("<dl>\n<dt>Module "));
@@ -846,7 +950,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert!(result.contains("<a href=\"https://first.com\">First</a>"));
@@ -875,7 +979,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert!(result.contains("<a href=\"https://embedded.com\">Embedded</a>"));
@@ -913,7 +1017,7 @@ mod tests {
 
         // When
         // This would stack overflow if the renderer searched from the root for every child
-        let html = render(&doc, &index, &doc.path);
+        let html = render(&doc, &index, &doc.path).html;
 
         // Then
         // The output should contain nested lists reflecting the finite depth of nav_tree
@@ -935,7 +1039,7 @@ mod tests {
         let index = ProjectIndex::default(); // empty nav_tree
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then — no crash, just an empty list
         assert_eq!(result, "<ul>\n</ul>\n");
@@ -948,7 +1052,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then
         assert_eq!(result, "");
@@ -987,7 +1091,7 @@ mod tests {
         }];
 
         // When
-        let result = render(&doc, &index, &doc.path);
+        let result = render(&doc, &index, &doc.path).html;
 
         // Then — child appears but grandchild is suppressed by maxdepth: 1
         assert!(result.contains("Child"), "child should be rendered");

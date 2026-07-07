@@ -39,7 +39,7 @@ fn test_renderer_step() {
         ],
     );
     let index = analyzer::analyze(&doc);
-    let html = renderer::render(&doc, &index, &doc.path);
+    let html = renderer::render(&doc, &index, &doc.path).html;
 
     let expected = "<h1>Section</h1>\n<p>A line of text.</p>\n";
     assert_eq!(html, expected);
