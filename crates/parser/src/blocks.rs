@@ -3,6 +3,7 @@ use super::definition_list::try_parse_definition_list;
 use super::directives::try_parse_directive;
 use super::headings::{Adornment, detect_adornment, try_parse_heading};
 use super::inline::parse_inline_text;
+use super::table::try_parse_grid_table;
 use rusty_sphinx_ast::{Document, Domain, Node, TargetName};
 
 /// Tries to parse an RST comment starting at line `i`.
@@ -245,6 +246,14 @@ pub(super) fn parse_blocks(
         }
 
         if let Some((consumed, node)) = try_parse_heading(lines, i, adornment_order, default_domain)
+        {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
+        if let Some((consumed, node)) =
+            try_parse_grid_table(lines, i, adornment_order, diagnostics, default_domain)
         {
             nodes.push(node);
             i += consumed;

@@ -603,6 +603,28 @@ pub struct DefinitionListItem {
     pub definition: Vec<Node>,
 }
 
+/// A single cell in a grid table, possibly spanning multiple grid columns/rows.
+///
+/// Only span-starting cells are represented (mirroring HTML's `colspan`/
+/// `rowspan` model) — there is no placeholder entry for grid positions
+/// covered by another cell's span.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TableCell {
+    /// Number of grid columns this cell spans (always >= 1).
+    pub colspan: usize,
+    /// Number of grid rows this cell spans (always >= 1).
+    pub rowspan: usize,
+    /// The cell's content, parsed as block-level RST nodes — a grid table
+    /// cell is "a miniature document" per the RST spec.
+    pub content: Vec<Node>,
+}
+
+/// A single row of a grid table, holding only its span-starting cells.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TableRow {
+    pub cells: Vec<TableCell>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Node {
     Heading {
@@ -624,6 +646,12 @@ pub enum Node {
     },
     DefinitionList {
         items: Vec<DefinitionListItem>,
+    },
+    /// A grid table (`+---+---+` / `|` / `=` ASCII-art syntax). `header_rows`
+    /// is empty when the table has no `=`-separated header.
+    Table {
+        header_rows: Vec<TableRow>,
+        body_rows: Vec<TableRow>,
     },
     LiteralBlock {
         /// The language hint (e.g. `"python"`), if specified via `.. code-block:: lang`.
@@ -1473,6 +1501,36 @@ mod tests {
 
         // When / Then
         assert_eq!(module.signature_text(), "greetings");
+    }
+
+    #[test]
+    fn test_table_node_serialization_roundtrip() {
+        // Given
+        let node = Node::Table {
+            header_rows: vec![TableRow {
+                cells: vec![TableCell {
+                    colspan: 1,
+                    rowspan: 1,
+                    content: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Header".to_string(),
+                    )])],
+                }],
+            }],
+            body_rows: vec![TableRow {
+                cells: vec![TableCell {
+                    colspan: 2,
+                    rowspan: 3,
+                    content: vec![Node::Paragraph(vec![InlineNode::Text("Body".to_string())])],
+                }],
+            }],
+        };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: Node = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
     }
 
     #[test]

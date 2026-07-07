@@ -22,3 +22,6 @@
 - Treat clippy warnings as refactoring opportunities; do not suppress them with `#[allow(...)]` attributes.
 - Prefer co-locating unit tests natively using inline `#[cfg(test)]` modules over splitting them into separate files with `include!` macros to satisfy arbitrary line-limit constraints.
 - When a family of related kinds needs different options per kind, give each kind its own explicit variant/type with only its own fields, rather than one shared struct/variant carrying the union of every kind's options (most of them meaningless on most instances).
+- When adding a construct whose delimiter characters can collide with an existing construct's, fix the ambiguity at the root by tightening the existing detector to match the spec, rather than relying on parser dispatch order.
+- When constructs depend on exact character alignment (e.g. grid tables), validate the alignment strictly and reject on mismatch instead of silently padding lines to paper over it.
+- Validate real-world/benchmark inputs against a parser before considering a feature done — a hand-built test suite can miss patterns (like a border line with a partial `+` set) that only show up in authentic external documents.

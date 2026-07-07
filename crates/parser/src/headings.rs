@@ -13,6 +13,21 @@ pub(super) struct Adornment {
     pub(super) style: AdornmentStyle,
 }
 
+/// Checks whether `line` is a valid section adornment: a non-empty run of a
+/// *single* repeated ASCII punctuation character (e.g. `=====`, `-----`,
+/// `+++++`). Mixed-punctuation lines such as a grid-table border
+/// (`+------+------+`) are deliberately rejected, matching the RST spec's
+/// definition of section adornments and mirroring `try_parse_transition`'s
+/// single-character rule — this is what keeps a header-less grid table from
+/// being mistaken for an overline/underline heading.
+pub(super) fn is_section_adornment(line: &str) -> bool {
+    let mut chars = line.chars();
+    match chars.next() {
+        Some(first) if first.is_ascii_punctuation() => chars.all(|c| c == first),
+        _ => false,
+    }
+}
+
 pub(super) fn detect_adornment(lines: &[&str], i: usize) -> Option<(usize, Adornment, String)> {
     // 1. Try 3-line pattern (Overline + Text + Underline)
     if i + 2 < lines.len() {
@@ -20,11 +35,7 @@ pub(super) fn detect_adornment(lines: &[&str], i: usize) -> Option<(usize, Adorn
         let text = lines[i + 1].trim();
         let underline = lines[i + 2].trim();
 
-        if !overline.is_empty()
-            && overline.chars().all(|c| c.is_ascii_punctuation())
-            && overline == underline
-            && overline.len() >= text.len()
-        {
+        if is_section_adornment(overline) && overline == underline && overline.len() >= text.len() {
             let adornment_char = overline.chars().next().expect("non-empty adornment");
             return Some((
                 3,
@@ -42,10 +53,7 @@ pub(super) fn detect_adornment(lines: &[&str], i: usize) -> Option<(usize, Adorn
         let text = lines[i].trim();
         let underline = lines[i + 1].trim();
 
-        if !underline.is_empty()
-            && underline.chars().all(|c| c.is_ascii_punctuation())
-            && underline.len() >= text.len()
-        {
+        if is_section_adornment(underline) && underline.len() >= text.len() {
             let adornment_char = underline.chars().next().expect("non-empty underline");
             return Some((
                 2,
@@ -93,6 +101,30 @@ mod tests {
     use super::*;
     use crate::parse;
     use rusty_sphinx_ast::InlineNode;
+
+    #[test]
+    fn test_is_section_adornment_accepts_single_repeated_char() {
+        // Given / When / Then
+        assert!(is_section_adornment("======"));
+        assert!(is_section_adornment("------"));
+        assert!(is_section_adornment("++++++"));
+    }
+
+    #[test]
+    fn test_is_section_adornment_rejects_mixed_grid_border() {
+        // Given — a grid-table border mixes '+' and '-'
+        let line = "+------+------+";
+
+        // When / Then
+        assert!(!is_section_adornment(line));
+    }
+
+    #[test]
+    fn test_is_section_adornment_rejects_empty_and_non_punctuation() {
+        // Given / When / Then
+        assert!(!is_section_adornment(""));
+        assert!(!is_section_adornment("abc"));
+    }
 
     #[test]
     fn test_detect_adornment_overline() {

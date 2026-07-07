@@ -42,6 +42,15 @@ the corresponding feature is implemented.
 | Block quotes (indented paragraphs without a directive) | ❌ Not implemented | — |
 | Line blocks (`| line`) | ❌ Not implemented | — |
 
+## Tables
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Grid tables (`+---+` / `|` / `=` ASCII art) | ✅ Implemented | `crates/parser/src/table.rs::try_parse_grid_table` → `Node::Table { header_rows, body_rows }`; rendered as `<table>`/`<thead>`/`<tbody>`/`<tr>`/`<th\|td>`. Supports the optional `=` header/body divider and both **column spans** (dropped `\|`) and **row spans** (dropped `-` divider), emitted as HTML `colspan`/`rowspan`. Also supports **hierarchical/nested headers** that introduce a finer column split partway through the table (e.g. a header's second line splitting one top-border column into two sub-columns, as in CPython's `apiabiversion.rst`) — column boundaries are derived from the union of every `+` found anywhere in the table, not just the top border, since a `+` is unambiguously a column marker wherever it appears; a row-block that predates a given split reads as an implicit colspan across the not-yet-split columns. One consequence: a stray/typo `+` not aligned with any other row's structure is silently absorbed as a new column boundary rather than rejected (matches real Sphinx/docutils' own ambiguity here). Every line's overall *width* must still match the top border exactly — a width mismatch is reported as a diagnostic and the block falls back to a paragraph (parser stays error-resilient). Cell contents are parsed as full block-level RST ("a miniature document"). Supporting this required making heading adornment detection reject mixed-punctuation lines like `+---+---+` (only a single repeated punctuation char is a valid section adornment, per spec), so a header-less grid table is no longer mistaken for an overline heading. |
+| Simple tables (whitespace-column `===` style) | ❌ Not implemented | — |
+| `.. csv-table::` / `.. list-table::` directives | ❌ Not implemented | — |
+| `.. table::` (table title/caption/options) | ❌ Not implemented | — |
+
 ## Directives
 
 | Feature | Status | Notes |

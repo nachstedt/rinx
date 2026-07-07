@@ -14,7 +14,7 @@ use directives::{
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use rusty_sphinx_analyzer::ProjectIndex;
-use rusty_sphinx_ast::{Directive, Document, InlineNode, Node};
+use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, TableRow};
 use std::fmt::Write as _;
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
@@ -137,6 +137,27 @@ fn render_inlines(html: &mut String, inlines: &[InlineNode], ctx: &mut RenderCtx
     }
 }
 
+/// Renders a single grid-table row, emitting each cell with the given tag
+/// (`th` for header rows, `td` for body rows). `colspan`/`rowspan` attributes
+/// are written only when greater than 1, matching how `LiteralBlock` only
+/// emits its optional `language` attribute when present.
+fn render_table_row(html: &mut String, row: &TableRow, cell_tag: &str, ctx: &mut RenderCtx<'_>) {
+    let _ = writeln!(html, "<tr>");
+    for cell in &row.cells {
+        let _ = write!(html, "<{cell_tag}");
+        if cell.colspan > 1 {
+            let _ = write!(html, " colspan=\"{}\"", cell.colspan);
+        }
+        if cell.rowspan > 1 {
+            let _ = write!(html, " rowspan=\"{}\"", cell.rowspan);
+        }
+        let _ = write!(html, ">");
+        render_nodes(html, &cell.content, ctx);
+        let _ = writeln!(html, "</{cell_tag}>");
+    }
+    let _ = writeln!(html, "</tr>");
+}
+
 pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCtx<'_>) {
     for node in nodes {
         match node {
@@ -183,6 +204,25 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                     let _ = writeln!(html, "</dd>");
                 }
                 let _ = writeln!(html, "</dl>");
+            }
+            Node::Table {
+                header_rows,
+                body_rows,
+            } => {
+                let _ = writeln!(html, "<table>");
+                if !header_rows.is_empty() {
+                    let _ = writeln!(html, "<thead>");
+                    for row in header_rows {
+                        render_table_row(html, row, "th", ctx);
+                    }
+                    let _ = writeln!(html, "</thead>");
+                }
+                let _ = writeln!(html, "<tbody>");
+                for row in body_rows {
+                    render_table_row(html, row, "td", ctx);
+                }
+                let _ = writeln!(html, "</tbody>");
+                let _ = writeln!(html, "</table>");
             }
             Node::LiteralBlock { language, content } => {
                 let escaped = html_escape::encode_text(content);
@@ -926,6 +966,117 @@ mod tests {
         assert!(result.starts_with("<dl>\n<dt>Module "));
         assert!(result.contains("curses.ascii"));
         assert!(result.contains("<dd><p>Utilities for ASCII characters.</p>\n</dd>"));
+    }
+
+    #[test]
+    fn test_render_table_with_header() {
+        // Given a table with a header row and a body row, no spans
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Table {
+                header_rows: vec![rusty_sphinx_ast::TableRow {
+                    cells: vec![
+                        rusty_sphinx_ast::TableCell {
+                            colspan: 1,
+                            rowspan: 1,
+                            content: vec![Node::Paragraph(vec![InlineNode::Text("A".to_string())])],
+                        },
+                        rusty_sphinx_ast::TableCell {
+                            colspan: 1,
+                            rowspan: 1,
+                            content: vec![Node::Paragraph(vec![InlineNode::Text("B".to_string())])],
+                        },
+                    ],
+                }],
+                body_rows: vec![rusty_sphinx_ast::TableRow {
+                    cells: vec![
+                        rusty_sphinx_ast::TableCell {
+                            colspan: 1,
+                            rowspan: 1,
+                            content: vec![Node::Paragraph(vec![InlineNode::Text(
+                                "a1".to_string(),
+                            )])],
+                        },
+                        rusty_sphinx_ast::TableCell {
+                            colspan: 1,
+                            rowspan: 1,
+                            content: vec![Node::Paragraph(vec![InlineNode::Text(
+                                "b1".to_string(),
+                            )])],
+                        },
+                    ],
+                }],
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then
+        assert_eq!(
+            result,
+            "<table>\n\
+             <thead>\n<tr>\n<th><p>A</p>\n</th>\n<th><p>B</p>\n</th>\n</tr>\n</thead>\n\
+             <tbody>\n<tr>\n<td><p>a1</p>\n</td>\n<td><p>b1</p>\n</td>\n</tr>\n</tbody>\n\
+             </table>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_table_without_header_omits_thead() {
+        // Given a header-less table
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Table {
+                header_rows: vec![],
+                body_rows: vec![rusty_sphinx_ast::TableRow {
+                    cells: vec![rusty_sphinx_ast::TableCell {
+                        colspan: 1,
+                        rowspan: 1,
+                        content: vec![Node::Paragraph(vec![InlineNode::Text("only".to_string())])],
+                    }],
+                }],
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then — no <thead> element at all
+        assert!(!result.contains("<thead>"));
+        assert_eq!(
+            result,
+            "<table>\n<tbody>\n<tr>\n<td><p>only</p>\n</td>\n</tr>\n</tbody>\n</table>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_table_emits_colspan_and_rowspan_attributes() {
+        // Given a body cell spanning 2 columns and 3 rows
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Table {
+                header_rows: vec![],
+                body_rows: vec![rusty_sphinx_ast::TableRow {
+                    cells: vec![rusty_sphinx_ast::TableCell {
+                        colspan: 2,
+                        rowspan: 3,
+                        content: vec![Node::Paragraph(vec![InlineNode::Text(
+                            "spanning".to_string(),
+                        )])],
+                    }],
+                }],
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then — attributes present with the correct values
+        assert!(result.contains("<td colspan=\"2\" rowspan=\"3\"><p>spanning</p>\n</td>"));
     }
 
     #[test]

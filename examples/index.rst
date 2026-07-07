@@ -20,6 +20,7 @@ Welcome to the Rusty-Sphinx example.
    domains
    transitions
    typography
+   tables
    team_a/index
    team_b/index
 
