@@ -13,6 +13,9 @@ static FUNC_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py|c):)?func:`(?P<name>[^`]+)`").unwrap());
 static MOD_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?mod:`(?P<name>[^`]+)`").unwrap());
+static DATA_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r":(?:(?P<domain>py):)?(?P<role>data|const):`(?P<name>[^`]+)`").unwrap()
+});
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -40,6 +43,7 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         let term_match = TERM_ROLE_REGEX.find(remaining);
         let func_match = FUNC_ROLE_REGEX.find(remaining);
         let mod_match = MOD_ROLE_REGEX.find(remaining);
+        let data_match = DATA_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -61,6 +65,9 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         }
         if let Some(m) = mod_match {
             all_matches.push((m.start(), m.end(), "mod", None));
+        }
+        if let Some(m) = data_match {
+            all_matches.push((m.start(), m.end(), "data", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -176,6 +183,32 @@ fn handle_mod_match(m_str: &str, default_domain: Domain) -> InlineNode {
     }
 }
 
+/// Builds the `InlineNode` for a matched `:data:`/`:py:data:`/`:const:`/
+/// `:py:const:` role, falling back to plain text if the role doesn't resolve
+/// for the given domain (`data`/`const` are Python-only, like `mod`). Both
+/// role spellings resolve to the same [`rusty_sphinx_ast::PyObjectType::Data`],
+/// so `:data:` and `:const:` targeting the same name link to the same
+/// `.. py:data::` definition.
+fn handle_data_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = DATA_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, &caps["role"]) {
+        Some(object_type) => {
+            let target = parse_domain_object_target(&caps["name"]);
+            InlineNode::DomainObjectReference {
+                object_type,
+                name: target.name,
+                display: target.display,
+                link: target.link,
+            }
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
 pub(super) fn handle_inline_match(
     kind: &str,
     m_str: &str,
@@ -194,6 +227,7 @@ pub(super) fn handle_inline_match(
         }
         "func" => handle_func_match(m_str, default_domain),
         "mod" => handle_mod_match(m_str, default_domain),
+        "data" => handle_data_match(m_str, default_domain),
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let content = &caps["content"];
@@ -478,6 +512,40 @@ mod tests {
     }
 
     #[test]
+    fn test_handle_data_match_resolves_data_role() {
+        let result = handle_data_match(":data:`DEFAULT_TIMEOUT`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+                name: "DEFAULT_TIMEOUT".to_string(),
+                display: "DEFAULT_TIMEOUT".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_data_match_resolves_const_role_to_same_object_type_as_data() {
+        // Given — real Sphinx has no separate `py:const` directive; `:const:`
+        // is just an alternate role spelling for a `py:data` object.
+        let data_result = handle_data_match(":data:`DEFAULT_TIMEOUT`", Domain::Py);
+        let const_result = handle_data_match(":const:`DEFAULT_TIMEOUT`", Domain::Py);
+
+        // Then
+        assert_eq!(data_result, const_result);
+    }
+
+    #[test]
+    fn test_handle_data_match_falls_back_to_text_when_domain_lacks_data_role() {
+        let result = handle_data_match(":data:`DEFAULT_TIMEOUT`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::Text(":data:`DEFAULT_TIMEOUT`".to_string())
+        );
+    }
+
+    #[test]
     fn test_handle_inline_match_inline_variant() {
         // Given
         let node = InlineNode::Emphasis("text".to_string());
@@ -631,6 +699,73 @@ mod tests {
         // library whose default domain is `c` doesn't resolve to any object type.
         let result = handle_inline_match("mod", ":mod:`greetings`", None, Domain::C);
         assert_eq!(result, InlineNode::Text(":mod:`greetings`".to_string()));
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_bare_uses_default_domain() {
+        let result = handle_inline_match("data", ":data:`DEFAULT_TIMEOUT`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+                name: "DEFAULT_TIMEOUT".to_string(),
+                display: "DEFAULT_TIMEOUT".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_const_spelling_explicit_py_domain() {
+        let result = handle_inline_match("data", ":py:const:`DEFAULT_TIMEOUT`", None, Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+                name: "DEFAULT_TIMEOUT".to_string(),
+                display: "DEFAULT_TIMEOUT".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_bang_prefix_suppresses_link() {
+        let result = handle_inline_match("data", ":data:`!SECRET_KEY`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+                name: "SECRET_KEY".to_string(),
+                display: "SECRET_KEY".to_string(),
+                link: false,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_tilde_prefix_shortens_display() {
+        let result = handle_inline_match("data", ":data:`~pkg.CONST`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+                name: "pkg.CONST".to_string(),
+                display: "CONST".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_falls_back_to_text_when_unresolvable() {
+        // Given — `data`/`const` roles are Python-only, so a bare `:const:`
+        // role in a library whose default domain is `c` doesn't resolve.
+        let result = handle_inline_match("data", ":const:`DEFAULT_TIMEOUT`", None, Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::Text(":const:`DEFAULT_TIMEOUT`".to_string())
+        );
     }
 
     #[test]
@@ -1265,6 +1400,74 @@ mod integration_tests {
                 object_type: ObjectType::Py(PyObjectType::Module),
                 name: "curses".to_string(),
                 display: "curses".to_string(),
+                link: false,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_data_role_resolves_via_default_domain() {
+        // Given
+        let input = "See :data:`DEFAULT_TIMEOUT` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(
+                inlines[1],
+                InlineNode::DomainObjectReference {
+                    object_type: ObjectType::Py(PyObjectType::Data),
+                    name: "DEFAULT_TIMEOUT".to_string(),
+                    display: "DEFAULT_TIMEOUT".to_string(),
+                    link: true,
+                }
+            );
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_prefixed_const_role_ignores_default_domain_and_matches_data_target() {
+        // Given — `:py:const:` referencing the same name as a `.. py:data::`
+        // definition must resolve to the identical `DomainObjectReference` a
+        // `:py:data:` role would produce, since both share one namespace.
+        let input = "See :py:const:`DEFAULT_TIMEOUT`.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Data),
+                name: "DEFAULT_TIMEOUT".to_string(),
+                display: "DEFAULT_TIMEOUT".to_string(),
+                link: true,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_data_role_with_bang_prefix_suppresses_link_end_to_end() {
+        // Given
+        let input = "See :data:`!SECRET_KEY` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Data),
+                name: "SECRET_KEY".to_string(),
+                display: "SECRET_KEY".to_string(),
                 link: false,
             }));
         } else {

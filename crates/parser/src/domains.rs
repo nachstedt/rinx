@@ -31,6 +31,13 @@ pub(super) fn parse_domain_object(
             diagnostics,
             default_domain,
         ),
+        ObjectType::Py(PyObjectType::Data) => parse_py_data(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
     }
 }
 
@@ -73,6 +80,32 @@ fn parse_py_module(
         platform,
         synopsis,
         deprecated,
+        body,
+    }
+}
+
+/// Parses a `.. py:data::` body: strips `:type:`/`:value:` option lines off
+/// the front before parsing the rest as the docstring body.
+fn parse_py_data(
+    name: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (type_, value, options_consumed) = extract_data_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::PyData {
+        name,
+        type_,
+        value,
         body,
     }
 }
@@ -125,6 +158,33 @@ fn extract_module_options(lines: &[String]) -> (Option<String>, Option<String>, 
     }
 
     (platform, synopsis, deprecated, consumed)
+}
+
+/// Extracts `.. py:data::`-specific options (`:type:`, `:value:`) from the
+/// leading lines of a domain object's body.
+///
+/// Scans from the start and stops at the first line that isn't one of these
+/// recognized options (e.g. a blank line or the start of the docstring body),
+/// returning how many leading lines were consumed as options so the caller
+/// can slice them off before parsing the remaining body content.
+fn extract_data_options(lines: &[String]) -> (Option<String>, Option<String>, usize) {
+    let mut type_ = None;
+    let mut value = None;
+    let mut consumed = 0;
+
+    for line in lines {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix(":type:") {
+            type_ = Some(rest.trim().to_string());
+        } else if let Some(rest) = trimmed.strip_prefix(":value:") {
+            value = Some(rest.trim().to_string());
+        } else {
+            break;
+        }
+        consumed += 1;
+    }
+
+    (type_, value, consumed)
 }
 
 #[cfg(test)]
@@ -184,6 +244,56 @@ mod tests {
         assert_eq!(platform, None);
         assert_eq!(synopsis, None);
         assert!(!deprecated);
+        assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_extract_data_options_parses_both_options() {
+        // Given
+        let lines = vec![
+            ":type: int".to_string(),
+            ":value: 30".to_string(),
+            String::new(),
+            "The default timeout in seconds.".to_string(),
+        ];
+
+        // When
+        let (type_, value, consumed) = extract_data_options(&lines);
+
+        // Then
+        assert_eq!(type_.as_deref(), Some("int"));
+        assert_eq!(value.as_deref(), Some("30"));
+        assert_eq!(consumed, 2);
+    }
+
+    #[test]
+    fn test_extract_data_options_stops_at_first_non_option_line() {
+        // Given
+        let lines = vec![
+            ":type: int".to_string(),
+            "The default timeout in seconds.".to_string(),
+        ];
+
+        // When
+        let (type_, value, consumed) = extract_data_options(&lines);
+
+        // Then
+        assert_eq!(type_.as_deref(), Some("int"));
+        assert_eq!(value, None);
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_extract_data_options_returns_defaults_when_no_options_present() {
+        // Given
+        let lines = vec!["The default timeout in seconds.".to_string()];
+
+        // When
+        let (type_, value, consumed) = extract_data_options(&lines);
+
+        // Then
+        assert_eq!(type_, None);
+        assert_eq!(value, None);
         assert_eq!(consumed, 0);
     }
 
@@ -410,6 +520,82 @@ mod tests {
             assert!(body.is_empty());
         } else {
             panic!("Expected PyModule, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_py_data_domain_object() {
+        // Given
+        let input = ".. py:data:: DEFAULT_TIMEOUT\n\n   The default timeout in seconds.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
+            name,
+            type_,
+            value,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(name, "DEFAULT_TIMEOUT");
+            assert_eq!(type_, &None);
+            assert_eq!(value, &None);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyData, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_data_with_type_and_value_options() {
+        // Given
+        let input = ".. py:data:: DEFAULT_TIMEOUT\n   :type: int\n   :value: 30\n\n   The default timeout in seconds.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
+            type_,
+            value,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(type_.as_deref(), Some("int"));
+            assert_eq!(value.as_deref(), Some("30"));
+            assert_eq!(body.len(), 1);
+            assert!(matches!(body[0], Node::Paragraph(_)));
+        } else {
+            panic!("Expected PyData, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_data_options_in_any_order_with_no_body() {
+        // Given — value before type, and no docstring body
+        let input = ".. py:data:: DEFAULT_TIMEOUT\n   :value: 30\n   :type: int";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
+            type_,
+            value,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(type_.as_deref(), Some("int"));
+            assert_eq!(value.as_deref(), Some("30"));
+            assert!(body.is_empty());
+        } else {
+            panic!("Expected PyData, got {:?}", doc.nodes[0]);
         }
     }
 

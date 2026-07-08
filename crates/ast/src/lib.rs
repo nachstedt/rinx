@@ -233,6 +233,7 @@ impl std::fmt::Display for Domain {
 pub enum PyObjectType {
     Function,
     Module,
+    Data,
 }
 
 impl PyObjectType {
@@ -241,6 +242,7 @@ impl PyObjectType {
         match self {
             Self::Function => "function",
             Self::Module => "module",
+            Self::Data => "data",
         }
     }
 }
@@ -252,6 +254,7 @@ impl std::str::FromStr for PyObjectType {
         match s {
             "function" => Ok(Self::Function),
             "module" => Ok(Self::Module),
+            "data" => Ok(Self::Data),
             _ => Err(()),
         }
     }
@@ -327,12 +330,16 @@ impl ObjectType {
 
     /// Parses a role-style abbreviation (e.g. `"func"` from `:func:`) within
     /// a known domain. Roles use different (often abbreviated) names than
-    /// their directive counterparts, matching real Sphinx.
+    /// their directive counterparts, matching real Sphinx. Note `"data"` and
+    /// `"const"` both resolve to [`PyObjectType::Data`]: real Sphinx has no
+    /// separate `py:const` directive, `:const:` is just an alternate role
+    /// spelling for referencing a `py:data` object as a constant.
     #[must_use]
     pub fn from_role_name(domain: Domain, role: &str) -> Option<Self> {
         match (domain, role) {
             (Domain::Py, "func") => Some(Self::Py(PyObjectType::Function)),
             (Domain::Py, "mod") => Some(Self::Py(PyObjectType::Module)),
+            (Domain::Py, "data" | "const") => Some(Self::Py(PyObjectType::Data)),
             (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
             _ => None,
         }
@@ -392,6 +399,14 @@ pub enum DomainObjectBody {
         deprecated: bool,
         body: Vec<Node>,
     },
+    PyData {
+        name: String,
+        /// The data item's type annotation (e.g. `"int"`).
+        type_: Option<String>,
+        /// The data item's value (e.g. `"30"`).
+        value: Option<String>,
+        body: Vec<Node>,
+    },
     CFunction {
         signature: String,
         body: Vec<Node>,
@@ -405,6 +420,7 @@ impl DomainObjectBody {
         match self {
             Self::PyFunction { .. } => ObjectType::Py(PyObjectType::Function),
             Self::PyModule { .. } => ObjectType::Py(PyObjectType::Module),
+            Self::PyData { .. } => ObjectType::Py(PyObjectType::Data),
             Self::CFunction { .. } => ObjectType::C(CObjectType::Function),
         }
     }
@@ -418,17 +434,17 @@ impl DomainObjectBody {
             Self::PyFunction { signature, .. } | Self::CFunction { signature, .. } => {
                 extract_object_name(signature)
             }
-            Self::PyModule { name, .. } => name.clone(),
+            Self::PyModule { name, .. } | Self::PyData { name, .. } => name.clone(),
         }
     }
 
     /// The raw text shown in the rendered `<dt>` — the full signature for
-    /// function-like objects, or the bare dotted name for modules.
+    /// function-like objects, or the bare dotted name for modules/data.
     #[must_use]
     pub fn signature_text(&self) -> &str {
         match self {
             Self::PyFunction { signature, .. } | Self::CFunction { signature, .. } => signature,
-            Self::PyModule { name, .. } => name,
+            Self::PyModule { name, .. } | Self::PyData { name, .. } => name,
         }
     }
 
@@ -438,6 +454,7 @@ impl DomainObjectBody {
         match self {
             Self::PyFunction { body, .. }
             | Self::PyModule { body, .. }
+            | Self::PyData { body, .. }
             | Self::CFunction { body, .. } => body,
         }
     }
@@ -1070,6 +1087,12 @@ mod tests {
     }
 
     #[test]
+    fn test_py_object_type_from_str_accepts_data() {
+        // Given / When / Then
+        assert_eq!("data".parse::<PyObjectType>(), Ok(PyObjectType::Data));
+    }
+
+    #[test]
     fn test_c_object_type_from_str_accepts_function() {
         // Given / When / Then
         assert_eq!("function".parse::<CObjectType>(), Ok(CObjectType::Function));
@@ -1157,6 +1180,21 @@ mod tests {
             Some(ObjectType::Py(PyObjectType::Module))
         );
         assert_eq!(ObjectType::from_role_name(Domain::C, "mod"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_data_and_const_to_same_type_only_for_py() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Py, "data"),
+            Some(ObjectType::Py(PyObjectType::Data))
+        );
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Py, "const"),
+            Some(ObjectType::Py(PyObjectType::Data))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::C, "data"), None);
+        assert_eq!(ObjectType::from_role_name(Domain::C, "const"), None);
     }
 
     #[test]
@@ -1311,6 +1349,20 @@ mod tests {
     }
 
     #[test]
+    fn test_build_domain_object_key_for_data_is_shared_by_data_and_const_roles() {
+        // Given
+        let object_type = ObjectType::Py(PyObjectType::Data);
+        let name = "DEFAULT_TIMEOUT";
+
+        // When — both `:py:data:` and `:py:const:` resolve to the same
+        // `ObjectType`, so both must build this same key.
+        let key = build_domain_object_key(object_type, name);
+
+        // Then — `TargetName` normalizes to lowercase.
+        assert_eq!(key.as_str(), "py:data:default_timeout");
+    }
+
+    #[test]
     fn test_domain_object_reference_serialization_roundtrip() {
         // Given
         let node = InlineNode::DomainObjectReference {
@@ -1418,6 +1470,24 @@ mod tests {
     }
 
     #[test]
+    fn test_domain_object_directive_serialization_roundtrip_with_data_options() {
+        // Given
+        let directive = Directive::DomainObject(DomainObjectBody::PyData {
+            name: "DEFAULT_TIMEOUT".to_string(),
+            type_: Some("int".to_string()),
+            value: Some("30".to_string()),
+            body: vec![],
+        });
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
     fn test_domain_object_body_object_type_matches_variant() {
         // Given / When / Then
         assert_eq!(
@@ -1438,6 +1508,16 @@ mod tests {
             }
             .object_type(),
             ObjectType::Py(PyObjectType::Module)
+        );
+        assert_eq!(
+            DomainObjectBody::PyData {
+                name: "DEFAULT_TIMEOUT".to_string(),
+                type_: None,
+                value: None,
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::Py(PyObjectType::Data)
         );
         assert_eq!(
             DomainObjectBody::CFunction {
@@ -1477,6 +1557,20 @@ mod tests {
     }
 
     #[test]
+    fn test_domain_object_body_name_uses_bare_name_for_data() {
+        // Given
+        let data = DomainObjectBody::PyData {
+            name: "DEFAULT_TIMEOUT".to_string(),
+            type_: None,
+            value: None,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(data.name(), "DEFAULT_TIMEOUT");
+    }
+
+    #[test]
     fn test_domain_object_body_signature_text_shows_full_signature_for_functions() {
         // Given
         let function = DomainObjectBody::CFunction {
@@ -1501,6 +1595,20 @@ mod tests {
 
         // When / Then
         assert_eq!(module.signature_text(), "greetings");
+    }
+
+    #[test]
+    fn test_domain_object_body_signature_text_shows_bare_name_for_data() {
+        // Given
+        let data = DomainObjectBody::PyData {
+            name: "DEFAULT_TIMEOUT".to_string(),
+            type_: None,
+            value: None,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(data.signature_text(), "DEFAULT_TIMEOUT");
     }
 
     #[test]
@@ -1548,6 +1656,12 @@ mod tests {
             deprecated: false,
             body: vec![paragraph.clone()],
         };
+        let data = DomainObjectBody::PyData {
+            name: "DEFAULT_TIMEOUT".to_string(),
+            type_: None,
+            value: None,
+            body: vec![paragraph.clone()],
+        };
         let c_function = DomainObjectBody::CFunction {
             signature: "int add(int a, int b)".to_string(),
             body: vec![paragraph.clone()],
@@ -1556,6 +1670,7 @@ mod tests {
         // When / Then
         assert_eq!(function.body(), std::slice::from_ref(&paragraph));
         assert_eq!(module.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(data.body(), std::slice::from_ref(&paragraph));
         assert_eq!(c_function.body(), std::slice::from_ref(&paragraph));
     }
 }
