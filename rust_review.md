@@ -19,39 +19,6 @@ reading the exact code path) before being recorded here.
 
 ## Critical
 
-### 1. HTML autoescaping is silently disabled for every rendered page
-`crates/renderer/src/page.rs:44` registers the page template under the
-literal name `"page"`: `env.add_template("page", template_str)`. MiniJinja's
-`default_auto_escape_callback` (wired up automatically by
-`Environment::new()`) decides whether to HTML-escape purely from the
-*registered template name's* extension — `"page"` has none, so every page
-renders with `AutoEscape::None`. Confirmed directly against
-`minijinja-2.19.0/src/defaults.rs`: `rsplit('.').next()` on `"page"` matches
-none of `"html"`/`"htm"`/`"xml"`.
-
-`templates/default.html` interpolates `{{ page_title }}`, `{{ project }}`,
-`{{ version }}`, and `{{ entry.title }}` (nav sidebar) with no `|escape`
-filter, relying entirely on the (absent) autoescaping. `page_title` is derived
-from `ast::inline_plain_text()` — i.e. straight from a document's H1 heading
-text — with no escaping applied anywhere in the chain
-(`crates/worker/src/main.rs:130-140`, `:176-186`). Nav-tree titles reach the
-template via `ResolvedNavEntry.title` (`crates/renderer/src/page.rs:58-92`),
-also unescaped — inconsistent with `crates/renderer/src/nav.rs:28`, which
-*does* call `html_escape::encode_text` for the same kind of data on the
-toctree-directive render path.
-
-**Impact:** any `.rst` document whose H1 heading (or any other doc's title,
-via the nav sidebar) contains raw `<`, `>`, or `&` injects arbitrary
-markup/script into the `<head>` and sidebar of every generated page that
-renders or links to it — a real HTML/script-injection bug in what's meant to
-be a static-site generator.
-
-**Fix:** register the template under a name ending in `.html` (or call
-`env.set_auto_escape_callback(|_| AutoEscape::Html)` explicitly), and add a
-regression test analogous to `crates/renderer/src/lib.rs`'s
-`test_render_escapes_html_special_characters` but for `render_page` (title,
-project, version, nav titles).
-
 ### 2. Byte-index slicing on a char-counted indent panics on multi-byte UTF-8
 Six call sites across three files share the same bug pattern: compute the
 leading-whitespace **character** count of the first non-blank body line, then
