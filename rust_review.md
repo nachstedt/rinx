@@ -13,41 +13,9 @@ reachable from untrusted `.rst` content or an ordinary Bazel action) · **High**
 (real bug or significant perf/maintainability cost) · **Medium** (real but
 minor cost) · **Low** (nice-to-have polish) · **Nit** (purely cosmetic).
 
-All Critical and the anonymous-target/merge-retraction High findings below
-were independently reproduced (either by compiling a minimal repro or by
-reading the exact code path) before being recorded here.
-
-## Critical
-
-### 3. Quadratic-time inline-markup scanning is a real DoS on ordinary input
-`crates/parser/src/inline.rs`, `find_inline_markup` (line 293) together with
-`try_match_inline` (line 366): for every candidate opening marker
-(`` ` ``/`**`/`*`) that fails to find a valid closing marker, the outer scan
-does not skip past the failed region — it re-tries from the next character,
-and each attempt does its own near-linear rescan forward. Text containing many
-isolated, never-validly-closed single-star tokens (e.g. prose about C
-pointers, glob patterns, or just a typo'd `*`) triggers O(n²) behavior.
-
-Empirically confirmed (release build), parsing one paragraph of repeated
-`"*word "`:
-
-| repetitions | size | parse time |
-|---|---|---|
-| 4,000  | ~24 KB  | 201 ms  |
-| 8,000  | ~48 KB  | 795 ms  |
-| 16,000 | ~96 KB  | 3.21 s  |
-| 32,000 | ~192 KB | 12.64 s |
-
-Time roughly quadruples every time input size doubles. Since this same code
-path backs the `preview` subcommand (reparses on every debounced keystroke),
-a single paragraph like this in a document under live edit would hang the
-editor for seconds to minutes — a genuine availability bug triggered by an
-everyday unclosed-markup typo, not a contrived adversarial input.
-
-**Fix:** make the outer scan advance past a failed candidate's already-scanned
-region instead of re-scanning it from the next starting position (e.g. track
-the furthest position already proven not to close, or restructure as a single
-forward pass that classifies each position once).
+The anonymous-target/merge-retraction High findings below were independently
+reproduced (either by compiling a minimal repro or by reading the exact code
+path) before being recorded here.
 
 ## High
 
