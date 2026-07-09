@@ -1,4 +1,5 @@
 use super::blocks::parse_blocks;
+use super::bullet_list::unindent_body_lines;
 use super::headings::Adornment;
 use rusty_sphinx_ast::{CObjectType, Domain, DomainObjectBody, Node, ObjectType, PyObjectType};
 
@@ -108,26 +109,6 @@ fn parse_py_data(
         value,
         body,
     }
-}
-
-/// Strips the common leading indentation off a directive's body lines.
-/// Returns an empty vec if the body has no non-blank line.
-fn unindent_body_lines(body_lines: &[&str]) -> Vec<String> {
-    let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) else {
-        return Vec::new();
-    };
-
-    let indent = first.chars().take_while(|c| c.is_whitespace()).count();
-    body_lines
-        .iter()
-        .map(|l| {
-            if l.len() >= indent {
-                l[indent..].to_string()
-            } else {
-                l.trim().to_string()
-            }
-        })
-        .collect()
 }
 
 /// Extracts `.. py:module::`-specific options (`:platform:`, `:synopsis:`,
@@ -414,6 +395,35 @@ mod tests {
             } else {
                 panic!("Expected Paragraph, got {:?}", body[0]);
             }
+        } else {
+            panic!("Expected PyFunction, got {domain_object:?}");
+        }
+    }
+
+    #[test]
+    fn test_parse_domain_object_does_not_panic_on_multi_byte_char_in_a_short_line() {
+        // Given a body whose first line has a 3-char indent and a second,
+        // less-indented line containing a multi-byte character at the byte
+        // offset the old byte-index slicing would have panicked on
+        let object_type = ObjectType::Py(PyObjectType::Function);
+        let signature = "greet(name)".to_string();
+        let body_lines = vec!["   First line normal indent.", "  éfoo"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When parsing the domain object body
+        let domain_object = parse_domain_object(
+            object_type,
+            signature,
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+
+        // Then it does not panic
+        if let DomainObjectBody::PyFunction { .. } = domain_object {
+            // no-op: reaching here means parsing succeeded without panicking
         } else {
             panic!("Expected PyFunction, got {domain_object:?}");
         }
