@@ -41,14 +41,16 @@ pub fn render_page(
     let resolved_nav = resolve_nav_hrefs(nav_tree, doc_path);
 
     let mut env = minijinja::Environment::new();
-    env.add_template("page", template_str)
+    env.add_template("page.html", template_str)
         .context("Failed to parse template")?;
-    let tmpl = env.get_template("page").context("Template not found")?;
+    let tmpl = env
+        .get_template("page.html")
+        .context("Template not found")?;
     let ctx = minijinja::context! {
-        body => body,
+        body => minijinja::Value::from_safe_string(body.to_string()),
         project => &config.project,
         version => &config.version,
-        css_path => css_path,
+        css_path => minijinja::Value::from_safe_string(css_path.to_string()),
         page_title => page_title,
         nav_tree => resolved_nav,
     };
@@ -56,10 +58,14 @@ pub fn render_page(
 }
 
 /// A nav entry with its path resolved to a relative HTML href.
+///
+/// `href` is a computed, build-controlled relative path rather than
+/// document-authored text, so it's wrapped as a `MiniJinja` safe string to
+/// avoid needless (if harmless) entity-escaping of its `/` separators.
 #[derive(Debug, serde::Serialize)]
 struct ResolvedNavEntry<'a> {
     title: &'a str,
-    href: String,
+    href: minijinja::Value,
     children: Vec<ResolvedNavEntry<'a>>,
 }
 
@@ -84,7 +90,7 @@ fn resolve_nav_hrefs<'a>(
 
             ResolvedNavEntry {
                 title: &entry.title,
-                href,
+                href: minijinja::Value::from_safe_string(href),
                 children: resolve_nav_hrefs(&entry.children, doc_path),
             }
         })
@@ -178,6 +184,119 @@ mod tests {
     }
 
     #[test]
+    fn test_render_page_escapes_html_in_page_title() {
+        // Given a page title containing raw HTML
+        let template = "<title>{{ page_title }}</title>{{ body }}";
+        let config = SiteConfig::default();
+        let page_title = "Title <script>alert(1)</script>";
+
+        // When
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            "default.css",
+            page_title,
+            "",
+            &[],
+        )
+        .unwrap();
+
+        // Then
+        assert!(!result.contains("<script>"));
+        assert!(result.contains("&lt;script&gt;"));
+    }
+
+    #[test]
+    fn test_render_page_escapes_html_in_project_name() {
+        // Given a project name containing raw HTML
+        let template = "<title>{{ project }}</title>{{ body }}";
+        let config = SiteConfig {
+            project: "A & <b>B</b>".to_string(),
+            ..SiteConfig::default()
+        };
+
+        // When
+        let result = render_page("body", template, &config, "default.css", "", "", &[]).unwrap();
+
+        // Then
+        assert!(!result.contains("<b>"));
+        assert!(result.contains("A &amp; &lt;b&gt;B&lt;&#x2f;b&gt;"));
+    }
+
+    #[test]
+    fn test_render_page_escapes_html_in_version() {
+        // Given a version string containing raw HTML
+        let template = "<p>{{ version }}</p>{{ body }}";
+        let config = SiteConfig {
+            version: "1.0 <script>".to_string(),
+            ..SiteConfig::default()
+        };
+
+        // When
+        let result = render_page("body", template, &config, "default.css", "", "", &[]).unwrap();
+
+        // Then
+        assert!(!result.contains("<script>"));
+        assert!(result.contains("1.0 &lt;script&gt;"));
+    }
+
+    #[test]
+    fn test_render_page_escapes_html_in_nav_entry_title() {
+        // Given a nav entry whose title contains raw HTML
+        let template = "{% for entry in nav_tree %}{{ entry.title }}{% endfor %}{{ body }}";
+        let config = SiteConfig::default();
+        let entries = vec![rusty_sphinx_analyzer::NavEntry {
+            title: "Evil <script>alert(1)</script>".to_string(),
+            path: "evil.rst".to_string(),
+            children: vec![],
+        }];
+
+        // When
+        let result =
+            render_page("body", template, &config, "default.css", "", "", &entries).unwrap();
+
+        // Then
+        assert!(!result.contains("<script>"));
+        assert!(result.contains("&lt;script&gt;"));
+    }
+
+    #[test]
+    fn test_render_page_does_not_escape_body_html() {
+        // Given a body containing pre-rendered, trusted HTML
+        let template = "<main>{{ body }}</main>";
+        let config = SiteConfig::default();
+        let body = "<h1>Title</h1>\n<p>A &amp; B</p>\n";
+
+        // When
+        let result = render_page(body, template, &config, "default.css", "", "", &[]).unwrap();
+
+        // Then
+        assert!(result.contains("<h1>Title</h1>"));
+        assert!(result.contains("<p>A &amp; B</p>"));
+    }
+
+    #[test]
+    fn test_render_page_does_not_escape_nav_entry_href_slashes() {
+        // Given a nested nav entry whose computed href contains slashes
+        let template = "{% for entry in nav_tree %}{{ entry.href }}{% endfor %}{{ body }}";
+        let config = SiteConfig::default();
+        let entries = vec![rusty_sphinx_analyzer::NavEntry {
+            title: "Nested".to_string(),
+            path: "sub/nested.rst".to_string(),
+            children: vec![],
+        }];
+
+        // When
+        let result =
+            render_page("body", template, &config, "default.css", "", "", &entries).unwrap();
+
+        // Then
+        assert!(result.contains("sub/nested.html"));
+        assert!(!result.contains("&#x2f;"));
+    }
+
+    #[test]
     fn test_render_page_returns_error_for_invalid_template() {
         // Given
         let template = "{% if unclosed";
@@ -205,7 +324,7 @@ mod tests {
         // Then
         assert_eq!(resolved.len(), 1);
         assert_eq!(resolved[0].title, "Index");
-        assert_eq!(resolved[0].href, "index.html");
+        assert_eq!(resolved[0].href.to_string(), "index.html");
     }
 
     #[test]
@@ -222,7 +341,7 @@ mod tests {
 
         // Then
         assert_eq!(resolved.len(), 1);
-        assert_eq!(resolved[0].href, "../index.html");
+        assert_eq!(resolved[0].href.to_string(), "../index.html");
     }
 
     #[test]
@@ -239,7 +358,7 @@ mod tests {
 
         // Then
         assert_eq!(resolved.len(), 1);
-        assert_eq!(resolved[0].href, "sub/nested.html");
+        assert_eq!(resolved[0].href.to_string(), "sub/nested.html");
     }
 
     #[test]
@@ -260,8 +379,8 @@ mod tests {
 
         // Then
         assert_eq!(resolved.len(), 1);
-        assert_eq!(resolved[0].href, "root.html");
+        assert_eq!(resolved[0].href.to_string(), "root.html");
         assert_eq!(resolved[0].children.len(), 1);
-        assert_eq!(resolved[0].children[0].href, "sub/child.html");
+        assert_eq!(resolved[0].children[0].href.to_string(), "sub/child.html");
     }
 }
