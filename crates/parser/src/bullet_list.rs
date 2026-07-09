@@ -11,6 +11,25 @@ pub(super) fn strip_indent(s: &str, indent_chars: usize) -> &str {
     }
 }
 
+/// Strips the common leading indentation off a directive's body lines.
+/// Returns an empty vec if the body has no non-blank line.
+pub(super) fn unindent_body_lines(body_lines: &[&str]) -> Vec<String> {
+    let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) else {
+        return Vec::new();
+    };
+    let indent = first.chars().take_while(|c| c.is_whitespace()).count();
+    body_lines
+        .iter()
+        .map(|l| {
+            if l.chars().count() >= indent {
+                strip_indent(l, indent).to_string()
+            } else {
+                l.trim().to_string()
+            }
+        })
+        .collect()
+}
+
 pub(super) fn detect_bullet_item(line: &str) -> Option<(char, usize, usize)> {
     let mut chars = line.chars();
     let mut indent = 0;
@@ -279,5 +298,61 @@ mod tests {
                 assert_eq!(l2_items[0].nodes.len(), 2); // Paragraph and Level 3 BulletList
             }
         }
+    }
+
+    #[test]
+    fn test_unindent_body_lines_strips_common_indentation() {
+        // Given a body whose lines share a 4-space common indent
+        let body_lines = ["    First line.", "    Second line.", "", "    Third line."];
+
+        // When unindenting the body
+        let result = unindent_body_lines(&body_lines);
+
+        // Then the common indent is stripped from every line
+        assert_eq!(
+            result,
+            vec!["First line.", "Second line.", "", "Third line."]
+        );
+    }
+
+    #[test]
+    fn test_unindent_body_lines_trims_a_line_shorter_than_the_indent() {
+        // Given a body whose first line sets a 4-char indent but a later line
+        // has fewer characters in total than that
+        let body_lines = ["    First line.", "  "];
+
+        // When unindenting the body
+        let result = unindent_body_lines(&body_lines);
+
+        // Then the short line is fully trimmed instead of indent-stripped
+        assert_eq!(result, vec!["First line.", ""]);
+    }
+
+    #[test]
+    fn test_unindent_body_lines_returns_empty_vec_when_no_non_blank_line() {
+        // Given a body containing only blank lines
+        let body_lines = ["", "   ", ""];
+
+        // When unindenting the body
+        let result = unindent_body_lines(&body_lines);
+
+        // Then no lines are returned
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_unindent_body_lines_does_not_panic_on_multi_byte_char_within_the_indent() {
+        // Given a first line with a 3-char indent and a second line long
+        // enough to be indent-stripped whose 3rd character is a multi-byte
+        // character straddling the byte offset the old byte-index slicing
+        // (using a char count as a byte index) would have panicked on
+        let body_lines = ["   First line normal indent.", "  éfoo"];
+
+        // When unindenting the body
+        let result = unindent_body_lines(&body_lines);
+
+        // Then it does not panic, and strips the first 3 characters same as
+        // any other line long enough to reach the common indent
+        assert_eq!(result, vec!["First line normal indent.", "foo"]);
     }
 }

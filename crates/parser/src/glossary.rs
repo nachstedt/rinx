@@ -1,6 +1,7 @@
 //! Glossary directive parsing for RST documents.
 
 use super::blocks::parse_blocks;
+use super::bullet_list::unindent_body_lines;
 use super::headings::Adornment;
 use rusty_sphinx_ast::{Directive, Domain};
 
@@ -11,29 +12,14 @@ pub(super) fn parse_glossary(
     diagnostics: &mut Vec<String>,
     default_domain: Domain,
 ) -> Directive {
-    // Determine the base indentation of the body (first non-blank line).
-    let Some(first_non_blank) = body_lines.iter().find(|l| !l.trim().is_empty()) else {
+    // Strip the base indentation from all lines.
+    let unindented = unindent_body_lines(body_lines);
+    if unindented.is_empty() {
         return Directive::Glossary {
             entries: vec![],
             sorted: false,
         };
-    };
-    let base_indent = first_non_blank
-        .chars()
-        .take_while(|c| c.is_whitespace())
-        .count();
-
-    // Strip the base indentation from all lines.
-    let unindented: Vec<String> = body_lines
-        .iter()
-        .map(|l| {
-            if l.len() >= base_indent {
-                l[base_indent..].to_string()
-            } else {
-                l.trim().to_string()
-            }
-        })
-        .collect();
+    }
 
     // Parse the :sorted: option from the leading option lines.
     let mut sorted = false;
@@ -129,4 +115,102 @@ pub(super) fn parse_glossary(
     }
 
     Directive::Glossary { entries, sorted }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_glossary_parses_a_single_term_and_definition() {
+        // Given a glossary body with one term and an indented definition
+        let body_lines = vec!["   term", "      Definition text."];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When parsing the glossary directive body
+        let directive = parse_glossary(
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+
+        // Then a single entry with the parsed term is produced
+        if let Directive::Glossary { entries, sorted } = directive {
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].terms, vec!["term".to_string()]);
+            assert!(!sorted);
+        } else {
+            panic!("Expected Glossary directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_glossary_parses_sorted_option() {
+        // Given a glossary body starting with the :sorted: option
+        let body_lines = vec!["   :sorted:", "", "   term", "      Definition text."];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When parsing the glossary directive body
+        let directive = parse_glossary(
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+
+        // Then the sorted flag is set
+        if let Directive::Glossary { sorted, .. } = directive {
+            assert!(sorted);
+        } else {
+            panic!("Expected Glossary directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_glossary_returns_empty_entries_when_body_has_no_non_blank_line() {
+        // Given a glossary body containing only blank lines
+        let body_lines = vec!["", "   "];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When parsing the glossary directive body
+        let directive = parse_glossary(
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+
+        // Then no entries are produced
+        if let Directive::Glossary { entries, sorted } = directive {
+            assert!(entries.is_empty());
+            assert!(!sorted);
+        } else {
+            panic!("Expected Glossary directive");
+        }
+    }
+
+    #[test]
+    fn test_parse_glossary_does_not_panic_on_multi_byte_char_in_a_short_line() {
+        // Given a body whose first line has a 3-space indent and a second,
+        // less-indented line containing a multi-byte character at the byte
+        // offset the old byte-index slicing would have panicked on
+        let body_lines = vec!["   First line normal indent.", "  éfoo"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When parsing the glossary directive body
+        let directive = parse_glossary(
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+
+        // Then it does not panic
+        assert!(matches!(directive, Directive::Glossary { .. }));
+    }
 }

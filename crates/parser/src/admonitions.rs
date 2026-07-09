@@ -1,4 +1,5 @@
 use super::blocks::parse_blocks;
+use super::bullet_list::unindent_body_lines;
 use super::headings::Adornment;
 use rusty_sphinx_ast::{Directive, Domain};
 
@@ -25,63 +26,52 @@ pub(super) fn parse_admonition(
     let mut collapsible = None;
 
     // Strip common indentation and parse options
-    if let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) {
-        let indent = first.chars().take_while(|c| c.is_whitespace()).count();
-        let unindented_lines: Vec<String> = body_lines
-            .iter()
-            .map(|l| {
-                if l.len() >= indent {
-                    l[indent..].to_string()
-                } else {
-                    l.trim().to_string()
-                }
-            })
-            .collect();
-
-        // Parse options (specifically :collapsible:)
-        let mut opt_idx = 0;
-        while opt_idx < unindented_lines.len() {
-            let line = unindented_lines[opt_idx].trim();
-            if line.is_empty() {
-                opt_idx += 1;
-                continue;
-            }
-            if line.starts_with(':') && line.contains(':') {
-                if line.starts_with(":collapsible:") {
-                    let arg = line.strip_prefix(":collapsible:").unwrap().trim();
-                    if arg == "open" {
-                        collapsible = Some(true);
-                    } else {
-                        // Default to closed if ":collapsible:" or ":collapsible: close"
-                        collapsible = Some(false);
-                    }
-                }
-                opt_idx += 1;
-            } else {
-                break;
-            }
-        }
-
-        // The rest is the body
-        let body_content: Vec<&str> = unindented_lines[opt_idx..]
-            .iter()
-            .map(String::as_str)
-            .collect();
-        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
-
-        Directive::Admonition {
-            kind,
-            title,
-            collapsible,
-            body: body_nodes,
-        }
-    } else {
-        Directive::Admonition {
+    let unindented_lines = unindent_body_lines(body_lines);
+    if unindented_lines.is_empty() {
+        return Directive::Admonition {
             kind,
             title,
             collapsible: None,
             body: vec![],
+        };
+    }
+
+    // Parse options (specifically :collapsible:)
+    let mut opt_idx = 0;
+    while opt_idx < unindented_lines.len() {
+        let line = unindented_lines[opt_idx].trim();
+        if line.is_empty() {
+            opt_idx += 1;
+            continue;
         }
+        if line.starts_with(':') && line.contains(':') {
+            if line.starts_with(":collapsible:") {
+                let arg = line.strip_prefix(":collapsible:").unwrap().trim();
+                if arg == "open" {
+                    collapsible = Some(true);
+                } else {
+                    // Default to closed if ":collapsible:" or ":collapsible: close"
+                    collapsible = Some(false);
+                }
+            }
+            opt_idx += 1;
+        } else {
+            break;
+        }
+    }
+
+    // The rest is the body
+    let body_content: Vec<&str> = unindented_lines[opt_idx..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    Directive::Admonition {
+        kind,
+        title,
+        collapsible,
+        body: body_nodes,
     }
 }
 
@@ -100,33 +90,22 @@ pub(super) fn parse_version_change(
         argument
     };
 
-    if let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) {
-        let indent = first.chars().take_while(|c| c.is_whitespace()).count();
-        let unindented_lines: Vec<String> = body_lines
-            .iter()
-            .map(|l| {
-                if l.len() >= indent {
-                    l[indent..].to_string()
-                } else {
-                    l.trim().to_string()
-                }
-            })
-            .collect();
-
-        let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
-        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
-
-        Directive::VersionChange {
-            kind,
-            version,
-            body: body_nodes,
-        }
-    } else {
-        Directive::VersionChange {
+    let unindented_lines = unindent_body_lines(body_lines);
+    if unindented_lines.is_empty() {
+        return Directive::VersionChange {
             kind,
             version,
             body: vec![],
-        }
+        };
+    }
+
+    let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
+    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    Directive::VersionChange {
+        kind,
+        version,
+        body: body_nodes,
     }
 }
 
@@ -136,26 +115,15 @@ pub(super) fn parse_seealso(
     diagnostics: &mut Vec<String>,
     default_domain: Domain,
 ) -> Directive {
-    if let Some(first) = body_lines.iter().find(|l| !l.trim().is_empty()) {
-        let indent = first.chars().take_while(|c| c.is_whitespace()).count();
-        let unindented_lines: Vec<String> = body_lines
-            .iter()
-            .map(|l| {
-                if l.len() >= indent {
-                    l[indent..].to_string()
-                } else {
-                    l.trim().to_string()
-                }
-            })
-            .collect();
-
-        let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
-        let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
-
-        Directive::SeeAlso { body: body_nodes }
-    } else {
-        Directive::SeeAlso { body: vec![] }
+    let unindented_lines = unindent_body_lines(body_lines);
+    if unindented_lines.is_empty() {
+        return Directive::SeeAlso { body: vec![] };
     }
+
+    let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
+    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    Directive::SeeAlso { body: body_nodes }
 }
 
 #[cfg(test)]
@@ -276,6 +244,31 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_admonition_does_not_panic_on_multi_byte_char_in_a_short_line() {
+        // Given a body whose first line has a 3-space indent and a second,
+        // less-indented line containing a multi-byte character at the byte
+        // offset the old byte-index slicing would have panicked on
+        let kind = rusty_sphinx_ast::AdmonitionKind::Note;
+        let argument = String::new();
+        let body_lines = vec!["   First line normal indent.", "  éfoo"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When
+        let directive = parse_admonition(
+            kind,
+            argument,
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+
+        // Then it does not panic
+        assert!(matches!(directive, Directive::Admonition { .. }));
+    }
+
+    #[test]
     fn test_parse_versionchanged_creates_directive() {
         // Given
         let input = ".. versionchanged:: 2.3\n\n   Added async support.";
@@ -373,6 +366,31 @@ mod tests {
         } else {
             panic!("Expected VersionChange directive");
         }
+    }
+
+    #[test]
+    fn test_parse_version_change_does_not_panic_on_multi_byte_char_in_a_short_line() {
+        // Given a body whose first line has a 3-space indent and a second,
+        // less-indented line containing a multi-byte character at the byte
+        // offset the old byte-index slicing would have panicked on
+        let kind = rusty_sphinx_ast::VersionChangeKind::Changed;
+        let argument = "2.3".to_string();
+        let body_lines = vec!["   First line normal indent.", "  éfoo"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When
+        let directive = parse_version_change(
+            kind,
+            argument,
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+
+        // Then it does not panic
+        assert!(matches!(directive, Directive::VersionChange { .. }));
     }
 
     #[test]
@@ -494,5 +512,26 @@ mod tests {
             panic!("Expected SeeAlso directive");
         }
         assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_parse_seealso_does_not_panic_on_multi_byte_char_in_a_short_line() {
+        // Given a body whose first line has a 3-space indent and a second,
+        // less-indented line containing a multi-byte character at the byte
+        // offset the old byte-index slicing would have panicked on
+        let body_lines = vec!["   First line normal indent.", "  éfoo"];
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+
+        // When
+        let directive = parse_seealso(
+            &body_lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+
+        // Then it does not panic
+        assert!(matches!(directive, Directive::SeeAlso { .. }));
     }
 }

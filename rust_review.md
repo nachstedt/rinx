@@ -19,47 +19,6 @@ reading the exact code path) before being recorded here.
 
 ## Critical
 
-### 2. Byte-index slicing on a char-counted indent panics on multi-byte UTF-8
-Six call sites across three files share the same bug pattern: compute the
-leading-whitespace **character** count of the first non-blank body line, then
-use that count as a **byte** offset to slice every other line.
-
-- `crates/parser/src/domains.rs:120-129` (`unindent_body_lines`, used by
-  `.. py:function::`, `.. py:module::`, `.. py:data::`, `.. c:function::`)
-- `crates/parser/src/admonitions.rs:29-38, 104-113, 140-149`
-  (`parse_admonition`, `parse_version_change`, `parse_seealso`)
-- `crates/parser/src/glossary.rs:21-35` (`parse_glossary`)
-
-```rust
-let indent = first.chars().take_while(|c| c.is_whitespace()).count(); // chars
-...
-if l.len() >= indent {        // l.len() is BYTES
-    l[indent..].to_string()   // byte-index slice using a char count
-}
-```
-
-Reproduced directly (outside the parser, isolating just the arithmetic):
-
-```
-first = "   First line normal indent."   (indent = 3, char count)
-l     = "  éfoo"                          (l.len() = 7 bytes)
-l[3..] => panics: byte index 3 is not a char boundary; it is inside 'é' (bytes 2..4)
-```
-
-Any directive body (`py:function`, `py:module`, `py:data`, `c:function`,
-`versionadded`/`versionchanged`/`deprecated`, `seealso`, `glossary`) where a
-line has *less* leading whitespace than the body's first line and contains an
-accented/CJK/other multi-byte character at the point the byte-index lands mid
-character will crash the whole `parse()` call — not adversarial input, just
-ordinary prose containing é/ü/ñ/CJK text. This defeats the parser's explicit
-"never panic on user RST" design goal and would take down the `preview`
-subcommand (and thus the live-editor experience) on an ordinary keystroke.
-
-**Fix:** reuse the crate's own char-safe helper, `strip_indent` in
-`crates/parser/src/bullet_list.rs:5-12` (already used safely by `table.rs` and
-`definition_list.rs`), instead of the byte-slicing version duplicated across
-these three files / six call sites.
-
 ### 3. Quadratic-time inline-markup scanning is a real DoS on ordinary input
 `crates/parser/src/inline.rs`, `find_inline_markup` (line 293) together with
 `try_match_inline` (line 366): for every candidate opening marker
@@ -390,7 +349,6 @@ followed consistently across all six worker subcommands, with good
 `.context()` error messages on every I/O boundary; no PlantUML/subprocess
 command-injection surface exists in the worker crate; `ProjectIndex`'s fields
 are all `BTreeMap`, so no `HashMap`-iteration-order nondeterminism leaks into
-Bazel-cached output; and most `panic!`/`unreachable!()` hits found via grep
+Bazel-cached output; and all `panic!`/`unreachable!()` hits found via grep
 across the parser crate are test-module assertion helpers, not
-production-reachable panics (see Critical #2 for the ones that *are*
-reachable).
+production-reachable panics.
