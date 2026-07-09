@@ -290,12 +290,82 @@ pub(super) fn handle_inline_match(
     }
 }
 
+/// Returns every absolute byte position in `full_text` at or after
+/// `search_start` where `marker` occurs and could validly serve as a
+/// *closing* marker for some inline-markup span: not preceded by whitespace,
+/// followed by whitespace/allowed punctuation (or end of text), and (unless
+/// `is_literal`) not itself escaped by a preceding backslash.
+///
+/// Whether an occurrence of `marker` is valid as a closing marker depends
+/// only on the text around that occurrence, never on where a candidate
+/// opening marker started searching from. Computing this table once per
+/// `marker` (here, once per call to [`find_inline_markup`]) instead of
+/// rescanning it from scratch for every failed candidate opening marker is
+/// what keeps inline-markup parsing from being quadratic in input size.
+fn find_valid_close_positions(
+    full_text: &str,
+    search_start: usize,
+    marker: &str,
+    is_literal: bool,
+) -> Vec<usize> {
+    let marker_len = marker.len();
+    let mut positions = Vec::new();
+    let mut search_pos = search_start;
+
+    while let Some(rel_pos) = full_text[search_pos..].find(marker) {
+        let abs_pos = search_pos + rel_pos;
+
+        // End context check
+        let last_inner = full_text[..abs_pos].chars().next_back();
+        if last_inner.is_some_and(char::is_whitespace) {
+            search_pos = abs_pos + 1;
+            continue;
+        }
+
+        // Check character after end marker
+        let after_end = abs_pos + marker_len;
+        if after_end < full_text.len() {
+            let next_char = full_text[after_end..].chars().next().unwrap();
+            if !next_char.is_whitespace() && !"-.,:;!?\\/ '\" >)]}".contains(next_char) {
+                search_pos = abs_pos + 1;
+                continue;
+            }
+        }
+
+        // Check for escaping of end marker (skip if is_literal)
+        if !is_literal && abs_pos > 0 && full_text.as_bytes()[abs_pos - 1] == b'\\' {
+            let mut bs_count = 0;
+            let mut j = abs_pos - 1;
+            while full_text.as_bytes()[j] == b'\\' {
+                bs_count += 1;
+                if j == 0 {
+                    break;
+                }
+                j -= 1;
+            }
+            if bs_count % 2 != 0 {
+                search_pos = abs_pos + 1;
+                continue;
+            }
+        }
+
+        positions.push(abs_pos);
+        search_pos = abs_pos + 1;
+    }
+
+    positions
+}
+
 pub(super) fn find_inline_markup(
     full_text: &str,
     start_offset: usize,
 ) -> Option<(usize, usize, InlineNode)> {
     let text = &full_text[start_offset..];
     let mut best_match: Option<(usize, usize, InlineNode)> = None;
+
+    let literal_close_positions = find_valid_close_positions(full_text, start_offset, "``", true);
+    let strong_close_positions = find_valid_close_positions(full_text, start_offset, "**", false);
+    let emphasis_close_positions = find_valid_close_positions(full_text, start_offset, "*", false);
 
     for (i, _) in text.char_indices() {
         let abs_i = start_offset + i;
@@ -319,7 +389,8 @@ pub(super) fn find_inline_markup(
 
         // Try Inline Literal first (``)
         if text[i..].starts_with("``")
-            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 2, true)
+            && let Some((end_pos, content)) =
+                try_match_inline(full_text, abs_i, 2, &literal_close_positions)
         {
             let m = (i, i + (end_pos - abs_i), InlineNode::Literal(content));
             if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
@@ -330,7 +401,8 @@ pub(super) fn find_inline_markup(
 
         // Try Strong Emphasis next (**)
         if text[i..].starts_with("**")
-            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 2, false)
+            && let Some((end_pos, content)) =
+                try_match_inline(full_text, abs_i, 2, &strong_close_positions)
         {
             let m = (
                 i,
@@ -346,7 +418,8 @@ pub(super) fn find_inline_markup(
         // Try Emphasis (*)
         if text[i..].starts_with('*')
             && !text[i..].starts_with("**")
-            && let Some((end_pos, content)) = try_match_inline(full_text, abs_i, 1, false)
+            && let Some((end_pos, content)) =
+                try_match_inline(full_text, abs_i, 1, &emphasis_close_positions)
         {
             let m = (
                 i,
@@ -367,7 +440,7 @@ pub(super) fn try_match_inline(
     full_text: &str,
     start_pos: usize,
     marker_len: usize,
-    is_literal: bool,
+    close_positions: &[usize],
 ) -> Option<(usize, String)> {
     // Start context check
     if start_pos > 0 {
@@ -387,58 +460,16 @@ pub(super) fn try_match_inline(
         return None;
     }
 
-    // Find end marker
-    let marker = &full_text[start_pos..start_pos + marker_len];
-    let mut search_pos = after_start + first_inner.len_utf8();
+    // The closing search only ever considers positions at or after
+    // `search_pos`, which is always strictly after `after_start` (it skips
+    // past the first inner character), so any matched close position yields
+    // non-empty content — no separate empty-content check is needed.
+    let search_pos = after_start + first_inner.len_utf8();
+    let idx = close_positions.partition_point(|&p| p < search_pos);
+    let &abs_end_pos = close_positions.get(idx)?;
+    let content = full_text[after_start..abs_end_pos].to_string();
 
-    while let Some(end_marker_pos) = full_text[search_pos..].find(marker) {
-        let abs_end_pos = search_pos + end_marker_pos;
-
-        // End context check
-        let last_inner = full_text[..abs_end_pos].chars().next_back().unwrap();
-        if last_inner.is_whitespace() {
-            search_pos = abs_end_pos + 1;
-            continue;
-        }
-
-        // Check character after end marker
-        let after_end = abs_end_pos + marker_len;
-        if after_end < full_text.len() {
-            let next_char = full_text[after_end..].chars().next().unwrap();
-            if !next_char.is_whitespace() && !"-.,:;!?\\/ '\" >)]}".contains(next_char) {
-                search_pos = abs_end_pos + 1;
-                continue;
-            }
-        }
-
-        // Check for escaping of end marker (skip if is_literal)
-        if !is_literal && full_text.as_bytes()[abs_end_pos - 1] == b'\\' {
-            let mut bs_count = 0;
-            let mut j = abs_end_pos - 1;
-            while full_text.as_bytes()[j] == b'\\' {
-                bs_count += 1;
-                if j == 0 {
-                    break;
-                }
-                j -= 1;
-            }
-            if bs_count % 2 != 0 {
-                search_pos = abs_end_pos + 1;
-                continue;
-            }
-        }
-
-        // Success!
-        let content = full_text[after_start..abs_end_pos].to_string();
-        if content.is_empty() {
-            search_pos = abs_end_pos + 1;
-            continue;
-        }
-
-        return Some((abs_end_pos + marker_len, content));
-    }
-
-    None
+    Some((abs_end_pos + marker_len, content))
 }
 
 #[cfg(test)]
@@ -838,8 +869,9 @@ mod tests {
     fn test_try_match_inline_multibyte_first_inner() {
         // Given
         let input = "*π*";
+        let close_positions = find_valid_close_positions(input, 0, "*", false);
         // When
-        let res = try_match_inline(input, 0, 1, false);
+        let res = try_match_inline(input, 0, 1, &close_positions);
         // Then
         assert_eq!(res, Some((4, "π".to_string())));
     }
@@ -848,8 +880,9 @@ mod tests {
     fn test_try_match_inline_rejects_space_after_open_marker() {
         // Given: space immediately after marker is not valid markup
         let input = "* not emphasis *";
+        let close_positions = find_valid_close_positions(input, 0, "*", false);
         // When
-        let res = try_match_inline(input, 0, 1, false);
+        let res = try_match_inline(input, 0, 1, &close_positions);
         // Then
         assert_eq!(res, None);
     }
@@ -858,10 +891,65 @@ mod tests {
     fn test_try_match_inline_requires_valid_end_boundary() {
         // Given: no valid end boundary
         let input = "*nospace*x";
+        let close_positions = find_valid_close_positions(input, 0, "*", false);
         // When
-        let res = try_match_inline(input, 0, 1, false);
+        let res = try_match_inline(input, 0, 1, &close_positions);
         // Then
         assert_eq!(res, None);
+    }
+
+    #[test]
+    fn test_find_valid_close_positions_finds_marker_with_valid_boundaries() {
+        // Given: a lone valid "*" close candidate, not preceded by whitespace,
+        // followed by whitespace
+        let input = "*word* rest";
+        // When
+        let positions = find_valid_close_positions(input, 0, "*", false);
+        // Then
+        assert_eq!(positions, vec![5]);
+    }
+
+    #[test]
+    fn test_find_valid_close_positions_rejects_marker_preceded_by_whitespace() {
+        // Given: the marker is preceded by a space, so it can't close content
+        let input = "*word * rest*";
+        // When
+        let positions = find_valid_close_positions(input, 0, "*", false);
+        // Then: only the final "*" (preceded by "t") qualifies
+        assert_eq!(positions, vec![12]);
+    }
+
+    #[test]
+    fn test_find_valid_close_positions_rejects_marker_followed_by_disallowed_char() {
+        // Given: the marker is immediately followed by a word character
+        let input = "*word*x more *word* here";
+        // When
+        let positions = find_valid_close_positions(input, 0, "*", false);
+        // Then: only the second "*word*" pair's closer qualifies
+        assert_eq!(positions, vec![18]);
+    }
+
+    #[test]
+    fn test_find_valid_close_positions_rejects_escaped_marker_unless_literal() {
+        // Given: an escaped "*" shouldn't count as a valid closer for
+        // emphasis, but escaping is irrelevant for inline literals
+        let input = r"word\* more";
+        // When
+        let emphasis_positions = find_valid_close_positions(input, 0, "*", false);
+        let literal_positions = find_valid_close_positions(input, 0, "*", true);
+        // Then
+        assert_eq!(emphasis_positions, Vec::<usize>::new());
+        assert_eq!(literal_positions, vec![5]);
+    }
+
+    #[test]
+    fn test_find_valid_close_positions_respects_search_start() {
+        // Given: two valid closers, one before and one at/after search_start
+        let input = "*a* *b*";
+        // When
+        let positions = find_valid_close_positions(input, 4, "*", false);
+        // Then: the closer at byte 2 (before search_start) is excluded
+        assert_eq!(positions, vec![6]);
     }
 }
 
@@ -1173,6 +1261,31 @@ mod integration_tests {
         } else {
             panic!("Expected Paragraph node");
         }
+    }
+
+    #[test]
+    fn test_parse_paragraph_with_many_unclosed_emphasis_markers_stays_fast() {
+        // Given: many isolated, never-validly-closed single-star tokens (each
+        // "*" is followed by a space before the next one, so none can close
+        // any other) — the exact pathological shape from rust_review.md
+        // finding #3, which previously made find_inline_markup/
+        // try_match_inline rescan the remaining text from every failed
+        // candidate, causing O(n^2) parse time.
+        let input = "*word ".repeat(20_000);
+
+        // When
+        let start = std::time::Instant::now();
+        let doc = parse("test.rst", &input);
+        let elapsed = start.elapsed();
+
+        // Then: stays well under a second (the O(n^2) implementation took
+        // several seconds at this size); still parses as a single
+        // unmatched-markup Text node.
+        assert!(
+            elapsed.as_secs() < 3,
+            "parsing took too long: {elapsed:?} (quadratic regression?)"
+        );
+        assert_eq!(doc.nodes.len(), 1);
     }
 
     #[test]
