@@ -59,6 +59,7 @@ impl ObjectType {
             (Domain::Py, "data" | "const") => Some(Self::Py(PyObjectType::Data)),
             (Domain::Py, "meth") => Some(Self::Py(PyObjectType::Method)),
             (Domain::Py, "class") => Some(Self::Py(PyObjectType::Class)),
+            (Domain::Py, "attr") => Some(Self::Py(PyObjectType::Attribute)),
             (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
             _ => None,
         }
@@ -154,6 +155,16 @@ mod tests {
         );
         assert_eq!(ObjectType::from_role_name(Domain::C, "data"), None);
         assert_eq!(ObjectType::from_role_name(Domain::C, "const"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_attr_only_for_py() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Py, "attr"),
+            Some(ObjectType::Py(PyObjectType::Attribute))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::C, "attr"), None);
     }
 
     #[test]

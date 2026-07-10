@@ -80,6 +80,19 @@ pub enum DomainObjectBody {
         value: Option<String>,
         body: Vec<Node>,
     },
+    PyAttribute {
+        name: String,
+        /// The attribute's type annotation (e.g. `"int"`).
+        type_: Option<String>,
+        /// The attribute's initial value (e.g. `"30"`).
+        value: Option<String>,
+        /// The fully qualified name (including module) of where the
+        /// attribute is actually defined, when documented via a re-export.
+        /// Rendered as metadata only — no alias/cross-reference-redirect
+        /// semantics.
+        canonical: Option<String>,
+        body: Vec<Node>,
+    },
     CFunction {
         signature: String,
         body: Vec<Node>,
@@ -107,6 +120,7 @@ impl DomainObjectBody {
             Self::PyFunction { .. } => ObjectType::Py(PyObjectType::Function),
             Self::PyModule { .. } => ObjectType::Py(PyObjectType::Module),
             Self::PyData { .. } => ObjectType::Py(PyObjectType::Data),
+            Self::PyAttribute { .. } => ObjectType::Py(PyObjectType::Attribute),
             Self::CFunction { .. } => ObjectType::C(CObjectType::Function),
             Self::PyMethod { .. } => ObjectType::Py(PyObjectType::Method),
             Self::PyClass { .. } => ObjectType::Py(PyObjectType::Class),
@@ -123,12 +137,14 @@ impl DomainObjectBody {
             | Self::CFunction { signature, .. }
             | Self::PyMethod { signature, .. }
             | Self::PyClass { signature, .. } => extract_object_name(signature),
-            Self::PyModule { name, .. } | Self::PyData { name, .. } => name.clone(),
+            Self::PyModule { name, .. }
+            | Self::PyData { name, .. }
+            | Self::PyAttribute { name, .. } => name.clone(),
         }
     }
 
     /// The raw text shown in the rendered `<dt>` — the full signature for
-    /// function-like objects, or the bare dotted name for modules/data.
+    /// function-like objects, or the bare dotted name for modules/data/attributes.
     #[must_use]
     pub fn signature_text(&self) -> &str {
         match self {
@@ -136,7 +152,9 @@ impl DomainObjectBody {
             | Self::CFunction { signature, .. }
             | Self::PyMethod { signature, .. }
             | Self::PyClass { signature, .. } => signature,
-            Self::PyModule { name, .. } | Self::PyData { name, .. } => name,
+            Self::PyModule { name, .. }
+            | Self::PyData { name, .. }
+            | Self::PyAttribute { name, .. } => name,
         }
     }
 
@@ -147,6 +165,7 @@ impl DomainObjectBody {
             Self::PyFunction { body, .. }
             | Self::PyModule { body, .. }
             | Self::PyData { body, .. }
+            | Self::PyAttribute { body, .. }
             | Self::CFunction { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. } => body,
@@ -324,6 +343,19 @@ mod tests {
     }
 
     #[test]
+    fn test_build_domain_object_key_for_attribute() {
+        // Given
+        let object_type = ObjectType::Py(PyObjectType::Attribute);
+        let name = "Greeter.name";
+
+        // When
+        let key = build_domain_object_key(object_type, name);
+
+        // Then
+        assert_eq!(key.as_str(), "py:attribute:greeter.name");
+    }
+
+    #[test]
     fn test_domain_object_body_object_type_matches_variant() {
         // Given / When / Then
         assert_eq!(
@@ -354,6 +386,17 @@ mod tests {
             }
             .object_type(),
             ObjectType::Py(PyObjectType::Data)
+        );
+        assert_eq!(
+            DomainObjectBody::PyAttribute {
+                name: "Greeter.name".to_string(),
+                type_: None,
+                value: None,
+                canonical: None,
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::Py(PyObjectType::Attribute)
         );
         assert_eq!(
             DomainObjectBody::CFunction {
@@ -499,6 +542,21 @@ mod tests {
     }
 
     #[test]
+    fn test_domain_object_body_name_uses_bare_name_for_attributes() {
+        // Given
+        let attribute = DomainObjectBody::PyAttribute {
+            name: "Greeter.name".to_string(),
+            type_: None,
+            value: None,
+            canonical: None,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(attribute.name(), "Greeter.name");
+    }
+
+    #[test]
     fn test_domain_object_body_signature_text_shows_full_signature_for_functions() {
         // Given
         let function = DomainObjectBody::CFunction {
@@ -540,6 +598,21 @@ mod tests {
     }
 
     #[test]
+    fn test_domain_object_body_signature_text_shows_bare_name_for_attributes() {
+        // Given
+        let attribute = DomainObjectBody::PyAttribute {
+            name: "Greeter.name".to_string(),
+            type_: None,
+            value: None,
+            canonical: None,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(attribute.signature_text(), "Greeter.name");
+    }
+
+    #[test]
     fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
         // Given
         let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
@@ -558,6 +631,13 @@ mod tests {
             name: "DEFAULT_TIMEOUT".to_string(),
             type_: None,
             value: None,
+            body: vec![paragraph.clone()],
+        };
+        let attribute = DomainObjectBody::PyAttribute {
+            name: "Greeter.name".to_string(),
+            type_: None,
+            value: None,
+            canonical: None,
             body: vec![paragraph.clone()],
         };
         let c_function = DomainObjectBody::CFunction {
@@ -582,6 +662,7 @@ mod tests {
         assert_eq!(function.body(), std::slice::from_ref(&paragraph));
         assert_eq!(module.body(), std::slice::from_ref(&paragraph));
         assert_eq!(data.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(attribute.body(), std::slice::from_ref(&paragraph));
         assert_eq!(c_function.body(), std::slice::from_ref(&paragraph));
         assert_eq!(method.body(), std::slice::from_ref(&paragraph));
         assert_eq!(class.body(), std::slice::from_ref(&paragraph));

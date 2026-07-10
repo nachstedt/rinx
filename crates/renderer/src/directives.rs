@@ -127,9 +127,29 @@ pub(super) fn render_domain_object(
 
     let _ = writeln!(html, "<dl class=\"{domain_str} {objtype_str}\">");
     let _ = write!(html, "  <dt id=\"{id_attr}\">");
-    // Canonical, deterministic prefix-label order — independent of how the
-    // author wrote the option flags.
-    let prefix_labels: Vec<&str> = match obj {
+    for label in domain_object_prefix_labels(obj) {
+        let _ = write!(html, "<em class=\"property\">{label}</em> ");
+    }
+    let _ = writeln!(html, "<code class=\"sig-name\">{sig_escaped}</code></dt>");
+    let _ = write!(html, "  <dd>");
+    render_domain_object_options(html, obj);
+    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyClass { .. }) {
+        ctx.class_stack.push(qualified_name);
+        super::render_nodes(html, obj.body(), ctx);
+        ctx.class_stack.pop();
+    } else {
+        super::render_nodes(html, obj.body(), ctx);
+    }
+    let _ = writeln!(html, "</dd>");
+    let _ = writeln!(html, "</dl>");
+}
+
+/// Canonical, deterministic prefix-label order for a domain object's `<dt>`
+/// (e.g. `abstractmethod`/`async`/`classmethod`/`staticmethod` for
+/// `py:method`, `final`/`class` for `py:class`) — independent of how the
+/// author wrote the option flags.
+fn domain_object_prefix_labels(obj: &rusty_sphinx_ast::DomainObjectBody) -> Vec<&'static str> {
+    match obj {
         rusty_sphinx_ast::DomainObjectBody::PyMethod {
             is_classmethod,
             is_staticmethod,
@@ -154,12 +174,15 @@ pub(super) fn render_domain_object(
             labels
         }
         _ => Vec::new(),
-    };
-    for label in prefix_labels {
-        let _ = write!(html, "<em class=\"property\">{label}</em> ");
     }
-    let _ = writeln!(html, "<code class=\"sig-name\">{sig_escaped}</code></dt>");
-    let _ = write!(html, "  <dd>");
+}
+
+/// Renders a domain object's type-specific options (`py:module`'s
+/// `platform`/`synopsis`/`deprecated`, `py:data`'s `type`/`value`,
+/// `py:attribute`'s `type`/`value`/`canonical`) as leading `<dd>` paragraphs.
+/// Object types with no such options (`py:function`, `c:function`,
+/// `py:method`, `py:class`) render nothing here.
+fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::DomainObjectBody) {
     match obj {
         rusty_sphinx_ast::DomainObjectBody::PyModule {
             platform,
@@ -201,20 +224,39 @@ pub(super) fn render_domain_object(
                 );
             }
         }
+        rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+            type_,
+            value,
+            canonical,
+            ..
+        } => {
+            if let Some(type_) = type_ {
+                let _ = write!(
+                    html,
+                    "<p class=\"type\">Type: {}</p>",
+                    html_escape::encode_text(type_)
+                );
+            }
+            if let Some(value) = value {
+                let _ = write!(
+                    html,
+                    "<p class=\"value\">Value: {}</p>",
+                    html_escape::encode_text(value)
+                );
+            }
+            if let Some(canonical) = canonical {
+                let _ = write!(
+                    html,
+                    "<p class=\"canonical\">Canonical: {}</p>",
+                    html_escape::encode_text(canonical)
+                );
+            }
+        }
         rusty_sphinx_ast::DomainObjectBody::PyFunction { .. }
         | rusty_sphinx_ast::DomainObjectBody::CFunction { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyMethod { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyClass { .. } => {}
     }
-    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyClass { .. }) {
-        ctx.class_stack.push(qualified_name);
-        super::render_nodes(html, obj.body(), ctx);
-        ctx.class_stack.pop();
-    } else {
-        super::render_nodes(html, obj.body(), ctx);
-    }
-    let _ = writeln!(html, "</dd>");
-    let _ = writeln!(html, "</dl>");
 }
 
 /// Renders a `glossary` directive as a definition list (`<dl>`).
@@ -1116,6 +1158,58 @@ mod tests {
     }
 
     #[test]
+    fn test_render_formats_py_attribute_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                    name: "Greeter.name".to_string(),
+                    type_: None,
+                    value: None,
+                    canonical: None,
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "The greeter's name.".to_string(),
+                    )])],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"py attribute\">"));
+        assert!(result.contains("<dt id=\"py:attribute:greeter.name\">"));
+        assert!(result.contains("<code class=\"sig-name\">Greeter.name</code>"));
+    }
+
+    #[test]
+    fn test_render_formats_py_attribute_type_value_and_canonical() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                    name: "Greeter.name".to_string(),
+                    type_: Some("str".to_string()),
+                    value: Some("\"anonymous\"".to_string()),
+                    canonical: Some("mymodule.MyClass.name".to_string()),
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<p class=\"type\">Type: str</p>"));
+        assert!(result.contains("<p class=\"value\">Value: \"anonymous\"</p>"));
+        assert!(result.contains("<p class=\"canonical\">Canonical: mymodule.MyClass.name</p>"));
+    }
+
+    #[test]
     fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
         // Given — regression test for the collect_anonymous_targets catch-all:
         // an anonymous reference nested inside a DomainObject body must still resolve.
@@ -1163,5 +1257,93 @@ mod tests {
 
         // Then — href should traverse up one directory
         assert!(result.contains("href=\"../glossary.html#term-foo\""));
+    }
+
+    #[test]
+    fn test_domain_object_prefix_labels_orders_method_flags_independent_of_input_order() {
+        // Given — flags set in a different order than the canonical output order
+        let obj = rusty_sphinx_ast::DomainObjectBody::PyMethod {
+            signature: "run()".to_string(),
+            is_classmethod: true,
+            is_staticmethod: true,
+            is_abstractmethod: true,
+            is_async: true,
+            body: vec![],
+        };
+
+        // When
+        let labels = domain_object_prefix_labels(&obj);
+
+        // Then
+        assert_eq!(
+            labels,
+            vec!["abstractmethod", "async", "classmethod", "staticmethod"]
+        );
+    }
+
+    #[test]
+    fn test_domain_object_prefix_labels_omits_inactive_method_flags() {
+        // Given
+        let obj = rusty_sphinx_ast::DomainObjectBody::PyMethod {
+            signature: "run()".to_string(),
+            is_classmethod: false,
+            is_staticmethod: true,
+            is_abstractmethod: false,
+            is_async: false,
+            body: vec![],
+        };
+
+        // When
+        let labels = domain_object_prefix_labels(&obj);
+
+        // Then
+        assert_eq!(labels, vec!["staticmethod"]);
+    }
+
+    #[test]
+    fn test_domain_object_prefix_labels_includes_final_before_class_label() {
+        // Given
+        let obj = rusty_sphinx_ast::DomainObjectBody::PyClass {
+            signature: "Greeter".to_string(),
+            is_final: true,
+            body: vec![],
+        };
+
+        // When
+        let labels = domain_object_prefix_labels(&obj);
+
+        // Then
+        assert_eq!(labels, vec!["final", "class"]);
+    }
+
+    #[test]
+    fn test_domain_object_prefix_labels_is_empty_for_object_types_without_flags() {
+        // Given
+        let obj = rusty_sphinx_ast::DomainObjectBody::PyFunction {
+            signature: "greet(name)".to_string(),
+            body: vec![],
+        };
+
+        // When
+        let labels = domain_object_prefix_labels(&obj);
+
+        // Then
+        assert!(labels.is_empty());
+    }
+
+    #[test]
+    fn test_render_domain_object_options_renders_nothing_for_py_function() {
+        // Given
+        let obj = rusty_sphinx_ast::DomainObjectBody::PyFunction {
+            signature: "greet(name)".to_string(),
+            body: vec![],
+        };
+        let mut html = String::new();
+
+        // When
+        render_domain_object_options(&mut html, &obj);
+
+        // Then
+        assert!(html.is_empty());
     }
 }

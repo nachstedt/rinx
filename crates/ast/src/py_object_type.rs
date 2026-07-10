@@ -9,6 +9,7 @@ pub enum PyObjectType {
     Data,
     Method,
     Class,
+    Attribute,
 }
 
 impl PyObjectType {
@@ -20,6 +21,7 @@ impl PyObjectType {
             Self::Data => "data",
             Self::Method => "method",
             Self::Class => "class",
+            Self::Attribute => "attribute",
         }
     }
 }
@@ -34,6 +36,7 @@ impl std::str::FromStr for PyObjectType {
             "data" => Ok(Self::Data),
             "method" => Ok(Self::Method),
             "class" => Ok(Self::Class),
+            "attribute" => Ok(Self::Attribute),
             _ => Err(()),
         }
     }
@@ -110,5 +113,26 @@ mod tests {
 
         // Then
         assert_eq!(s, "class");
+    }
+
+    #[test]
+    fn test_py_object_type_from_str_accepts_attribute() {
+        // Given / When / Then
+        assert_eq!(
+            "attribute".parse::<PyObjectType>(),
+            Ok(PyObjectType::Attribute)
+        );
+    }
+
+    #[test]
+    fn test_py_object_type_as_str_returns_attribute() {
+        // Given
+        let object_type = PyObjectType::Attribute;
+
+        // When
+        let s = object_type.as_str();
+
+        // Then
+        assert_eq!(s, "attribute");
     }
 }
