@@ -4,8 +4,8 @@ Domains
 Rusty-Sphinx supports Sphinx-style domains for namespacing directives and
 cross-reference roles by language, mirroring real Sphinx. This page uses
 ``py`` and ``c`` as the first two domains: ``c`` has a ``function`` object
-type, and ``py`` additionally has ``module``, ``data``, ``method``, and
-``class`` object types.
+type, and ``py`` additionally has ``module``, ``data``, ``method``,
+``class``, and ``attribute`` object types.
 
 Python Domain
 -------------
@@ -50,6 +50,18 @@ when cross-referenced, exactly like real Sphinx.
 .. py:class:: Greeter
 
    A greeter.
+
+   .. py:attribute:: name
+      :type: str
+      :value: "anonymous"
+      :canonical: greetings.Greeter.name
+
+      The name this greeter addresses. Nesting it inside the ``Greeter``
+      class body qualifies its cross-reference name to ``Greeter.name``,
+      exactly like the nested methods below. The ``:canonical:`` option
+      records where the attribute is really defined when documented via a
+      re-export; rusty-sphinx renders it as metadata only, with no
+      alias/redirect behavior in cross-reference resolution.
 
    .. py:method:: greet(self, name)
 
@@ -168,3 +180,9 @@ directives above — the qualification comes entirely from nesting.
 resolve to their respective ``py:class`` definitions above. The nested class
 :py:class:`ImmutableGreeter.Options` resolves too, proving qualification
 composes across two levels of nesting.
+
+The :py:attr:`Greeter.name` attribute (or, using the bare role,
+:attr:`Greeter.name`) links to the nested ``.. py:attribute::`` definition
+above — qualification applies to nested attributes exactly as it does to
+nested methods. Using the ``~`` prefix, :py:attr:`~Greeter.name` links to
+the same target but displays only ``name``.

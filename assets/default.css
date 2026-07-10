@@ -453,6 +453,120 @@ a.broken-link:hover {
   color: #dc2626 !important;
 }
 
+/* ── Domain Objects (py:*, c:*) ───────────────────────────────────────── */
+
+dl.py, dl.c {
+  margin: 1.5rem 0;
+  display: block;
+}
+
+dl.py dt, dl.c dt {
+  font-weight: 600;
+  color: var(--text-header);
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  scroll-margin-top: 2rem;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover-reveal permalink, mirrors dl.glossary dt::after */
+dl.py dt::after, dl.c dt::after {
+  content: ' #';
+  color: var(--primary);
+  opacity: 0;
+  font-size: 0.85em;
+  font-weight: 400;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+  transform: translateX(-4px);
+  pointer-events: none;
+}
+
+dl.py dt:hover::after, dl.c dt:hover::after {
+  opacity: 0.6;
+  transform: translateX(2px);
+}
+
+/* Active targeted definition via #py:... in the URL, mirrors dl.glossary */
+dl.py dt:target, dl.c dt:target {
+  color: var(--primary);
+  background-color: #eff6ff;
+  border-color: var(--primary);
+}
+
+dl.py dt:target + dd, dl.c dt:target + dd {
+  border-left-color: var(--primary);
+  background: linear-gradient(90deg, #eff6ff 0%, transparent 100%);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+dl.py dd, dl.c dd {
+  margin-left: 1.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 2px solid var(--border);
+  color: #475569;
+}
+
+dl.py dd > :first-child, dl.c dd > :first-child { margin-top: 0; }
+dl.py dd > :last-child, dl.c dd > :last-child { margin-bottom: 0; }
+
+/* Nested domain-object dl's cascade automatically via normal block flow —
+ * each level of class/method/attribute nesting adds another indent and
+ * border-left with no depth-tracking needed on the Rust side. Tighten
+ * spacing so a nested definition reads as "inside" its parent rather than
+ * as a new top-level section. */
+dl.py dd dl.py, dl.py dd dl.c,
+dl.c dd dl.py, dl.c dd dl.c {
+  margin: 0.75rem 0;
+}
+
+/* Prefix labels: classmethod / staticmethod / abstractmethod / async / final / class */
+dl.py em.property, dl.c em.property {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.8em;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-right: 0.35em;
+}
+
+/* Signature name/params sit inline in a heading-like <dt>, not as inline
+ * code in body text — override the generic pill-style `.document code`. */
+dl.py dt code.sig-name, dl.c dt code.sig-name {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1em;
+  color: inherit;
+  font-weight: 600;
+}
+
+/* Type-specific option paragraphs: py:module's platform/synopsis/deprecated,
+ * py:data/py:attribute's type/value/canonical */
+dl.py dd > p.type,
+dl.py dd > p.value,
+dl.py dd > p.canonical,
+dl.py dd > p.platform,
+dl.py dd > p.synopsis {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 0.5rem;
+}
+
+dl.py dd > p.deprecated {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #b45309;
+  margin-bottom: 0.5rem;
+}
+
 /* ── Tables ────────────────────────────────────────────────────────── */
 
 table {

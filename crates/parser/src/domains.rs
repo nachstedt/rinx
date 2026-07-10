@@ -53,6 +53,13 @@ pub(super) fn parse_domain_object(
             diagnostics,
             default_domain,
         ),
+        ObjectType::Py(PyObjectType::Attribute) => parse_py_attribute(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
     }
 }
 
@@ -184,6 +191,33 @@ fn parse_py_class(
     }
 }
 
+/// Parses a `.. py:attribute::` body: strips `:type:`/`:value:`/`:canonical:`
+/// option lines off the front before parsing the rest as the docstring body.
+fn parse_py_attribute(
+    name: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (type_, value, canonical, options_consumed) = extract_attribute_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::PyAttribute {
+        name,
+        type_,
+        value,
+        canonical,
+        body,
+    }
+}
+
 /// Extracts `.. py:module::`-specific options (`:platform:`, `:synopsis:`,
 /// `:deprecated:`) from the leading lines of a domain object's body.
 ///
@@ -296,6 +330,38 @@ fn extract_class_options(lines: &[String]) -> (bool, usize) {
     }
 
     (is_final, consumed)
+}
+
+/// Extracts `.. py:attribute::`-specific options (`:type:`, `:value:`,
+/// `:canonical:`) from the leading lines of a domain object's body.
+///
+/// Scans from the start and stops at the first line that isn't one of these
+/// recognized options (e.g. a blank line or the start of the docstring body),
+/// returning how many leading lines were consumed as options so the caller
+/// can slice them off before parsing the remaining body content.
+fn extract_attribute_options(
+    lines: &[String],
+) -> (Option<String>, Option<String>, Option<String>, usize) {
+    let mut type_ = None;
+    let mut value = None;
+    let mut canonical = None;
+    let mut consumed = 0;
+
+    for line in lines {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix(":type:") {
+            type_ = Some(rest.trim().to_string());
+        } else if let Some(rest) = trimmed.strip_prefix(":value:") {
+            value = Some(rest.trim().to_string());
+        } else if let Some(rest) = trimmed.strip_prefix(":canonical:") {
+            canonical = Some(rest.trim().to_string());
+        } else {
+            break;
+        }
+        consumed += 1;
+    }
+
+    (type_, value, canonical, consumed)
 }
 
 #[cfg(test)]
@@ -464,6 +530,76 @@ mod tests {
         assert!(!is_abstractmethod);
         assert!(!is_async);
         assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_extract_attribute_options_parses_all_three_options() {
+        // Given
+        let lines = vec![
+            ":type: str".to_string(),
+            ":value: \"anonymous\"".to_string(),
+            ":canonical: mymodule.MyClass.name".to_string(),
+            String::new(),
+            "The greeter's name.".to_string(),
+        ];
+
+        // When
+        let (type_, value, canonical, consumed) = extract_attribute_options(&lines);
+
+        // Then
+        assert_eq!(type_.as_deref(), Some("str"));
+        assert_eq!(value.as_deref(), Some("\"anonymous\""));
+        assert_eq!(canonical.as_deref(), Some("mymodule.MyClass.name"));
+        assert_eq!(consumed, 3);
+    }
+
+    #[test]
+    fn test_extract_attribute_options_stops_at_first_non_option_line() {
+        // Given
+        let lines = vec![":type: str".to_string(), "The greeter's name.".to_string()];
+
+        // When
+        let (type_, value, canonical, consumed) = extract_attribute_options(&lines);
+
+        // Then
+        assert_eq!(type_.as_deref(), Some("str"));
+        assert_eq!(value, None);
+        assert_eq!(canonical, None);
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_extract_attribute_options_returns_defaults_when_no_options_present() {
+        // Given
+        let lines = vec!["The greeter's name.".to_string()];
+
+        // When
+        let (type_, value, canonical, consumed) = extract_attribute_options(&lines);
+
+        // Then
+        assert_eq!(type_, None);
+        assert_eq!(value, None);
+        assert_eq!(canonical, None);
+        assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_extract_attribute_options_parses_options_in_any_order() {
+        // Given
+        let lines = vec![
+            ":canonical: mymodule.MyClass.name".to_string(),
+            ":value: \"anonymous\"".to_string(),
+            ":type: str".to_string(),
+        ];
+
+        // When
+        let (type_, value, canonical, consumed) = extract_attribute_options(&lines);
+
+        // Then
+        assert_eq!(type_.as_deref(), Some("str"));
+        assert_eq!(value.as_deref(), Some("\"anonymous\""));
+        assert_eq!(canonical.as_deref(), Some("mymodule.MyClass.name"));
+        assert_eq!(consumed, 3);
     }
 
     #[test]
@@ -1020,6 +1156,62 @@ mod tests {
             assert!(body.is_empty());
         } else {
             panic!("Expected PyData, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_py_attribute_domain_object() {
+        // Given
+        let input = ".. py:attribute:: Greeter.name\n\n   The greeter's name.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyAttribute {
+            name,
+            type_,
+            value,
+            canonical,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(name, "Greeter.name");
+            assert_eq!(type_, &None);
+            assert_eq!(value, &None);
+            assert_eq!(canonical, &None);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyAttribute, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_attribute_with_type_value_and_canonical_options() {
+        // Given
+        let input = ".. py:attribute:: Greeter.name\n   :type: str\n   :value: \"anonymous\"\n   :canonical: mymodule.MyClass.name\n\n   The greeter's name.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyAttribute {
+            type_,
+            value,
+            canonical,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(type_.as_deref(), Some("str"));
+            assert_eq!(value.as_deref(), Some("\"anonymous\""));
+            assert_eq!(canonical.as_deref(), Some("mymodule.MyClass.name"));
+            assert_eq!(body.len(), 1);
+            assert!(matches!(body[0], Node::Paragraph(_)));
+        } else {
+            panic!("Expected PyAttribute, got {:?}", doc.nodes[0]);
         }
     }
 

@@ -20,6 +20,8 @@ static METH_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?meth:`(?P<name>[^`]+)`").unwrap());
 static CLASS_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?class:`(?P<name>[^`]+)`").unwrap());
+static ATTR_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?attr:`(?P<name>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -50,6 +52,7 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         let data_match = DATA_ROLE_REGEX.find(remaining);
         let meth_match = METH_ROLE_REGEX.find(remaining);
         let class_match = CLASS_ROLE_REGEX.find(remaining);
+        let attr_match = ATTR_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -80,6 +83,9 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         }
         if let Some(m) = class_match {
             all_matches.push((m.start(), m.end(), "class", None));
+        }
+        if let Some(m) = attr_match {
+            all_matches.push((m.start(), m.end(), "attr", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -267,6 +273,29 @@ fn handle_class_match(m_str: &str, default_domain: Domain) -> InlineNode {
     }
 }
 
+/// Builds the `InlineNode` for a matched `:attr:`/`:py:attr:` role, falling
+/// back to plain text if the role doesn't resolve for the given domain
+/// (`attr` is Python-only, like `mod`/`data`).
+fn handle_attr_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = ATTR_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, "attr") {
+        Some(object_type) => {
+            let target = parse_domain_object_target(&caps["name"]);
+            InlineNode::DomainObjectReference {
+                object_type,
+                name: target.name,
+                display: target.display,
+                link: target.link,
+            }
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
 pub(super) fn handle_inline_match(
     kind: &str,
     m_str: &str,
@@ -288,6 +317,7 @@ pub(super) fn handle_inline_match(
         "data" => handle_data_match(m_str, default_domain),
         "meth" => handle_meth_match(m_str, default_domain),
         "class" => handle_class_match(m_str, default_domain),
+        "attr" => handle_attr_match(m_str, default_domain),
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let content = &caps["content"];
@@ -677,6 +707,26 @@ mod tests {
     }
 
     #[test]
+    fn test_handle_attr_match_resolves_when_domain_defines_attr_role() {
+        let result = handle_attr_match(":attr:`Greeter.name`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                name: "Greeter.name".to_string(),
+                display: "Greeter.name".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_attr_match_falls_back_to_text_when_domain_lacks_attr_role() {
+        let result = handle_attr_match(":attr:`Greeter.name`", Domain::C);
+        assert_eq!(result, InlineNode::Text(":attr:`Greeter.name`".to_string()));
+    }
+
+    #[test]
     fn test_handle_inline_match_inline_variant() {
         // Given
         let node = InlineNode::Emphasis("text".to_string());
@@ -883,6 +933,48 @@ mod tests {
                 object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
                 name: "pkg.CONST".to_string(),
                 display: "CONST".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_attr_variant() {
+        let result = handle_inline_match("attr", ":attr:`Greeter.name`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                name: "Greeter.name".to_string(),
+                display: "Greeter.name".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_attr_variant_bang_prefix_suppresses_link() {
+        let result = handle_inline_match("attr", ":attr:`!Greeter.secret`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                name: "Greeter.secret".to_string(),
+                display: "Greeter.secret".to_string(),
+                link: false,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_attr_variant_tilde_prefix_shortens_display() {
+        let result = handle_inline_match("attr", ":attr:`~Greeter.name`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                name: "Greeter.name".to_string(),
+                display: "name".to_string(),
                 link: true,
             }
         );
@@ -1793,6 +1885,89 @@ mod integration_tests {
                 name: "Greeter".to_string(),
                 display: "Greeter".to_string(),
                 link: true,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_attr_role_resolves_via_default_domain() {
+        // Given
+        let input = "See :attr:`Greeter.name` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(
+                inlines[1],
+                InlineNode::DomainObjectReference {
+                    object_type: ObjectType::Py(PyObjectType::Attribute),
+                    name: "Greeter.name".to_string(),
+                    display: "Greeter.name".to_string(),
+                    link: true,
+                }
+            );
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_prefixed_attr_role_ignores_default_domain() {
+        // Given
+        let input = "See :py:attr:`Greeter.name`.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Attribute),
+                name: "Greeter.name".to_string(),
+                display: "Greeter.name".to_string(),
+                link: true,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_attr_role_under_c_default_domain_falls_back_to_text() {
+        // Given — `attr` is Python-only, like `mod`/`data`, so a bare role
+        // under a `c` default domain doesn't resolve to a cross-reference.
+        let input = "See :attr:`Greeter.name` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::Text(":attr:`Greeter.name`".to_string())));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_attr_role_with_bang_prefix_suppresses_link_end_to_end() {
+        // Given
+        let input = "See :attr:`!Greeter.secret` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Attribute),
+                name: "Greeter.secret".to_string(),
+                display: "Greeter.secret".to_string(),
+                link: false,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
