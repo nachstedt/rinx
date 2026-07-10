@@ -7,6 +7,8 @@ pub enum PyObjectType {
     Function,
     Module,
     Data,
+    Method,
+    Class,
 }
 
 impl PyObjectType {
@@ -16,6 +18,8 @@ impl PyObjectType {
             Self::Function => "function",
             Self::Module => "module",
             Self::Data => "data",
+            Self::Method => "method",
+            Self::Class => "class",
         }
     }
 }
@@ -28,6 +32,8 @@ impl std::str::FromStr for PyObjectType {
             "function" => Ok(Self::Function),
             "module" => Ok(Self::Module),
             "data" => Ok(Self::Data),
+            "method" => Ok(Self::Method),
+            "class" => Ok(Self::Class),
             _ => Err(()),
         }
     }
@@ -49,7 +55,7 @@ mod tests {
     #[test]
     fn test_py_object_type_from_str_rejects_unknown() {
         // Given
-        let input = "class";
+        let input = "struct";
 
         // When
         let result = input.parse::<PyObjectType>();
@@ -68,5 +74,41 @@ mod tests {
     fn test_py_object_type_from_str_accepts_data() {
         // Given / When / Then
         assert_eq!("data".parse::<PyObjectType>(), Ok(PyObjectType::Data));
+    }
+
+    #[test]
+    fn test_py_object_type_from_str_accepts_method() {
+        // Given / When / Then
+        assert_eq!("method".parse::<PyObjectType>(), Ok(PyObjectType::Method));
+    }
+
+    #[test]
+    fn test_py_object_type_as_str_returns_method() {
+        // Given
+        let object_type = PyObjectType::Method;
+
+        // When
+        let s = object_type.as_str();
+
+        // Then
+        assert_eq!(s, "method");
+    }
+
+    #[test]
+    fn test_py_object_type_from_str_accepts_class() {
+        // Given / When / Then
+        assert_eq!("class".parse::<PyObjectType>(), Ok(PyObjectType::Class));
+    }
+
+    #[test]
+    fn test_py_object_type_as_str_returns_class() {
+        // Given
+        let object_type = PyObjectType::Class;
+
+        // When
+        let s = object_type.as_str();
+
+        // Then
+        assert_eq!(s, "class");
     }
 }

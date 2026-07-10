@@ -69,6 +69,11 @@ pub(crate) struct RenderCtx<'a> {
     pub anon_index: &'a mut usize,
     pub original_doc_path: &'a str,
     pub broken_links: &'a mut Vec<BrokenLink>,
+    /// Stack of enclosing `py:class` qualified names, innermost last — empty
+    /// outside any class. Pushed/popped by `render_domain_object` around a
+    /// `PyClass`'s nested body so a nested object's anchor `id` matches the
+    /// same qualified key the analyzer indexed it under.
+    pub class_stack: Vec<String>,
 }
 
 /// Renders a Document into HTML, reporting any cross-references that failed to resolve.
@@ -89,6 +94,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         anon_index: &mut anon_index,
         original_doc_path: &doc.path,
         broken_links: &mut broken_links,
+        class_stack: Vec::new(),
     };
 
     render_nodes(&mut html, &doc.nodes, &mut ctx);

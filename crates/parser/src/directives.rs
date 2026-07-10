@@ -592,7 +592,7 @@ mod tests {
     #[test]
     fn test_resolve_domain_object_type_rejects_unknown_object_type() {
         // Given
-        let name = "py:class";
+        let name = "py:struct";
 
         // When
         let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);

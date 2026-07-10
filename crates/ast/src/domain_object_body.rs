@@ -36,6 +36,19 @@ pub fn build_domain_object_key(object_type: ObjectType, name: &str) -> TargetNam
     ))
 }
 
+/// Prefixes `name` with `qualifier` (e.g. an enclosing `py:class`'s own
+/// qualified name), joined with `.`, or returns `name` unchanged if there is
+/// no enclosing qualifier. Shared by the analyzer (when indexing a nested
+/// domain object) and the renderer (when computing its anchor `id`), so both
+/// always agree on the qualified name for the same nested object.
+#[must_use]
+pub fn qualify_name(qualifier: Option<&str>, name: &str) -> String {
+    match qualifier {
+        Some(prefix) => format!("{prefix}.{name}"),
+        None => name.to_string(),
+    }
+}
+
 /// The body of a domain object *definition* directive (e.g. `.. py:function::`,
 /// `.. py:module::`, `.. c:function::`) — one variant per concrete object
 /// type, each carrying exactly the fields/options meaningful to it.
@@ -71,6 +84,19 @@ pub enum DomainObjectBody {
         signature: String,
         body: Vec<Node>,
     },
+    PyMethod {
+        signature: String,
+        is_classmethod: bool,
+        is_staticmethod: bool,
+        is_abstractmethod: bool,
+        is_async: bool,
+        body: Vec<Node>,
+    },
+    PyClass {
+        signature: String,
+        is_final: bool,
+        body: Vec<Node>,
+    },
 }
 
 impl DomainObjectBody {
@@ -82,6 +108,8 @@ impl DomainObjectBody {
             Self::PyModule { .. } => ObjectType::Py(PyObjectType::Module),
             Self::PyData { .. } => ObjectType::Py(PyObjectType::Data),
             Self::CFunction { .. } => ObjectType::C(CObjectType::Function),
+            Self::PyMethod { .. } => ObjectType::Py(PyObjectType::Method),
+            Self::PyClass { .. } => ObjectType::Py(PyObjectType::Class),
         }
     }
 
@@ -91,9 +119,10 @@ impl DomainObjectBody {
     #[must_use]
     pub fn name(&self) -> String {
         match self {
-            Self::PyFunction { signature, .. } | Self::CFunction { signature, .. } => {
-                extract_object_name(signature)
-            }
+            Self::PyFunction { signature, .. }
+            | Self::CFunction { signature, .. }
+            | Self::PyMethod { signature, .. }
+            | Self::PyClass { signature, .. } => extract_object_name(signature),
             Self::PyModule { name, .. } | Self::PyData { name, .. } => name.clone(),
         }
     }
@@ -103,7 +132,10 @@ impl DomainObjectBody {
     #[must_use]
     pub fn signature_text(&self) -> &str {
         match self {
-            Self::PyFunction { signature, .. } | Self::CFunction { signature, .. } => signature,
+            Self::PyFunction { signature, .. }
+            | Self::CFunction { signature, .. }
+            | Self::PyMethod { signature, .. }
+            | Self::PyClass { signature, .. } => signature,
             Self::PyModule { name, .. } | Self::PyData { name, .. } => name,
         }
     }
@@ -115,7 +147,9 @@ impl DomainObjectBody {
             Self::PyFunction { body, .. }
             | Self::PyModule { body, .. }
             | Self::PyData { body, .. }
-            | Self::CFunction { body, .. } => body,
+            | Self::CFunction { body, .. }
+            | Self::PyMethod { body, .. }
+            | Self::PyClass { body, .. } => body,
         }
     }
 }
@@ -265,6 +299,31 @@ mod tests {
     }
 
     #[test]
+    fn test_qualify_name_returns_bare_name_when_no_qualifier() {
+        // Given / When / Then
+        assert_eq!(qualify_name(None, "greet"), "greet");
+    }
+
+    #[test]
+    fn test_qualify_name_prefixes_with_qualifier() {
+        // Given / When / Then
+        assert_eq!(qualify_name(Some("Greeter"), "greet"), "Greeter.greet");
+    }
+
+    #[test]
+    fn test_qualify_name_composes_nested_qualifiers() {
+        // Given — a two-level nested-class qualifier, built incrementally
+        let outer_qualified = qualify_name(None, "Outer");
+        let inner_qualified = qualify_name(Some(&outer_qualified), "Inner");
+
+        // When
+        let method_qualified = qualify_name(Some(&inner_qualified), "method");
+
+        // Then
+        assert_eq!(method_qualified, "Outer.Inner.method");
+    }
+
+    #[test]
     fn test_domain_object_body_object_type_matches_variant() {
         // Given / When / Then
         assert_eq!(
@@ -304,6 +363,27 @@ mod tests {
             .object_type(),
             ObjectType::C(CObjectType::Function)
         );
+        assert_eq!(
+            DomainObjectBody::PyMethod {
+                signature: "greet(self, name)".to_string(),
+                is_classmethod: false,
+                is_staticmethod: false,
+                is_abstractmethod: false,
+                is_async: false,
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::Py(PyObjectType::Method)
+        );
+        assert_eq!(
+            DomainObjectBody::PyClass {
+                signature: "Greeter".to_string(),
+                is_final: false,
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::Py(PyObjectType::Class)
+        );
     }
 
     #[test]
@@ -316,6 +396,77 @@ mod tests {
 
         // When / Then
         assert_eq!(function.name(), "greet");
+    }
+
+    #[test]
+    fn test_domain_object_body_name_extracts_from_signature_for_methods() {
+        // Given
+        let method = DomainObjectBody::PyMethod {
+            signature: "Greeter.greet(self, name)".to_string(),
+            is_classmethod: false,
+            is_staticmethod: false,
+            is_abstractmethod: false,
+            is_async: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(method.name(), "Greeter.greet");
+    }
+
+    #[test]
+    fn test_domain_object_body_signature_text_shows_full_signature_for_methods() {
+        // Given
+        let method = DomainObjectBody::PyMethod {
+            signature: "greet(self, name)".to_string(),
+            is_classmethod: true,
+            is_staticmethod: false,
+            is_abstractmethod: false,
+            is_async: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(method.signature_text(), "greet(self, name)");
+    }
+
+    #[test]
+    fn test_domain_object_body_name_extracts_from_signature_for_classes() {
+        // Given
+        let class = DomainObjectBody::PyClass {
+            signature: "Greeter".to_string(),
+            is_final: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(class.name(), "Greeter");
+    }
+
+    #[test]
+    fn test_domain_object_body_name_ignores_base_class_list() {
+        // Given — base classes shouldn't leak into the referenceable name
+        let class = DomainObjectBody::PyClass {
+            signature: "Greeter(Base)".to_string(),
+            is_final: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(class.name(), "Greeter");
+    }
+
+    #[test]
+    fn test_domain_object_body_signature_text_shows_full_signature_for_classes() {
+        // Given
+        let class = DomainObjectBody::PyClass {
+            signature: "Greeter(Base)".to_string(),
+            is_final: true,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(class.signature_text(), "Greeter(Base)");
     }
 
     #[test]
@@ -413,11 +564,26 @@ mod tests {
             signature: "int add(int a, int b)".to_string(),
             body: vec![paragraph.clone()],
         };
+        let method = DomainObjectBody::PyMethod {
+            signature: "greet(self, name)".to_string(),
+            is_classmethod: false,
+            is_staticmethod: false,
+            is_abstractmethod: false,
+            is_async: false,
+            body: vec![paragraph.clone()],
+        };
+        let class = DomainObjectBody::PyClass {
+            signature: "Greeter".to_string(),
+            is_final: false,
+            body: vec![paragraph.clone()],
+        };
 
         // When / Then
         assert_eq!(function.body(), std::slice::from_ref(&paragraph));
         assert_eq!(module.body(), std::slice::from_ref(&paragraph));
         assert_eq!(data.body(), std::slice::from_ref(&paragraph));
         assert_eq!(c_function.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(method.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(class.body(), std::slice::from_ref(&paragraph));
     }
 }

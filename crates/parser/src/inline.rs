@@ -16,6 +16,10 @@ static MOD_ROLE_REGEX: LazyLock<Regex> =
 static DATA_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r":(?:(?P<domain>py):)?(?P<role>data|const):`(?P<name>[^`]+)`").unwrap()
 });
+static METH_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?meth:`(?P<name>[^`]+)`").unwrap());
+static CLASS_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?class:`(?P<name>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -44,6 +48,8 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         let func_match = FUNC_ROLE_REGEX.find(remaining);
         let mod_match = MOD_ROLE_REGEX.find(remaining);
         let data_match = DATA_ROLE_REGEX.find(remaining);
+        let meth_match = METH_ROLE_REGEX.find(remaining);
+        let class_match = CLASS_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -68,6 +74,12 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         }
         if let Some(m) = data_match {
             all_matches.push((m.start(), m.end(), "data", None));
+        }
+        if let Some(m) = meth_match {
+            all_matches.push((m.start(), m.end(), "meth", None));
+        }
+        if let Some(m) = class_match {
+            all_matches.push((m.start(), m.end(), "class", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -209,6 +221,52 @@ fn handle_data_match(m_str: &str, default_domain: Domain) -> InlineNode {
     }
 }
 
+/// Builds the `InlineNode` for a matched `:meth:`/`:py:meth:` role, falling
+/// back to plain text if the role doesn't resolve for the given domain
+/// (`meth` is Python-only, like `mod`/`data`).
+fn handle_meth_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = METH_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, "meth") {
+        Some(object_type) => {
+            let target = parse_domain_object_target(&caps["name"]);
+            InlineNode::DomainObjectReference {
+                object_type,
+                name: target.name,
+                display: target.display,
+                link: target.link,
+            }
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
+/// Builds the `InlineNode` for a matched `:class:`/`:py:class:` role, falling
+/// back to plain text if the role doesn't resolve for the given domain
+/// (`class` is Python-only, like `mod`/`data`/`meth`).
+fn handle_class_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = CLASS_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, "class") {
+        Some(object_type) => {
+            let target = parse_domain_object_target(&caps["name"]);
+            InlineNode::DomainObjectReference {
+                object_type,
+                name: target.name,
+                display: target.display,
+                link: target.link,
+            }
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
 pub(super) fn handle_inline_match(
     kind: &str,
     m_str: &str,
@@ -228,6 +286,8 @@ pub(super) fn handle_inline_match(
         "func" => handle_func_match(m_str, default_domain),
         "mod" => handle_mod_match(m_str, default_domain),
         "data" => handle_data_match(m_str, default_domain),
+        "meth" => handle_meth_match(m_str, default_domain),
+        "class" => handle_class_match(m_str, default_domain),
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let content = &caps["content"];
@@ -574,6 +634,46 @@ mod tests {
             result,
             InlineNode::Text(":data:`DEFAULT_TIMEOUT`".to_string())
         );
+    }
+
+    #[test]
+    fn test_handle_meth_match_resolves_meth_role() {
+        let result = handle_meth_match(":meth:`greet`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+                name: "greet".to_string(),
+                display: "greet".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_meth_match_falls_back_to_text_when_domain_lacks_meth_role() {
+        let result = handle_meth_match(":meth:`greet`", Domain::C);
+        assert_eq!(result, InlineNode::Text(":meth:`greet`".to_string()));
+    }
+
+    #[test]
+    fn test_handle_class_match_resolves_class_role() {
+        let result = handle_class_match(":class:`Greeter`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+                name: "Greeter".to_string(),
+                display: "Greeter".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_class_match_falls_back_to_text_when_domain_lacks_class_role() {
+        let result = handle_class_match(":class:`Greeter`", Domain::C);
+        assert_eq!(result, InlineNode::Text(":class:`Greeter`".to_string()));
     }
 
     #[test]
@@ -1582,6 +1682,117 @@ mod integration_tests {
                 name: "SECRET_KEY".to_string(),
                 display: "SECRET_KEY".to_string(),
                 link: false,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_meth_role_resolves_via_default_domain() {
+        // Given
+        let input = "See :meth:`greet` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(
+                inlines[1],
+                InlineNode::DomainObjectReference {
+                    object_type: ObjectType::Py(PyObjectType::Method),
+                    name: "greet".to_string(),
+                    display: "greet".to_string(),
+                    link: true,
+                }
+            );
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_prefixed_meth_role_ignores_default_domain() {
+        // Given
+        let input = "See :py:meth:`greet`.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Method),
+                name: "greet".to_string(),
+                display: "greet".to_string(),
+                link: true,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_meth_role_with_bang_prefix_suppresses_link_end_to_end() {
+        // Given
+        let input = "See :meth:`!secret_method` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Method),
+                name: "secret_method".to_string(),
+                display: "secret_method".to_string(),
+                link: false,
+            }));
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_class_role_resolves_via_default_domain() {
+        // Given
+        let input = "See :class:`Greeter` for details.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert_eq!(
+                inlines[1],
+                InlineNode::DomainObjectReference {
+                    object_type: ObjectType::Py(PyObjectType::Class),
+                    name: "Greeter".to_string(),
+                    display: "Greeter".to_string(),
+                    link: true,
+                }
+            );
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_prefixed_class_role_ignores_default_domain() {
+        // Given
+        let input = "See :py:class:`Greeter`.";
+
+        // When
+        let doc = parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Class),
+                name: "Greeter".to_string(),
+                display: "Greeter".to_string(),
+                link: true,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
