@@ -39,6 +39,20 @@ pub(super) fn parse_domain_object(
             diagnostics,
             default_domain,
         ),
+        ObjectType::Py(PyObjectType::Method) => parse_py_method(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
+        ObjectType::Py(PyObjectType::Class) => parse_py_class(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
     }
 }
 
@@ -111,6 +125,65 @@ fn parse_py_data(
     }
 }
 
+/// Parses a `.. py:method::` body: strips `:classmethod:`/`:staticmethod:`/
+/// `:abstractmethod:`/`:async:` flag lines off the front before parsing the
+/// rest as the docstring body.
+fn parse_py_method(
+    signature: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, options_consumed) =
+        extract_method_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::PyMethod {
+        signature,
+        is_classmethod,
+        is_staticmethod,
+        is_abstractmethod,
+        is_async,
+        body,
+    }
+}
+
+/// Parses a `.. py:class::` body: strips a leading `:final:` flag line off
+/// the front before parsing the rest as the docstring body. Any nested
+/// domain object directives (e.g. `.. py:method::`) in the body are parsed
+/// through the same recursive `parse_blocks` call every other domain object
+/// uses — qualifying their cross-reference names by this class is the
+/// analyzer/renderer's job, not the parser's.
+fn parse_py_class(
+    signature: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (is_final, options_consumed) = extract_class_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::PyClass {
+        signature,
+        is_final,
+        body,
+    }
+}
+
 /// Extracts `.. py:module::`-specific options (`:platform:`, `:synopsis:`,
 /// `:deprecated:`) from the leading lines of a domain object's body.
 ///
@@ -166,6 +239,63 @@ fn extract_data_options(lines: &[String]) -> (Option<String>, Option<String>, us
     }
 
     (type_, value, consumed)
+}
+
+/// Extracts `.. py:method::`-specific flag options (`:classmethod:`,
+/// `:staticmethod:`, `:abstractmethod:`, `:async:`) from the leading lines of
+/// a domain object's body.
+///
+/// Scans from the start and stops at the first line that isn't one of these
+/// recognized flags (e.g. a blank line or the start of the docstring body),
+/// returning how many leading lines were consumed as options so the caller
+/// can slice them off before parsing the remaining body content.
+fn extract_method_options(lines: &[String]) -> (bool, bool, bool, bool, usize) {
+    let mut is_classmethod = false;
+    let mut is_staticmethod = false;
+    let mut is_abstractmethod = false;
+    let mut is_async = false;
+    let mut consumed = 0;
+
+    for line in lines {
+        match line.trim() {
+            ":classmethod:" => is_classmethod = true,
+            ":staticmethod:" => is_staticmethod = true,
+            ":abstractmethod:" => is_abstractmethod = true,
+            ":async:" => is_async = true,
+            _ => break,
+        }
+        consumed += 1;
+    }
+
+    (
+        is_classmethod,
+        is_staticmethod,
+        is_abstractmethod,
+        is_async,
+        consumed,
+    )
+}
+
+/// Extracts `.. py:class::`-specific flag options (`:final:`) from the
+/// leading lines of a domain object's body.
+///
+/// Scans from the start and stops at the first line that isn't `:final:`
+/// (e.g. a blank line, a nested directive, or the start of the docstring
+/// body), returning how many leading lines were consumed as options so the
+/// caller can slice them off before parsing the remaining body content.
+fn extract_class_options(lines: &[String]) -> (bool, usize) {
+    let mut is_final = false;
+    let mut consumed = 0;
+
+    for line in lines {
+        match line.trim() {
+            ":final:" => is_final = true,
+            _ => break,
+        }
+        consumed += 1;
+    }
+
+    (is_final, consumed)
 }
 
 #[cfg(test)]
@@ -276,6 +406,290 @@ mod tests {
         assert_eq!(type_, None);
         assert_eq!(value, None);
         assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_extract_method_options_parses_all_four_flags() {
+        // Given
+        let lines = vec![
+            ":classmethod:".to_string(),
+            ":staticmethod:".to_string(),
+            ":abstractmethod:".to_string(),
+            ":async:".to_string(),
+            String::new(),
+            "Does the thing.".to_string(),
+        ];
+
+        // When
+        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, consumed) =
+            extract_method_options(&lines);
+
+        // Then
+        assert!(is_classmethod);
+        assert!(is_staticmethod);
+        assert!(is_abstractmethod);
+        assert!(is_async);
+        assert_eq!(consumed, 4);
+    }
+
+    #[test]
+    fn test_extract_method_options_stops_at_first_non_option_line() {
+        // Given
+        let lines = vec![":classmethod:".to_string(), "Does the thing.".to_string()];
+
+        // When
+        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, consumed) =
+            extract_method_options(&lines);
+
+        // Then
+        assert!(is_classmethod);
+        assert!(!is_staticmethod);
+        assert!(!is_abstractmethod);
+        assert!(!is_async);
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_extract_method_options_returns_defaults_when_no_options_present() {
+        // Given
+        let lines = vec!["Does the thing.".to_string()];
+
+        // When
+        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, consumed) =
+            extract_method_options(&lines);
+
+        // Then
+        assert!(!is_classmethod);
+        assert!(!is_staticmethod);
+        assert!(!is_abstractmethod);
+        assert!(!is_async);
+        assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_parse_creates_py_method_domain_object() {
+        // Given
+        let input = ".. py:method:: greet(self, name)\n\n   Greets the given name.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            signature,
+            is_classmethod,
+            is_staticmethod,
+            is_abstractmethod,
+            is_async,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "greet(self, name)");
+            assert!(!is_classmethod);
+            assert!(!is_staticmethod);
+            assert!(!is_abstractmethod);
+            assert!(!is_async);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_method_with_classmethod_and_abstractmethod_options() {
+        // Given
+        let input = ".. py:method:: create(cls)\n   :classmethod:\n   :abstractmethod:\n\n   Creates an instance.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            is_classmethod,
+            is_staticmethod,
+            is_abstractmethod,
+            is_async,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(*is_classmethod);
+            assert!(!is_staticmethod);
+            assert!(*is_abstractmethod);
+            assert!(!is_async);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_method_options_in_any_order_with_no_body() {
+        // Given — async before staticmethod, and no docstring body
+        let input = ".. py:method:: run()\n   :async:\n   :staticmethod:";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            is_classmethod,
+            is_staticmethod,
+            is_abstractmethod,
+            is_async,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(!is_classmethod);
+            assert!(*is_staticmethod);
+            assert!(!is_abstractmethod);
+            assert!(*is_async);
+            assert!(body.is_empty());
+        } else {
+            panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_extract_class_options_parses_final_flag() {
+        // Given
+        let lines = vec![
+            ":final:".to_string(),
+            String::new(),
+            "A greeter.".to_string(),
+        ];
+
+        // When
+        let (is_final, consumed) = extract_class_options(&lines);
+
+        // Then
+        assert!(is_final);
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_extract_class_options_returns_defaults_when_no_options_present() {
+        // Given
+        let lines = vec!["A greeter.".to_string()];
+
+        // When
+        let (is_final, consumed) = extract_class_options(&lines);
+
+        // Then
+        assert!(!is_final);
+        assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_parse_creates_py_class_domain_object() {
+        // Given
+        let input = ".. py:class:: Greeter\n\n   A greeter.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
+            signature,
+            is_final,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "Greeter");
+            assert!(!is_final);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyClass, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_class_with_final_option_and_base_class_signature() {
+        // Given
+        let input = ".. py:class:: Greeter(Base)\n   :final:\n\n   A greeter.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
+            signature,
+            is_final,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "Greeter(Base)");
+            assert!(*is_final);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyClass, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_class_with_no_options_and_no_body() {
+        // Given
+        let input = ".. py:class:: Greeter";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
+            is_final,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(!is_final);
+            assert!(body.is_empty());
+        } else {
+            panic!("Expected PyClass, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_class_with_nested_py_method() {
+        // Given — a `py:method` nested inside a `py:class` body, indented
+        // like any other nested directive (e.g. `py:data` inside a table).
+        let input = ".. py:class:: Greeter\n\n   A greeter.\n\n   .. py:method:: greet(self, name)\n\n      Greets the given name.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
+            body, ..
+        })) = &doc.nodes[0]
+        {
+            assert!(body.iter().any(|node| matches!(
+                node,
+                Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod { .. }))
+            )));
+        } else {
+            panic!("Expected PyClass, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_class_directive_resolves_via_default_domain() {
+        // Given
+        let input = ".. class:: Greeter\n\n   A greeter.";
+
+        // When
+        let doc = crate::parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert!(matches!(
+            &doc.nodes[0],
+            Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass { .. }))
+        ));
     }
 
     #[test]
@@ -688,7 +1102,7 @@ mod tests {
     #[test]
     fn test_parse_unknown_object_type_in_known_domain_falls_through_to_unknown() {
         // Given
-        let input = ".. py:class:: Greeter\n\n   Body.";
+        let input = ".. py:struct:: Greeter\n\n   Body.";
 
         // When
         let doc = parse("test.rst", input);

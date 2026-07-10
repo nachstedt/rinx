@@ -25,7 +25,9 @@ pub use definition_list_item::DefinitionListItem;
 pub use directive::Directive;
 pub use document::Document;
 pub use domain::Domain;
-pub use domain_object_body::{DomainObjectBody, build_domain_object_key, extract_object_name};
+pub use domain_object_body::{
+    DomainObjectBody, build_domain_object_key, extract_object_name, qualify_name,
+};
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use hashed_content::HashedContent;
 pub use inline_node::{InlineNode, inline_plain_text};

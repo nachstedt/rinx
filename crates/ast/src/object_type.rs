@@ -57,6 +57,8 @@ impl ObjectType {
             (Domain::Py, "func") => Some(Self::Py(PyObjectType::Function)),
             (Domain::Py, "mod") => Some(Self::Py(PyObjectType::Module)),
             (Domain::Py, "data" | "const") => Some(Self::Py(PyObjectType::Data)),
+            (Domain::Py, "meth") => Some(Self::Py(PyObjectType::Method)),
+            (Domain::Py, "class") => Some(Self::Py(PyObjectType::Class)),
             (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
             _ => None,
         }
@@ -107,7 +109,7 @@ mod tests {
     fn test_object_type_from_directive_name_rejects_unknown_object_type() {
         // Given
         let domain = Domain::Py;
-        let name = "class";
+        let name = "struct";
 
         // When
         let result = ObjectType::from_directive_name(domain, name);
@@ -158,13 +160,33 @@ mod tests {
     fn test_object_type_from_role_name_rejects_unknown_role() {
         // Given
         let domain = Domain::Py;
-        let role = "meth";
+        let role = "struct";
 
         // When
         let result = ObjectType::from_role_name(domain, role);
 
         // Then
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_meth_only_for_py() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Py, "meth"),
+            Some(ObjectType::Py(PyObjectType::Method))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::C, "meth"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_class_only_for_py() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Py, "class"),
+            Some(ObjectType::Py(PyObjectType::Class))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::C, "class"), None);
     }
 
     #[test]

@@ -95,7 +95,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             found_title = true;
         }
     }
-    index_nodes(&doc.nodes, &doc.path, &mut index);
+    index_nodes(&doc.nodes, &doc.path, &mut index, None);
     index
 }
 
@@ -106,7 +106,14 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// definition nested in a container still needs to be indexed for
 /// cross-references to resolve, exactly like it's still rendered with a
 /// working anchor.
-fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
+///
+/// `qualifier` is the enclosing `py:class`'s own qualified name, if any —
+/// `None` at the document's top level, or when nested inside anything other
+/// than a `py:class` (e.g. a `py:function` nested in a `py:module`'s body is
+/// deliberately *not* qualified by the module's name; only `py:class`
+/// bodies introduce a qualifying scope for their descendants, matching real
+/// Sphinx and preserving pre-existing module-nesting behavior).
+fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, qualifier: Option<&str>) {
     for node in nodes {
         match node {
             Node::Target { name, uri } => {
@@ -126,25 +133,33 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
                 }
             }
             Node::Directive(Directive::DomainObject(obj)) => {
-                let key = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &obj.name());
+                let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, &obj.name());
+                let key =
+                    rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
                 index.domain_objects.insert(key, doc_path.to_string());
-                index_nodes(obj.body(), doc_path, index);
+                let child_qualifier =
+                    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyClass { .. }) {
+                        Some(qualified_name.as_str())
+                    } else {
+                        qualifier
+                    };
+                index_nodes(obj.body(), doc_path, index, child_qualifier);
             }
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
                 | Directive::SeeAlso { body },
             ) => {
-                index_nodes(body, doc_path, index);
+                index_nodes(body, doc_path, index, qualifier);
             }
             Node::BulletList { items, .. } => {
                 for item in items {
-                    index_nodes(&item.nodes, doc_path, index);
+                    index_nodes(&item.nodes, doc_path, index, qualifier);
                 }
             }
             Node::DefinitionList { items } => {
                 for item in items {
-                    index_nodes(&item.definition, doc_path, index);
+                    index_nodes(&item.definition, doc_path, index, qualifier);
                 }
             }
             Node::Table {
@@ -153,7 +168,7 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
             } => {
                 for row in header_rows.iter().chain(body_rows) {
                     for cell in &row.cells {
-                        index_nodes(&cell.content, doc_path, index);
+                        index_nodes(&cell.content, doc_path, index, qualifier);
                     }
                 }
             }
@@ -1391,6 +1406,162 @@ mod tests {
             index
                 .domain_objects
                 .contains_key(&TargetName::new("py:function:greet"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_qualifies_method_nested_in_class() {
+        // Given — a `py:method` nested inside a `py:class` body
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    signature: "Greeter".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                            signature: "greet(self, name)".to_string(),
+                            is_classmethod: false,
+                            is_staticmethod: false,
+                            is_abstractmethod: false,
+                            is_async: false,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — both the class and its qualified method are indexed
+        assert_eq!(index.domain_objects.len(), 2);
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:class:Greeter"))
+        );
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:method:Greeter.greet"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_qualifies_nested_classes_two_levels_deep() {
+        // Given — a class nested inside another class, both containing a method
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    signature: "Outer".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyClass {
+                            signature: "Inner".to_string(),
+                            is_final: false,
+                            body: vec![Node::Directive(Directive::DomainObject(
+                                rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                                    signature: "method(self)".to_string(),
+                                    is_classmethod: false,
+                                    is_staticmethod: false,
+                                    is_abstractmethod: false,
+                                    is_async: false,
+                                    body: vec![],
+                                },
+                            ))],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:class:Outer.Inner"))
+        );
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:method:Outer.Inner.method"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_qualifies_non_method_object_nested_in_class() {
+        // Given — a `py:data` (class attribute) nested inside a `py:class`
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    signature: "Greeter".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyData {
+                            name: "DEFAULT_GREETING".to_string(),
+                            type_: None,
+                            value: None,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:data:Greeter.DEFAULT_GREETING"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_does_not_qualify_object_nested_in_non_class_domain_object() {
+        // Given — a `py:function` nested inside a `py:module` (not a
+        // `py:class`) must keep its bare name, preserving pre-existing
+        // module-nesting behavior.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                    name: "greetings".to_string(),
+                    platform: None,
+                    synopsis: None,
+                    deprecated: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                            signature: "greet(name)".to_string(),
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — bare name, not "greetings.greet"
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:function:greet"))
+        );
+        assert!(
+            !index
+                .domain_objects
+                .contains_key(&TargetName::new("py:function:greetings.greet"))
         );
     }
 

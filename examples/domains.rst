@@ -4,7 +4,8 @@ Domains
 Rusty-Sphinx supports Sphinx-style domains for namespacing directives and
 cross-reference roles by language, mirroring real Sphinx. This page uses
 ``py`` and ``c`` as the first two domains: ``c`` has a ``function`` object
-type, and ``py`` additionally has ``module`` and ``data`` object types.
+type, and ``py`` additionally has ``module``, ``data``, ``method``, and
+``class`` object types.
 
 Python Domain
 -------------
@@ -36,6 +37,60 @@ Python Domain
 
    The default timeout, in seconds, used when greeting someone takes too
    long to respond.
+
+The ``Greeter`` Class
+"""""""""""""""""""""
+
+Nesting a ``py:method`` (or any domain object) directive inside a
+``py:class`` body automatically qualifies its cross-reference name with the
+enclosing class's name — the signatures below are written unqualified
+(``greet``, not ``Greeter.greet``), and still resolve as ``Greeter.greet``
+when cross-referenced, exactly like real Sphinx.
+
+.. py:class:: Greeter
+
+   A greeter.
+
+   .. py:method:: greet(self, name)
+
+      Greets the given name.
+
+   .. py:method:: create(cls)
+      :classmethod:
+
+      Creates a new ``Greeter``.
+
+   .. py:method:: default_name()
+      :staticmethod:
+
+      Returns the default name used when none is given.
+
+   .. py:method:: validate(cls, name)
+      :classmethod:
+      :abstractmethod:
+
+      Validates a name before greeting it. Combines two modifier options at
+      once — each renders as its own prefix label, in a fixed
+      ``abstractmethod``/``async``/``classmethod``/``staticmethod`` order
+      regardless of the order the options were written in.
+
+   .. py:method:: greet_async(self, name)
+      :async:
+
+      An asynchronous variant of ``greet``.
+
+.. py:class:: ImmutableGreeter
+   :final:
+
+   A ``:final:`` class, rendered with a ``final`` prefix label before
+   ``class`` (not enforced by rusty-sphinx, just documented via the label,
+   like real Sphinx).
+
+   .. py:class:: Options
+
+      A class nested inside another class — qualification composes, so this
+      is indexed and cross-referenced as ``ImmutableGreeter.Options``, and
+      anything nested inside *it* would be qualified two levels deep.
 
 The :py:mod:`greetings` Module
 """"""""""""""""""""""""""""""
@@ -99,3 +154,17 @@ with no warning, even though no such function is defined. A ``~`` prefix
 instead keeps the link but shortens the displayed text to the last dotted
 component — e.g. :py:func:`~greetings.shout` links to ``greetings.shout``
 but displays only ``shout``.
+
+Call :py:meth:`Greeter.greet` to greet someone synchronously, or await
+:py:meth:`Greeter.greet_async` for the asynchronous variant. The bare role
+:meth:`Greeter.create` also resolves to the ``py`` domain, like the other
+bare roles above. As with :py:func:`~greetings.shout`, the ``~`` prefix
+shortens the display text — :py:meth:`~Greeter.validate` links to
+``Greeter.validate`` but displays only ``validate``. Note that none of these
+targets are written qualified anywhere in the ``Greeter`` class's own
+directives above — the qualification comes entirely from nesting.
+
+:py:class:`Greeter` and the bare role :class:`ImmutableGreeter` both
+resolve to their respective ``py:class`` definitions above. The nested class
+:py:class:`ImmutableGreeter.Options` resolves too, proving qualification
+composes across two levels of nesting.

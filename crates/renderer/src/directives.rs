@@ -116,18 +116,49 @@ pub(super) fn render_domain_object(
     ctx: &mut RenderCtx<'_>,
 ) {
     let object_type = obj.object_type();
-    let name = obj.name();
-    let key = rusty_sphinx_ast::build_domain_object_key(object_type, &name);
+    let own_name = obj.name();
+    let qualified_name =
+        rusty_sphinx_ast::qualify_name(ctx.class_stack.last().map(String::as_str), &own_name);
+    let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
     let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
     let sig_escaped = html_escape::encode_text(obj.signature_text());
 
     let _ = writeln!(html, "<dl class=\"{domain_str} {objtype_str}\">");
-    let _ = writeln!(
-        html,
-        "  <dt id=\"{id_attr}\"><code class=\"sig-name\">{sig_escaped}</code></dt>"
-    );
+    let _ = write!(html, "  <dt id=\"{id_attr}\">");
+    // Canonical, deterministic prefix-label order — independent of how the
+    // author wrote the option flags.
+    let prefix_labels: Vec<&str> = match obj {
+        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+            is_classmethod,
+            is_staticmethod,
+            is_abstractmethod,
+            is_async,
+            ..
+        } => [
+            (*is_abstractmethod, "abstractmethod"),
+            (*is_async, "async"),
+            (*is_classmethod, "classmethod"),
+            (*is_staticmethod, "staticmethod"),
+        ]
+        .into_iter()
+        .filter_map(|(active, label)| active.then_some(label))
+        .collect(),
+        rusty_sphinx_ast::DomainObjectBody::PyClass { is_final, .. } => {
+            let mut labels = Vec::new();
+            if *is_final {
+                labels.push("final");
+            }
+            labels.push("class");
+            labels
+        }
+        _ => Vec::new(),
+    };
+    for label in prefix_labels {
+        let _ = write!(html, "<em class=\"property\">{label}</em> ");
+    }
+    let _ = writeln!(html, "<code class=\"sig-name\">{sig_escaped}</code></dt>");
     let _ = write!(html, "  <dd>");
     match obj {
         rusty_sphinx_ast::DomainObjectBody::PyModule {
@@ -171,9 +202,17 @@ pub(super) fn render_domain_object(
             }
         }
         rusty_sphinx_ast::DomainObjectBody::PyFunction { .. }
-        | rusty_sphinx_ast::DomainObjectBody::CFunction { .. } => {}
+        | rusty_sphinx_ast::DomainObjectBody::CFunction { .. }
+        | rusty_sphinx_ast::DomainObjectBody::PyMethod { .. }
+        | rusty_sphinx_ast::DomainObjectBody::PyClass { .. } => {}
     }
-    super::render_nodes(html, obj.body(), ctx);
+    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyClass { .. }) {
+        ctx.class_stack.push(qualified_name);
+        super::render_nodes(html, obj.body(), ctx);
+        ctx.class_stack.pop();
+    } else {
+        super::render_nodes(html, obj.body(), ctx);
+    }
     let _ = writeln!(html, "</dd>");
     let _ = writeln!(html, "</dl>");
 }
@@ -277,6 +316,7 @@ mod tests {
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
+            class_stack: Vec::new(),
         };
 
         // When
@@ -313,6 +353,7 @@ mod tests {
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
+            class_stack: Vec::new(),
         };
 
         // When
@@ -481,6 +522,7 @@ mod tests {
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
+            class_stack: Vec::new(),
         };
 
         // When
@@ -790,6 +832,238 @@ mod tests {
         assert!(result.contains("<p class=\"platform\">Platform: Unix, Windows</p>"));
         assert!(result.contains("<p class=\"synopsis\">Greeting utilities.</p>"));
         assert!(result.contains("<p class=\"deprecated\">Deprecated.</p>"));
+    }
+
+    #[test]
+    fn test_render_formats_py_method_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                    signature: "greet(self, name)".to_string(),
+                    is_classmethod: false,
+                    is_staticmethod: false,
+                    is_abstractmethod: false,
+                    is_async: false,
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Greets the given name.".to_string(),
+                    )])],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"py method\">"));
+        assert!(result.contains("<dt id=\"py:method:greet\">"));
+        assert!(result.contains("<code class=\"sig-name\">greet(self, name)</code>"));
+        assert!(!result.contains("class=\"property\""));
+    }
+
+    #[test]
+    fn test_render_py_method_modifier_prefixes_in_canonical_order() {
+        // Given — options written out of canonical order
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                    signature: "create(cls)".to_string(),
+                    is_classmethod: true,
+                    is_staticmethod: false,
+                    is_abstractmethod: true,
+                    is_async: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — abstractmethod is rendered before classmethod regardless of
+        // struct-field/author order
+        let abstractmethod_pos = result.find("abstractmethod").unwrap();
+        let classmethod_pos = result.find("classmethod").unwrap();
+        assert!(abstractmethod_pos < classmethod_pos);
+        assert!(result.contains("<em class=\"property\">abstractmethod</em>"));
+        assert!(result.contains("<em class=\"property\">classmethod</em>"));
+        assert!(!result.contains("staticmethod"));
+        assert!(!result.contains(">async<"));
+    }
+
+    #[test]
+    fn test_render_formats_py_class_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    signature: "greeter".to_string(),
+                    is_final: false,
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "A greeter.".to_string(),
+                    )])],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"py class\">"));
+        assert!(result.contains("<dt id=\"py:class:greeter\">"));
+        assert!(result.contains("<em class=\"property\">class</em>"));
+        assert!(result.contains("<code class=\"sig-name\">greeter</code>"));
+        assert!(!result.contains("final"));
+    }
+
+    #[test]
+    fn test_render_py_class_final_prefix_precedes_class_prefix() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    signature: "greeter".to_string(),
+                    is_final: true,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        let final_pos = result.find("final").unwrap();
+        let class_pos = result.find("class</em>").unwrap();
+        assert!(final_pos < class_pos);
+        assert!(result.contains("<em class=\"property\">final</em>"));
+    }
+
+    #[test]
+    fn test_render_qualifies_method_nested_in_class_id() {
+        // Given — a `py:method` nested inside a `py:class` body
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    signature: "greeter".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                            signature: "greet(self, name)".to_string(),
+                            is_classmethod: false,
+                            is_staticmethod: false,
+                            is_abstractmethod: false,
+                            is_async: false,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — the nested method's id and signature are qualified/plain
+        // respectively, matching the analyzer's index key exactly.
+        assert!(result.contains("<dt id=\"py:method:greeter.greet\">"));
+        assert!(result.contains("<code class=\"sig-name\">greet(self, name)</code>"));
+    }
+
+    #[test]
+    fn test_render_qualifies_nested_classes_two_levels_deep() {
+        // Given — a class nested inside another class, each containing a method
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    signature: "outer".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyClass {
+                            signature: "inner".to_string(),
+                            is_final: false,
+                            body: vec![Node::Directive(Directive::DomainObject(
+                                rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                                    signature: "method(self)".to_string(),
+                                    is_classmethod: false,
+                                    is_staticmethod: false,
+                                    is_abstractmethod: false,
+                                    is_async: false,
+                                    body: vec![],
+                                },
+                            ))],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dt id=\"py:class:outer.inner\">"));
+        assert!(result.contains("<dt id=\"py:method:outer.inner.method\">"));
+    }
+
+    #[test]
+    fn test_render_class_stack_does_not_leak_across_sibling_classes() {
+        // Given — two sibling classes, each with a method of the same name;
+        // the second class's method must not inherit the first class's
+        // qualifier from a stale, un-popped stack entry.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                        signature: "first".to_string(),
+                        is_final: false,
+                        body: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                                signature: "run(self)".to_string(),
+                                is_classmethod: false,
+                                is_staticmethod: false,
+                                is_abstractmethod: false,
+                                is_async: false,
+                                body: vec![],
+                            },
+                        ))],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                        signature: "second".to_string(),
+                        is_final: false,
+                        body: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                                signature: "run(self)".to_string(),
+                                is_classmethod: false,
+                                is_staticmethod: false,
+                                is_abstractmethod: false,
+                                is_async: false,
+                                body: vec![],
+                            },
+                        ))],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dt id=\"py:method:first.run\">"));
+        assert!(result.contains("<dt id=\"py:method:second.run\">"));
+        assert!(!result.contains("py:method:first.second.run"));
     }
 
     #[test]
