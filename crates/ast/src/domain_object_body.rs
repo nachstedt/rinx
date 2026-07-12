@@ -38,14 +38,22 @@ pub fn build_domain_object_key(object_type: ObjectType, name: &str) -> TargetNam
 
 /// Prefixes `name` with `qualifier` (e.g. an enclosing `py:class`'s own
 /// qualified name), joined with `.`, or returns `name` unchanged if there is
-/// no enclosing qualifier. Shared by the analyzer (when indexing a nested
-/// domain object) and the renderer (when computing its anchor `id`), so both
-/// always agree on the qualified name for the same nested object.
+/// no enclosing qualifier *or* `name` is already written fully qualified
+/// (starts with `"{qualifier}."`) — real-world Sphinx docs commonly nest a
+/// domain object under its already-dotted name (e.g. `CPython`'s
+/// `.. attribute:: StopIteration.value` nested inside
+/// `.. exception:: StopIteration`), and real Sphinx's own `py` domain avoids
+/// double-prepending in that case too. Shared by the analyzer (when indexing
+/// a nested domain object) and the renderer (when computing its anchor
+/// `id`), so both always agree on the qualified name for the same nested
+/// object.
 #[must_use]
 pub fn qualify_name(qualifier: Option<&str>, name: &str) -> String {
     match qualifier {
-        Some(prefix) => format!("{prefix}.{name}"),
-        None => name.to_string(),
+        Some(prefix) if !name.starts_with(&format!("{prefix}.")) => {
+            format!("{prefix}.{name}")
+        }
+        _ => name.to_string(),
     }
 }
 
@@ -110,6 +118,11 @@ pub enum DomainObjectBody {
         is_final: bool,
         body: Vec<Node>,
     },
+    PyException {
+        signature: String,
+        is_final: bool,
+        body: Vec<Node>,
+    },
 }
 
 impl DomainObjectBody {
@@ -124,6 +137,7 @@ impl DomainObjectBody {
             Self::CFunction { .. } => ObjectType::C(CObjectType::Function),
             Self::PyMethod { .. } => ObjectType::Py(PyObjectType::Method),
             Self::PyClass { .. } => ObjectType::Py(PyObjectType::Class),
+            Self::PyException { .. } => ObjectType::Py(PyObjectType::Exception),
         }
     }
 
@@ -136,7 +150,8 @@ impl DomainObjectBody {
             Self::PyFunction { signature, .. }
             | Self::CFunction { signature, .. }
             | Self::PyMethod { signature, .. }
-            | Self::PyClass { signature, .. } => extract_object_name(signature),
+            | Self::PyClass { signature, .. }
+            | Self::PyException { signature, .. } => extract_object_name(signature),
             Self::PyModule { name, .. }
             | Self::PyData { name, .. }
             | Self::PyAttribute { name, .. } => name.clone(),
@@ -151,7 +166,8 @@ impl DomainObjectBody {
             Self::PyFunction { signature, .. }
             | Self::CFunction { signature, .. }
             | Self::PyMethod { signature, .. }
-            | Self::PyClass { signature, .. } => signature,
+            | Self::PyClass { signature, .. }
+            | Self::PyException { signature, .. } => signature,
             Self::PyModule { name, .. }
             | Self::PyData { name, .. }
             | Self::PyAttribute { name, .. } => name,
@@ -168,7 +184,8 @@ impl DomainObjectBody {
             | Self::PyAttribute { body, .. }
             | Self::CFunction { body, .. }
             | Self::PyMethod { body, .. }
-            | Self::PyClass { body, .. } => body,
+            | Self::PyClass { body, .. }
+            | Self::PyException { body, .. } => body,
         }
     }
 
@@ -183,7 +200,8 @@ impl DomainObjectBody {
             | Self::PyAttribute { body, .. }
             | Self::CFunction { body, .. }
             | Self::PyMethod { body, .. }
-            | Self::PyClass { body, .. } => body,
+            | Self::PyClass { body, .. }
+            | Self::PyException { body, .. } => body,
         }
     }
 }
@@ -358,6 +376,35 @@ mod tests {
     }
 
     #[test]
+    fn test_qualify_name_returns_name_unchanged_when_already_fully_qualified() {
+        // Given — CPython's `Doc/library/exceptions.rst` nests
+        // `.. attribute:: StopIteration.value` inside
+        // `.. exception:: StopIteration`, writing the attribute's name
+        // already fully qualified rather than bare (`value`).
+        // When / Then — must not double-prepend to
+        // "StopIteration.StopIteration.value".
+        assert_eq!(
+            qualify_name(Some("StopIteration"), "StopIteration.value"),
+            "StopIteration.value"
+        );
+    }
+
+    #[test]
+    fn test_qualify_name_composes_nested_qualifiers_when_innermost_name_is_already_qualified() {
+        // Given — a two-level nested-class qualifier, where the innermost
+        // name is already written fully qualified (like the
+        // `StopIteration.value` case, but two levels deep).
+        let outer_qualified = qualify_name(None, "Outer");
+        let inner_qualified = qualify_name(Some(&outer_qualified), "Inner");
+
+        // When
+        let method_qualified = qualify_name(Some(&inner_qualified), "Outer.Inner.method");
+
+        // Then — not doubled to "Outer.Inner.Outer.Inner.method"
+        assert_eq!(method_qualified, "Outer.Inner.method");
+    }
+
+    #[test]
     fn test_build_domain_object_key_for_attribute() {
         // Given
         let object_type = ObjectType::Py(PyObjectType::Attribute);
@@ -442,6 +489,15 @@ mod tests {
             .object_type(),
             ObjectType::Py(PyObjectType::Class)
         );
+        assert_eq!(
+            DomainObjectBody::PyException {
+                signature: "GreeterError".to_string(),
+                is_final: false,
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::Py(PyObjectType::Exception)
+        );
     }
 
     #[test]
@@ -525,6 +581,45 @@ mod tests {
 
         // When / Then
         assert_eq!(class.signature_text(), "Greeter(Base)");
+    }
+
+    #[test]
+    fn test_domain_object_body_name_extracts_from_signature_for_exceptions() {
+        // Given
+        let exception = DomainObjectBody::PyException {
+            signature: "GreeterError".to_string(),
+            is_final: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(exception.name(), "GreeterError");
+    }
+
+    #[test]
+    fn test_domain_object_body_name_ignores_base_class_list_for_exceptions() {
+        // Given — base classes shouldn't leak into the referenceable name
+        let exception = DomainObjectBody::PyException {
+            signature: "InvalidNameError(GreeterError)".to_string(),
+            is_final: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(exception.name(), "InvalidNameError");
+    }
+
+    #[test]
+    fn test_domain_object_body_signature_text_shows_full_signature_for_exceptions() {
+        // Given
+        let exception = DomainObjectBody::PyException {
+            signature: "InvalidNameError(GreeterError)".to_string(),
+            is_final: true,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(exception.signature_text(), "InvalidNameError(GreeterError)");
     }
 
     #[test]
@@ -672,6 +767,11 @@ mod tests {
             is_final: false,
             body: vec![paragraph.clone()],
         };
+        let exception = DomainObjectBody::PyException {
+            signature: "GreeterError".to_string(),
+            is_final: false,
+            body: vec![paragraph.clone()],
+        };
 
         // When / Then
         assert_eq!(function.body(), std::slice::from_ref(&paragraph));
@@ -681,6 +781,7 @@ mod tests {
         assert_eq!(c_function.body(), std::slice::from_ref(&paragraph));
         assert_eq!(method.body(), std::slice::from_ref(&paragraph));
         assert_eq!(class.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(exception.body(), std::slice::from_ref(&paragraph));
     }
 
     #[test]

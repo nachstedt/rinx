@@ -72,10 +72,11 @@ pub(crate) struct RenderCtx<'a> {
     pub anon_index: &'a mut usize,
     pub original_doc_path: &'a str,
     pub broken_links: &'a mut Vec<BrokenLink>,
-    /// Stack of enclosing `py:class` qualified names, innermost last — empty
-    /// outside any class. Pushed/popped by `render_domain_object` around a
-    /// `PyClass`'s nested body so a nested object's anchor `id` matches the
-    /// same qualified key the analyzer indexed it under.
+    /// Stack of enclosing `py:class`/`py:exception` qualified names, innermost
+    /// last — empty outside any class/exception. Pushed/popped by
+    /// `render_domain_object` around a `PyClass`/`PyException`'s nested body
+    /// so a nested object's anchor `id` matches the same qualified key the
+    /// analyzer indexed it under.
     pub class_stack: Vec<String>,
 }
 

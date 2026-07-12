@@ -10,6 +10,7 @@ pub enum PyObjectType {
     Method,
     Class,
     Attribute,
+    Exception,
 }
 
 impl PyObjectType {
@@ -22,6 +23,7 @@ impl PyObjectType {
             Self::Method => "method",
             Self::Class => "class",
             Self::Attribute => "attribute",
+            Self::Exception => "exception",
         }
     }
 }
@@ -37,6 +39,7 @@ impl std::str::FromStr for PyObjectType {
             "method" => Ok(Self::Method),
             "class" => Ok(Self::Class),
             "attribute" => Ok(Self::Attribute),
+            "exception" => Ok(Self::Exception),
             _ => Err(()),
         }
     }
@@ -134,5 +137,26 @@ mod tests {
 
         // Then
         assert_eq!(s, "attribute");
+    }
+
+    #[test]
+    fn test_py_object_type_from_str_accepts_exception() {
+        // Given / When / Then
+        assert_eq!(
+            "exception".parse::<PyObjectType>(),
+            Ok(PyObjectType::Exception)
+        );
+    }
+
+    #[test]
+    fn test_py_object_type_as_str_returns_exception() {
+        // Given
+        let object_type = PyObjectType::Exception;
+
+        // When
+        let s = object_type.as_str();
+
+        // Then
+        assert_eq!(s, "exception");
     }
 }
