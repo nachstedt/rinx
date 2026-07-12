@@ -43,7 +43,7 @@ pub(super) fn try_parse_comment(lines: &[&str], i: usize) -> Option<(usize, Node
     }
 
     // Consume the intro line and any indented body that follows.
-    let (body_consumed, _body) = collect_directive_body(lines, i + 1);
+    let (body_consumed, _body) = collect_directive_body(lines, i + 1, indent_width(line));
     let consumed = 1 + body_consumed;
 
     Some((consumed, Node::Comment))
@@ -126,12 +126,15 @@ pub fn parse_with_domain(path: &str, input: &str, default_domain: Domain) -> Doc
     let mut adornment_order: Vec<Adornment> = Vec::new();
     let mut diagnostics = Vec::new();
 
-    let nodes = parse_blocks(
+    let mut nodes = parse_blocks(
         &lines,
         &mut adornment_order,
         &mut diagnostics,
         default_domain,
     );
+
+    let mut index_id_counter = 0;
+    super::index_ids::assign_index_ids(&mut nodes, &mut index_id_counter);
 
     if !diagnostics.is_empty() {
         eprintln!("Diagnostics for '{path}':");
@@ -283,16 +286,33 @@ pub(super) fn parse_blocks(
     nodes
 }
 
+/// Counts the leading whitespace characters on a line, char-based (not
+/// byte-based) so it doesn't panic on multi-byte characters near the
+/// indentation boundary.
+pub(super) fn indent_width(line: &str) -> usize {
+    line.chars().take_while(|c| c.is_whitespace()).count()
+}
+
+/// Collects the indented body belonging to a directive/comment whose own
+/// intro line has `min_indent` leading whitespace characters.
+///
+/// Only lines indented *more* than `min_indent` (plus blank lines) are part
+/// of the body; a line indented at or below `min_indent` ends it. This
+/// distinguishes true nested body content from a sibling block at the same
+/// indentation — e.g. a bodyless `.. index:: single: x` immediately followed
+/// by a paragraph at the same indent level (common inside glossary entries,
+/// list items, and other indented containers) must not swallow that
+/// paragraph as if it were the directive's own body.
 pub(super) fn collect_directive_body<'a>(
     lines: &[&'a str],
     start_index: usize,
+    min_indent: usize,
 ) -> (usize, Vec<&'a str>) {
     let mut body_lines = Vec::new();
     let mut current = start_index;
     while current < lines.len() {
         let next_line = lines[current].trim_end();
-        if next_line.trim().is_empty() || next_line.starts_with(' ') || next_line.starts_with('\t')
-        {
+        if next_line.trim().is_empty() || indent_width(next_line) > min_indent {
             body_lines.push(next_line);
         } else {
             break;
@@ -821,7 +841,7 @@ mod tests {
         // Given
         let lines = vec![".. note::", "   body1", "   body2"];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1);
+        let (consumed, body) = collect_directive_body(&lines, 1, 0);
         // Then
         assert_eq!(consumed, 2);
         assert_eq!(body, vec!["   body1", "   body2"]);
@@ -832,7 +852,7 @@ mod tests {
         // Given
         let lines = vec![".. note::", "   body1", "unindented", "   body2"];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1);
+        let (consumed, body) = collect_directive_body(&lines, 1, 0);
         // Then
         assert_eq!(consumed, 1);
         assert_eq!(body, vec!["   body1"]);
@@ -843,7 +863,7 @@ mod tests {
         // Given
         let lines = vec![".. note::", "  ", "   body1", "  ", "   body2", "   ", ""];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1);
+        let (consumed, body) = collect_directive_body(&lines, 1, 0);
         // Then
         assert_eq!(consumed, 6);
         assert_eq!(body, vec!["   body1", "", "   body2"]);
@@ -854,7 +874,7 @@ mod tests {
         // Given
         let lines = vec![".. note::", "unindented"];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1);
+        let (consumed, body) = collect_directive_body(&lines, 1, 0);
         // Then
         assert_eq!(consumed, 0);
         assert!(body.is_empty());
@@ -865,10 +885,62 @@ mod tests {
         // Given
         let lines = vec![".. note::", "   body", "  "];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1);
+        let (consumed, body) = collect_directive_body(&lines, 1, 0);
         // Then
         assert_eq!(consumed, 2);
         assert_eq!(body, vec!["   body"]);
+    }
+
+    #[test]
+    fn test_collect_directive_body_stops_at_sibling_indented_at_same_level_as_directive() {
+        // Given — a bodyless directive nested at 3-space indent (e.g. inside
+        // a glossary entry), immediately followed by a sibling paragraph at
+        // the SAME 3-space indent, not a deeper one. Real Sphinx docs do
+        // this constantly (CPython's glossary.rst: `.. index:: pair: magic;
+        // method` followed by a plain paragraph at the same indent).
+        let lines = vec![
+            "   .. index:: pair: magic; method",
+            "",
+            "   An informal synonym for something.",
+        ];
+        // When — min_indent is the directive's own 3-space indentation
+        let (consumed, body) = collect_directive_body(&lines, 1, 3);
+        // Then — the body is empty and only the blank line is consumed;
+        // critically, the sibling paragraph itself is NOT swallowed, so the
+        // caller will parse it as its own paragraph node afterwards.
+        assert_eq!(consumed, 1);
+        assert!(body.is_empty());
+    }
+
+    #[test]
+    fn test_collect_directive_body_includes_lines_indented_deeper_than_directive() {
+        // Given — true nested body content, indented deeper than the
+        // directive's own 3-space indent
+        let lines = vec!["   .. note::", "", "      Actual body.", "   Sibling."];
+        // When
+        let (consumed, body) = collect_directive_body(&lines, 1, 3);
+        // Then — only the deeper-indented line is included
+        assert_eq!(consumed, 2);
+        assert_eq!(body, vec!["      Actual body."]);
+    }
+
+    #[test]
+    fn test_indent_width_counts_leading_whitespace() {
+        // Given / When / Then
+        assert_eq!(indent_width("   text"), 3);
+        assert_eq!(indent_width("text"), 0);
+        assert_eq!(indent_width("  "), 2);
+    }
+
+    #[test]
+    fn test_indent_width_does_not_panic_on_multibyte_char_after_indent() {
+        // Given — a multi-byte character immediately after the indentation,
+        // exercising the char-based (not byte-based) counting
+        let line = "  éfoo";
+        // When
+        let width = indent_width(line);
+        // Then
+        assert_eq!(width, 2);
     }
 }
 
@@ -1367,6 +1439,54 @@ mod integration_tests {
             doc.diagnostics
                 .iter()
                 .any(|d| d.contains("begin the document"))
+        );
+    }
+
+    #[test]
+    fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_following_paragraph() {
+        // Given — mirrors real CPython usage (Doc/glossary.rst): a bodyless
+        // `.. index::` directive nested inside a glossary term's definition,
+        // immediately followed by a plain paragraph at the SAME indentation
+        // (not a deeper one). Before the indentation-depth fix, the
+        // paragraph was swallowed into the directive's body and mis-parsed
+        // as bogus index entries.
+        let input = "\
+.. glossary::
+
+   magic method
+      .. index:: pair: magic; method
+
+      An informal synonym for something.
+";
+        // When
+        let doc = parse("test.rst", input);
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        let Node::Directive(rusty_sphinx_ast::Directive::Glossary { entries, .. }) = &doc.nodes[0]
+        else {
+            panic!("Expected Glossary directive, got {:?}", doc.nodes[0]);
+        };
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].terms, vec!["magic method".to_string()]);
+        // The definition must contain the Index directive AND the paragraph
+        // as two separate sibling nodes — not one node with the paragraph's
+        // text corrupted into bogus index entries.
+        assert_eq!(entries[0].definition.len(), 2);
+        assert!(matches!(
+            entries[0].definition[0],
+            Node::Directive(rusty_sphinx_ast::Directive::Index { .. })
+        ));
+        assert_eq!(
+            entries[0].definition[1],
+            Node::Paragraph(vec![InlineNode::Text(
+                "An informal synonym for something.".to_string()
+            )])
+        );
+        // No diagnostics about invalid/unknown index entries should be emitted.
+        assert!(
+            !doc.diagnostics
+                .iter()
+                .any(|d| d.contains(".. index::") || d.contains("index:"))
         );
     }
 }

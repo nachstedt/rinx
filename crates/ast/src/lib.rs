@@ -10,6 +10,7 @@ mod domain;
 mod domain_object_body;
 mod glossary_entry;
 mod hashed_content;
+mod index_entry;
 mod inline_node;
 mod node;
 mod object_type;
@@ -30,6 +31,7 @@ pub use domain_object_body::{
 };
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use hashed_content::HashedContent;
+pub use index_entry::IndexEntry;
 pub use inline_node::{InlineNode, inline_plain_text};
 pub use node::Node;
 pub use object_type::ObjectType;

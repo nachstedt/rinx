@@ -171,6 +171,21 @@ impl DomainObjectBody {
             | Self::PyClass { body, .. } => body,
         }
     }
+
+    /// Mutable access to the parsed docstring body, for passes that rewrite
+    /// nested nodes in place (e.g. assigning `.. index::` anchor ids).
+    #[must_use]
+    pub fn body_mut(&mut self) -> &mut Vec<Node> {
+        match self {
+            Self::PyFunction { body, .. }
+            | Self::PyModule { body, .. }
+            | Self::PyData { body, .. }
+            | Self::PyAttribute { body, .. }
+            | Self::CFunction { body, .. }
+            | Self::PyMethod { body, .. }
+            | Self::PyClass { body, .. } => body,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -666,5 +681,20 @@ mod tests {
         assert_eq!(c_function.body(), std::slice::from_ref(&paragraph));
         assert_eq!(method.body(), std::slice::from_ref(&paragraph));
         assert_eq!(class.body(), std::slice::from_ref(&paragraph));
+    }
+
+    #[test]
+    fn test_body_mut_allows_in_place_rewrite() {
+        // Given
+        let mut function = DomainObjectBody::PyFunction {
+            signature: "foo()".to_string(),
+            body: vec![Node::Comment],
+        };
+
+        // When
+        function.body_mut().push(Node::Comment);
+
+        // Then
+        assert_eq!(function.body(), &[Node::Comment, Node::Comment]);
     }
 }

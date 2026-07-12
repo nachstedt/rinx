@@ -10,6 +10,7 @@
 //! rusty-sphinx validate_toctree --input <file.ast>  [--allowed <path>...]
 //! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
 //! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links]
+//! rusty-sphinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>
 //! rusty-sphinx validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>
 //! ```
 //!
@@ -150,10 +151,13 @@ fn process_preview(
         &render_output.html,
         template_str,
         config,
-        &css_path,
-        &page_title,
-        doc_path,
-        &index.nav_tree,
+        &renderer::PageMeta {
+            css_path: &css_path,
+            page_title: &page_title,
+            doc_path,
+            nav_tree: &index.nav_tree,
+            has_genindex: !index.genindex_entries.is_empty(),
+        },
     )?;
     Ok((html, render_output.broken_links))
 }
@@ -190,12 +194,25 @@ fn process_render(
         &render_output.html,
         template_str,
         config,
-        &css_path,
-        &page_title,
-        doc_path,
-        &index.nav_tree,
+        &renderer::PageMeta {
+            css_path: &css_path,
+            page_title: &page_title,
+            doc_path,
+            nav_tree: &index.nav_tree,
+            has_genindex: !index.genindex_entries.is_empty(),
+        },
     )?;
     Ok((html, render_output.broken_links))
+}
+
+fn process_genindex(
+    index_json: &str,
+    config: &config::SiteConfig,
+    template_str: &str,
+) -> Result<String> {
+    let index: analyzer::ProjectIndex =
+        serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
+    renderer::render_genindex(&index, config, template_str)
 }
 
 /// Formats a single broken-link diagnostic as a human-readable warning line.
@@ -341,6 +358,26 @@ fn cmd_render(args: &[String]) -> Result<()> {
     Ok(())
 }
 
+fn cmd_genindex(args: &[String]) -> Result<()> {
+    let index_path = flag_value(args, "--index")?;
+    let output = flag_value(args, "--output")?;
+    let config_path = flag_value(args, "--config")?;
+    let template_path = flag_value(args, "--template")?;
+
+    let index_json =
+        fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
+    let config_str = fs::read_to_string(&config_path)
+        .with_context(|| format!("Error reading config '{config_path}'"))?;
+    let site_config: config::SiteConfig = toml::from_str(&config_str)
+        .with_context(|| format!("Error parsing config '{config_path}'"))?;
+    let template_str = fs::read_to_string(&template_path)
+        .with_context(|| format!("Error reading template '{template_path}'"))?;
+
+    let html = process_genindex(&index_json, &site_config, &template_str)?;
+    fs::write(&output, html).with_context(|| format!("Error writing '{output}'"))?;
+    Ok(())
+}
+
 fn cmd_validate_toctree(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let output = flag_value(args, "--output")?;
@@ -449,6 +486,7 @@ fn run(args: &[String]) -> Result<()> {
         Some("validate_images") => cmd_validate_images(&args[2..]),
         Some("index") => cmd_index(&args[2..]),
         Some("render") => cmd_render(&args[2..]),
+        Some("genindex") => cmd_genindex(&args[2..]),
         Some("preview") => cmd_preview(&args[2..]),
         Some(path) if !path.starts_with('-') => cmd_legacy(path),
         _ => {
@@ -461,6 +499,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
                    {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--strict-links]\n\
+                   {program} genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>\n\
                    {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
                    {program} validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>"
             );
@@ -848,7 +887,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}],"glossary_terms":{},"domain_objects":{}}"#
+            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}],"glossary_terms":{},"domain_objects":{},"genindex_entries":[]}"#
         );
     }
 
@@ -884,6 +923,36 @@ mod tests {
         // Then
         assert_eq!(broken_links.len(), 1);
         assert_eq!(broken_links[0].target, "missing");
+    }
+
+    #[test]
+    fn test_process_genindex_renders_html_with_letter_section() {
+        // Given
+        let index = r#"{"targets":{},"document_titles":{"guide.rst":"Guide"},"nav_tree":[],"glossary_terms":{},"domain_objects":{},"genindex_entries":[{"primary":"execution","subentry":null,"main":false,"doc_path":"guide.rst","anchor":"index-0"}]}"#;
+        let config = config::SiteConfig::default();
+        let template = "{{ body }}";
+
+        // When
+        let html = process_genindex(index, &config, template).unwrap();
+
+        // Then
+        assert!(html.contains("<h2 id=\"E\">E</h2>"));
+        assert!(html.contains("execution"));
+        assert!(html.contains("guide.html#index-0"));
+    }
+
+    #[test]
+    fn test_process_genindex_returns_error_for_invalid_index_json() {
+        // Given
+        let index = "not json";
+        let config = config::SiteConfig::default();
+        let template = "{{ body }}";
+
+        // When
+        let result = process_genindex(index, &config, template);
+
+        // Then
+        assert!(result.is_err());
     }
 
     #[test]

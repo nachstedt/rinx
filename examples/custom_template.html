@@ -9,6 +9,8 @@
     h1 { color: #2980b9; margin: 0; }
     .content { display: flex; gap: 3rem; max-width: 1200px; margin: 0 auto; }
     .sidebar { flex: 0 0 280px; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: fit-content; }
+    .genindex-link { margin: 0 0 1rem 0; }
+    .genindex-link a { font-weight: 600; color: #2980b9; }
     main { flex: 1; background: #fff; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     
     /* Admonitions */
@@ -181,6 +183,7 @@
   <div class="content">
     <aside class="sidebar">
       <h3>Table of Contents</h3>
+      {% if genindex_href %}<p class="genindex-link"><a href="{{ genindex_href }}">Index</a></p>{% endif %}
       {% if nav_tree %}
       <ul>
       {% for entry in nav_tree recursive %}

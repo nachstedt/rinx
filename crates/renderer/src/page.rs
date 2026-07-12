@@ -19,12 +19,32 @@ pub fn css_relative_path(doc_path: &str, css_filename: &str) -> String {
     }
 }
 
+/// Per-page metadata [`render_page`] needs beyond the body/template/config
+/// every page shares — bundled into one struct to keep `render_page`'s own
+/// argument count down.
+#[derive(Default)]
+pub struct PageMeta<'a> {
+    /// The relative path to the stylesheet.
+    pub css_path: &'a str,
+    pub page_title: &'a str,
+    /// The `.rst` path of the page being rendered (used to compute relative
+    /// links to other pages, e.g. via [`css_relative_path`]).
+    pub doc_path: &'a str,
+    /// Hierarchical sidebar navigation.
+    pub nav_tree: &'a [rusty_sphinx_analyzer::NavEntry],
+    /// Whether a `genindex_href` link (computed via [`css_relative_path`],
+    /// since `genindex.html` always lives at the site root like
+    /// `default.css`) is made available to the template — sites with no
+    /// index entries get no dead link.
+    pub has_genindex: bool,
+}
+
 /// Renders a page body into a full HTML document using a `MiniJinja` template.
 ///
 /// The `template_str` is Jinja2-compatible markup loaded from an `.html` file.
-/// The `body` is the inner HTML produced by [`super::render()`]. The `config` provides
-/// project metadata, `css_path` is the relative path to the stylesheet, and
-/// `nav_tree` provides hierarchical sidebar navigation.
+/// The `body` is the inner HTML produced by [`super::render()`]. The `config`
+/// provides project metadata; `meta` provides everything specific to this
+/// one page (see [`PageMeta`]).
 ///
 /// # Errors
 ///
@@ -33,12 +53,12 @@ pub fn render_page(
     body: &str,
     template_str: &str,
     config: &SiteConfig,
-    css_path: &str,
-    page_title: &str,
-    doc_path: &str,
-    nav_tree: &[rusty_sphinx_analyzer::NavEntry],
+    meta: &PageMeta<'_>,
 ) -> Result<String> {
-    let resolved_nav = resolve_nav_hrefs(nav_tree, doc_path);
+    let resolved_nav = resolve_nav_hrefs(meta.nav_tree, meta.doc_path);
+    let genindex_href = meta.has_genindex.then(|| {
+        minijinja::Value::from_safe_string(css_relative_path(meta.doc_path, "genindex.html"))
+    });
 
     let mut env = minijinja::Environment::new();
     env.add_template("page.html", template_str)
@@ -50,9 +70,10 @@ pub fn render_page(
         body => minijinja::Value::from_safe_string(body.to_string()),
         project => &config.project,
         version => &config.version,
-        css_path => minijinja::Value::from_safe_string(css_path.to_string()),
-        page_title => page_title,
+        css_path => minijinja::Value::from_safe_string(meta.css_path.to_string()),
+        page_title => meta.page_title,
         nav_tree => resolved_nav,
+        genindex_href => genindex_href,
     };
     tmpl.render(ctx).context("Failed to render template")
 }
@@ -146,7 +167,17 @@ mod tests {
         let body = "<h1>Title</h1>\n";
 
         // When
-        let result = render_page(body, template, &config, "default.css", "Title", "", &[]).unwrap();
+        let result = render_page(
+            body,
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                page_title: "Title",
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(result.contains("<h1>Title</h1>"));
@@ -163,7 +194,16 @@ mod tests {
         };
 
         // When
-        let result = render_page("body", template, &config, "default.css", "", "", &[]).unwrap();
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(result.contains("<title>MyProject</title>"));
@@ -176,8 +216,16 @@ mod tests {
         let config = SiteConfig::default();
 
         // When
-        let result =
-            render_page("body", template, &config, "../../default.css", "", "", &[]).unwrap();
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "../../default.css",
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(result.contains(r#"<link href="../../default.css">"#));
@@ -195,10 +243,11 @@ mod tests {
             "body",
             template,
             &config,
-            "default.css",
-            page_title,
-            "",
-            &[],
+            &PageMeta {
+                css_path: "default.css",
+                page_title,
+                ..PageMeta::default()
+            },
         )
         .unwrap();
 
@@ -217,7 +266,16 @@ mod tests {
         };
 
         // When
-        let result = render_page("body", template, &config, "default.css", "", "", &[]).unwrap();
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(!result.contains("<b>"));
@@ -234,7 +292,16 @@ mod tests {
         };
 
         // When
-        let result = render_page("body", template, &config, "default.css", "", "", &[]).unwrap();
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(!result.contains("<script>"));
@@ -253,8 +320,17 @@ mod tests {
         }];
 
         // When
-        let result =
-            render_page("body", template, &config, "default.css", "", "", &entries).unwrap();
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                nav_tree: &entries,
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(!result.contains("<script>"));
@@ -269,7 +345,16 @@ mod tests {
         let body = "<h1>Title</h1>\n<p>A &amp; B</p>\n";
 
         // When
-        let result = render_page(body, template, &config, "default.css", "", "", &[]).unwrap();
+        let result = render_page(
+            body,
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(result.contains("<h1>Title</h1>"));
@@ -288,12 +373,69 @@ mod tests {
         }];
 
         // When
-        let result =
-            render_page("body", template, &config, "default.css", "", "", &entries).unwrap();
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                nav_tree: &entries,
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(result.contains("sub/nested.html"));
         assert!(!result.contains("&#x2f;"));
+    }
+
+    #[test]
+    fn test_render_page_injects_genindex_href_when_has_genindex_true() {
+        // Given a document one directory deep
+        let template =
+            "{% if genindex_href %}<a href=\"{{ genindex_href }}\">Index</a>{% endif %}{{ body }}";
+        let config = SiteConfig::default();
+
+        // When
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                doc_path: "team_a/index.rst",
+                has_genindex: true,
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
+
+        // Then
+        assert!(result.contains("<a href=\"../genindex.html\">Index</a>"));
+    }
+
+    #[test]
+    fn test_render_page_omits_genindex_href_when_has_genindex_false() {
+        // Given
+        let template =
+            "{% if genindex_href %}<a href=\"{{ genindex_href }}\">Index</a>{% endif %}{{ body }}";
+        let config = SiteConfig::default();
+
+        // When
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
+
+        // Then
+        assert!(!result.contains("Index</a>"));
     }
 
     #[test]
@@ -303,7 +445,15 @@ mod tests {
         let config = SiteConfig::default();
 
         // When
-        let result = render_page("body", template, &config, "default.css", "", "", &[]);
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                ..PageMeta::default()
+            },
+        );
 
         // Then
         assert!(result.is_err());

@@ -12,6 +12,7 @@
       <div class="sidebar-header">
         <h2 class="project-name">{{ project }}</h2>
         {% if version %}<p class="project-version">{{ version }}</p>{% endif %}
+        {% if genindex_href %}<p class="sidebar-index-link"><a href="{{ genindex_href }}">Index</a></p>{% endif %}
       </div>
       <nav class="sidebar-nav">
         {% if nav_tree %}

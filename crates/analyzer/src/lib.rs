@@ -8,7 +8,7 @@ mod utils;
 
 pub use utils::normalize_path;
 
-use rusty_sphinx_ast::{Directive, Document, Node, TargetName};
+use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TargetName};
 use serde::{Deserialize, Serialize};
 
 use std::collections::BTreeMap;
@@ -34,6 +34,24 @@ pub enum TargetLocation {
     External(String), // URL
 }
 
+/// One entry in the site-wide general index (`genindex.html`), sourced
+/// either from a `.. index::` directive or automatically from a domain
+/// object definition.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GenIndexEntry {
+    /// The main, alphabetized term (e.g. `"execution"`, `"Greeter.greet (method)"`).
+    pub primary: String,
+    /// An optional nested sub-term (e.g. `"context"` in `single: execution; context`).
+    pub subentry: Option<String>,
+    /// Whether this occurrence should be emphasized as the entry's primary
+    /// definition (from a leading `!` in a `.. index::` entry).
+    pub main: bool,
+    /// The document this entry's anchor lives on.
+    pub doc_path: String,
+    /// The HTML anchor `id` on `doc_path` this entry links to.
+    pub anchor: String,
+}
+
 /// A global symbol table built from all documents in the project.
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ProjectIndex {
@@ -51,6 +69,11 @@ pub struct ProjectIndex {
     /// document path containing their `Directive::DomainObject` definition.
     #[serde(default)]
     pub domain_objects: BTreeMap<TargetName, String>,
+    /// Entries for the site-wide general index page, accumulated (not
+    /// deduplicated) across every document — the same term legitimately
+    /// appearing from multiple locations is expected, not an error.
+    #[serde(default)]
+    pub genindex_entries: Vec<GenIndexEntry>,
 }
 
 impl ProjectIndex {
@@ -62,6 +85,7 @@ impl ProjectIndex {
         self.targets.extend(other.targets);
         self.document_titles.extend(other.document_titles);
         self.domain_objects.extend(other.domain_objects);
+        self.genindex_entries.extend(other.genindex_entries);
         // nav_tree is built globally, not merged per-document
         let mut diagnostics = Vec::new();
         for (term, path) in other.glossary_terms {
@@ -132,11 +156,41 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, qualifi
                     }
                 }
             }
+            Node::Directive(Directive::Index { entries, id }) => {
+                for entry in entries {
+                    if let IndexEntry::Term {
+                        primary,
+                        subentry,
+                        main,
+                    } = entry
+                    {
+                        index.genindex_entries.push(GenIndexEntry {
+                            primary: primary.clone(),
+                            subentry: subentry.clone(),
+                            main: *main,
+                            doc_path: doc_path.to_string(),
+                            anchor: id.clone(),
+                        });
+                    }
+                    // IndexEntry::See/SeeAlso redirect rather than link to
+                    // content and are not surfaced in genindex_entries yet
+                    // (see spec_gaps.md).
+                }
+            }
             Node::Directive(Directive::DomainObject(obj)) => {
                 let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, &obj.name());
                 let key =
                     rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
-                index.domain_objects.insert(key, doc_path.to_string());
+                index
+                    .domain_objects
+                    .insert(key.clone(), doc_path.to_string());
+                index.genindex_entries.push(GenIndexEntry {
+                    primary: format!("{qualified_name} ({})", obj.object_type().as_str()),
+                    subentry: None,
+                    main: false,
+                    doc_path: doc_path.to_string(),
+                    anchor: key.as_str().to_string(),
+                });
                 let child_qualifier =
                     if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyClass { .. }) {
                         Some(qualified_name.as_str())
@@ -1563,6 +1617,236 @@ mod tests {
                 .domain_objects
                 .contains_key(&TargetName::new("py:function:greetings.greet"))
         );
+    }
+
+    // ── genindex analyzer tests ───────────────────────────────────────────────
+
+    #[test]
+    fn test_analyze_registers_genindex_entry_for_domain_object() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                    signature: "greet(name)".to_string(),
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.genindex_entries.len(), 1);
+        let entry = &index.genindex_entries[0];
+        assert_eq!(entry.primary, "greet (function)");
+        assert_eq!(entry.subentry, None);
+        assert!(!entry.main);
+        assert_eq!(entry.doc_path, "api.rst");
+        assert_eq!(entry.anchor, "py:function:greet");
+    }
+
+    #[test]
+    fn test_analyze_qualifies_genindex_entry_for_method_nested_in_class() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    signature: "Greeter".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                            signature: "greet(self, name)".to_string(),
+                            is_classmethod: false,
+                            is_staticmethod: false,
+                            is_abstractmethod: false,
+                            is_async: false,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — one entry for the class, one for the qualified method
+        assert_eq!(index.genindex_entries.len(), 2);
+        assert!(
+            index
+                .genindex_entries
+                .iter()
+                .any(|e| e.primary == "Greeter (class)")
+        );
+        assert!(
+            index
+                .genindex_entries
+                .iter()
+                .any(|e| e.primary == "Greeter.greet (method)")
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_genindex_entry_for_index_directive_single() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Directive(Directive::Index {
+                entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+                    primary: "execution".to_string(),
+                    subentry: None,
+                    main: false,
+                }],
+                id: "index-0".to_string(),
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.genindex_entries.len(), 1);
+        let entry = &index.genindex_entries[0];
+        assert_eq!(entry.primary, "execution");
+        assert_eq!(entry.doc_path, "guide.rst");
+        assert_eq!(entry.anchor, "index-0");
+    }
+
+    #[test]
+    fn test_analyze_registers_genindex_entry_with_subentry_and_main_flag() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Directive(Directive::Index {
+                entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+                    primary: "Python".to_string(),
+                    subentry: Some("interpreter".to_string()),
+                    main: true,
+                }],
+                id: "index-0".to_string(),
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        let entry = &index.genindex_entries[0];
+        assert_eq!(entry.subentry, Some("interpreter".to_string()));
+        assert!(entry.main);
+    }
+
+    #[test]
+    fn test_analyze_skips_see_and_seealso_index_entries() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Directive(Directive::Index {
+                entries: vec![
+                    rusty_sphinx_ast::IndexEntry::See {
+                        entry: "foo".to_string(),
+                        target: "bar".to_string(),
+                    },
+                    rusty_sphinx_ast::IndexEntry::SeeAlso {
+                        entry: "foo".to_string(),
+                        target: "bar".to_string(),
+                    },
+                ],
+                id: "index-0".to_string(),
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(index.genindex_entries.is_empty());
+    }
+
+    #[test]
+    fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_bullet_list() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::BulletList {
+                bullet: '-',
+                items: vec![rusty_sphinx_ast::BulletListItem {
+                    nodes: vec![Node::Directive(Directive::Index {
+                        entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+                            primary: "execution".to_string(),
+                            subentry: None,
+                            main: false,
+                        }],
+                        id: "index-0".to_string(),
+                    })],
+                }],
+            }],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.genindex_entries.len(), 1);
+    }
+
+    #[test]
+    fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_admonition() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Directive(Directive::Admonition {
+                kind: rusty_sphinx_ast::AdmonitionKind::Note,
+                title: None,
+                collapsible: None,
+                body: vec![Node::Directive(Directive::Index {
+                    entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+                        primary: "execution".to_string(),
+                        subentry: None,
+                        main: false,
+                    }],
+                    id: "index-0".to_string(),
+                })],
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.genindex_entries.len(), 1);
+    }
+
+    #[test]
+    fn test_merge_accumulates_genindex_entries_from_two_documents() {
+        // Given
+        let mut idx1 = ProjectIndex::default();
+        idx1.genindex_entries.push(GenIndexEntry {
+            primary: "foo".to_string(),
+            subentry: None,
+            main: false,
+            doc_path: "a.rst".to_string(),
+            anchor: "index-0".to_string(),
+        });
+
+        let mut idx2 = ProjectIndex::default();
+        idx2.genindex_entries.push(GenIndexEntry {
+            primary: "foo".to_string(),
+            subentry: None,
+            main: false,
+            doc_path: "b.rst".to_string(),
+            anchor: "index-0".to_string(),
+        });
+
+        // When
+        let diagnostics = idx1.merge(idx2);
+
+        // Then — both locations kept, no dedup/diagnostics
+        assert!(diagnostics.is_empty());
+        assert_eq!(idx1.genindex_entries.len(), 2);
     }
 
     #[test]
