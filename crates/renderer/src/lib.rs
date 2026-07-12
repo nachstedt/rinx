@@ -2,14 +2,17 @@
 
 pub mod config;
 mod directives;
+mod genindex;
 mod inline;
 mod nav;
 mod page;
 
-pub use page::{css_relative_path, render_page};
+pub use genindex::render_genindex;
+pub use page::{PageMeta, css_relative_path, render_page};
 
 use directives::{
-    render_admonition, render_domain_object, render_glossary, render_seealso, render_version_change,
+    render_admonition, render_domain_object, render_glossary, render_index_anchor, render_seealso,
+    render_version_change,
 };
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
@@ -289,6 +292,7 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         } => render_version_change(html, *kind, version, body, ctx),
         Directive::SeeAlso { body } => render_seealso(html, body, ctx),
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
+        Directive::Index { id, .. } => render_index_anchor(html, id),
         Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
         Directive::Unknown { .. } => {}
     }

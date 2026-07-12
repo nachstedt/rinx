@@ -280,6 +280,14 @@ pub(super) fn render_glossary(
     let _ = writeln!(html, "</dl>");
 }
 
+/// Renders a `.. index::` directive as a bare, invisible anchor at its
+/// document position — like `Node::Comment`, it produces no visible content;
+/// the genindex page links here via `id`.
+pub(super) fn render_index_anchor(html: &mut String, id: &str) {
+    let id_attr = html_escape::encode_double_quoted_attribute(id);
+    let _ = writeln!(html, "<span id=\"{id_attr}\"></span>");
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::RenderCtx;
@@ -632,6 +640,28 @@ mod tests {
 
         // Then
         assert!(result.contains("a &lt; b &amp;&amp; b &gt; c"));
+    }
+
+    #[test]
+    fn test_render_index_directive_produces_invisible_anchor() {
+        // Given
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Directive(Directive::Index {
+                entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+                    primary: "execution".to_string(),
+                    subentry: None,
+                    main: false,
+                }],
+                id: "index-0".to_string(),
+            })],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — a bare anchor, no other visible content
+        assert_eq!(result, "<span id=\"index-0\"></span>\n");
     }
 
     #[test]

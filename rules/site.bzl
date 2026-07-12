@@ -33,11 +33,32 @@ def _rusty_sphinx_site_impl(ctx):
         progress_message = "Indexing %s docs" % len(ast_list),
     )
 
-    # ── Phase 3: render ───────────────────────────────────────────────────────
     template_file = ctx.file.template
     config_file = ctx.file.config
     css_file = ctx.file.css
 
+    # ── Phase 2.5: genindex ──────────────────────────────────────────────────
+    # Always generated (matches Sphinx's on-by-default genindex.html), so the
+    # sidebar's "Index" link is never dangling. Only needs the project-wide
+    # index, not any per-doc .ast file.
+    genindex_out = ctx.actions.declare_file(ctx.label.name + "_site_out/genindex.html")
+    genindex_args = ctx.actions.args()
+    genindex_args.add("genindex")
+    genindex_args.add("--index", index_out.path)
+    genindex_args.add("--output", genindex_out.path)
+    genindex_args.add("--config", config_file.path)
+    genindex_args.add("--template", template_file.path)
+
+    ctx.actions.run(
+        executable = worker,
+        arguments = [genindex_args],
+        inputs = [index_out, template_file, config_file],
+        outputs = [genindex_out],
+        mnemonic = "RustySphinxGenIndex",
+        progress_message = "Generating genindex.html for %s" % ctx.label.name,
+    )
+
+    # ── Phase 3: render ───────────────────────────────────────────────────────
     html_files = []
     for ast_file in ast_list:
         doc_path = ast_file.short_path.removesuffix(".ast")
@@ -71,7 +92,7 @@ def _rusty_sphinx_site_impl(ctx):
         transitive = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps],
     ).to_list()
     
-    final_outputs = html_files
+    final_outputs = html_files + [genindex_out]
 
     if all_svg_dirs:
         images_out = ctx.actions.declare_directory(ctx.label.name + "_site_out/_images")

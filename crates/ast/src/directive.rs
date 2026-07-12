@@ -4,6 +4,7 @@ use crate::admonition_kind::AdmonitionKind;
 use crate::domain_object_body::DomainObjectBody;
 use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
+use crate::index_entry::IndexEntry;
 use crate::node::Node;
 use crate::version_change_kind::VersionChangeKind;
 
@@ -33,6 +34,15 @@ pub enum Directive {
         entries: Vec<GlossaryEntry>,
         sorted: bool,
     },
+    /// A `.. index::` directive. `id` is the anchor the genindex page links
+    /// back to — assigned by a post-parse pass (unique within this document
+    /// only, see `rusty_sphinx_parser`'s `assign_index_ids`), not at
+    /// construction time, since there's no content-derived identity for a
+    /// directive that marks a bare location.
+    Index {
+        entries: Vec<IndexEntry>,
+        id: String,
+    },
     DomainObject(DomainObjectBody),
     Unknown {
         name: String,
@@ -55,6 +65,26 @@ mod tests {
                 definition: vec![],
             }],
             sorted: true,
+        };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_index_directive_serialization_roundtrip() {
+        // Given
+        let directive = Directive::Index {
+            entries: vec![IndexEntry::Term {
+                primary: "foo".to_string(),
+                subentry: None,
+                main: false,
+            }],
+            id: "index-0".to_string(),
         };
 
         // When

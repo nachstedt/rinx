@@ -1,8 +1,9 @@
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
-use super::blocks::{collect_directive_body, join_body_lines};
+use super::blocks::{collect_directive_body, indent_width, join_body_lines};
 use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
 use super::headings::Adornment;
+use super::index_directive::parse_index_directive;
 use rusty_sphinx_ast::{Directive, Domain, Node, ObjectType};
 
 pub(super) fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
@@ -63,7 +64,7 @@ pub(super) fn try_parse_directive(
     let name = name_part.strip_prefix(".. ")?.trim().to_string();
     let argument = arg_part.trim().to_string();
 
-    let (consumed_lines, body_lines) = collect_directive_body(lines, i + 1);
+    let (consumed_lines, body_lines) = collect_directive_body(lines, i + 1, indent_width(line));
 
     if name == "toctree" {
         let directive = parse_toctree(&body_lines, diagnostics);
@@ -130,6 +131,10 @@ pub(super) fn try_parse_directive(
     }
     if name == "glossary" {
         let directive = parse_glossary(&body_lines, adornment_order, diagnostics, default_domain);
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
+    if name == "index" {
+        let directive = parse_index_directive(&argument, &body_lines, diagnostics);
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if let Some(object_type) = resolve_domain_object_type(&name, default_domain) {
@@ -315,6 +320,23 @@ mod tests {
                 content: "let x = 1;\n\nlet y = 2;".to_string(),
             }
         );
+    }
+
+    #[test]
+    fn test_parse_creates_index_directive() {
+        // Given
+        let input = ".. index:: single: execution\n\nNext Para";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        if let Node::Directive(Directive::Index { entries, .. }) = &doc.nodes[0] {
+            assert_eq!(entries.len(), 1);
+        } else {
+            panic!("Expected Index directive, got {:?}", doc.nodes[0]);
+        }
     }
 
     #[test]

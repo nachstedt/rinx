@@ -21,6 +21,7 @@ Welcome to the Rusty-Sphinx example.
    transitions
    typography
    tables
+   index_entries
    team_a/index
    team_b/index
 

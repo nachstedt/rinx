@@ -8,6 +8,8 @@ pub(crate) mod directives;
 pub(crate) mod domains;
 pub(crate) mod glossary;
 pub(crate) mod headings;
+pub(crate) mod index_directive;
+pub(crate) mod index_ids;
 pub(crate) mod inline;
 pub(crate) mod table;
 pub(crate) mod typography;
