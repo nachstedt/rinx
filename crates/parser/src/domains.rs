@@ -53,6 +53,13 @@ pub(super) fn parse_domain_object(
             diagnostics,
             default_domain,
         ),
+        ObjectType::Py(PyObjectType::Exception) => parse_py_exception(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
         ObjectType::Py(PyObjectType::Attribute) => parse_py_attribute(
             argument,
             body_lines,
@@ -185,6 +192,34 @@ fn parse_py_class(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyClass {
+        signature,
+        is_final,
+        body,
+    }
+}
+
+/// Parses a `.. py:exception::` body: strips a leading `:final:` flag line
+/// off the front before parsing the rest as the docstring body. Shares
+/// `extract_class_options` with `.. py:class::` since both directives have
+/// the same option set; only the object type (and thus the produced
+/// [`DomainObjectBody`] variant) differs.
+fn parse_py_exception(
+    signature: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (is_final, options_consumed) = extract_class_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::PyException {
         signature,
         is_final,
         body,
@@ -810,6 +845,118 @@ mod tests {
         } else {
             panic!("Expected PyClass, got {:?}", doc.nodes[0]);
         }
+    }
+
+    #[test]
+    fn test_parse_creates_py_exception_domain_object() {
+        // Given
+        let input = ".. py:exception:: GreeterError\n\n   Raised when greeting fails.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
+            signature,
+            is_final,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "GreeterError");
+            assert!(!is_final);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyException, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_exception_with_final_option_and_base_class_signature() {
+        // Given
+        let input = ".. py:exception:: InvalidNameError(GreeterError)\n   :final:\n\n   Raised for an invalid name.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
+            signature,
+            is_final,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "InvalidNameError(GreeterError)");
+            assert!(*is_final);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyException, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_exception_with_no_options_and_no_body() {
+        // Given
+        let input = ".. py:exception:: GreeterError";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
+            is_final,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(!is_final);
+            assert!(body.is_empty());
+        } else {
+            panic!("Expected PyException, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_exception_with_nested_py_method() {
+        // Given — a `py:method` nested inside a `py:exception` body, indented
+        // like any other nested directive.
+        let input = ".. py:exception:: GreeterError\n\n   Raised when greeting fails.\n\n   .. py:method:: reason(self)\n\n      Returns the failure reason.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(body.iter().any(|node| matches!(
+                node,
+                Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod { .. }))
+            )));
+        } else {
+            panic!("Expected PyException, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_exception_directive_resolves_via_default_domain() {
+        // Given
+        let input = ".. exception:: GreeterError\n\n   Raised when greeting fails.";
+
+        // When
+        let doc = crate::parse_with_domain("test.rst", input, Domain::Py);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert!(matches!(
+            &doc.nodes[0],
+            Node::Directive(Directive::DomainObject(
+                DomainObjectBody::PyException { .. }
+            ))
+        ));
     }
 
     #[test]

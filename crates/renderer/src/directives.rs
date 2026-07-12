@@ -133,7 +133,11 @@ pub(super) fn render_domain_object(
     let _ = writeln!(html, "<code class=\"sig-name\">{sig_escaped}</code></dt>");
     let _ = write!(html, "  <dd>");
     render_domain_object_options(html, obj);
-    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyClass { .. }) {
+    if matches!(
+        obj,
+        rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
+            | rusty_sphinx_ast::DomainObjectBody::PyException { .. }
+    ) {
         ctx.class_stack.push(qualified_name);
         super::render_nodes(html, obj.body(), ctx);
         ctx.class_stack.pop();
@@ -166,22 +170,32 @@ fn domain_object_prefix_labels(obj: &rusty_sphinx_ast::DomainObjectBody) -> Vec<
         .filter_map(|(active, label)| active.then_some(label))
         .collect(),
         rusty_sphinx_ast::DomainObjectBody::PyClass { is_final, .. } => {
-            let mut labels = Vec::new();
-            if *is_final {
-                labels.push("final");
-            }
-            labels.push("class");
-            labels
+            class_like_prefix_labels(*is_final, "class")
+        }
+        rusty_sphinx_ast::DomainObjectBody::PyException { is_final, .. } => {
+            class_like_prefix_labels(*is_final, "exception")
         }
         _ => Vec::new(),
     }
+}
+
+/// Shared prefix-label construction for `py:class`/`py:exception` — both
+/// objects have the same `is_final` option and only differ in the trailing
+/// label naming the object type (`"class"` vs `"exception"`).
+fn class_like_prefix_labels(is_final: bool, kind_label: &'static str) -> Vec<&'static str> {
+    let mut labels = Vec::new();
+    if is_final {
+        labels.push("final");
+    }
+    labels.push(kind_label);
+    labels
 }
 
 /// Renders a domain object's type-specific options (`py:module`'s
 /// `platform`/`synopsis`/`deprecated`, `py:data`'s `type`/`value`,
 /// `py:attribute`'s `type`/`value`/`canonical`) as leading `<dd>` paragraphs.
 /// Object types with no such options (`py:function`, `c:function`,
-/// `py:method`, `py:class`) render nothing here.
+/// `py:method`, `py:class`, `py:exception`) render nothing here.
 fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::DomainObjectBody) {
     match obj {
         rusty_sphinx_ast::DomainObjectBody::PyModule {
@@ -255,7 +269,8 @@ fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::Domai
         rusty_sphinx_ast::DomainObjectBody::PyFunction { .. }
         | rusty_sphinx_ast::DomainObjectBody::CFunction { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyMethod { .. }
-        | rusty_sphinx_ast::DomainObjectBody::PyClass { .. } => {}
+        | rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
+        | rusty_sphinx_ast::DomainObjectBody::PyException { .. } => {}
     }
 }
 
@@ -1087,6 +1102,121 @@ mod tests {
     }
 
     #[test]
+    fn test_render_formats_py_exception_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyException {
+                    signature: "greetererror".to_string(),
+                    is_final: false,
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Raised when greeting fails.".to_string(),
+                    )])],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"py exception\">"));
+        assert!(result.contains("<dt id=\"py:exception:greetererror\">"));
+        assert!(result.contains("<em class=\"property\">exception</em>"));
+        assert!(result.contains("<code class=\"sig-name\">greetererror</code>"));
+        assert!(!result.contains("final"));
+    }
+
+    #[test]
+    fn test_render_py_exception_final_prefix_precedes_exception_prefix() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyException {
+                    signature: "greetererror".to_string(),
+                    is_final: true,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        let final_pos = result.find("final").unwrap();
+        let exception_pos = result.find("exception</em>").unwrap();
+        assert!(final_pos < exception_pos);
+        assert!(result.contains("<em class=\"property\">final</em>"));
+    }
+
+    #[test]
+    fn test_render_qualifies_method_nested_in_exception_id() {
+        // Given — a `py:method` nested inside a `py:exception` body
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyException {
+                    signature: "greetererror".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                            signature: "reason(self)".to_string(),
+                            is_classmethod: false,
+                            is_staticmethod: false,
+                            is_abstractmethod: false,
+                            is_async: false,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — the nested method's id is qualified, matching the
+        // analyzer's index key exactly.
+        assert!(result.contains("<dt id=\"py:method:greetererror.reason\">"));
+        assert!(result.contains("<code class=\"sig-name\">reason(self)</code>"));
+    }
+
+    #[test]
+    fn test_render_does_not_double_qualify_already_qualified_nested_attribute() {
+        // Given — mirrors CPython's `Doc/library/exceptions.rst`, which
+        // nests `.. attribute:: StopIteration.value` (already fully
+        // qualified) inside `.. exception:: StopIteration`.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyException {
+                    signature: "StopIteration".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                            name: "StopIteration.value".to_string(),
+                            type_: None,
+                            value: None,
+                            canonical: None,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — not doubled to "py:attribute:stopiteration.stopiteration.value"
+        // (`TargetName` lowercases keys, same as every other domain object test).
+        assert!(result.contains("<dt id=\"py:attribute:stopiteration.value\">"));
+    }
+
+    #[test]
     fn test_render_class_stack_does_not_leak_across_sibling_classes() {
         // Given — two sibling classes, each with a method of the same name;
         // the second class's method must not inherit the first class's
@@ -1347,6 +1477,31 @@ mod tests {
     }
 
     #[test]
+    fn test_domain_object_prefix_labels_includes_final_before_exception_label() {
+        // Given
+        let obj = rusty_sphinx_ast::DomainObjectBody::PyException {
+            signature: "GreeterError".to_string(),
+            is_final: true,
+            body: vec![],
+        };
+
+        // When
+        let labels = domain_object_prefix_labels(&obj);
+
+        // Then
+        assert_eq!(labels, vec!["final", "exception"]);
+    }
+
+    #[test]
+    fn test_class_like_prefix_labels_omits_final_when_not_set() {
+        // Given / When
+        let labels = class_like_prefix_labels(false, "exception");
+
+        // Then
+        assert_eq!(labels, vec!["exception"]);
+    }
+
+    #[test]
     fn test_domain_object_prefix_labels_is_empty_for_object_types_without_flags() {
         // Given
         let obj = rusty_sphinx_ast::DomainObjectBody::PyFunction {
@@ -1366,6 +1521,23 @@ mod tests {
         // Given
         let obj = rusty_sphinx_ast::DomainObjectBody::PyFunction {
             signature: "greet(name)".to_string(),
+            body: vec![],
+        };
+        let mut html = String::new();
+
+        // When
+        render_domain_object_options(&mut html, &obj);
+
+        // Then
+        assert!(html.is_empty());
+    }
+
+    #[test]
+    fn test_render_domain_object_options_renders_nothing_for_py_exception() {
+        // Given
+        let obj = rusty_sphinx_ast::DomainObjectBody::PyException {
+            signature: "GreeterError".to_string(),
+            is_final: false,
             body: vec![],
         };
         let mut html = String::new();

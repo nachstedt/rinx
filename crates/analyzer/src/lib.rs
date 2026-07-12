@@ -131,12 +131,14 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// cross-references to resolve, exactly like it's still rendered with a
 /// working anchor.
 ///
-/// `qualifier` is the enclosing `py:class`'s own qualified name, if any —
-/// `None` at the document's top level, or when nested inside anything other
-/// than a `py:class` (e.g. a `py:function` nested in a `py:module`'s body is
-/// deliberately *not* qualified by the module's name; only `py:class`
-/// bodies introduce a qualifying scope for their descendants, matching real
-/// Sphinx and preserving pre-existing module-nesting behavior).
+/// `qualifier` is the enclosing `py:class`/`py:exception`'s own qualified
+/// name, if any — `None` at the document's top level, or when nested inside
+/// anything other than a `py:class`/`py:exception` (e.g. a `py:function`
+/// nested in a `py:module`'s body is deliberately *not* qualified by the
+/// module's name; only `py:class`/`py:exception` bodies introduce a
+/// qualifying scope for their descendants, matching real Sphinx and
+/// preserving pre-existing module-nesting behavior — exceptions are classes
+/// in Python, so they get the same nesting treatment).
 fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, qualifier: Option<&str>) {
     for node in nodes {
         match node {
@@ -191,12 +193,15 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, qualifi
                     doc_path: doc_path.to_string(),
                     anchor: key.as_str().to_string(),
                 });
-                let child_qualifier =
-                    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyClass { .. }) {
-                        Some(qualified_name.as_str())
-                    } else {
-                        qualifier
-                    };
+                let child_qualifier = if matches!(
+                    obj,
+                    rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
+                        | rusty_sphinx_ast::DomainObjectBody::PyException { .. }
+                ) {
+                    Some(qualified_name.as_str())
+                } else {
+                    qualifier
+                };
                 index_nodes(obj.body(), doc_path, index, child_qualifier);
             }
             Node::Directive(
@@ -1188,6 +1193,33 @@ mod tests {
     }
 
     #[test]
+    fn test_analyze_registers_exception_domain_object() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyException {
+                    signature: "GreeterError".to_string(),
+                    is_final: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.domain_objects.len(), 1);
+        assert_eq!(
+            index
+                .domain_objects
+                .get(&TargetName::new("py:exception:GreeterError")),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
     fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
         // Given — same object name "add" declared under both py and c domains
         let doc = Document::new(
@@ -1500,6 +1532,90 @@ mod tests {
             index
                 .domain_objects
                 .contains_key(&TargetName::new("py:method:Greeter.greet"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_qualifies_method_nested_in_exception() {
+        // Given — a `py:method` nested inside a `py:exception` body, exactly
+        // like the `py:class` nesting case, since exceptions are classes.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyException {
+                    signature: "GreeterError".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                            signature: "reason(self)".to_string(),
+                            is_classmethod: false,
+                            is_staticmethod: false,
+                            is_abstractmethod: false,
+                            is_async: false,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — both the exception and its qualified method are indexed
+        assert_eq!(index.domain_objects.len(), 2);
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:exception:GreeterError"))
+        );
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:method:GreeterError.reason"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_does_not_double_qualify_already_qualified_nested_attribute() {
+        // Given — mirrors CPython's `Doc/library/exceptions.rst`, which
+        // nests `.. attribute:: StopIteration.value` (already fully
+        // qualified) inside `.. exception:: StopIteration`, rather than
+        // writing the bare name `value`.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::PyException {
+                    signature: "StopIteration".to_string(),
+                    is_final: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                            name: "StopIteration.value".to_string(),
+                            type_: None,
+                            value: None,
+                            canonical: None,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — the attribute is indexed under its own already-qualified
+        // name, not doubled to "StopIteration.StopIteration.value"
+        assert_eq!(index.domain_objects.len(), 2);
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:exception:StopIteration"))
+        );
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:attribute:StopIteration.value"))
         );
     }
 

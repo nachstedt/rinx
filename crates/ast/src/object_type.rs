@@ -60,6 +60,7 @@ impl ObjectType {
             (Domain::Py, "meth") => Some(Self::Py(PyObjectType::Method)),
             (Domain::Py, "class") => Some(Self::Py(PyObjectType::Class)),
             (Domain::Py, "attr") => Some(Self::Py(PyObjectType::Attribute)),
+            (Domain::Py, "exc") => Some(Self::Py(PyObjectType::Exception)),
             (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
             _ => None,
         }
@@ -198,6 +199,29 @@ mod tests {
             Some(ObjectType::Py(PyObjectType::Class))
         );
         assert_eq!(ObjectType::from_role_name(Domain::C, "class"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_directive_name_resolves_exception_for_py() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_directive_name(Domain::Py, "exception"),
+            Some(ObjectType::Py(PyObjectType::Exception))
+        );
+        assert_eq!(
+            ObjectType::from_directive_name(Domain::C, "exception"),
+            None
+        );
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_exc_only_for_py() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Py, "exc"),
+            Some(ObjectType::Py(PyObjectType::Exception))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::C, "exc"), None);
     }
 
     #[test]

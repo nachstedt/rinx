@@ -5,7 +5,7 @@ Rusty-Sphinx supports Sphinx-style domains for namespacing directives and
 cross-reference roles by language, mirroring real Sphinx. This page uses
 ``py`` and ``c`` as the first two domains: ``c`` has a ``function`` object
 type, and ``py`` additionally has ``module``, ``data``, ``method``,
-``class``, and ``attribute`` object types.
+``class``, ``attribute``, and ``exception`` object types.
 
 Python Domain
 -------------
@@ -104,6 +104,30 @@ when cross-referenced, exactly like real Sphinx.
       is indexed and cross-referenced as ``ImmutableGreeter.Options``, and
       anything nested inside *it* would be qualified two levels deep.
 
+Custom Exceptions
+""""""""""""""""""
+
+``py:exception`` shares ``py:class``'s signature grammar and ``:final:``
+option, and — since exceptions are classes in Python — the same
+nesting-based cross-reference qualification for any domain object
+documented inside its body.
+
+.. py:exception:: GreeterError
+
+   The base error raised when greeting fails.
+
+.. py:exception:: InvalidNameError(GreeterError)
+   :final:
+
+   A ``:final:`` exception class, rendered with a ``final`` prefix label
+   before ``exception``, exactly like ``py:class``'s ``:final:`` label.
+
+   .. py:method:: reason(self)
+
+      Returns why the name was rejected. Nesting it inside
+      ``InvalidNameError`` qualifies its cross-reference name to
+      ``InvalidNameError.reason``, exactly like a method nested in a class.
+
 The :py:mod:`greetings` Module
 """"""""""""""""""""""""""""""
 
@@ -186,3 +210,13 @@ The :py:attr:`Greeter.name` attribute (or, using the bare role,
 above — qualification applies to nested attributes exactly as it does to
 nested methods. Using the ``~`` prefix, :py:attr:`~Greeter.name` links to
 the same target but displays only ``name``.
+
+Raising a :py:exc:`GreeterError` (or, using the bare role,
+:exc:`GreeterError`) signals a greeting failure; :py:exc:`InvalidNameError`
+is its ``:final:`` subclass. The nested method
+:py:meth:`InvalidNameError.reason` resolves too, proving ``py:exception``
+bodies qualify nested domain objects exactly like ``py:class`` bodies do. As
+with the other roles above, ``!``/``~`` prefixes work the same way —
+:py:exc:`!NotARealError` renders as plain text with no warning, and
+:py:meth:`~InvalidNameError.reason` links to ``InvalidNameError.reason``
+but displays only ``reason``.
