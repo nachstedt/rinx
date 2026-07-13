@@ -157,6 +157,10 @@ pub enum DomainObjectBody {
         signature: String,
         body: Vec<Node>,
     },
+    CMacro {
+        signature: String,
+        body: Vec<Node>,
+    },
     PyMethod {
         signature: String,
         is_classmethod: bool,
@@ -187,6 +191,7 @@ impl DomainObjectBody {
             Self::PyData { .. } => ObjectType::Py(PyObjectType::Data),
             Self::PyAttribute { .. } => ObjectType::Py(PyObjectType::Attribute),
             Self::CFunction { .. } => ObjectType::C(CObjectType::Function),
+            Self::CMacro { .. } => ObjectType::C(CObjectType::Macro),
             Self::PyMethod { .. } => ObjectType::Py(PyObjectType::Method),
             Self::PyClass { .. } => ObjectType::Py(PyObjectType::Class),
             Self::PyException { .. } => ObjectType::Py(PyObjectType::Exception),
@@ -203,7 +208,9 @@ impl DomainObjectBody {
             | Self::PyMethod { signature, .. }
             | Self::PyClass { signature, .. }
             | Self::PyException { signature, .. } => extract_python_object_name(signature),
-            Self::CFunction { signature, .. } => extract_c_object_name(signature),
+            Self::CFunction { signature, .. } | Self::CMacro { signature, .. } => {
+                extract_c_object_name(signature)
+            }
             Self::PyModule { name, .. }
             | Self::PyData { name, .. }
             | Self::PyAttribute { name, .. } => name.clone(),
@@ -217,6 +224,7 @@ impl DomainObjectBody {
         match self {
             Self::PyFunction { signature, .. }
             | Self::CFunction { signature, .. }
+            | Self::CMacro { signature, .. }
             | Self::PyMethod { signature, .. }
             | Self::PyClass { signature, .. }
             | Self::PyException { signature, .. } => signature,
@@ -235,6 +243,7 @@ impl DomainObjectBody {
             | Self::PyData { body, .. }
             | Self::PyAttribute { body, .. }
             | Self::CFunction { body, .. }
+            | Self::CMacro { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
             | Self::PyException { body, .. } => body,
@@ -251,6 +260,7 @@ impl DomainObjectBody {
             | Self::PyData { body, .. }
             | Self::PyAttribute { body, .. }
             | Self::CFunction { body, .. }
+            | Self::CMacro { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
             | Self::PyException { body, .. } => body,
@@ -417,6 +427,30 @@ mod tests {
 
         // Then
         assert_eq!(name, "PyUnicode_FromString");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_bare_macro_name() {
+        // Given — object-like macros have no parens and no return type
+        let signature = "PY_SSIZE_T_MAX";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "PY_SSIZE_T_MAX");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_function_like_macro() {
+        // Given — function-like macros have no return type to strip
+        let signature = "MAX(a, b)";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "MAX");
     }
 
     #[test]
@@ -630,6 +664,14 @@ mod tests {
             ObjectType::C(CObjectType::Function)
         );
         assert_eq!(
+            DomainObjectBody::CMacro {
+                signature: "MAX(a, b)".to_string(),
+                body: vec![],
+            }
+            .object_type(),
+            ObjectType::C(CObjectType::Macro)
+        );
+        assert_eq!(
             DomainObjectBody::PyMethod {
                 signature: "greet(self, name)".to_string(),
                 is_classmethod: false,
@@ -671,6 +713,30 @@ mod tests {
 
         // When / Then
         assert_eq!(function.name(), "greet");
+    }
+
+    #[test]
+    fn test_domain_object_body_name_extracts_from_signature_for_macros() {
+        // Given
+        let macro_ = DomainObjectBody::CMacro {
+            signature: "MAX(a, b)".to_string(),
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(macro_.name(), "MAX");
+    }
+
+    #[test]
+    fn test_domain_object_body_name_uses_bare_signature_for_object_like_macros() {
+        // Given
+        let macro_ = DomainObjectBody::CMacro {
+            signature: "PY_SSIZE_T_MAX".to_string(),
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(macro_.name(), "PY_SSIZE_T_MAX");
     }
 
     #[test]
@@ -840,6 +906,18 @@ mod tests {
     }
 
     #[test]
+    fn test_domain_object_body_signature_text_shows_full_signature_for_macros() {
+        // Given
+        let macro_ = DomainObjectBody::CMacro {
+            signature: "MAX(a, b)".to_string(),
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(macro_.signature_text(), "MAX(a, b)");
+    }
+
+    #[test]
     fn test_domain_object_body_signature_text_shows_bare_name_for_modules() {
         // Given
         let module = DomainObjectBody::PyModule {
@@ -915,6 +993,10 @@ mod tests {
             signature: "int add(int a, int b)".to_string(),
             body: vec![paragraph.clone()],
         };
+        let c_macro = DomainObjectBody::CMacro {
+            signature: "MAX(a, b)".to_string(),
+            body: vec![paragraph.clone()],
+        };
         let method = DomainObjectBody::PyMethod {
             signature: "greet(self, name)".to_string(),
             is_classmethod: false,
@@ -940,6 +1022,7 @@ mod tests {
         assert_eq!(data.body(), std::slice::from_ref(&paragraph));
         assert_eq!(attribute.body(), std::slice::from_ref(&paragraph));
         assert_eq!(c_function.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(c_macro.body(), std::slice::from_ref(&paragraph));
         assert_eq!(method.body(), std::slice::from_ref(&paragraph));
         assert_eq!(class.body(), std::slice::from_ref(&paragraph));
         assert_eq!(exception.body(), std::slice::from_ref(&paragraph));

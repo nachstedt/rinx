@@ -182,6 +182,17 @@ C Domain
    qualifies objects in other domains, even when documented afterward in
    the same file.
 
+.. c:macro:: PY_SSIZE_T_MAX
+
+   The maximum value of a ``Py_ssize_t``. An object-like macro: no
+   parentheses, so no signature to parse beyond the bare name.
+
+.. c:macro:: MAX(a, b)
+
+   Expands to whichever of *a* or *b* is greater. A function-like macro:
+   unlike ``c:function``, there is no return type or parameter types to
+   strip from the signature.
+
 Cross-References
 -----------------
 
@@ -193,6 +204,10 @@ of them.
 
 See also Team A's :c:func:`subtract`, defined in a library whose
 ``default_domain`` is set to ``c``.
+
+The :c:macro:`PY_SSIZE_T_MAX` macro and the :c:macro:`MAX` function-like
+macro are both defined above. Like ``:c:func:``, ``:c:macro:`` is C-only —
+there is no ``py:macro`` equivalent.
 
 The :py:data:`DEFAULT_TIMEOUT` data item has no equivalent ``py:const``
 directive in real Sphinx — instead, :py:const:`DEFAULT_TIMEOUT` is simply

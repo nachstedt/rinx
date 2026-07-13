@@ -202,7 +202,7 @@ fn class_like_prefix_labels(is_final: bool, kind_label: &'static str) -> Vec<&'s
 /// `platform`/`synopsis`/`deprecated`, `py:data`'s `type`/`value`,
 /// `py:attribute`'s `type`/`value`/`canonical`) as leading `<dd>` paragraphs.
 /// Object types with no such options (`py:function`, `c:function`,
-/// `py:method`, `py:class`, `py:exception`) render nothing here.
+/// `c:macro`, `py:method`, `py:class`, `py:exception`) render nothing here.
 fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::DomainObjectBody) {
     match obj {
         rusty_sphinx_ast::DomainObjectBody::PyModule {
@@ -275,6 +275,7 @@ fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::Domai
         }
         rusty_sphinx_ast::DomainObjectBody::PyFunction { .. }
         | rusty_sphinx_ast::DomainObjectBody::CFunction { .. }
+        | rusty_sphinx_ast::DomainObjectBody::CMacro { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyMethod { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyException { .. } => {}
@@ -877,6 +878,30 @@ mod tests {
         assert!(result.contains("<dl class=\"c function\">"));
         assert!(result.contains("<dt id=\"c:function:add\">"));
         assert!(result.contains("<code class=\"sig-name\">int add(int a, int b)</code>"));
+    }
+
+    #[test]
+    fn test_render_formats_c_macro_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CMacro {
+                    signature: "MAX(a, b)".to_string(),
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Expands to whichever of a or b is greater.".to_string(),
+                    )])],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"c macro\">"));
+        assert!(result.contains("<dt id=\"c:macro:max\">"));
+        assert!(result.contains("<code class=\"sig-name\">MAX(a, b)</code>"));
     }
 
     #[test]

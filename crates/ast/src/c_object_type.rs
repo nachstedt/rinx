@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "lowercase")]
 pub enum CObjectType {
     Function,
+    Macro,
 }
 
 impl CObjectType {
@@ -12,6 +13,7 @@ impl CObjectType {
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Function => "function",
+            Self::Macro => "macro",
         }
     }
 }
@@ -22,6 +24,7 @@ impl std::str::FromStr for CObjectType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "function" => Ok(Self::Function),
+            "macro" => Ok(Self::Macro),
             _ => Err(()),
         }
     }
@@ -47,5 +50,17 @@ mod tests {
 
         // Then
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_c_object_type_from_str_accepts_macro() {
+        // Given / When / Then
+        assert_eq!("macro".parse::<CObjectType>(), Ok(CObjectType::Macro));
+    }
+
+    #[test]
+    fn test_c_object_type_as_str_returns_macro() {
+        // Given / When / Then
+        assert_eq!(CObjectType::Macro.as_str(), "macro");
     }
 }
