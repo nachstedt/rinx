@@ -6,21 +6,44 @@ use crate::object_type::ObjectType;
 use crate::py_object_type::PyObjectType;
 use crate::target_name::TargetName;
 
-/// Extracts the referenceable name from a domain object signature.
+/// Extracts the referenceable name from a `py:*` domain object signature.
 ///
 /// Takes the text before the first `(` (or the whole string if there is
 /// none), then its last whitespace-separated token — e.g. `"foo(bar)"` ->
-/// `"foo"`, `"int foo(int bar)"` -> `"foo"`. A pointer return type like
-/// `"char *foo(void)"` naively yields `"*foo"`, since real C declarator
-/// parsing is out of scope (tracked in `spec_gaps.md`).
+/// `"foo"`. This also strips an optional base-class list for free, e.g.
+/// `"Greeter(Base)"` -> `"Greeter"`. Python-specific: identifiers never
+/// start with a pointer sigil, so unlike the C extractor below, there is
+/// nothing to strip from the extracted token.
 #[must_use]
-pub fn extract_object_name(signature: &str) -> String {
+pub fn extract_python_object_name(signature: &str) -> String {
     let before_parens = signature.split('(').next().unwrap_or(signature).trim();
     before_parens
         .split_whitespace()
         .next_back()
         .unwrap_or(before_parens)
         .to_string()
+}
+
+/// Extracts the referenceable name from a `c:*` domain object signature,
+/// e.g. `"int foo(int bar)"` -> `"foo"`.
+///
+/// Like [`extract_python_object_name`], takes the text before the first `(`
+/// and its last whitespace-separated token, but also strips a
+/// pointer-return-type sigil (`*`, `**`, ...) that ends up glued to the
+/// front of the name when the author writes `Type *name(...)` rather than
+/// `Type* name(...)` — e.g. `CPython`'s
+/// `"PyObject *PyUnicode_FromString(const char *str)"` ->
+/// `"PyUnicode_FromString"`. Still not real C declarator parsing: array
+/// declarators, function-pointer declarators, etc. are out of scope
+/// (tracked in `spec_gaps.md`).
+#[must_use]
+pub fn extract_c_object_name(signature: &str) -> String {
+    let before_parens = signature.split('(').next().unwrap_or(signature).trim();
+    let last_token = before_parens
+        .split_whitespace()
+        .next_back()
+        .unwrap_or(before_parens);
+    last_token.trim_start_matches('*').to_string()
 }
 
 /// Builds the qualified [`TargetName`] key shared by domain object
@@ -148,10 +171,10 @@ impl DomainObjectBody {
     pub fn name(&self) -> String {
         match self {
             Self::PyFunction { signature, .. }
-            | Self::CFunction { signature, .. }
             | Self::PyMethod { signature, .. }
             | Self::PyClass { signature, .. }
-            | Self::PyException { signature, .. } => extract_object_name(signature),
+            | Self::PyException { signature, .. } => extract_python_object_name(signature),
+            Self::CFunction { signature, .. } => extract_c_object_name(signature),
             Self::PyModule { name, .. }
             | Self::PyData { name, .. }
             | Self::PyAttribute { name, .. } => name.clone(),
@@ -212,87 +235,159 @@ mod tests {
     use crate::inline_node::InlineNode;
 
     #[test]
-    fn test_extract_object_name_simple_call() {
+    fn test_extract_python_object_name_simple_call() {
         // Given
         let signature = "foo(bar)";
 
         // When
-        let name = extract_object_name(signature);
+        let name = extract_python_object_name(signature);
 
         // Then
         assert_eq!(name, "foo");
     }
 
     #[test]
-    fn test_extract_object_name_no_parens() {
+    fn test_extract_python_object_name_no_parens() {
         // Given
         let signature = "foo";
 
         // When
-        let name = extract_object_name(signature);
+        let name = extract_python_object_name(signature);
 
         // Then
         assert_eq!(name, "foo");
     }
 
     #[test]
-    fn test_extract_object_name_no_args() {
+    fn test_extract_python_object_name_no_args() {
         // Given
         let signature = "foo()";
 
         // When
-        let name = extract_object_name(signature);
+        let name = extract_python_object_name(signature);
 
         // Then
         assert_eq!(name, "foo");
     }
 
     #[test]
-    fn test_extract_object_name_c_style_return_type_prefix() {
-        // Given
-        let signature = "int foo(int bar)";
-
-        // When
-        let name = extract_object_name(signature);
-
-        // Then
-        assert_eq!(name, "foo");
-    }
-
-    #[test]
-    fn test_extract_object_name_extra_whitespace() {
+    fn test_extract_python_object_name_extra_whitespace() {
         // Given
         let signature = "  foo   (bar)";
 
         // When
-        let name = extract_object_name(signature);
+        let name = extract_python_object_name(signature);
 
         // Then
         assert_eq!(name, "foo");
     }
 
     #[test]
-    fn test_extract_object_name_empty_string() {
+    fn test_extract_python_object_name_empty_string() {
         // Given
         let signature = "";
 
         // When
-        let name = extract_object_name(signature);
+        let name = extract_python_object_name(signature);
 
         // Then
         assert_eq!(name, "");
     }
 
     #[test]
-    fn test_extract_object_name_pointer_return_type_is_naive() {
-        // Given — documented limitation: no real C declarator parsing
+    fn test_extract_c_object_name_simple_call() {
+        // Given
+        let signature = "foo(bar)";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_no_parens() {
+        // Given
+        let signature = "foo";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_empty_string() {
+        // Given
+        let signature = "";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_return_type_prefix() {
+        // Given
+        let signature = "int foo(int bar)";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_strips_pointer_sigil_glued_to_name() {
+        // Given
         let signature = "char *foo(void)";
 
         // When
-        let name = extract_object_name(signature);
+        let name = extract_c_object_name(signature);
 
         // Then
-        assert_eq!(name, "*foo");
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_strips_double_pointer_sigil() {
+        // Given
+        let signature = "int **foo(void)";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "foo");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_unaffected_when_sigil_glued_to_type() {
+        // Given
+        let signature = "PyObject* PyUnicode_FromStringAndSize(const char *str, Py_ssize_t size)";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "PyUnicode_FromStringAndSize");
+    }
+
+    #[test]
+    fn test_extract_c_object_name_matches_cpython_unicode_fromstring() {
+        // Given — the real-world signature that surfaced the broken-link bug
+        let signature = "PyObject *PyUnicode_FromString(const char *str)";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then
+        assert_eq!(name, "PyUnicode_FromString");
     }
 
     #[test]
