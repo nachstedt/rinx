@@ -78,6 +78,12 @@ pub(crate) struct RenderCtx<'a> {
     /// so a nested object's anchor `id` matches the same qualified key the
     /// analyzer indexed it under.
     pub class_stack: Vec<String>,
+    /// The most recently rendered `py:module`'s own name, updated in
+    /// document order (not popped on leaving a nested body) exactly like
+    /// `index_nodes`'s `current_module` in the analyzer, so a domain object
+    /// documented as a sibling after a `py:module` gets the same anchor `id`
+    /// the analyzer indexed it under.
+    pub current_module: Option<String>,
 }
 
 /// Renders a Document into HTML, reporting any cross-references that failed to resolve.
@@ -99,6 +105,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         original_doc_path: &doc.path,
         broken_links: &mut broken_links,
         class_stack: Vec::new(),
+        current_module: None,
     };
 
     render_nodes(&mut html, &doc.nodes, &mut ctx);

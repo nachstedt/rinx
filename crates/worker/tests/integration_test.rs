@@ -111,3 +111,43 @@ Text 4.
     let result = process_rst("test.rst", input);
     assert_eq!(result, expected_html);
 }
+
+#[test]
+fn test_e2e_module_qualifies_sibling_function_for_cross_reference() {
+    // Given — the real-world CPython shape that surfaced the
+    // "broken domain object 'types.coroutine'" warning: `py:module` and the
+    // `py:function` it documents are written as siblings (not nested), and
+    // a reference elsewhere in the document uses the fully qualified name.
+    let input = "\
+.. py:module:: types
+
+.. py:function:: coroutine(gen_func)
+
+   Converts a generator function into a coroutine function.
+
+See :py:func:`types.coroutine` for details.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then — no broken domain object reference, and the function's own
+    // signature is still rendered unqualified.
+    assert!(
+        output.broken_links.is_empty(),
+        "expected no broken links, got {:?}",
+        output.broken_links
+    );
+    assert!(
+        output
+            .html
+            .contains("<dt id=\"py:function:types.coroutine\">")
+    );
+    assert!(
+        output
+            .html
+            .contains("<code class=\"sig-name\">coroutine(gen_func)</code>")
+    );
+    assert!(output.html.contains("#py:function:types.coroutine\""));
+}

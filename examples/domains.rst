@@ -20,17 +20,6 @@ Python Domain
    prefix — this library's default domain is ``py`` (the default), so this
    resolves to ``py:function``.
 
-.. py:module:: greetings
-   :platform: Unix, Windows
-   :synopsis: Greeting utilities.
-   :deprecated:
-
-   A module holding the ``greet`` and ``farewell`` functions.
-
-.. py:function:: greetings.shout(name)
-
-   Greets the given name loudly.
-
 .. py:data:: DEFAULT_TIMEOUT
    :type: int
    :value: 30
@@ -39,7 +28,7 @@ Python Domain
    long to respond.
 
 The ``Greeter`` Class
-"""""""""""""""""""""
+""""""""""""""""""""""
 
 Nesting a ``py:method`` (or any domain object) directive inside a
 ``py:class`` body automatically qualifies its cross-reference name with the
@@ -128,14 +117,6 @@ documented inside its body.
       ``InvalidNameError`` qualifies its cross-reference name to
       ``InvalidNameError.reason``, exactly like a method nested in a class.
 
-The :py:mod:`greetings` Module
-""""""""""""""""""""""""""""""
-
-This heading's title itself contains a cross-reference role, proving that
-inline markup and domain-object roles resolve inside headings, not just in
-paragraph text — the heading text above renders as a working link to the
-module definition, not literal ``:py:mod:`greetings``` text.
-
 ``py:data`` Definitions Inside a Table
 """"""""""""""""""""""""""""""""""""""
 
@@ -155,6 +136,34 @@ just rendered:
 |    Bold greeting attribute.                     |
 +-------------------------------------------------+
 
+The :py:mod:`greetings` Module
+""""""""""""""""""""""""""""""
+
+This heading's title itself contains a cross-reference role, proving that
+inline markup and domain-object roles resolve inside headings, not just in
+paragraph text — the heading text above renders as a working link to the
+module definition, not literal ``:py:mod:`greetings``` text.
+
+.. py:module:: greetings
+   :platform: Unix, Windows
+   :synopsis: Greeting utilities.
+   :deprecated:
+
+   A module holding the ``greet`` and ``farewell`` functions.
+
+.. py:function:: shout(name)
+
+   Greets the given name loudly. Written unqualified — a domain object
+   documented as a sibling *after* a ``py:module`` directive (real Sphinx
+   docs never nest them; ``py:module`` has no indented content of its own)
+   is automatically qualified with that module's name for cross-referencing,
+   so this resolves as ``greetings.shout`` without writing the prefix by
+   hand, exactly like real Sphinx. This is also why the ``greetings``
+   module is documented last among this page's ``py`` domain objects —
+   real Sphinx's module context is sequential and stays in effect for the
+   rest of the document until changed, so anything documented after a
+   ``py:module`` directive is implicitly considered part of it.
+
 C Domain
 --------
 
@@ -167,7 +176,11 @@ C Domain
    Returns a newly-allocated greeting string for *name*. Demonstrates a
    pointer-return-type signature (the return type's ``*`` glued to the
    function name, as real-world C API docs like CPython's
-   ``PyUnicode_FromString`` commonly write it).
+   ``PyUnicode_FromString`` commonly write it). ``c:function`` is
+   unaffected by ``py:module``'s current-module tracking above — module
+   context is a ``py``-domain-only concept in real Sphinx, so it never
+   qualifies objects in other domains, even when documented afterward in
+   the same file.
 
 Cross-References
 -----------------
