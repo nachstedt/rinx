@@ -759,6 +759,72 @@ mod tests {
     }
 
     #[test]
+    fn test_render_inline_domain_object_reference_resolved_c_macro() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.domain_objects.insert(
+            rusty_sphinx_ast::build_domain_object_key(
+                ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                "MAX",
+            ),
+            "api.rst".to_string(),
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                name: "MAX",
+                display: "MAX",
+                link: true,
+            },
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
+
+        // Then
+        assert!(html.contains("href=\"api.html#c:macro:max\""));
+        assert!(html.contains("class=\"xref c macro docutils literal\""));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_broken_link_for_c_macro() {
+        // Given
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                name: "MISSING",
+                display: "MISSING",
+                link: true,
+            },
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
+
+        // Then
+        assert!(html.contains("class=\"broken-link\""));
+        assert!(html.contains(">MISSING<"));
+        assert_eq!(
+            broken_links,
+            vec![BrokenLink {
+                kind: BrokenLinkKind::DomainObjectReference,
+                target: "MISSING".to_string(),
+            }]
+        );
+    }
+
+    #[test]
     fn test_render_inline_domain_object_reference_resolved_py_module() {
         // Given
         let mut index = ProjectIndex::default();

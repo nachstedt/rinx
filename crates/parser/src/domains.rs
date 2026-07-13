@@ -25,6 +25,10 @@ pub(super) fn parse_domain_object(
             signature: argument,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
+        ObjectType::C(CObjectType::Macro) => DomainObjectBody::CMacro {
+            signature: argument,
+            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+        },
         ObjectType::Py(PyObjectType::Module) => parse_py_module(
             argument,
             body_lines,
@@ -1403,6 +1407,65 @@ mod tests {
         } else {
             panic!("Expected CFunction, got {:?}", doc.nodes[0]);
         }
+    }
+
+    #[test]
+    fn test_parse_creates_c_macro_domain_object_bare_name() {
+        // Given — an object-like macro, with no parens
+        let input = ".. c:macro:: PY_SSIZE_T_MAX\n\n   The maximum value of a Py_ssize_t.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
+            signature,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "PY_SSIZE_T_MAX");
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected CMacro, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_c_macro_domain_object_function_like() {
+        // Given — a function-like macro, with no return type or param types
+        let input = ".. c:macro:: MAX(a, b)\n\n   Expands to whichever of a or b is greater.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
+            signature,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "MAX(a, b)");
+        } else {
+            panic!("Expected CMacro, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_bare_macro_directive_resolves_via_default_domain() {
+        // Given
+        let input = ".. macro:: MAX(a, b)\n\n   Expands to whichever of a or b is greater.";
+
+        // When
+        let doc = crate::parse_with_domain("test.rst", input, Domain::C);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert!(matches!(
+            &doc.nodes[0],
+            Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro { .. }))
+        ));
     }
 
     #[test]

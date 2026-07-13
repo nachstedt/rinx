@@ -24,6 +24,8 @@ static ATTR_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?attr:`(?P<name>[^`]+)`").unwrap());
 static EXC_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?exc:`(?P<name>[^`]+)`").unwrap());
+static MACRO_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?macro:`(?P<name>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -56,6 +58,7 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         let class_match = CLASS_ROLE_REGEX.find(remaining);
         let attr_match = ATTR_ROLE_REGEX.find(remaining);
         let exc_match = EXC_ROLE_REGEX.find(remaining);
+        let macro_match = MACRO_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -92,6 +95,9 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         }
         if let Some(m) = exc_match {
             all_matches.push((m.start(), m.end(), "exc", None));
+        }
+        if let Some(m) = macro_match {
+            all_matches.push((m.start(), m.end(), "macro", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -325,6 +331,29 @@ fn handle_exc_match(m_str: &str, default_domain: Domain) -> InlineNode {
     }
 }
 
+/// Builds the `InlineNode` for a matched `:macro:`/`:c:macro:` role, falling
+/// back to plain text if the role doesn't resolve for the given domain
+/// (`macro` is C-only, unlike the Python-only roles above).
+fn handle_macro_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = MACRO_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, "macro") {
+        Some(object_type) => {
+            let target = parse_domain_object_target(&caps["name"]);
+            InlineNode::DomainObjectReference {
+                object_type,
+                name: target.name,
+                display: target.display,
+                link: target.link,
+            }
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
 pub(super) fn handle_inline_match(
     kind: &str,
     m_str: &str,
@@ -348,6 +377,7 @@ pub(super) fn handle_inline_match(
         "class" => handle_class_match(m_str, default_domain),
         "attr" => handle_attr_match(m_str, default_domain),
         "exc" => handle_exc_match(m_str, default_domain),
+        "macro" => handle_macro_match(m_str, default_domain),
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let content = &caps["content"];
@@ -802,6 +832,88 @@ mod tests {
                 link: true,
             }
         );
+    }
+
+    #[test]
+    fn test_handle_macro_match_resolves_via_explicit_c_domain() {
+        let result = handle_macro_match(":c:macro:`MAX`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                name: "MAX".to_string(),
+                display: "MAX".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_macro_match_resolves_bare_role_via_default_domain() {
+        let result = handle_macro_match(":macro:`MAX`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                name: "MAX".to_string(),
+                display: "MAX".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_macro_match_falls_back_to_text_when_domain_lacks_macro_role() {
+        let result = handle_macro_match(":macro:`MAX`", Domain::Py);
+        assert_eq!(result, InlineNode::Text(":macro:`MAX`".to_string()));
+    }
+
+    #[test]
+    fn test_handle_macro_match_bang_prefix_suppresses_link() {
+        let result = handle_macro_match(":macro:`!MAX`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                name: "MAX".to_string(),
+                display: "MAX".to_string(),
+                link: false,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_macro_match_tilde_prefix_shortens_display() {
+        let result = handle_macro_match(":macro:`~pkg.MAX`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                name: "pkg.MAX".to_string(),
+                display: "MAX".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_macro_variant_bare_uses_default_domain() {
+        let result = handle_inline_match("macro", ":macro:`MAX`", None, Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                name: "MAX".to_string(),
+                display: "MAX".to_string(),
+                link: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_macro_variant_falls_back_to_text_when_unresolvable() {
+        let result = handle_inline_match("macro", ":macro:`MAX`", None, Domain::Py);
+        assert_eq!(result, InlineNode::Text(":macro:`MAX`".to_string()));
     }
 
     #[test]

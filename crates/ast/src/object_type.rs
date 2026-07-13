@@ -62,6 +62,7 @@ impl ObjectType {
             (Domain::Py, "attr") => Some(Self::Py(PyObjectType::Attribute)),
             (Domain::Py, "exc") => Some(Self::Py(PyObjectType::Exception)),
             (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
+            (Domain::C, "macro") => Some(Self::C(CObjectType::Macro)),
             _ => None,
         }
     }
@@ -104,6 +105,10 @@ mod tests {
         assert_eq!(
             ObjectType::from_directive_name(Domain::C, "function"),
             Some(ObjectType::C(CObjectType::Function))
+        );
+        assert_eq!(
+            ObjectType::from_directive_name(Domain::C, "macro"),
+            Some(ObjectType::C(CObjectType::Macro))
         );
     }
 
@@ -212,6 +217,16 @@ mod tests {
             ObjectType::from_directive_name(Domain::C, "exception"),
             None
         );
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_macro_only_for_c() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::C, "macro"),
+            Some(ObjectType::C(CObjectType::Macro))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::Py, "macro"), None);
     }
 
     #[test]
