@@ -117,9 +117,16 @@ pub(super) fn render_domain_object(
 ) {
     let object_type = obj.object_type();
     let own_name = obj.name();
-    let qualified_name =
-        rusty_sphinx_ast::qualify_name(ctx.class_stack.last().map(String::as_str), &own_name);
+    let qualifier = rusty_sphinx_ast::effective_qualifier(
+        ctx.class_stack.last().map(String::as_str),
+        ctx.current_module.as_deref(),
+        object_type.domain(),
+    );
+    let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, &own_name);
     let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
+    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. }) {
+        ctx.current_module = Some(qualified_name.clone());
+    }
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
     let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
@@ -382,6 +389,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             class_stack: Vec::new(),
+            current_module: None,
         };
 
         // When
@@ -419,6 +427,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             class_stack: Vec::new(),
+            current_module: None,
         };
 
         // When
@@ -588,6 +597,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             class_stack: Vec::new(),
+            current_module: None,
         };
 
         // When
@@ -1099,6 +1109,83 @@ mod tests {
         // Then
         assert!(result.contains("<dt id=\"py:class:outer.inner\">"));
         assert!(result.contains("<dt id=\"py:method:outer.inner.method\">"));
+    }
+
+    #[test]
+    fn test_render_qualifies_sibling_function_after_module_id() {
+        // Given — the real-world CPython shape: `py:module` and the
+        // `py:function` it documents are siblings, not nested.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "types".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                        signature: "coroutine(gen_func)".to_string(),
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — the function's anchor id is module-qualified, matching the
+        // analyzer's index key for `:func:`types.coroutine``.
+        assert!(result.contains("<dt id=\"py:function:types.coroutine\">"));
+        assert!(result.contains("<code class=\"sig-name\">coroutine(gen_func)</code>"));
+    }
+
+    #[test]
+    fn test_render_composes_module_and_class_qualifiers_in_id() {
+        // Given — a class documented as a sibling after `py:module`, with a
+        // method nested inside the class — both qualifiers must compose.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "types".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                        signature: "DynamicClassAttribute".to_string(),
+                        is_final: false,
+                        body: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                                signature: "__get__(self, instance, owner)".to_string(),
+                                is_classmethod: false,
+                                is_staticmethod: false,
+                                is_abstractmethod: false,
+                                is_async: false,
+                                body: vec![],
+                            },
+                        ))],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — id is lowercased, matching `TargetName`'s normalization
+        assert!(result.contains("<dt id=\"py:class:types.dynamicclassattribute\">"));
+        assert!(result.contains("<dt id=\"py:method:types.dynamicclassattribute.__get__\">"));
     }
 
     #[test]

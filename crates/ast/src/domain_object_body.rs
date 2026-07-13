@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::c_object_type::CObjectType;
+use crate::domain::Domain;
 use crate::node::Node;
 use crate::object_type::ObjectType;
 use crate::py_object_type::PyObjectType;
@@ -57,6 +58,34 @@ pub fn build_domain_object_key(object_type: ObjectType, name: &str) -> TargetNam
         object_type.as_str(),
         name
     ))
+}
+
+/// Picks the qualifier to use for a domain object that isn't itself nested
+/// inside a `py:class`/`py:exception` body: the enclosing class's qualified
+/// name takes precedence (lexical nesting), falling back to the current
+/// module set by the most recent `py:module` seen earlier in the document
+/// (sequential, document-order state — real Sphinx docs write `py:module`
+/// and the functions/classes it documents as siblings, not nested).
+///
+/// `current_module` only ever applies to `domain` == [`Domain::Py`] — real
+/// Sphinx's module context is a `py`-domain-only concept (`env.ref_context
+/// ['py:module']`) and never qualifies `c:function` or other non-`py`
+/// domain objects, even when they're written as later siblings in the same
+/// document.
+///
+/// Shared by the analyzer (`index_nodes`) and the renderer
+/// (`render_domain_object`) so both always agree on which qualifier applies
+/// to a given object.
+#[must_use]
+pub fn effective_qualifier<'a>(
+    class_qualifier: Option<&'a str>,
+    current_module: Option<&'a str>,
+    domain: Domain,
+) -> Option<&'a str> {
+    class_qualifier.or(match domain {
+        Domain::Py => current_module,
+        Domain::C => None,
+    })
 }
 
 /// Prefixes `name` with `qualifier` (e.g. an enclosing `py:class`'s own
@@ -443,6 +472,43 @@ mod tests {
 
         // Then — `TargetName` normalizes to lowercase.
         assert_eq!(key.as_str(), "py:data:default_timeout");
+    }
+
+    #[test]
+    fn test_effective_qualifier_returns_none_when_neither_set() {
+        // Given / When / Then
+        assert_eq!(effective_qualifier(None, None, Domain::Py), None);
+    }
+
+    #[test]
+    fn test_effective_qualifier_falls_back_to_current_module_for_py_domain() {
+        // Given / When / Then
+        assert_eq!(
+            effective_qualifier(None, Some("types"), Domain::Py),
+            Some("types")
+        );
+    }
+
+    #[test]
+    fn test_effective_qualifier_prefers_class_qualifier_over_current_module() {
+        // Given — a method nested inside a class that itself lives in a
+        // module: the class's own (already module-qualified) name wins.
+        // When / Then
+        assert_eq!(
+            effective_qualifier(Some("types.Greeter"), Some("types"), Domain::Py),
+            Some("types.Greeter")
+        );
+    }
+
+    #[test]
+    fn test_effective_qualifier_never_applies_current_module_to_c_domain() {
+        // Given — real Sphinx's module context is `py`-domain-only; a
+        // `c:function` written as a later sibling after `py:module:: types`
+        // must not get "types." prepended (the bug this guards against:
+        // CPython's `types.rst` documents a `c:function` right after
+        // `.. module:: types`, and it must not be swept into that scope).
+        // When / Then
+        assert_eq!(effective_qualifier(None, Some("types"), Domain::C), None);
     }
 
     #[test]

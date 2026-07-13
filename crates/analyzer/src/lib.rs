@@ -119,7 +119,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             found_title = true;
         }
     }
-    index_nodes(&doc.nodes, &doc.path, &mut index, None);
+    index_nodes(&doc.nodes, &doc.path, &mut index, None, &mut None);
     index
 }
 
@@ -131,15 +131,29 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// cross-references to resolve, exactly like it's still rendered with a
 /// working anchor.
 ///
-/// `qualifier` is the enclosing `py:class`/`py:exception`'s own qualified
-/// name, if any — `None` at the document's top level, or when nested inside
-/// anything other than a `py:class`/`py:exception` (e.g. a `py:function`
-/// nested in a `py:module`'s body is deliberately *not* qualified by the
-/// module's name; only `py:class`/`py:exception` bodies introduce a
-/// qualifying scope for their descendants, matching real Sphinx and
-/// preserving pre-existing module-nesting behavior — exceptions are classes
-/// in Python, so they get the same nesting treatment).
-fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, qualifier: Option<&str>) {
+/// `class_qualifier` is the enclosing `py:class`/`py:exception`'s own
+/// qualified name, if any — `None` at the document's top level, or when
+/// nested inside anything other than a `py:class`/`py:exception` (only
+/// `py:class`/`py:exception` bodies introduce a lexical qualifying scope for
+/// their descendants — exceptions are classes in Python, so they get the
+/// same nesting treatment).
+///
+/// `current_module` is the most recently seen `py:module`'s own name,
+/// updated in document order (not lexical nesting) as `py:module` directives
+/// are encountered — real Sphinx docs write `py:module` and the
+/// functions/classes it documents as *siblings*, not nested underneath it,
+/// so this has to be sequential state threaded through the whole traversal
+/// rather than a recursive-call-scoped parameter like `class_qualifier`. It
+/// intentionally is not reset when returning from a nested body, matching
+/// real Sphinx: a module stays "current" for the rest of the document until
+/// another `py:module` (or, once supported, `py:currentmodule`) changes it.
+fn index_nodes(
+    nodes: &[Node],
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    class_qualifier: Option<&str>,
+    current_module: &mut Option<String>,
+) {
     for node in nodes {
         match node {
             Node::Target { name, uri } => {
@@ -180,45 +194,35 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, qualifi
                 }
             }
             Node::Directive(Directive::DomainObject(obj)) => {
-                let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, &obj.name());
-                let key =
-                    rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
-                index
-                    .domain_objects
-                    .insert(key.clone(), doc_path.to_string());
-                index.genindex_entries.push(GenIndexEntry {
-                    primary: format!("{qualified_name} ({})", obj.object_type().as_str()),
-                    subentry: None,
-                    main: false,
-                    doc_path: doc_path.to_string(),
-                    anchor: key.as_str().to_string(),
-                });
-                let child_qualifier = if matches!(
-                    obj,
-                    rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
-                        | rusty_sphinx_ast::DomainObjectBody::PyException { .. }
-                ) {
-                    Some(qualified_name.as_str())
-                } else {
-                    qualifier
-                };
-                index_nodes(obj.body(), doc_path, index, child_qualifier);
+                index_domain_object(obj, doc_path, index, class_qualifier, current_module);
             }
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
                 | Directive::SeeAlso { body },
             ) => {
-                index_nodes(body, doc_path, index, qualifier);
+                index_nodes(body, doc_path, index, class_qualifier, current_module);
             }
             Node::BulletList { items, .. } => {
                 for item in items {
-                    index_nodes(&item.nodes, doc_path, index, qualifier);
+                    index_nodes(
+                        &item.nodes,
+                        doc_path,
+                        index,
+                        class_qualifier,
+                        current_module,
+                    );
                 }
             }
             Node::DefinitionList { items } => {
                 for item in items {
-                    index_nodes(&item.definition, doc_path, index, qualifier);
+                    index_nodes(
+                        &item.definition,
+                        doc_path,
+                        index,
+                        class_qualifier,
+                        current_module,
+                    );
                 }
             }
             Node::Table {
@@ -227,13 +231,61 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, qualifi
             } => {
                 for row in header_rows.iter().chain(body_rows) {
                     for cell in &row.cells {
-                        index_nodes(&cell.content, doc_path, index, qualifier);
+                        index_nodes(
+                            &cell.content,
+                            doc_path,
+                            index,
+                            class_qualifier,
+                            current_module,
+                        );
                     }
                 }
             }
             _ => {}
         }
     }
+}
+
+/// Registers a single `Directive::DomainObject` (and recurses into its
+/// body), handling both qualification and `current_module` updates. Split
+/// out of [`index_nodes`] to keep that function's line count manageable.
+fn index_domain_object(
+    obj: &rusty_sphinx_ast::DomainObjectBody,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    class_qualifier: Option<&str>,
+    current_module: &mut Option<String>,
+) {
+    let qualifier = rusty_sphinx_ast::effective_qualifier(
+        class_qualifier,
+        current_module.as_deref(),
+        obj.object_type().domain(),
+    );
+    let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, &obj.name());
+    let key = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
+    index
+        .domain_objects
+        .insert(key.clone(), doc_path.to_string());
+    index.genindex_entries.push(GenIndexEntry {
+        primary: format!("{qualified_name} ({})", obj.object_type().as_str()),
+        subentry: None,
+        main: false,
+        doc_path: doc_path.to_string(),
+        anchor: key.as_str().to_string(),
+    });
+    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. }) {
+        *current_module = Some(qualified_name.clone());
+    }
+    let child_qualifier = if matches!(
+        obj,
+        rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
+            | rusty_sphinx_ast::DomainObjectBody::PyException { .. }
+    ) {
+        Some(qualified_name.as_str())
+    } else {
+        class_qualifier
+    };
+    index_nodes(obj.body(), doc_path, index, child_qualifier, current_module);
 }
 
 /// Extracts toctree entries from a document, resolved to absolute paths.
@@ -1481,7 +1533,8 @@ mod tests {
         // When
         let index = analyze(&doc);
 
-        // Then — both the outer module and the nested function are indexed
+        // Then — both the outer module and the nested function are indexed,
+        // the function qualified by the enclosing module's name
         assert_eq!(index.domain_objects.len(), 2);
         assert!(
             index
@@ -1491,7 +1544,7 @@ mod tests {
         assert!(
             index
                 .domain_objects
-                .contains_key(&TargetName::new("py:function:greet"))
+                .contains_key(&TargetName::new("py:function:greetings.greet"))
         );
     }
 
@@ -1697,10 +1750,9 @@ mod tests {
     }
 
     #[test]
-    fn test_analyze_does_not_qualify_object_nested_in_non_class_domain_object() {
-        // Given — a `py:function` nested inside a `py:module` (not a
-        // `py:class`) must keep its bare name, preserving pre-existing
-        // module-nesting behavior.
+    fn test_analyze_qualifies_object_nested_in_module_domain_object() {
+        // Given — a `py:function` nested inside a `py:module` body picks up
+        // the module's name, matching real Sphinx.
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
@@ -1722,17 +1774,188 @@ mod tests {
         // When
         let index = analyze(&doc);
 
-        // Then — bare name, not "greetings.greet"
+        // Then
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:function:greetings.greet"))
+        );
+        assert!(
+            !index
+                .domain_objects
+                .contains_key(&TargetName::new("py:function:greet"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_qualifies_sibling_object_after_module_domain_object() {
+        // Given — the real-world CPython shape: `py:module` and the
+        // `py:function` it documents are *siblings* at the document's top
+        // level, not nested — this is what surfaced the `types.coroutine`
+        // broken-domain-object bug.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "types".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                        signature: "coroutine(gen_func)".to_string(),
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:function:types.coroutine"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_object_before_any_module_directive_stays_unqualified() {
+        // Given — a `py:function` appearing before any `py:module` in the
+        // document has no current module to fall back to.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                        signature: "greet(name)".to_string(),
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "greetings".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
         assert!(
             index
                 .domain_objects
                 .contains_key(&TargetName::new("py:function:greet"))
         );
-        assert!(
-            !index
-                .domain_objects
-                .contains_key(&TargetName::new("py:function:greetings.greet"))
+    }
+
+    #[test]
+    fn test_analyze_switches_current_module_on_second_module_directive() {
+        // Given — two sequential `py:module` directives in one document
+        // (e.g. a package's docs covering a couple of submodules); the
+        // second one becomes current for everything after it.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "email.mime".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "email.mime.text".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                        signature: "MIMEText".to_string(),
+                        is_final: false,
+                        body: vec![],
+                    },
+                )),
+            ],
         );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:class:email.mime.text.MIMEText"))
+        );
+    }
+
+    #[test]
+    fn test_analyze_composes_module_and_class_qualifiers() {
+        // Given — a `py:class` documented as a sibling after `py:module`
+        // (module-qualified), with a `py:method` nested inside the class
+        // (class-qualified) — both qualifiers must compose.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "types".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                        signature: "DynamicClassAttribute".to_string(),
+                        is_final: false,
+                        body: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                                signature: "__get__(self, instance, owner)".to_string(),
+                                is_classmethod: false,
+                                is_staticmethod: false,
+                                is_abstractmethod: false,
+                                is_async: false,
+                                body: vec![],
+                            },
+                        ))],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(
+            index
+                .domain_objects
+                .contains_key(&TargetName::new("py:class:types.DynamicClassAttribute"))
+        );
+        assert!(index.domain_objects.contains_key(&TargetName::new(
+            "py:method:types.DynamicClassAttribute.__get__"
+        )));
     }
 
     // ── genindex analyzer tests ───────────────────────────────────────────────
