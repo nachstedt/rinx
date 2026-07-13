@@ -162,10 +162,18 @@ C Domain
 
    Adds two numbers and returns the sum.
 
+.. c:function:: char *duplicate_greeting(const char *name)
+
+   Returns a newly-allocated greeting string for *name*. Demonstrates a
+   pointer-return-type signature (the return type's ``*`` glued to the
+   function name, as real-world C API docs like CPython's
+   ``PyUnicode_FromString`` commonly write it).
+
 Cross-References
 -----------------
 
 Call :py:func:`greet` to greet someone, or :c:func:`add` to add two numbers.
+See :c:func:`duplicate_greeting` for the pointer-return-type function above.
 The bare role :func:`farewell` also resolves to the ``py`` domain, since
 that is this library's default. The :py:mod:`greetings` module holds both
 of them.
