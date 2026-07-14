@@ -227,6 +227,14 @@ instead keeps the link but shortens the displayed text to the last dotted
 component — e.g. :py:func:`~greetings.shout` links to ``greetings.shout``
 but displays only ``shout``.
 
+Calling :py:func:`shout` — written bare, with no ``greetings.`` prefix — is
+the same as calling :py:func:`~greetings.shout`. This is the shape real-world
+Sphinx docs actually use (e.g. every CPython module page cross-references its
+own members unqualified): resolution first tries the reference against the
+current module/class scope (here, ``greetings``, still in effect from the
+``py:module`` directive above) before falling back to a global, unqualified
+lookup, mirroring how ``shout``'s own definition was qualified when indexed.
+
 Call :py:meth:`Greeter.greet` to greet someone synchronously, or await
 :py:meth:`Greeter.greet_async` for the asynchronous variant. The bare role
 :meth:`Greeter.create` also resolves to the ``py`` domain, like the other

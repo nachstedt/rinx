@@ -142,15 +142,7 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
 /// paragraph content, which are both just a `Vec<InlineNode>`.
 fn render_inlines(html: &mut String, inlines: &[InlineNode], ctx: &mut RenderCtx<'_>) {
     for inline in inlines {
-        render_inline(
-            html,
-            inline,
-            ctx.index,
-            ctx.doc_path,
-            ctx.anon_targets,
-            ctx.anon_index,
-            ctx.broken_links,
-        );
+        render_inline(html, inline, ctx);
     }
 }
 
