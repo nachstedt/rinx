@@ -354,6 +354,23 @@ fn handle_macro_match(m_str: &str, default_domain: Domain) -> InlineNode {
     }
 }
 
+/// Splits a role's backtick content on Sphinx's optional explicit-title
+/// syntax (`Display text <target>`), shared by every role that supports it
+/// (`:term:`, `:ref:`). Returns `(display, target)`, both equal to `content`
+/// when there is no explicit title.
+fn split_display_and_target(content: &str) -> (String, String) {
+    if let Some(angle_start) = content.rfind('<')
+        && let Some(angle_end) = content[angle_start..].find('>')
+    {
+        let display = content[..angle_start].trim().to_string();
+        let target = content[angle_start + 1..angle_start + angle_end]
+            .trim()
+            .to_string();
+        return (display, target);
+    }
+    (content.to_string(), content.to_string())
+}
+
 pub(super) fn handle_inline_match(
     kind: &str,
     m_str: &str,
@@ -364,7 +381,8 @@ pub(super) fn handle_inline_match(
         "inline" => node_opt.expect("inline node should be present"),
         "ref" => {
             let caps = REF_REGEX.captures(m_str).unwrap();
-            InlineNode::Reference(caps["target"].to_string())
+            let (display, target) = split_display_and_target(&caps["target"]);
+            InlineNode::Reference { display, target }
         }
         "program" => {
             let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
@@ -380,21 +398,8 @@ pub(super) fn handle_inline_match(
         "macro" => handle_macro_match(m_str, default_domain),
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
-            let content = &caps["content"];
-            // Support :term:`display text <actual term>` syntax
-            if let Some(angle_start) = content.rfind('<')
-                && let Some(angle_end) = content[angle_start..].find('>')
-            {
-                let display = content[..angle_start].trim().to_string();
-                let term = content[angle_start + 1..angle_start + angle_end]
-                    .trim()
-                    .to_string();
-                return InlineNode::TermReference { display, term };
-            }
-            InlineNode::TermReference {
-                display: content.to_string(),
-                term: content.to_string(),
-            }
+            let (display, term) = split_display_and_target(&caps["content"]);
+            InlineNode::TermReference { display, term }
         }
         "phrased" => {
             let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
@@ -963,7 +968,30 @@ mod tests {
     #[test]
     fn test_handle_inline_match_ref_variant() {
         let result = handle_inline_match("ref", ":ref:`target`", None, Domain::Py);
-        assert_eq!(result, InlineNode::Reference("target".to_string()));
+        assert_eq!(
+            result,
+            InlineNode::Reference {
+                display: "target".to_string(),
+                target: "target".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_ref_variant_with_display_text() {
+        let result = handle_inline_match(
+            "ref",
+            ":ref:`GenericAlias <types-genericalias>`",
+            None,
+            Domain::Py,
+        );
+        assert_eq!(
+            result,
+            InlineNode::Reference {
+                display: "GenericAlias".to_string(),
+                target: "types-genericalias".to_string(),
+            }
+        );
     }
 
     #[test]
@@ -1384,7 +1412,10 @@ mod integration_tests {
             doc.nodes[0],
             Node::Paragraph(vec![
                 InlineNode::Text("Here is a ".to_string()),
-                InlineNode::Reference("my-target".to_string()),
+                InlineNode::Reference {
+                    display: "my-target".to_string(),
+                    target: "my-target".to_string(),
+                },
                 InlineNode::Text(" link.".to_string()),
             ])
         );
@@ -1800,6 +1831,24 @@ mod integration_tests {
             if let Some(InlineNode::TermReference { display, term }) = term_ref {
                 assert_eq!(display, "the env");
                 assert_eq!(term, "environment");
+            }
+        } else {
+            panic!("Expected Paragraph");
+        }
+    }
+
+    #[test]
+    fn test_parse_ref_role_with_display_text() {
+        let input = "See :ref:`GenericAlias <types-genericalias>` here.\n";
+        let doc = parse("test.rst", input);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            let reference = inlines
+                .iter()
+                .find(|n| matches!(n, InlineNode::Reference { .. }));
+            assert!(reference.is_some());
+            if let Some(InlineNode::Reference { display, target }) = reference {
+                assert_eq!(display, "GenericAlias");
+                assert_eq!(target, "types-genericalias");
             }
         } else {
             panic!("Expected Paragraph");

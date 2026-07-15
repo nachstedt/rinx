@@ -647,7 +647,10 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Reference("other-section".to_string()),
+                rusty_sphinx_ast::InlineNode::Reference {
+                    display: "other-section".to_string(),
+                    target: "other-section".to_string(),
+                },
             ])],
         );
         let mut index = ProjectIndex::default();
@@ -672,7 +675,10 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Reference("other-section".to_string()),
+                rusty_sphinx_ast::InlineNode::Reference {
+                    display: "other-section".to_string(),
+                    target: "other-section".to_string(),
+                },
             ])],
         );
         let mut index = ProjectIndex::default();
@@ -694,7 +700,10 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Reference("missing-ref".to_string()),
+                rusty_sphinx_ast::InlineNode::Reference {
+                    display: "missing-ref".to_string(),
+                    target: "missing-ref".to_string(),
+                },
                 rusty_sphinx_ast::InlineNode::TermReference {
                     display: "missing term".to_string(),
                     term: "missing-term".to_string(),
@@ -728,7 +737,10 @@ mod tests {
         let doc = Document::new(
             "examples/team_b/index.rst".to_string(),
             vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Reference("target-in-a".to_string()),
+                rusty_sphinx_ast::InlineNode::Reference {
+                    display: "target-in-a".to_string(),
+                    target: "target-in-a".to_string(),
+                },
             ])],
         );
 

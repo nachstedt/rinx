@@ -558,7 +558,10 @@ mod tests {
                             )])],
                         },
                         rusty_sphinx_ast::DefinitionListItem {
-                            term: vec![InlineNode::Reference("curses-howto".to_string())],
+                            term: vec![InlineNode::Reference {
+                                display: "curses-howto".to_string(),
+                                target: "curses-howto".to_string(),
+                            }],
                             definition: vec![Node::Paragraph(vec![InlineNode::Text(
                                 "Tutorial material.".to_string(),
                             )])],

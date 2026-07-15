@@ -5,7 +5,16 @@ use crate::object_type::ObjectType;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum InlineNode {
     Text(String),
-    Reference(String),
+    /// An inline cross-reference produced by the `:ref:` role, linking to a
+    /// labeled location elsewhere in the site.
+    ///
+    /// `display` and `target` differ when the role is written with an
+    /// explicit display-text override (the angle-bracket form), same as
+    /// [`TermReference`](Self::TermReference).
+    Reference {
+        display: String,
+        target: String,
+    },
     Hyperlink {
         text: String,
         target: String,
@@ -66,12 +75,12 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             | InlineNode::Strong(text)
             | InlineNode::Literal(text)
             | InlineNode::Program(text)
-            | InlineNode::AnonymousReference(text)
-            | InlineNode::Reference(text) => text.as_str(),
+            | InlineNode::AnonymousReference(text) => text.as_str(),
             InlineNode::Hyperlink { text, .. } | InlineNode::AnonymousHyperlink { text, .. } => {
                 text.as_str()
             }
-            InlineNode::TermReference { display, .. }
+            InlineNode::Reference { display, .. }
+            | InlineNode::TermReference { display, .. }
             | InlineNode::DomainObjectReference { display, .. } => display.as_str(),
         })
         .collect()
@@ -93,6 +102,41 @@ mod tests {
 
         // Then
         assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_reference_serialization_roundtrip() {
+        // Given
+        let node = InlineNode::Reference {
+            display: "GenericAlias".to_string(),
+            target: "types-genericalias".to_string(),
+        };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_reference_display_equals_target_when_no_alias() {
+        // Given
+        let label = "home-index";
+
+        // When
+        let node = InlineNode::Reference {
+            display: label.to_string(),
+            target: label.to_string(),
+        };
+
+        // Then
+        if let InlineNode::Reference { display, target } = node {
+            assert_eq!(display, target);
+        } else {
+            panic!("Expected Reference");
+        }
     }
 
     #[test]
@@ -161,6 +205,21 @@ mod tests {
 
         // Then
         assert_eq!(text, "Hello world");
+    }
+
+    #[test]
+    fn test_inline_plain_text_uses_display_for_reference() {
+        // Given — an explicit-title `:ref:`
+        let nodes = vec![InlineNode::Reference {
+            display: "GenericAlias".to_string(),
+            target: "types-genericalias".to_string(),
+        }];
+
+        // When
+        let text = inline_plain_text(&nodes);
+
+        // Then
+        assert_eq!(text, "GenericAlias");
     }
 
     #[test]

@@ -479,7 +479,7 @@ mod tests {
                 ));
                 assert!(matches!(
                     items[2].term[0],
-                    rusty_sphinx_ast::InlineNode::Reference(_)
+                    rusty_sphinx_ast::InlineNode::Reference { .. }
                 ));
             } else {
                 panic!("Expected DefinitionList, got {:?}", body[0]);

@@ -15,8 +15,15 @@ pub(super) fn render_inline(
         rusty_sphinx_ast::InlineNode::Text(text) => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
         }
-        rusty_sphinx_ast::InlineNode::Reference(target) => {
-            render_inline_reference(html, target, ctx.index, ctx.doc_path, ctx.broken_links);
+        rusty_sphinx_ast::InlineNode::Reference { display, target } => {
+            render_inline_reference(
+                html,
+                display,
+                target,
+                ctx.index,
+                ctx.doc_path,
+                ctx.broken_links,
+            );
         }
         rusty_sphinx_ast::InlineNode::Hyperlink { text, target } => {
             render_inline_hyperlink(
@@ -92,16 +99,20 @@ pub(super) fn render_inline(
     }
 }
 
-/// Renders a named `:ref:` reference. Resolves the target via the project index
-/// and emits a relative HTML link, or a broken-link fallback if not found.
+/// Renders a named `:ref:` reference. Resolves `target` via the project
+/// index and emits a relative HTML link showing `display` as the link text
+/// (equal to `target` unless the role used the explicit-title syntax,
+/// e.g. `` :ref:`Display text <target>` ``), or a broken-link fallback if
+/// `target` is not found.
 pub(super) fn render_inline_reference(
     html: &mut String,
+    display: &str,
     target: &str,
     index: &ProjectIndex,
     doc_path: &str,
     broken_links: &mut Vec<BrokenLink>,
 ) {
-    let target_escaped = html_escape::encode_text(target);
+    let display_escaped = html_escape::encode_text(display);
     let target_name = TargetName::new(target);
     if let Some(TargetLocation::Internal(target_path)) = index.targets.get(&target_name) {
         let current_dir = std::path::Path::new(doc_path)
@@ -112,11 +123,12 @@ pub(super) fn render_inline_reference(
             pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
         let href = format!("{}#{}", relative_path.display(), target_name.as_str());
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
-        let _ = write!(html, "<a href=\"{href_attr}\">{target_escaped}</a>");
+        let _ = write!(html, "<a href=\"{href_attr}\">{display_escaped}</a>");
     } else {
+        let target_escaped = html_escape::encode_text(target);
         let _ = write!(
             html,
-            "<a href=\"#{target_escaped}\" class=\"broken-link\">{target_escaped}</a>"
+            "<a href=\"#{target_escaped}\" class=\"broken-link\">{display_escaped}</a>"
         );
         broken_links.push(BrokenLink {
             kind: BrokenLinkKind::Reference,
@@ -437,6 +449,7 @@ mod tests {
         render_inline_reference(
             &mut html,
             "my-section",
+            "my-section",
             &index,
             "doc.rst",
             &mut broken_links,
@@ -455,7 +468,14 @@ mod tests {
         let mut broken_links = Vec::new();
 
         // When
-        render_inline_reference(&mut html, "missing", &index, "doc.rst", &mut broken_links);
+        render_inline_reference(
+            &mut html,
+            "missing",
+            "missing",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
 
         // Then
         assert_eq!(
@@ -486,6 +506,7 @@ mod tests {
         render_inline_reference(
             &mut html,
             "target-a",
+            "target-a",
             &index,
             "team_b/index.rst",
             &mut broken_links,
@@ -495,6 +516,68 @@ mod tests {
         assert_eq!(
             html,
             "<a href=\"../team_a/index.html#target-a\">target-a</a>"
+        );
+    }
+
+    #[test]
+    fn test_render_inline_reference_custom_display_differs_from_target() {
+        // Given — an explicit-title `:ref:`, mirroring CPython's
+        // `:ref:`GenericAlias <types-genericalias>``
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("types-genericalias"),
+            TargetLocation::Internal("stdtypes.rst".to_string()),
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+
+        // When
+        render_inline_reference(
+            &mut html,
+            "GenericAlias",
+            "types-genericalias",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
+
+        // Then
+        assert_eq!(
+            html,
+            "<a href=\"stdtypes.html#types-genericalias\">GenericAlias</a>"
+        );
+        assert!(broken_links.is_empty());
+    }
+
+    #[test]
+    fn test_render_inline_reference_custom_display_broken_link_reports_real_target() {
+        // Given — the display text and target both appear only via their
+        // respective fields, not concatenated together in the warning.
+        let index = ProjectIndex::default();
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+
+        // When
+        render_inline_reference(
+            &mut html,
+            "GenericAlias",
+            "types-genericalias",
+            &index,
+            "doc.rst",
+            &mut broken_links,
+        );
+
+        // Then
+        assert_eq!(
+            html,
+            "<a href=\"#types-genericalias\" class=\"broken-link\">GenericAlias</a>"
+        );
+        assert_eq!(
+            broken_links,
+            vec![BrokenLink {
+                kind: BrokenLinkKind::Reference,
+                target: "types-genericalias".to_string(),
+            }]
         );
     }
 

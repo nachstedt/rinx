@@ -166,7 +166,7 @@ mod tests {
                 items[0].term[1],
                 InlineNode::DomainObjectReference { .. }
             ));
-            assert!(matches!(items[1].term[0], InlineNode::Reference(_)));
+            assert!(matches!(items[1].term[0], InlineNode::Reference { .. }));
         } else {
             panic!("Expected DefinitionList, got {:?}", doc.nodes[0]);
         }
