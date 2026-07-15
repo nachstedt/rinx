@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Object types defined by the `c` domain.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum CObjectType {
     Function,
@@ -62,5 +62,15 @@ mod tests {
     fn test_c_object_type_as_str_returns_macro() {
         // Given / When / Then
         assert_eq!(CObjectType::Macro.as_str(), "macro");
+    }
+
+    #[test]
+    fn test_c_object_type_ord_orders_variants_by_declaration_order() {
+        // Given
+        let function = CObjectType::Function;
+        let macro_ = CObjectType::Macro;
+
+        // When / Then
+        assert!(function < macro_);
     }
 }

@@ -117,6 +117,19 @@ documented inside its body.
       ``InvalidNameError`` qualifies its cross-reference name to
       ``InvalidNameError.reason``, exactly like a method nested in a class.
 
+Role-Target Aliasing (``class`` / ``exception``)
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+Real Sphinx treats ``class`` and ``exception`` as mutually resolvable role
+targets: a ``.. py:class::`` definition can be referenced via ``:exc:`` as
+well as ``:class:``, and vice versa. This mirrors CPython's own
+``xmlrpc.client`` docs, which define ``Fault`` via ``.. class::`` but
+reference it via ``:exc:`Fault``` throughout.
+
+.. py:class:: Fault
+
+   Encapsulates the content of an XML-RPC fault tag.
+
 ``py:data`` Definitions Inside a Table
 """"""""""""""""""""""""""""""""""""""
 
@@ -264,3 +277,9 @@ with the other roles above, ``!``/``~`` prefixes work the same way —
 :py:exc:`!NotARealError` renders as plain text with no warning, and
 :py:meth:`~InvalidNameError.reason` links to ``InvalidNameError.reason``
 but displays only ``reason``.
+
+Both :py:exc:`Fault` and :py:class:`Fault` (or, using the bare roles,
+:exc:`Fault` and :class:`Fault`) resolve to the same ``.. py:class::``
+definition above, even though it was documented as a ``class``, not an
+``exception`` — proving the two object types alias each other for
+cross-reference purposes, exactly as real Sphinx does.

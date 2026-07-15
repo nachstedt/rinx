@@ -1,6 +1,6 @@
 //! Inline node rendering helpers.
 
-use crate::{BrokenLink, BrokenLinkKind, RenderCtx};
+use crate::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch, RenderCtx};
 use rusty_sphinx_analyzer::{ProjectIndex, TargetLocation};
 use rusty_sphinx_ast::{ObjectType, TargetName};
 use std::fmt::Write as _;
@@ -91,7 +91,10 @@ pub(super) fn render_inline(
                 },
                 ctx.index,
                 ctx.doc_path,
-                ctx.broken_links,
+                &mut DomainObjectDiagnostics {
+                    broken_links: ctx.broken_links,
+                    object_type_mismatches: ctx.object_type_mismatches,
+                },
                 &ctx.class_stack,
                 ctx.current_module.as_deref(),
             );
@@ -303,6 +306,18 @@ fn domain_object_scope_candidates<'a>(
 /// already written fully qualified), every qualified attempt is identical to
 /// the bare one, so this is a no-op for every previously-working case.
 ///
+/// For each scope candidate, every object type [`ObjectType::role_alias_candidates`]
+/// accepts for the requested type is also tried (most-preferred, i.e. the
+/// requested type itself, first) — e.g. `CPython` documents `Fault` via
+/// `.. class::` but references it via `:exc:`, which real Sphinx resolves
+/// because it treats `class`/`exception` as mutually aliasable role targets.
+/// The rendered anchor always matches the *matched* object type (what the
+/// definition actually rendered), not the originally requested one. When the
+/// matched type differs from the requested one, an [`ObjectTypeMismatch`] is
+/// recorded in `diagnostics` — the reference still resolves and is not a
+/// [`BrokenLink`], but the mismatch is surfaced to the author as a
+/// non-fatal warning (never fails `--strict-links`).
+///
 /// When `link` is `false` (the role target used a `!` prefix), the index is
 /// never consulted — the target is rendered as plain text with no hyperlink
 /// and no broken-link fallback, matching Sphinx's "suppress cross-reference"
@@ -318,12 +333,20 @@ pub(super) struct DomainObjectRef<'a> {
     pub link: bool,
 }
 
+/// Mutable diagnostic sinks for [`render_inline_domain_object_reference`],
+/// bundled (like `DomainObjectRef` bundles its inputs) to keep the function
+/// within clippy's argument-count limit.
+pub(super) struct DomainObjectDiagnostics<'a> {
+    pub broken_links: &'a mut Vec<BrokenLink>,
+    pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
+}
+
 pub(super) fn render_inline_domain_object_reference(
     html: &mut String,
     obj_ref: DomainObjectRef<'_>,
     index: &ProjectIndex,
     doc_path: &str,
-    broken_links: &mut Vec<BrokenLink>,
+    diagnostics: &mut DomainObjectDiagnostics<'_>,
     class_stack: &[String],
     current_module: Option<&str>,
 ) {
@@ -349,19 +372,34 @@ pub(super) fn render_inline_domain_object_reference(
         domain_object_scope_candidates(class_stack, current_module, object_type.domain()).find_map(
             |qualifier| {
                 let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, name);
-                let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
-                index.domain_objects.get_key_value(&key)
+                let entries = index
+                    .domain_objects
+                    .get(&TargetName::new(&qualified_name))?;
+                let matched_type = object_type
+                    .role_alias_candidates()
+                    .iter()
+                    .find(|candidate| entries.contains_key(candidate))?;
+                let target_doc_path = entries.get(matched_type)?;
+                Some((*matched_type, qualified_name, target_doc_path))
             },
         );
 
-    if let Some((key, target_doc_path)) = resolved {
+    if let Some((matched_type, qualified_name, target_doc_path)) = resolved {
+        if matched_type != object_type {
+            diagnostics.object_type_mismatches.push(ObjectTypeMismatch {
+                name: qualified_name.clone(),
+                requested_type: object_type,
+                resolved_type: matched_type,
+            });
+        }
+        let anchor = rusty_sphinx_ast::build_domain_object_key(matched_type, &qualified_name);
         let current_dir = std::path::Path::new(doc_path)
             .parent()
             .unwrap_or_else(|| std::path::Path::new(""));
         let target_html_path = std::path::Path::new(target_doc_path).with_extension("html");
         let relative_path =
             pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
-        let href = format!("{}#{}", relative_path.display(), key.as_str());
+        let href = format!("{}#{}", relative_path.display(), anchor.as_str());
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
         let _ = write!(
             html,
@@ -372,7 +410,7 @@ pub(super) fn render_inline_domain_object_reference(
             html,
             "<a href=\"#\" class=\"broken-link\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code></a>"
         );
-        broken_links.push(BrokenLink {
+        diagnostics.broken_links.push(BrokenLink {
             kind: BrokenLinkKind::DomainObjectReference,
             target: name.to_string(),
         });
@@ -898,15 +936,14 @@ mod tests {
     fn test_render_inline_domain_object_reference_resolved_py_domain() {
         // Given
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-                "greet",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            "greet",
+            "api.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -919,7 +956,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -935,15 +975,14 @@ mod tests {
     fn test_render_inline_domain_object_reference_resolved_c_domain() {
         // Given
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
-                "add",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+            "add",
+            "api.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -956,7 +995,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -970,15 +1012,14 @@ mod tests {
     fn test_render_inline_domain_object_reference_resolved_c_macro() {
         // Given
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
-                "MAX",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+            "MAX",
+            "api.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -991,7 +1032,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -1002,11 +1046,90 @@ mod tests {
     }
 
     #[test]
+    fn test_render_inline_domain_object_reference_resolves_exc_role_to_class_definition() {
+        // Given — CPython's `xmlrpc.client.rst` defines `Fault` via
+        // `.. class::` but references it via `:exc:`.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            "Fault",
+            "xmlrpc.client.rst",
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+                name: "Fault",
+                display: "Fault",
+                link: true,
+            },
+            &index,
+            "doc.rst",
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
+            &[],
+            None,
+        );
+
+        // Then — resolved, and the anchor matches the actual definition's
+        // object type (`class`), not the role that referenced it (`exc`).
+        assert!(broken_links.is_empty());
+        assert!(html.contains("class=\"reference internal\""));
+        assert!(html.contains("href=\"xmlrpc.client.html#py:class:fault\""));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_does_not_alias_unrelated_object_types() {
+        // Given — `Fault` is defined only as a `py:function`, which has no
+        // role-alias relationship with `py:exception`.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            "Fault",
+            "api.rst",
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+                name: "Fault",
+                display: "Fault",
+                link: true,
+            },
+            &index,
+            "doc.rst",
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
+            &[],
+            None,
+        );
+
+        // Then
+        assert!(html.contains("class=\"broken-link\""));
+        assert_eq!(broken_links.len(), 1);
+    }
+
+    #[test]
     fn test_render_inline_domain_object_reference_broken_link_for_c_macro() {
         // Given
         let index = ProjectIndex::default();
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -1019,7 +1142,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -1040,15 +1166,14 @@ mod tests {
     fn test_render_inline_domain_object_reference_resolved_py_module() {
         // Given
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
-                "greetings",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+            "greetings",
+            "api.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -1061,7 +1186,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -1078,18 +1206,17 @@ mod tests {
         // Given — a single `.. py:data::` definition registered under its
         // canonical `ObjectType::Py(PyObjectType::Data)` key.
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
-                "DEFAULT_TIMEOUT",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+            "DEFAULT_TIMEOUT",
+            "api.rst",
         );
 
         // When — both `:py:data:` and `:py:const:` roles parse down to the
         // same `ObjectType`, so rendering either must resolve identically.
         let mut data_html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
         render_inline_domain_object_reference(
             &mut data_html,
             DomainObjectRef {
@@ -1100,7 +1227,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -1115,7 +1245,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -1133,6 +1266,7 @@ mod tests {
         let index = ProjectIndex::default();
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -1145,7 +1279,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -1169,15 +1306,14 @@ mod tests {
         // after `.. module:: zipimport` (see zipimport.rst in the CPython
         // benchmark).
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
-                "zipimport.ZipImportError",
-            ),
-            "library/zipimport.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+            "zipimport.ZipImportError",
+            "library/zipimport.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When — the reference is written bare, as real Sphinx docs do,
         // relying on `zipimport` being the current module.
@@ -1191,7 +1327,10 @@ mod tests {
             },
             &index,
             "library/zipimport.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             Some("zipimport"),
         );
@@ -1209,15 +1348,14 @@ mod tests {
         // `.. class:: zipimporter` (itself a sibling after
         // `.. module:: zipimport`).
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
-                "zipimport.zipimporter.find_spec",
-            ),
-            "library/zipimport.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+            "zipimport.zipimporter.find_spec",
+            "library/zipimport.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
         let class_stack = vec!["zipimport.zipimporter".to_string()];
 
         // When — the reference is written bare, resolved against the
@@ -1232,7 +1370,10 @@ mod tests {
             },
             &index,
             "library/zipimport.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &class_stack,
             Some("zipimport"),
         );
@@ -1253,15 +1394,14 @@ mod tests {
         // must miss and fall through to the module-qualified one, not go
         // straight to the bare global name.
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
-                "zipimport.ZipImportError",
-            ),
-            "library/zipimport.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+            "zipimport.ZipImportError",
+            "library/zipimport.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
         let class_stack = vec!["zipimport.zipimporter".to_string()];
 
         // When
@@ -1275,7 +1415,10 @@ mod tests {
             },
             &index,
             "library/zipimport.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &class_stack,
             Some("zipimport"),
         );
@@ -1292,15 +1435,14 @@ mod tests {
         // to it written from within a document whose current module is
         // unrelated.
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-                "greet",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            "greet",
+            "api.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When — the qualified attempt ("other_module.greet") misses, so
         // resolution must fall back to the bare key.
@@ -1314,7 +1456,10 @@ mod tests {
             },
             &index,
             "api.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             Some("other_module"),
         );
@@ -1330,15 +1475,14 @@ mod tests {
         // reference that already spells out that qualifier explicitly
         // (`qualify_name` must not double-prepend the current module).
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-                "types.coroutine",
-            ),
-            "library/types.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            "types.coroutine",
+            "library/types.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -1351,7 +1495,10 @@ mod tests {
             },
             &index,
             "library/types.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             Some("types"),
         );
@@ -1365,15 +1512,14 @@ mod tests {
     fn test_render_inline_domain_object_reference_resolves_cross_directory_path() {
         // Given — document is nested, object defined at root
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-                "greet",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            "greet",
+            "api.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -1386,7 +1532,10 @@ mod tests {
             },
             &index,
             "guide/intro.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -1402,6 +1551,7 @@ mod tests {
         let index = ProjectIndex::default();
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -1414,7 +1564,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );
@@ -1431,15 +1584,14 @@ mod tests {
     fn test_render_inline_domain_object_reference_shortened_display_resolves_via_full_name() {
         // Given
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
-                "greetings.shout",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            "greetings.shout",
+            "api.rst",
         );
         let mut html = String::new();
         let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
 
         // When
         render_inline_domain_object_reference(
@@ -1452,7 +1604,10 @@ mod tests {
             },
             &index,
             "doc.rst",
-            &mut broken_links,
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
             &[],
             None,
         );

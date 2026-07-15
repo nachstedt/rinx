@@ -281,3 +281,83 @@ fn test_e2e_bare_reference_inside_class_falls_back_to_module_scope() {
             .contains("#py:exception:zipimport.zipimporterror\"")
     );
 }
+
+#[test]
+fn test_e2e_class_definition_resolves_both_class_and_exc_role_references() {
+    // Given — the real-world CPython shape that surfaced the
+    // "broken domain object 'Fault'" warning in `xmlrpc.client.rst`: the
+    // object is defined via `.. class::` but referenced via both `:exc:`
+    // and `:class:` roles, which real Sphinx treats as mutually aliasable.
+    let input = "\
+.. class:: Fault
+
+   Encapsulates the content of an XML-RPC fault tag.
+
+Both :exc:`Fault` and :class:`Fault` refer to the same object.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then — no broken domain object reference, and both references' hrefs
+    // point at the anchor the `class` definition actually rendered.
+    assert!(
+        output.broken_links.is_empty(),
+        "expected no broken links, got {:?}",
+        output.broken_links
+    );
+    assert!(output.html.contains("<dt id=\"py:class:fault\">"));
+    assert_eq!(output.html.matches("#py:class:fault\"").count(), 2);
+}
+
+#[test]
+fn test_e2e_exception_definition_resolves_class_role_reference() {
+    // Given — the mirror case: an object defined via `.. exception::`
+    // referenced via `:class:`, proving the aliasing is bidirectional.
+    let input = "\
+.. exception:: Fault
+
+   Encapsulates the content of an XML-RPC fault tag.
+
+Use :class:`Fault` to catch it.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then
+    assert!(
+        output.broken_links.is_empty(),
+        "expected no broken links, got {:?}",
+        output.broken_links
+    );
+    assert!(output.html.contains("<dt id=\"py:exception:fault\">"));
+    assert!(output.html.contains("#py:exception:fault\""));
+}
+
+#[test]
+fn test_e2e_function_definition_does_not_resolve_exc_role_reference() {
+    // Given — a negative case guarding the alias table stays intentionally
+    // small (`class`/`exception` only, matching real Sphinx's `py` domain):
+    // a `.. function::` definition must NOT resolve an `:exc:` reference.
+    let input = "\
+.. function:: Fault(x)
+
+   Not actually an exception.
+
+See :exc:`Fault` for details.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then
+    assert!(
+        !output.broken_links.is_empty(),
+        "expected a broken link for the unaliased objtype mismatch"
+    );
+    assert!(output.html.contains("class=\"broken-link\""));
+}

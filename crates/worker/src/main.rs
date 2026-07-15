@@ -114,7 +114,11 @@ fn process_preview(
     template_str: &str,
     doc_path: &str,
     default_domain: ast::Domain,
-) -> Result<(String, Vec<renderer::BrokenLink>)> {
+) -> Result<(
+    String,
+    Vec<renderer::BrokenLink>,
+    Vec<renderer::ObjectTypeMismatch>,
+)> {
     let doc = parser::parse_with_domain(doc_path, rst, default_domain);
     let mut index = if let Some(json) = index_json {
         serde_json::from_str(json).context("Failed to deserialize global index")?
@@ -159,7 +163,11 @@ fn process_preview(
             has_genindex: !index.genindex_entries.is_empty(),
         },
     )?;
-    Ok((html, render_output.broken_links))
+    Ok((
+        html,
+        render_output.broken_links,
+        render_output.object_type_mismatches,
+    ))
 }
 
 fn process_render(
@@ -168,7 +176,11 @@ fn process_render(
     config: &config::SiteConfig,
     template_str: &str,
     doc_path: &str,
-) -> Result<(String, Vec<renderer::BrokenLink>)> {
+) -> Result<(
+    String,
+    Vec<renderer::BrokenLink>,
+    Vec<renderer::ObjectTypeMismatch>,
+)> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
     let index: analyzer::ProjectIndex =
@@ -202,7 +214,11 @@ fn process_render(
             has_genindex: !index.genindex_entries.is_empty(),
         },
     )?;
-    Ok((html, render_output.broken_links))
+    Ok((
+        html,
+        render_output.broken_links,
+        render_output.object_type_mismatches,
+    ))
 }
 
 fn process_genindex(
@@ -221,6 +237,30 @@ fn format_broken_link_warning(doc_path: &str, link: &renderer::BrokenLink) -> St
         "warning: broken {} '{}' in {doc_path}",
         link.kind.as_str(),
         link.target
+    )
+}
+
+/// Formats a single object-type-mismatch diagnostic as a human-readable
+/// warning line. Both the requested and resolved object types are shown
+/// domain-qualified (e.g. `"py:class"`, not just `"class"`) via
+/// [`rusty_sphinx_ast::ObjectType::domain_qualified_str`] — the alias
+/// fallback is domain-scoped today (only `py`'s `class`/`exception` alias
+/// each other), so the two domains always match in practice, but spelling
+/// both out avoids the reader having to assume that rather than see it.
+/// Unlike [`format_broken_link_warning`], this never feeds into
+/// [`check_broken_links_strict`] — the reference did resolve, so `--strict-links`
+/// never fails the build for it; the warning only flags that the reference's
+/// role (e.g. `:exc:`) and the definition's actual object type (e.g. `class`)
+/// are inconsistent.
+fn format_object_type_mismatch_warning(
+    doc_path: &str,
+    mismatch: &renderer::ObjectTypeMismatch,
+) -> String {
+    format!(
+        "warning: domain object '{}' referenced as '{}' but defined as '{}' in {doc_path}",
+        mismatch.name,
+        mismatch.requested_type.domain_qualified_str(),
+        mismatch.resolved_type.domain_qualified_str(),
     )
 }
 
@@ -341,7 +381,7 @@ fn cmd_render(args: &[String]) -> Result<()> {
     let index_json =
         fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
 
-    let (html, broken_links) = process_render(
+    let (html, broken_links, object_type_mismatches) = process_render(
         &ast_json,
         &index_json,
         &site_config,
@@ -351,6 +391,12 @@ fn cmd_render(args: &[String]) -> Result<()> {
 
     for link in &broken_links {
         eprintln!("{}", format_broken_link_warning(&doc_path, link));
+    }
+    for mismatch in &object_type_mismatches {
+        eprintln!(
+            "{}",
+            format_object_type_mismatch_warning(&doc_path, mismatch)
+        );
     }
     check_broken_links_strict(strict_links, &doc_path, &broken_links)?;
 
@@ -450,7 +496,7 @@ fn cmd_preview(args: &[String]) -> Result<()> {
     let template_str = fs::read_to_string(&template_path)
         .with_context(|| format!("Error reading template '{template_path}'"))?;
 
-    let (html, broken_links) = process_preview(
+    let (html, broken_links, object_type_mismatches) = process_preview(
         &rst,
         index_json.as_deref(),
         &site_config,
@@ -463,6 +509,12 @@ fn cmd_preview(args: &[String]) -> Result<()> {
     // documents), so broken links are always warnings, never a failure.
     for link in &broken_links {
         eprintln!("{}", format_broken_link_warning(&doc_path, link));
+    }
+    for mismatch in &object_type_mismatches {
+        eprintln!(
+            "{}",
+            format_object_type_mismatch_warning(&doc_path, mismatch)
+        );
     }
 
     println!("{html}");
@@ -901,12 +953,13 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let (html, broken_links) =
+        let (html, broken_links, object_type_mismatches) =
             process_render(doc, index, &config, template, "test.rst").unwrap();
 
         // Then
         assert!(html.contains("<h1>Title</h1>"));
         assert!(broken_links.is_empty());
+        assert!(object_type_mismatches.is_empty());
     }
 
     #[test]
@@ -918,11 +971,61 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let (_, broken_links) = process_render(doc, index, &config, template, "test.rst").unwrap();
+        let (_, broken_links, _) =
+            process_render(doc, index, &config, template, "test.rst").unwrap();
 
         // Then
         assert_eq!(broken_links.len(), 1);
         assert_eq!(broken_links[0].target, "missing");
+    }
+
+    #[test]
+    fn test_process_render_reports_object_type_mismatch() {
+        // Given — mirrors CPython's `xmlrpc.client.rst`: `Fault` is defined
+        // via `.. class::` but referenced via `:exc:`.
+        let doc = r#"{"path":"test.rst","nodes":[
+            {"Directive":{"DomainObject":{"PyClass":{"signature":"Fault","is_final":false,"body":[]}}}},
+            {"Paragraph":[{"DomainObjectReference":{"object_type":"py:exception","name":"Fault","display":"Fault","link":true}}]}
+        ]}"#;
+        let index = r#"{"targets":{},"document_titles":{},"nav_tree":[],"glossary_terms":{},"domain_objects":{"fault":{"py:class":"test.rst"}},"genindex_entries":[]}"#;
+        let config = config::SiteConfig::default();
+        let template = "{{ body }}";
+
+        // When
+        let (_, broken_links, object_type_mismatches) =
+            process_render(doc, index, &config, template, "test.rst").unwrap();
+
+        // Then — resolved, not broken, but flagged as a mismatch
+        assert!(broken_links.is_empty());
+        assert_eq!(object_type_mismatches.len(), 1);
+        assert_eq!(object_type_mismatches[0].name, "Fault");
+        assert_eq!(
+            object_type_mismatches[0].requested_type,
+            ast::ObjectType::Py(ast::PyObjectType::Exception)
+        );
+        assert_eq!(
+            object_type_mismatches[0].resolved_type,
+            ast::ObjectType::Py(ast::PyObjectType::Class)
+        );
+    }
+
+    #[test]
+    fn test_format_object_type_mismatch_warning_includes_name_and_types() {
+        // Given
+        let mismatch = renderer::ObjectTypeMismatch {
+            name: "fault".to_string(),
+            requested_type: ast::ObjectType::Py(ast::PyObjectType::Exception),
+            resolved_type: ast::ObjectType::Py(ast::PyObjectType::Class),
+        };
+
+        // When
+        let message = format_object_type_mismatch_warning("xmlrpc.client.rst", &mismatch);
+
+        // Then
+        assert_eq!(
+            message,
+            "warning: domain object 'fault' referenced as 'py:exception' but defined as 'py:class' in xmlrpc.client.rst"
+        );
     }
 
     #[test]
@@ -965,7 +1068,7 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let (html, broken_links) = process_preview(
+        let (html, broken_links, _) = process_preview(
             rst,
             Some(global_index),
             &config,
@@ -990,7 +1093,7 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let (html, broken_links) =
+        let (html, broken_links, _) =
             process_preview(rst, None, &config, template, "test.rst", ast::Domain::Py).unwrap();
 
         // Then
@@ -1006,7 +1109,7 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let (html, broken_links) =
+        let (html, broken_links, _) =
             process_preview(rst, None, &config, template, "test.rst", ast::Domain::Py).unwrap();
 
         // Then

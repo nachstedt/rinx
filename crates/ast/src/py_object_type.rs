@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Object types defined by the `py` domain.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PyObjectType {
     Function,
@@ -158,5 +158,15 @@ mod tests {
 
         // Then
         assert_eq!(s, "exception");
+    }
+
+    #[test]
+    fn test_py_object_type_ord_orders_variants_by_declaration_order() {
+        // Given
+        let function = PyObjectType::Function;
+        let exception = PyObjectType::Exception;
+
+        // When / Then
+        assert!(function < exception);
     }
 }

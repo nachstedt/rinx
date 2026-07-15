@@ -17,7 +17,7 @@ use directives::{
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use rusty_sphinx_analyzer::ProjectIndex;
-use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, TableRow};
+use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, ObjectType, TableRow};
 use std::fmt::Write as _;
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
@@ -56,12 +56,32 @@ pub struct BrokenLink {
     pub target: String,
 }
 
-/// The result of rendering a document: the body HTML plus any cross-references
-/// that failed to resolve against the [`ProjectIndex`].
+/// A domain-object reference that *did* resolve, but only via
+/// [`rusty_sphinx_ast::ObjectType::role_alias_candidates`]'s fallback — the
+/// definition's own object type doesn't match the one the role asked for
+/// (e.g. a `:exc:` role resolved against a `.. class::` definition, as
+/// `CPython`'s `xmlrpc.client.rst` does with `Fault`). Deliberately not a
+/// [`BrokenLink`]: the reference works and the build is never failed for it
+/// (not even under `--strict-links`) — this only flags a source
+/// inconsistency the author may want to clean up.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ObjectTypeMismatch {
+    /// The qualified name the reference resolved against.
+    pub name: String,
+    /// The object type the role asked for (e.g. `exception`, from `:exc:`).
+    pub requested_type: ObjectType,
+    /// The object type the definition actually has (e.g. `class`).
+    pub resolved_type: ObjectType,
+}
+
+/// The result of rendering a document: the body HTML, any cross-references
+/// that failed to resolve against the [`ProjectIndex`], and any domain-object
+/// references that resolved only via an object-type fallback.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RenderOutput {
     pub html: String,
     pub broken_links: Vec<BrokenLink>,
+    pub object_type_mismatches: Vec<ObjectTypeMismatch>,
 }
 
 /// Shared rendering state threaded through the node traversal.
@@ -72,6 +92,7 @@ pub(crate) struct RenderCtx<'a> {
     pub anon_index: &'a mut usize,
     pub original_doc_path: &'a str,
     pub broken_links: &'a mut Vec<BrokenLink>,
+    pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
     /// Stack of enclosing `py:class`/`py:exception` qualified names, innermost
     /// last — empty outside any class/exception. Pushed/popped by
     /// `render_domain_object` around a `PyClass`/`PyException`'s nested body
@@ -96,6 +117,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
     collect_anonymous_targets(&doc.nodes, &mut anon_targets);
     let mut anon_index = 0;
     let mut broken_links = Vec::new();
+    let mut object_type_mismatches = Vec::new();
 
     let mut ctx = RenderCtx {
         index,
@@ -104,13 +126,18 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         anon_index: &mut anon_index,
         original_doc_path: &doc.path,
         broken_links: &mut broken_links,
+        object_type_mismatches: &mut object_type_mismatches,
         class_stack: Vec::new(),
         current_module: None,
     };
 
     render_nodes(&mut html, &doc.nodes, &mut ctx);
 
-    RenderOutput { html, broken_links }
+    RenderOutput {
+        html,
+        broken_links,
+        object_type_mismatches,
+    }
 }
 
 fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
@@ -369,12 +396,10 @@ mod tests {
             }],
         );
         let mut index = ProjectIndex::default();
-        index.domain_objects.insert(
-            rusty_sphinx_ast::build_domain_object_key(
-                rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
-                "greetings",
-            ),
-            "api.rst".to_string(),
+        index.insert_domain_object(
+            rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+            "greetings",
+            "api.rst",
         );
 
         // When
