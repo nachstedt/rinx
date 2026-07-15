@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::de::Error as _;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::c_object_type::CObjectType;
 use crate::domain::Domain;
@@ -11,11 +12,45 @@ use crate::py_object_type::PyObjectType;
 /// recoverable from the value itself via [`ObjectType::domain`] — there is
 /// no separate `domain` field that could drift out of sync with the object
 /// type.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+///
+/// `Ord`/`PartialOrd` are derived (in declaration order) so `ObjectType` can
+/// be used as a `BTreeMap` key (the second level of
+/// `ProjectIndex::domain_objects`). `Serialize`/`Deserialize` are hand-written
+/// rather than derived: `ObjectType` has non-unit variants, so a derived impl
+/// would serialize as `{"py":"class"}`, and `serde_json` rejects non-string
+/// map keys — the hand-written impl renders/parses the flat `"py:class"`
+/// form instead, which both stays a valid map key and matches the
+/// `domain:objtype` shape used elsewhere (e.g. [`crate::domain_object_body::build_domain_object_key`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ObjectType {
     Py(PyObjectType),
     C(CObjectType),
+}
+
+impl Serialize for ObjectType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&format!("{}:{}", self.domain().as_str(), self.as_str()))
+    }
+}
+
+impl<'de> Deserialize<'de> for ObjectType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        let (domain_str, objtype_str) = s
+            .split_once(':')
+            .ok_or_else(|| D::Error::custom(format!("invalid object type key: {s:?}")))?;
+        let domain: Domain = domain_str
+            .parse()
+            .map_err(|()| D::Error::custom(format!("unknown domain: {domain_str:?}")))?;
+        Self::from_directive_name(domain, objtype_str)
+            .ok_or_else(|| D::Error::custom(format!("unknown object type: {s:?}")))
+    }
 }
 
 impl ObjectType {
@@ -33,6 +68,19 @@ impl ObjectType {
             Self::Py(t) => t.as_str(),
             Self::C(t) => t.as_str(),
         }
+    }
+
+    /// The `"domain:objtype"` form (e.g. `"py:class"`) used in diagnostics
+    /// where the domain needs to be visible alongside the object type — bare
+    /// `as_str()` alone is ambiguous between domains that happen to share an
+    /// object-type name (though today only `function` does: `py:function`
+    /// vs `c:function`). Distinct from
+    /// [`crate::domain_object_body::build_domain_object_key`]'s
+    /// `"domain:objtype:name"` anchor-key form, which additionally includes
+    /// a specific object's name.
+    #[must_use]
+    pub fn domain_qualified_str(&self) -> String {
+        format!("{}:{}", self.domain().as_str(), self.as_str())
     }
 
     /// Parses a directive-style object-type name (e.g. `"function"` from
@@ -66,6 +114,34 @@ impl ObjectType {
             _ => None,
         }
     }
+
+    /// The object types a reference asking for `self` is also willing to
+    /// accept, most-preferred (itself) first — models real Sphinx's small,
+    /// static `py` domain aliasing between `class`/`exception`/`obj`
+    /// (`CPython`'s own docs freely mix `.. class::` definitions with `:exc:`
+    /// references and vice versa, and Sphinx never warns). Deliberately an
+    /// exhaustive match, not a wildcard fallback arm: adding a new object
+    /// type later forces a decision about whether it aliases anything.
+    #[must_use]
+    pub const fn role_alias_candidates(self) -> &'static [Self] {
+        match self {
+            Self::Py(PyObjectType::Class) => &[
+                Self::Py(PyObjectType::Class),
+                Self::Py(PyObjectType::Exception),
+            ],
+            Self::Py(PyObjectType::Exception) => &[
+                Self::Py(PyObjectType::Exception),
+                Self::Py(PyObjectType::Class),
+            ],
+            Self::Py(PyObjectType::Function) => &[Self::Py(PyObjectType::Function)],
+            Self::Py(PyObjectType::Module) => &[Self::Py(PyObjectType::Module)],
+            Self::Py(PyObjectType::Data) => &[Self::Py(PyObjectType::Data)],
+            Self::Py(PyObjectType::Method) => &[Self::Py(PyObjectType::Method)],
+            Self::Py(PyObjectType::Attribute) => &[Self::Py(PyObjectType::Attribute)],
+            Self::C(CObjectType::Function) => &[Self::C(CObjectType::Function)],
+            Self::C(CObjectType::Macro) => &[Self::C(CObjectType::Macro)],
+        }
+    }
 }
 
 #[cfg(test)]
@@ -93,6 +169,23 @@ mod tests {
 
         // Then
         assert_eq!(s, "function");
+    }
+
+    #[test]
+    fn test_object_type_domain_qualified_str_prefixes_domain() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Class).domain_qualified_str(),
+            "py:class"
+        );
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Exception).domain_qualified_str(),
+            "py:exception"
+        );
+        assert_eq!(
+            ObjectType::C(CObjectType::Function).domain_qualified_str(),
+            "c:function"
+        );
     }
 
     #[test]
@@ -250,5 +343,102 @@ mod tests {
 
         // Then
         assert_eq!(object_type, deserialized);
+    }
+
+    #[test]
+    fn test_object_type_serializes_as_flat_domain_objtype_string() {
+        // Given
+        let object_type = ObjectType::Py(PyObjectType::Class);
+
+        // When
+        let json = serde_json::to_string(&object_type).expect("Failed to serialize");
+
+        // Then — not the derived `{"py":"class"}` shape, which serde_json
+        // would reject as a map key.
+        assert_eq!(json, "\"py:class\"");
+    }
+
+    #[test]
+    fn test_object_type_deserialize_rejects_malformed_string() {
+        // Given
+        let json = "\"not-a-valid-key\"";
+
+        // When
+        let result: Result<ObjectType, _> = serde_json::from_str(json);
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_object_type_can_be_used_as_btreemap_key() {
+        // Given
+        let mut map = std::collections::BTreeMap::new();
+
+        // When
+        map.insert(ObjectType::Py(PyObjectType::Class), "fault.rst");
+        map.insert(ObjectType::Py(PyObjectType::Exception), "other.rst");
+
+        // Then
+        assert_eq!(
+            map.get(&ObjectType::Py(PyObjectType::Class)),
+            Some(&"fault.rst")
+        );
+        assert_eq!(
+            map.get(&ObjectType::Py(PyObjectType::Exception)),
+            Some(&"other.rst")
+        );
+    }
+
+    #[test]
+    fn test_role_alias_candidates_aliases_class_and_exception_both_directions() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Class).role_alias_candidates(),
+            &[
+                ObjectType::Py(PyObjectType::Class),
+                ObjectType::Py(PyObjectType::Exception)
+            ]
+        );
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Exception).role_alias_candidates(),
+            &[
+                ObjectType::Py(PyObjectType::Exception),
+                ObjectType::Py(PyObjectType::Class)
+            ]
+        );
+    }
+
+    #[test]
+    fn test_role_alias_candidates_is_self_only_for_non_aliased_types() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Function).role_alias_candidates(),
+            &[ObjectType::Py(PyObjectType::Function)]
+        );
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Module).role_alias_candidates(),
+            &[ObjectType::Py(PyObjectType::Module)]
+        );
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Data).role_alias_candidates(),
+            &[ObjectType::Py(PyObjectType::Data)]
+        );
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Method).role_alias_candidates(),
+            &[ObjectType::Py(PyObjectType::Method)]
+        );
+        assert_eq!(
+            ObjectType::Py(PyObjectType::Attribute).role_alias_candidates(),
+            &[ObjectType::Py(PyObjectType::Attribute)]
+        );
+        assert_eq!(
+            ObjectType::C(CObjectType::Function).role_alias_candidates(),
+            &[ObjectType::C(CObjectType::Function)]
+        );
+        assert_eq!(
+            ObjectType::C(CObjectType::Macro).role_alias_candidates(),
+            &[ObjectType::C(CObjectType::Macro)]
+        );
     }
 }

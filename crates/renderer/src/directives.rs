@@ -389,6 +389,7 @@ mod tests {
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
+            object_type_mismatches: &mut Vec::new(),
             class_stack: Vec::new(),
             current_module: None,
         };
@@ -427,6 +428,7 @@ mod tests {
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
+            object_type_mismatches: &mut Vec::new(),
             class_stack: Vec::new(),
             current_module: None,
         };
@@ -600,6 +602,7 @@ mod tests {
             anon_index: &mut anon_index,
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
+            object_type_mismatches: &mut Vec::new(),
             class_stack: Vec::new(),
             current_module: None,
         };

@@ -8,7 +8,7 @@ mod utils;
 
 pub use utils::normalize_path;
 
-use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TargetName};
+use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, ObjectType, TargetName};
 use serde::{Deserialize, Serialize};
 
 use std::collections::BTreeMap;
@@ -65,10 +65,16 @@ pub struct ProjectIndex {
     /// Maps normalized glossary term names to the document path containing their definition.
     #[serde(default)]
     pub glossary_terms: BTreeMap<TargetName, String>,
-    /// Maps domain-qualified object keys (e.g. `py:function:foo`) to the
-    /// document path containing their `Directive::DomainObject` definition.
+    /// Maps a domain object's qualified name (e.g. `xmlrpc.client.fault`) to
+    /// every object type it's been defined under and the document path
+    /// containing that `Directive::DomainObject` definition. Keyed by name
+    /// first (rather than baking the object type into a single flat key)
+    /// so a reference can be resolved against any of the object types real
+    /// Sphinx treats as mutually aliasable for the same name (see
+    /// [`ObjectType::role_alias_candidates`]) — e.g. `CPython` documents
+    /// `Fault` via `.. class::` but references it via `:exc:`.
     #[serde(default)]
-    pub domain_objects: BTreeMap<TargetName, String>,
+    pub domain_objects: BTreeMap<TargetName, BTreeMap<ObjectType, String>>,
     /// Entries for the site-wide general index page, accumulated (not
     /// deduplicated) across every document — the same term legitimately
     /// appearing from multiple locations is expected, not an error.
@@ -77,6 +83,23 @@ pub struct ProjectIndex {
 }
 
 impl ProjectIndex {
+    /// Registers a domain object's definition under its qualified name,
+    /// keyed further by its own object type — shared by [`index_domain_object`]
+    /// and by tests, so both always agree on how a `domain_objects` entry is
+    /// shaped. Last-writer-wins if the same `(qualified_name, object_type)`
+    /// pair is inserted twice.
+    pub fn insert_domain_object(
+        &mut self,
+        object_type: ObjectType,
+        qualified_name: &str,
+        doc_path: impl Into<String>,
+    ) {
+        self.domain_objects
+            .entry(TargetName::new(qualified_name))
+            .or_default()
+            .insert(object_type, doc_path.into());
+    }
+
     /// Merge another `ProjectIndex` into this one.
     ///
     /// Emits a diagnostic string for each glossary term defined in both indices
@@ -84,7 +107,12 @@ impl ProjectIndex {
     pub fn merge(&mut self, other: Self) -> Vec<String> {
         self.targets.extend(other.targets);
         self.document_titles.extend(other.document_titles);
-        self.domain_objects.extend(other.domain_objects);
+        for (name, object_types) in other.domain_objects {
+            self.domain_objects
+                .entry(name)
+                .or_default()
+                .extend(object_types);
+        }
         self.genindex_entries.extend(other.genindex_entries);
         // nav_tree is built globally, not merged per-document
         let mut diagnostics = Vec::new();
@@ -262,16 +290,14 @@ fn index_domain_object(
         obj.object_type().domain(),
     );
     let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, &obj.name());
-    let key = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
-    index
-        .domain_objects
-        .insert(key.clone(), doc_path.to_string());
+    index.insert_domain_object(obj.object_type(), &qualified_name, doc_path);
+    let anchor = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
     index.genindex_entries.push(GenIndexEntry {
         primary: format!("{qualified_name} ({})", obj.object_type().as_str()),
         subentry: None,
         main: false,
         doc_path: doc_path.to_string(),
-        anchor: key.as_str().to_string(),
+        anchor: anchor.as_str().to_string(),
     });
     if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. }) {
         *current_module = Some(qualified_name.clone());
@@ -411,7 +437,55 @@ pub fn build_project_index(docs: &[Document]) -> ProjectIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{InlineNode, Node, ObjectType, PyObjectType};
+    use rusty_sphinx_ast::{Domain, InlineNode, Node, ObjectType, PyObjectType};
+
+    /// Looks up a domain object by the pre-refactor flat `"domain:objtype:name"`
+    /// key shape (e.g. `"py:function:greet"`), so test expectations can stay
+    /// expressed as a single string instead of repeating two-level map
+    /// navigation at every call site below.
+    fn lookup_domain_object<'a>(index: &'a ProjectIndex, flat_key: &str) -> Option<&'a String> {
+        let mut parts = flat_key.splitn(3, ':');
+        let domain: Domain = parts.next()?.parse().ok()?;
+        let objtype_str = parts.next()?;
+        let name = parts.next()?;
+        let object_type = ObjectType::from_directive_name(domain, objtype_str)?;
+        index
+            .domain_objects
+            .get(&TargetName::new(name))?
+            .get(&object_type)
+    }
+
+    #[test]
+    fn test_lookup_domain_object_finds_inserted_entry() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(ObjectType::Py(PyObjectType::Function), "greet", "api.rst");
+
+        // When / Then
+        assert_eq!(
+            lookup_domain_object(&index, "py:function:greet"),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_lookup_domain_object_returns_none_for_missing_name() {
+        // Given
+        let index = ProjectIndex::default();
+
+        // When / Then
+        assert_eq!(lookup_domain_object(&index, "py:function:greet"), None);
+    }
+
+    #[test]
+    fn test_lookup_domain_object_returns_none_when_name_present_under_different_objtype() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(ObjectType::Py(PyObjectType::Class), "Fault", "xmlrpc.rst");
+
+        // When / Then
+        assert_eq!(lookup_domain_object(&index, "py:function:Fault"), None);
+    }
 
     #[test]
     fn test_build_nav_subtree_basic() {
@@ -1179,9 +1253,7 @@ mod tests {
         // Then
         assert_eq!(index.domain_objects.len(), 1);
         assert_eq!(
-            index
-                .domain_objects
-                .get(&TargetName::new("py:function:greet")),
+            lookup_domain_object(&index, "py:function:greet"),
             Some(&"api.rst".to_string())
         );
     }
@@ -1208,9 +1280,7 @@ mod tests {
         // Then
         assert_eq!(index.domain_objects.len(), 1);
         assert_eq!(
-            index
-                .domain_objects
-                .get(&TargetName::new("py:module:greetings")),
+            lookup_domain_object(&index, "py:module:greetings"),
             Some(&"api.rst".to_string())
         );
     }
@@ -1237,9 +1307,7 @@ mod tests {
         // one both `:py:data:` and `:py:const:` roles resolve against.
         assert_eq!(index.domain_objects.len(), 1);
         assert_eq!(
-            index
-                .domain_objects
-                .get(&TargetName::new("py:data:DEFAULT_TIMEOUT")),
+            lookup_domain_object(&index, "py:data:DEFAULT_TIMEOUT"),
             Some(&"api.rst".to_string())
         );
     }
@@ -1264,9 +1332,7 @@ mod tests {
         // Then
         assert_eq!(index.domain_objects.len(), 1);
         assert_eq!(
-            index
-                .domain_objects
-                .get(&TargetName::new("py:exception:GreeterError")),
+            lookup_domain_object(&index, "py:exception:GreeterError"),
             Some(&"api.rst".to_string())
         );
     }
@@ -1295,18 +1361,18 @@ mod tests {
         // When
         let index = analyze(&doc);
 
-        // Then
-        assert_eq!(index.domain_objects.len(), 2);
-        assert!(
+        // Then — same qualified name ("add"), but two distinct object types
+        // coexist under it, one entry per domain.
+        assert_eq!(index.domain_objects.len(), 1);
+        assert_eq!(
             index
                 .domain_objects
-                .contains_key(&TargetName::new("py:function:add"))
+                .get(&TargetName::new("add"))
+                .map(std::collections::BTreeMap::len),
+            Some(2)
         );
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("c:function:add"))
-        );
+        assert!(lookup_domain_object(&index, "py:function:add").is_some());
+        assert!(lookup_domain_object(&index, "c:function:add").is_some());
     }
 
     #[test]
@@ -1330,25 +1396,48 @@ mod tests {
     fn test_merge_combines_domain_objects_from_two_documents() {
         // Given
         let mut idx1 = ProjectIndex::default();
-        idx1.domain_objects
-            .insert(TargetName::new("py:function:foo"), "a.rst".to_string());
+        idx1.insert_domain_object(ObjectType::Py(PyObjectType::Function), "foo", "a.rst");
 
         let mut idx2 = ProjectIndex::default();
-        idx2.domain_objects
-            .insert(TargetName::new("c:function:bar"), "b.rst".to_string());
+        idx2.insert_domain_object(
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+            "bar",
+            "b.rst",
+        );
 
         // When
         idx1.merge(idx2);
 
         // Then
         assert_eq!(idx1.domain_objects.len(), 2);
-        assert!(
-            idx1.domain_objects
-                .contains_key(&TargetName::new("py:function:foo"))
+        assert!(lookup_domain_object(&idx1, "py:function:foo").is_some());
+        assert!(lookup_domain_object(&idx1, "c:function:bar").is_some());
+    }
+
+    #[test]
+    fn test_merge_combines_domain_objects_with_different_object_types_for_same_name() {
+        // Given — mirrors CPython's `xmlrpc.client.rst`: one document defines
+        // `Fault` via `.. class::`, another (hypothetically) documents it via
+        // `.. exception::` — merge must keep both coexisting under the same
+        // qualified name rather than one clobbering the other.
+        let mut idx1 = ProjectIndex::default();
+        idx1.insert_domain_object(ObjectType::Py(PyObjectType::Class), "Fault", "a.rst");
+
+        let mut idx2 = ProjectIndex::default();
+        idx2.insert_domain_object(ObjectType::Py(PyObjectType::Exception), "Fault", "b.rst");
+
+        // When
+        idx1.merge(idx2);
+
+        // Then
+        assert_eq!(idx1.domain_objects.len(), 1);
+        assert_eq!(
+            lookup_domain_object(&idx1, "py:class:Fault"),
+            Some(&"a.rst".to_string())
         );
-        assert!(
-            idx1.domain_objects
-                .contains_key(&TargetName::new("c:function:bar"))
+        assert_eq!(
+            lookup_domain_object(&idx1, "py:exception:Fault"),
+            Some(&"b.rst".to_string())
         );
     }
 
@@ -1382,9 +1471,7 @@ mod tests {
 
         // Then
         assert_eq!(
-            index
-                .domain_objects
-                .get(&TargetName::new("py:data:A_NORMAL")),
+            lookup_domain_object(&index, "py:data:A_NORMAL"),
             Some(&"curses.rst".to_string())
         );
     }
@@ -1442,9 +1529,7 @@ mod tests {
 
         // Then
         assert_eq!(
-            index
-                .domain_objects
-                .get(&TargetName::new("py:function:greet")),
+            lookup_domain_object(&index, "py:function:greet"),
             Some(&"test.rst".to_string())
         );
     }
@@ -1472,9 +1557,7 @@ mod tests {
 
         // Then
         assert_eq!(
-            index
-                .domain_objects
-                .get(&TargetName::new("py:function:greet")),
+            lookup_domain_object(&index, "py:function:greet"),
             Some(&"test.rst".to_string())
         );
     }
@@ -1502,9 +1585,7 @@ mod tests {
 
         // Then
         assert_eq!(
-            index
-                .domain_objects
-                .get(&TargetName::new("py:function:greet")),
+            lookup_domain_object(&index, "py:function:greet"),
             Some(&"test.rst".to_string())
         );
     }
@@ -1536,16 +1617,8 @@ mod tests {
         // Then — both the outer module and the nested function are indexed,
         // the function qualified by the enclosing module's name
         assert_eq!(index.domain_objects.len(), 2);
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:module:greetings"))
-        );
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:function:greetings.greet"))
-        );
+        assert!(lookup_domain_object(&index, "py:module:greetings").is_some());
+        assert!(lookup_domain_object(&index, "py:function:greetings.greet").is_some());
     }
 
     #[test]
@@ -1576,16 +1649,8 @@ mod tests {
 
         // Then — both the class and its qualified method are indexed
         assert_eq!(index.domain_objects.len(), 2);
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:class:Greeter"))
-        );
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:method:Greeter.greet"))
-        );
+        assert!(lookup_domain_object(&index, "py:class:Greeter").is_some());
+        assert!(lookup_domain_object(&index, "py:method:Greeter.greet").is_some());
     }
 
     #[test]
@@ -1617,16 +1682,8 @@ mod tests {
 
         // Then — both the exception and its qualified method are indexed
         assert_eq!(index.domain_objects.len(), 2);
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:exception:GreeterError"))
-        );
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:method:GreeterError.reason"))
-        );
+        assert!(lookup_domain_object(&index, "py:exception:GreeterError").is_some());
+        assert!(lookup_domain_object(&index, "py:method:GreeterError.reason").is_some());
     }
 
     #[test]
@@ -1660,16 +1717,8 @@ mod tests {
         // Then — the attribute is indexed under its own already-qualified
         // name, not doubled to "StopIteration.StopIteration.value"
         assert_eq!(index.domain_objects.len(), 2);
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:exception:StopIteration"))
-        );
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:attribute:StopIteration.value"))
-        );
+        assert!(lookup_domain_object(&index, "py:exception:StopIteration").is_some());
+        assert!(lookup_domain_object(&index, "py:attribute:StopIteration.value").is_some());
     }
 
     #[test]
@@ -1705,16 +1754,8 @@ mod tests {
         let index = analyze(&doc);
 
         // Then
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:class:Outer.Inner"))
-        );
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:method:Outer.Inner.method"))
-        );
+        assert!(lookup_domain_object(&index, "py:class:Outer.Inner").is_some());
+        assert!(lookup_domain_object(&index, "py:method:Outer.Inner.method").is_some());
     }
 
     #[test]
@@ -1742,11 +1783,7 @@ mod tests {
         let index = analyze(&doc);
 
         // Then
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:data:Greeter.DEFAULT_GREETING"))
-        );
+        assert!(lookup_domain_object(&index, "py:data:Greeter.DEFAULT_GREETING").is_some());
     }
 
     #[test]
@@ -1775,16 +1812,8 @@ mod tests {
         let index = analyze(&doc);
 
         // Then
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:function:greetings.greet"))
-        );
-        assert!(
-            !index
-                .domain_objects
-                .contains_key(&TargetName::new("py:function:greet"))
-        );
+        assert!(lookup_domain_object(&index, "py:function:greetings.greet").is_some());
+        assert!(lookup_domain_object(&index, "py:function:greet").is_none());
     }
 
     #[test]
@@ -1818,11 +1847,7 @@ mod tests {
         let index = analyze(&doc);
 
         // Then
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:function:types.coroutine"))
-        );
+        assert!(lookup_domain_object(&index, "py:function:types.coroutine").is_some());
     }
 
     #[test]
@@ -1854,11 +1879,7 @@ mod tests {
         let index = analyze(&doc);
 
         // Then
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:function:greet"))
-        );
+        assert!(lookup_domain_object(&index, "py:function:greet").is_some());
     }
 
     #[test]
@@ -1901,11 +1922,7 @@ mod tests {
         let index = analyze(&doc);
 
         // Then
-        assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:class:email.mime.text.MIMEText"))
-        );
+        assert!(lookup_domain_object(&index, "py:class:email.mime.text.MIMEText").is_some());
     }
 
     #[test]
@@ -1948,14 +1965,10 @@ mod tests {
         let index = analyze(&doc);
 
         // Then
+        assert!(lookup_domain_object(&index, "py:class:types.DynamicClassAttribute").is_some());
         assert!(
-            index
-                .domain_objects
-                .contains_key(&TargetName::new("py:class:types.DynamicClassAttribute"))
+            lookup_domain_object(&index, "py:method:types.DynamicClassAttribute.__get__").is_some()
         );
-        assert!(index.domain_objects.contains_key(&TargetName::new(
-            "py:method:types.DynamicClassAttribute.__get__"
-        )));
     }
 
     // ── genindex analyzer tests ───────────────────────────────────────────────
