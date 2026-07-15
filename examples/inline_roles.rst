@@ -32,3 +32,13 @@ The ``:term:`` role creates a cross-reference to a term defined in a
 * Basic term reference: The :term:`environment` stores document metadata.
 * Multi-word term: The :term:`configuration directory` holds project settings.
 * Custom display text: :term:`the build tool <builder>` processes the RST files.
+
+Reference Role (``:ref:``)
+---------------------------
+
+The ``:ref:`` role creates a cross-reference to a labeled location
+elsewhere in the site.
+
+* Basic reference: See :ref:`home-index` for the project overview.
+* Custom display text: :ref:`the site home <home-index>` links back to
+  the same page under different link text.

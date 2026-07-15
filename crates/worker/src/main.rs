@@ -912,7 +912,7 @@ mod tests {
     #[test]
     fn test_process_render_reports_broken_reference() {
         // Given
-        let doc = r#"{"path":"test.rst","nodes":[{"Paragraph":[{"Reference":"missing"}]}]}"#;
+        let doc = r#"{"path":"test.rst","nodes":[{"Paragraph":[{"Reference":{"display":"missing","target":"missing"}}]}]}"#;
         let index = r#"{"targets":{},"document_titles":{},"nav_tree":[]}"#;
         let config = config::SiteConfig::default();
         let template = "{{ body }}";

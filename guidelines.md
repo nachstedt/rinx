@@ -25,3 +25,4 @@
 - When adding a construct whose delimiter characters can collide with an existing construct's, fix the ambiguity at the root by tightening the existing detector to match the spec, rather than relying on parser dispatch order.
 - When constructs depend on exact character alignment (e.g. grid tables), validate the alignment strictly and reject on mismatch instead of silently padding lines to paper over it.
 - Validate real-world/benchmark inputs against a parser before considering a feature done — a hand-built test suite can miss patterns (like a border line with a partial `+` set) that only show up in authentic external documents.
+- When two roles/directives share the same sub-syntax (e.g. the `Display text <target>` explicit-title form), extract one shared helper and reuse it rather than re-implementing the same parsing logic per role.
