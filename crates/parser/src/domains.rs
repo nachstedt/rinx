@@ -1,15 +1,18 @@
 use super::blocks::parse_blocks;
 use super::bullet_list::unindent_body_lines;
+use super::directives::DirectiveObjectType;
 use super::headings::Adornment;
-use rusty_sphinx_ast::{CObjectType, Domain, DomainObjectBody, Node, ObjectType, PyObjectType};
+use rusty_sphinx_ast::{Domain, DomainObjectBody, Node};
 
 /// Parses a domain object directive body (e.g. `.. py:function::`,
 /// `.. py:module::`, `.. c:function::`) into the matching [`DomainObjectBody`]
 /// variant, dispatching on `object_type` since each object type has its own
 /// shape (only `py:module` has `platform`/`synopsis`/`deprecated`, for
-/// instance).
+/// instance). The legacy `Classmethod`/`Staticmethod` directive-name aliases
+/// map to the same `py:method` body as `PyMethod`, with the matching flag
+/// forced on.
 pub(super) fn parse_domain_object(
-    object_type: ObjectType,
+    object_type: DirectiveObjectType,
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
@@ -17,54 +20,74 @@ pub(super) fn parse_domain_object(
     default_domain: Domain,
 ) -> DomainObjectBody {
     match object_type {
-        ObjectType::Py(PyObjectType::Function) => DomainObjectBody::PyFunction {
+        DirectiveObjectType::PyFunction => DomainObjectBody::PyFunction {
             signature: argument,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
-        ObjectType::C(CObjectType::Function) => DomainObjectBody::CFunction {
+        DirectiveObjectType::CFunction => DomainObjectBody::CFunction {
             signature: argument,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
-        ObjectType::C(CObjectType::Macro) => DomainObjectBody::CMacro {
+        DirectiveObjectType::CMacro => DomainObjectBody::CMacro {
             signature: argument,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
-        ObjectType::Py(PyObjectType::Module) => parse_py_module(
+        DirectiveObjectType::PyModule => parse_py_module(
             argument,
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         ),
-        ObjectType::Py(PyObjectType::Data) => parse_py_data(
+        DirectiveObjectType::PyData => parse_py_data(
             argument,
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         ),
-        ObjectType::Py(PyObjectType::Method) => parse_py_method(
+        DirectiveObjectType::PyMethod => parse_py_method(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+            false,
+            false,
+        ),
+        DirectiveObjectType::PyClassmethod => parse_py_method(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+            true,
+            false,
+        ),
+        DirectiveObjectType::PyStaticmethod => parse_py_method(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+            false,
+            true,
+        ),
+        DirectiveObjectType::PyClass => parse_py_class(
             argument,
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         ),
-        ObjectType::Py(PyObjectType::Class) => parse_py_class(
+        DirectiveObjectType::PyException => parse_py_exception(
             argument,
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         ),
-        ObjectType::Py(PyObjectType::Exception) => parse_py_exception(
-            argument,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
-        ObjectType::Py(PyObjectType::Attribute) => parse_py_attribute(
+        DirectiveObjectType::PyAttribute => parse_py_attribute(
             argument,
             body_lines,
             adornment_order,
@@ -146,12 +169,21 @@ fn parse_py_data(
 /// Parses a `.. py:method::` body: strips `:classmethod:`/`:staticmethod:`/
 /// `:abstractmethod:`/`:async:` flag lines off the front before parsing the
 /// rest as the docstring body.
+///
+/// `forced_classmethod`/`forced_staticmethod` come from the legacy
+/// `.. classmethod::`/`.. staticmethod::` directive-name aliases (which are
+/// just `py:method` with the matching flag implied); they are OR-ed with any
+/// flag the body's own `:classmethod:`/`:staticmethod:` option lines set, so
+/// the alias spelling and the explicit option spelling compose rather than
+/// conflict.
 fn parse_py_method(
     signature: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
     default_domain: Domain,
+    forced_classmethod: bool,
+    forced_staticmethod: bool,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
     let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, options_consumed) =
@@ -165,8 +197,8 @@ fn parse_py_method(
 
     DomainObjectBody::PyMethod {
         signature,
-        is_classmethod,
-        is_staticmethod,
+        is_classmethod: is_classmethod || forced_classmethod,
+        is_staticmethod: is_staticmethod || forced_staticmethod,
         is_abstractmethod,
         is_async,
         body,
@@ -729,6 +761,98 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_classmethod_alias_directive_forces_classmethod_flag() {
+        // Given — the legacy `.. classmethod::` directive spelling (the shape
+        // CPython's `zoneinfo` docs use for `ZoneInfo.clear_cache`), a bare
+        // name under the default `py` domain
+        let input =
+            ".. classmethod:: ZoneInfo.clear_cache(*, only_keys=None)\n\n   Clear the cache.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — it parses as a `py:method` with `is_classmethod` forced on
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            signature,
+            is_classmethod,
+            is_staticmethod,
+            is_abstractmethod,
+            is_async,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "ZoneInfo.clear_cache(*, only_keys=None)");
+            assert!(*is_classmethod);
+            assert!(!is_staticmethod);
+            assert!(!is_abstractmethod);
+            assert!(!is_async);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_staticmethod_alias_directive_forces_staticmethod_flag() {
+        // Given — the legacy `.. staticmethod::` directive spelling
+        let input = ".. staticmethod:: Greeter.default_name()\n\n   The default name.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — it parses as a `py:method` with `is_staticmethod` forced on
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            signature,
+            is_classmethod,
+            is_staticmethod,
+            is_abstractmethod,
+            is_async,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signature, "Greeter.default_name()");
+            assert!(!is_classmethod);
+            assert!(*is_staticmethod);
+            assert!(!is_abstractmethod);
+            assert!(!is_async);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_classmethod_alias_composes_with_explicit_abstractmethod_option() {
+        // Given — the alias directive name forces `classmethod`, and an
+        // explicit `:abstractmethod:` option line in the body is still parsed
+        // and OR-ed in on top of it
+        let input = ".. classmethod:: validate(cls, name)\n   :abstractmethod:\n\n   Validate.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — both flags are set
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
+            is_classmethod,
+            is_staticmethod,
+            is_abstractmethod,
+            is_async,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(*is_classmethod);
+            assert!(!is_staticmethod);
+            assert!(*is_abstractmethod);
+            assert!(!is_async);
+        } else {
+            panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
     fn test_extract_class_options_parses_final_flag() {
         // Given
         let lines = vec![
@@ -982,7 +1106,7 @@ mod tests {
     #[test]
     fn test_parse_domain_object_with_paragraph_body() {
         // Given
-        let object_type = ObjectType::Py(PyObjectType::Function);
+        let object_type = DirectiveObjectType::PyFunction;
         let signature = "greet(name)".to_string();
         let body_lines = vec!["   Greets the given name."];
         let mut adornment_order = Vec::new();
@@ -1015,7 +1139,7 @@ mod tests {
     #[test]
     fn test_parse_domain_object_with_bullet_list_body() {
         // Given
-        let object_type = ObjectType::C(CObjectType::Function);
+        let object_type = DirectiveObjectType::CFunction;
         let signature = "int add(int a, int b)".to_string();
         let body_lines = vec!["   * Adds two numbers.", "   * Returns their sum."];
         let mut adornment_order = Vec::new();
@@ -1043,7 +1167,7 @@ mod tests {
     #[test]
     fn test_parse_domain_object_with_empty_body() {
         // Given
-        let object_type = ObjectType::Py(PyObjectType::Function);
+        let object_type = DirectiveObjectType::PyFunction;
         let signature = "greet(name)".to_string();
         let body_lines: Vec<&str> = vec![];
         let mut adornment_order = Vec::new();
@@ -1070,7 +1194,7 @@ mod tests {
     #[test]
     fn test_parse_domain_object_strips_common_indentation() {
         // Given
-        let object_type = ObjectType::Py(PyObjectType::Function);
+        let object_type = DirectiveObjectType::PyFunction;
         let signature = "greet(name)".to_string();
         let body_lines = vec!["     Indented more than needed."];
         let mut adornment_order = Vec::new();
@@ -1106,7 +1230,7 @@ mod tests {
         // Given a body whose first line has a 3-char indent and a second,
         // less-indented line containing a multi-byte character at the byte
         // offset the old byte-index slicing would have panicked on
-        let object_type = ObjectType::Py(PyObjectType::Function);
+        let object_type = DirectiveObjectType::PyFunction;
         let signature = "greet(name)".to_string();
         let body_lines = vec!["   First line normal indent.", "  éfoo"];
         let mut adornment_order = Vec::new();

@@ -338,6 +338,57 @@ Use :class:`Fault` to catch it.
 }
 
 #[test]
+fn test_e2e_classmethod_alias_directive_is_indexed_and_resolves() {
+    // Given — the real-world CPython shape that surfaced the
+    // "broken domain object 'ZoneInfo.clear_cache'" warning in
+    // `Doc/library/zoneinfo`: the method is defined via the legacy
+    // `.. classmethod::` directive spelling (a `py:method` alias), as a
+    // sibling of the `py:module` and `py:class` it belongs to, and referenced
+    // via `:meth:` using its class-qualified name.
+    let input = "\
+.. module:: zoneinfo
+
+.. class:: ZoneInfo(key)
+
+   A concrete tzinfo subclass.
+
+.. classmethod:: ZoneInfo.clear_cache(*, only_keys=None)
+
+   Clear the ZoneInfo cache.
+
+Invalidate the cache via :meth:`ZoneInfo.clear_cache`.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then — the alias directive was indexed as a `py:method` (not dropped as
+    // an unknown directive), so the reference resolves with no broken link.
+    assert!(
+        output.broken_links.is_empty(),
+        "expected no broken links, got {:?}",
+        output.broken_links
+    );
+    assert!(
+        output
+            .html
+            .contains("<dt id=\"py:method:zoneinfo.zoneinfo.clear_cache\">")
+    );
+    assert!(
+        output
+            .html
+            .contains("#py:method:zoneinfo.zoneinfo.clear_cache\"")
+    );
+    // And — the `classmethod` prefix label is rendered, from the forced flag.
+    assert!(
+        output
+            .html
+            .contains("<em class=\"property\">classmethod</em>")
+    );
+}
+
+#[test]
 fn test_e2e_function_definition_does_not_resolve_exc_role_reference() {
     // Given — a negative case guarding the alias table stays intentionally
     // small (`class`/`exception` only, matching real Sphinx's `py` domain):

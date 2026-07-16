@@ -80,6 +80,31 @@ when cross-referenced, exactly like real Sphinx.
 
       An asynchronous variant of ``greet``.
 
+Legacy ``.. classmethod::`` / ``.. staticmethod::`` Directives
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+Real Sphinx also accepts the legacy directive spellings ``.. classmethod::``
+and ``.. staticmethod::`` as aliases for ``.. py:method::`` with the
+corresponding option pre-set (this is the shape CPython's own ``zoneinfo``
+docs use, e.g. ``.. classmethod:: ZoneInfo.clear_cache``). They are
+``py``-domain only and index and cross-reference exactly like a
+``.. py:method::`` carrying ``:classmethod:``/``:staticmethod:``, so the
+``from_nickname`` and ``anonymous`` methods below — written with the legacy
+spelling and qualified by hand (``Greeter.``) since they're documented as
+siblings of the class rather than nested in it — resolve as
+``Greeter.from_nickname`` and ``Greeter.anonymous``, and render with the same
+``classmethod``/``staticmethod`` prefix labels the nested methods above do.
+
+.. classmethod:: Greeter.from_nickname(nickname)
+
+   Creates a ``Greeter`` from a nickname. Written with the legacy
+   ``.. classmethod::`` spelling instead of ``.. py:method:: :classmethod:``.
+
+.. staticmethod:: Greeter.anonymous()
+
+   Returns a ``Greeter`` for an anonymous caller. Written with the legacy
+   ``.. staticmethod::`` spelling.
+
 .. py:class:: ImmutableGreeter
    :final:
 
@@ -256,6 +281,12 @@ shortens the display text — :py:meth:`~Greeter.validate` links to
 ``Greeter.validate`` but displays only ``validate``. Note that none of these
 targets are written qualified anywhere in the ``Greeter`` class's own
 directives above — the qualification comes entirely from nesting.
+
+The :py:meth:`Greeter.from_nickname` classmethod and :py:meth:`Greeter.anonymous`
+staticmethod — both defined above with the legacy ``.. classmethod::`` /
+``.. staticmethod::`` directive spellings — resolve through the ordinary
+``:py:meth:`` role just like the ones written as ``.. py:method::``, proving
+the legacy aliases are indexed identically.
 
 :py:class:`Greeter` and the bare role :class:`ImmutableGreeter` both
 resolve to their respective ``py:class`` definitions above. The nested class

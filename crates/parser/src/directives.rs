@@ -4,7 +4,29 @@ use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
 use super::headings::Adornment;
 use super::index_directive::parse_index_directive;
-use rusty_sphinx_ast::{Directive, Domain, Node, ObjectType};
+use rusty_sphinx_ast::{Directive, Domain, Node};
+
+/// The domain-object directive names the parser recognizes, resolved from a
+/// directive's `domain:objtype` (or bare, default-domain-resolved) name.
+/// Deliberately independent of `ast::ObjectType`: directive-name syntax
+/// (including the legacy `classmethod`/`staticmethod` aliases, which have no
+/// `ast::ObjectType` of their own — they're just `py:method` with a flag
+/// forced) is a parser concern, so it's modeled entirely here rather than
+/// borrowing the shared object-type vocabulary the analyzer/renderer use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum DirectiveObjectType {
+    PyFunction,
+    PyModule,
+    PyData,
+    PyMethod,
+    PyClassmethod,
+    PyStaticmethod,
+    PyClass,
+    PyAttribute,
+    PyException,
+    CFunction,
+    CMacro,
+}
 
 pub(super) fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
     let mut paths = Vec::new();
@@ -159,15 +181,32 @@ pub(super) fn try_parse_directive(
     Some((1 + consumed_lines, Node::Directive(directive)))
 }
 
-/// Resolves a directive name to a domain object type: either an explicit
+/// Resolves a directive name to a [`DirectiveObjectType`]: either an explicit
 /// `domain:objtype` form (e.g. `py:function`), or a bare `objtype` name
-/// (e.g. `function`) resolved via `default_domain`.
-fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<ObjectType> {
-    if let Some((domain_str, objtype_str)) = name.split_once(':') {
-        let domain = domain_str.parse::<Domain>().ok()?;
-        return ObjectType::from_directive_name(domain, objtype_str);
+/// (e.g. `function`) resolved via `default_domain`. The `classmethod`/
+/// `staticmethod` legacy `py:method` aliases are recognized here too, and
+/// only in the `py` domain — the domain/bare-name split gates them for free,
+/// so a bare `.. classmethod::` under a `c` default domain resolves `domain`
+/// to `Domain::C`, matches no arm, and falls through to `Directive::Unknown`.
+fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<DirectiveObjectType> {
+    let (domain, objtype_str) = match name.split_once(':') {
+        Some((domain_str, rest)) => (domain_str.parse::<Domain>().ok()?, rest),
+        None => (default_domain, name),
+    };
+    match (domain, objtype_str) {
+        (Domain::Py, "function") => Some(DirectiveObjectType::PyFunction),
+        (Domain::Py, "module") => Some(DirectiveObjectType::PyModule),
+        (Domain::Py, "data") => Some(DirectiveObjectType::PyData),
+        (Domain::Py, "method") => Some(DirectiveObjectType::PyMethod),
+        (Domain::Py, "classmethod") => Some(DirectiveObjectType::PyClassmethod),
+        (Domain::Py, "staticmethod") => Some(DirectiveObjectType::PyStaticmethod),
+        (Domain::Py, "class") => Some(DirectiveObjectType::PyClass),
+        (Domain::Py, "attribute") => Some(DirectiveObjectType::PyAttribute),
+        (Domain::Py, "exception") => Some(DirectiveObjectType::PyException),
+        (Domain::C, "function") => Some(DirectiveObjectType::CFunction),
+        (Domain::C, "macro") => Some(DirectiveObjectType::CMacro),
+        _ => None,
     }
-    ObjectType::from_directive_name(default_domain, name)
 }
 
 #[cfg(test)]
@@ -574,12 +613,7 @@ mod tests {
         let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
 
         // Then
-        assert_eq!(
-            result,
-            Some(rusty_sphinx_ast::ObjectType::C(
-                rusty_sphinx_ast::CObjectType::Function
-            ))
-        );
+        assert_eq!(result, Some(DirectiveObjectType::CFunction));
     }
 
     #[test]
@@ -591,12 +625,7 @@ mod tests {
         let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
 
         // Then
-        assert_eq!(
-            result,
-            Some(rusty_sphinx_ast::ObjectType::C(
-                rusty_sphinx_ast::CObjectType::Function
-            ))
-        );
+        assert_eq!(result, Some(DirectiveObjectType::CFunction));
     }
 
     #[test]
@@ -618,6 +647,56 @@ mod tests {
 
         // When
         let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_classmethod_resolves_in_py_domain() {
+        // Given — a bare `classmethod` directive name under the `py` default
+        // domain (the legacy `py:method` alias)
+        let name = "classmethod";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::PyClassmethod));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_staticmethod_resolves_in_py_domain() {
+        // Given
+        let name = "staticmethod";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::PyStaticmethod));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_explicit_py_classmethod_resolves() {
+        // Given — the explicit `py:classmethod` domain-prefixed form
+        let name = "py:classmethod";
+
+        // When — resolved even when the default domain is `c`
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::PyClassmethod));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_classmethod_rejected_in_c_domain() {
+        // Given — a bare `classmethod` under a `c` default domain: the alias
+        // is `py`-only, so this must not resolve
+        let name = "classmethod";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
 
         // Then
         assert_eq!(result, None);
