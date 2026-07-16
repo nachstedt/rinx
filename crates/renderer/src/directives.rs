@@ -110,6 +110,12 @@ pub(super) fn render_seealso(html: &mut String, body: &[Node], ctx: &mut RenderC
 /// here, so they're rendered inline as leading `<dd>` paragraphs rather than
 /// dropped) is matched explicitly, so adding a new object type with its own
 /// options can't be forgotten here.
+///
+/// The body renders under whatever scope this object establishes (see
+/// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`]), popped again
+/// afterwards so it can't leak into later siblings — the analyzer's
+/// `index_domain_object` applies the same scope to keep index keys and
+/// anchor `id`s in agreement.
 pub(super) fn render_domain_object(
     html: &mut String,
     obj: &rusty_sphinx_ast::DomainObjectBody,
@@ -140,17 +146,11 @@ pub(super) fn render_domain_object(
     let _ = writeln!(html, "<code class=\"sig-name\">{sig_escaped}</code></dt>");
     let _ = write!(html, "  <dd>");
     render_domain_object_options(html, obj);
-    if matches!(
-        obj,
-        rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
-            | rusty_sphinx_ast::DomainObjectBody::PyException { .. }
-    ) {
-        ctx.class_stack.push(qualified_name);
-        super::render_nodes(html, obj.body(), ctx);
-        ctx.class_stack.pop();
-    } else {
-        super::render_nodes(html, obj.body(), ctx);
-    }
+    let depth = ctx.class_stack.len();
+    ctx.class_stack
+        .extend(obj.deduce_local_scope(&qualified_name));
+    super::render_nodes(html, obj.body(), ctx);
+    ctx.class_stack.truncate(depth);
     let _ = writeln!(html, "</dd>");
     let _ = writeln!(html, "</dl>");
 }
@@ -1384,6 +1384,53 @@ mod tests {
         assert!(result.contains("<dt id=\"py:method:first.run\">"));
         assert!(result.contains("<dt id=\"py:method:second.run\">"));
         assert!(!result.contains("py:method:first.second.run"));
+    }
+
+    #[test]
+    fn test_render_dotted_method_scopes_its_body_without_leaking_to_siblings() {
+        // Given — the flat, dotted-signature shape CPython's `zipfile.rst`
+        // uses: a method written as a sibling rather than nested in its
+        // class. Its own name-prefix scopes its body (here, a nested
+        // attribute), but must be popped again before the next sibling.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                        signature: "ZipFile.open(name)".to_string(),
+                        is_classmethod: false,
+                        is_staticmethod: false,
+                        is_abstractmethod: false,
+                        is_async: false,
+                        body: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                                name: "mode".to_string(),
+                                type_: None,
+                                value: None,
+                                canonical: None,
+                                body: vec![],
+                            },
+                        ))],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                        signature: "is_zipfile(filename)".to_string(),
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — the nested attribute is scoped by the method's prefix, and
+        // the following sibling is untouched by that scope.
+        assert!(result.contains("<dt id=\"py:method:zipfile.open\">"));
+        assert!(result.contains("<dt id=\"py:attribute:zipfile.mode\">"));
+        assert!(result.contains("<dt id=\"py:function:is_zipfile\">"));
+        assert!(!result.contains("py:function:zipfile.is_zipfile"));
     }
 
     #[test]

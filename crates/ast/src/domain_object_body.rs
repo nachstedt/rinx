@@ -89,24 +89,50 @@ pub fn effective_qualifier<'a>(
 }
 
 /// Prefixes `name` with `qualifier` (e.g. an enclosing `py:class`'s own
-/// qualified name), joined with `.`, or returns `name` unchanged if there is
-/// no enclosing qualifier *or* `name` is already written fully qualified
-/// (starts with `"{qualifier}."`) — real-world Sphinx docs commonly nest a
+/// qualified name), joined with `.`, avoiding double-prepending when `name`
+/// already repeats that qualifier — real-world Sphinx docs commonly nest a
 /// domain object under its already-dotted name (e.g. `CPython`'s
 /// `.. attribute:: StopIteration.value` nested inside
 /// `.. exception:: StopIteration`), and real Sphinx's own `py` domain avoids
-/// double-prepending in that case too. Shared by the analyzer (when indexing
-/// a nested domain object) and the renderer (when computing its anchor
-/// `id`), so both always agree on the qualified name for the same nested
-/// object.
+/// double-prepending in that case too.
+///
+/// A nested name can repeat the qualifier in two ways, and both are left
+/// un-doubled:
+/// - The whole qualifier (`"{qualifier}."`), when the author writes the name
+///   out fully — `.. attribute:: StopIteration.value` under a bare
+///   `.. exception:: StopIteration`.
+/// - Only the qualifier's *last segment*, when the enclosing class is itself
+///   module-qualified but the author (as `CPython` idiomatically does) repeats
+///   just the bare class name: `.. method:: Random.seed` inside
+///   `.. class:: Random` under `.. module:: random` has the qualifier
+///   `random.Random` but a name repeating only `Random.`, and must still
+///   yield `random.Random.seed` rather than `random.Random.Random.seed`.
+///   Mirrors real Sphinx's `PyObject.handle_signature`, which strips the
+///   `py:class` `ref_context` off the front of the signature's name-prefix for
+///   exactly this case. Deliberately case-*sensitive*, so a method whose
+///   class shares its module's name modulo case (`.. method:: ZipFile.read`
+///   under `.. module:: zipfile`) is still qualified to `zipfile.ZipFile.read`
+///   rather than mistaking `ZipFile.` for a repeat of `zipfile.`.
+///
+/// Shared by the analyzer (when indexing a nested domain object) and the
+/// renderer (when computing its anchor `id`), so both always agree on the
+/// qualified name for the same nested object.
 #[must_use]
 pub fn qualify_name(qualifier: Option<&str>, name: &str) -> String {
-    match qualifier {
-        Some(prefix) if !name.starts_with(&format!("{prefix}.")) => {
-            format!("{prefix}.{name}")
-        }
-        _ => name.to_string(),
+    let Some(prefix) = qualifier else {
+        return name.to_string();
+    };
+    if name.starts_with(&format!("{prefix}.")) {
+        return name.to_string();
     }
+    if let Some(rest) = prefix
+        .rsplit('.')
+        .next()
+        .and_then(|last_segment| name.strip_prefix(&format!("{last_segment}.")))
+    {
+        return format!("{prefix}.{rest}");
+    }
+    format!("{prefix}.{name}")
 }
 
 /// The body of a domain object *definition* directive (e.g. `.. py:function::`,
@@ -247,6 +273,54 @@ impl DomainObjectBody {
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
             | Self::PyException { body, .. } => body,
+        }
+    }
+
+    /// The qualifying scope, if any, that this object's own nested body
+    /// content lives in — the "class context" a bare cross-reference written
+    /// inside that body resolves against first, and the qualifier a domain
+    /// object *defined* inside it is indexed under. `qualified_name` is this
+    /// object's own name after [`qualify_name`] has applied its enclosing
+    /// scope.
+    ///
+    /// Two ways an object establishes one:
+    /// - `py:class`/`py:exception` bodies introduce their own full qualified
+    ///   name (real lexical nesting: `.. method:: find_spec` written inside
+    ///   `.. class:: zipimporter` is `zipimport.zipimporter.find_spec`).
+    /// - Any other `py` object *written with a dotted signature* lends its
+    ///   own name-prefix (`.. method:: ZipFile.read` lends `ZipFile`),
+    ///   mirroring real Sphinx's `PyObject.before_content()`/
+    ///   `after_content()`, which sets the `py:class` `ref_context` from the
+    ///   signature's name-prefix for the duration of that directive's body,
+    ///   then restores it. This is what lets a bare ``:meth:`read` `` written
+    ///   inside `.. method:: ZipFile.open`'s body resolve against
+    ///   `ZipFile.read` with no global search: `open`'s own signature
+    ///   already carries the scope. Real `CPython` docs (e.g. `zipfile.rst`)
+    ///   document a class's methods flat like this rather than nested.
+    ///
+    /// `py:module` establishes no scope: real Sphinx's `module` directive is
+    /// not a `PyObject` and never sets `py:class` from its own name — it
+    /// sets only the persistent, document-order module context that
+    /// [`effective_qualifier`]'s `current_module` already models, so a
+    /// dotted module name (`xml.etree.ElementTree`) must never be mistaken
+    /// for a class prefix. `c` domain objects establish none either, for the
+    /// same reason [`effective_qualifier`] is domain-gated.
+    ///
+    /// Shared by the analyzer (`index_domain_object`) and the renderer
+    /// (`render_domain_object`), so both always agree on the scope a given
+    /// body introduces. Matched exhaustively rather than with a wildcard, so
+    /// a new object type can't be added without deciding what it scopes.
+    #[must_use]
+    pub fn deduce_local_scope(&self, qualified_name: &str) -> Option<String> {
+        match self {
+            Self::PyClass { .. } | Self::PyException { .. } => Some(qualified_name.to_string()),
+            Self::PyFunction { .. }
+            | Self::PyMethod { .. }
+            | Self::PyData { .. }
+            | Self::PyAttribute { .. } => qualified_name
+                .rsplit_once('.')
+                .map(|(prefix, _)| prefix.to_string()),
+            Self::PyModule { .. } | Self::CFunction { .. } | Self::CMacro { .. } => None,
         }
     }
 
@@ -585,6 +659,31 @@ mod tests {
     }
 
     #[test]
+    fn test_qualify_name_does_not_double_qualifier_last_segment_repeated_by_name() {
+        // Given — CPython's `random.rst` nests `.. method:: Random.seed`
+        // inside `.. class:: Random`, itself under `.. module:: random`. The
+        // qualifier is the class's *module-qualified* name, but the method's
+        // signature repeats only the class's bare name.
+        // When / Then — must not double to "random.Random.Random.seed".
+        assert_eq!(
+            qualify_name(Some("random.Random"), "Random.seed"),
+            "random.Random.seed"
+        );
+    }
+
+    #[test]
+    fn test_qualify_name_matches_repeated_last_segment_case_sensitively() {
+        // Given — CPython's `zipfile.rst` documents `.. method:: ZipFile.read`
+        // under `.. module:: zipfile`: the class name differs from the module
+        // name only by case, and `ZipFile.` is *not* a repeat of `zipfile.`.
+        // When / Then — must qualify normally, not strip down to "zipfile.read".
+        assert_eq!(
+            qualify_name(Some("zipfile"), "ZipFile.read"),
+            "zipfile.ZipFile.read"
+        );
+    }
+
+    #[test]
     fn test_qualify_name_composes_nested_qualifiers_when_innermost_name_is_already_qualified() {
         // Given — a two-level nested-class qualifier, where the innermost
         // name is already written fully qualified (like the
@@ -597,6 +696,184 @@ mod tests {
 
         // Then — not doubled to "Outer.Inner.Outer.Inner.method"
         assert_eq!(method_qualified, "Outer.Inner.method");
+    }
+
+    #[test]
+    fn test_deduce_local_scope_uses_own_qualified_name_for_classes() {
+        // Given
+        let class = DomainObjectBody::PyClass {
+            signature: "zipimporter(archivepath)".to_string(),
+            is_final: false,
+            body: vec![],
+        };
+
+        // When
+        let scope = class.deduce_local_scope("zipimport.zipimporter");
+
+        // Then
+        assert_eq!(scope, Some("zipimport.zipimporter".to_string()));
+    }
+
+    #[test]
+    fn test_deduce_local_scope_uses_own_qualified_name_for_exceptions() {
+        // Given — exceptions are classes in Python, so they scope their body
+        // the same way.
+        let exception = DomainObjectBody::PyException {
+            signature: "ZipImportError".to_string(),
+            is_final: false,
+            body: vec![],
+        };
+
+        // When
+        let scope = exception.deduce_local_scope("zipimport.ZipImportError");
+
+        // Then
+        assert_eq!(scope, Some("zipimport.ZipImportError".to_string()));
+    }
+
+    #[test]
+    fn test_deduce_local_scope_lends_name_prefix_for_dotted_method() {
+        // Given — the real-world CPython shape that surfaced the
+        // "broken domain object 'read'" warning: `zipfile.rst` documents
+        // `ZipFile`'s methods flat, with dotted signatures, so the method's
+        // own name carries the class scope its body should resolve against.
+        let method = DomainObjectBody::PyMethod {
+            signature: "ZipFile.open(name, mode='r')".to_string(),
+            is_classmethod: false,
+            is_staticmethod: false,
+            is_abstractmethod: false,
+            is_async: false,
+            body: vec![],
+        };
+
+        // When
+        let scope = method.deduce_local_scope("zipfile.ZipFile.open");
+
+        // Then — the last component is dropped, not the whole dotted path.
+        assert_eq!(scope, Some("zipfile.ZipFile".to_string()));
+    }
+
+    #[test]
+    fn test_deduce_local_scope_lends_name_prefix_for_dotted_function() {
+        // Given
+        let function = DomainObjectBody::PyFunction {
+            signature: "path.join(a, *p)".to_string(),
+            body: vec![],
+        };
+
+        // When
+        let scope = function.deduce_local_scope("os.path.join");
+
+        // Then
+        assert_eq!(scope, Some("os.path".to_string()));
+    }
+
+    #[test]
+    fn test_deduce_local_scope_lends_name_prefix_for_dotted_attribute() {
+        // Given
+        let attribute = DomainObjectBody::PyAttribute {
+            name: "ZipInfo.filename".to_string(),
+            type_: None,
+            value: None,
+            canonical: None,
+            body: vec![],
+        };
+
+        // When
+        let attribute_scope = attribute.deduce_local_scope("zipfile.ZipInfo.filename");
+
+        // Then
+        assert_eq!(attribute_scope, Some("zipfile.ZipInfo".to_string()));
+    }
+
+    #[test]
+    fn test_deduce_local_scope_lends_name_prefix_for_dotted_data() {
+        // Given
+        let data = DomainObjectBody::PyData {
+            name: "ZipFile.DEFAULT_TIMEOUT".to_string(),
+            type_: None,
+            value: None,
+            body: vec![],
+        };
+
+        // When
+        let scope = data.deduce_local_scope("zipfile.ZipFile.DEFAULT_TIMEOUT");
+
+        // Then
+        assert_eq!(scope, Some("zipfile.ZipFile".to_string()));
+    }
+
+    #[test]
+    fn test_deduce_local_scope_returns_none_for_undotted_function() {
+        // Given — an unqualified, module-less function has no prefix to lend.
+        let function = DomainObjectBody::PyFunction {
+            signature: "greet(name)".to_string(),
+            body: vec![],
+        };
+
+        // When
+        let scope = function.deduce_local_scope("greet");
+
+        // Then
+        assert_eq!(scope, None);
+    }
+
+    #[test]
+    fn test_deduce_local_scope_returns_none_for_undotted_method() {
+        // Given
+        let method = DomainObjectBody::PyMethod {
+            signature: "find_spec(fullname)".to_string(),
+            is_classmethod: false,
+            is_staticmethod: false,
+            is_abstractmethod: false,
+            is_async: false,
+            body: vec![],
+        };
+
+        // When
+        let scope = method.deduce_local_scope("find_spec");
+
+        // Then
+        assert_eq!(scope, None);
+    }
+
+    #[test]
+    fn test_deduce_local_scope_never_treats_dotted_module_name_as_class_prefix() {
+        // Given — a dotted module name is a package path, not a class
+        // qualifier: real Sphinx's `module` directive is not a `PyObject`
+        // and never sets `py:class` from its own name (it sets only the
+        // sequential module context `effective_qualifier` already models).
+        let module = DomainObjectBody::PyModule {
+            name: "xml.etree.ElementTree".to_string(),
+            platform: None,
+            synopsis: None,
+            deprecated: false,
+            body: vec![],
+        };
+
+        // When
+        let scope = module.deduce_local_scope("xml.etree.ElementTree");
+
+        // Then — must not lend "xml.etree" to everything in its body.
+        assert_eq!(scope, None);
+    }
+
+    #[test]
+    fn test_deduce_local_scope_returns_none_for_c_domain_objects() {
+        // Given — the `py:class` context is a py-domain-only concept, same
+        // reason `effective_qualifier` is domain-gated.
+        let function = DomainObjectBody::CFunction {
+            signature: "int PyList_Append(PyObject *list, PyObject *item)".to_string(),
+            body: vec![],
+        };
+        let macro_ = DomainObjectBody::CMacro {
+            signature: "PY_SSIZE_T_MAX".to_string(),
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(function.deduce_local_scope("PyList_Append"), None);
+        assert_eq!(macro_.deduce_local_scope("PY_SSIZE_T_MAX"), None);
     }
 
     #[test]
