@@ -283,6 +283,88 @@ fn test_e2e_bare_reference_inside_class_falls_back_to_module_scope() {
 }
 
 #[test]
+fn test_e2e_dotted_method_scopes_bare_reference_in_its_own_body() {
+    // Given — the real-world CPython shape that surfaced the
+    // "broken domain object 'read'" warning in `Doc/library/zipfile`:
+    // `ZipFile`'s methods are documented *flat*, as siblings with dotted
+    // signatures rather than nested inside `.. class:: ZipFile`, and one
+    // method's body refers to a sibling method by its bare name. The
+    // enclosing method's own name-prefix has to supply the class scope —
+    // there is no enclosing `.. class::` body to supply it.
+    let input = "\
+.. module:: zipfile
+
+.. method:: ZipFile.open(name, mode='r')
+
+   The :meth:`read` method can also take a filename.
+
+.. method:: ZipFile.read(name, pwd=None)
+
+   Return the bytes of the file in the archive.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then — no broken domain object reference, and the bare reference
+    // resolves to the sibling method's class-and-module-qualified anchor.
+    assert!(
+        output.broken_links.is_empty(),
+        "expected no broken links, got {:?}",
+        output.broken_links
+    );
+    assert!(
+        output
+            .html
+            .contains("<dt id=\"py:method:zipfile.zipfile.read\">")
+    );
+    assert!(output.html.contains("#py:method:zipfile.zipfile.read\""));
+}
+
+#[test]
+fn test_e2e_method_repeating_bare_class_name_is_not_double_qualified() {
+    // Given — the real-world CPython shape from `Doc/library/random`: a
+    // method nested inside its class, but written with the class's *bare*
+    // name repeated in its own signature, while the class itself is
+    // module-qualified. The qualifier ("random.Random") and the repeated
+    // prefix ("Random.") don't match textually, so a naive already-qualified
+    // guard double-prepends and indexes it as "random.Random.Random.seed".
+    let input = "\
+.. module:: random
+
+.. class:: Random([seed])
+
+   Default pseudo-random number generator.
+
+   .. method:: Random.seed(a=None, version=2)
+
+      Reinitialize the generator.
+
+   Call :meth:`Random.seed` to reseed the generator.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then — the method is indexed and anchored under the class exactly
+    // once, and the bare reference resolves to that same anchor.
+    assert!(
+        output.broken_links.is_empty(),
+        "expected no broken links, got {:?}",
+        output.broken_links
+    );
+    assert!(
+        output
+            .html
+            .contains("<dt id=\"py:method:random.random.seed\">")
+    );
+    assert!(!output.html.contains("random.random.random.seed"));
+    assert!(output.html.contains("#py:method:random.random.seed\""));
+}
+
+#[test]
 fn test_e2e_class_definition_resolves_both_class_and_exc_role_references() {
     // Given — the real-world CPython shape that surfaced the
     // "broken domain object 'Fault'" warning in `xmlrpc.client.rst`: the

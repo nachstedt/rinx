@@ -159,12 +159,12 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// cross-references to resolve, exactly like it's still rendered with a
 /// working anchor.
 ///
-/// `class_qualifier` is the enclosing `py:class`/`py:exception`'s own
-/// qualified name, if any — `None` at the document's top level, or when
-/// nested inside anything other than a `py:class`/`py:exception` (only
-/// `py:class`/`py:exception` bodies introduce a lexical qualifying scope for
-/// their descendants — exceptions are classes in Python, so they get the
-/// same nesting treatment).
+/// `class_qualifier` is the enclosing class scope, if any — `None` at the
+/// document's top level, or when nested inside a body that establishes no
+/// scope of its own. Which bodies establish one, and what they scope their
+/// contents under, is decided by
+/// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`] (shared with
+/// the renderer so index keys and anchor `id`s can't drift apart).
 ///
 /// `current_module` is the most recently seen `py:module`'s own name,
 /// updated in document order (not lexical nesting) as `py:module` directives
@@ -302,15 +302,8 @@ fn index_domain_object(
     if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. }) {
         *current_module = Some(qualified_name.clone());
     }
-    let child_qualifier = if matches!(
-        obj,
-        rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
-            | rusty_sphinx_ast::DomainObjectBody::PyException { .. }
-    ) {
-        Some(qualified_name.as_str())
-    } else {
-        class_qualifier
-    };
+    let local_scope = obj.deduce_local_scope(&qualified_name);
+    let child_qualifier = local_scope.as_deref().or(class_qualifier);
     index_nodes(obj.body(), doc_path, index, child_qualifier, current_module);
 }
 
