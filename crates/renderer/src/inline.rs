@@ -411,7 +411,7 @@ pub(super) fn render_inline_domain_object_reference(
             "<a href=\"#\" class=\"broken-link\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code></a>"
         );
         diagnostics.broken_links.push(BrokenLink {
-            kind: BrokenLinkKind::DomainObjectReference,
+            kind: BrokenLinkKind::DomainObjectReference(object_type),
             target: name.to_string(),
         });
     }
@@ -1156,7 +1156,9 @@ mod tests {
         assert_eq!(
             broken_links,
             vec![BrokenLink {
-                kind: BrokenLinkKind::DomainObjectReference,
+                kind: BrokenLinkKind::DomainObjectReference(ObjectType::C(
+                    rusty_sphinx_ast::CObjectType::Macro
+                )),
                 target: "MISSING".to_string(),
             }]
         );
@@ -1293,7 +1295,9 @@ mod tests {
         assert_eq!(
             broken_links,
             vec![BrokenLink {
-                kind: BrokenLinkKind::DomainObjectReference,
+                kind: BrokenLinkKind::DomainObjectReference(ObjectType::Py(
+                    rusty_sphinx_ast::PyObjectType::Function
+                )),
                 target: "missing".to_string(),
             }]
         );

@@ -240,6 +240,7 @@ dependencies = [
  "rusty_sphinx_ast",
  "rusty_sphinx_parser",
  "rusty_sphinx_renderer",
+ "serde",
  "serde_json",
  "toml",
 ]

@@ -1,7 +1,22 @@
-load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+
+py_library(
+    name = "benchmark_lib",
+    srcs = ["benchmark.py"],
+    # Add this package dir to sys.path so `import benchmark` resolves as a
+    # top-level module (both for the binary and the test).
+    imports = ["."],
+    # deps = ["@pypi//some_package"], # add pip dependencies here when needed
+)
 
 py_binary(
     name = "benchmark",
     srcs = ["benchmark.py"],
-    # deps = ["@pypi//some_package"], # add pip dependencies here when needed
+)
+
+py_test(
+    name = "benchmark_test",
+    size = "small",
+    srcs = ["benchmark_test.py"],
+    deps = [":benchmark_lib"],
 )

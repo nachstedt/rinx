@@ -60,11 +60,22 @@ def _rusty_sphinx_site_impl(ctx):
 
     # ── Phase 3: render ───────────────────────────────────────────────────────
     html_files = []
+    warnings_files = []
     for ast_file in ast_list:
         doc_path = ast_file.short_path.removesuffix(".ast")
         html_out = ctx.actions.declare_file(
             ctx.label.name + "_site_out/" + doc_path + ".html",
         )
+
+        # Structured domain-object warnings sidecar. Declared outside
+        # _site_out/ so it never lands in the published site bundle, and kept
+        # out of the default outputs (see OutputGroupInfo below) — it exists
+        # purely for the developer-only whitelist tooling in
+        # scripts/benchmark.py.
+        warnings_out = ctx.actions.declare_file(
+            ctx.label.name + "_warnings/" + doc_path + ".warnings.json",
+        )
+
         render_args = [
             "render",
             "--input", ast_file.path,
@@ -73,6 +84,7 @@ def _rusty_sphinx_site_impl(ctx):
             "--output", html_out.path,
             "--config", config_file.path,
             "--template", template_file.path,
+            "--warnings-output", warnings_out.path,
         ]
         if ctx.attr.strict_links:
             render_args.append("--strict-links")
@@ -81,11 +93,12 @@ def _rusty_sphinx_site_impl(ctx):
             executable = worker,
             arguments = render_args,
             inputs = [ast_file, index_out, template_file, config_file],
-            outputs = [html_out],
+            outputs = [html_out, warnings_out],
             mnemonic = "RustySphinxRender",
             progress_message = "Rendering %s" % ast_file.short_path,
         )
         html_files.append(html_out)
+        warnings_files.append(warnings_out)
 
     # ── Phase 4: Bundle Images ────────────────────────────────────────────────
     all_svg_dirs = depset(
@@ -147,7 +160,10 @@ def _rusty_sphinx_site_impl(ctx):
     )
     final_outputs.append(css_out)
 
-    return [DefaultInfo(files = depset(final_outputs))]
+    return [
+        DefaultInfo(files = depset(final_outputs)),
+        OutputGroupInfo(domain_warnings = depset(warnings_files)),
+    ]
 
 rusty_sphinx_site = rule(
     implementation = _rusty_sphinx_site_impl,

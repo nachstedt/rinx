@@ -1,0 +1,11 @@
+{
+  "entries": [
+    {
+      "doc_path": "Doc/c-api/sys",
+      "kind": "domain_object_reference",
+      "target": "fork",
+      "requested_type": "c:function",
+      "comment": "The POSIX fork(2) system call, referenced by the PyOS_BeforeFork / PyOS_AfterFork_* docs. It is a C library function, not a CPython C-API symbol, so it is never indexed by this doc set. Real Sphinx also fails to resolve it and CPython suppresses it via nitpick_ignore in Doc/conf.py; expected, not a rusty-sphinx resolver gap."
+    }
+  ]
+}

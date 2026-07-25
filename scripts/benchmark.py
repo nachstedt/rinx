@@ -3,12 +3,16 @@ import subprocess
 import time
 import json
 import os
+from collections import Counter
 from pathlib import Path
 import shutil
 import tempfile
 
 TARGET_DIR = Path(tempfile.gettempdir()) / "rusty_sphinx_benchmark_cpython"
 REPO_URL = "https://github.com/python/cpython.git"
+# Hand-authored list of domain-object warnings we accept, relative to the
+# workspace root (main() chdirs there via BUILD_WORKSPACE_DIRECTORY).
+WHITELIST_PATH = Path("scripts/domain_warnings_whitelist.json")
 
 def clone_repo():
     print(f"Target directory: {TARGET_DIR}")
@@ -99,23 +103,220 @@ def run_benchmark(clean: bool = False):
     
     end_time = time.time()
     duration = end_time - start_time
-    
+
+    # Persist the inner build's captured output — it's swallowed by
+    # capture_output above, so without this it's invisible on a successful
+    # build. Written on success and failure alike, so it's always inspectable.
+    build_log = TARGET_DIR / "bazel_build.log"
+    build_log.write_text(result.stdout + result.stderr)
+
     if result.returncode != 0:
-        print("Bazel build failed (or finished with errors under --keep_going)!")
+        print("Bazel build failed!")
         print(result.stderr)
     else:
         print(f"Bazel build succeeded in {duration:.2f} seconds.")
-    
+
+    print(f"\nBazel build output was captured to: {build_log}")
+
     # Inform the user where the HTML is
     html_out = TARGET_DIR / "bazel-bin/Doc/site_site_out"
-    print(f"\nHTML output is located at: {html_out}/")
-    
+    print(f"HTML output is located at: {html_out}/")
+
     # Inform the user where the Bazel profile is
     profile_out = TARGET_DIR / "profile.json.gz"
     print(f"Bazel profile is located at: {profile_out}")
     print("You can view it by dropping the file into https://ui.perfetto.dev/ or chrome://tracing")
 
-def analyze_results():
+    return result.returncode == 0
+
+# ── Domain-object warning whitelist helpers (pure, unit-tested) ───────────────
+
+def collect_domain_warnings(bazel_bin_dir):
+    """Load every per-document .warnings.json sidecar under bazel_bin_dir and
+    flatten them into a single list of warning entries, each augmented with the
+    doc_path of the report it came from.
+
+    Returns (entries, file_count) — file_count is the number of sidecar files
+    found, used by the pruning safety guard (an empty corpus must not prune)."""
+    warning_files = sorted(Path(bazel_bin_dir).glob("**/*.warnings.json"))
+    entries = []
+    for warning_file in warning_files:
+        try:
+            with open(warning_file, "r") as f:
+                report = json.load(f)
+        except Exception as e:
+            print(f"Failed to parse {warning_file}: {e}")
+            continue
+        doc_path = report.get("doc_path", str(warning_file))
+        for warning in report.get("warnings", []):
+            entry = dict(warning)
+            entry["doc_path"] = doc_path
+            entries.append(entry)
+    return entries, len(warning_files)
+
+
+def warning_key(entry):
+    """The identity of a warning for whitelist matching: (doc_path, kind,
+    target). The requested/resolved object types are informational payload,
+    deliberately not part of the key."""
+    return (entry.get("doc_path"), entry.get("kind"), entry.get("target"))
+
+
+def load_whitelist(path):
+    """Return the list of whitelist entries, or [] if the file doesn't exist."""
+    path = Path(path)
+    if not path.exists():
+        return []
+    with open(path, "r") as f:
+        data = json.load(f)
+    return data.get("entries", [])
+
+
+def write_whitelist(path, entries):
+    """Rewrite the whitelist file with the given entries."""
+    with open(path, "w") as f:
+        json.dump({"entries": entries}, f, indent=2)
+        f.write("\n")
+
+
+def partition_warnings(actual, whitelist_entries):
+    """Split actual warnings into those not covered by the whitelist ('new',
+    de-duplicated by key) and count how many actual occurrences the whitelist
+    suppressed."""
+    whitelist_keys = {warning_key(w) for w in whitelist_entries}
+    new_by_key = {}
+    suppressed = 0
+    for entry in actual:
+        key = warning_key(entry)
+        if key in whitelist_keys:
+            suppressed += 1
+        elif key not in new_by_key:
+            new_by_key[key] = entry
+    return list(new_by_key.values()), suppressed
+
+
+def prune_whitelist(whitelist_entries, actual):
+    """Partition the whitelist into entries still justified by an actual
+    warning ('kept') and entries that no longer match anything ('removed')."""
+    actual_keys = {warning_key(a) for a in actual}
+    kept = [w for w in whitelist_entries if warning_key(w) in actual_keys]
+    removed = [w for w in whitelist_entries if warning_key(w) not in actual_keys]
+    return kept, removed
+
+
+def format_warning(entry, include_kind=True):
+    """One-line human-readable rendering of a warning or whitelist entry.
+
+    Surfaces the object-type info ("missed type"): a mismatch shows
+    'requested -> resolved'; a broken reference (nothing resolved) shows just
+    the requested type it was looking for. Pass include_kind=False when the
+    surrounding section already states the kind (avoids a redundant token)."""
+    requested = entry.get("requested_type")
+    resolved = entry.get("resolved_type")
+    if requested and resolved:
+        detail = f" ({requested} -> {resolved})"
+    elif requested:
+        detail = f" (referenced as {requested})"
+    elif resolved:
+        detail = f" (resolved as {resolved})"
+    else:
+        detail = ""
+    kind = f"{entry.get('kind')} " if include_kind else ""
+    return f"{entry.get('doc_path')}: {kind}'{entry.get('target')}'{detail}"
+
+
+def report_domain_warnings(bazel_bin_dir, whitelist_path, build_succeeded, out):
+    """Diff the emitted domain-object warnings against the whitelist, write the
+    detailed listing to the `out` file handle, and auto-prune stale whitelist
+    entries when it is safe to do so. Returns a small dict of counts for the
+    terminal summary.
+
+    Pruning is destructive (it deletes hand-written comments), so it only runs
+    when the warning data is trustworthy: the build succeeded AND at least one
+    sidecar was found."""
+    actual, file_count = collect_domain_warnings(bazel_bin_dir)
+    whitelist_entries = load_whitelist(whitelist_path)
+
+    new_warnings, suppressed = partition_warnings(actual, whitelist_entries)
+    occurrences = Counter(warning_key(a) for a in actual)
+
+    # Split the new warnings by kind so "couldn't resolve at all" and "resolved
+    # to the wrong object type" read as two distinct, separately-scannable
+    # lists rather than being interleaved by frequency. The leading number is
+    # each warning's occurrence count across the corpus.
+    def write_section(title, kind):
+        section = [e for e in new_warnings if e.get("kind") == kind]
+        header = f"{title} ({len(section)}):"
+        print(f"\n{header}", file=out)
+        print("-" * len(header), file=out)
+        if not section:
+            print("None found.", file=out)
+        else:
+            for entry in sorted(
+                section, key=lambda e: occurrences[warning_key(e)], reverse=True
+            ):
+                print(
+                    f"{occurrences[warning_key(entry)]:5d}  "
+                    f"{format_warning(entry, include_kind=False)}",
+                    file=out,
+                )
+        occ = sum(occurrences[warning_key(e)] for e in section)
+        return len(section), occ
+
+    unresolved_distinct, unresolved_occ = write_section(
+        "Unresolved Domain-Object References", "domain_object_reference"
+    )
+    mismatch_distinct, mismatch_occ = write_section(
+        "Domain-Object Type Mismatches", "object_type_mismatch"
+    )
+    print(
+        f"\n{suppressed} warning occurrence(s) suppressed by whitelist "
+        f"({len(whitelist_entries)} entr(y/ies)).",
+        file=out,
+    )
+
+    kept, removed = prune_whitelist(whitelist_entries, actual)
+    pruned = False
+    if removed:
+        can_prune = build_succeeded and file_count > 0
+        print("\nStale Whitelist Entries:", file=out)
+        print("------------------------", file=out)
+        for entry in removed:
+            comment = entry.get("comment", "")
+            suffix = f"  # {comment}" if comment else ""
+            print(f"- {format_warning(entry)}{suffix}", file=out)
+        if can_prune:
+            write_whitelist(whitelist_path, kept)
+            pruned = True
+            print(
+                f"\nRemoved {len(removed)} stale entr(y/ies) from {whitelist_path}.",
+                file=out,
+            )
+        else:
+            reason = (
+                "build did not succeed"
+                if not build_succeeded
+                else "no .warnings.json sidecars were found"
+            )
+            print(
+                f"\nSkipped auto-pruning ({reason}); "
+                f"{len(removed)} entr(y/ies) left untouched.",
+                file=out,
+            )
+
+    return {
+        "unresolved_distinct": unresolved_distinct,
+        "unresolved_occurrences": unresolved_occ,
+        "mismatch_distinct": mismatch_distinct,
+        "mismatch_occurrences": mismatch_occ,
+        "suppressed": suppressed,
+        "whitelist_size": len(whitelist_entries),
+        "stale_count": len(removed),
+        "stale_pruned": pruned,
+    }
+
+
+def analyze_results(build_succeeded=False):
     print("Analyzing AST output for unsupported constructs...")
     
     ast_files = list(TARGET_DIR.glob("bazel-bin/Doc/**/*.ast"))
@@ -167,29 +368,74 @@ def analyze_results():
         except Exception as e:
             print(f"Failed to parse {ast_file}: {e}")
             
-    print("\nUnsupported Directives Summary:")
-    print("-------------------------------")
-    if not unknown_directives:
-        print("None found.")
-    else:
-        for name, count in sorted(unknown_directives.items(), key=lambda x: x[1], reverse=True):
-            print(f"{name}: {count}")
+    # The full listing is far too long for the terminal, so write it to a file
+    # and show only a compact summary on screen.
+    result_path = Path("benchmark_result.txt")
+    with open(result_path, "w") as out:
+        print("=== rusty-sphinx benchmark: full report ===", file=out)
+        write_frequency_summary(out, "Unsupported Directives Summary", unknown_directives)
+        write_frequency_summary(
+            out,
+            "Ignored Toctree Options Summary",
+            ignored_toctree_options,
+            key_prefix=":",
+            key_suffix=":",
+        )
+        write_frequency_summary(out, "Parser Diagnostics Summary", parser_diagnostics)
+        domain = report_domain_warnings(
+            TARGET_DIR / "bazel-bin", WHITELIST_PATH, build_succeeded, out
+        )
 
-    print("\nIgnored Toctree Options Summary:")
-    print("--------------------------------")
-    if not ignored_toctree_options:
-        print("None found.")
-    else:
-        for name, count in sorted(ignored_toctree_options.items(), key=lambda x: x[1], reverse=True):
-            print(f":{name}: {count}")
+    print_benchmark_summary(
+        result_path,
+        unknown_directives,
+        ignored_toctree_options,
+        parser_diagnostics,
+        domain,
+    )
 
-    print("\nParser Diagnostics Summary:")
-    print("---------------------------")
-    if not parser_diagnostics:
-        print("None found.")
-    else:
-        for msg, count in sorted(parser_diagnostics.items(), key=lambda x: x[1], reverse=True):
-            print(f"{msg}: {count}")
+
+def write_frequency_summary(out, title, counts, key_prefix="", key_suffix=""):
+    """Write one `name: count` frequency table (descending) to the `out` file
+    handle — used for the detailed report file."""
+    print(f"\n{title}:", file=out)
+    print("-" * (len(title) + 1), file=out)
+    if not counts:
+        print("None found.", file=out)
+        return
+    for name, count in sorted(counts.items(), key=lambda x: x[1], reverse=True):
+        print(f"{key_prefix}{name}{key_suffix}: {count}", file=out)
+
+
+def print_benchmark_summary(result_path, unknown, toctree_opts, diagnostics, domain):
+    """Print the compact, terminal-friendly summary (counts only) and point at
+    the full report file."""
+    def line(label, distinct, occurrences=None):
+        occ = f"  ({occurrences} occurrences)" if occurrences is not None else ""
+        print(f"  {label:<28}{distinct:6d} distinct{occ}")
+
+    print("\n=== Benchmark Summary ===")
+    line("Unsupported directives:", len(unknown), sum(unknown.values()))
+    line("Ignored toctree options:", len(toctree_opts))
+    line("Parser diagnostics:", len(diagnostics))
+    line(
+        "Unresolved domain refs:",
+        domain["unresolved_distinct"],
+        domain["unresolved_occurrences"],
+    )
+    line(
+        "Domain type mismatches:",
+        domain["mismatch_distinct"],
+        domain["mismatch_occurrences"],
+    )
+    print(
+        f"  {'Suppressed by whitelist:':<28}"
+        f"{domain['suppressed']:6d} occurrences ({domain['whitelist_size']} entries)"
+    )
+    if domain["stale_count"]:
+        action = "removed" if domain["stale_pruned"] else "left untouched"
+        print(f"  {'Stale whitelist entries:':<28}{domain['stale_count']:6d} ({action})")
+    print(f"\nFull report written to: {result_path}")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -207,8 +453,8 @@ def main():
         
     clone_repo()
     generate_bazel_project(workspace_dir)
-    run_benchmark(clean=args.clean)
-    analyze_results()
+    build_succeeded = run_benchmark(clean=args.clean)
+    analyze_results(build_succeeded=build_succeeded)
 
 if __name__ == "__main__":
     main()
