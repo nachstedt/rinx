@@ -4,6 +4,9 @@
 # Bazel
 /bazel-*
 
+# Benchmark run output
+/benchmark_result.txt
+
 # IDEs and Editors
 .vscode/
 .idea/

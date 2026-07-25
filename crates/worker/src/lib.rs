@@ -3,6 +3,7 @@
 //! This module provides the foundational pieces for building a high-performance,
 //! Bazel-compatible re-implementation of the Sphinx documentation framework.
 
+pub mod domain_warnings;
 pub mod validator;
 
 /// Processes an RST text block through the full pipeline (parse, analyze, render)

@@ -4,6 +4,7 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 rust_library(
     name = "rusty_sphinx_worker_lib",
     srcs = [
+        "src/domain_warnings.rs",
         "src/lib.rs",
         "src/validator.rs",
     ],

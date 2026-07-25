@@ -31,8 +31,11 @@ pub enum BrokenLinkKind {
     AnonymousReference,
     /// A `:term:` role (`InlineNode::TermReference`).
     TermReference,
-    /// A domain-object role (`:func:`, `:py:func:`, etc.).
-    DomainObjectReference,
+    /// A domain-object role (`:func:`, `:py:func:`, etc.). Carries the object
+    /// type the role asked for (e.g. `py:function`) — the "missed type", known
+    /// at the point resolution failed and worth surfacing in diagnostics even
+    /// though nothing resolved.
+    DomainObjectReference(ObjectType),
 }
 
 impl BrokenLinkKind {
@@ -44,7 +47,7 @@ impl BrokenLinkKind {
             Self::Hyperlink => "hyperlink",
             Self::AnonymousReference => "anonymous reference",
             Self::TermReference => "term",
-            Self::DomainObjectReference => "domain object",
+            Self::DomainObjectReference(_) => "domain object",
         }
     }
 }

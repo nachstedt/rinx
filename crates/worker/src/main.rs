@@ -9,7 +9,7 @@
 //! rusty-sphinx parse  --input <file.rst>  --output <file.ast>  [--default-domain <py|c>]
 //! rusty-sphinx validate_toctree --input <file.ast>  [--allowed <path>...]
 //! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
-//! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links]
+//! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links] [--warnings-output <file.warnings.json>]
 //! rusty-sphinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>
 //! rusty-sphinx validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>
 //! ```
@@ -25,7 +25,7 @@ use rusty_sphinx_analyzer as analyzer;
 use rusty_sphinx_ast as ast;
 use rusty_sphinx_parser as parser;
 use rusty_sphinx_renderer::{self as renderer, config};
-use rusty_sphinx_worker::{process_rst, validator};
+use rusty_sphinx_worker::{domain_warnings, process_rst, validator};
 use std::env;
 use std::fs;
 use std::io::{self, Read};
@@ -232,9 +232,19 @@ fn process_genindex(
 }
 
 /// Formats a single broken-link diagnostic as a human-readable warning line.
+///
+/// For a broken domain-object reference the role's requested object type (the
+/// "missed type", e.g. `py:function`) is included — it's known at the point
+/// resolution failed and pinpoints what kind of object couldn't be found.
 fn format_broken_link_warning(doc_path: &str, link: &renderer::BrokenLink) -> String {
+    let requested = match link.kind {
+        renderer::BrokenLinkKind::DomainObjectReference(object_type) => {
+            format!(" (referenced as {})", object_type.domain_qualified_str())
+        }
+        _ => String::new(),
+    };
     format!(
-        "warning: broken {} '{}' in {doc_path}",
+        "warning: broken {} '{}'{requested} in {doc_path}",
         link.kind.as_str(),
         link.target
     )
@@ -367,6 +377,7 @@ fn cmd_render(args: &[String]) -> Result<()> {
     let template_path = flag_value(args, "--template")?;
     let doc_path = flag_value(args, "--doc-path")?;
     let strict_links = args.iter().any(|a| a == "--strict-links");
+    let warnings_output = flag_value_opt(args, "--warnings-output");
 
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Error reading config '{config_path}'"))?;
@@ -398,6 +409,23 @@ fn cmd_render(args: &[String]) -> Result<()> {
             format_object_type_mismatch_warning(&doc_path, mismatch)
         );
     }
+
+    // Emit the structured domain-object warning sidecar when requested. Written
+    // unconditionally (even with zero warnings) and before the strict-links
+    // check, so the file always exists as a Bazel-declared output and reflects
+    // reality regardless of whether the strict check then fails the render.
+    if let Some(warnings_path) = &warnings_output {
+        let report = domain_warnings::build_domain_warning_report(
+            &doc_path,
+            &broken_links,
+            &object_type_mismatches,
+        );
+        let report_json = serde_json::to_string_pretty(&report)
+            .context("Failed to serialize domain warning report")?;
+        fs::write(warnings_path, report_json)
+            .with_context(|| format!("Error writing '{warnings_path}'"))?;
+    }
+
     check_broken_links_strict(strict_links, &doc_path, &broken_links)?;
 
     fs::write(&output, html).with_context(|| format!("Error writing '{output}'"))?;
@@ -550,7 +578,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} extract_diagrams --input <file.ast> --outdir <puml_dir>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
-                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--strict-links]\n\
+                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--strict-links] [--warnings-output <file.warnings.json>]\n\
                    {program} genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>\n\
                    {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
                    {program} validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>"
