@@ -91,7 +91,7 @@ def run_benchmark(clean: bool = False):
     
     # Run bazel build inside the decoupled workspace
     result = subprocess.run(
-        ["bazel", "build", "-c", "opt", "--host_compilation_mode=opt", "--keep_going", "--spawn_strategy=local", "--profile=profile.json.gz", "//Doc:site"],
+        ["bazel", "build", "-c", "opt", "--host_compilation_mode=opt", "--spawn_strategy=local", "--profile=profile.json.gz", "//Doc:site"],
         cwd=str(TARGET_DIR),
         capture_output=True,
         text=True
