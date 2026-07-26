@@ -209,10 +209,13 @@ def format_warning(entry, include_kind=True):
 
     Surfaces the object-type info ("missed type"): a mismatch shows
     'requested -> resolved'; a broken reference (nothing resolved) shows just
-    the requested type it was looking for. Pass include_kind=False when the
-    surrounding section already states the kind (avoids a redundant token)."""
+    the requested type it was looking for; an ambiguous reference also lists
+    the qualified names it matched, since choosing between them is the fix.
+    Pass include_kind=False when the surrounding section already states the
+    kind (avoids a redundant token)."""
     requested = entry.get("requested_type")
     resolved = entry.get("resolved_type")
+    candidates = entry.get("candidates")
     if requested and resolved:
         detail = f" ({requested} -> {resolved})"
     elif requested:
@@ -221,6 +224,8 @@ def format_warning(entry, include_kind=True):
         detail = f" (resolved as {resolved})"
     else:
         detail = ""
+    if candidates:
+        detail += f" matching {', '.join(candidates)}"
     kind = f"{entry.get('kind')} " if include_kind else ""
     return f"{entry.get('doc_path')}: {kind}'{entry.get('target')}'{detail}"
 
@@ -240,10 +245,11 @@ def report_domain_warnings(bazel_bin_dir, whitelist_path, build_succeeded, out):
     new_warnings, suppressed = partition_warnings(actual, whitelist_entries)
     occurrences = Counter(warning_key(a) for a in actual)
 
-    # Split the new warnings by kind so "couldn't resolve at all" and "resolved
-    # to the wrong object type" read as two distinct, separately-scannable
-    # lists rather than being interleaved by frequency. The leading number is
-    # each warning's occurrence count across the corpus.
+    # Split the new warnings by kind so "couldn't resolve at all", "matched
+    # several objects" and "resolved to the wrong object type" read as
+    # distinct, separately-scannable lists rather than being interleaved by
+    # frequency — they call for different fixes. The leading number is each
+    # warning's occurrence count across the corpus.
     def write_section(title, kind):
         section = [e for e in new_warnings if e.get("kind") == kind]
         header = f"{title} ({len(section)}):"
@@ -265,6 +271,9 @@ def report_domain_warnings(bazel_bin_dir, whitelist_path, build_succeeded, out):
 
     unresolved_distinct, unresolved_occ = write_section(
         "Unresolved Domain-Object References", "domain_object_reference"
+    )
+    ambiguous_distinct, ambiguous_occ = write_section(
+        "Ambiguous Domain-Object References", "ambiguous_domain_object_reference"
     )
     mismatch_distinct, mismatch_occ = write_section(
         "Domain-Object Type Mismatches", "object_type_mismatch"
@@ -307,6 +316,8 @@ def report_domain_warnings(bazel_bin_dir, whitelist_path, build_succeeded, out):
     return {
         "unresolved_distinct": unresolved_distinct,
         "unresolved_occurrences": unresolved_occ,
+        "ambiguous_distinct": ambiguous_distinct,
+        "ambiguous_occurrences": ambiguous_occ,
         "mismatch_distinct": mismatch_distinct,
         "mismatch_occurrences": mismatch_occ,
         "suppressed": suppressed,
@@ -422,6 +433,11 @@ def print_benchmark_summary(result_path, unknown, toctree_opts, diagnostics, dom
         "Unresolved domain refs:",
         domain["unresolved_distinct"],
         domain["unresolved_occurrences"],
+    )
+    line(
+        "Ambiguous domain refs:",
+        domain["ambiguous_distinct"],
+        domain["ambiguous_occurrences"],
     )
     line(
         "Domain type mismatches:",

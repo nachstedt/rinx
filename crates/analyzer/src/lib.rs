@@ -413,7 +413,7 @@ pub fn build_project_index(docs: &[Document]) -> ProjectIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Domain, InlineNode, Node, ObjectType, PyObjectType};
+    use rusty_sphinx_ast::{Domain, InlineNode, Node, ObjectType, PyObjectType, TargetSearchOrder};
 
     /// Looks up a domain object by the pre-refactor flat `"domain:objtype:name"`
     /// key shape (e.g. `"py:function:greet"`), so test expectations can stay
@@ -727,6 +727,7 @@ mod tests {
                         name: "pkg.greetings".to_string(),
                         display: "greetings".to_string(),
                         link: true,
+                        search_order: TargetSearchOrder::LeastQualifiedFirst,
                     },
                     InlineNode::Text(" Module".to_string()),
                 ],

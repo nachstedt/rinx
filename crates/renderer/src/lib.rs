@@ -2,6 +2,7 @@
 
 pub mod config;
 mod directives;
+mod domain_resolution;
 mod genindex;
 mod inline;
 mod nav;
@@ -14,6 +15,7 @@ use directives::{
     render_admonition, render_domain_object, render_glossary, render_index_anchor, render_seealso,
     render_version_change,
 };
+use domain_resolution::DomainObjectResolver;
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use rusty_sphinx_analyzer::ProjectIndex;
@@ -22,7 +24,7 @@ use rusty_sphinx_scope::PythonScope;
 use std::fmt::Write as _;
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BrokenLinkKind {
     /// A `:ref:` role (`InlineNode::Reference`).
     Reference,
@@ -37,18 +39,29 @@ pub enum BrokenLinkKind {
     /// at the point resolution failed and worth surfacing in diagnostics even
     /// though nothing resolved.
     DomainObjectReference(ObjectType),
+    /// A dot-prefixed domain-object role whose suffix search matched several
+    /// objects, so the target names no single one. Deliberately unresolved
+    /// rather than linked to an arbitrary candidate (real Sphinx links the
+    /// first) — the candidates are carried here so the author is told what to
+    /// disambiguate between.
+    AmbiguousDomainObjectReference {
+        object_type: ObjectType,
+        /// The qualified names that matched, in index order.
+        candidates: Vec<String>,
+    },
 }
 
 impl BrokenLinkKind {
     /// Returns a short, human-readable label for this kind, used in CLI diagnostics.
     #[must_use]
-    pub fn as_str(self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             Self::Reference => "ref",
             Self::Hyperlink => "hyperlink",
             Self::AnonymousReference => "anonymous reference",
             Self::TermReference => "term",
             Self::DomainObjectReference(_) => "domain object",
+            Self::AmbiguousDomainObjectReference { .. } => "ambiguous domain object",
         }
     }
 }
@@ -91,6 +104,9 @@ pub struct RenderOutput {
 /// Shared rendering state threaded through the node traversal.
 pub(crate) struct RenderCtx<'a> {
     pub index: &'a ProjectIndex,
+    /// Resolves domain-object references against `index`. Held for the whole
+    /// document so its derived suffix index is built at most once per page.
+    pub domain_resolver: &'a DomainObjectResolver<'a>,
     pub doc_path: &'a str,
     pub anon_targets: &'a [String],
     pub anon_index: &'a mut usize,
@@ -117,8 +133,10 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
 
+    let domain_resolver = DomainObjectResolver::new(index);
     let mut ctx = RenderCtx {
         index,
+        domain_resolver: &domain_resolver,
         doc_path,
         anon_targets: &anon_targets,
         anon_index: &mut anon_index,
@@ -325,7 +343,7 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{HashedContent, InlineNode, TargetName};
+    use rusty_sphinx_ast::{HashedContent, InlineNode, TargetName, TargetSearchOrder};
 
     #[test]
     fn test_render_returns_empty_string_for_empty_document() {
@@ -387,6 +405,7 @@ mod tests {
                         name: "greetings".to_string(),
                         display: "greetings".to_string(),
                         link: true,
+                        search_order: TargetSearchOrder::LeastQualifiedFirst,
                     },
                     InlineNode::Text(" Module".to_string()),
                 ],
@@ -993,6 +1012,7 @@ mod tests {
                             name: "curses.ascii".to_string(),
                             display: "curses.ascii".to_string(),
                             link: true,
+                            search_order: TargetSearchOrder::LeastQualifiedFirst,
                         },
                     ],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(

@@ -17,6 +17,7 @@ mod object_type;
 mod py_object_type;
 mod table;
 mod target_name;
+mod target_search_order;
 mod version_change_kind;
 
 pub use admonition_kind::AdmonitionKind;
@@ -38,4 +39,5 @@ pub use object_type::ObjectType;
 pub use py_object_type::PyObjectType;
 pub use table::{TableCell, TableRow};
 pub use target_name::TargetName;
+pub use target_search_order::TargetSearchOrder;
 pub use version_change_kind::VersionChangeKind;
