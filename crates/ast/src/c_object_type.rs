@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub enum CObjectType {
     Function,
     Macro,
+    Data,
 }
 
 impl CObjectType {
@@ -14,6 +15,7 @@ impl CObjectType {
         match self {
             Self::Function => "function",
             Self::Macro => "macro",
+            Self::Data => "data",
         }
     }
 }
@@ -25,6 +27,7 @@ impl std::str::FromStr for CObjectType {
         match s {
             "function" => Ok(Self::Function),
             "macro" => Ok(Self::Macro),
+            "data" => Ok(Self::Data),
             _ => Err(()),
         }
     }
@@ -65,12 +68,26 @@ mod tests {
     }
 
     #[test]
+    fn test_c_object_type_from_str_accepts_data() {
+        // Given / When / Then
+        assert_eq!("data".parse::<CObjectType>(), Ok(CObjectType::Data));
+    }
+
+    #[test]
+    fn test_c_object_type_as_str_returns_data() {
+        // Given / When / Then
+        assert_eq!(CObjectType::Data.as_str(), "data");
+    }
+
+    #[test]
     fn test_c_object_type_ord_orders_variants_by_declaration_order() {
         // Given
         let function = CObjectType::Function;
         let macro_ = CObjectType::Macro;
+        let data = CObjectType::Data;
 
         // When / Then
         assert!(function < macro_);
+        assert!(macro_ < data);
     }
 }

@@ -271,6 +271,15 @@ The :c:macro:`PY_SSIZE_T_MAX` macro and the :c:macro:`MAX` function-like
 macro are both defined above. Like ``:c:func:``, ``:c:macro:`` is C-only —
 there is no ``py:macro`` equivalent.
 
+There is no dedicated ``.. c:data::``/``.. c:var::`` directive, only the
+cross-reference roles — :c:data:`PY_SSIZE_T_MAX` and :c:var:`PY_SSIZE_T_MAX`
+both resolve against the ``.. c:macro::`` definition above rather than a
+``data``/``var`` definition of their own. This mirrors real Sphinx's own C
+domain, which resolves a role by name without checking it against the
+matched declaration's actual object type — real-world docs like CPython's
+``c-api/module.rst`` rely on exactly this to reference macro-defined slot
+constants (e.g. ``Py_mod_exec``) via ``:c:data:``.
+
 The :py:data:`DEFAULT_TIMEOUT` data item has no equivalent ``py:const``
 directive in real Sphinx — instead, :py:const:`DEFAULT_TIMEOUT` is simply
 an alternate role spelling for the same object, used when the author wants
