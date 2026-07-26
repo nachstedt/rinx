@@ -9,6 +9,7 @@ mod utils;
 pub use utils::normalize_path;
 
 use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, ObjectType, TargetName};
+use rusty_sphinx_scope::PythonScope;
 use serde::{Deserialize, Serialize};
 
 use std::collections::BTreeMap;
@@ -147,7 +148,12 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             found_title = true;
         }
     }
-    index_nodes(&doc.nodes, &doc.path, &mut index, None, &mut None);
+    index_nodes(
+        &doc.nodes,
+        &doc.path,
+        &mut index,
+        &mut PythonScope::default(),
+    );
     index
 }
 
@@ -159,29 +165,17 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// cross-references to resolve, exactly like it's still rendered with a
 /// working anchor.
 ///
-/// `class_qualifier` is the enclosing class scope, if any — `None` at the
-/// document's top level, or when nested inside a body that establishes no
-/// scope of its own. Which bodies establish one, and what they scope their
-/// contents under, is decided by
-/// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`] (shared with
-/// the renderer so index keys and anchor `id`s can't drift apart).
-///
-/// `current_module` is the most recently seen `py:module`'s own name,
-/// updated in document order (not lexical nesting) as `py:module` directives
-/// are encountered — real Sphinx docs write `py:module` and the
-/// functions/classes it documents as *siblings*, not nested underneath it,
-/// so this has to be sequential state threaded through the whole traversal
-/// rather than a recursive-call-scoped parameter like `class_qualifier`. It
-/// intentionally is not reset when returning from a nested body, matching
-/// real Sphinx: a module stays "current" for the rest of the document until
-/// another `py:module` (or, once supported, `py:currentmodule`) changes it.
-fn index_nodes(
-    nodes: &[Node],
-    doc_path: &str,
-    index: &mut ProjectIndex,
-    class_qualifier: Option<&str>,
-    current_module: &mut Option<String>,
-) {
+/// `scope` carries the enclosing `py:class`/`py:exception` stack (lexical,
+/// pushed/popped around a nested body — see
+/// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`], shared with
+/// the renderer so index keys and anchor `id`s can't drift apart) and the
+/// most recently seen `py:module` (document-order state, not lexical
+/// nesting — real Sphinx docs write `py:module` and the functions/classes it
+/// documents as *siblings*, not nested underneath it, so it is never popped
+/// when returning from a nested body; a module stays "current" for the rest
+/// of the document until another `py:module`, or once supported,
+/// `py:currentmodule`, changes it).
+fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: &mut PythonScope) {
     for node in nodes {
         match node {
             Node::Target { name, uri } => {
@@ -222,35 +216,23 @@ fn index_nodes(
                 }
             }
             Node::Directive(Directive::DomainObject(obj)) => {
-                index_domain_object(obj, doc_path, index, class_qualifier, current_module);
+                index_domain_object(obj, doc_path, index, scope);
             }
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
                 | Directive::SeeAlso { body },
             ) => {
-                index_nodes(body, doc_path, index, class_qualifier, current_module);
+                index_nodes(body, doc_path, index, scope);
             }
             Node::BulletList { items, .. } => {
                 for item in items {
-                    index_nodes(
-                        &item.nodes,
-                        doc_path,
-                        index,
-                        class_qualifier,
-                        current_module,
-                    );
+                    index_nodes(&item.nodes, doc_path, index, scope);
                 }
             }
             Node::DefinitionList { items } => {
                 for item in items {
-                    index_nodes(
-                        &item.definition,
-                        doc_path,
-                        index,
-                        class_qualifier,
-                        current_module,
-                    );
+                    index_nodes(&item.definition, doc_path, index, scope);
                 }
             }
             Node::Table {
@@ -259,13 +241,7 @@ fn index_nodes(
             } => {
                 for row in header_rows.iter().chain(body_rows) {
                     for cell in &row.cells {
-                        index_nodes(
-                            &cell.content,
-                            doc_path,
-                            index,
-                            class_qualifier,
-                            current_module,
-                        );
+                        index_nodes(&cell.content, doc_path, index, scope);
                     }
                 }
             }
@@ -275,21 +251,27 @@ fn index_nodes(
 }
 
 /// Registers a single `Directive::DomainObject` (and recurses into its
-/// body), handling both qualification and `current_module` updates. Split
-/// out of [`index_nodes`] to keep that function's line count manageable.
+/// body), handling both qualification and module-context updates. Split out
+/// of [`index_nodes`] to keep that function's line count manageable.
 fn index_domain_object(
     obj: &rusty_sphinx_ast::DomainObjectBody,
     doc_path: &str,
     index: &mut ProjectIndex,
-    class_qualifier: Option<&str>,
-    current_module: &mut Option<String>,
+    scope: &mut PythonScope,
 ) {
-    let qualifier = rusty_sphinx_ast::effective_qualifier(
-        class_qualifier,
-        current_module.as_deref(),
-        obj.object_type().domain(),
-    );
-    let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, &obj.name());
+    // A `py:module`'s own name is never qualified against the *previous*
+    // module: real Sphinx always writes it in full and sets it verbatim as
+    // the new current module, it never nests it under whatever module was
+    // current before.
+    let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
+    let own_name = obj.name();
+    let (qualified_name, new_segments) = if is_module {
+        (own_name, Vec::new())
+    } else {
+        let qualification = scope.qualify(obj.object_type().domain(), &own_name);
+        (qualification.qualified_name, qualification.new_segments)
+    };
+
     index.insert_domain_object(obj.object_type(), &qualified_name, doc_path);
     let anchor = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
     index.genindex_entries.push(GenIndexEntry {
@@ -299,12 +281,13 @@ fn index_domain_object(
         doc_path: doc_path.to_string(),
         anchor: anchor.as_str().to_string(),
     });
-    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. }) {
-        *current_module = Some(qualified_name.clone());
+    if is_module {
+        scope.set_module(&qualified_name);
     }
-    let local_scope = obj.deduce_local_scope(&qualified_name);
-    let child_qualifier = local_scope.as_deref().or(class_qualifier);
-    index_nodes(obj.body(), doc_path, index, child_qualifier, current_module);
+    let lend = obj.deduce_local_scope(&new_segments);
+    let depth = scope.push_classes(&lend);
+    index_nodes(obj.body(), doc_path, index, scope);
+    scope.truncate_classes(depth);
 }
 
 /// Extracts toctree entries from a document, resolved to absolute paths.
@@ -1844,6 +1827,47 @@ mod tests {
     }
 
     #[test]
+    fn test_analyze_does_not_dedup_module_prefix_in_flat_sibling_signature() {
+        // Given — the class/module conflation bug this change fixes: real
+        // CPython's `datetime.rst` documents `.. classmethod::
+        // datetime.strptime` as a column-0 sibling of `.. module::
+        // datetime`, with no enclosing `.. class::`. The `datetime.` in the
+        // signature is the *class* name (there is a separate `.. class::
+        // datetime` elsewhere in the same file) — it only coincides with the
+        // module name, and must not be mistaken for a repeat of it.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "datetime".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                        signature: "datetime.strptime(date_string, format)".to_string(),
+                        is_classmethod: true,
+                        is_staticmethod: false,
+                        is_abstractmethod: false,
+                        is_async: false,
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — not collapsed to "datetime.strptime".
+        assert!(lookup_domain_object(&index, "py:method:datetime.datetime.strptime").is_some());
+    }
+
+    #[test]
     fn test_analyze_object_before_any_module_directive_stays_unqualified() {
         // Given — a `py:function` appearing before any `py:module` in the
         // document has no current module to fall back to.
@@ -1962,6 +1986,51 @@ mod tests {
         assert!(
             lookup_domain_object(&index, "py:method:types.DynamicClassAttribute.__get__").is_some()
         );
+    }
+
+    #[test]
+    fn test_analyze_dedups_class_name_repeated_in_flat_nested_signature() {
+        // Given — the real CPython idiom from `random.rst`: `.. method::
+        // Random.seed` indented inside `.. class:: Random`, itself a sibling
+        // after `.. module:: random`. The method's own signature repeats the
+        // class name; it must not double to "random.Random.Random.seed".
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "random".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                        signature: "Random([seed])".to_string(),
+                        is_final: false,
+                        body: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                                signature: "Random.seed(a=None, version=2)".to_string(),
+                                is_classmethod: false,
+                                is_staticmethod: false,
+                                is_abstractmethod: false,
+                                is_async: false,
+                                body: vec![],
+                            },
+                        ))],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(lookup_domain_object(&index, "py:class:random.Random").is_some());
+        assert!(lookup_domain_object(&index, "py:method:random.Random.seed").is_some());
     }
 
     // ── genindex analyzer tests ───────────────────────────────────────────────

@@ -1,0 +1,10 @@
+[package]
+name = "rusty_sphinx_scope"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+rusty_sphinx_ast = { path = "../ast" }
+
+[lints]
+workspace = true

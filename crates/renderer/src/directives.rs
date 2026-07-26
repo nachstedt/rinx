@@ -123,15 +123,19 @@ pub(super) fn render_domain_object(
 ) {
     let object_type = obj.object_type();
     let own_name = obj.name();
-    let qualifier = rusty_sphinx_ast::effective_qualifier(
-        ctx.class_stack.last().map(String::as_str),
-        ctx.current_module.as_deref(),
-        object_type.domain(),
-    );
-    let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, &own_name);
+    // A `py:module`'s own name is never qualified against the *previous*
+    // module: real Sphinx always writes it in full and sets it verbatim as
+    // the new current module, matching `index_domain_object` in the analyzer.
+    let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
+    let (qualified_name, new_segments) = if is_module {
+        (own_name, Vec::new())
+    } else {
+        let qualification = ctx.python_scope.qualify(object_type.domain(), &own_name);
+        (qualification.qualified_name, qualification.new_segments)
+    };
     let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
-    if matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. }) {
-        ctx.current_module = Some(qualified_name.clone());
+    if is_module {
+        ctx.python_scope.set_module(&qualified_name);
     }
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
@@ -146,11 +150,10 @@ pub(super) fn render_domain_object(
     let _ = writeln!(html, "<code class=\"sig-name\">{sig_escaped}</code></dt>");
     let _ = write!(html, "  <dd>");
     render_domain_object_options(html, obj);
-    let depth = ctx.class_stack.len();
-    ctx.class_stack
-        .extend(obj.deduce_local_scope(&qualified_name));
+    let lend = obj.deduce_local_scope(&new_segments);
+    let depth = ctx.python_scope.push_classes(&lend);
     super::render_nodes(html, obj.body(), ctx);
-    ctx.class_stack.truncate(depth);
+    ctx.python_scope.truncate_classes(depth);
     let _ = writeln!(html, "</dd>");
     let _ = writeln!(html, "</dl>");
 }
@@ -390,8 +393,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
-            class_stack: Vec::new(),
-            current_module: None,
+            python_scope: rusty_sphinx_scope::PythonScope::default(),
         };
 
         // When
@@ -429,8 +431,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
-            class_stack: Vec::new(),
-            current_module: None,
+            python_scope: rusty_sphinx_scope::PythonScope::default(),
         };
 
         // When
@@ -603,8 +604,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
-            class_stack: Vec::new(),
-            current_module: None,
+            python_scope: rusty_sphinx_scope::PythonScope::default(),
         };
 
         // When
@@ -1174,6 +1174,48 @@ mod tests {
         // analyzer's index key for `:func:`types.coroutine``.
         assert!(result.contains("<dt id=\"py:function:types.coroutine\">"));
         assert!(result.contains("<code class=\"sig-name\">coroutine(gen_func)</code>"));
+    }
+
+    #[test]
+    fn test_render_does_not_dedup_module_prefix_in_flat_sibling_signature_id() {
+        // Given — the class/module conflation bug this change fixes: real
+        // CPython's `datetime.rst` documents `.. classmethod::
+        // datetime.strptime` as a column-0 sibling of `.. module::
+        // datetime`, with no enclosing `.. class::`. The `datetime.` in the
+        // signature is the *class* name (there is a separate `.. class::
+        // datetime` elsewhere in the same file) — it only coincides with the
+        // module name, and must not be mistaken for a repeat of it.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "datetime".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                        signature: "datetime.strptime(date_string, format)".to_string(),
+                        is_classmethod: true,
+                        is_staticmethod: false,
+                        is_abstractmethod: false,
+                        is_async: false,
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — not collapsed to "py:method:datetime.strptime", and matches
+        // the analyzer's index key.
+        assert!(result.contains("<dt id=\"py:method:datetime.datetime.strptime\">"));
     }
 
     #[test]

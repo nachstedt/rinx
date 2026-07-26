@@ -196,6 +196,7 @@ name = "rusty_sphinx_analyzer"
 version = "0.1.0"
 dependencies = [
  "rusty_sphinx_ast",
+ "rusty_sphinx_scope",
  "serde",
  "serde_json",
 ]
@@ -227,8 +228,16 @@ dependencies = [
  "pathdiff",
  "rusty_sphinx_analyzer",
  "rusty_sphinx_ast",
+ "rusty_sphinx_scope",
  "serde",
  "toml",
+]
+
+[[package]]
+name = "rusty_sphinx_scope"
+version = "0.1.0"
+dependencies = [
+ "rusty_sphinx_ast",
 ]
 
 [[package]]

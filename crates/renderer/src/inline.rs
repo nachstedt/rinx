@@ -95,8 +95,7 @@ pub(super) fn render_inline(
                     broken_links: ctx.broken_links,
                     object_type_mismatches: ctx.object_type_mismatches,
                 },
-                &ctx.class_stack,
-                ctx.current_module.as_deref(),
+                &ctx.python_scope,
             );
         }
     }
@@ -258,36 +257,35 @@ pub(super) fn render_inline_term_reference(
     }
 }
 
-/// Yields the qualifiers to try, in order, when resolving a domain object
-/// cross-reference: the nearest enclosing `py:class`/`py:exception` first,
-/// then the current `py:module` (only for the `py` domain — real Sphinx's
-/// module context never qualifies non-`py` objects), then `None` (the bare,
-/// unqualified name) as the final global fallback.
+/// Yields the qualified names to try, in order, when resolving a domain
+/// object cross-reference against `scope`: qualified by the reference's full
+/// enclosing scope first (nearest `py:class`/`py:exception`, plus the
+/// current `py:module` — only for the `py` domain, real Sphinx's module
+/// context never qualifies non-`py` objects), then by the module alone, then
+/// the bare, unqualified name as the final global fallback.
 ///
-/// Three tiers, not the two `effective_qualifier` (used on the *definition*
-/// side, where an object is qualified by exactly one enclosing scope) gives
-/// you: a reference can be written from *inside* a narrower scope than the
-/// object it targets, e.g. a bare `:exc:` role reading just `ZipImportError`,
+/// Three tiers, not the two a *definition*'s own qualification needs: a
+/// reference can be written from *inside* a narrower scope than the object
+/// it targets, e.g. a bare `:exc:` role reading just `ZipImportError`,
 /// written inside `.. class:: zipimporter`'s own body, referring to an
 /// exception that was itself only ever module-qualified (a sibling of
 /// `.. module:: zipimport`, never nested in the class) — the class-qualified
 /// guess (`zipimport.zipimporter.ZipImportError`) misses, so resolution must
 /// still fall through to the module-qualified one
 /// (`zipimport.ZipImportError`) before giving up and trying the bare name.
-fn domain_object_scope_candidates<'a>(
-    class_stack: &'a [String],
-    current_module: Option<&'a str>,
+fn domain_object_scope_candidates(
+    scope: &rusty_sphinx_scope::PythonScope,
     domain: rusty_sphinx_ast::Domain,
-) -> impl Iterator<Item = Option<&'a str>> {
-    let class_qualifier = class_stack.last().map(String::as_str);
-    let module_qualifier = (domain == rusty_sphinx_ast::Domain::Py)
-        .then_some(current_module)
-        .flatten();
-    class_qualifier
-        .map(Some)
-        .into_iter()
-        .chain(module_qualifier.map(Some))
-        .chain(std::iter::once(None))
+    name: &str,
+) -> [String; 3] {
+    let full = scope.qualify(domain, name).qualified_name;
+    let mut module_only = scope.clone();
+    module_only.truncate_classes(0);
+    let module_qualified = module_only.qualify(domain, name).qualified_name;
+    let bare = rusty_sphinx_scope::PythonScope::default()
+        .qualify(domain, name)
+        .qualified_name;
+    [full, module_qualified, bare]
 }
 
 /// Renders a domain object cross-reference (`:func:`, `:py:func:`, `:c:func:`).
@@ -296,8 +294,8 @@ fn domain_object_scope_candidates<'a>(
 ///
 /// Resolution tries the reference's enclosing scope(s) first, from most to
 /// least specific (see [`domain_object_scope_candidates`]) — the same
-/// `class_stack`/`current_module` state `render_domain_object` uses to
-/// qualify a definition's own anchor `id` — before falling back to the
+/// `PythonScope` state `render_domain_object` uses to qualify a definition's
+/// own anchor `id` — before falling back to the
 /// literal, unqualified name. This mirrors real Sphinx: a bare `:meth:` role
 /// reading just `find_spec`, written inside `.. class:: zipimporter` (itself
 /// a sibling of `.. module:: zipimport`), must resolve against that scope,
@@ -347,8 +345,7 @@ pub(super) fn render_inline_domain_object_reference(
     index: &ProjectIndex,
     doc_path: &str,
     diagnostics: &mut DomainObjectDiagnostics<'_>,
-    class_stack: &[String],
-    current_module: Option<&str>,
+    scope: &rusty_sphinx_scope::PythonScope,
 ) {
     let DomainObjectRef {
         object_type,
@@ -368,21 +365,19 @@ pub(super) fn render_inline_domain_object_reference(
         return;
     }
 
-    let resolved =
-        domain_object_scope_candidates(class_stack, current_module, object_type.domain()).find_map(
-            |qualifier| {
-                let qualified_name = rusty_sphinx_ast::qualify_name(qualifier, name);
-                let entries = index
-                    .domain_objects
-                    .get(&TargetName::new(&qualified_name))?;
-                let matched_type = object_type
-                    .role_alias_candidates()
-                    .iter()
-                    .find(|candidate| entries.contains_key(candidate))?;
-                let target_doc_path = entries.get(matched_type)?;
-                Some((*matched_type, qualified_name, target_doc_path))
-            },
-        );
+    let resolved = domain_object_scope_candidates(scope, object_type.domain(), name)
+        .into_iter()
+        .find_map(|qualified_name| {
+            let entries = index
+                .domain_objects
+                .get(&TargetName::new(&qualified_name))?;
+            let matched_type = object_type
+                .role_alias_candidates()
+                .iter()
+                .find(|candidate| entries.contains_key(candidate))?;
+            let target_doc_path = entries.get(matched_type)?;
+            Some((*matched_type, qualified_name, target_doc_path))
+        });
 
     if let Some((matched_type, qualified_name, target_doc_path)) = resolved {
         if matched_type != object_type {
@@ -426,50 +421,66 @@ mod tests {
     #[test]
     fn test_domain_object_scope_candidates_yields_class_then_module_then_bare_for_py() {
         // Given
-        let class_stack = vec!["zipimport.zipimporter".to_string()];
+        let mut scope = rusty_sphinx_scope::PythonScope::default();
+        scope.set_module("zipimport");
+        scope.push_classes(&["zipimporter".to_string()]);
 
         // When
-        let candidates: Vec<Option<&str>> = domain_object_scope_candidates(
-            &class_stack,
-            Some("zipimport"),
-            rusty_sphinx_ast::Domain::Py,
-        )
-        .collect();
+        let candidates =
+            domain_object_scope_candidates(&scope, rusty_sphinx_ast::Domain::Py, "find_spec");
 
         // Then
         assert_eq!(
             candidates,
-            vec![Some("zipimport.zipimporter"), Some("zipimport"), None]
+            [
+                "zipimport.zipimporter.find_spec".to_string(),
+                "zipimport.find_spec".to_string(),
+                "find_spec".to_string(),
+            ]
         );
     }
 
     #[test]
-    fn test_domain_object_scope_candidates_skips_module_for_c_domain() {
-        // Given — a `c` domain object nested in a `py:class` body (unusual,
-        // but the class-nesting qualifier still applies to any domain,
-        // while `current_module` never does).
-        let class_stack = vec!["zipimport.zipimporter".to_string()];
+    fn test_domain_object_scope_candidates_skips_module_for_c_domain_with_no_class_scope() {
+        // Given — a `c` domain object referenced with no enclosing class:
+        // real Sphinx's module context is `py`-domain-only, so the
+        // module-qualified and bare candidates must coincide.
+        let mut scope = rusty_sphinx_scope::PythonScope::default();
+        scope.set_module("zipimport");
 
         // When
-        let candidates: Vec<Option<&str>> = domain_object_scope_candidates(
-            &class_stack,
-            Some("zipimport"),
-            rusty_sphinx_ast::Domain::C,
-        )
-        .collect();
+        let candidates =
+            domain_object_scope_candidates(&scope, rusty_sphinx_ast::Domain::C, "PyList_Append");
 
         // Then
-        assert_eq!(candidates, vec![Some("zipimport.zipimporter"), None]);
+        assert_eq!(
+            candidates,
+            [
+                "PyList_Append".to_string(),
+                "PyList_Append".to_string(),
+                "PyList_Append".to_string(),
+            ]
+        );
     }
 
     #[test]
     fn test_domain_object_scope_candidates_yields_only_bare_with_no_enclosing_scope() {
         // Given / When
-        let candidates: Vec<Option<&str>> =
-            domain_object_scope_candidates(&[], None, rusty_sphinx_ast::Domain::Py).collect();
+        let candidates = domain_object_scope_candidates(
+            &rusty_sphinx_scope::PythonScope::default(),
+            rusty_sphinx_ast::Domain::Py,
+            "greet",
+        );
 
         // Then
-        assert_eq!(candidates, vec![None]);
+        assert_eq!(
+            candidates,
+            [
+                "greet".to_string(),
+                "greet".to_string(),
+                "greet".to_string()
+            ]
+        );
     }
 
     #[test]
@@ -960,8 +971,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -999,8 +1009,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1036,8 +1045,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1074,8 +1082,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then — resolved, and the anchor matches the actual definition's
@@ -1114,8 +1121,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1146,8 +1152,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1192,8 +1197,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1233,8 +1237,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
         let mut const_html = String::new();
         render_inline_domain_object_reference(
@@ -1251,8 +1254,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1285,8 +1287,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1319,6 +1320,9 @@ mod tests {
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
 
+        let mut scope = rusty_sphinx_scope::PythonScope::default();
+        scope.set_module("zipimport");
+
         // When — the reference is written bare, as real Sphinx docs do,
         // relying on `zipimport` being the current module.
         render_inline_domain_object_reference(
@@ -1335,8 +1339,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            Some("zipimport"),
+            &scope,
         );
 
         // Then
@@ -1346,7 +1349,7 @@ mod tests {
     }
 
     #[test]
-    fn test_render_inline_domain_object_reference_bare_name_resolves_via_class_stack() {
+    fn test_render_inline_domain_object_reference_bare_name_resolves_via_python_scope() {
         // Given — a method indexed under its class-qualified name, the shape
         // `.. method:: find_spec` gets when nested inside
         // `.. class:: zipimporter` (itself a sibling after
@@ -1360,7 +1363,9 @@ mod tests {
         let mut html = String::new();
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
-        let class_stack = vec!["zipimport.zipimporter".to_string()];
+        let mut scope = rusty_sphinx_scope::PythonScope::default();
+        scope.set_module("zipimport");
+        scope.push_classes(&["zipimporter".to_string()]);
 
         // When — the reference is written bare, resolved against the
         // innermost enclosing class, which wins over the current module.
@@ -1378,8 +1383,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &class_stack,
-            Some("zipimport"),
+            &scope,
         );
 
         // Then
@@ -1406,7 +1410,9 @@ mod tests {
         let mut html = String::new();
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
-        let class_stack = vec!["zipimport.zipimporter".to_string()];
+        let mut scope = rusty_sphinx_scope::PythonScope::default();
+        scope.set_module("zipimport");
+        scope.push_classes(&["zipimporter".to_string()]);
 
         // When
         render_inline_domain_object_reference(
@@ -1423,8 +1429,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &class_stack,
-            Some("zipimport"),
+            &scope,
         );
 
         // Then
@@ -1448,6 +1453,9 @@ mod tests {
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
 
+        let mut scope = rusty_sphinx_scope::PythonScope::default();
+        scope.set_module("other_module");
+
         // When — the qualified attempt ("other_module.greet") misses, so
         // resolution must fall back to the bare key.
         render_inline_domain_object_reference(
@@ -1464,8 +1472,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            Some("other_module"),
+            &scope,
         );
 
         // Then
@@ -1476,8 +1483,12 @@ mod tests {
     #[test]
     fn test_render_inline_domain_object_reference_already_qualified_name_unaffected_by_scope() {
         // Given — a function indexed under its module-qualified name, and a
-        // reference that already spells out that qualifier explicitly
-        // (`qualify_name` must not double-prepend the current module).
+        // reference that already spells out that qualifier explicitly. The
+        // module-qualified candidate ("types.types.coroutine") misses since
+        // the module is never absorbed against a repeat in the reference
+        // text, but the bare-name candidate ("types.coroutine", the literal
+        // text) still resolves — no different from real Sphinx trying the
+        // literal name first.
         let mut index = ProjectIndex::default();
         index.insert_domain_object(
             ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
@@ -1487,6 +1498,8 @@ mod tests {
         let mut html = String::new();
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
+        let mut scope = rusty_sphinx_scope::PythonScope::default();
+        scope.set_module("types");
 
         // When
         render_inline_domain_object_reference(
@@ -1503,8 +1516,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            Some("types"),
+            &scope,
         );
 
         // Then
@@ -1540,8 +1552,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1572,8 +1583,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then
@@ -1612,8 +1622,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &[],
-            None,
+            &rusty_sphinx_scope::PythonScope::default(),
         );
 
         // Then

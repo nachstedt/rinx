@@ -314,3 +314,39 @@ Both :py:exc:`Fault` and :py:class:`Fault` (or, using the bare roles,
 definition above, even though it was documented as a ``class``, not an
 ``exception`` — proving the two object types alias each other for
 cross-reference purposes, exactly as real Sphinx does.
+
+The Flat ``clock.now`` Classmethod
+-----------------------------------
+
+Real-world Sphinx docs (CPython's own ``datetime`` module is the canonical
+example) sometimes document a class's members as flat, column-0 siblings of
+the class itself — and give the class the *same name* as its own module
+(CPython's ``datetime`` module defines a class also named ``datetime``).
+When that happens, a flat signature repeating the module's name is the
+*class* name, not a repeat of the module, and must not be collapsed away:
+``.. py:classmethod:: clock.now`` below is written as a sibling of both
+``.. py:module:: clock`` and ``.. py:class:: clock`` (never nested inside the
+class), and is indexed and cross-referenced as ``clock.clock.now`` — the
+module, then the class, then the method — not ``clock.now``. This section is
+placed last, after every other cross-reference on this page, since
+``py:module`` context is sequential and stays in effect for the rest of the
+document — placing it earlier would shift what the ``greetings``-relative
+bare references above resolve against.
+
+.. py:module:: clock
+
+   A module for telling the time.
+
+.. py:class:: clock
+
+   Represents a point in time.
+
+.. py:classmethod:: clock.now()
+
+   Returns the current time. Written as a flat, unnested sibling signature —
+   compare with :py:meth:`Greeter.greet` earlier on this page, which is
+   nested instead.
+
+:py:meth:`clock.clock.now` resolves to the classmethod above, proving the
+module and class prefixes are both preserved rather than collapsed into each
+other just because they're spelled the same.
