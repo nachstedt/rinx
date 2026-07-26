@@ -6,6 +6,104 @@
       "target": "fork",
       "requested_type": "c:function",
       "comment": "The POSIX fork(2) system call, referenced by the PyOS_BeforeFork / PyOS_AfterFork_* docs. It is a C library function, not a CPython C-API symbol, so it is never indexed by this doc set. Real Sphinx also fails to resolve it and CPython suppresses it via nitpick_ignore in Doc/conf.py; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/xml.dom",
+      "kind": "domain_object_reference",
+      "target": "Node",
+      "requested_type": "py:class",
+      "comment": "The DOM Level 1 'Node' interface is only described in prose and an interface-summary table in xml.dom.rst; there is no `.. class:: Node` directive anywhere in the docs defining it as a concrete Sphinx object (same is true of Document, Element, DOMImplementation, DocumentType, NodeList and Attr in this module). Real Sphinx fails to resolve these references too; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/exceptions",
+      "kind": "domain_object_reference",
+      "target": "errno",
+      "requested_type": "py:data",
+      "comment": "Referenced via the `:c:data:` role (e.g. 'A numeric error code from the C variable :c:data:`errno`'), pointing at the standard C library global `errno`, which is never documented as a CPython C-API or Python symbol. CPython's own Doc/conf.py nitpick_ignore explicitly lists ('c:data', 'errno') for exactly this reason. Real Sphinx also fails to resolve it; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/csv",
+      "kind": "domain_object_reference",
+      "target": "writer",
+      "requested_type": "py:class",
+      "comment": "`writer` is defined via `.. function:: writer(...)` in csv.rst but is conventionally cross-referenced with `:class:`writer`` throughout the module's prose, since the function returns a writer 'object'. Sphinx's Python domain does not alias py:function and py:class for xref resolution, so real Sphinx fails to resolve this too; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/threading",
+      "kind": "domain_object_reference",
+      "target": "Thread.run",
+      "requested_type": "py:function",
+      "comment": "`Thread.run` is defined via `.. method:: run()` inside `.. class:: Thread` but is cross-referenced with `:func:`Thread.run`` (e.g. in the threading.excepthook docs). Sphinx's Python domain does not alias py:function and py:method for xref resolution, so real Sphinx fails to resolve this too; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/pyexpat",
+      "kind": "domain_object_reference",
+      "target": "xmlparser",
+      "requested_type": "py:class",
+      "comment": "`xmlparser` is cross-referenced with `:class:`xmlparser`` dozens of times in pyexpat.rst, but the class itself is never given a `.. class:: xmlparser` directive — only its methods are documented directly as `.. method:: xmlparser.Parse` etc. with no enclosing class definition. Real Sphinx fails to resolve `:class:`xmlparser`` too; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/xml.dom",
+      "kind": "domain_object_reference",
+      "target": "Document",
+      "requested_type": "py:class",
+      "comment": "Same undocumented-DOM-interface issue as 'Node' in this file: no `.. class:: Document` directive exists anywhere in the docs, only prose/table descriptions. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/xml.dom",
+      "kind": "domain_object_reference",
+      "target": "Element",
+      "requested_type": "py:class",
+      "comment": "Same undocumented-DOM-interface issue as 'Node' in this file: no `.. class:: Element` directive exists anywhere in the docs, only prose/table descriptions. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/extending/extending",
+      "kind": "domain_object_reference",
+      "target": "malloc",
+      "requested_type": "c:function",
+      "comment": "The C standard library allocator, not a CPython C-API symbol, so it is never indexed by this doc set. CPython's own Doc/conf.py nitpick_ignore explicitly lists ('c:func', 'malloc'). Real Sphinx also fails to resolve it; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/extending/extending",
+      "kind": "domain_object_reference",
+      "target": "free",
+      "requested_type": "c:function",
+      "comment": "The C standard library deallocator, not a CPython C-API symbol, so it is never indexed by this doc set. CPython's own Doc/conf.py nitpick_ignore explicitly lists ('c:func', 'free'). Real Sphinx also fails to resolve it; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/csv",
+      "kind": "domain_object_reference",
+      "target": "reader",
+      "requested_type": "py:class",
+      "comment": "Same py:function/py:class mismatch as 'writer' in this file: `reader` is defined via `.. function:: reader(...)` but conventionally cross-referenced with `:class:`reader``. Real Sphinx does not alias these object types either, so it fails to resolve this too; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/datetime",
+      "kind": "domain_object_reference",
+      "target": "localtime",
+      "requested_type": "c:function",
+      "comment": "The C standard library function, not a CPython C-API symbol, so it is never indexed by this doc set. CPython's own Doc/conf.py nitpick_ignore explicitly lists ('c:func', 'localtime'). Real Sphinx also fails to resolve it; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/datetime",
+      "kind": "domain_object_reference",
+      "target": "gmtime",
+      "requested_type": "c:function",
+      "comment": "The C standard library function, not a CPython C-API symbol, so it is never indexed by this doc set. CPython's own Doc/conf.py nitpick_ignore explicitly lists ('c:func', 'gmtime'). Real Sphinx also fails to resolve it; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/socket",
+      "kind": "domain_object_reference",
+      "target": "socket.socket",
+      "requested_type": "py:function",
+      "comment": "`socket.socket` is defined via `.. class:: socket(family=AF_INET, ...)` but is cross-referenced with `:func:`socket.socket`` in places, since it reads like a factory call. Sphinx's Python domain does not alias py:function and py:class for xref resolution, so real Sphinx fails to resolve this too; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/reference/datamodel",
+      "kind": "domain_object_reference",
+      "target": "__eq__",
+      "requested_type": "py:method",
+      "comment": "`__eq__` is only ever shown inline as example code (`object.__eq__(self, other)`) in datamodel.rst; there is no `.. method::` directive anywhere defining it as a concrete Sphinx object for this or any other special method discussed in that section. Real Sphinx fails to resolve `:meth:`__eq__`` here too; expected, not a rusty-sphinx resolver gap."
     }
   ]
 }
