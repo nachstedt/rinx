@@ -5,7 +5,11 @@ use crate::domain_object_body::DomainObjectBody;
 use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
 use crate::index_entry::IndexEntry;
+use crate::list_table_widths::ListTableWidths;
 use crate::node::Node;
+use crate::table::TableRow;
+use crate::table_align::TableAlign;
+use crate::target_name::TargetName;
 use crate::version_change_kind::VersionChangeKind;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -42,6 +46,39 @@ pub enum Directive {
     Index {
         entries: Vec<IndexEntry>,
         id: String,
+    },
+    /// `.. list-table::` — a table specified as a nested bullet list (outer
+    /// list = rows, each row's own bullet list = cells) rather than
+    /// character-art. Reuses [`TableRow`]/[`TableCell`] from the grid-table
+    /// implementation for its rows (`colspan`/`rowspan` always 1, since
+    /// list-table has no span syntax), but gets its own variant rather than
+    /// folding into `Node::Table` because grid tables have none of these
+    /// options and would otherwise carry meaningless defaults forever.
+    ListTable {
+        /// The directive argument — the table's title/caption. `None` when
+        /// no argument was given.
+        title: Option<String>,
+        /// `:header-rows:` — how many leading rows in `rows` are header
+        /// rows. 0 (the spec default) when the option is omitted; clamped
+        /// to `rows.len()` at parse time.
+        header_rows: usize,
+        /// `:stub-columns:` — how many leading columns in every row are
+        /// stub (row-header) columns. 0 by default; clamped to the actual
+        /// column count at parse time.
+        stub_columns: usize,
+        widths: Option<ListTableWidths>,
+        /// `:width:` — an opaque CSS length/percentage (e.g. `"100%"`),
+        /// passed through verbatim since it's only ever re-emitted as a
+        /// `style` attribute.
+        width: Option<String>,
+        align: Option<TableAlign>,
+        /// `:class:` — space-separated class names, already split.
+        classes: Vec<String>,
+        /// `:name:` — reuses [`TargetName`] (the same type explicit
+        /// hyperlink targets use) so it can be registered in
+        /// `ProjectIndex::targets` with no extra conversion.
+        name: Option<TargetName>,
+        rows: Vec<TableRow>,
     },
     DomainObject(DomainObjectBody),
     /// `.. py:currentmodule::` — sets the `py`-domain module context for the
@@ -177,6 +214,37 @@ mod tests {
     fn test_py_current_module_directive_serialization_roundtrip_with_reset() {
         // Given
         let directive = Directive::PyCurrentModule { module: None };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_list_table_directive_serialization_roundtrip() {
+        // Given
+        use crate::table::TableCell;
+
+        let directive = Directive::ListTable {
+            title: Some("Fruit".to_string()),
+            header_rows: 1,
+            stub_columns: 0,
+            widths: Some(ListTableWidths::Explicit(vec![30, 70])),
+            width: Some("100%".to_string()),
+            align: Some(TableAlign::Center),
+            classes: vec!["custom".to_string()],
+            name: Some(TargetName::new("fruit-table")),
+            rows: vec![TableRow {
+                cells: vec![TableCell {
+                    colspan: 1,
+                    rowspan: 1,
+                    content: vec![Node::Paragraph(vec![InlineNode::Text("Fruit".to_string())])],
+                }],
+            }],
+        };
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");

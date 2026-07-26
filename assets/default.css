@@ -604,6 +604,36 @@ table td p:last-child {
   margin-bottom: 0;
 }
 
+/* `.. list-table::`'s `:align:` option only has a visible effect once the
+ * table is narrower than the page, so list-tables size to their content by
+ * default instead of inheriting the 100%-width rule above; `:width:` (an
+ * inline `style` attribute) always wins over this when given. */
+table.list-table {
+  width: auto;
+}
+
+table.list-table.align-left {
+  margin-right: auto;
+}
+
+table.list-table.align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.list-table.align-right {
+  margin-left: auto;
+}
+
+table.list-table caption {
+  caption-side: top;
+  text-align: left;
+  font-style: italic;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
 /* ── Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {

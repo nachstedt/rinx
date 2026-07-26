@@ -131,6 +131,19 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
                     }
                 }
             }
+            Node::Directive(Directive::ListTable { rows, name, .. }) => {
+                if let Some(target_name) = name {
+                    index.targets.insert(
+                        target_name.clone(),
+                        TargetLocation::Internal(doc_path.to_string()),
+                    );
+                }
+                for row in rows {
+                    for cell in &row.cells {
+                        index_nodes(&cell.content, doc_path, index, scope);
+                    }
+                }
+            }
             _ => {}
         }
     }
@@ -1375,6 +1388,102 @@ mod tests {
         assert_eq!(
             index.targets.get(&TargetName::new("nested-target")),
             Some(&TargetLocation::Internal("test.rst".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_list_table_name_as_target() {
+        // Given — a `.. list-table::` with a `:name:` option
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::ListTable {
+                title: None,
+                header_rows: 0,
+                stub_columns: 0,
+                widths: None,
+                width: None,
+                align: None,
+                classes: vec![],
+                name: Some(TargetName::new("fruit-table")),
+                rows: vec![],
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            index.targets.get(&TargetName::new("fruit-table")),
+            Some(&TargetLocation::Internal("test.rst".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_analyze_list_table_without_name_registers_no_target() {
+        // Given — a `.. list-table::` with no `:name:` option
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::ListTable {
+                title: None,
+                header_rows: 0,
+                stub_columns: 0,
+                widths: None,
+                width: None,
+                align: None,
+                classes: vec![],
+                name: None,
+                rows: vec![],
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(index.targets.is_empty());
+    }
+
+    #[test]
+    fn test_analyze_registers_domain_object_nested_in_list_table_cell() {
+        // Given — a `.. py:attribute::` nested inside a list-table cell,
+        // mirroring the known_bugs.md `reference/datamodel.rst` scenario
+        let doc = Document::new(
+            "datamodel.rst".to_string(),
+            vec![Node::Directive(Directive::ListTable {
+                title: None,
+                header_rows: 0,
+                stub_columns: 0,
+                widths: None,
+                width: None,
+                align: None,
+                classes: vec![],
+                name: None,
+                rows: vec![rusty_sphinx_ast::TableRow {
+                    cells: vec![rusty_sphinx_ast::TableCell {
+                        colspan: 1,
+                        rowspan: 1,
+                        content: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                                signatures: NonEmptyVector::single("method.__self__".to_string()),
+                                type_: None,
+                                value: None,
+                                canonical: None,
+                                body: vec![],
+                            },
+                        ))],
+                    }],
+                }],
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "py:attribute:method.__self__"),
+            Some(&"datamodel.rst".to_string())
         );
     }
 

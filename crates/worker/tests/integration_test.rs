@@ -625,3 +625,77 @@ Call :meth:`.close` when done.
         }]
     );
 }
+
+#[test]
+fn test_e2e_list_table_basic_renders_as_table() {
+    // Given
+    let input = "\
+.. list-table::
+   :header-rows: 1
+
+   * - Fruit
+     - Colour
+   * - Apple
+     - Red
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    let expected_html = "\
+<table class=\"list-table\">
+<thead>
+<tr>
+<th><p>Fruit</p>
+</th>
+<th><p>Colour</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Apple</p>
+</td>
+<td><p>Red</p>
+</td>
+</tr>
+</tbody>
+</table>
+";
+    assert_eq!(result, expected_html);
+}
+
+#[test]
+fn test_e2e_list_table_known_bug_regression_nested_domain_object_resolves() {
+    // Given — the known_bugs.md `reference/datamodel.rst` scenario: a
+    // domain-object definition nested inside a list-table cell, referenced
+    // elsewhere in the same document. Before `list-table` was implemented,
+    // `.. py:attribute::` here was swallowed as opaque directive-body text
+    // and the `:attr:` reference below would have rendered as broken.
+    let input = "\
+.. list-table::
+   :header-rows: 1
+
+   * - Attribute
+     - Meaning
+   * - .. py:attribute:: method.__self__
+
+     - The instance to which a bound method is bound.
+
+See :attr:`method.__self__` for details.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+
+    // When
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then
+    assert!(output.broken_links.is_empty());
+    assert!(!output.html.contains("class=\"broken-link\""));
+    assert!(output.html.contains(
+        "<a class=\"reference internal\" href=\"test.html#py:attribute:method.__self__\">"
+    ));
+}
