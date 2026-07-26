@@ -6,20 +6,18 @@ CPython doc source. Unlike the entries in `scripts/domain_warnings_whitelist.jso
 these are cases where real Sphinx *would* resolve the reference — the warning
 is a rusty-sphinx shortcoming, not a CPython doc inconsistency.
 
-## Explicit-title cross-reference syntax (`` `text <target>` ``) isn't parsed
+## ~~Explicit-title cross-reference syntax (`` `text <target>` ``) isn't parsed~~ — fixed
 
-Sphinx's explicit-title role syntax — `` :func:`spawn\* <spawnl>` `` displays
-"spawn\*" but resolves against target "spawnl" — isn't recognized at all.
-`parse_domain_object_target` (`crates/parser/src/inline.rs`) only strips a
-leading `~` or `!`; it has no logic to split on `<...>`, so the entire raw
-string (including the display text and angle brackets) is treated as the
-literal target name.
-
-- Confirmed example: `spawn\* <spawnl>` (`library/os.rst`).
-- Likely affects other entries further down `benchmark_result.txt` with the
-  same `text <target>` shape, e.g. `compat32 <email.policy.Compat32>`,
-  `ttk.Treeview <tkinter.ttk.Treeview>`, `data <data_filter>`,
-  `cur.execute(...) <Cursor.execute>` — not yet individually verified.
+`parse_domain_object_target` (`crates/parser/src/inline.rs`) now splits an
+explicit title (`` `Display text <target>` ``) off the target via the same
+`split_explicit_title` helper `:ref:`/`:term:` already used, and un-escapes
+backslash-escaped punctuation in the display text (e.g. `spawn\*` → `spawn*`)
+via a new `unescape_rst_backslashes` helper. Covered by unit tests in the
+same file (`test_parse_domain_object_target_explicit_title_*`,
+`test_handle_inline_match_func_variant_explicit_title`,
+`test_handle_attr_match_explicit_title_splits_display_from_target`) and by
+an example in `examples/domains.rst`. See `spec_gaps.md`'s "Inline Markup"
+section for the up-to-date status.
 
 ## `:c:data:` role loses its `c:` domain prefix
 

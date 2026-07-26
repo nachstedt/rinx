@@ -164,12 +164,20 @@ impl DomainObjectTarget {
 /// Parses a domain-object role's raw backtick-quoted target, resolving the
 /// `!`/`~`/`.` prefix modifiers documented at
 /// <https://www.sphinx-doc.org/en/master/usage/referencing.html> and
-/// <https://www.sphinx-doc.org/en/master/usage/domains/python.html#target-resolution>.
+/// <https://www.sphinx-doc.org/en/master/usage/domains/python.html#target-resolution>,
+/// as well as the explicit-title syntax (`` `Display text <target>` ``,
+/// e.g. `` :func:`spawn\* <spawnl>` ``) shared with `:ref:`/`:term:` via
+/// [`split_explicit_title`].
 ///
 /// `!` is checked first and returns immediately, mirroring real Sphinx's
 /// `XRefRole.run`: a suppressed reference becomes a plain literal before the
 /// other prefixes are ever examined, so `` :func:`!~foo` `` displays a literal
 /// `~foo`.
+///
+/// When an explicit title is present, it always wins for `display` —
+/// regardless of a `~` prefix on the target — since there is nothing left to
+/// shorten; `~`/`.` still apply to the target itself for `name`/
+/// `search_order` either way.
 ///
 /// A leading `.` never survives into `name` — no indexed object name can
 /// contain an empty dotted segment, so leaving it in would guarantee a miss.
@@ -187,9 +195,14 @@ fn parse_domain_object_target(raw: &str) -> DomainObjectTarget {
         };
     }
 
-    let (shorten_display, after_tilde) = match raw.strip_prefix('~') {
+    let (explicit_title, target_raw) = match split_explicit_title(raw) {
+        Some((title, target)) => (Some(title), target),
+        None => (None, raw.to_string()),
+    };
+
+    let (shorten_display, after_tilde) = match target_raw.strip_prefix('~') {
         Some(rest) => (true, rest),
-        None => (false, raw),
+        None => (false, target_raw.as_str()),
     };
     let name = after_tilde.trim_start_matches('.');
     let search_order = if name.len() == after_tilde.len() {
@@ -197,18 +210,37 @@ fn parse_domain_object_target(raw: &str) -> DomainObjectTarget {
     } else {
         TargetSearchOrder::MostQualifiedFirst
     };
-    let display = if shorten_display {
-        name.rsplit('.').next().unwrap_or(name)
-    } else {
-        name
+    let display = match &explicit_title {
+        Some(title) => unescape_rst_backslashes(title),
+        None if shorten_display => {
+            unescape_rst_backslashes(name.rsplit('.').next().unwrap_or(name))
+        }
+        None => unescape_rst_backslashes(name),
     };
 
     DomainObjectTarget {
-        name: name.to_string(),
-        display: display.to_string(),
+        name: unescape_rst_backslashes(name),
+        display,
         link: true,
         search_order,
     }
+}
+
+/// Un-escapes RST backslash escapes (`\X` → `X`) in role content, e.g.
+/// `spawn\*` → `spawn*`.
+fn unescape_rst_backslashes(text: &str) -> String {
+    let mut result = String::with_capacity(text.len());
+    let mut chars = text.chars();
+    while let Some(c) = chars.next() {
+        if c == '\\' {
+            if let Some(next) = chars.next() {
+                result.push(next);
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    result
 }
 
 /// Builds the `InlineNode` for a matched `:func:`/`:py:func:`/`:c:func:` role.
@@ -349,19 +381,24 @@ fn handle_macro_match(m_str: &str, default_domain: Domain) -> InlineNode {
 
 /// Splits a role's backtick content on Sphinx's optional explicit-title
 /// syntax (`Display text <target>`), shared by every role that supports it
-/// (`:term:`, `:ref:`). Returns `(display, target)`, both equal to `content`
-/// when there is no explicit title.
+/// (`:term:`, `:ref:`, and the domain-object roles via
+/// [`parse_domain_object_target`]). Returns `None` when there is no explicit
+/// title.
+fn split_explicit_title(content: &str) -> Option<(String, String)> {
+    let angle_start = content.rfind('<')?;
+    let angle_end = content[angle_start..].find('>')?;
+    let display = content[..angle_start].trim().to_string();
+    let target = content[angle_start + 1..angle_start + angle_end]
+        .trim()
+        .to_string();
+    Some((display, target))
+}
+
+/// Splits a role's backtick content on Sphinx's optional explicit-title
+/// syntax, shared by `:term:`/`:ref:`. Returns `(display, target)`, both
+/// equal to `content` when there is no explicit title.
 fn split_display_and_target(content: &str) -> (String, String) {
-    if let Some(angle_start) = content.rfind('<')
-        && let Some(angle_end) = content[angle_start..].find('>')
-    {
-        let display = content[..angle_start].trim().to_string();
-        let target = content[angle_start + 1..angle_start + angle_end]
-            .trim()
-            .to_string();
-        return (display, target);
-    }
-    (content.to_string(), content.to_string())
+    split_explicit_title(content).unwrap_or_else(|| (content.to_string(), content.to_string()))
 }
 
 pub(super) fn handle_inline_match(
@@ -731,6 +768,51 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_domain_object_target_explicit_title_splits_display_from_target() {
+        // Given / When — Sphinx's `Display text <target>` syntax.
+        let target = parse_domain_object_target("spawn text <spawnl>");
+
+        // Then
+        assert_eq!(target.name, "spawnl");
+        assert_eq!(target.display, "spawn text");
+        assert!(target.link);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_explicit_title_unescapes_display() {
+        // Given / When — the confirmed known_bugs.md example:
+        // `:func:`spawn\* <spawnl>`` displays "spawn*", resolves "spawnl".
+        let target = parse_domain_object_target("spawn\\* <spawnl>");
+
+        // Then
+        assert_eq!(target.name, "spawnl");
+        assert_eq!(target.display, "spawn*");
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_explicit_title_keeps_dotted_target_unshortened() {
+        // Given / When — an explicit title is given, so `name`'s dots are
+        // never used to shorten the display (there's nothing to shorten).
+        let target = parse_domain_object_target("compat32 <email.policy.Compat32>");
+
+        // Then
+        assert_eq!(target.name, "email.policy.Compat32");
+        assert_eq!(target.display, "compat32");
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_explicit_title_overrides_tilde_shortening() {
+        // Given / When — `~` still strips from the target for `name`, but
+        // the explicit title always wins for `display`.
+        let target = parse_domain_object_target("Custom <~pkg.mod.foo>");
+
+        // Then
+        assert_eq!(target.name, "pkg.mod.foo");
+        assert_eq!(target.display, "Custom");
+        assert!(target.link);
+    }
+
+    #[test]
     fn test_handle_func_match_resolves_via_given_domain() {
         let result = handle_func_match(":func:`foo`", Domain::C);
         assert_eq!(
@@ -852,6 +934,21 @@ mod tests {
                 object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
                 name: "Greeter.name".to_string(),
                 display: "Greeter.name".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_attr_match_explicit_title_splits_display_from_target() {
+        let result = handle_attr_match(":attr:`the name <Greeter.name>`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                name: "Greeter.name".to_string(),
+                display: "the name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
@@ -1152,6 +1249,24 @@ mod tests {
                 object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
                 name: "pkg.mod.foo".to_string(),
                 display: "foo".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_func_variant_explicit_title() {
+        // Given / When — the confirmed known_bugs.md example.
+        let result = handle_inline_match("func", ":func:`spawn\\* <spawnl>`", None, Domain::Py);
+
+        // Then
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                name: "spawnl".to_string(),
+                display: "spawn*".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
             }

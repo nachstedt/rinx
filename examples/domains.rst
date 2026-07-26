@@ -293,6 +293,12 @@ instead keeps the link but shortens the displayed text to the last dotted
 component — e.g. :py:func:`~greetings.shout` links to ``greetings.shout``
 but displays only ``shout``.
 
+A domain-object role's target may also use Sphinx's explicit-title syntax,
+``text <target>``, to display custom text while resolving against a
+different target — e.g. :py:func:`the greet function <greet>` displays "the
+greet function" but links to the ``greet`` function defined above, exactly
+like :ref:`the site home <home-index>` already does for ``:ref:``.
+
 Calling :py:func:`shout` — written bare, with no ``greetings.`` prefix — is
 the same as calling :py:func:`~greetings.shout`. This is the shape real-world
 Sphinx docs actually use (e.g. every CPython module page cross-references its
