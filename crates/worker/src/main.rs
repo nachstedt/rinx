@@ -123,7 +123,7 @@ fn process_preview(
     let mut index = if let Some(json) = index_json {
         serde_json::from_str(json).context("Failed to deserialize global index")?
     } else {
-        analyzer::ProjectIndex::default()
+        rusty_sphinx_index::ProjectIndex::default()
     };
 
     let local_index = analyzer::analyze(&doc);
@@ -183,7 +183,7 @@ fn process_render(
 )> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
-    let index: analyzer::ProjectIndex =
+    let index: rusty_sphinx_index::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
 
     let render_output = renderer::render(&doc, &index, doc_path);
@@ -226,7 +226,7 @@ fn process_genindex(
     config: &config::SiteConfig,
     template_str: &str,
 ) -> Result<String> {
-    let index: analyzer::ProjectIndex =
+    let index: rusty_sphinx_index::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
     renderer::render_genindex(&index, config, template_str)
 }

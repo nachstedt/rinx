@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 rusty_sphinx_ast = { path = "../ast" }
-rusty_sphinx_analyzer = { path = "../analyzer" }
+rusty_sphinx_index = { path = "../index" }
 rusty_sphinx_scope = { path = "../scope" }
 anyhow = "1.0.102"
 html-escape = "0.2.13"

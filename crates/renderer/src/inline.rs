@@ -2,8 +2,8 @@
 
 use crate::domain_resolution::{DomainObjectResolution, DomainObjectResolver};
 use crate::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch, RenderCtx};
-use rusty_sphinx_analyzer::{ProjectIndex, TargetLocation};
 use rusty_sphinx_ast::{ObjectType, TargetName};
+use rusty_sphinx_index::{ProjectIndex, TargetLocation};
 use std::fmt::Write as _;
 
 /// Renders a single inline node into `html`.
@@ -376,8 +376,8 @@ pub(super) fn render_inline_domain_object_reference(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_analyzer::ProjectIndex;
     use rusty_sphinx_ast::{TargetName, TargetSearchOrder};
+    use rusty_sphinx_index::ProjectIndex;
 
     #[test]
     fn test_render_inline_reference_resolved_internal_target() {
