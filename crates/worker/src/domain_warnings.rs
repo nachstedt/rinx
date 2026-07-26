@@ -32,6 +32,11 @@ pub enum DomainWarningKind {
     /// fallback — the definition's own type differs from the one the role
     /// asked for.
     ObjectTypeMismatch,
+    /// A dot-prefixed domain-object role whose suffix search matched several
+    /// objects. Reported separately from
+    /// [`Self::DomainObjectReference`] because the fix differs: the object
+    /// exists, the target just has to say which one.
+    AmbiguousDomainObjectReference,
 }
 
 /// A single domain-object warning, flattened into a serializable shape.
@@ -48,6 +53,11 @@ pub struct DomainWarning {
     /// mismatches.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub resolved_type: Option<ObjectType>,
+    /// The qualified names an ambiguous reference matched. Present only for
+    /// ambiguities, where naming the options *is* the actionable part of the
+    /// warning.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub candidates: Option<Vec<String>>,
 }
 
 /// All domain-object warnings emitted while rendering one document.
@@ -60,10 +70,10 @@ pub struct DomainWarningReport {
 /// Builds the per-document domain-object warning report from a render's raw
 /// diagnostics.
 ///
-/// Only [`BrokenLinkKind::DomainObjectReference`] broken links are kept — the
-/// other broken-link kinds (`:ref:`, hyperlink, anonymous, `:term:`) are
-/// deliberately excluded, as this sidecar is scoped to domain-object
-/// references. Every [`ObjectTypeMismatch`] is included.
+/// Only the two domain-object broken-link kinds are kept — the others
+/// (`:ref:`, hyperlink, anonymous, `:term:`) are deliberately excluded, as
+/// this sidecar is scoped to domain-object references. Every
+/// [`ObjectTypeMismatch`] is included.
 #[must_use]
 pub fn build_domain_warning_report(
     doc_path: &str,
@@ -73,15 +83,27 @@ pub fn build_domain_warning_report(
     let mut warnings = Vec::new();
 
     for link in broken_links {
-        if let BrokenLinkKind::DomainObjectReference(requested_type) = link.kind {
-            warnings.push(DomainWarning {
+        match &link.kind {
+            BrokenLinkKind::DomainObjectReference(requested_type) => warnings.push(DomainWarning {
                 kind: DomainWarningKind::DomainObjectReference,
                 target: link.target.clone(),
                 // The role's requested object type ("missed type") — nothing
                 // resolved, so there is no resolved_type.
-                requested_type: Some(requested_type),
+                requested_type: Some(*requested_type),
                 resolved_type: None,
-            });
+                candidates: None,
+            }),
+            BrokenLinkKind::AmbiguousDomainObjectReference {
+                object_type,
+                candidates,
+            } => warnings.push(DomainWarning {
+                kind: DomainWarningKind::AmbiguousDomainObjectReference,
+                target: link.target.clone(),
+                requested_type: Some(*object_type),
+                resolved_type: None,
+                candidates: Some(candidates.clone()),
+            }),
+            _ => {}
         }
     }
 
@@ -91,6 +113,7 @@ pub fn build_domain_warning_report(
             target: mismatch.name.clone(),
             requested_type: Some(mismatch.requested_type),
             resolved_type: Some(mismatch.resolved_type),
+            candidates: None,
         });
     }
 
@@ -152,6 +175,65 @@ mod tests {
             Some(py(PyObjectType::Class))
         );
         assert!(report.warnings[0].resolved_type.is_none());
+        assert!(report.warnings[0].candidates.is_none());
+    }
+
+    #[test]
+    fn test_build_report_records_the_candidates_of_an_ambiguous_reference() {
+        // Given a dot-prefixed reference that matched several objects
+        let broken_links = vec![BrokenLink {
+            kind: BrokenLinkKind::AmbiguousDomainObjectReference {
+                object_type: py(PyObjectType::Method),
+                candidates: vec![
+                    "tarfile.tarfile.close".to_string(),
+                    "zipfile.zipfile.close".to_string(),
+                ],
+            },
+            target: "close".to_string(),
+        }];
+
+        // When
+        let report = build_domain_warning_report("Doc/library/shutil", &broken_links, &[]);
+
+        // Then the candidates are carried through, so the whitelist diff can
+        // show what has to be disambiguated between
+        assert_eq!(report.warnings.len(), 1);
+        assert_eq!(
+            report.warnings[0].kind,
+            DomainWarningKind::AmbiguousDomainObjectReference
+        );
+        assert_eq!(report.warnings[0].target, "close");
+        assert_eq!(
+            report.warnings[0].requested_type,
+            Some(py(PyObjectType::Method))
+        );
+        assert_eq!(
+            report.warnings[0].candidates,
+            Some(vec![
+                "tarfile.tarfile.close".to_string(),
+                "zipfile.zipfile.close".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn test_ambiguous_warning_serializes_with_its_own_kind_and_candidates() {
+        // Given
+        let warning = DomainWarning {
+            kind: DomainWarningKind::AmbiguousDomainObjectReference,
+            target: "close".to_string(),
+            requested_type: Some(py(PyObjectType::Method)),
+            resolved_type: None,
+            candidates: Some(vec!["tarfile.tarfile.close".to_string()]),
+        };
+
+        // When
+        let json = serde_json::to_string(&warning).expect("Failed to serialize");
+
+        // Then — the `kind` string is what the whitelist matches on
+        assert!(json.contains(r#""kind":"ambiguous_domain_object_reference""#));
+        assert!(json.contains(r#""candidates":["tarfile.tarfile.close"]"#));
+        assert!(!json.contains("resolved_type"));
     }
 
     #[test]

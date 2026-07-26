@@ -26,3 +26,7 @@
 - When constructs depend on exact character alignment (e.g. grid tables), validate the alignment strictly and reject on mismatch instead of silently padding lines to paper over it.
 - Validate real-world/benchmark inputs against a parser before considering a feature done — a hand-built test suite can miss patterns (like a border line with a partial `+` set) that only show up in authentic external documents.
 - When two roles/directives share the same sub-syntax (e.g. the `Display text <target>` explicit-title form), extract one shared helper and reuse it rather than re-implementing the same parsing logic per role.
+- When emulating a reference implementation, deviate deliberately where it is silently permissive: keep the type/kind check on every lookup path even if the original skips it, so an author's mistake is reported instead of resolved to something plausible.
+- When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
+- Keep logic in the pipeline phase (and crate) that actually performs it; do not move it next to the data type it reads just because that type is defined elsewhere.
+- When a prefix/sigil is markup rather than part of a name, strip it during parsing and record its meaning as typed intent on the AST node, rather than leaving it in the string for a later phase to re-interpret.

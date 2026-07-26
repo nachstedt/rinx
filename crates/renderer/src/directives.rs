@@ -319,7 +319,7 @@ mod tests {
     use super::super::RenderCtx;
     use super::*;
     use rusty_sphinx_analyzer::ProjectIndex;
-    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, TargetName};
+    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, TargetName, TargetSearchOrder};
 
     fn render_doc(doc: &Document) -> String {
         let index = ProjectIndex::default();
@@ -385,8 +385,10 @@ mod tests {
         let index = ProjectIndex::default();
         let anon_targets = vec![];
         let mut anon_index = 0;
+        let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
+            domain_resolver: &resolver,
             doc_path: "test.rst",
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,
@@ -423,8 +425,10 @@ mod tests {
         let index = ProjectIndex::default();
         let anon_targets = vec![];
         let mut anon_index = 0;
+        let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
+            domain_resolver: &resolver,
             doc_path: "test.rst",
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,
@@ -554,6 +558,7 @@ mod tests {
                                     name: "curses.ascii".to_string(),
                                     display: "curses.ascii".to_string(),
                                     link: true,
+                                    search_order: TargetSearchOrder::LeastQualifiedFirst,
                                 },
                             ],
                             definition: vec![Node::Paragraph(vec![InlineNode::Text(
@@ -596,8 +601,10 @@ mod tests {
         let index = ProjectIndex::default();
         let anon_targets = vec![];
         let mut anon_index = 0;
+        let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
+            domain_resolver: &resolver,
             doc_path: "test.rst",
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,

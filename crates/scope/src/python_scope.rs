@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::Domain;
+use rusty_sphinx_ast::{Domain, TargetSearchOrder};
 
 /// The `py`-domain's enclosing lexical scope while indexing/rendering: the
 /// most recently seen `py:module` (document-order, persists across siblings)
@@ -65,8 +65,71 @@ impl PythonScope {
         self.classes.truncate(depth);
     }
 
+    /// The qualified names a *reference* to `name` may denote, in the order
+    /// they should be tried, deduplicated.
+    ///
+    /// This is the reference-side counterpart to [`Self::qualify`], and the
+    /// two deliberately differ. `qualify` serves *definitions*: it absorbs a
+    /// class prefix a signature repeats, because a definition names itself
+    /// once and the index key must not double it. Here nothing is absorbed —
+    /// a reference's text is the author's own words and is never rewritten
+    /// before lookup; a repeat is covered by simply having a tier for it.
+    ///
+    /// Sphinx's two orders (see [`TargetSearchOrder`]) are not mirror images:
+    /// the default order has a class-only tier (`ZipFile.read` resolving
+    /// without the module in scope), which the dot-prefixed order omits.
+    ///
+    /// Module and class context are `py`-domain concepts, so every other
+    /// domain yields just the literal name — the `c` domain namespaces with
+    /// `c:namespace`, which this type does not model.
+    #[must_use]
+    pub fn reference_candidates(
+        &self,
+        domain: Domain,
+        name: &str,
+        order: TargetSearchOrder,
+    ) -> Vec<String> {
+        if domain != Domain::Py {
+            return vec![name.to_string()];
+        }
+
+        let module = self.module.as_deref();
+        let class = (!self.classes.is_empty()).then(|| self.classes.join("."));
+        let prefixed = |prefix: &str| format!("{prefix}.{name}");
+        let module_and_class = || match (module, class.as_deref()) {
+            (Some(module), Some(class)) => Some(prefixed(&format!("{module}.{class}"))),
+            _ => None,
+        };
+
+        let tiers = match order {
+            TargetSearchOrder::LeastQualifiedFirst => [
+                Some(name.to_string()),
+                class.as_deref().map(prefixed),
+                module.map(prefixed),
+                module_and_class(),
+            ],
+            TargetSearchOrder::MostQualifiedFirst => [
+                module_and_class(),
+                module.map(prefixed),
+                Some(name.to_string()),
+                None,
+            ],
+        };
+
+        let mut candidates: Vec<String> = Vec::with_capacity(tiers.len());
+        for candidate in tiers.into_iter().flatten() {
+            if !candidates.contains(&candidate) {
+                candidates.push(candidate);
+            }
+        }
+        candidates
+    }
+
     /// Qualifies `own_name` (a domain object's own, possibly dotted, name)
     /// against this scope for an object of the given `domain`.
+    ///
+    /// This is the *definition* side — see [`Self::reference_candidates`] for
+    /// how a reference to a name is resolved, and why the two differ.
     ///
     /// A dotted `own_name` that repeats (all or just the innermost segment
     /// of) the current class stack has that repeat absorbed, exactly once,
@@ -328,5 +391,154 @@ mod tests {
 
         // Then
         assert_eq!(qualification.qualified_name, "StopIteration.value");
+    }
+
+    #[test]
+    fn test_reference_candidates_least_qualified_first_yields_all_four_tiers() {
+        // Given — a reference written inside `.. class:: zipimporter` under
+        // `.. module:: zipimport`.
+        let mut scope = PythonScope::default();
+        scope.set_module("zipimport");
+        scope.push_classes(&segments(&["zipimporter"]));
+
+        // When
+        let candidates = scope.reference_candidates(
+            Domain::Py,
+            "find_spec",
+            TargetSearchOrder::LeastQualifiedFirst,
+        );
+
+        // Then — Sphinx's documented default: unqualified first, then
+        // progressively more scope.
+        assert_eq!(
+            candidates,
+            segments(&[
+                "find_spec",
+                "zipimporter.find_spec",
+                "zipimport.find_spec",
+                "zipimport.zipimporter.find_spec",
+            ])
+        );
+    }
+
+    #[test]
+    fn test_reference_candidates_most_qualified_first_omits_the_class_only_tier() {
+        // Given — the same scope, but the target was written with a leading
+        // dot.
+        let mut scope = PythonScope::default();
+        scope.set_module("zipimport");
+        scope.push_classes(&segments(&["zipimporter"]));
+
+        // When
+        let candidates = scope.reference_candidates(
+            Domain::Py,
+            "find_spec",
+            TargetSearchOrder::MostQualifiedFirst,
+        );
+
+        // Then — not the reverse of the default order: real Sphinx's
+        // dot-prefixed branch never tries a class without its module.
+        assert_eq!(
+            candidates,
+            segments(&[
+                "zipimport.zipimporter.find_spec",
+                "zipimport.find_spec",
+                "find_spec",
+            ])
+        );
+    }
+
+    #[test]
+    fn test_reference_candidates_joins_nested_classes_into_one_qualifier() {
+        // Given — a class nested inside another class.
+        let mut scope = PythonScope::default();
+        scope.set_module("pkg");
+        scope.push_classes(&segments(&["Outer", "Inner"]));
+
+        // When
+        let candidates =
+            scope.reference_candidates(Domain::Py, "run", TargetSearchOrder::MostQualifiedFirst);
+
+        // Then
+        assert_eq!(
+            candidates,
+            segments(&["pkg.Outer.Inner.run", "pkg.run", "run"])
+        );
+    }
+
+    #[test]
+    fn test_reference_candidates_skips_tiers_with_no_module_in_scope() {
+        // Given — a class scope but no `.. module::` yet.
+        let mut scope = PythonScope::default();
+        scope.push_classes(&segments(&["ZipFile"]));
+
+        // When
+        let candidates =
+            scope.reference_candidates(Domain::Py, "read", TargetSearchOrder::LeastQualifiedFirst);
+
+        // Then — the two module-bearing tiers simply do not exist.
+        assert_eq!(candidates, segments(&["read", "ZipFile.read"]));
+    }
+
+    #[test]
+    fn test_reference_candidates_collapses_to_the_bare_name_without_any_scope() {
+        // Given / When
+        let candidates = PythonScope::default().reference_candidates(
+            Domain::Py,
+            "greet",
+            TargetSearchOrder::LeastQualifiedFirst,
+        );
+
+        // Then — every tier coincides, and duplicates are dropped rather
+        // than looked up repeatedly.
+        assert_eq!(candidates, segments(&["greet"]));
+    }
+
+    #[test]
+    fn test_reference_candidates_ignores_scope_outside_the_py_domain() {
+        // Given — module context is a `py` concept; the `c` domain
+        // namespaces differently and must not inherit it.
+        let mut scope = PythonScope::default();
+        scope.set_module("zipimport");
+        scope.push_classes(&segments(&["zipimporter"]));
+
+        // When
+        let candidates = scope.reference_candidates(
+            Domain::C,
+            "PyList_Append",
+            TargetSearchOrder::MostQualifiedFirst,
+        );
+
+        // Then
+        assert_eq!(candidates, segments(&["PyList_Append"]));
+    }
+
+    #[test]
+    fn test_reference_candidates_does_not_absorb_a_repeated_class_prefix() {
+        // Given — the CPython `random` shape: a reference written
+        // `Random.seed` from inside `.. class:: Random`. `qualify` would
+        // absorb the repeat; a reference must not be rewritten, and does not
+        // need to be — the module+class tier resolves it.
+        let mut scope = PythonScope::default();
+        scope.set_module("random");
+        scope.push_classes(&segments(&["Random"]));
+
+        // When
+        let candidates = scope.reference_candidates(
+            Domain::Py,
+            "Random.seed",
+            TargetSearchOrder::LeastQualifiedFirst,
+        );
+
+        // Then
+        assert_eq!(
+            candidates,
+            segments(&[
+                "Random.seed",
+                "Random.Random.seed",
+                "random.Random.seed",
+                "random.Random.Random.seed",
+            ])
+        );
     }
 }

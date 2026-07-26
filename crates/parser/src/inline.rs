@@ -1,6 +1,6 @@
 use crate::typography::apply_smart_typography;
 use regex::Regex;
-use rusty_sphinx_ast::{Domain, InlineNode, ObjectType};
+use rusty_sphinx_ast::{Domain, InlineNode, ObjectType, TargetSearchOrder};
 use std::sync::LazyLock;
 
 static REF_REGEX: LazyLock<Regex> =
@@ -137,37 +137,77 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
 }
 
 /// The name/display/link-behavior of a domain-object role target, after
-/// stripping an optional `!` (suppress link) or `~` (shorten display to the
-/// last dotted component) prefix.
+/// stripping the optional `!` (suppress link), `~` (shorten display to the
+/// last dotted component) and `.` (search the enclosing scope first) prefixes.
 struct DomainObjectTarget {
     name: String,
     display: String,
     link: bool,
+    search_order: TargetSearchOrder,
+}
+
+impl DomainObjectTarget {
+    /// Builds the reference node for this target under `object_type`. Every
+    /// role handler ends this way, so the node's shape is spelled out once
+    /// here rather than once per role.
+    fn into_inline_node(self, object_type: ObjectType) -> InlineNode {
+        InlineNode::DomainObjectReference {
+            object_type,
+            name: self.name,
+            display: self.display,
+            link: self.link,
+            search_order: self.search_order,
+        }
+    }
 }
 
 /// Parses a domain-object role's raw backtick-quoted target, resolving the
-/// `!`/`~` prefix modifiers documented at
-/// <https://www.sphinx-doc.org/en/master/usage/referencing.html>.
+/// `!`/`~`/`.` prefix modifiers documented at
+/// <https://www.sphinx-doc.org/en/master/usage/referencing.html> and
+/// <https://www.sphinx-doc.org/en/master/usage/domains/python.html#target-resolution>.
+///
+/// `!` is checked first and returns immediately, mirroring real Sphinx's
+/// `XRefRole.run`: a suppressed reference becomes a plain literal before the
+/// other prefixes are ever examined, so `` :func:`!~foo` `` displays a literal
+/// `~foo`.
+///
+/// A leading `.` never survives into `name` — no indexed object name can
+/// contain an empty dotted segment, so leaving it in would guarantee a miss.
+/// Unlike Sphinx, which strips exactly one dot from the target while stripping
+/// all of them from the title, both are stripped fully here: the two disagree
+/// only for degenerate input like `..foo`, where Sphinx's asymmetry just makes
+/// the lookup unresolvable while displaying a name that looks resolvable.
 fn parse_domain_object_target(raw: &str) -> DomainObjectTarget {
     if let Some(name) = raw.strip_prefix('!') {
-        DomainObjectTarget {
+        return DomainObjectTarget {
             name: name.to_string(),
             display: name.to_string(),
             link: false,
-        }
-    } else if let Some(name) = raw.strip_prefix('~') {
-        let display = name.rsplit('.').next().unwrap_or(name).to_string();
-        DomainObjectTarget {
-            name: name.to_string(),
-            display,
-            link: true,
-        }
+            search_order: TargetSearchOrder::default(),
+        };
+    }
+
+    let (shorten_display, after_tilde) = match raw.strip_prefix('~') {
+        Some(rest) => (true, rest),
+        None => (false, raw),
+    };
+    let name = after_tilde.trim_start_matches('.');
+    let search_order = if name.len() == after_tilde.len() {
+        TargetSearchOrder::LeastQualifiedFirst
     } else {
-        DomainObjectTarget {
-            name: raw.to_string(),
-            display: raw.to_string(),
-            link: true,
-        }
+        TargetSearchOrder::MostQualifiedFirst
+    };
+    let display = if shorten_display {
+        name.rsplit('.').next().unwrap_or(name)
+    } else {
+        name
+    };
+
+    DomainObjectTarget {
+        name: name.to_string(),
+        display: display.to_string(),
+        link: true,
+        search_order,
     }
 }
 
@@ -182,12 +222,7 @@ fn handle_func_match(m_str: &str, default_domain: Domain) -> InlineNode {
     // Both domains currently define "func", so this always resolves.
     let object_type =
         ObjectType::from_role_name(domain, "func").expect("every domain defines a 'func' role");
-    InlineNode::DomainObjectReference {
-        object_type,
-        name: target.name,
-        display: target.display,
-        link: target.link,
-    }
+    target.into_inline_node(object_type)
 }
 
 /// Builds the `InlineNode` for a matched `:mod:`/`:py:mod:` role, falling
@@ -201,13 +236,7 @@ fn handle_mod_match(m_str: &str, default_domain: Domain) -> InlineNode {
         .unwrap_or(default_domain);
     match ObjectType::from_role_name(domain, "mod") {
         Some(object_type) => {
-            let target = parse_domain_object_target(&caps["name"]);
-            InlineNode::DomainObjectReference {
-                object_type,
-                name: target.name,
-                display: target.display,
-                link: target.link,
-            }
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
         }
         None => InlineNode::Text(m_str.to_string()),
     }
@@ -227,13 +256,7 @@ fn handle_data_match(m_str: &str, default_domain: Domain) -> InlineNode {
         .unwrap_or(default_domain);
     match ObjectType::from_role_name(domain, &caps["role"]) {
         Some(object_type) => {
-            let target = parse_domain_object_target(&caps["name"]);
-            InlineNode::DomainObjectReference {
-                object_type,
-                name: target.name,
-                display: target.display,
-                link: target.link,
-            }
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
         }
         None => InlineNode::Text(m_str.to_string()),
     }
@@ -250,13 +273,7 @@ fn handle_meth_match(m_str: &str, default_domain: Domain) -> InlineNode {
         .unwrap_or(default_domain);
     match ObjectType::from_role_name(domain, "meth") {
         Some(object_type) => {
-            let target = parse_domain_object_target(&caps["name"]);
-            InlineNode::DomainObjectReference {
-                object_type,
-                name: target.name,
-                display: target.display,
-                link: target.link,
-            }
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
         }
         None => InlineNode::Text(m_str.to_string()),
     }
@@ -273,13 +290,7 @@ fn handle_class_match(m_str: &str, default_domain: Domain) -> InlineNode {
         .unwrap_or(default_domain);
     match ObjectType::from_role_name(domain, "class") {
         Some(object_type) => {
-            let target = parse_domain_object_target(&caps["name"]);
-            InlineNode::DomainObjectReference {
-                object_type,
-                name: target.name,
-                display: target.display,
-                link: target.link,
-            }
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
         }
         None => InlineNode::Text(m_str.to_string()),
     }
@@ -296,13 +307,7 @@ fn handle_attr_match(m_str: &str, default_domain: Domain) -> InlineNode {
         .unwrap_or(default_domain);
     match ObjectType::from_role_name(domain, "attr") {
         Some(object_type) => {
-            let target = parse_domain_object_target(&caps["name"]);
-            InlineNode::DomainObjectReference {
-                object_type,
-                name: target.name,
-                display: target.display,
-                link: target.link,
-            }
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
         }
         None => InlineNode::Text(m_str.to_string()),
     }
@@ -319,13 +324,7 @@ fn handle_exc_match(m_str: &str, default_domain: Domain) -> InlineNode {
         .unwrap_or(default_domain);
     match ObjectType::from_role_name(domain, "exc") {
         Some(object_type) => {
-            let target = parse_domain_object_target(&caps["name"]);
-            InlineNode::DomainObjectReference {
-                object_type,
-                name: target.name,
-                display: target.display,
-                link: target.link,
-            }
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
         }
         None => InlineNode::Text(m_str.to_string()),
     }
@@ -342,13 +341,7 @@ fn handle_macro_match(m_str: &str, default_domain: Domain) -> InlineNode {
         .unwrap_or(default_domain);
     match ObjectType::from_role_name(domain, "macro") {
         Some(object_type) => {
-            let target = parse_domain_object_target(&caps["name"]);
-            InlineNode::DomainObjectReference {
-                object_type,
-                name: target.name,
-                display: target.display,
-                link: target.link,
-            }
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
         }
         None => InlineNode::Text(m_str.to_string()),
     }
@@ -630,6 +623,7 @@ pub(super) fn try_match_inline(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_ast::TargetSearchOrder;
 
     #[test]
     fn test_parse_domain_object_target_plain_name() {
@@ -661,6 +655,79 @@ mod tests {
         assert_eq!(target.name, "foo");
         assert_eq!(target.display, "foo");
         assert!(target.link);
+        assert_eq!(target.search_order, TargetSearchOrder::LeastQualifiedFirst);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_plain_name_searches_least_qualified_first() {
+        // Given / When — no leading dot, Sphinx's default order.
+        let target = parse_domain_object_target("open");
+
+        // Then
+        assert_eq!(target.search_order, TargetSearchOrder::LeastQualifiedFirst);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_dot_prefix_reverses_search_order() {
+        // Given / When — the `:py:func:`.open`` form from the Sphinx docs.
+        let target = parse_domain_object_target(".open");
+
+        // Then — the dot is markup: it drives the order and is shown to
+        // nobody.
+        assert_eq!(target.name, "open");
+        assert_eq!(target.display, "open");
+        assert!(target.link);
+        assert_eq!(target.search_order, TargetSearchOrder::MostQualifiedFirst);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_dot_prefix_keeps_inner_dots() {
+        // Given / When — only the *leading* dot is a modifier; the ones
+        // inside the name are what make it dotted at all.
+        let target = parse_domain_object_target(".datetime.strptime");
+
+        // Then
+        assert_eq!(target.name, "datetime.strptime");
+        assert_eq!(target.display, "datetime.strptime");
+        assert_eq!(target.search_order, TargetSearchOrder::MostQualifiedFirst);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_strips_every_leading_dot() {
+        // Given / When — degenerate input; an empty leading segment can
+        // never match an index key, so no dot may survive.
+        let target = parse_domain_object_target("..foo");
+
+        // Then
+        assert_eq!(target.name, "foo");
+        assert_eq!(target.display, "foo");
+        assert_eq!(target.search_order, TargetSearchOrder::MostQualifiedFirst);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_combines_tilde_and_dot_prefixes() {
+        // Given / When — `~` shortens the display, `.` reverses the search
+        // order, and they compose in that written order.
+        let target = parse_domain_object_target("~.pkg.mod.foo");
+
+        // Then
+        assert_eq!(target.name, "pkg.mod.foo");
+        assert_eq!(target.display, "foo");
+        assert!(target.link);
+        assert_eq!(target.search_order, TargetSearchOrder::MostQualifiedFirst);
+    }
+
+    #[test]
+    fn test_parse_domain_object_target_bang_prefix_shows_remaining_prefixes_verbatim() {
+        // Given / When — real Sphinx turns a `!` target into a plain literal
+        // before it ever looks at `~`/`.`, so those are just text here.
+        let target = parse_domain_object_target("!.foo");
+
+        // Then
+        assert_eq!(target.name, ".foo");
+        assert_eq!(target.display, ".foo");
+        assert!(!target.link);
+        assert_eq!(target.search_order, TargetSearchOrder::LeastQualifiedFirst);
     }
 
     #[test]
@@ -673,6 +740,7 @@ mod tests {
                 name: "foo".to_string(),
                 display: "foo".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -687,6 +755,7 @@ mod tests {
                 name: "greetings".to_string(),
                 display: "greetings".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -707,6 +776,7 @@ mod tests {
                 name: "DEFAULT_TIMEOUT".to_string(),
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -741,6 +811,7 @@ mod tests {
                 name: "greet".to_string(),
                 display: "greet".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -761,6 +832,7 @@ mod tests {
                 name: "Greeter".to_string(),
                 display: "Greeter".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -781,6 +853,7 @@ mod tests {
                 name: "Greeter.name".to_string(),
                 display: "Greeter.name".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -801,6 +874,7 @@ mod tests {
                 name: "GreeterError".to_string(),
                 display: "GreeterError".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -821,6 +895,7 @@ mod tests {
                 name: "GreeterError".to_string(),
                 display: "GreeterError".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -835,6 +910,7 @@ mod tests {
                 name: "greetings.GreeterError".to_string(),
                 display: "GreeterError".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -849,6 +925,7 @@ mod tests {
                 name: "MAX".to_string(),
                 display: "MAX".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -863,6 +940,7 @@ mod tests {
                 name: "MAX".to_string(),
                 display: "MAX".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -883,6 +961,7 @@ mod tests {
                 name: "MAX".to_string(),
                 display: "MAX".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -897,6 +976,7 @@ mod tests {
                 name: "pkg.MAX".to_string(),
                 display: "MAX".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -911,6 +991,7 @@ mod tests {
                 name: "MAX".to_string(),
                 display: "MAX".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -931,6 +1012,7 @@ mod tests {
                 name: "GreeterError".to_string(),
                 display: "GreeterError".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -945,6 +1027,7 @@ mod tests {
                 name: "GreeterError".to_string(),
                 display: "GreeterError".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1010,6 +1093,7 @@ mod tests {
                 name: "foo".to_string(),
                 display: "foo".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1024,6 +1108,7 @@ mod tests {
                 name: "foo".to_string(),
                 display: "foo".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1038,6 +1123,7 @@ mod tests {
                 name: "add".to_string(),
                 display: "add".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1052,6 +1138,7 @@ mod tests {
                 name: "foo".to_string(),
                 display: "foo".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1066,6 +1153,7 @@ mod tests {
                 name: "pkg.mod.foo".to_string(),
                 display: "foo".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1080,6 +1168,7 @@ mod tests {
                 name: "greetings".to_string(),
                 display: "greetings".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1094,6 +1183,7 @@ mod tests {
                 name: "greetings".to_string(),
                 display: "greetings".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1108,6 +1198,7 @@ mod tests {
                 name: "curses".to_string(),
                 display: "curses".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1122,6 +1213,7 @@ mod tests {
                 name: "pkg.submodule".to_string(),
                 display: "submodule".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1144,6 +1236,7 @@ mod tests {
                 name: "DEFAULT_TIMEOUT".to_string(),
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1158,6 +1251,7 @@ mod tests {
                 name: "DEFAULT_TIMEOUT".to_string(),
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1172,6 +1266,7 @@ mod tests {
                 name: "SECRET_KEY".to_string(),
                 display: "SECRET_KEY".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1186,6 +1281,7 @@ mod tests {
                 name: "pkg.CONST".to_string(),
                 display: "CONST".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1200,6 +1296,7 @@ mod tests {
                 name: "Greeter.name".to_string(),
                 display: "Greeter.name".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1214,6 +1311,7 @@ mod tests {
                 name: "Greeter.secret".to_string(),
                 display: "Greeter.secret".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1228,6 +1326,7 @@ mod tests {
                 name: "Greeter.name".to_string(),
                 display: "name".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
         );
     }
@@ -1401,7 +1500,9 @@ mod tests {
 mod integration_tests {
     use crate::{parse, parse_with_domain};
     use rusty_sphinx_ast::Node;
-    use rusty_sphinx_ast::{CObjectType, Domain, InlineNode, ObjectType, PyObjectType};
+    use rusty_sphinx_ast::{
+        CObjectType, Domain, InlineNode, ObjectType, PyObjectType, TargetSearchOrder,
+    };
 
     #[test]
     fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
@@ -1885,6 +1986,7 @@ mod integration_tests {
                     name: "greet".to_string(),
                     display: "greet".to_string(),
                     link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
                 }
             );
         } else {
@@ -1907,12 +2009,14 @@ mod integration_tests {
                 name: "greet".to_string(),
                 display: "greet".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
             assert!(inlines.contains(&InlineNode::DomainObjectReference {
                 object_type: ObjectType::C(CObjectType::Function),
                 name: "add".to_string(),
                 display: "add".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -1936,6 +2040,7 @@ mod integration_tests {
                     name: "greetings".to_string(),
                     display: "greetings".to_string(),
                     link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
                 }
             );
         } else {
@@ -1958,6 +2063,7 @@ mod integration_tests {
                 name: "greetings".to_string(),
                 display: "greetings".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -1979,6 +2085,7 @@ mod integration_tests {
                 name: "curses".to_string(),
                 display: "curses".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -2002,6 +2109,7 @@ mod integration_tests {
                     name: "DEFAULT_TIMEOUT".to_string(),
                     display: "DEFAULT_TIMEOUT".to_string(),
                     link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
                 }
             );
         } else {
@@ -2026,6 +2134,7 @@ mod integration_tests {
                 name: "DEFAULT_TIMEOUT".to_string(),
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -2047,6 +2156,7 @@ mod integration_tests {
                 name: "SECRET_KEY".to_string(),
                 display: "SECRET_KEY".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -2070,6 +2180,7 @@ mod integration_tests {
                     name: "greet".to_string(),
                     display: "greet".to_string(),
                     link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
                 }
             );
         } else {
@@ -2092,6 +2203,7 @@ mod integration_tests {
                 name: "greet".to_string(),
                 display: "greet".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -2113,6 +2225,7 @@ mod integration_tests {
                 name: "secret_method".to_string(),
                 display: "secret_method".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -2136,6 +2249,7 @@ mod integration_tests {
                     name: "Greeter".to_string(),
                     display: "Greeter".to_string(),
                     link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
                 }
             );
         } else {
@@ -2158,6 +2272,7 @@ mod integration_tests {
                 name: "Greeter".to_string(),
                 display: "Greeter".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -2181,6 +2296,7 @@ mod integration_tests {
                     name: "Greeter.name".to_string(),
                     display: "Greeter.name".to_string(),
                     link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
                 }
             );
         } else {
@@ -2203,6 +2319,7 @@ mod integration_tests {
                 name: "Greeter.name".to_string(),
                 display: "Greeter.name".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -2241,6 +2358,7 @@ mod integration_tests {
                 name: "Greeter.secret".to_string(),
                 display: "Greeter.secret".to_string(),
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
@@ -2262,6 +2380,7 @@ mod integration_tests {
                 name: "greetings.shout".to_string(),
                 display: "shout".to_string(),
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             }));
         } else {
             panic!("Expected Paragraph, got {:?}", doc.nodes[0]);

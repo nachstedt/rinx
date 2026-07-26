@@ -1,5 +1,6 @@
 //! Inline node rendering helpers.
 
+use crate::domain_resolution::{DomainObjectResolution, DomainObjectResolver};
 use crate::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch, RenderCtx};
 use rusty_sphinx_analyzer::{ProjectIndex, TargetLocation};
 use rusty_sphinx_ast::{ObjectType, TargetName};
@@ -80,6 +81,7 @@ pub(super) fn render_inline(
             name,
             display,
             link,
+            search_order,
         } => {
             render_inline_domain_object_reference(
                 html,
@@ -88,8 +90,9 @@ pub(super) fn render_inline(
                     name,
                     display,
                     link: *link,
+                    search_order: *search_order,
                 },
-                ctx.index,
+                ctx.domain_resolver,
                 ctx.doc_path,
                 &mut DomainObjectDiagnostics {
                     broken_links: ctx.broken_links,
@@ -257,69 +260,6 @@ pub(super) fn render_inline_term_reference(
     }
 }
 
-/// Yields the qualified names to try, in order, when resolving a domain
-/// object cross-reference against `scope`: qualified by the reference's full
-/// enclosing scope first (nearest `py:class`/`py:exception`, plus the
-/// current `py:module` — only for the `py` domain, real Sphinx's module
-/// context never qualifies non-`py` objects), then by the module alone, then
-/// the bare, unqualified name as the final global fallback.
-///
-/// Three tiers, not the two a *definition*'s own qualification needs: a
-/// reference can be written from *inside* a narrower scope than the object
-/// it targets, e.g. a bare `:exc:` role reading just `ZipImportError`,
-/// written inside `.. class:: zipimporter`'s own body, referring to an
-/// exception that was itself only ever module-qualified (a sibling of
-/// `.. module:: zipimport`, never nested in the class) — the class-qualified
-/// guess (`zipimport.zipimporter.ZipImportError`) misses, so resolution must
-/// still fall through to the module-qualified one
-/// (`zipimport.ZipImportError`) before giving up and trying the bare name.
-fn domain_object_scope_candidates(
-    scope: &rusty_sphinx_scope::PythonScope,
-    domain: rusty_sphinx_ast::Domain,
-    name: &str,
-) -> [String; 3] {
-    let full = scope.qualify(domain, name).qualified_name;
-    let mut module_only = scope.clone();
-    module_only.truncate_classes(0);
-    let module_qualified = module_only.qualify(domain, name).qualified_name;
-    let bare = rusty_sphinx_scope::PythonScope::default()
-        .qualify(domain, name)
-        .qualified_name;
-    [full, module_qualified, bare]
-}
-
-/// Renders a domain object cross-reference (`:func:`, `:py:func:`, `:c:func:`).
-/// Resolves the domain-qualified key via the project index and emits a
-/// relative link, or a broken-link fallback if the object is not found.
-///
-/// Resolution tries the reference's enclosing scope(s) first, from most to
-/// least specific (see [`domain_object_scope_candidates`]) — the same
-/// `PythonScope` state `render_domain_object` uses to qualify a definition's
-/// own anchor `id` — before falling back to the
-/// literal, unqualified name. This mirrors real Sphinx: a bare `:meth:` role
-/// reading just `find_spec`, written inside `.. class:: zipimporter` (itself
-/// a sibling of `.. module:: zipimport`), must resolve against that scope,
-/// since it was indexed as `zipimport.zipimporter.find_spec`, not
-/// `find_spec`. When no enclosing scope applies (or the reference is
-/// already written fully qualified), every qualified attempt is identical to
-/// the bare one, so this is a no-op for every previously-working case.
-///
-/// For each scope candidate, every object type [`ObjectType::role_alias_candidates`]
-/// accepts for the requested type is also tried (most-preferred, i.e. the
-/// requested type itself, first) — e.g. `CPython` documents `Fault` via
-/// `.. class::` but references it via `:exc:`, which real Sphinx resolves
-/// because it treats `class`/`exception` as mutually aliasable role targets.
-/// The rendered anchor always matches the *matched* object type (what the
-/// definition actually rendered), not the originally requested one. When the
-/// matched type differs from the requested one, an [`ObjectTypeMismatch`] is
-/// recorded in `diagnostics` — the reference still resolves and is not a
-/// [`BrokenLink`], but the mismatch is surfaced to the author as a
-/// non-fatal warning (never fails `--strict-links`).
-///
-/// When `link` is `false` (the role target used a `!` prefix), the index is
-/// never consulted — the target is rendered as plain text with no hyperlink
-/// and no broken-link fallback, matching Sphinx's "suppress cross-reference"
-/// semantics.
 /// The fields of `InlineNode::DomainObjectReference` needed to render it,
 /// bundled to keep [`render_inline_domain_object_reference`] within clippy's
 /// argument-count limit.
@@ -329,6 +269,7 @@ pub(super) struct DomainObjectRef<'a> {
     pub name: &'a str,
     pub display: &'a str,
     pub link: bool,
+    pub search_order: rusty_sphinx_ast::TargetSearchOrder,
 }
 
 /// Mutable diagnostic sinks for [`render_inline_domain_object_reference`],
@@ -339,10 +280,29 @@ pub(super) struct DomainObjectDiagnostics<'a> {
     pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
 }
 
+/// Renders a domain object cross-reference (`:func:`, `:py:func:`, `:c:func:`).
+///
+/// Delegates the search itself to [`crate::domain_resolution`] — which order
+/// names are tried in, what counts as a type match, and how a dot-prefixed
+/// target falls back to a suffix search are all documented there — and only
+/// decides here what each outcome looks like on the page:
+///
+/// - resolved: a relative link whose anchor uses the *matched* object type
+///   and the qualified name that actually matched, not the text the author
+///   wrote. A type that differs from the requested one additionally records
+///   an [`ObjectTypeMismatch`]; the reference still works and never fails
+///   `--strict-links`.
+/// - ambiguous or not found: the broken-link fallback plus a [`BrokenLink`],
+///   the ambiguous case carrying the candidates it could not choose between.
+///
+/// When `link` is `false` (the role target used a `!` prefix), the index is
+/// never consulted — the target is rendered as plain text with no hyperlink
+/// and no broken-link fallback, matching Sphinx's "suppress cross-reference"
+/// semantics.
 pub(super) fn render_inline_domain_object_reference(
     html: &mut String,
     obj_ref: DomainObjectRef<'_>,
-    index: &ProjectIndex,
+    resolver: &DomainObjectResolver<'_>,
     doc_path: &str,
     diagnostics: &mut DomainObjectDiagnostics<'_>,
     scope: &rusty_sphinx_scope::PythonScope,
@@ -352,63 +312,64 @@ pub(super) fn render_inline_domain_object_reference(
         name,
         display,
         link,
+        search_order,
     } = obj_ref;
     let display_escaped = html_escape::encode_text(display);
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
+    let literal = format!(
+        "<code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code>"
+    );
 
     if !link {
-        let _ = write!(
-            html,
-            "<code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code>"
-        );
+        html.push_str(&literal);
         return;
     }
 
-    let resolved = domain_object_scope_candidates(scope, object_type.domain(), name)
-        .into_iter()
-        .find_map(|qualified_name| {
-            let entries = index
-                .domain_objects
-                .get(&TargetName::new(&qualified_name))?;
-            let matched_type = object_type
-                .role_alias_candidates()
-                .iter()
-                .find(|candidate| entries.contains_key(candidate))?;
-            let target_doc_path = entries.get(matched_type)?;
-            Some((*matched_type, qualified_name, target_doc_path))
-        });
-
-    if let Some((matched_type, qualified_name, target_doc_path)) = resolved {
-        if matched_type != object_type {
-            diagnostics.object_type_mismatches.push(ObjectTypeMismatch {
-                name: qualified_name.clone(),
-                requested_type: object_type,
-                resolved_type: matched_type,
-            });
-        }
-        let anchor = rusty_sphinx_ast::build_domain_object_key(matched_type, &qualified_name);
-        let current_dir = std::path::Path::new(doc_path)
-            .parent()
-            .unwrap_or_else(|| std::path::Path::new(""));
-        let target_html_path = std::path::Path::new(target_doc_path).with_extension("html");
-        let relative_path =
-            pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
-        let href = format!("{}#{}", relative_path.display(), anchor.as_str());
-        let href_attr = html_escape::encode_double_quoted_attribute(&href);
-        let _ = write!(
-            html,
-            "<a class=\"reference internal\" href=\"{href_attr}\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code></a>"
-        );
-    } else {
-        let _ = write!(
-            html,
-            "<a href=\"#\" class=\"broken-link\"><code class=\"xref {domain_str} {objtype_str} docutils literal\">{display_escaped}</code></a>"
-        );
+    let mut render_unresolved = |kind| {
+        let _ = write!(html, "<a href=\"#\" class=\"broken-link\">{literal}</a>");
         diagnostics.broken_links.push(BrokenLink {
-            kind: BrokenLinkKind::DomainObjectReference(object_type),
+            kind,
             target: name.to_string(),
         });
+    };
+
+    match resolver.resolve(scope, object_type, name, search_order) {
+        DomainObjectResolution::Resolved {
+            object_type: matched_type,
+            qualified_name,
+            doc_path: target_doc_path,
+        } => {
+            if matched_type != object_type {
+                diagnostics.object_type_mismatches.push(ObjectTypeMismatch {
+                    name: qualified_name.clone(),
+                    requested_type: object_type,
+                    resolved_type: matched_type,
+                });
+            }
+            let anchor = rusty_sphinx_ast::build_domain_object_key(matched_type, &qualified_name);
+            let current_dir = std::path::Path::new(doc_path)
+                .parent()
+                .unwrap_or_else(|| std::path::Path::new(""));
+            let target_html_path = std::path::Path::new(target_doc_path).with_extension("html");
+            let relative_path =
+                pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
+            let href = format!("{}#{}", relative_path.display(), anchor.as_str());
+            let href_attr = html_escape::encode_double_quoted_attribute(&href);
+            let _ = write!(
+                html,
+                "<a class=\"reference internal\" href=\"{href_attr}\">{literal}</a>"
+            );
+        }
+        DomainObjectResolution::Ambiguous { candidates } => {
+            render_unresolved(BrokenLinkKind::AmbiguousDomainObjectReference {
+                object_type,
+                candidates,
+            });
+        }
+        DomainObjectResolution::NotFound => {
+            render_unresolved(BrokenLinkKind::DomainObjectReference(object_type));
+        }
     }
 }
 
@@ -416,72 +377,7 @@ pub(super) fn render_inline_domain_object_reference(
 mod tests {
     use super::*;
     use rusty_sphinx_analyzer::ProjectIndex;
-    use rusty_sphinx_ast::TargetName;
-
-    #[test]
-    fn test_domain_object_scope_candidates_yields_class_then_module_then_bare_for_py() {
-        // Given
-        let mut scope = rusty_sphinx_scope::PythonScope::default();
-        scope.set_module("zipimport");
-        scope.push_classes(&["zipimporter".to_string()]);
-
-        // When
-        let candidates =
-            domain_object_scope_candidates(&scope, rusty_sphinx_ast::Domain::Py, "find_spec");
-
-        // Then
-        assert_eq!(
-            candidates,
-            [
-                "zipimport.zipimporter.find_spec".to_string(),
-                "zipimport.find_spec".to_string(),
-                "find_spec".to_string(),
-            ]
-        );
-    }
-
-    #[test]
-    fn test_domain_object_scope_candidates_skips_module_for_c_domain_with_no_class_scope() {
-        // Given — a `c` domain object referenced with no enclosing class:
-        // real Sphinx's module context is `py`-domain-only, so the
-        // module-qualified and bare candidates must coincide.
-        let mut scope = rusty_sphinx_scope::PythonScope::default();
-        scope.set_module("zipimport");
-
-        // When
-        let candidates =
-            domain_object_scope_candidates(&scope, rusty_sphinx_ast::Domain::C, "PyList_Append");
-
-        // Then
-        assert_eq!(
-            candidates,
-            [
-                "PyList_Append".to_string(),
-                "PyList_Append".to_string(),
-                "PyList_Append".to_string(),
-            ]
-        );
-    }
-
-    #[test]
-    fn test_domain_object_scope_candidates_yields_only_bare_with_no_enclosing_scope() {
-        // Given / When
-        let candidates = domain_object_scope_candidates(
-            &rusty_sphinx_scope::PythonScope::default(),
-            rusty_sphinx_ast::Domain::Py,
-            "greet",
-        );
-
-        // Then
-        assert_eq!(
-            candidates,
-            [
-                "greet".to_string(),
-                "greet".to_string(),
-                "greet".to_string()
-            ]
-        );
-    }
+    use rusty_sphinx_ast::{TargetName, TargetSearchOrder};
 
     #[test]
     fn test_render_inline_reference_resolved_internal_target() {
@@ -964,8 +860,9 @@ mod tests {
                 name: "greet",
                 display: "greet",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1002,8 +899,9 @@ mod tests {
                 name: "add",
                 display: "add",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1038,8 +936,9 @@ mod tests {
                 name: "MAX",
                 display: "MAX",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1075,8 +974,9 @@ mod tests {
                 name: "Fault",
                 display: "Fault",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1114,8 +1014,9 @@ mod tests {
                 name: "Fault",
                 display: "Fault",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1145,8 +1046,9 @@ mod tests {
                 name: "MISSING",
                 display: "MISSING",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1190,8 +1092,9 @@ mod tests {
                 name: "greetings",
                 display: "greetings",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1230,8 +1133,9 @@ mod tests {
                 name: "DEFAULT_TIMEOUT",
                 display: "DEFAULT_TIMEOUT",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1247,8 +1151,9 @@ mod tests {
                 name: "DEFAULT_TIMEOUT",
                 display: "DEFAULT_TIMEOUT",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1280,8 +1185,9 @@ mod tests {
                 name: "missing",
                 display: "missing",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1332,8 +1238,9 @@ mod tests {
                 name: "ZipImportError",
                 display: "ZipImportError",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "library/zipimport.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1376,8 +1283,9 @@ mod tests {
                 name: "find_spec",
                 display: "find_spec",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "library/zipimport.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1422,8 +1330,9 @@ mod tests {
                 name: "ZipImportError",
                 display: "ZipImportError",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "library/zipimport.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1465,8 +1374,9 @@ mod tests {
                 name: "greet",
                 display: "greet",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "api.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1509,8 +1419,9 @@ mod tests {
                 name: "types.coroutine",
                 display: "types.coroutine",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "library/types.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1522,6 +1433,103 @@ mod tests {
         // Then
         assert!(broken_links.is_empty());
         assert!(html.contains("href=\"types.html#py:function:types.coroutine\""));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_dot_prefixed_target_displays_without_its_dot() {
+        // Given — the CPython `datetime` shape: inside `.. module:: datetime`
+        // a `:class:`.datetime`` reference means the module's own class. The
+        // parser has already stripped the dot into `search_order`.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            "datetime.datetime",
+            "library/datetime.rst",
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
+        let mut scope = rusty_sphinx_scope::PythonScope::default();
+        scope.set_module("datetime");
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+                name: "datetime",
+                display: "datetime",
+                link: true,
+                search_order: TargetSearchOrder::MostQualifiedFirst,
+            },
+            &DomainObjectResolver::new(&index),
+            "library/datetime.rst",
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
+            &scope,
+        );
+
+        // Then — linked to the module-qualified class, and no dot is shown.
+        assert!(broken_links.is_empty());
+        assert!(html.contains("href=\"datetime.html#py:class:datetime.datetime\""));
+        assert!(html.contains(">datetime</code>"));
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_ambiguous_suffix_reports_its_candidates() {
+        // Given — two classes documenting a `close` method, and a
+        // dot-prefixed reference that names neither of them unambiguously.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+            "tarfile.TarFile.close",
+            "library/tarfile.rst",
+        );
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+            "zipfile.ZipFile.close",
+            "library/zipfile.rst",
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+                name: "close",
+                display: "close",
+                link: true,
+                search_order: TargetSearchOrder::MostQualifiedFirst,
+            },
+            &DomainObjectResolver::new(&index),
+            "library/shutil.rst",
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
+            &rusty_sphinx_scope::PythonScope::default(),
+        );
+
+        // Then — nothing is linked, and the diagnostic names both options.
+        assert!(html.contains("class=\"broken-link\""));
+        assert_eq!(
+            broken_links,
+            vec![BrokenLink {
+                kind: BrokenLinkKind::AmbiguousDomainObjectReference {
+                    object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+                    candidates: vec![
+                        "tarfile.tarfile.close".to_string(),
+                        "zipfile.zipfile.close".to_string(),
+                    ],
+                },
+                target: "close".to_string(),
+            }]
+        );
     }
 
     #[test]
@@ -1545,8 +1553,9 @@ mod tests {
                 name: "greet",
                 display: "greet",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "guide/intro.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1576,8 +1585,9 @@ mod tests {
                 name: "curses",
                 display: "curses",
                 link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,
@@ -1615,8 +1625,9 @@ mod tests {
                 name: "greetings.shout",
                 display: "shout",
                 link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
             },
-            &index,
+            &DomainObjectResolver::new(&index),
             "doc.rst",
             &mut DomainObjectDiagnostics {
                 broken_links: &mut broken_links,

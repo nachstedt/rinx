@@ -100,7 +100,7 @@ pub(super) fn try_parse_heading(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::InlineNode;
+    use rusty_sphinx_ast::{InlineNode, TargetSearchOrder};
 
     #[test]
     fn test_is_section_adornment_accepts_single_repeated_char() {
@@ -395,6 +395,7 @@ mod tests {
                         name: "greetings".to_string(),
                         display: "greetings".to_string(),
                         link: true,
+                        search_order: TargetSearchOrder::LeastQualifiedFirst,
                     },
                     InlineNode::Text(" Module".to_string()),
                 ]

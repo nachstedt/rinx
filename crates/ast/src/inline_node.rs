@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::object_type::ObjectType;
+use crate::target_search_order::TargetSearchOrder;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum InlineNode {
@@ -52,11 +53,21 @@ pub enum InlineNode {
     /// (just the last dotted component). A `!` prefix instead sets `link`
     /// to `false`, suppressing the hyperlink entirely (the target is never
     /// looked up, so a missing target produces no broken-link warning).
+    ///
+    /// A leading `.` prefix is likewise consumed by the parser: it never
+    /// survives into `name` or `display` (it is markup, not part of any
+    /// object's name), and is recorded as `search_order` instead.
     DomainObjectReference {
         object_type: ObjectType,
         name: String,
         display: String,
         link: bool,
+        /// Which resolution order the target asked for. `#[serde(default)]`
+        /// keeps `.ast` files written before this field existed loadable —
+        /// they predate leading-dot support, so the default (no dot) is the
+        /// faithful reading.
+        #[serde(default)]
+        search_order: TargetSearchOrder,
     },
 }
 
@@ -182,6 +193,7 @@ mod tests {
             name: "foo".to_string(),
             display: "foo".to_string(),
             link: true,
+            search_order: TargetSearchOrder::MostQualifiedFirst,
         };
 
         // When
@@ -190,6 +202,27 @@ mod tests {
 
         // Then
         assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_domain_object_reference_deserializes_without_search_order_field() {
+        // Given — an `.ast` file written before leading-dot support existed.
+        let json = r#"{"DomainObjectReference":{"object_type":"py:function","name":"foo","display":"foo","link":true}}"#;
+
+        // When
+        let deserialized: InlineNode = serde_json::from_str(json).expect("Failed to deserialize");
+
+        // Then — it reads as an unprefixed target, not a parse failure.
+        assert_eq!(
+            deserialized,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Function),
+                name: "foo".to_string(),
+                display: "foo".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
     }
 
     #[test]
@@ -230,6 +263,7 @@ mod tests {
             name: "pkg.submodule".to_string(),
             display: "submodule".to_string(),
             link: true,
+            search_order: TargetSearchOrder::LeastQualifiedFirst,
         }];
 
         // When

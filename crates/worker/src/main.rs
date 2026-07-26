@@ -235,12 +235,23 @@ fn process_genindex(
 ///
 /// For a broken domain-object reference the role's requested object type (the
 /// "missed type", e.g. `py:function`) is included — it's known at the point
-/// resolution failed and pinpoints what kind of object couldn't be found.
+/// resolution failed and pinpoints what kind of object couldn't be found. An
+/// ambiguous reference additionally lists the qualified names it matched:
+/// unlike a plain miss, the fix is to pick one of them, so they are the
+/// actionable part of the message.
 fn format_broken_link_warning(doc_path: &str, link: &renderer::BrokenLink) -> String {
-    let requested = match link.kind {
+    let requested = match &link.kind {
         renderer::BrokenLinkKind::DomainObjectReference(object_type) => {
             format!(" (referenced as {})", object_type.domain_qualified_str())
         }
+        renderer::BrokenLinkKind::AmbiguousDomainObjectReference {
+            object_type,
+            candidates,
+        } => format!(
+            " (referenced as {}, matches {})",
+            object_type.domain_qualified_str(),
+            candidates.join(", ")
+        ),
         _ => String::new(),
     };
     format!(

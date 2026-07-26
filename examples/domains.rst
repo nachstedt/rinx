@@ -350,3 +350,36 @@ bare references above resolve against.
 :py:meth:`clock.clock.now` resolves to the classmethod above, proving the
 module and class prefixes are both preserved rather than collapsed into each
 other just because they're spelled the same.
+
+Target Resolution Order
+------------------------
+
+Sphinx searches a role's target in one of two orders, chosen by whether the
+target is written with a leading dot. Without a dot, the target is tried
+unqualified first and only then against progressively more of the enclosing
+scope, so a global name wins; with a dot, that order is reversed, so the
+nearby name wins. The ``clock`` module above is the ideal place to show the
+difference, because a module and a class there share the same name:
+
+:py:mod:`clock` — no dot — matches the unqualified name first, which is the
+``py:module`` itself. :py:class:`.clock` — same spelling, leading dot — tries
+the current module's scope first instead and so reaches the ``py:class``
+``clock.clock``. The dot is markup: it steers the lookup and is never shown
+to the reader, so both of those render as ``clock``.
+
+A dotted target may also be qualified further: :py:meth:`.clock.now` resolves
+to ``clock.clock.now``, the classmethod defined above, by prepending the
+current module to the target as written.
+
+When a dot-prefixed target matches nothing exactly, Sphinx falls back to
+treating it as a *suffix* and searching every documented object for it — this
+is how a reference can reach into a module it never names. :py:func:`.shout`
+resolves to ``greetings.shout`` that way: the current module here is
+``clock``, so neither ``clock.shout`` nor a bare ``shout`` exists, and only
+the suffix search finds it.
+
+Only a suffix search that matches exactly one object resolves. If several
+objects share a suffix, the reference is reported as ambiguous, listing the
+candidates, and is left unlinked rather than silently pointing at whichever
+one happened to sort first — so no such case appears on this page, which is
+built with ``strict_links``.

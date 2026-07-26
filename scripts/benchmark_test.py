@@ -186,6 +186,22 @@ class FormatWarningTest(unittest.TestCase):
             "d: domain_object_reference 'os.PathLike' (referenced as py:function)",
         )
 
+    def test_ambiguous_reference_lists_its_candidates(self):
+        # Given an ambiguous reference: the fix is choosing between the
+        # matches, so they belong in the one-line rendering
+        entry = {
+            "doc_path": "d",
+            "kind": "ambiguous_domain_object_reference",
+            "target": "close",
+            "requested_type": "py:method",
+            "candidates": ["tarfile.tarfile.close", "zipfile.zipfile.close"],
+        }
+        self.assertEqual(
+            benchmark.format_warning(entry),
+            "d: ambiguous_domain_object_reference 'close' (referenced as py:method)"
+            " matching tarfile.tarfile.close, zipfile.zipfile.close",
+        )
+
     def test_entry_without_types_has_no_detail(self):
         entry = {"doc_path": "d", "kind": "domain_object_reference", "target": "x"}
         self.assertEqual(
@@ -231,7 +247,8 @@ class ReportDomainWarningsTest(unittest.TestCase):
         )
 
     def test_writes_detail_to_handle_and_returns_summary_counts(self):
-        # Given a corpus with two unresolved refs (one twice) and one mismatch
+        # Given a corpus with two unresolved refs (one twice), one ambiguous
+        # ref and one mismatch
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             self._write_sidecar(
@@ -241,6 +258,12 @@ class ReportDomainWarningsTest(unittest.TestCase):
                     {"kind": "domain_object_reference", "target": "x", "requested_type": "py:class"},
                     {"kind": "domain_object_reference", "target": "x", "requested_type": "py:class"},
                     {"kind": "domain_object_reference", "target": "y", "requested_type": "py:func"},
+                    {
+                        "kind": "ambiguous_domain_object_reference",
+                        "target": "close",
+                        "requested_type": "py:method",
+                        "candidates": ["a.B.close", "c.D.close"],
+                    },
                     {
                         "kind": "object_type_mismatch",
                         "target": "Z",
@@ -259,13 +282,17 @@ class ReportDomainWarningsTest(unittest.TestCase):
             # Then — counts reflect distinct keys and total occurrences
             self.assertEqual(summary["unresolved_distinct"], 2)
             self.assertEqual(summary["unresolved_occurrences"], 3)
+            self.assertEqual(summary["ambiguous_distinct"], 1)
+            self.assertEqual(summary["ambiguous_occurrences"], 1)
             self.assertEqual(summary["mismatch_distinct"], 1)
             self.assertEqual(summary["mismatch_occurrences"], 1)
             self.assertEqual(summary["suppressed"], 0)
 
-            # And the detail went to the handle, split into the two sections
+            # And the detail went to the handle, split into one section per
+            # kind — each calls for a different fix
             text = out.getvalue()
             self.assertIn("Unresolved Domain-Object References (2):", text)
+            self.assertIn("Ambiguous Domain-Object References (1):", text)
             self.assertIn("Domain-Object Type Mismatches (1):", text)
 
     def test_stale_entries_are_pruned_only_on_a_trustworthy_build(self):
