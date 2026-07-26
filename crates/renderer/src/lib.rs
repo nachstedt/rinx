@@ -12,8 +12,8 @@ pub use genindex::render_genindex;
 pub use page::{PageMeta, css_relative_path, render_page};
 
 use directives::{
-    render_admonition, render_domain_object, render_glossary, render_index_anchor, render_seealso,
-    render_version_change,
+    ListTableParams, render_admonition, render_domain_object, render_glossary, render_index_anchor,
+    render_list_table, render_seealso, render_version_change,
 };
 use domain_resolution::DomainObjectResolver;
 use inline::render_inline;
@@ -174,6 +174,13 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
                     collect_anonymous_targets(&entry.definition, targets);
                 }
             }
+            Node::Directive(Directive::ListTable { rows, .. }) => {
+                for row in rows {
+                    for cell in &row.cells {
+                        collect_anonymous_targets(&cell.content, targets);
+                    }
+                }
+            }
             _ => {}
         }
     }
@@ -189,24 +196,41 @@ fn render_inlines(html: &mut String, inlines: &[InlineNode], ctx: &mut RenderCtx
 }
 
 /// Renders a single grid-table row, emitting each cell with the given tag
-/// (`th` for header rows, `td` for body rows). `colspan`/`rowspan` attributes
-/// are written only when greater than 1, matching how `LiteralBlock` only
-/// emits its optional `language` attribute when present.
+/// (`th` for header rows, `td` for body rows) via [`render_table_cell`].
 fn render_table_row(html: &mut String, row: &TableRow, cell_tag: &str, ctx: &mut RenderCtx<'_>) {
     let _ = writeln!(html, "<tr>");
     for cell in &row.cells {
-        let _ = write!(html, "<{cell_tag}");
-        if cell.colspan > 1 {
-            let _ = write!(html, " colspan=\"{}\"", cell.colspan);
-        }
-        if cell.rowspan > 1 {
-            let _ = write!(html, " rowspan=\"{}\"", cell.rowspan);
-        }
-        let _ = write!(html, ">");
-        render_nodes(html, &cell.content, ctx);
-        let _ = writeln!(html, "</{cell_tag}>");
+        render_table_cell(html, cell, cell_tag, None, ctx);
     }
     let _ = writeln!(html, "</tr>");
+}
+
+/// Renders a single table cell with the given tag (`th`/`td`) and an
+/// optional `scope` attribute (used by `list-table`'s `:stub-columns:` to
+/// mark a stub cell as a row header; grid tables never pass one).
+/// `colspan`/`rowspan` attributes are written only when greater than 1,
+/// matching how `LiteralBlock` only emits its optional `language` attribute
+/// when present.
+pub(crate) fn render_table_cell(
+    html: &mut String,
+    cell: &rusty_sphinx_ast::TableCell,
+    tag: &str,
+    scope: Option<&str>,
+    ctx: &mut RenderCtx<'_>,
+) {
+    let _ = write!(html, "<{tag}");
+    if cell.colspan > 1 {
+        let _ = write!(html, " colspan=\"{}\"", cell.colspan);
+    }
+    if cell.rowspan > 1 {
+        let _ = write!(html, " rowspan=\"{}\"", cell.rowspan);
+    }
+    if let Some(scope) = scope {
+        let _ = write!(html, " scope=\"{scope}\"");
+    }
+    let _ = write!(html, ">");
+    render_nodes(html, &cell.content, ctx);
+    let _ = writeln!(html, "</{tag}>");
 }
 
 pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCtx<'_>) {
@@ -336,6 +360,31 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
         Directive::Index { id, .. } => render_index_anchor(html, id),
         Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
+        Directive::ListTable {
+            title,
+            header_rows,
+            stub_columns,
+            widths,
+            width,
+            align,
+            classes,
+            name,
+            rows,
+        } => render_list_table(
+            html,
+            ListTableParams {
+                title: title.as_deref(),
+                header_rows: *header_rows,
+                stub_columns: *stub_columns,
+                widths: widths.as_ref(),
+                width: width.as_deref(),
+                align: *align,
+                classes,
+                name: name.as_ref(),
+                rows,
+            },
+            ctx,
+        ),
         Directive::PyCurrentModule { module } => match module {
             Some(name) => ctx.python_scope.set_module(name),
             None => ctx.python_scope.clear_module(),

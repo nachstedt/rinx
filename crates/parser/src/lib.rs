@@ -11,6 +11,7 @@ pub(crate) mod headings;
 pub(crate) mod index_directive;
 pub(crate) mod index_ids;
 pub(crate) mod inline;
+pub(crate) mod list_table;
 pub(crate) mod table;
 pub(crate) mod typography;
 

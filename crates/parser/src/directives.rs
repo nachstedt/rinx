@@ -6,6 +6,7 @@ use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
 use super::headings::Adornment;
 use super::index_directive::parse_index_directive;
+use super::list_table::parse_list_table;
 use rusty_sphinx_ast::{Directive, Domain, Node};
 
 /// The domain-object directive names the parser recognizes, resolved from a
@@ -164,6 +165,16 @@ pub(super) fn try_parse_directive(
     }
     if name == "glossary" {
         let directive = parse_glossary(&body_lines, adornment_order, diagnostics, default_domain);
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
+    if name == "list-table" {
+        let directive = parse_list_table(
+            argument,
+            &body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        );
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if name == "index" {
