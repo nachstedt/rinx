@@ -336,6 +336,10 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
         Directive::Index { id, .. } => render_index_anchor(html, id),
         Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
+        Directive::PyCurrentModule { module } => match module {
+            Some(name) => ctx.python_scope.set_module(name),
+            None => ctx.python_scope.clear_module(),
+        },
         Directive::Unknown { .. } => {}
     }
 }
@@ -428,6 +432,102 @@ mod tests {
                 .contains("<a class=\"reference internal\" href=\"api.html#py:module:greetings\">")
         );
         assert!(result.ends_with(" Module</h1>\n"));
+    }
+
+    #[test]
+    fn test_render_resolves_bare_reference_after_current_module_directive() {
+        // Given — the `Doc/howto/enum.rst` shape: a document with no
+        // `py:module` of its own, opening with `.. currentmodule:: enum`
+        // before a bare reference to a class defined in another document
+        // under that module.
+        let doc = Document::new(
+            "howto/enum.rst".to_string(),
+            vec![
+                Node::Directive(Directive::PyCurrentModule {
+                    module: Some("enum".to_string()),
+                }),
+                Node::Paragraph(vec![InlineNode::DomainObjectReference {
+                    object_type: rusty_sphinx_ast::ObjectType::Py(
+                        rusty_sphinx_ast::PyObjectType::Class,
+                    ),
+                    name: "Enum".to_string(),
+                    display: "Enum".to_string(),
+                    link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
+                }]),
+            ],
+        );
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            "enum.Enum",
+            "library/enum.rst",
+        );
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(output.broken_links.is_empty());
+        assert!(
+            output
+                .html
+                .contains("href=\"../library/enum.html#py:class:enum.enum\"")
+        );
+    }
+
+    #[test]
+    fn test_render_current_module_directive_emits_no_html() {
+        // Given — real Sphinx's `currentmodule` documents nothing.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::PyCurrentModule {
+                module: Some("enum".to_string()),
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(output.html, "");
+    }
+
+    #[test]
+    fn test_render_current_module_none_resets_scope_so_bare_reference_stays_unresolved() {
+        // Given — `.. currentmodule:: None` clears the module, so a
+        // subsequent bare reference that depended on it no longer resolves.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::PyCurrentModule {
+                    module: Some("enum".to_string()),
+                }),
+                Node::Directive(Directive::PyCurrentModule { module: None }),
+                Node::Paragraph(vec![InlineNode::DomainObjectReference {
+                    object_type: rusty_sphinx_ast::ObjectType::Py(
+                        rusty_sphinx_ast::PyObjectType::Class,
+                    ),
+                    name: "Enum".to_string(),
+                    display: "Enum".to_string(),
+                    link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
+                }]),
+            ],
+        );
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            "enum.Enum",
+            "library/enum.rst",
+        );
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(output.broken_links.len(), 1);
     }
 
     #[test]

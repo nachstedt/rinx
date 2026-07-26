@@ -55,8 +55,8 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// nesting — real Sphinx docs write `py:module` and the functions/classes it
 /// documents as *siblings*, not nested underneath it, so it is never popped
 /// when returning from a nested body; a module stays "current" for the rest
-/// of the document until another `py:module`, or once supported,
-/// `py:currentmodule`, changes it).
+/// of the document until another `py:module`, or `py:currentmodule`,
+/// changes it).
 fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: &mut PythonScope) {
     for node in nodes {
         match node {
@@ -100,6 +100,10 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
             Node::Directive(Directive::DomainObject(obj)) => {
                 index_domain_object(obj, doc_path, index, scope);
             }
+            Node::Directive(Directive::PyCurrentModule { module }) => match module {
+                Some(name) => scope.set_module(name),
+                None => scope.clear_module(),
+            },
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
@@ -1607,6 +1611,88 @@ mod tests {
 
         // Then — not collapsed to "datetime.strptime".
         assert!(lookup_domain_object(&index, "py:method:datetime.datetime.strptime").is_some());
+    }
+
+    #[test]
+    fn test_analyze_qualifies_object_after_current_module_directive() {
+        // Given — the CPython `howto/enum.rst` shape: a document with no
+        // `py:module` of its own, opening with `.. currentmodule:: enum`
+        // before a class defined as if under that module.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::PyCurrentModule {
+                    module: Some("enum".to_string()),
+                }),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                        signature: "Enum".to_string(),
+                        is_final: false,
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(lookup_domain_object(&index, "py:class:enum.Enum").is_some());
+    }
+
+    #[test]
+    fn test_analyze_current_module_directive_creates_no_index_entry_of_its_own() {
+        // Given — real Sphinx's `currentmodule` documents nothing; unlike
+        // `py:module`, it must not appear in `domain_objects` or
+        // `genindex_entries`.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::PyCurrentModule {
+                module: Some("enum".to_string()),
+            })],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(index.domain_objects.is_empty());
+        assert!(index.genindex_entries.is_empty());
+    }
+
+    #[test]
+    fn test_analyze_current_module_none_resets_qualification_to_module_free() {
+        // Given — `.. currentmodule:: None` after a `py:module` restores
+        // unqualified index keys, matching real Sphinx's reset form.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "pickle".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::PyCurrentModule { module: None }),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                        signature: "example()".to_string(),
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — not qualified as "pickle.example".
+        assert!(lookup_domain_object(&index, "py:function:example").is_some());
+        assert!(lookup_domain_object(&index, "py:function:pickle.example").is_none());
     }
 
     #[test]

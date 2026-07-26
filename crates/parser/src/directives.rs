@@ -99,31 +99,8 @@ pub(super) fn try_parse_directive(
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
     if name == "code-block" {
-        let language = if argument.is_empty() {
-            None
-        } else {
-            Some(argument)
-        };
-        // body_lines was collected by collect_directive_body; strip common indentation
-        // to preserve relative indentation within the block (RST spec behaviour).
-        let min_indent = body_lines
-            .iter()
-            .filter(|l| !l.trim().is_empty())
-            .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
-            .min()
-            .unwrap_or(0);
-        let content = body_lines
-            .iter()
-            .map(|l| {
-                if l.trim().is_empty() {
-                    String::new()
-                } else {
-                    l.chars().skip(min_indent).collect()
-                }
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-        return Some((1 + consumed_lines, Node::LiteralBlock { language, content }));
+        let node = parse_code_block(argument, &body_lines);
+        return Some((1 + consumed_lines, node));
     }
     if let Ok(kind) = name.parse::<rusty_sphinx_ast::VersionChangeKind>() {
         let directive = parse_version_change(
@@ -159,6 +136,9 @@ pub(super) fn try_parse_directive(
         let directive = parse_index_directive(&argument, &body_lines, diagnostics);
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
+    if let Some(directive) = try_parse_current_module(&name, &argument, default_domain) {
+        return Some((1 + consumed_lines, Node::Directive(directive)));
+    }
     if let Some(object_type) = resolve_domain_object_type(&name, default_domain) {
         let domain_object = parse_domain_object(
             object_type,
@@ -189,10 +169,7 @@ pub(super) fn try_parse_directive(
 /// so a bare `.. classmethod::` under a `c` default domain resolves `domain`
 /// to `Domain::C`, matches no arm, and falls through to `Directive::Unknown`.
 fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<DirectiveObjectType> {
-    let (domain, objtype_str) = match name.split_once(':') {
-        Some((domain_str, rest)) => (domain_str.parse::<Domain>().ok()?, rest),
-        None => (default_domain, name),
-    };
+    let (domain, objtype_str) = split_domain_qualified_name(name, default_domain)?;
     match (domain, objtype_str) {
         (Domain::Py, "function") => Some(DirectiveObjectType::PyFunction),
         (Domain::Py, "module") => Some(DirectiveObjectType::PyModule),
@@ -206,6 +183,80 @@ fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<Dire
         (Domain::C, "function") => Some(DirectiveObjectType::CFunction),
         (Domain::C, "macro") => Some(DirectiveObjectType::CMacro),
         _ => None,
+    }
+}
+
+/// Parses a `.. code-block::` directive's argument (the language, if any)
+/// and body into a [`Node::LiteralBlock`], stripping the common leading
+/// indentation from `body_lines` (collected by [`collect_directive_body`])
+/// to preserve relative indentation within the block (RST spec behaviour).
+fn parse_code_block(argument: String, body_lines: &[&str]) -> Node {
+    let language = if argument.is_empty() {
+        None
+    } else {
+        Some(argument)
+    };
+    let min_indent = body_lines
+        .iter()
+        .filter(|l| !l.trim().is_empty())
+        .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
+        .min()
+        .unwrap_or(0);
+    let content = body_lines
+        .iter()
+        .map(|l| {
+            if l.trim().is_empty() {
+                String::new()
+            } else {
+                l.chars().skip(min_indent).collect()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    Node::LiteralBlock { language, content }
+}
+
+/// Tries to parse `name`/`argument` as a `.. currentmodule::` /
+/// `.. py:currentmodule::` directive — the only non-object, domain-scoped
+/// directive the parser recognizes, so it gets its own small function
+/// rather than inlining the domain check into [`try_parse_directive`].
+fn try_parse_current_module(
+    name: &str,
+    argument: &str,
+    default_domain: Domain,
+) -> Option<Directive> {
+    match split_domain_qualified_name(name, default_domain) {
+        Some((Domain::Py, "currentmodule")) => Some(Directive::PyCurrentModule {
+            module: parse_current_module_argument(argument),
+        }),
+        _ => None,
+    }
+}
+
+/// Splits a directive name into its domain and bare name — either an
+/// explicit `domain:name` form (e.g. `py:function`), or a bare name (e.g.
+/// `function`) resolved via `default_domain`. Shared by
+/// [`resolve_domain_object_type`] and domain-scoped non-object directives
+/// (`currentmodule`), so both obey the same domain rules: a bare
+/// `.. currentmodule::` under a `c` default domain, or an explicit
+/// `.. c:currentmodule::`, must not match the `py`-only arm that consumes
+/// it.
+fn split_domain_qualified_name(name: &str, default_domain: Domain) -> Option<(Domain, &str)> {
+    match name.split_once(':') {
+        Some((domain_str, rest)) => Some((domain_str.parse::<Domain>().ok()?, rest)),
+        None => Some((default_domain, name)),
+    }
+}
+
+/// Parses a `.. currentmodule::`/`.. py:currentmodule::` argument. `None`
+/// (the reset form Sphinx uses to clear the current module, written
+/// `.. currentmodule:: None`) and an empty argument both clear the module;
+/// anything else becomes the new module name verbatim.
+fn parse_current_module_argument(argument: &str) -> Option<String> {
+    if argument.is_empty() || argument == "None" {
+        None
+    } else {
+        Some(argument.to_string())
     }
 }
 
@@ -700,5 +751,86 @@ mod tests {
 
         // Then
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_parse_creates_py_current_module_directive_from_bare_form() {
+        // Given — the `py` domain is the parser's default, so the bare form
+        // is what CPython's docs actually write.
+        let input = ".. currentmodule:: enum";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes,
+            vec![Node::Directive(Directive::PyCurrentModule {
+                module: Some("enum".to_string())
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_creates_py_current_module_directive_from_explicit_domain_form() {
+        // Given
+        let input = ".. py:currentmodule:: enum";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes,
+            vec![Node::Directive(Directive::PyCurrentModule {
+                module: Some("enum".to_string())
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_current_module_none_argument_clears_module() {
+        // Given
+        let input = ".. currentmodule:: None";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes,
+            vec![Node::Directive(Directive::PyCurrentModule { module: None })]
+        );
+    }
+
+    #[test]
+    fn test_parse_bare_current_module_under_c_default_domain_is_unknown() {
+        // Given — `currentmodule` is `py`-only; a bare directive under a `c`
+        // default domain must not resolve to it.
+        let input = ".. currentmodule:: enum";
+
+        // When
+        let doc = crate::parse_with_domain("test.rst", input, rusty_sphinx_ast::Domain::C);
+
+        // Then
+        assert!(matches!(
+            &doc.nodes[0],
+            Node::Directive(Directive::Unknown { name, .. }) if name == "currentmodule"
+        ));
+    }
+
+    #[test]
+    fn test_parse_explicit_c_current_module_is_unknown() {
+        // Given — `c:currentmodule` names no real directive.
+        let input = ".. c:currentmodule:: enum";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert!(matches!(
+            &doc.nodes[0],
+            Node::Directive(Directive::Unknown { name, .. }) if name == "c:currentmodule"
+        ));
     }
 }
