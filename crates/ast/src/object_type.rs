@@ -111,6 +111,7 @@ impl ObjectType {
             (Domain::Py, "exc") => Some(Self::Py(PyObjectType::Exception)),
             (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
             (Domain::C, "macro") => Some(Self::C(CObjectType::Macro)),
+            (Domain::C, "data" | "var") => Some(Self::C(CObjectType::Data)),
             _ => None,
         }
     }
@@ -122,6 +123,19 @@ impl ObjectType {
     /// references and vice versa, and Sphinx never warns). Deliberately an
     /// exhaustive match, not a wildcard fallback arm: adding a new object
     /// type later forces a decision about whether it aliases anything.
+    ///
+    /// `C(Macro)`/`C(Data)` alias for a different reason than the `py` pair
+    /// above: real Sphinx's C domain `resolve_xref`
+    /// (`sphinx/domains/c/__init__.py`, `_resolve_xref_inner`) looks up a
+    /// declaration by name only and never checks the role's requested type
+    /// against the declaration's actual object type (there's a literal
+    /// `# TODO: check role type vs. object type` at the point where it
+    /// would) — so a `:c:data:` role resolving against a `.. c:macro::`
+    /// definition, as `CPython`'s `c-api/module.rst` does for `Py_mod_exec`,
+    /// is a known real-Sphinx looseness rather than a deliberate aliasing
+    /// rule. This models only that one confirmed collision rather than
+    /// dropping type-checking for the whole domain (which would also let
+    /// `:c:func:` blindly match unrelated `data`/`macro` names).
     #[must_use]
     pub const fn role_alias_candidates(self) -> &'static [Self] {
         match self {
@@ -139,7 +153,12 @@ impl ObjectType {
             Self::Py(PyObjectType::Method) => &[Self::Py(PyObjectType::Method)],
             Self::Py(PyObjectType::Attribute) => &[Self::Py(PyObjectType::Attribute)],
             Self::C(CObjectType::Function) => &[Self::C(CObjectType::Function)],
-            Self::C(CObjectType::Macro) => &[Self::C(CObjectType::Macro)],
+            Self::C(CObjectType::Macro) => {
+                &[Self::C(CObjectType::Macro), Self::C(CObjectType::Data)]
+            }
+            Self::C(CObjectType::Data) => {
+                &[Self::C(CObjectType::Data), Self::C(CObjectType::Macro)]
+            }
         }
     }
 }
@@ -242,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn test_object_type_from_role_name_resolves_data_and_const_to_same_type_only_for_py() {
+    fn test_object_type_from_role_name_resolves_py_data_and_const_to_same_type() {
         // Given / When / Then
         assert_eq!(
             ObjectType::from_role_name(Domain::Py, "data"),
@@ -252,8 +271,21 @@ mod tests {
             ObjectType::from_role_name(Domain::Py, "const"),
             Some(ObjectType::Py(PyObjectType::Data))
         );
-        assert_eq!(ObjectType::from_role_name(Domain::C, "data"), None);
         assert_eq!(ObjectType::from_role_name(Domain::C, "const"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_data_and_var_to_same_type_only_for_c() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::C, "data"),
+            Some(ObjectType::C(CObjectType::Data))
+        );
+        assert_eq!(
+            ObjectType::from_role_name(Domain::C, "var"),
+            Some(ObjectType::C(CObjectType::Data))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::Py, "var"), None);
     }
 
     #[test]
@@ -410,6 +442,25 @@ mod tests {
     }
 
     #[test]
+    fn test_role_alias_candidates_aliases_c_macro_and_data_both_directions() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::C(CObjectType::Macro).role_alias_candidates(),
+            &[
+                ObjectType::C(CObjectType::Macro),
+                ObjectType::C(CObjectType::Data)
+            ]
+        );
+        assert_eq!(
+            ObjectType::C(CObjectType::Data).role_alias_candidates(),
+            &[
+                ObjectType::C(CObjectType::Data),
+                ObjectType::C(CObjectType::Macro)
+            ]
+        );
+    }
+
+    #[test]
     fn test_role_alias_candidates_is_self_only_for_non_aliased_types() {
         // Given / When / Then
         assert_eq!(
@@ -435,10 +486,6 @@ mod tests {
         assert_eq!(
             ObjectType::C(CObjectType::Function).role_alias_candidates(),
             &[ObjectType::C(CObjectType::Function)]
-        );
-        assert_eq!(
-            ObjectType::C(CObjectType::Macro).role_alias_candidates(),
-            &[ObjectType::C(CObjectType::Macro)]
         );
     }
 }

@@ -14,7 +14,7 @@ static FUNC_ROLE_REGEX: LazyLock<Regex> =
 static MOD_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?mod:`(?P<name>[^`]+)`").unwrap());
 static DATA_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r":(?:(?P<domain>py):)?(?P<role>data|const):`(?P<name>[^`]+)`").unwrap()
+    Regex::new(r":(?:(?P<domain>py|c):)?(?P<role>data|const|var):`(?P<name>[^`]+)`").unwrap()
 });
 static METH_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?meth:`(?P<name>[^`]+)`").unwrap());
@@ -275,11 +275,15 @@ fn handle_mod_match(m_str: &str, default_domain: Domain) -> InlineNode {
 }
 
 /// Builds the `InlineNode` for a matched `:data:`/`:py:data:`/`:const:`/
-/// `:py:const:` role, falling back to plain text if the role doesn't resolve
-/// for the given domain (`data`/`const` are Python-only, like `mod`). Both
-/// role spellings resolve to the same [`rusty_sphinx_ast::PyObjectType::Data`],
-/// so `:data:` and `:const:` targeting the same name link to the same
-/// `.. py:data::` definition.
+/// `:py:const:`/`:c:data:`/`:var:`/`:c:var:` role, falling back to plain text
+/// if the role doesn't resolve for the given domain (`const` is Python-only;
+/// `var` is C-only). `data`/`const` resolve to the same
+/// [`rusty_sphinx_ast::PyObjectType::Data`] in the `py` domain, and
+/// `data`/`var` resolve to the same [`rusty_sphinx_ast::CObjectType::Data`]
+/// in the `c` domain — matching real Sphinx's C domain docs, which describe
+/// `:c:member:`/`:c:data:`/`:c:var:` as equivalent role spellings — so e.g.
+/// `:c:data:` and `:c:var:` targeting the same name link to the same
+/// definition.
 fn handle_data_match(m_str: &str, default_domain: Domain) -> InlineNode {
     let caps = DATA_ROLE_REGEX.captures(m_str).unwrap();
     let domain = caps
@@ -875,12 +879,46 @@ mod tests {
     }
 
     #[test]
-    fn test_handle_data_match_falls_back_to_text_when_domain_lacks_data_role() {
-        let result = handle_data_match(":data:`DEFAULT_TIMEOUT`", Domain::C);
+    fn test_handle_data_match_resolves_data_role_for_c_domain() {
+        let result = handle_data_match(":data:`Py_mod_exec`", Domain::C);
         assert_eq!(
             result,
-            InlineNode::Text(":data:`DEFAULT_TIMEOUT`".to_string())
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Data),
+                name: "Py_mod_exec".to_string(),
+                display: "Py_mod_exec".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
         );
+    }
+
+    #[test]
+    fn test_handle_data_match_resolves_var_role_to_same_object_type_as_data_for_c_domain() {
+        // Given — real Sphinx documents `:c:member:`/`:c:data:`/`:c:var:` as
+        // equivalent role spellings for the same object.
+        let data_result = handle_data_match(":data:`errno`", Domain::C);
+        let var_result = handle_data_match(":var:`errno`", Domain::C);
+
+        // Then
+        assert_eq!(data_result, var_result);
+    }
+
+    #[test]
+    fn test_handle_data_match_falls_back_to_text_when_domain_lacks_const_role() {
+        // Given — `const` is Python-only, so it doesn't resolve for `c`.
+        let result = handle_data_match(":const:`DEFAULT_TIMEOUT`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::Text(":const:`DEFAULT_TIMEOUT`".to_string())
+        );
+    }
+
+    #[test]
+    fn test_handle_data_match_falls_back_to_text_when_domain_lacks_var_role() {
+        // Given — `var` is C-only, so it doesn't resolve for `py`.
+        let result = handle_data_match(":var:`errno`", Domain::Py);
+        assert_eq!(result, InlineNode::Text(":var:`errno`".to_string()));
     }
 
     #[test]
@@ -1455,6 +1493,62 @@ mod tests {
             result,
             InlineNode::Text(":const:`DEFAULT_TIMEOUT`".to_string())
         );
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_explicit_c_domain() {
+        // Given — the confirmed known_bugs.md regression: `:c:data:` must
+        // resolve with `domain = Some("c")`, not fall through to a truncated
+        // bare `:data:` match with `domain = None`.
+        let result = handle_inline_match("data", ":c:data:`Py_mod_exec`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Data),
+                name: "Py_mod_exec".to_string(),
+                display: "Py_mod_exec".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_var_spelling_explicit_c_domain() {
+        let result = handle_inline_match("data", ":c:var:`errno`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Data),
+                name: "errno".to_string(),
+                display: "errno".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_bare_role_uses_default_c_domain() {
+        let result = handle_inline_match("data", ":data:`Py_tp_bases`", None, Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Data),
+                name: "Py_tp_bases".to_string(),
+                display: "Py_tp_bases".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_data_variant_bare_var_falls_back_to_text_under_py_domain() {
+        // Given — `var` is C-only, so a bare `:var:` role in a library whose
+        // default domain is `py` doesn't resolve.
+        let result = handle_inline_match("data", ":var:`errno`", None, Domain::Py);
+        assert_eq!(result, InlineNode::Text(":var:`errno`".to_string()));
     }
 
     #[test]
