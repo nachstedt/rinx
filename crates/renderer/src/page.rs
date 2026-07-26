@@ -31,7 +31,7 @@ pub struct PageMeta<'a> {
     /// links to other pages, e.g. via [`css_relative_path`]).
     pub doc_path: &'a str,
     /// Hierarchical sidebar navigation.
-    pub nav_tree: &'a [rusty_sphinx_analyzer::NavEntry],
+    pub nav_tree: &'a [rusty_sphinx_index::NavEntry],
     /// Whether a `genindex_href` link (computed via [`css_relative_path`],
     /// since `genindex.html` always lives at the site root like
     /// `default.css`) is made available to the template — sites with no
@@ -93,7 +93,7 @@ struct ResolvedNavEntry<'a> {
 /// Converts a nav tree's `.rst` paths into relative `.html` hrefs
 /// based on the current document's location.
 fn resolve_nav_hrefs<'a>(
-    entries: &'a [rusty_sphinx_analyzer::NavEntry],
+    entries: &'a [rusty_sphinx_index::NavEntry],
     doc_path: &str,
 ) -> Vec<ResolvedNavEntry<'a>> {
     let doc_dir = std::path::Path::new(doc_path)
@@ -313,7 +313,7 @@ mod tests {
         // Given a nav entry whose title contains raw HTML
         let template = "{% for entry in nav_tree %}{{ entry.title }}{% endfor %}{{ body }}";
         let config = SiteConfig::default();
-        let entries = vec![rusty_sphinx_analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_index::NavEntry {
             title: "Evil <script>alert(1)</script>".to_string(),
             path: "evil.rst".to_string(),
             children: vec![],
@@ -366,7 +366,7 @@ mod tests {
         // Given a nested nav entry whose computed href contains slashes
         let template = "{% for entry in nav_tree %}{{ entry.href }}{% endfor %}{{ body }}";
         let config = SiteConfig::default();
-        let entries = vec![rusty_sphinx_analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_index::NavEntry {
             title: "Nested".to_string(),
             path: "sub/nested.rst".to_string(),
             children: vec![],
@@ -462,7 +462,7 @@ mod tests {
     #[test]
     fn test_resolve_nav_hrefs_same_directory() {
         // Given
-        let entries = vec![rusty_sphinx_analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_index::NavEntry {
             title: "Index".to_string(),
             path: "index.rst".to_string(),
             children: vec![],
@@ -480,7 +480,7 @@ mod tests {
     #[test]
     fn test_resolve_nav_hrefs_document_in_subdirectory() {
         // Given
-        let entries = vec![rusty_sphinx_analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_index::NavEntry {
             title: "Index".to_string(),
             path: "index.rst".to_string(),
             children: vec![],
@@ -497,7 +497,7 @@ mod tests {
     #[test]
     fn test_resolve_nav_hrefs_target_in_subdirectory() {
         // Given
-        let entries = vec![rusty_sphinx_analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_index::NavEntry {
             title: "Nested".to_string(),
             path: "sub/nested.rst".to_string(),
             children: vec![],
@@ -514,10 +514,10 @@ mod tests {
     #[test]
     fn test_resolve_nav_hrefs_nested_entries() {
         // Given
-        let entries = vec![rusty_sphinx_analyzer::NavEntry {
+        let entries = vec![rusty_sphinx_index::NavEntry {
             title: "Root".to_string(),
             path: "root.rst".to_string(),
-            children: vec![rusty_sphinx_analyzer::NavEntry {
+            children: vec![rusty_sphinx_index::NavEntry {
                 title: "Child".to_string(),
                 path: "sub/child.rst".to_string(),
                 children: vec![],

@@ -1,12 +1,13 @@
 [package]
-name = "rusty_sphinx_analyzer"
+name = "rusty_sphinx_index"
 version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
 rusty_sphinx_ast = { path = "../ast" }
-rusty_sphinx_index = { path = "../index" }
-rusty_sphinx_scope = { path = "../scope" }
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
 serde_json = "1"
 
 [lints]

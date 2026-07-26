@@ -8,129 +8,11 @@ mod utils;
 
 pub use utils::normalize_path;
 
-use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, ObjectType, TargetName};
+use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TargetName};
+use rusty_sphinx_index::{GenIndexEntry, NavEntry, ProjectIndex, TargetLocation};
 use rusty_sphinx_scope::PythonScope;
-use serde::{Deserialize, Serialize};
 
 use std::collections::BTreeMap;
-
-/// One node in the navigation tree, matching Sphinx's sidebar nesting behavior.
-///
-/// Each entry corresponds to a document and may have children derived from
-/// its toctree directive. The hierarchy mirrors how `.. toctree::` directives
-/// link documents together.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct NavEntry {
-    /// The display title (from the document's H1 heading, or the path if untitled).
-    pub title: String,
-    /// The `.rst` path (used to compute relative HTML links).
-    pub path: String,
-    /// Child entries from this document's toctree directive.
-    pub children: Vec<Self>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum TargetLocation {
-    Internal(String), // doc_path
-    External(String), // URL
-}
-
-/// One entry in the site-wide general index (`genindex.html`), sourced
-/// either from a `.. index::` directive or automatically from a domain
-/// object definition.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct GenIndexEntry {
-    /// The main, alphabetized term (e.g. `"execution"`, `"Greeter.greet (method)"`).
-    pub primary: String,
-    /// An optional nested sub-term (e.g. `"context"` in `single: execution; context`).
-    pub subentry: Option<String>,
-    /// Whether this occurrence should be emphasized as the entry's primary
-    /// definition (from a leading `!` in a `.. index::` entry).
-    pub main: bool,
-    /// The document this entry's anchor lives on.
-    pub doc_path: String,
-    /// The HTML anchor `id` on `doc_path` this entry links to.
-    pub anchor: String,
-}
-
-/// A global symbol table built from all documents in the project.
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
-pub struct ProjectIndex {
-    /// Maps target names to document paths.
-    pub targets: BTreeMap<TargetName, TargetLocation>,
-    /// Maps document paths to their top-level title.
-    pub document_titles: BTreeMap<String, String>,
-    /// Hierarchical navigation tree derived from toctree directives.
-    #[serde(default)]
-    pub nav_tree: Vec<NavEntry>,
-    /// Maps normalized glossary term names to the document path containing their definition.
-    #[serde(default)]
-    pub glossary_terms: BTreeMap<TargetName, String>,
-    /// Maps a domain object's qualified name (e.g. `xmlrpc.client.fault`) to
-    /// every object type it's been defined under and the document path
-    /// containing that `Directive::DomainObject` definition. Keyed by name
-    /// first (rather than baking the object type into a single flat key)
-    /// so a reference can be resolved against any of the object types real
-    /// Sphinx treats as mutually aliasable for the same name (see
-    /// [`ObjectType::role_alias_candidates`]) — e.g. `CPython` documents
-    /// `Fault` via `.. class::` but references it via `:exc:`.
-    #[serde(default)]
-    pub domain_objects: BTreeMap<TargetName, BTreeMap<ObjectType, String>>,
-    /// Entries for the site-wide general index page, accumulated (not
-    /// deduplicated) across every document — the same term legitimately
-    /// appearing from multiple locations is expected, not an error.
-    #[serde(default)]
-    pub genindex_entries: Vec<GenIndexEntry>,
-}
-
-impl ProjectIndex {
-    /// Registers a domain object's definition under its qualified name,
-    /// keyed further by its own object type — shared by [`index_domain_object`]
-    /// and by tests, so both always agree on how a `domain_objects` entry is
-    /// shaped. Last-writer-wins if the same `(qualified_name, object_type)`
-    /// pair is inserted twice.
-    pub fn insert_domain_object(
-        &mut self,
-        object_type: ObjectType,
-        qualified_name: &str,
-        doc_path: impl Into<String>,
-    ) {
-        self.domain_objects
-            .entry(TargetName::new(qualified_name))
-            .or_default()
-            .insert(object_type, doc_path.into());
-    }
-
-    /// Merge another `ProjectIndex` into this one.
-    ///
-    /// Emits a diagnostic string for each glossary term defined in both indices
-    /// (case-insensitive duplicate detection). Last-writer-wins for the mapping value.
-    pub fn merge(&mut self, other: Self) -> Vec<String> {
-        self.targets.extend(other.targets);
-        self.document_titles.extend(other.document_titles);
-        for (name, object_types) in other.domain_objects {
-            self.domain_objects
-                .entry(name)
-                .or_default()
-                .extend(object_types);
-        }
-        self.genindex_entries.extend(other.genindex_entries);
-        // nav_tree is built globally, not merged per-document
-        let mut diagnostics = Vec::new();
-        for (term, path) in other.glossary_terms {
-            if let Some(existing) = self.glossary_terms.get(&term) {
-                diagnostics.push(format!(
-                    "Duplicate glossary term '{}': defined in '{}' and '{}'. The latter definition wins.",
-                    term.as_str(),
-                    existing,
-                    path,
-                ));
-            }
-            self.glossary_terms.insert(term, path);
-        }
-        diagnostics
-    }
-}
 
 /// Analyzes a single `Document` and returns a local `ProjectIndex`.
 ///
@@ -432,38 +314,6 @@ mod tests {
     }
 
     #[test]
-    fn test_lookup_domain_object_finds_inserted_entry() {
-        // Given
-        let mut index = ProjectIndex::default();
-        index.insert_domain_object(ObjectType::Py(PyObjectType::Function), "greet", "api.rst");
-
-        // When / Then
-        assert_eq!(
-            lookup_domain_object(&index, "py:function:greet"),
-            Some(&"api.rst".to_string())
-        );
-    }
-
-    #[test]
-    fn test_lookup_domain_object_returns_none_for_missing_name() {
-        // Given
-        let index = ProjectIndex::default();
-
-        // When / Then
-        assert_eq!(lookup_domain_object(&index, "py:function:greet"), None);
-    }
-
-    #[test]
-    fn test_lookup_domain_object_returns_none_when_name_present_under_different_objtype() {
-        // Given
-        let mut index = ProjectIndex::default();
-        index.insert_domain_object(ObjectType::Py(PyObjectType::Class), "Fault", "xmlrpc.rst");
-
-        // When / Then
-        assert_eq!(lookup_domain_object(&index, "py:function:Fault"), None);
-    }
-
-    #[test]
     fn test_build_nav_subtree_basic() {
         let mut toctrees = BTreeMap::new();
         toctrees.insert("index.rst".to_string(), vec!["child.rst".to_string()]);
@@ -645,20 +495,6 @@ mod tests {
         let _ = format!("{index:?}");
     }
 
-    #[test]
-    fn test_merge_combines_indices_without_error() {
-        // Given
-        let mut idx1 = ProjectIndex::default();
-        let idx2 = ProjectIndex::default();
-
-        // When
-        idx1.merge(idx2);
-
-        // Then
-        // Since we don't have fields to assert equality on right now,
-        // we just ensure the execution path is hit without issues.
-        let _ = format!("{idx1:?}");
-    }
     #[test]
     fn test_analyze_populates_targets_for_target_nodes() {
         // Given
@@ -1163,52 +999,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_merge_combines_glossary_terms_from_two_documents() {
-        // Given
-        let mut idx1 = ProjectIndex::default();
-        idx1.glossary_terms
-            .insert(TargetName::new("foo"), "glossary_a.rst".to_string());
-
-        let mut idx2 = ProjectIndex::default();
-        idx2.glossary_terms
-            .insert(TargetName::new("bar"), "glossary_b.rst".to_string());
-
-        // When
-        let diagnostics = idx1.merge(idx2);
-
-        // Then
-        assert!(diagnostics.is_empty());
-        assert_eq!(idx1.glossary_terms.len(), 2);
-        assert!(idx1.glossary_terms.contains_key(&TargetName::new("foo")));
-        assert!(idx1.glossary_terms.contains_key(&TargetName::new("bar")));
-    }
-
-    #[test]
-    fn test_merge_emits_diagnostic_for_duplicate_glossary_term() {
-        // Given
-        let mut idx1 = ProjectIndex::default();
-        idx1.glossary_terms
-            .insert(TargetName::new("environment"), "glossary.rst".to_string());
-
-        let mut idx2 = ProjectIndex::default();
-        idx2.glossary_terms
-            .insert(TargetName::new("environment"), "other.rst".to_string());
-
-        // When
-        let diagnostics = idx1.merge(idx2);
-
-        // Then
-        assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("Duplicate glossary term"));
-        assert!(diagnostics[0].contains("environment"));
-        // Last-writer-wins: idx2's path should be kept
-        assert_eq!(
-            idx1.glossary_terms.get(&TargetName::new("environment")),
-            Some(&"other.rst".to_string())
-        );
-    }
-
     // ── Domain object analyzer tests ──────────────────────────────────────────
 
     #[test]
@@ -1367,55 +1157,6 @@ mod tests {
 
         // Then
         assert!(index.domain_objects.is_empty());
-    }
-
-    #[test]
-    fn test_merge_combines_domain_objects_from_two_documents() {
-        // Given
-        let mut idx1 = ProjectIndex::default();
-        idx1.insert_domain_object(ObjectType::Py(PyObjectType::Function), "foo", "a.rst");
-
-        let mut idx2 = ProjectIndex::default();
-        idx2.insert_domain_object(
-            ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
-            "bar",
-            "b.rst",
-        );
-
-        // When
-        idx1.merge(idx2);
-
-        // Then
-        assert_eq!(idx1.domain_objects.len(), 2);
-        assert!(lookup_domain_object(&idx1, "py:function:foo").is_some());
-        assert!(lookup_domain_object(&idx1, "c:function:bar").is_some());
-    }
-
-    #[test]
-    fn test_merge_combines_domain_objects_with_different_object_types_for_same_name() {
-        // Given — mirrors CPython's `xmlrpc.client.rst`: one document defines
-        // `Fault` via `.. class::`, another (hypothetically) documents it via
-        // `.. exception::` — merge must keep both coexisting under the same
-        // qualified name rather than one clobbering the other.
-        let mut idx1 = ProjectIndex::default();
-        idx1.insert_domain_object(ObjectType::Py(PyObjectType::Class), "Fault", "a.rst");
-
-        let mut idx2 = ProjectIndex::default();
-        idx2.insert_domain_object(ObjectType::Py(PyObjectType::Exception), "Fault", "b.rst");
-
-        // When
-        idx1.merge(idx2);
-
-        // Then
-        assert_eq!(idx1.domain_objects.len(), 1);
-        assert_eq!(
-            lookup_domain_object(&idx1, "py:class:Fault"),
-            Some(&"a.rst".to_string())
-        );
-        assert_eq!(
-            lookup_domain_object(&idx1, "py:exception:Fault"),
-            Some(&"b.rst".to_string())
-        );
     }
 
     #[test]
@@ -2233,52 +1974,5 @@ mod tests {
 
         // Then
         assert_eq!(index.genindex_entries.len(), 1);
-    }
-
-    #[test]
-    fn test_merge_accumulates_genindex_entries_from_two_documents() {
-        // Given
-        let mut idx1 = ProjectIndex::default();
-        idx1.genindex_entries.push(GenIndexEntry {
-            primary: "foo".to_string(),
-            subentry: None,
-            main: false,
-            doc_path: "a.rst".to_string(),
-            anchor: "index-0".to_string(),
-        });
-
-        let mut idx2 = ProjectIndex::default();
-        idx2.genindex_entries.push(GenIndexEntry {
-            primary: "foo".to_string(),
-            subentry: None,
-            main: false,
-            doc_path: "b.rst".to_string(),
-            anchor: "index-0".to_string(),
-        });
-
-        // When
-        let diagnostics = idx1.merge(idx2);
-
-        // Then — both locations kept, no dedup/diagnostics
-        assert!(diagnostics.is_empty());
-        assert_eq!(idx1.genindex_entries.len(), 2);
-    }
-
-    #[test]
-    fn test_merge_duplicate_detection_is_case_insensitive() {
-        // Given — "Environment" and "environment" should collide
-        let mut idx1 = ProjectIndex::default();
-        idx1.glossary_terms
-            .insert(TargetName::new("Environment"), "a.rst".to_string());
-
-        let mut idx2 = ProjectIndex::default();
-        idx2.glossary_terms
-            .insert(TargetName::new("environment"), "b.rst".to_string());
-
-        // When
-        let diagnostics = idx1.merge(idx2);
-
-        // Then
-        assert_eq!(diagnostics.len(), 1, "Expected duplicate diagnostic");
     }
 }

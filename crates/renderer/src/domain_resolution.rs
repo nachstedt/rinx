@@ -28,8 +28,8 @@
 //! checked that hazard is gone — so `` :mod:`minidom` `` written under
 //! `.. module:: xml.dom` is allowed to find `xml.dom.minidom`.
 
-use rusty_sphinx_analyzer::ProjectIndex;
 use rusty_sphinx_ast::{ObjectType, TargetName, TargetSearchOrder};
+use rusty_sphinx_index::ProjectIndex;
 use rusty_sphinx_scope::PythonScope;
 use std::cell::OnceCell;
 use std::collections::BTreeMap;

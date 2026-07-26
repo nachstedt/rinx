@@ -196,8 +196,8 @@ name = "rusty_sphinx_analyzer"
 version = "0.1.0"
 dependencies = [
  "rusty_sphinx_ast",
+ "rusty_sphinx_index",
  "rusty_sphinx_scope",
- "serde",
  "serde_json",
 ]
 
@@ -208,6 +208,15 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+]
+
+[[package]]
+name = "rusty_sphinx_index"
+version = "0.1.0"
+dependencies = [
+ "rusty_sphinx_ast",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -226,8 +235,8 @@ dependencies = [
  "html-escape",
  "minijinja",
  "pathdiff",
- "rusty_sphinx_analyzer",
  "rusty_sphinx_ast",
+ "rusty_sphinx_index",
  "rusty_sphinx_scope",
  "serde",
  "toml",
@@ -247,6 +256,7 @@ dependencies = [
  "anyhow",
  "rusty_sphinx_analyzer",
  "rusty_sphinx_ast",
+ "rusty_sphinx_index",
  "rusty_sphinx_parser",
  "rusty_sphinx_renderer",
  "serde",

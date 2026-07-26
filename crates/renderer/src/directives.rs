@@ -318,8 +318,8 @@ pub(super) fn render_index_anchor(html: &mut String, id: &str) {
 mod tests {
     use super::super::RenderCtx;
     use super::*;
-    use rusty_sphinx_analyzer::ProjectIndex;
     use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, TargetName, TargetSearchOrder};
+    use rusty_sphinx_index::ProjectIndex;
 
     fn render_doc(doc: &Document) -> String {
         let index = ProjectIndex::default();

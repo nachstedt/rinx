@@ -31,6 +31,7 @@ rust_binary(
         ":rusty_sphinx_worker_lib",
         "//crates/analyzer:rusty_sphinx_analyzer",
         "//crates/ast:rusty_sphinx_ast",
+        "//crates/index:rusty_sphinx_index",
         "//crates/parser:rusty_sphinx_parser",
         "//crates/renderer:rusty_sphinx_renderer",
     ],

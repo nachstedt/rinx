@@ -18,8 +18,8 @@ use directives::{
 use domain_resolution::DomainObjectResolver;
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
-use rusty_sphinx_analyzer::ProjectIndex;
 use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, ObjectType, TableRow};
+use rusty_sphinx_index::ProjectIndex;
 use rusty_sphinx_scope::PythonScope;
 use std::fmt::Write as _;
 
@@ -472,10 +472,10 @@ mod tests {
         index
             .document_titles
             .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
-        index.nav_tree = vec![rusty_sphinx_analyzer::NavEntry {
+        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
             title: "test".to_string(),
             path: "test.rst".to_string(),
-            children: vec![rusty_sphinx_analyzer::NavEntry {
+            children: vec![rusty_sphinx_index::NavEntry {
                 title: "Team A Module".to_string(),
                 path: "team_a/index.rst".to_string(),
                 children: vec![],
@@ -508,16 +508,16 @@ mod tests {
             .document_titles
             .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
         // Build a nav_tree so the renderer can look up children by doc path.
-        index.nav_tree = vec![rusty_sphinx_analyzer::NavEntry {
+        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
             title: "test".to_string(),
             path: "test.rst".to_string(),
             children: vec![
-                rusty_sphinx_analyzer::NavEntry {
+                rusty_sphinx_index::NavEntry {
                     title: "Team A Module".to_string(),
                     path: "team_a/index.rst".to_string(),
                     children: vec![],
                 },
-                rusty_sphinx_analyzer::NavEntry {
+                rusty_sphinx_index::NavEntry {
                     title: "team_b/index".to_string(),
                     path: "team_b/index.rst".to_string(),
                     children: vec![],
@@ -697,7 +697,7 @@ mod tests {
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("other-section"),
-            rusty_sphinx_analyzer::TargetLocation::Internal("other_file.rst".to_string()),
+            rusty_sphinx_index::TargetLocation::Internal("other_file.rst".to_string()),
         );
 
         // When
@@ -725,7 +725,7 @@ mod tests {
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("other-section"),
-            rusty_sphinx_analyzer::TargetLocation::Internal("other_file.rst".to_string()),
+            rusty_sphinx_index::TargetLocation::Internal("other_file.rst".to_string()),
         );
 
         // When
@@ -788,9 +788,7 @@ mod tests {
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("target-in-a"),
-            rusty_sphinx_analyzer::TargetLocation::Internal(
-                "examples/team_a/index.rst".to_string(),
-            ),
+            rusty_sphinx_index::TargetLocation::Internal("examples/team_a/index.rst".to_string()),
         );
 
         // When
@@ -818,7 +816,7 @@ mod tests {
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("Python"),
-            rusty_sphinx_analyzer::TargetLocation::External("https://python.org".to_string()),
+            rusty_sphinx_index::TargetLocation::External("https://python.org".to_string()),
         );
 
         // When
@@ -1216,10 +1214,10 @@ mod tests {
         // And a ProjectIndex that represents this cycle but is truncated by the analyzer
         // to a finite depth (e.g. depth 2)
         let index = ProjectIndex {
-            nav_tree: vec![rusty_sphinx_analyzer::NavEntry {
+            nav_tree: vec![rusty_sphinx_index::NavEntry {
                 path: "cycle.rst".to_string(),
                 title: "Cycle".to_string(),
-                children: vec![rusty_sphinx_analyzer::NavEntry {
+                children: vec![rusty_sphinx_index::NavEntry {
                     path: "cycle.rst".to_string(), // Cycle back to the same path
                     title: "Cycle".to_string(),
                     children: vec![], // Truncated here
@@ -1291,13 +1289,13 @@ mod tests {
         index
             .document_titles
             .insert("grandchild.rst".to_string(), "Grandchild".to_string());
-        index.nav_tree = vec![rusty_sphinx_analyzer::NavEntry {
+        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
             title: "Root".to_string(),
             path: "index.rst".to_string(),
-            children: vec![rusty_sphinx_analyzer::NavEntry {
+            children: vec![rusty_sphinx_index::NavEntry {
                 title: "Child".to_string(),
                 path: "child.rst".to_string(),
-                children: vec![rusty_sphinx_analyzer::NavEntry {
+                children: vec![rusty_sphinx_index::NavEntry {
                     title: "Grandchild".to_string(),
                     path: "grandchild.rst".to_string(),
                     children: vec![],
