@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `rusty-sphinx` is a Rust re-implementation of (a subset of) the Sphinx documentation generator, designed to be fast and to integrate natively with Bazel as a first-class, cache-friendly build step (not a wrapped external tool). It parses reStructuredText (`.rst`) into HTML documentation sites, with cross-file references, toctree-based navigation, and PlantUML diagram rendering.
 
-Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`), matching architecture.md's crate split; the `rusty_sphinx_lsp` crate it also describes is not yet built.
+Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_scope`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`); `rusty_sphinx_scope` isn't part of architecture.md's crate split (that doc is aspirational and predates it), the other five match it. The `rusty_sphinx_lsp` crate architecture.md also describes is not yet built.
 
 ## Commands
 
@@ -50,9 +50,10 @@ Each subcommand handler in `main.rs` is split into a pure `process_*` function (
 
 ### Crate layout (`crates/`)
 
-Each crate is a workspace member with its own `Cargo.toml` and `BUILD.bazel`; dependencies between them flow strictly `ast → parser`/`analyzer` → `renderer` → `worker`.
+Each crate is a workspace member with its own `Cargo.toml` and `BUILD.bazel`; dependencies between them flow strictly `ast → scope → analyzer`/`renderer` → `worker`, with `parser` depending only on `ast`, parallel to `scope`.
 
 - `rusty_sphinx_ast` (`crates/ast/src/lib.rs`) — AST node types. Note `HashedContent` and `TargetName`: both are "parse, don't validate" opaque types (smart constructors + custom `Deserialize` that re-validates the invariant on load, e.g. `HashedContent`'s stored hash must match `sha256(body)`). Follow this pattern for new invariants rather than validating ad hoc at call sites.
+- `rusty_sphinx_scope` (`crates/scope/src/python_scope.rs`) — `PythonScope`, the enclosing `py:class`/`py:exception`/`py:module` scope tracked while indexing and rendering domain objects, shared by `analyzer` and `renderer` so a definition's index key and a reference's resolution always agree. Kept as its own crate (rather than folded into `ast`, where it briefly lived) because it's traversal state, not parsed-document data — nothing in it is ever serialized to a `.ast` file.
 - `rusty_sphinx_parser` (`crates/parser/src/`) — one file per construct (`headings.rs`, `blocks.rs`, `bullet_list.rs`, `directives.rs`, `admonitions.rs`, `glossary.rs`, `inline.rs`); `parser::parse()` is the entry point. The parser is meant to be error-resilient (bad input becomes an error/unknown node, not a panic/abort) to support live preview over incomplete documents.
 - `rusty_sphinx_analyzer` (`crates/analyzer/src/lib.rs`) — builds the per-document and project-wide index: cross-reference targets, document titles, the toctree-derived nav tree, glossary terms. `ProjectIndex::merge` is what lets the `preview` subcommand and the VS Code extension combine a fresh local analysis with a stale global index.
 - `rusty_sphinx_renderer` (`crates/renderer/src/`) — AST + `ProjectIndex` to HTML. `lib.rs` renders body content; `page.rs` wraps it in the MiniJinja-templated page chrome (nav sidebar, CSS link); `nav.rs` builds sidebar markup from the nav tree; `directives.rs`/`inline.rs` handle directive- and inline-markup-specific rendering; `config.rs` holds `SiteConfig`, deserialized from `rusty_sphinx.toml` — deliberately only metadata (project name/version), never file paths, see "Config vs CLI flags" below.

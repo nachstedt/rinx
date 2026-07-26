@@ -18,6 +18,7 @@ use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use rusty_sphinx_analyzer::ProjectIndex;
 use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, ObjectType, TableRow};
+use rusty_sphinx_scope::PythonScope;
 use std::fmt::Write as _;
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
@@ -96,18 +97,12 @@ pub(crate) struct RenderCtx<'a> {
     pub original_doc_path: &'a str,
     pub broken_links: &'a mut Vec<BrokenLink>,
     pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
-    /// Stack of enclosing `py:class`/`py:exception` qualified names, innermost
-    /// last — empty outside any class/exception. Pushed/popped by
-    /// `render_domain_object` around a `PyClass`/`PyException`'s nested body
-    /// so a nested object's anchor `id` matches the same qualified key the
-    /// analyzer indexed it under.
-    pub class_stack: Vec<String>,
-    /// The most recently rendered `py:module`'s own name, updated in
-    /// document order (not popped on leaving a nested body) exactly like
-    /// `index_nodes`'s `current_module` in the analyzer, so a domain object
-    /// documented as a sibling after a `py:module` gets the same anchor `id`
-    /// the analyzer indexed it under.
-    pub current_module: Option<String>,
+    /// The enclosing `py:class`/`py:exception` stack and current `py:module`,
+    /// mirroring the analyzer's `index_nodes` scope so a domain object's
+    /// anchor `id` always matches the qualified key the analyzer indexed it
+    /// under. Pushed/popped by `render_domain_object` around a nested body;
+    /// the module component is document-order state, never popped.
+    pub python_scope: PythonScope,
 }
 
 /// Renders a Document into HTML, reporting any cross-references that failed to resolve.
@@ -130,8 +125,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         original_doc_path: &doc.path,
         broken_links: &mut broken_links,
         object_type_mismatches: &mut object_type_mismatches,
-        class_stack: Vec::new(),
-        current_module: None,
+        python_scope: PythonScope::default(),
     };
 
     render_nodes(&mut html, &doc.nodes, &mut ctx);
