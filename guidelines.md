@@ -30,3 +30,4 @@
 - When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
 - Keep logic in the pipeline phase (and crate) that actually performs it; do not move it next to the data type it reads just because that type is defined elsewhere.
 - When a prefix/sigil is markup rather than part of a name, strip it during parsing and record its meaning as typed intent on the AST node, rather than leaving it in the string for a later phase to re-interpret.
+- When several values play the same role, model them as one uniform collection rather than splitting the first out into its own field; if one of them is special, express that as a named accessor on the collection, not as a structural asymmetry.

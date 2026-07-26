@@ -335,6 +335,45 @@ pub(super) fn collect_directive_body<'a>(
     (consumed, body_lines[start..].to_vec())
 }
 
+/// Collects a domain object directive's *argument continuation lines*: the
+/// further signatures a single definition directive may declare, each on its
+/// own line immediately below the directive marker, e.g.
+///
+/// ```rst
+/// .. data:: AF_UNIX
+///           AF_INET
+///           AF_INET6
+/// ```
+///
+/// Unlike a directive body, continuation lines need no blank line to separate
+/// them from the marker — so scanning stops at the first blank line, at any
+/// line indented no more than `min_indent` (the marker's own indentation), or
+/// at an option field such as `:type: int`, whichever comes first. Everything
+/// after that belongs to [`collect_directive_body`] instead, which cannot
+/// make this distinction itself: to it a continuation line and a docstring
+/// line are both just "indented more than the marker".
+///
+/// Returns the number of lines consumed and each one's trimmed text.
+pub(super) fn collect_argument_continuation_lines(
+    lines: &[&str],
+    start_index: usize,
+    min_indent: usize,
+) -> (usize, Vec<String>) {
+    let mut continuations = Vec::new();
+    let mut current = start_index;
+    while current < lines.len() {
+        let line = lines[current].trim_end();
+        let trimmed = line.trim();
+        if trimmed.is_empty() || indent_width(line) <= min_indent || trimmed.starts_with(':') {
+            break;
+        }
+        continuations.push(trimmed.to_string());
+        current += 1;
+    }
+
+    (current - start_index, continuations)
+}
+
 pub(super) fn join_body_lines(body_lines: &[&str]) -> String {
     let mut body = String::new();
     for l in body_lines {
@@ -477,6 +516,105 @@ fn parse_paragraph(lines: &[&str], i: usize, default_domain: Domain) -> (usize, 
 mod tests {
     use super::*;
     use rusty_sphinx_ast::InlineNode;
+
+    #[test]
+    fn test_collect_argument_continuation_lines_collects_every_further_signature() {
+        // Given — the shape `library/socket.rst` declares its address
+        // families in: three aliases for one object, no blank line between.
+        let lines = vec![
+            ".. data:: AF_UNIX",
+            "          AF_INET",
+            "          AF_INET6",
+        ];
+
+        // When
+        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
+
+        // Then
+        assert_eq!(consumed, 2);
+        assert_eq!(continuations, ["AF_INET", "AF_INET6"]);
+    }
+
+    #[test]
+    fn test_collect_argument_continuation_lines_stops_at_a_blank_line() {
+        // Given — everything past the blank line is docstring body.
+        let lines = vec![
+            ".. data:: AF_UNIX",
+            "          AF_INET",
+            "",
+            "   The address families.",
+        ];
+
+        // When
+        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
+
+        // Then
+        assert_eq!(consumed, 1);
+        assert_eq!(continuations, ["AF_INET"]);
+    }
+
+    #[test]
+    fn test_collect_argument_continuation_lines_stops_at_an_option_field() {
+        // Given — `:type:` opens the directive's option block, which ends the
+        // argument text even though it is indented like a continuation.
+        let lines = vec![
+            ".. data:: DEFAULT_TIMEOUT",
+            "   :type: int",
+            "   :value: 30",
+        ];
+
+        // When
+        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
+
+        // Then
+        assert_eq!(consumed, 0);
+        assert!(continuations.is_empty());
+    }
+
+    #[test]
+    fn test_collect_argument_continuation_lines_stops_at_a_dedent() {
+        // Given — a line indented no further than the marker is a sibling
+        // block, not part of this directive at all.
+        let lines = vec![".. data:: AF_UNIX", "Next paragraph."];
+
+        // When
+        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
+
+        // Then
+        assert_eq!(consumed, 0);
+        assert!(continuations.is_empty());
+    }
+
+    #[test]
+    fn test_collect_argument_continuation_lines_respects_a_nested_markers_indentation() {
+        // Given — a directive nested inside another block: its continuation
+        // lines are indented past *its* marker, not past column zero.
+        let lines = vec![
+            "   .. data:: AF_UNIX",
+            "             AF_INET",
+            "   Sibling text.",
+        ];
+
+        // When
+        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 3);
+
+        // Then
+        assert_eq!(consumed, 1);
+        assert_eq!(continuations, ["AF_INET"]);
+    }
+
+    #[test]
+    fn test_collect_argument_continuation_lines_returns_nothing_at_end_of_input() {
+        // Given — a bodyless directive on the document's last line.
+        let lines = vec![".. data:: AF_UNIX"];
+
+        // When
+        let (consumed, continuations) = collect_argument_continuation_lines(&lines, 1, 0);
+
+        // Then
+        assert_eq!(consumed, 0);
+        assert!(continuations.is_empty());
+    }
 
     #[test]
     fn test_parse_blocks_empty_input() {

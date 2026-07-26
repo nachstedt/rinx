@@ -27,6 +27,30 @@ Python Domain
    The default timeout, in seconds, used when greeting someone takes too
    long to respond.
 
+Multiple Signatures Per Directive
+"""""""""""""""""""""""""""""""""
+
+One definition directive may declare several argument lines, each an
+independently referenceable alias for the same documented object, all
+sharing a single docstring. This is the shape CPython's ``library/socket.rst``
+uses for its address families and ``library/re.rst`` for its flag aliases.
+
+.. py:data:: AF_UNIX
+             AF_INET
+             AF_INET6
+
+   The supported address families. All three names refer to this one
+   description, and each can be cross-referenced on its own.
+
+Continuation lines are not limited to bare names — for a function-like
+object each is a full signature:
+
+.. py:function:: spawnl(mode, file, *args)
+                 spawnle(mode, file, *args, env)
+
+   Spawn a new process. The ``e`` variant additionally takes a mapping of
+   environment variables.
+
 The ``Greeter`` Class
 """"""""""""""""""""""
 
@@ -252,6 +276,10 @@ directive in real Sphinx — instead, :py:const:`DEFAULT_TIMEOUT` is simply
 an alternate role spelling for the same object, used when the author wants
 to emphasize that it's a constant. Both roles resolve to the same
 ``.. py:data::`` definition above.
+
+Every name a multi-signature directive declares resolves independently:
+:py:data:`AF_UNIX`, :py:data:`AF_INET`, and :py:data:`AF_INET6` all link to
+the same description, as do :py:func:`spawnl` and :py:func:`spawnle`.
 
 :py:const:`GREETING_ATTR_NORMAL` and :py:const:`GREETING_ATTR_BOLD` resolve
 correctly even though both are defined inside the table above rather than as

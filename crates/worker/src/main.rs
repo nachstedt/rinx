@@ -1023,7 +1023,7 @@ mod tests {
         // Given — mirrors CPython's `xmlrpc.client.rst`: `Fault` is defined
         // via `.. class::` but referenced via `:exc:`.
         let doc = r#"{"path":"test.rst","nodes":[
-            {"Directive":{"DomainObject":{"PyClass":{"signature":"Fault","is_final":false,"body":[]}}}},
+            {"Directive":{"DomainObject":{"PyClass":{"signatures":["Fault"],"is_final":false,"body":[]}}}},
             {"Paragraph":[{"DomainObjectReference":{"object_type":"py:exception","name":"Fault","display":"Fault","link":true}}]}
         ]}"#;
         let index = r#"{"targets":{},"document_titles":{},"nav_tree":[],"glossary_terms":{},"domain_objects":{"fault":{"py:class":"test.rst"}},"genindex_entries":[]}"#;

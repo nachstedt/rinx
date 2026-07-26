@@ -62,6 +62,7 @@ pub enum Directive {
 mod tests {
     use super::*;
     use crate::inline_node::InlineNode;
+    use crate::non_empty_vector::NonEmptyVector;
 
     #[test]
     fn test_glossary_directive_serialization_roundtrip() {
@@ -106,7 +107,7 @@ mod tests {
     fn test_domain_object_directive_serialization_roundtrip() {
         // Given
         let directive = Directive::DomainObject(DomainObjectBody::CFunction {
-            signature: "int add(int a, int b)".to_string(),
+            signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
             body: vec![Node::Paragraph(vec![InlineNode::Text(
                 "Adds two numbers.".to_string(),
             )])],
@@ -143,7 +144,7 @@ mod tests {
     fn test_domain_object_directive_serialization_roundtrip_with_data_options() {
         // Given
         let directive = Directive::DomainObject(DomainObjectBody::PyData {
-            name: "DEFAULT_TIMEOUT".to_string(),
+            signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: Some("int".to_string()),
             value: Some("30".to_string()),
             body: vec![],

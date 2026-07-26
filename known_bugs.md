@@ -6,26 +6,6 @@ CPython doc source. Unlike the entries in `scripts/domain_warnings_whitelist.jso
 these are cases where real Sphinx *would* resolve the reference — the warning
 is a rusty-sphinx shortcoming, not a CPython doc inconsistency.
 
-## Multi-signature directives only keep the first name
-
-`.. data::` (and presumably other domain-object directives) can declare several
-aliases for one object as multiple argument lines within a single directive,
-e.g. in `library/socket.rst`:
-
-```rst
-.. data:: AF_UNIX
-          AF_INET
-          AF_INET6
-```
-
-`parse_py_data` (`crates/parser/src/domains.rs`) takes a single `name: String`
-built from just the directive's argument line, so every alias after the first
-is silently dropped and never indexed.
-
-- Confirmed examples: `re.ASCII` (`library/re.rst`, defined via `.. data:: A` /
-  `ASCII`), `AF_INET` / `AF_INET6` (`library/socket.rst`, defined via
-  `.. data:: AF_UNIX` / `AF_INET` / `AF_INET6`).
-
 ## Explicit-title cross-reference syntax (`` `text <target>` ``) isn't parsed
 
 Sphinx's explicit-title role syntax — `` :func:`spawn\* <spawnl>` `` displays
