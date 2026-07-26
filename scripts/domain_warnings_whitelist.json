@@ -40,7 +40,7 @@
       "kind": "domain_object_reference",
       "target": "xmlparser",
       "requested_type": "py:class",
-      "comment": "`xmlparser` is cross-referenced with `:class:`xmlparser`` dozens of times in pyexpat.rst, but the class itself is never given a `.. class:: xmlparser` directive — only its methods are documented directly as `.. method:: xmlparser.Parse` etc. with no enclosing class definition. Real Sphinx fails to resolve `:class:`xmlparser`` too; expected, not a rusty-sphinx resolver gap."
+      "comment": "`xmlparser` is cross-referenced with `:class:`xmlparser`` dozens of times in pyexpat.rst, but the class itself is never given a `.. class:: xmlparser` directive \u2014 only its methods are documented directly as `.. method:: xmlparser.Parse` etc. with no enclosing class definition. Real Sphinx fails to resolve `:class:`xmlparser`` too; expected, not a rusty-sphinx resolver gap."
     },
     {
       "doc_path": "Doc/library/xml.dom",
@@ -97,13 +97,6 @@
       "target": "socket.socket",
       "requested_type": "py:function",
       "comment": "`socket.socket` is defined via `.. class:: socket(family=AF_INET, ...)` but is cross-referenced with `:func:`socket.socket`` in places, since it reads like a factory call. Sphinx's Python domain does not alias py:function and py:class for xref resolution, so real Sphinx fails to resolve this too; expected, not a rusty-sphinx resolver gap."
-    },
-    {
-      "doc_path": "Doc/reference/datamodel",
-      "kind": "domain_object_reference",
-      "target": "__eq__",
-      "requested_type": "py:method",
-      "comment": "`__eq__` is only ever shown inline as example code (`object.__eq__(self, other)`) in datamodel.rst; there is no `.. method::` directive anywhere defining it as a concrete Sphinx object for this or any other special method discussed in that section. Real Sphinx fails to resolve `:meth:`__eq__`` here too; expected, not a rusty-sphinx resolver gap."
     }
   ]
 }
