@@ -50,6 +50,14 @@ impl PythonScope {
         self.module = Some(name.to_string());
     }
 
+    /// Clears the current `py:module`, so later references qualify as if
+    /// none had ever been set — the `.. currentmodule:: None` reset. The
+    /// class stack is untouched, matching [`Self::set_module`]'s
+    /// document-order semantics.
+    pub fn clear_module(&mut self) {
+        self.module = None;
+    }
+
     /// Pushes lexically nested class segments (innermost last) onto the
     /// scope, returning the prior depth so a caller can restore it with
     /// [`Self::truncate_classes`] once the nested body has been processed.
@@ -492,6 +500,51 @@ mod tests {
         // Then — every tier coincides, and duplicates are dropped rather
         // than looked up repeatedly.
         assert_eq!(candidates, segments(&["greet"]));
+    }
+
+    #[test]
+    fn test_clear_module_drops_module_from_qualify() {
+        // Given
+        let mut scope = PythonScope::default();
+        scope.set_module("enum");
+
+        // When
+        scope.clear_module();
+        let qualification = scope.qualify(Domain::Py, "Enum");
+
+        // Then
+        assert_eq!(qualification.qualified_name, "Enum");
+    }
+
+    #[test]
+    fn test_clear_module_drops_module_bearing_tiers_from_reference_candidates() {
+        // Given
+        let mut scope = PythonScope::default();
+        scope.set_module("enum");
+
+        // When
+        scope.clear_module();
+        let candidates =
+            scope.reference_candidates(Domain::Py, "Enum", TargetSearchOrder::LeastQualifiedFirst);
+
+        // Then
+        assert_eq!(candidates, segments(&["Enum"]));
+    }
+
+    #[test]
+    fn test_clear_module_leaves_class_stack_intact() {
+        // Given — mirrors `test_set_module_persists_across_truncate_classes`:
+        // clearing the module is likewise independent of the class stack.
+        let mut scope = PythonScope::default();
+        scope.set_module("enum");
+        scope.push_classes(&segments(&["Flag"]));
+
+        // When
+        scope.clear_module();
+        let qualification = scope.qualify(Domain::Py, "name");
+
+        // Then
+        assert_eq!(qualification.qualified_name, "Flag.name");
     }
 
     #[test]

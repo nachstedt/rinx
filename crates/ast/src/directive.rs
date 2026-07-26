@@ -44,6 +44,13 @@ pub enum Directive {
         id: String,
     },
     DomainObject(DomainObjectBody),
+    /// `.. py:currentmodule::` — sets the `py`-domain module context for the
+    /// rest of the document without documenting a module. `None` is the
+    /// reset form (`.. currentmodule:: None`); the sentinel is resolved by
+    /// the parser so no later phase re-interprets the literal string.
+    PyCurrentModule {
+        module: Option<String>,
+    },
     Unknown {
         name: String,
         argument: String,
@@ -141,6 +148,34 @@ mod tests {
             value: Some("30".to_string()),
             body: vec![],
         });
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_py_current_module_directive_serialization_roundtrip_with_module() {
+        // Given
+        let directive = Directive::PyCurrentModule {
+            module: Some("enum".to_string()),
+        };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_py_current_module_directive_serialization_roundtrip_with_reset() {
+        // Given
+        let directive = Directive::PyCurrentModule { module: None };
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");

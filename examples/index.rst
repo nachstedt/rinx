@@ -18,6 +18,7 @@ Welcome to the Rusty-Sphinx example.
    definition_lists
    comments
    domains
+   current_module
    transitions
    typography
    tables
