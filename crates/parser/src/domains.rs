@@ -2,7 +2,7 @@ use super::blocks::parse_blocks;
 use super::bullet_list::unindent_body_lines;
 use super::directives::DirectiveObjectType;
 use super::headings::Adornment;
-use rusty_sphinx_ast::{Domain, DomainObjectBody, Node};
+use rusty_sphinx_ast::{Domain, DomainObjectBody, Node, NonEmptyVector};
 
 /// Parses a domain object directive body (e.g. `.. py:function::`,
 /// `.. py:module::`, `.. c:function::`) into the matching [`DomainObjectBody`]
@@ -11,43 +11,54 @@ use rusty_sphinx_ast::{Domain, DomainObjectBody, Node};
 /// instance). The legacy `Classmethod`/`Staticmethod` directive-name aliases
 /// map to the same `py:method` body as `PyMethod`, with the matching flag
 /// forced on.
+///
+/// `argument` is the directive's own argument line and `continuations` the
+/// further argument lines that followed it (see
+/// [`super::blocks::collect_argument_continuation_lines`]) — each declares
+/// another alias for the same object. Taking them as two parameters rather
+/// than one list is what makes the resulting [`NonEmptyVector`] non-empty by
+/// construction, with no validation step and no error path. `py:module` is
+/// the one object type that ignores `continuations`: real Sphinx's `module`
+/// directive takes exactly one argument.
 pub(super) fn parse_domain_object(
     object_type: DirectiveObjectType,
     argument: String,
+    continuations: Vec<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
     default_domain: Domain,
 ) -> DomainObjectBody {
+    let signatures = NonEmptyVector::new(argument, continuations);
     match object_type {
         DirectiveObjectType::PyFunction => DomainObjectBody::PyFunction {
-            signature: argument,
+            signatures,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
         DirectiveObjectType::CFunction => DomainObjectBody::CFunction {
-            signature: argument,
+            signatures,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
         DirectiveObjectType::CMacro => DomainObjectBody::CMacro {
-            signature: argument,
+            signatures,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
         DirectiveObjectType::PyModule => parse_py_module(
-            argument,
+            signatures.first().clone(),
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         ),
         DirectiveObjectType::PyData => parse_py_data(
-            argument,
+            signatures,
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         ),
         DirectiveObjectType::PyMethod => parse_py_method(
-            argument,
+            signatures,
             body_lines,
             adornment_order,
             diagnostics,
@@ -56,7 +67,7 @@ pub(super) fn parse_domain_object(
             false,
         ),
         DirectiveObjectType::PyClassmethod => parse_py_method(
-            argument,
+            signatures,
             body_lines,
             adornment_order,
             diagnostics,
@@ -65,7 +76,7 @@ pub(super) fn parse_domain_object(
             false,
         ),
         DirectiveObjectType::PyStaticmethod => parse_py_method(
-            argument,
+            signatures,
             body_lines,
             adornment_order,
             diagnostics,
@@ -74,21 +85,21 @@ pub(super) fn parse_domain_object(
             true,
         ),
         DirectiveObjectType::PyClass => parse_py_class(
-            argument,
+            signatures,
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         ),
         DirectiveObjectType::PyException => parse_py_exception(
-            argument,
+            signatures,
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         ),
         DirectiveObjectType::PyAttribute => parse_py_attribute(
-            argument,
+            signatures,
             body_lines,
             adornment_order,
             diagnostics,
@@ -143,7 +154,7 @@ fn parse_py_module(
 /// Parses a `.. py:data::` body: strips `:type:`/`:value:` option lines off
 /// the front before parsing the rest as the docstring body.
 fn parse_py_data(
-    name: String,
+    signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -159,7 +170,7 @@ fn parse_py_data(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyData {
-        name,
+        signatures,
         type_,
         value,
         body,
@@ -177,7 +188,7 @@ fn parse_py_data(
 /// the alias spelling and the explicit option spelling compose rather than
 /// conflict.
 fn parse_py_method(
-    signature: String,
+    signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -196,7 +207,7 @@ fn parse_py_method(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyMethod {
-        signature,
+        signatures,
         is_classmethod: is_classmethod || forced_classmethod,
         is_staticmethod: is_staticmethod || forced_staticmethod,
         is_abstractmethod,
@@ -212,7 +223,7 @@ fn parse_py_method(
 /// uses — qualifying their cross-reference names by this class is the
 /// analyzer/renderer's job, not the parser's.
 fn parse_py_class(
-    signature: String,
+    signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -228,7 +239,7 @@ fn parse_py_class(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyClass {
-        signature,
+        signatures,
         is_final,
         body,
     }
@@ -240,7 +251,7 @@ fn parse_py_class(
 /// the same option set; only the object type (and thus the produced
 /// [`DomainObjectBody`] variant) differs.
 fn parse_py_exception(
-    signature: String,
+    signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -256,7 +267,7 @@ fn parse_py_exception(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyException {
-        signature,
+        signatures,
         is_final,
         body,
     }
@@ -265,7 +276,7 @@ fn parse_py_exception(
 /// Parses a `.. py:attribute::` body: strips `:type:`/`:value:`/`:canonical:`
 /// option lines off the front before parsing the rest as the docstring body.
 fn parse_py_attribute(
-    name: String,
+    signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -281,7 +292,7 @@ fn parse_py_attribute(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyAttribute {
-        name,
+        signatures,
         type_,
         value,
         canonical,
@@ -684,7 +695,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
-            signature,
+            signatures,
             is_classmethod,
             is_staticmethod,
             is_abstractmethod,
@@ -692,7 +703,7 @@ mod tests {
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "greet(self, name)");
+            assert_eq!(signatures.as_slice(), ["greet(self, name)"]);
             assert!(!is_classmethod);
             assert!(!is_staticmethod);
             assert!(!is_abstractmethod);
@@ -774,7 +785,7 @@ mod tests {
         // Then — it parses as a `py:method` with `is_classmethod` forced on
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
-            signature,
+            signatures,
             is_classmethod,
             is_staticmethod,
             is_abstractmethod,
@@ -782,7 +793,10 @@ mod tests {
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "ZoneInfo.clear_cache(*, only_keys=None)");
+            assert_eq!(
+                signatures.as_slice(),
+                ["ZoneInfo.clear_cache(*, only_keys=None)"]
+            );
             assert!(*is_classmethod);
             assert!(!is_staticmethod);
             assert!(!is_abstractmethod);
@@ -804,7 +818,7 @@ mod tests {
         // Then — it parses as a `py:method` with `is_staticmethod` forced on
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyMethod {
-            signature,
+            signatures,
             is_classmethod,
             is_staticmethod,
             is_abstractmethod,
@@ -812,7 +826,7 @@ mod tests {
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "Greeter.default_name()");
+            assert_eq!(signatures.as_slice(), ["Greeter.default_name()"]);
             assert!(!is_classmethod);
             assert!(*is_staticmethod);
             assert!(!is_abstractmethod);
@@ -893,12 +907,12 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
-            signature,
+            signatures,
             is_final,
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "Greeter");
+            assert_eq!(signatures.as_slice(), ["Greeter"]);
             assert!(!is_final);
             assert_eq!(body.len(), 1);
         } else {
@@ -917,12 +931,12 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
-            signature,
+            signatures,
             is_final,
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "Greeter(Base)");
+            assert_eq!(signatures.as_slice(), ["Greeter(Base)"]);
             assert!(*is_final);
             assert_eq!(body.len(), 1);
         } else {
@@ -986,12 +1000,12 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
-            signature,
+            signatures,
             is_final,
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "GreeterError");
+            assert_eq!(signatures.as_slice(), ["GreeterError"]);
             assert!(!is_final);
             assert_eq!(body.len(), 1);
         } else {
@@ -1010,12 +1024,12 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
-            signature,
+            signatures,
             is_final,
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "InvalidNameError(GreeterError)");
+            assert_eq!(signatures.as_slice(), ["InvalidNameError(GreeterError)"]);
             assert!(*is_final);
             assert_eq!(body.len(), 1);
         } else {
@@ -1116,6 +1130,7 @@ mod tests {
         let domain_object = parse_domain_object(
             object_type,
             signature.clone(),
+            Vec::new(),
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -1123,12 +1138,8 @@ mod tests {
         );
 
         // Then
-        if let DomainObjectBody::PyFunction {
-            signature: sig,
-            body,
-        } = domain_object
-        {
-            assert_eq!(sig, signature);
+        if let DomainObjectBody::PyFunction { signatures, body } = domain_object {
+            assert_eq!(signatures.as_slice(), [signature]);
             assert_eq!(body.len(), 1);
             assert!(matches!(body[0], Node::Paragraph(_)));
         } else {
@@ -1149,6 +1160,7 @@ mod tests {
         let domain_object = parse_domain_object(
             object_type,
             signature,
+            Vec::new(),
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -1177,6 +1189,7 @@ mod tests {
         let domain_object = parse_domain_object(
             object_type,
             signature,
+            Vec::new(),
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -1204,6 +1217,7 @@ mod tests {
         let domain_object = parse_domain_object(
             object_type,
             signature,
+            Vec::new(),
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -1240,6 +1254,7 @@ mod tests {
         let domain_object = parse_domain_object(
             object_type,
             signature,
+            Vec::new(),
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -1265,11 +1280,11 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
-            signature,
+            signatures,
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "greet(name)");
+            assert_eq!(signatures.as_slice(), ["greet(name)"]);
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
@@ -1369,13 +1384,13 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
-            name,
+            signatures,
             type_,
             value,
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(name, "DEFAULT_TIMEOUT");
+            assert_eq!(signatures.as_slice(), ["DEFAULT_TIMEOUT"]);
             assert_eq!(type_, &None);
             assert_eq!(value, &None);
             assert_eq!(body.len(), 1);
@@ -1407,6 +1422,109 @@ mod tests {
             assert!(matches!(body[0], Node::Paragraph(_)));
         } else {
             panic!("Expected PyData, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_data_collects_every_argument_line_as_a_signature() {
+        // Given — the shape `library/socket.rst` uses to declare three
+        // aliases for one documented object, which real Sphinx indexes as
+        // three separate targets sharing one docstring.
+        let input = ".. py:data:: AF_UNIX\n             AF_INET\n             AF_INET6\n\n   The address families.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
+            signatures,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["AF_UNIX", "AF_INET", "AF_INET6"]);
+            // The continuation lines must not leak into the docstring.
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyData, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_data_collects_signatures_before_option_lines() {
+        // Given — continuation lines come first, then the option block; both
+        // have to be recognized.
+        let input = ".. py:data:: A\n             ASCII\n   :type: int\n\n   The ASCII flag.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyData {
+            signatures,
+            type_,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["A", "ASCII"]);
+            assert_eq!(type_.as_deref(), Some("int"));
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyData, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_function_collects_every_argument_line_as_a_signature() {
+        // Given — multi-signature declarations are not limited to bare names;
+        // each continuation line may be a full signature.
+        let input = ".. py:function:: spawnl(mode, file, *args)\n                 spawnle(mode, file, *args, env)\n\n   Spawn a process.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
+            signatures,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(
+                signatures.as_slice(),
+                [
+                    "spawnl(mode, file, *args)",
+                    "spawnle(mode, file, *args, env)"
+                ]
+            );
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_module_treats_a_following_line_as_body_not_a_second_name() {
+        // Given — real Sphinx's `module` directive takes exactly one
+        // argument, so an immediately following line is body content even
+        // though it looks like a continuation.
+        let input = ".. py:module:: greetings\n   A module of greetings.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyModule {
+            name,
+            body,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(name, "greetings");
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyModule, got {:?}", doc.nodes[0]);
         }
     }
 
@@ -1445,14 +1563,14 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyAttribute {
-            name,
+            signatures,
             type_,
             value,
             canonical,
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(name, "Greeter.name");
+            assert_eq!(signatures.as_slice(), ["Greeter.name"]);
             assert_eq!(type_, &None);
             assert_eq!(value, &None);
             assert_eq!(canonical, &None);
@@ -1523,11 +1641,11 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::CFunction {
-            signature,
+            signatures,
             ..
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "int add(int a, int b)");
+            assert_eq!(signatures.as_slice(), ["int add(int a, int b)"]);
         } else {
             panic!("Expected CFunction, got {:?}", doc.nodes[0]);
         }
@@ -1544,11 +1662,11 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
-            signature,
+            signatures,
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "PY_SSIZE_T_MAX");
+            assert_eq!(signatures.as_slice(), ["PY_SSIZE_T_MAX"]);
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected CMacro, got {:?}", doc.nodes[0]);
@@ -1566,11 +1684,11 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
-            signature,
+            signatures,
             ..
         })) = &doc.nodes[0]
         {
-            assert_eq!(signature, "MAX(a, b)");
+            assert_eq!(signatures.as_slice(), ["MAX(a, b)"]);
         } else {
             panic!("Expected CMacro, got {:?}", doc.nodes[0]);
         }

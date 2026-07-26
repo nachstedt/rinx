@@ -65,7 +65,8 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
 mod tests {
     use super::*;
     use rusty_sphinx_ast::{
-        AdmonitionKind, BulletListItem, DomainObjectBody, IndexEntry, TableCell, TableRow,
+        AdmonitionKind, BulletListItem, DomainObjectBody, IndexEntry, NonEmptyVector, TableCell,
+        TableRow,
     };
 
     fn index_directive() -> Node {
@@ -151,7 +152,7 @@ mod tests {
         // Given
         let mut nodes = vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::PyFunction {
-                signature: "foo()".to_string(),
+                signatures: NonEmptyVector::single("foo()".to_string()),
                 body: vec![index_directive()],
             },
         ))];

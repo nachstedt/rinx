@@ -1,5 +1,7 @@
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
-use super::blocks::{collect_directive_body, indent_width, join_body_lines};
+use super::blocks::{
+    collect_argument_continuation_lines, collect_directive_body, indent_width, join_body_lines,
+};
 use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
 use super::headings::Adornment;
@@ -86,7 +88,39 @@ pub(super) fn try_parse_directive(
     let name = name_part.strip_prefix(".. ")?.trim().to_string();
     let argument = arg_part.trim().to_string();
 
-    let (consumed_lines, body_lines) = collect_directive_body(lines, i + 1, indent_width(line));
+    let min_indent = indent_width(line);
+
+    // Checked before the generic body collection below, because a domain
+    // object splits the lines after its marker differently: any further
+    // argument lines are peeled off as extra signatures first, and only what
+    // remains is its body. No other directive name can reach this branch —
+    // `resolve_domain_object_type` matches a disjoint set of names from the
+    // ones handled afterwards.
+    if let Some(object_type) = resolve_domain_object_type(&name, default_domain) {
+        let (continuations_consumed, continuations) =
+            if object_type_supports_multiple_signatures(object_type) {
+                collect_argument_continuation_lines(lines, i + 1, min_indent)
+            } else {
+                (0, Vec::new())
+            };
+        let (consumed_lines, body_lines) =
+            collect_directive_body(lines, i + 1 + continuations_consumed, min_indent);
+        let domain_object = parse_domain_object(
+            object_type,
+            argument,
+            continuations,
+            &body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        );
+        return Some((
+            1 + continuations_consumed + consumed_lines,
+            Node::Directive(Directive::DomainObject(domain_object)),
+        ));
+    }
+
+    let (consumed_lines, body_lines) = collect_directive_body(lines, i + 1, min_indent);
 
     if name == "toctree" {
         let directive = parse_toctree(&body_lines, diagnostics);
@@ -139,20 +173,6 @@ pub(super) fn try_parse_directive(
     if let Some(directive) = try_parse_current_module(&name, &argument, default_domain) {
         return Some((1 + consumed_lines, Node::Directive(directive)));
     }
-    if let Some(object_type) = resolve_domain_object_type(&name, default_domain) {
-        let domain_object = parse_domain_object(
-            object_type,
-            argument,
-            &body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        );
-        return Some((
-            1 + consumed_lines,
-            Node::Directive(Directive::DomainObject(domain_object)),
-        ));
-    }
     let directive = Directive::Unknown {
         name,
         argument,
@@ -184,6 +204,16 @@ fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<Dire
         (Domain::C, "macro") => Some(DirectiveObjectType::CMacro),
         _ => None,
     }
+}
+
+/// Whether a directive of this object type may declare more than one
+/// signature, as several argument lines below its marker.
+///
+/// Every object type may except `py:module`: real Sphinx's `module`
+/// directive takes exactly one argument, so a line below it is body content
+/// even when it looks like a further name.
+const fn object_type_supports_multiple_signatures(object_type: DirectiveObjectType) -> bool {
+    !matches!(object_type, DirectiveObjectType::PyModule)
 }
 
 /// Parses a `.. code-block::` directive's argument (the language, if any)
