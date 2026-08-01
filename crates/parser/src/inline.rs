@@ -14,7 +14,7 @@ static FUNC_ROLE_REGEX: LazyLock<Regex> =
 static MOD_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?mod:`(?P<name>[^`]+)`").unwrap());
 static DATA_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r":(?:(?P<domain>py|c):)?(?P<role>data|const|var):`(?P<name>[^`]+)`").unwrap()
+    Regex::new(r":(?:(?P<domain>py|c):)?(?P<role>data|const|var|member):`(?P<name>[^`]+)`").unwrap()
 });
 static METH_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?meth:`(?P<name>[^`]+)`").unwrap());
@@ -26,6 +26,10 @@ static EXC_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?exc:`(?P<name>[^`]+)`").unwrap());
 static MACRO_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?macro:`(?P<name>[^`]+)`").unwrap());
+static STRUCT_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?struct:`(?P<name>[^`]+)`").unwrap());
+static UNION_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?union:`(?P<name>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -59,6 +63,8 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         let attr_match = ATTR_ROLE_REGEX.find(remaining);
         let exc_match = EXC_ROLE_REGEX.find(remaining);
         let macro_match = MACRO_ROLE_REGEX.find(remaining);
+        let struct_match = STRUCT_ROLE_REGEX.find(remaining);
+        let union_match = UNION_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -98,6 +104,12 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         }
         if let Some(m) = macro_match {
             all_matches.push((m.start(), m.end(), "macro", None));
+        }
+        if let Some(m) = struct_match {
+            all_matches.push((m.start(), m.end(), "struct", None));
+        }
+        if let Some(m) = union_match {
+            all_matches.push((m.start(), m.end(), "union", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -275,14 +287,15 @@ fn handle_mod_match(m_str: &str, default_domain: Domain) -> InlineNode {
 }
 
 /// Builds the `InlineNode` for a matched `:data:`/`:py:data:`/`:const:`/
-/// `:py:const:`/`:c:data:`/`:var:`/`:c:var:` role, falling back to plain text
-/// if the role doesn't resolve for the given domain (`const` is Python-only;
-/// `var` is C-only). `data`/`const` resolve to the same
-/// [`rusty_sphinx_ast::PyObjectType::Data`] in the `py` domain, and
-/// `data`/`var` resolve to the same [`rusty_sphinx_ast::CObjectType::Data`]
-/// in the `c` domain — matching real Sphinx's C domain docs, which describe
-/// `:c:member:`/`:c:data:`/`:c:var:` as equivalent role spellings — so e.g.
-/// `:c:data:` and `:c:var:` targeting the same name link to the same
+/// `:py:const:`/`:c:data:`/`:var:`/`:c:var:`/`:member:`/`:c:member:` role,
+/// falling back to plain text if the role doesn't resolve for the given
+/// domain (`const` is Python-only; `var`/`member` are C-only). `data`/`const`
+/// resolve to the same [`rusty_sphinx_ast::PyObjectType::Data`] in the `py`
+/// domain, and `data`/`var`/`member` all resolve to the same
+/// [`rusty_sphinx_ast::CObjectType::Member`] in the `c` domain — matching
+/// real Sphinx's C domain docs, which describe `:c:member:`/`:c:data:`/
+/// `:c:var:` as equivalent role spellings — so e.g. `:c:data:` and `:c:var:`
+/// targeting the same name link to the same `.. c:member::`/`.. c:var::`
 /// definition.
 fn handle_data_match(m_str: &str, default_domain: Domain) -> InlineNode {
     let caps = DATA_ROLE_REGEX.captures(m_str).unwrap();
@@ -383,6 +396,40 @@ fn handle_macro_match(m_str: &str, default_domain: Domain) -> InlineNode {
     }
 }
 
+/// Builds the `InlineNode` for a matched `:struct:`/`:c:struct:` role,
+/// falling back to plain text if the role doesn't resolve for the given
+/// domain (`struct` is C-only, like `macro`).
+fn handle_struct_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = STRUCT_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, "struct") {
+        Some(object_type) => {
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
+/// Builds the `InlineNode` for a matched `:union:`/`:c:union:` role, falling
+/// back to plain text if the role doesn't resolve for the given domain
+/// (`union` is C-only, like `macro`/`struct`).
+fn handle_union_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = UNION_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, "union") {
+        Some(object_type) => {
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
 /// Splits a role's backtick content on Sphinx's optional explicit-title
 /// syntax (`Display text <target>`), shared by every role that supports it
 /// (`:term:`, `:ref:`, and the domain-object roles via
@@ -430,6 +477,8 @@ pub(super) fn handle_inline_match(
         "attr" => handle_attr_match(m_str, default_domain),
         "exc" => handle_exc_match(m_str, default_domain),
         "macro" => handle_macro_match(m_str, default_domain),
+        "struct" => handle_struct_match(m_str, default_domain),
+        "union" => handle_union_match(m_str, default_domain),
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let (display, term) = split_display_and_target(&caps["content"]);
@@ -884,7 +933,7 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Data),
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Member),
                 name: "Py_mod_exec".to_string(),
                 display: "Py_mod_exec".to_string(),
                 link: true,
@@ -902,6 +951,24 @@ mod tests {
 
         // Then
         assert_eq!(data_result, var_result);
+    }
+
+    #[test]
+    fn test_handle_data_match_resolves_member_role_to_same_object_type_as_data_for_c_domain() {
+        // Given — `:c:member:` is the canonical spelling; `:c:data:`/`:c:var:`
+        // are equivalent alternates.
+        let data_result = handle_data_match(":data:`count`", Domain::C);
+        let member_result = handle_data_match(":member:`count`", Domain::C);
+
+        // Then
+        assert_eq!(data_result, member_result);
+    }
+
+    #[test]
+    fn test_handle_data_match_falls_back_to_text_when_domain_lacks_member_role() {
+        // Given — `member` is C-only, so it doesn't resolve for `py`.
+        let result = handle_data_match(":member:`count`", Domain::Py);
+        assert_eq!(result, InlineNode::Text(":member:`count`".to_string()));
     }
 
     #[test]
@@ -1110,6 +1177,108 @@ mod tests {
                 object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
                 name: "pkg.MAX".to_string(),
                 display: "MAX".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_struct_match_resolves_via_explicit_c_domain() {
+        let result = handle_struct_match(":c:struct:`Data`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Struct),
+                name: "Data".to_string(),
+                display: "Data".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_struct_match_resolves_bare_role_via_default_domain() {
+        let result = handle_struct_match(":struct:`Data`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Struct),
+                name: "Data".to_string(),
+                display: "Data".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_struct_match_falls_back_to_text_when_domain_lacks_struct_role() {
+        let result = handle_struct_match(":struct:`Data`", Domain::Py);
+        assert_eq!(result, InlineNode::Text(":struct:`Data`".to_string()));
+    }
+
+    #[test]
+    fn test_handle_union_match_resolves_via_explicit_c_domain() {
+        let result = handle_union_match(":c:union:`Number`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Union),
+                name: "Number".to_string(),
+                display: "Number".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_union_match_resolves_bare_role_via_default_domain() {
+        let result = handle_union_match(":union:`Number`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Union),
+                name: "Number".to_string(),
+                display: "Number".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_union_match_falls_back_to_text_when_domain_lacks_union_role() {
+        let result = handle_union_match(":union:`Number`", Domain::Py);
+        assert_eq!(result, InlineNode::Text(":union:`Number`".to_string()));
+    }
+
+    #[test]
+    fn test_handle_inline_match_struct_variant_dispatches_through_handle_inline_match() {
+        let result = handle_inline_match("struct", ":c:struct:`Data`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Struct),
+                name: "Data".to_string(),
+                display: "Data".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_union_variant_dispatches_through_handle_inline_match() {
+        let result = handle_inline_match("union", ":c:union:`Number`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Union),
+                name: "Number".to_string(),
+                display: "Number".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
             }
@@ -1504,7 +1673,7 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Data),
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Member),
                 name: "Py_mod_exec".to_string(),
                 display: "Py_mod_exec".to_string(),
                 link: true,
@@ -1519,7 +1688,7 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Data),
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Member),
                 name: "errno".to_string(),
                 display: "errno".to_string(),
                 link: true,
@@ -1534,7 +1703,7 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Data),
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Member),
                 name: "Py_tp_bases".to_string(),
                 display: "Py_tp_bases".to_string(),
                 link: true,

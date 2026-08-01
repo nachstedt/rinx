@@ -127,11 +127,23 @@ pub(super) fn render_domain_object(
     // module: real Sphinx always writes it in full and sets it verbatim as
     // the new current module, matching `index_domain_object` in the analyzer.
     let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
+    // `c:struct`/`c:union`/`c:member` qualify against `ctx.c_scope` instead
+    // of `ctx.python_scope` — mirrors the analyzer's `index_domain_object`
+    // exactly, so anchor `id`s never drift from the index keys.
+    let uses_c_scope = matches!(
+        obj,
+        rusty_sphinx_ast::DomainObjectBody::CStruct { .. }
+            | rusty_sphinx_ast::DomainObjectBody::CUnion { .. }
+            | rusty_sphinx_ast::DomainObjectBody::CMember { .. }
+    );
     // Only the primary name qualifies the scope, exactly as in the analyzer's
     // `index_domain_object`; the rest are aliases that get their own `<dt>`
     // anchor but lend nothing to the body.
     let (qualified_primary, new_segments) = if is_module {
         (own_names.first().clone(), Vec::new())
+    } else if uses_c_scope {
+        let qualification = ctx.c_scope.qualify(own_names.first());
+        (qualification.qualified_name, qualification.new_segments)
     } else {
         let qualification = ctx
             .python_scope
@@ -155,15 +167,23 @@ pub(super) fn render_domain_object(
     {
         let qualified_name = if index_in_object == 0 {
             qualified_primary.clone()
+        } else if uses_c_scope {
+            ctx.c_scope.qualify(own_name).qualified_name
         } else {
             ctx.python_scope
                 .qualify(object_type.domain(), own_name)
                 .qualified_name
         };
-        let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
-        let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
         let sig_escaped = html_escape::encode_text(signature_text);
-        let _ = write!(html, "  <dt id=\"{id_attr}\">");
+        // `no_index` means no cross-reference target — omit the `id`
+        // entirely rather than emitting a dangling anchor.
+        if obj.no_index() {
+            let _ = write!(html, "  <dt>");
+        } else {
+            let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
+            let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
+            let _ = write!(html, "  <dt id=\"{id_attr}\">");
+        }
         for label in domain_object_prefix_labels(obj) {
             let _ = write!(html, "<em class=\"property\">{label}</em> ");
         }
@@ -172,9 +192,15 @@ pub(super) fn render_domain_object(
     let _ = write!(html, "  <dd>");
     render_domain_object_options(html, obj);
     let lend = obj.deduce_local_scope(&new_segments);
-    let depth = ctx.python_scope.push_classes(&lend);
-    super::render_nodes(html, obj.body(), ctx);
-    ctx.python_scope.truncate_classes(depth);
+    if uses_c_scope {
+        let depth = ctx.c_scope.push_containers(&lend);
+        super::render_nodes(html, obj.body(), ctx);
+        ctx.c_scope.truncate_containers(depth);
+    } else {
+        let depth = ctx.python_scope.push_classes(&lend);
+        super::render_nodes(html, obj.body(), ctx);
+        ctx.python_scope.truncate_classes(depth);
+    }
     let _ = writeln!(html, "</dd>");
     let _ = writeln!(html, "</dl>");
 }
@@ -300,6 +326,9 @@ fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::Domai
         rusty_sphinx_ast::DomainObjectBody::PyFunction { .. }
         | rusty_sphinx_ast::DomainObjectBody::CFunction { .. }
         | rusty_sphinx_ast::DomainObjectBody::CMacro { .. }
+        | rusty_sphinx_ast::DomainObjectBody::CStruct { .. }
+        | rusty_sphinx_ast::DomainObjectBody::CUnion { .. }
+        | rusty_sphinx_ast::DomainObjectBody::CMember { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyMethod { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyException { .. } => {}
@@ -563,6 +592,7 @@ mod tests {
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
             python_scope: rusty_sphinx_scope::PythonScope::default(),
+            c_scope: rusty_sphinx_scope::CScope::default(),
         };
 
         // When
@@ -603,6 +633,7 @@ mod tests {
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
             python_scope: rusty_sphinx_scope::PythonScope::default(),
+            c_scope: rusty_sphinx_scope::CScope::default(),
         };
 
         // When
@@ -779,6 +810,7 @@ mod tests {
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
             python_scope: rusty_sphinx_scope::PythonScope::default(),
+            c_scope: rusty_sphinx_scope::CScope::default(),
         };
 
         // When
@@ -1082,6 +1114,118 @@ mod tests {
         assert!(result.contains("<dl class=\"c macro\">"));
         assert!(result.contains("<dt id=\"c:macro:max\">"));
         assert!(result.contains("<code class=\"sig-name\">MAX(a, b)</code>"));
+    }
+
+    #[test]
+    fn test_render_formats_c_struct_domain_object_with_nested_member() {
+        // Given — `.. c:member:: int count` nested inside `.. c:struct:: Data`.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CStruct {
+                    signatures: NonEmptyVector::single("Data".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::CMember {
+                            signatures: NonEmptyVector::single("int count".to_string()),
+                            no_index: false,
+                            no_index_entry: false,
+                            no_contents_entry: false,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — the struct's own anchor, and the nested member auto-qualified
+        // against it, agreeing with what the analyzer would index.
+        assert!(result.contains("<dl class=\"c struct\">"));
+        assert!(result.contains("<dt id=\"c:struct:data\">"));
+        assert!(result.contains("<dl class=\"c member\">"));
+        assert!(result.contains("<dt id=\"c:member:data.count\">"));
+        assert!(result.contains("<code class=\"sig-name\">int count</code>"));
+    }
+
+    #[test]
+    fn test_render_formats_c_union_domain_object() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CUnion {
+                    signatures: NonEmptyVector::single("Number".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"c union\">"));
+        assert!(result.contains("<dt id=\"c:union:number\">"));
+    }
+
+    #[test]
+    fn test_render_formats_c_member_domain_object_flat_dotted_signature() {
+        // Given — no enclosing `.. c:struct::`, the real CPython-docs shape.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CMember {
+                    signatures: NonEmptyVector::single(
+                        "PyObject *PyTypeObject.tp_bases".to_string(),
+                    ),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"c member\">"));
+        assert!(result.contains("<dt id=\"c:member:pytypeobject.tp_bases\">"));
+        assert!(result.contains("<code class=\"sig-name\">PyObject *PyTypeObject.tp_bases</code>"));
+    }
+
+    #[test]
+    fn test_render_omits_id_attribute_when_no_index_is_set() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CMember {
+                    signatures: NonEmptyVector::single("int count".to_string()),
+                    no_index: true,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then — still typeset, just no anchor.
+        assert!(result.contains("<dt>"));
+        assert!(!result.contains("id=\"c:member:count\""));
+        assert!(result.contains("<code class=\"sig-name\">int count</code>"));
     }
 
     #[test]

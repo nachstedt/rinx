@@ -419,6 +419,40 @@ mod tests {
     }
 
     #[test]
+    fn test_resolve_dot_prefixed_c_member_finds_nested_member_via_suffix_search() {
+        // Given — a `c:member` nested under `.. c:struct:: Data` (registered
+        // as `Data.count` by the analyzer's `CScope`), referenced with a
+        // dot-prefixed target (`` :c:member:`.count` ``). No C-domain-specific
+        // resolution code exists for this — `CScope` only qualifies
+        // definitions; this proves the existing, domain-agnostic suffix
+        // search (used for Python's `.TarFile.close`-style lookups above)
+        // already covers Sphinx's "nested symbols found even when omitted"
+        // for the `c` domain too.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(ObjectType::C(CObjectType::Member), "Data.count", "api.rst");
+        let resolver = DomainObjectResolver::new(&index);
+
+        // When
+        let resolution = resolver.resolve(
+            &PythonScope::default(),
+            ObjectType::C(CObjectType::Member),
+            "count",
+            TargetSearchOrder::MostQualifiedFirst,
+        );
+
+        // Then — `TargetName` normalizes to lowercase, like every other
+        // indexed name.
+        assert_eq!(
+            resolution,
+            DomainObjectResolution::Resolved {
+                object_type: ObjectType::C(CObjectType::Member),
+                qualified_name: "data.count".to_string(),
+                doc_path: "api.rst",
+            }
+        );
+    }
+
+    #[test]
     fn test_resolve_reports_every_candidate_when_a_suffix_match_is_ambiguous() {
         // Given — two classes documenting a `close` method.
         let mut index = ProjectIndex::default();

@@ -29,6 +29,9 @@ pub(super) enum DirectiveObjectType {
     PyException,
     CFunction,
     CMacro,
+    CStruct,
+    CUnion,
+    CMember,
 }
 
 pub(super) fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
@@ -213,6 +216,12 @@ fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<Dire
         (Domain::Py, "exception") => Some(DirectiveObjectType::PyException),
         (Domain::C, "function") => Some(DirectiveObjectType::CFunction),
         (Domain::C, "macro") => Some(DirectiveObjectType::CMacro),
+        (Domain::C, "struct") => Some(DirectiveObjectType::CStruct),
+        (Domain::C, "union") => Some(DirectiveObjectType::CUnion),
+        // `.. c:var::` is a pure directive-name alias for `.. c:member::` in
+        // real Sphinx (both register the same handler) — no forced-flag
+        // distinction to carry, unlike `classmethod`/`staticmethod` above.
+        (Domain::C, "member" | "var") => Some(DirectiveObjectType::CMember),
         _ => None,
     }
 }
@@ -718,6 +727,66 @@ mod tests {
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CFunction));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_explicit_c_struct_resolves() {
+        // Given
+        let name = "c:struct";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::CStruct));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_explicit_c_union_resolves() {
+        // Given
+        let name = "c:union";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::CUnion));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_explicit_c_member_resolves() {
+        // Given
+        let name = "c:member";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::CMember));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_c_var_resolves_as_member_alias() {
+        // Given — `.. c:var::` is a pure directive-name alias for `c:member`.
+        let name = "c:var";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::CMember));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_member_uses_default_domain() {
+        // Given
+        let name = "member";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::CMember));
     }
 
     #[test]

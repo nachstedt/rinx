@@ -118,6 +118,34 @@ pub enum DomainObjectBody {
         signatures: NonEmptyVector<String>,
         body: Vec<Node>,
     },
+    CStruct {
+        signatures: NonEmptyVector<String>,
+        /// Suppresses the cross-reference target entirely (and, per real
+        /// Sphinx, implies `no_index_entry`).
+        no_index: bool,
+        /// Suppresses the general-index (`genindex.html`) entry only; the
+        /// cross-reference target is still created.
+        no_index_entry: bool,
+        /// Excludes this object from a local contents/TOC listing. Parsed
+        /// and stored for round-tripping, but rusty-sphinx has no such
+        /// listing for domain objects yet, so it has no rendering effect.
+        no_contents_entry: bool,
+        body: Vec<Node>,
+    },
+    CUnion {
+        signatures: NonEmptyVector<String>,
+        no_index: bool,
+        no_index_entry: bool,
+        no_contents_entry: bool,
+        body: Vec<Node>,
+    },
+    CMember {
+        signatures: NonEmptyVector<String>,
+        no_index: bool,
+        no_index_entry: bool,
+        no_contents_entry: bool,
+        body: Vec<Node>,
+    },
     PyMethod {
         signatures: NonEmptyVector<String>,
         is_classmethod: bool,
@@ -149,6 +177,9 @@ impl DomainObjectBody {
             Self::PyAttribute { .. } => ObjectType::Py(PyObjectType::Attribute),
             Self::CFunction { .. } => ObjectType::C(CObjectType::Function),
             Self::CMacro { .. } => ObjectType::C(CObjectType::Macro),
+            Self::CStruct { .. } => ObjectType::C(CObjectType::Struct),
+            Self::CUnion { .. } => ObjectType::C(CObjectType::Union),
+            Self::CMember { .. } => ObjectType::C(CObjectType::Member),
             Self::PyMethod { .. } => ObjectType::Py(PyObjectType::Method),
             Self::PyClass { .. } => ObjectType::Py(PyObjectType::Class),
             Self::PyException { .. } => ObjectType::Py(PyObjectType::Exception),
@@ -174,7 +205,11 @@ impl DomainObjectBody {
             | Self::PyException { signatures, .. } => {
                 signatures.map(|signature| extract_python_object_name(signature))
             }
-            Self::CFunction { signatures, .. } | Self::CMacro { signatures, .. } => {
+            Self::CFunction { signatures, .. }
+            | Self::CMacro { signatures, .. }
+            | Self::CStruct { signatures, .. }
+            | Self::CUnion { signatures, .. }
+            | Self::CMember { signatures, .. } => {
                 signatures.map(|signature| extract_c_object_name(signature))
             }
             Self::PyData { signatures, .. } | Self::PyAttribute { signatures, .. } => {
@@ -197,6 +232,9 @@ impl DomainObjectBody {
             Self::PyFunction { signatures, .. }
             | Self::CFunction { signatures, .. }
             | Self::CMacro { signatures, .. }
+            | Self::CStruct { signatures, .. }
+            | Self::CUnion { signatures, .. }
+            | Self::CMember { signatures, .. }
             | Self::PyMethod { signatures, .. }
             | Self::PyClass { signatures, .. }
             | Self::PyException { signatures, .. }
@@ -216,6 +254,9 @@ impl DomainObjectBody {
             | Self::PyAttribute { body, .. }
             | Self::CFunction { body, .. }
             | Self::CMacro { body, .. }
+            | Self::CStruct { body, .. }
+            | Self::CUnion { body, .. }
+            | Self::CMember { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
             | Self::PyException { body, .. } => body,
@@ -262,7 +303,14 @@ impl DomainObjectBody {
     #[must_use]
     pub fn deduce_local_scope(&self, new_segments: &[String]) -> Vec<String> {
         match self {
-            Self::PyClass { .. } | Self::PyException { .. } => new_segments.to_vec(),
+            // `c:struct`/`c:union` nest exactly like `py:class`/`py:exception`
+            // (real lexical nesting, just under `CScope` rather than
+            // `PythonScope` — see the analyzer/renderer's `uses_c_scope`
+            // branch).
+            Self::PyClass { .. }
+            | Self::PyException { .. }
+            | Self::CStruct { .. }
+            | Self::CUnion { .. } => new_segments.to_vec(),
             Self::PyFunction { .. }
             | Self::PyMethod { .. }
             | Self::PyData { .. }
@@ -270,7 +318,12 @@ impl DomainObjectBody {
                 .split_last()
                 .map(|(_, rest)| rest.to_vec())
                 .unwrap_or_default(),
-            Self::PyModule { .. } | Self::CFunction { .. } | Self::CMacro { .. } => Vec::new(),
+            // Nothing nests under a `c:member` in real Sphinx, unlike
+            // `py:data`/`py:attribute`, which lend a dotted prefix.
+            Self::PyModule { .. }
+            | Self::CFunction { .. }
+            | Self::CMacro { .. }
+            | Self::CMember { .. } => Vec::new(),
         }
     }
 
@@ -285,9 +338,95 @@ impl DomainObjectBody {
             | Self::PyAttribute { body, .. }
             | Self::CFunction { body, .. }
             | Self::CMacro { body, .. }
+            | Self::CStruct { body, .. }
+            | Self::CUnion { body, .. }
+            | Self::CMember { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
             | Self::PyException { body, .. } => body,
+        }
+    }
+
+    /// Whether this object's cross-reference target (and, per real Sphinx,
+    /// its general-index entry too) is suppressed. `false` for every object
+    /// type that doesn't model the option yet.
+    #[must_use]
+    pub const fn no_index(&self) -> bool {
+        match self {
+            Self::CStruct { no_index, .. }
+            | Self::CUnion { no_index, .. }
+            | Self::CMember { no_index, .. } => *no_index,
+            Self::PyFunction { .. }
+            | Self::PyModule { .. }
+            | Self::PyData { .. }
+            | Self::PyAttribute { .. }
+            | Self::CFunction { .. }
+            | Self::CMacro { .. }
+            | Self::PyMethod { .. }
+            | Self::PyClass { .. }
+            | Self::PyException { .. } => false,
+        }
+    }
+
+    /// Whether this object's general-index (`genindex.html`) entry is
+    /// suppressed — true either because `no_index_entry` was set directly,
+    /// or because `no_index` implies it. `false` for every object type that
+    /// doesn't model either option yet.
+    #[must_use]
+    pub const fn no_index_entry(&self) -> bool {
+        match self {
+            Self::CStruct {
+                no_index,
+                no_index_entry,
+                ..
+            }
+            | Self::CUnion {
+                no_index,
+                no_index_entry,
+                ..
+            }
+            | Self::CMember {
+                no_index,
+                no_index_entry,
+                ..
+            } => *no_index || *no_index_entry,
+            Self::PyFunction { .. }
+            | Self::PyModule { .. }
+            | Self::PyData { .. }
+            | Self::PyAttribute { .. }
+            | Self::CFunction { .. }
+            | Self::CMacro { .. }
+            | Self::PyMethod { .. }
+            | Self::PyClass { .. }
+            | Self::PyException { .. } => false,
+        }
+    }
+
+    /// Whether this object is excluded from a local contents/TOC listing.
+    /// Parsed and stored for the three object types that model it, but
+    /// rusty-sphinx has no such listing for domain objects yet, so this has
+    /// no rendering effect today.
+    #[must_use]
+    pub const fn no_contents_entry(&self) -> bool {
+        match self {
+            Self::CStruct {
+                no_contents_entry, ..
+            }
+            | Self::CUnion {
+                no_contents_entry, ..
+            }
+            | Self::CMember {
+                no_contents_entry, ..
+            } => *no_contents_entry,
+            Self::PyFunction { .. }
+            | Self::PyModule { .. }
+            | Self::PyData { .. }
+            | Self::PyAttribute { .. }
+            | Self::CFunction { .. }
+            | Self::CMacro { .. }
+            | Self::PyMethod { .. }
+            | Self::PyClass { .. }
+            | Self::PyException { .. } => false,
         }
     }
 }
@@ -1317,5 +1456,238 @@ mod tests {
 
         // Then
         assert_eq!(function.body(), &[Node::Comment, Node::Comment]);
+    }
+
+    fn plain_c_member(signature: &str) -> DomainObjectBody {
+        DomainObjectBody::CMember {
+            signatures: NonEmptyVector::single(signature.to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        }
+    }
+
+    fn plain_c_struct(signature: &str) -> DomainObjectBody {
+        DomainObjectBody::CStruct {
+            signatures: NonEmptyVector::single(signature.to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        }
+    }
+
+    fn plain_c_union(signature: &str) -> DomainObjectBody {
+        DomainObjectBody::CUnion {
+            signatures: NonEmptyVector::single(signature.to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        }
+    }
+
+    #[test]
+    fn test_domain_object_body_object_type_for_c_struct_union_member() {
+        // Given / When / Then
+        assert_eq!(
+            plain_c_struct("Data").object_type(),
+            ObjectType::C(CObjectType::Struct)
+        );
+        assert_eq!(
+            plain_c_union("Number").object_type(),
+            ObjectType::C(CObjectType::Union)
+        );
+        assert_eq!(
+            plain_c_member("count").object_type(),
+            ObjectType::C(CObjectType::Member)
+        );
+    }
+
+    #[test]
+    fn test_domain_object_body_name_uses_bare_signature_for_c_struct() {
+        // Given — struct/union tags have no parens, like object-like macros.
+        let struct_ = plain_c_struct("Data");
+
+        // When / Then
+        assert_eq!(struct_.names().as_slice(), ["Data"]);
+    }
+
+    #[test]
+    fn test_domain_object_body_name_uses_bare_signature_for_c_union() {
+        // Given
+        let union_ = plain_c_union("Number");
+
+        // When / Then
+        assert_eq!(union_.names().as_slice(), ["Number"]);
+    }
+
+    #[test]
+    fn test_domain_object_body_name_extracts_dotted_flat_name_for_c_member() {
+        // Given — the real CPython-docs shape: a member declared with its
+        // enclosing struct's name baked into the signature, no `.. c:struct::`
+        // wrapper at all.
+        let member = plain_c_member("PyObject *PyTypeObject.tp_bases");
+
+        // When / Then
+        assert_eq!(member.names().as_slice(), ["PyTypeObject.tp_bases"]);
+    }
+
+    #[test]
+    fn test_domain_object_body_name_uses_bare_name_for_undotted_c_member() {
+        // Given — a member written bare, e.g. nested inside `.. c:struct::`.
+        let member = plain_c_member("int count");
+
+        // When / Then
+        assert_eq!(member.names().as_slice(), ["count"]);
+    }
+
+    #[test]
+    fn test_domain_object_body_signature_text_shows_full_signature_for_c_struct_union_member() {
+        // Given
+        let struct_ = plain_c_struct("Data");
+        let union_ = plain_c_union("Number");
+        let member = plain_c_member("PyObject *PyTypeObject.tp_bases");
+
+        // When / Then
+        assert_eq!(struct_.signature_texts(), ["Data"]);
+        assert_eq!(union_.signature_texts(), ["Number"]);
+        assert_eq!(
+            member.signature_texts(),
+            ["PyObject *PyTypeObject.tp_bases"]
+        );
+    }
+
+    #[test]
+    fn test_deduce_local_scope_lends_all_new_segments_for_c_struct_and_union() {
+        // Given — real lexical nesting, like `py:class`.
+        let struct_ = plain_c_struct("Data");
+        let union_ = plain_c_union("Number");
+
+        // When / Then
+        assert_eq!(
+            struct_.deduce_local_scope(&["Data".to_string()]),
+            vec!["Data".to_string()]
+        );
+        assert_eq!(
+            union_.deduce_local_scope(&["Number".to_string()]),
+            vec!["Number".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_deduce_local_scope_returns_empty_for_c_member() {
+        // Given — nothing nests under a `c:member` in real Sphinx.
+        let member = plain_c_member("count");
+
+        // When
+        let scope = member.deduce_local_scope(&["count".to_string()]);
+
+        // Then
+        assert!(scope.is_empty());
+    }
+
+    #[test]
+    fn test_domain_object_body_body_returns_shared_body_for_c_struct_union_member() {
+        // Given
+        let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
+        let struct_ = DomainObjectBody::CStruct {
+            signatures: NonEmptyVector::single("Data".to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![paragraph.clone()],
+        };
+        let union_ = DomainObjectBody::CUnion {
+            signatures: NonEmptyVector::single("Number".to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![paragraph.clone()],
+        };
+        let member = DomainObjectBody::CMember {
+            signatures: NonEmptyVector::single("count".to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![paragraph.clone()],
+        };
+
+        // When / Then
+        assert_eq!(struct_.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(union_.body(), std::slice::from_ref(&paragraph));
+        assert_eq!(member.body(), std::slice::from_ref(&paragraph));
+    }
+
+    #[test]
+    fn test_no_index_is_false_by_default_for_pre_existing_variants() {
+        // Given / When / Then
+        assert!(
+            !DomainObjectBody::CFunction {
+                signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
+                body: vec![],
+            }
+            .no_index()
+        );
+    }
+
+    #[test]
+    fn test_no_index_reflects_flag_for_c_member() {
+        // Given
+        let mut member = plain_c_member("count");
+
+        // When / Then
+        assert!(!member.no_index());
+        if let DomainObjectBody::CMember { no_index, .. } = &mut member {
+            *no_index = true;
+        }
+        assert!(member.no_index());
+    }
+
+    #[test]
+    fn test_no_index_entry_is_true_when_no_index_entry_flag_set() {
+        // Given
+        let member = DomainObjectBody::CMember {
+            signatures: NonEmptyVector::single("count".to_string()),
+            no_index: false,
+            no_index_entry: true,
+            no_contents_entry: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert!(member.no_index_entry());
+    }
+
+    #[test]
+    fn test_no_index_entry_is_implied_by_no_index() {
+        // Given — real Sphinx's `no-index` implies `no-index-entry`.
+        let member = DomainObjectBody::CMember {
+            signatures: NonEmptyVector::single("count".to_string()),
+            no_index: true,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert!(member.no_index_entry());
+    }
+
+    #[test]
+    fn test_no_contents_entry_reflects_flag_for_c_struct() {
+        // Given
+        let struct_with_flag = DomainObjectBody::CStruct {
+            signatures: NonEmptyVector::single("Data".to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: true,
+            body: vec![],
+        };
+
+        // When / Then
+        assert!(struct_with_flag.no_contents_entry());
+        assert!(!plain_c_struct("Data").no_contents_entry());
     }
 }

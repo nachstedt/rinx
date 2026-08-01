@@ -255,6 +255,56 @@ C Domain
    unlike ``c:function``, there is no return type or parameter types to
    strip from the signature.
 
+.. c:struct:: Data
+
+   A data record. Nesting a ``c:member`` inside a ``c:struct``/``c:union``
+   body auto-qualifies its bare name against the enclosing container, the
+   same way a ``py:method`` written inside ``py:class`` picks up its class
+   prefix.
+
+   .. c:member:: int count
+
+      A count, indexed as ``Data.count`` even though the signature above
+      only says ``count`` — the enclosing ``c:struct:: Data`` supplies the
+      rest.
+
+.. c:union:: Number
+
+   A numeric union, demonstrating that ``c:member`` nests under
+   ``c:union`` exactly like it does under ``c:struct``.
+
+   .. c:member:: int as_int
+
+      The integer view of the union's value, indexed as ``Number.as_int``.
+
+.. c:member:: PyObject *PyTypeObject.tp_bases
+
+   The type's base classes. The real CPython-docs shape: no enclosing
+   ``.. c:struct::`` at all — the struct name is simply written as part of
+   the dotted signature instead of relying on nesting.
+
+.. c:var:: int errno
+
+   The last error number set by a failed system call. ``.. c:var::`` is a
+   pure directive-name alias for ``.. c:member::`` in real Sphinx — both
+   produce the exact same kind of definition, just spelled differently.
+
+.. c:member:: int hidden_field
+   :no-index:
+
+   A member with ``:no-index:`` set: it is still typeset here, but gets no
+   cross-reference target at all (and, since ``no-index`` implies
+   ``no-index-entry``, no general-index entry either) — a role trying to
+   reference ``hidden_field`` would not resolve.
+
+.. c:member:: int quiet_field
+   :no-index-entry:
+
+   A member with only ``:no-index-entry:`` set: it still gets a
+   cross-reference target (:c:member:`quiet_field` resolves normally), but
+   is left out of the general index page — which would list neither this
+   nor the ``:no-index:`` member above.
+
 Cross-References
 -----------------
 
@@ -271,14 +321,28 @@ The :c:macro:`PY_SSIZE_T_MAX` macro and the :c:macro:`MAX` function-like
 macro are both defined above. Like ``:c:func:``, ``:c:macro:`` is C-only —
 there is no ``py:macro`` equivalent.
 
-There is no dedicated ``.. c:data::``/``.. c:var::`` directive, only the
-cross-reference roles — :c:data:`PY_SSIZE_T_MAX` and :c:var:`PY_SSIZE_T_MAX`
-both resolve against the ``.. c:macro::`` definition above rather than a
-``data``/``var`` definition of their own. This mirrors real Sphinx's own C
-domain, which resolves a role by name without checking it against the
-matched declaration's actual object type — real-world docs like CPython's
-``c-api/module.rst`` rely on exactly this to reference macro-defined slot
-constants (e.g. ``Py_mod_exec``) via ``:c:data:``.
+:c:data:`PY_SSIZE_T_MAX` and :c:var:`PY_SSIZE_T_MAX` both resolve against
+the ``.. c:macro::`` definition above rather than a ``.. c:member::``/
+``.. c:var::`` definition of their own — real Sphinx's C domain resolves a
+role by name without checking it against the matched declaration's actual
+object type, and real-world docs like CPython's ``c-api/module.rst`` rely on
+exactly this to reference macro-defined slot constants (e.g.
+``Py_mod_exec``) via ``:c:data:``.
+
+:c:struct:`Data` and :c:union:`Number` reference the two containers above.
+:c:member:`Data.count` and :c:member:`Number.as_int` reference their nested
+members by full dotted name; the same target also resolves via
+:c:data:`Data.count` or :c:var:`Data.count`, since real Sphinx documents
+``member``/``data``/``var`` as equivalent role spellings for one object
+type — unlike the ``PY_SSIZE_T_MAX`` case above, this one *does* have a real
+``.. c:member::`` definition backing it. A dot-prefixed target,
+:c:member:`.count`, finds the same nested member via suffix search without
+repeating ``Data.`` at all — the same mechanism that lets :py:func:`.shout`
+(demonstrated further below) reach into a module it never names.
+
+:c:member:`PyTypeObject.tp_bases` references the flat, non-nested member
+defined above, and :c:var:`errno` references the ``.. c:var::`` global,
+confirming it produced the same kind of definition ``.. c:member::`` does.
 
 The :py:data:`DEFAULT_TIMEOUT` data item has no equivalent ``py:const``
 directive in real Sphinx — instead, :py:const:`DEFAULT_TIMEOUT` is simply

@@ -8,9 +8,9 @@ mod utils;
 
 pub use utils::normalize_path;
 
-use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TargetName};
+use rusty_sphinx_ast::{Directive, Document, DomainObjectBody, IndexEntry, Node, TargetName};
 use rusty_sphinx_index::{GenIndexEntry, NavEntry, ProjectIndex, TargetLocation};
-use rusty_sphinx_scope::PythonScope;
+use rusty_sphinx_scope::{CScope, PythonScope};
 
 use std::collections::BTreeMap;
 
@@ -35,6 +35,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
         &doc.path,
         &mut index,
         &mut PythonScope::default(),
+        &mut CScope::default(),
     );
     index
 }
@@ -56,8 +57,18 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// documents as *siblings*, not nested underneath it, so it is never popped
 /// when returning from a nested body; a module stays "current" for the rest
 /// of the document until another `py:module`, or `py:currentmodule`,
-/// changes it).
-fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: &mut PythonScope) {
+/// changes it). `c_scope` is the same idea for the `c` domain's
+/// `c:struct`/`c:union` nesting — a wholly separate stack (see
+/// [`rusty_sphinx_scope::CScope`]'s doc comment for why it isn't a variant of
+/// `PythonScope`); `c:function`/`c:macro` never touch it and keep qualifying
+/// via `scope` exactly as before it existed.
+fn index_nodes(
+    nodes: &[Node],
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    scope: &mut PythonScope,
+    c_scope: &mut CScope,
+) {
     for node in nodes {
         match node {
             Node::Target { name, uri } => {
@@ -98,7 +109,7 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
                 }
             }
             Node::Directive(Directive::DomainObject(obj)) => {
-                index_domain_object(obj, doc_path, index, scope);
+                index_domain_object(obj, doc_path, index, scope, c_scope);
             }
             Node::Directive(Directive::PyCurrentModule { module }) => match module {
                 Some(name) => scope.set_module(name),
@@ -109,16 +120,16 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
                 | Directive::VersionChange { body, .. }
                 | Directive::SeeAlso { body },
             ) => {
-                index_nodes(body, doc_path, index, scope);
+                index_nodes(body, doc_path, index, scope, c_scope);
             }
             Node::BulletList { items, .. } => {
                 for item in items {
-                    index_nodes(&item.nodes, doc_path, index, scope);
+                    index_nodes(&item.nodes, doc_path, index, scope, c_scope);
                 }
             }
             Node::DefinitionList { items } => {
                 for item in items {
-                    index_nodes(&item.definition, doc_path, index, scope);
+                    index_nodes(&item.definition, doc_path, index, scope, c_scope);
                 }
             }
             Node::Table {
@@ -127,7 +138,7 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
             } => {
                 for row in header_rows.iter().chain(body_rows) {
                     for cell in &row.cells {
-                        index_nodes(&cell.content, doc_path, index, scope);
+                        index_nodes(&cell.content, doc_path, index, scope, c_scope);
                     }
                 }
             }
@@ -140,7 +151,7 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
                 }
                 for row in rows {
                     for cell in &row.cells {
-                        index_nodes(&cell.content, doc_path, index, scope);
+                        index_nodes(&cell.content, doc_path, index, scope, c_scope);
                     }
                 }
             }
@@ -157,12 +168,22 @@ fn index_domain_object(
     doc_path: &str,
     index: &mut ProjectIndex,
     scope: &mut PythonScope,
+    c_scope: &mut CScope,
 ) {
     // A `py:module`'s own name is never qualified against the *previous*
     // module: real Sphinx always writes it in full and sets it verbatim as
     // the new current module, it never nests it under whatever module was
     // current before.
     let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
+    // `c:struct`/`c:union`/`c:member` nest under `CScope` instead of
+    // `PythonScope` — everything else, including `c:function`/`c:macro`,
+    // keeps using `scope` exactly as before this type existed.
+    let uses_c_scope = matches!(
+        obj,
+        DomainObjectBody::CStruct { .. }
+            | DomainObjectBody::CUnion { .. }
+            | DomainObjectBody::CMember { .. }
+    );
     let own_names = obj.names();
     // Only the primary name qualifies the *scope*: it alone decides what this
     // object lends to its body and, for a module, what becomes current. The
@@ -170,6 +191,9 @@ fn index_domain_object(
     // none of them contributes scope.
     let (qualified_primary, new_segments) = if is_module {
         (own_names.first().clone(), Vec::new())
+    } else if uses_c_scope {
+        let qualification = c_scope.qualify(own_names.first());
+        (qualification.qualified_name, qualification.new_segments)
     } else {
         let qualification = scope.qualify(obj.object_type().domain(), own_names.first());
         (qualification.qualified_name, qualification.new_segments)
@@ -178,12 +202,20 @@ fn index_domain_object(
     for (index_in_object, own_name) in own_names.as_slice().iter().enumerate() {
         let qualified_name = if index_in_object == 0 {
             qualified_primary.clone()
+        } else if uses_c_scope {
+            c_scope.qualify(own_name).qualified_name
         } else {
             scope
                 .qualify(obj.object_type().domain(), own_name)
                 .qualified_name
         };
+        if obj.no_index() {
+            continue;
+        }
         index.insert_domain_object(obj.object_type(), &qualified_name, doc_path);
+        if obj.no_index_entry() {
+            continue;
+        }
         let anchor = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
         index.genindex_entries.push(GenIndexEntry {
             primary: format!("{qualified_name} ({})", obj.object_type().as_str()),
@@ -200,9 +232,15 @@ fn index_domain_object(
     // The body is indexed exactly once, no matter how many names the object
     // declares — the aliases share it rather than each owning a copy.
     let lend = obj.deduce_local_scope(&new_segments);
-    let depth = scope.push_classes(&lend);
-    index_nodes(obj.body(), doc_path, index, scope);
-    scope.truncate_classes(depth);
+    if uses_c_scope {
+        let depth = c_scope.push_containers(&lend);
+        index_nodes(obj.body(), doc_path, index, scope, c_scope);
+        c_scope.truncate_containers(depth);
+    } else {
+        let depth = scope.push_classes(&lend);
+        index_nodes(obj.body(), doc_path, index, scope, c_scope);
+        scope.truncate_classes(depth);
+    }
 }
 
 /// Extracts toctree entries from a document, resolved to absolute paths.
@@ -1307,6 +1345,171 @@ mod tests {
         );
         assert!(lookup_domain_object(&index, "py:function:add").is_some());
         assert!(lookup_domain_object(&index, "c:function:add").is_some());
+    }
+
+    fn c_member(signature: &str) -> Node {
+        Node::Directive(Directive::DomainObject(DomainObjectBody::CMember {
+            signatures: NonEmptyVector::single(signature.to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        }))
+    }
+
+    #[test]
+    fn test_analyze_qualifies_bare_c_member_nested_under_c_struct() {
+        // Given — `.. c:member:: int count` nested inside `.. c:struct:: Data`.
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CStruct {
+                    signatures: NonEmptyVector::single("Data".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![c_member("int count")],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — the bare member name is auto-qualified against the
+        // enclosing struct.
+        assert_eq!(
+            lookup_domain_object(&index, "c:member:Data.count"),
+            Some(&"api.rst".to_string())
+        );
+        assert!(lookup_domain_object(&index, "c:member:count").is_none());
+    }
+
+    #[test]
+    fn test_analyze_qualifies_bare_c_member_nested_under_c_union() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CUnion {
+                    signatures: NonEmptyVector::single("Number".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![c_member("int as_int")],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:member:Number.as_int"),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_flat_dotted_c_member_without_enclosing_struct() {
+        // Given — the real CPython-docs shape: no `.. c:struct::` at all.
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![c_member("PyObject *PyTypeObject.tp_bases")],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:member:PyTypeObject.tp_bases"),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_c_function_nested_in_c_struct_is_not_qualified_by_it() {
+        // Given — an (unrealistic) `c:function` written inside a `c:struct`
+        // body: `deduce_local_scope` never lends its `CStruct` segments to
+        // anything but `CScope`, and `c:function` doesn't consult `CScope` at
+        // all, so it must be registered under its own bare name.
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CStruct {
+                    signatures: NonEmptyVector::single("Data".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        DomainObjectBody::CFunction {
+                            signatures: NonEmptyVector::single("int helper(void)".to_string()),
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(lookup_domain_object(&index, "c:function:helper").is_some());
+        assert!(lookup_domain_object(&index, "c:function:Data.helper").is_none());
+    }
+
+    #[test]
+    fn test_analyze_no_index_suppresses_target_and_genindex_entry() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CMember {
+                    signatures: NonEmptyVector::single("count".to_string()),
+                    no_index: true,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(lookup_domain_object(&index, "c:member:count").is_none());
+        assert!(index.genindex_entries.is_empty());
+    }
+
+    #[test]
+    fn test_analyze_no_index_entry_keeps_target_but_suppresses_genindex_entry() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CMember {
+                    signatures: NonEmptyVector::single("count".to_string()),
+                    no_index: false,
+                    no_index_entry: true,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:member:count"),
+            Some(&"api.rst".to_string())
+        );
+        assert!(index.genindex_entries.is_empty());
     }
 
     #[test]
