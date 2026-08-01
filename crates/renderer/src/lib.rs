@@ -20,7 +20,7 @@ use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, ObjectType, TableRow};
 use rusty_sphinx_index::ProjectIndex;
-use rusty_sphinx_scope::PythonScope;
+use rusty_sphinx_scope::{CScope, PythonScope};
 use std::fmt::Write as _;
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
@@ -119,6 +119,11 @@ pub(crate) struct RenderCtx<'a> {
     /// under. Pushed/popped by `render_domain_object` around a nested body;
     /// the module component is document-order state, never popped.
     pub python_scope: PythonScope,
+    /// The enclosing `c:struct`/`c:union` stack, mirroring the analyzer's
+    /// `index_nodes` `c_scope` for the same reason `python_scope` mirrors
+    /// its `scope` — see [`rusty_sphinx_scope::CScope`]'s doc comment for why
+    /// it's a separate type rather than a `PythonScope` variant.
+    pub c_scope: CScope,
 }
 
 /// Renders a Document into HTML, reporting any cross-references that failed to resolve.
@@ -144,6 +149,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         broken_links: &mut broken_links,
         object_type_mismatches: &mut object_type_mismatches,
         python_scope: PythonScope::default(),
+        c_scope: CScope::default(),
     };
 
     render_nodes(&mut html, &doc.nodes, &mut ctx);

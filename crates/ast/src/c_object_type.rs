@@ -6,7 +6,14 @@ use serde::{Deserialize, Serialize};
 pub enum CObjectType {
     Function,
     Macro,
-    Data,
+    /// The real Sphinx `ObjType` name is `"member"`; `data`/`var` are
+    /// role-only spellings that resolve to this same type (see
+    /// [`crate::object_type::ObjectType::from_role_name`]), and `.. c:var::`
+    /// is a directive-name alias for the same definition (see the parser's
+    /// `resolve_domain_object_type`) — neither is a variant of its own.
+    Member,
+    Struct,
+    Union,
 }
 
 impl CObjectType {
@@ -15,7 +22,9 @@ impl CObjectType {
         match self {
             Self::Function => "function",
             Self::Macro => "macro",
-            Self::Data => "data",
+            Self::Member => "member",
+            Self::Struct => "struct",
+            Self::Union => "union",
         }
     }
 }
@@ -27,7 +36,9 @@ impl std::str::FromStr for CObjectType {
         match s {
             "function" => Ok(Self::Function),
             "macro" => Ok(Self::Macro),
-            "data" => Ok(Self::Data),
+            "member" => Ok(Self::Member),
+            "struct" => Ok(Self::Struct),
+            "union" => Ok(Self::Union),
             _ => Err(()),
         }
     }
@@ -46,7 +57,7 @@ mod tests {
     #[test]
     fn test_c_object_type_from_str_rejects_unknown() {
         // Given
-        let input = "struct";
+        let input = "enum";
 
         // When
         let result = input.parse::<CObjectType>();
@@ -68,15 +79,51 @@ mod tests {
     }
 
     #[test]
-    fn test_c_object_type_from_str_accepts_data() {
+    fn test_c_object_type_from_str_accepts_member() {
         // Given / When / Then
-        assert_eq!("data".parse::<CObjectType>(), Ok(CObjectType::Data));
+        assert_eq!("member".parse::<CObjectType>(), Ok(CObjectType::Member));
     }
 
     #[test]
-    fn test_c_object_type_as_str_returns_data() {
+    fn test_c_object_type_as_str_returns_member() {
         // Given / When / Then
-        assert_eq!(CObjectType::Data.as_str(), "data");
+        assert_eq!(CObjectType::Member.as_str(), "member");
+    }
+
+    #[test]
+    fn test_c_object_type_from_str_rejects_data() {
+        // Given — "data" is a role-only spelling, never a real object-type tag.
+        let input = "data";
+
+        // When
+        let result = input.parse::<CObjectType>();
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_c_object_type_from_str_accepts_struct() {
+        // Given / When / Then
+        assert_eq!("struct".parse::<CObjectType>(), Ok(CObjectType::Struct));
+    }
+
+    #[test]
+    fn test_c_object_type_as_str_returns_struct() {
+        // Given / When / Then
+        assert_eq!(CObjectType::Struct.as_str(), "struct");
+    }
+
+    #[test]
+    fn test_c_object_type_from_str_accepts_union() {
+        // Given / When / Then
+        assert_eq!("union".parse::<CObjectType>(), Ok(CObjectType::Union));
+    }
+
+    #[test]
+    fn test_c_object_type_as_str_returns_union() {
+        // Given / When / Then
+        assert_eq!(CObjectType::Union.as_str(), "union");
     }
 
     #[test]
@@ -84,10 +131,14 @@ mod tests {
         // Given
         let function = CObjectType::Function;
         let macro_ = CObjectType::Macro;
-        let data = CObjectType::Data;
+        let member = CObjectType::Member;
+        let struct_ = CObjectType::Struct;
+        let union_ = CObjectType::Union;
 
         // When / Then
         assert!(function < macro_);
-        assert!(macro_ < data);
+        assert!(macro_ < member);
+        assert!(member < struct_);
+        assert!(struct_ < union_);
     }
 }

@@ -111,7 +111,9 @@ impl ObjectType {
             (Domain::Py, "exc") => Some(Self::Py(PyObjectType::Exception)),
             (Domain::C, "func") => Some(Self::C(CObjectType::Function)),
             (Domain::C, "macro") => Some(Self::C(CObjectType::Macro)),
-            (Domain::C, "data" | "var") => Some(Self::C(CObjectType::Data)),
+            (Domain::C, "member" | "data" | "var") => Some(Self::C(CObjectType::Member)),
+            (Domain::C, "struct") => Some(Self::C(CObjectType::Struct)),
+            (Domain::C, "union") => Some(Self::C(CObjectType::Union)),
             _ => None,
         }
     }
@@ -124,7 +126,7 @@ impl ObjectType {
     /// exhaustive match, not a wildcard fallback arm: adding a new object
     /// type later forces a decision about whether it aliases anything.
     ///
-    /// `C(Macro)`/`C(Data)` alias for a different reason than the `py` pair
+    /// `C(Macro)`/`C(Member)` alias for a different reason than the `py` pair
     /// above: real Sphinx's C domain `resolve_xref`
     /// (`sphinx/domains/c/__init__.py`, `_resolve_xref_inner`) looks up a
     /// declaration by name only and never checks the role's requested type
@@ -135,7 +137,8 @@ impl ObjectType {
     /// is a known real-Sphinx looseness rather than a deliberate aliasing
     /// rule. This models only that one confirmed collision rather than
     /// dropping type-checking for the whole domain (which would also let
-    /// `:c:func:` blindly match unrelated `data`/`macro` names).
+    /// `:c:func:` blindly match unrelated `data`/`macro` names). `Struct`/
+    /// `Union` alias nothing: real Sphinx doesn't collide them with anything.
     #[must_use]
     pub const fn role_alias_candidates(self) -> &'static [Self] {
         match self {
@@ -154,11 +157,13 @@ impl ObjectType {
             Self::Py(PyObjectType::Attribute) => &[Self::Py(PyObjectType::Attribute)],
             Self::C(CObjectType::Function) => &[Self::C(CObjectType::Function)],
             Self::C(CObjectType::Macro) => {
-                &[Self::C(CObjectType::Macro), Self::C(CObjectType::Data)]
+                &[Self::C(CObjectType::Macro), Self::C(CObjectType::Member)]
             }
-            Self::C(CObjectType::Data) => {
-                &[Self::C(CObjectType::Data), Self::C(CObjectType::Macro)]
+            Self::C(CObjectType::Member) => {
+                &[Self::C(CObjectType::Member), Self::C(CObjectType::Macro)]
             }
+            Self::C(CObjectType::Struct) => &[Self::C(CObjectType::Struct)],
+            Self::C(CObjectType::Union) => &[Self::C(CObjectType::Union)],
         }
     }
 }
@@ -279,13 +284,38 @@ mod tests {
         // Given / When / Then
         assert_eq!(
             ObjectType::from_role_name(Domain::C, "data"),
-            Some(ObjectType::C(CObjectType::Data))
+            Some(ObjectType::C(CObjectType::Member))
         );
         assert_eq!(
             ObjectType::from_role_name(Domain::C, "var"),
-            Some(ObjectType::C(CObjectType::Data))
+            Some(ObjectType::C(CObjectType::Member))
         );
         assert_eq!(ObjectType::from_role_name(Domain::Py, "var"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_member_only_for_c() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::C, "member"),
+            Some(ObjectType::C(CObjectType::Member))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::Py, "member"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_struct_and_union_only_for_c() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::C, "struct"),
+            Some(ObjectType::C(CObjectType::Struct))
+        );
+        assert_eq!(
+            ObjectType::from_role_name(Domain::C, "union"),
+            Some(ObjectType::C(CObjectType::Union))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::Py, "struct"), None);
+        assert_eq!(ObjectType::from_role_name(Domain::Py, "union"), None);
     }
 
     #[test]
@@ -442,21 +472,34 @@ mod tests {
     }
 
     #[test]
-    fn test_role_alias_candidates_aliases_c_macro_and_data_both_directions() {
+    fn test_role_alias_candidates_aliases_c_macro_and_member_both_directions() {
         // Given / When / Then
         assert_eq!(
             ObjectType::C(CObjectType::Macro).role_alias_candidates(),
             &[
                 ObjectType::C(CObjectType::Macro),
-                ObjectType::C(CObjectType::Data)
+                ObjectType::C(CObjectType::Member)
             ]
         );
         assert_eq!(
-            ObjectType::C(CObjectType::Data).role_alias_candidates(),
+            ObjectType::C(CObjectType::Member).role_alias_candidates(),
             &[
-                ObjectType::C(CObjectType::Data),
+                ObjectType::C(CObjectType::Member),
                 ObjectType::C(CObjectType::Macro)
             ]
+        );
+    }
+
+    #[test]
+    fn test_role_alias_candidates_is_self_only_for_struct_and_union() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::C(CObjectType::Struct).role_alias_candidates(),
+            &[ObjectType::C(CObjectType::Struct)]
+        );
+        assert_eq!(
+            ObjectType::C(CObjectType::Union).role_alias_candidates(),
+            &[ObjectType::C(CObjectType::Union)]
         );
     }
 

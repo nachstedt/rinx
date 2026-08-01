@@ -43,6 +43,27 @@ pub(super) fn parse_domain_object(
             signatures,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
+        DirectiveObjectType::CStruct => parse_c_struct(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
+        DirectiveObjectType::CUnion => parse_c_union(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
+        DirectiveObjectType::CMember => parse_c_member(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
         DirectiveObjectType::PyModule => parse_py_module(
             signatures.first().clone(),
             body_lines,
@@ -298,6 +319,124 @@ fn parse_py_attribute(
         canonical,
         body,
     }
+}
+
+/// Parses a `.. c:struct::` body: strips the common object-description flag
+/// lines (`:no-index:`, `:no-index-entry:`, `:no-contents-entry:`, and their
+/// legacy spellings) off the front before parsing the rest as the docstring
+/// body.
+fn parse_c_struct(
+    signatures: NonEmptyVector<String>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (no_index, no_index_entry, no_contents_entry, options_consumed) =
+        extract_common_object_description_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::CStruct {
+        signatures,
+        no_index,
+        no_index_entry,
+        no_contents_entry,
+        body,
+    }
+}
+
+/// Parses a `.. c:union::` body — identical shape to [`parse_c_struct`],
+/// just producing the other container variant.
+fn parse_c_union(
+    signatures: NonEmptyVector<String>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (no_index, no_index_entry, no_contents_entry, options_consumed) =
+        extract_common_object_description_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::CUnion {
+        signatures,
+        no_index,
+        no_index_entry,
+        no_contents_entry,
+        body,
+    }
+}
+
+/// Parses a `.. c:member::`/`.. c:var::` body — same common flags as
+/// [`parse_c_struct`]/[`parse_c_union`]; the real spec has no member-specific
+/// options beyond them (the type is embedded in the signature itself, e.g.
+/// `int count`, unlike `py:data`/`py:attribute`'s separate `:type:` option).
+fn parse_c_member(
+    signatures: NonEmptyVector<String>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (no_index, no_index_entry, no_contents_entry, options_consumed) =
+        extract_common_object_description_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::CMember {
+        signatures,
+        no_index,
+        no_index_entry,
+        no_contents_entry,
+        body,
+    }
+}
+
+/// Extracts the object-description flag options common across domains
+/// (`:no-index:`, `:no-index-entry:`, `:no-contents-entry:`, plus their
+/// legacy pre-Sphinx-7 spellings `:noindex:`/`:noindexentry:`/
+/// `:nocontentsentry:`) from the leading lines of a domain object's body.
+/// Currently only wired up for `c:struct`/`c:union`/`c:member`, the first
+/// object types in this codebase to model them.
+///
+/// Scans from the start and stops at the first line that isn't one of these
+/// recognized flags (e.g. a blank line or the start of the docstring body),
+/// returning how many leading lines were consumed as options so the caller
+/// can slice them off before parsing the remaining body content.
+fn extract_common_object_description_options(lines: &[String]) -> (bool, bool, bool, usize) {
+    let mut no_index = false;
+    let mut no_index_entry = false;
+    let mut no_contents_entry = false;
+    let mut consumed = 0;
+
+    for line in lines {
+        match line.trim() {
+            ":no-index:" | ":noindex:" => no_index = true,
+            ":no-index-entry:" | ":noindexentry:" => no_index_entry = true,
+            ":no-contents-entry:" | ":nocontentsentry:" => no_contents_entry = true,
+            _ => break,
+        }
+        consumed += 1;
+    }
+
+    (no_index, no_index_entry, no_contents_entry, consumed)
 }
 
 /// Extracts `.. py:module::`-specific options (`:platform:`, `:synopsis:`,
@@ -893,6 +1032,83 @@ mod tests {
 
         // Then
         assert!(!is_final);
+        assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_extract_common_object_description_options_parses_hyphenated_spellings() {
+        // Given
+        let lines = vec![
+            ":no-index:".to_string(),
+            ":no-index-entry:".to_string(),
+            ":no-contents-entry:".to_string(),
+            String::new(),
+            "A struct.".to_string(),
+        ];
+
+        // When
+        let (no_index, no_index_entry, no_contents_entry, consumed) =
+            extract_common_object_description_options(&lines);
+
+        // Then
+        assert!(no_index);
+        assert!(no_index_entry);
+        assert!(no_contents_entry);
+        assert_eq!(consumed, 3);
+    }
+
+    #[test]
+    fn test_extract_common_object_description_options_parses_legacy_spellings() {
+        // Given
+        let lines = vec![
+            ":noindex:".to_string(),
+            ":noindexentry:".to_string(),
+            ":nocontentsentry:".to_string(),
+        ];
+
+        // When
+        let (no_index, no_index_entry, no_contents_entry, consumed) =
+            extract_common_object_description_options(&lines);
+
+        // Then
+        assert!(no_index);
+        assert!(no_index_entry);
+        assert!(no_contents_entry);
+        assert_eq!(consumed, 3);
+    }
+
+    #[test]
+    fn test_extract_common_object_description_options_stops_at_first_non_option_line() {
+        // Given
+        let lines = vec![
+            ":no-index:".to_string(),
+            "A struct.".to_string(),
+            ":no-index-entry:".to_string(),
+        ];
+
+        // When
+        let (no_index, no_index_entry, _, consumed) =
+            extract_common_object_description_options(&lines);
+
+        // Then
+        assert!(no_index);
+        assert!(!no_index_entry);
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_extract_common_object_description_options_returns_defaults_when_no_options_present() {
+        // Given
+        let lines = vec!["A struct.".to_string()];
+
+        // When
+        let (no_index, no_index_entry, no_contents_entry, consumed) =
+            extract_common_object_description_options(&lines);
+
+        // Then
+        assert!(!no_index);
+        assert!(!no_index_entry);
+        assert!(!no_contents_entry);
         assert_eq!(consumed, 0);
     }
 
@@ -1691,6 +1907,144 @@ mod tests {
             assert_eq!(signatures.as_slice(), ["MAX(a, b)"]);
         } else {
             panic!("Expected CMacro, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_c_struct_domain_object() {
+        // Given
+        let input = ".. c:struct:: Data\n\n   A data record.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CStruct {
+            signatures,
+            no_index,
+            no_index_entry,
+            no_contents_entry,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["Data"]);
+            assert!(!no_index);
+            assert!(!no_index_entry);
+            assert!(!no_contents_entry);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected CStruct, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_c_union_domain_object() {
+        // Given
+        let input = ".. c:union:: Number\n\n   A numeric union.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CUnion {
+            signatures,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["Number"]);
+        } else {
+            panic!("Expected CUnion, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_c_member_domain_object_flat_dotted_signature() {
+        // Given — the real CPython-docs shape: no enclosing `.. c:struct::`.
+        let input = ".. c:member:: PyObject *PyTypeObject.tp_bases\n\n   The type's base classes.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMember {
+            signatures,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["PyObject *PyTypeObject.tp_bases"]);
+        } else {
+            panic!("Expected CMember, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_c_member_domain_object_with_no_index_option() {
+        // Given
+        let input = ".. c:member:: int count\n   :no-index:\n\n   A count.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMember {
+            no_index,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(no_index);
+        } else {
+            panic!("Expected CMember, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_c_var_directive_creates_c_member_domain_object() {
+        // Given — `.. c:var::` is a pure directive-name alias for `c:member`.
+        let input = ".. c:var:: int errno\n\n   The last error number.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CMember {
+            signatures,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["int errno"]);
+        } else {
+            panic!("Expected CMember, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_nested_c_member_under_c_struct() {
+        // Given — real nesting: the member's signature is bare, relying on
+        // the enclosing struct for qualification (an analyzer/renderer-time
+        // concern; the parser just needs to nest the node correctly).
+        let input = ".. c:struct:: Data\n\n   .. c:member:: int count\n\n      A count.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CStruct {
+            body, ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(body.len(), 1);
+            assert!(matches!(
+                &body[0],
+                Node::Directive(Directive::DomainObject(DomainObjectBody::CMember { .. }))
+            ));
+        } else {
+            panic!("Expected CStruct, got {:?}", doc.nodes[0]);
         }
     }
 
