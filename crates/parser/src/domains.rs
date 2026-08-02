@@ -35,29 +35,13 @@ pub(super) fn parse_domain_object(
             signatures,
             body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
         },
-        DirectiveObjectType::CFunction => DomainObjectBody::CFunction {
-            signatures,
-            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
-        },
-        DirectiveObjectType::CMacro => DomainObjectBody::CMacro {
-            signatures,
-            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
-        },
-        DirectiveObjectType::CStruct => parse_c_struct(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
-        DirectiveObjectType::CUnion => parse_c_union(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
-        DirectiveObjectType::CMember => parse_c_member(
+        DirectiveObjectType::CFunction
+        | DirectiveObjectType::CMacro
+        | DirectiveObjectType::CStruct
+        | DirectiveObjectType::CUnion
+        | DirectiveObjectType::CMember
+        | DirectiveObjectType::CType => parse_c_domain_object(
+            object_type,
             signatures,
             body_lines,
             adornment_order,
@@ -126,6 +110,70 @@ pub(super) fn parse_domain_object(
             diagnostics,
             default_domain,
         ),
+    }
+}
+
+/// Dispatches the six `c`-domain object types to their respective parsers —
+/// factored out of [`parse_domain_object`] purely to keep that function's
+/// line count manageable. Only ever called with a `DirectiveObjectType::C*`
+/// variant (enforced by `parse_domain_object`'s own match arm), so the
+/// non-`c` variants are unreachable here.
+fn parse_c_domain_object(
+    object_type: DirectiveObjectType,
+    signatures: NonEmptyVector<String>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    match object_type {
+        DirectiveObjectType::CFunction => DomainObjectBody::CFunction {
+            signatures,
+            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+        },
+        DirectiveObjectType::CMacro => DomainObjectBody::CMacro {
+            signatures,
+            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+        },
+        DirectiveObjectType::CStruct => parse_c_struct(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
+        DirectiveObjectType::CUnion => parse_c_union(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
+        DirectiveObjectType::CMember => parse_c_member(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
+        DirectiveObjectType::CType => parse_c_type(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
+        DirectiveObjectType::PyFunction
+        | DirectiveObjectType::PyModule
+        | DirectiveObjectType::PyData
+        | DirectiveObjectType::PyMethod
+        | DirectiveObjectType::PyClassmethod
+        | DirectiveObjectType::PyStaticmethod
+        | DirectiveObjectType::PyClass
+        | DirectiveObjectType::PyAttribute
+        | DirectiveObjectType::PyException => {
+            unreachable!("parse_c_domain_object called with a non-c object type")
+        }
     }
 }
 
@@ -401,6 +449,39 @@ fn parse_c_member(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::CMember {
+        signatures,
+        no_index,
+        no_index_entry,
+        no_contents_entry,
+        body,
+    }
+}
+
+/// Parses a `.. c:type::` body — same common flags and shape as
+/// [`parse_c_struct`]/[`parse_c_union`]; real Sphinx documents no options
+/// specific to `c:type` beyond the shared object-description ones. Unlike
+/// `c:struct`/`c:union`, `c:type` has no members of its own, but its body is
+/// still parsed as full block content (rather than left opaque) so that
+/// nested definitions (e.g. enum-style `.. c:macro::` constants) are indexed
+/// instead of silently dropped — see `known_bugs.md`'s former `c:type` entry.
+fn parse_c_type(
+    signatures: NonEmptyVector<String>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (no_index, no_index_entry, no_contents_entry, options_consumed) =
+        extract_common_object_description_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
+    DomainObjectBody::CType {
         signatures,
         no_index,
         no_index_entry,
@@ -2019,6 +2100,100 @@ mod tests {
             assert_eq!(signatures.as_slice(), ["int errno"]);
         } else {
             panic!("Expected CMember, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_c_type_domain_object_bare_name() {
+        // Given
+        let input = ".. c:type:: PyMemAllocatorDomain\n\n   Enumeration of allocator domains.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
+            signatures,
+            no_index,
+            no_index_entry,
+            no_contents_entry,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["PyMemAllocatorDomain"]);
+            assert!(!no_index);
+            assert!(!no_index_entry);
+            assert!(!no_contents_entry);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected CType, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_c_type_domain_object_typedef_alias_signature() {
+        // Given — real Sphinx's `type name` typedef-alias form.
+        let input = ".. c:type:: unsigned long ulong\n\n   An unsigned long alias.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
+            signatures,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["unsigned long ulong"]);
+        } else {
+            panic!("Expected CType, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_c_type_domain_object_with_no_index_option() {
+        // Given
+        let input = ".. c:type:: Hidden\n   :no-index:\n\n   A hidden type.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
+            no_index, ..
+        })) = &doc.nodes[0]
+        {
+            assert!(no_index);
+        } else {
+            panic!("Expected CType, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_nested_c_macro_under_c_type_is_recursively_parsed() {
+        // Given — the real CPython `c-api/memory.rst` shape (`known_bugs.md`):
+        // a `.. c:type::` body nesting `.. c:macro::` constants, previously
+        // swallowed as opaque `Directive::Unknown` text.
+        let input = ".. c:type:: PyMemAllocatorDomain\n\n   .. c:macro:: PYMEM_DOMAIN_RAW\n\n      The raw domain.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::CType { body, .. })) =
+            &doc.nodes[0]
+        {
+            assert_eq!(body.len(), 1);
+            assert!(matches!(
+                &body[0],
+                Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro { .. }))
+            ));
+        } else {
+            panic!("Expected CType, got {:?}", doc.nodes[0]);
         }
     }
 

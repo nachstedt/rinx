@@ -127,14 +127,16 @@ pub(super) fn render_domain_object(
     // module: real Sphinx always writes it in full and sets it verbatim as
     // the new current module, matching `index_domain_object` in the analyzer.
     let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
-    // `c:struct`/`c:union`/`c:member` qualify against `ctx.c_scope` instead
-    // of `ctx.python_scope` — mirrors the analyzer's `index_domain_object`
-    // exactly, so anchor `id`s never drift from the index keys.
+    // `c:struct`/`c:union`/`c:member`/`c:type` qualify against `ctx.c_scope`
+    // instead of `ctx.python_scope` — mirrors the analyzer's
+    // `index_domain_object` exactly, so anchor `id`s never drift from the
+    // index keys.
     let uses_c_scope = matches!(
         obj,
         rusty_sphinx_ast::DomainObjectBody::CStruct { .. }
             | rusty_sphinx_ast::DomainObjectBody::CUnion { .. }
             | rusty_sphinx_ast::DomainObjectBody::CMember { .. }
+            | rusty_sphinx_ast::DomainObjectBody::CType { .. }
     );
     // Only the primary name qualifies the scope, exactly as in the analyzer's
     // `index_domain_object`; the rest are aliases that get their own `<dt>`
@@ -329,6 +331,7 @@ fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::Domai
         | rusty_sphinx_ast::DomainObjectBody::CStruct { .. }
         | rusty_sphinx_ast::DomainObjectBody::CUnion { .. }
         | rusty_sphinx_ast::DomainObjectBody::CMember { .. }
+        | rusty_sphinx_ast::DomainObjectBody::CType { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyMethod { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyException { .. } => {}
@@ -1201,6 +1204,128 @@ mod tests {
         assert!(result.contains("<dl class=\"c member\">"));
         assert!(result.contains("<dt id=\"c:member:pytypeobject.tp_bases\">"));
         assert!(result.contains("<code class=\"sig-name\">PyObject *PyTypeObject.tp_bases</code>"));
+    }
+
+    #[test]
+    fn test_render_formats_c_type_domain_object_with_nested_macro() {
+        // Given — the real CPython `c-api/memory.rst` shape (`known_bugs.md`):
+        // enum-style `.. c:macro::` constants nested inside `.. c:type::`.
+        // `c:macro` never consults `CScope` regardless of what it's nested
+        // under (same pre-existing behavior as `c:function` nested in
+        // `c:struct` — see `test_render_...c_function...` equivalents in the
+        // analyzer), so the nested macro renders under its own bare name,
+        // not qualified by the enclosing type.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::CMacro {
+                            signatures: NonEmptyVector::single("PYMEM_DOMAIN_RAW".to_string()),
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"c type\">"));
+        assert!(result.contains("<dt id=\"c:type:pymemallocatordomain\">"));
+        assert!(result.contains("<dl class=\"c macro\">"));
+        assert!(result.contains("<dt id=\"c:macro:pymem_domain_raw\">"));
+    }
+
+    #[test]
+    fn test_render_formats_c_type_domain_object_with_nested_member() {
+        // Given — unlike `c:macro`, `c:member` does consult `CScope`, so
+        // nesting it under `c:type` still qualifies it against the enclosing
+        // type's name, exactly like nesting under `c:struct`/`c:union`.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("Data".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![Node::Directive(Directive::DomainObject(
+                        rusty_sphinx_ast::DomainObjectBody::CMember {
+                            signatures: NonEmptyVector::single("int count".to_string()),
+                            no_index: false,
+                            no_index_entry: false,
+                            no_contents_entry: false,
+                            body: vec![],
+                        },
+                    ))],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"c type\">"));
+        assert!(result.contains("<dt id=\"c:type:data\">"));
+        assert!(result.contains("<dl class=\"c member\">"));
+        assert!(result.contains("<dt id=\"c:member:data.count\">"));
+    }
+
+    #[test]
+    fn test_render_formats_c_type_domain_object_typedef_alias_signature() {
+        // Given — real Sphinx's `type name` typedef-alias form.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("unsigned long ulong".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dl class=\"c type\">"));
+        assert!(result.contains("<dt id=\"c:type:ulong\">"));
+        assert!(result.contains("<code class=\"sig-name\">unsigned long ulong</code>"));
+    }
+
+    #[test]
+    fn test_render_omits_id_attribute_when_no_index_is_set_for_c_type() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("Hidden".to_string()),
+                    no_index: true,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(!result.contains("id=\"c:type:hidden\""));
+        assert!(result.contains("<code class=\"sig-name\">Hidden</code>"));
     }
 
     #[test]

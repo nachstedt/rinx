@@ -114,6 +114,7 @@ impl ObjectType {
             (Domain::C, "member" | "data" | "var") => Some(Self::C(CObjectType::Member)),
             (Domain::C, "struct") => Some(Self::C(CObjectType::Struct)),
             (Domain::C, "union") => Some(Self::C(CObjectType::Union)),
+            (Domain::C, "type") => Some(Self::C(CObjectType::Type)),
             _ => None,
         }
     }
@@ -138,7 +139,8 @@ impl ObjectType {
     /// rule. This models only that one confirmed collision rather than
     /// dropping type-checking for the whole domain (which would also let
     /// `:c:func:` blindly match unrelated `data`/`macro` names). `Struct`/
-    /// `Union` alias nothing: real Sphinx doesn't collide them with anything.
+    /// `Union`/`Type` alias nothing: real Sphinx doesn't collide them with
+    /// anything.
     #[must_use]
     pub const fn role_alias_candidates(self) -> &'static [Self] {
         match self {
@@ -164,6 +166,7 @@ impl ObjectType {
             }
             Self::C(CObjectType::Struct) => &[Self::C(CObjectType::Struct)],
             Self::C(CObjectType::Union) => &[Self::C(CObjectType::Union)],
+            Self::C(CObjectType::Type) => &[Self::C(CObjectType::Type)],
         }
     }
 }
@@ -226,6 +229,10 @@ mod tests {
         assert_eq!(
             ObjectType::from_directive_name(Domain::C, "macro"),
             Some(ObjectType::C(CObjectType::Macro))
+        );
+        assert_eq!(
+            ObjectType::from_directive_name(Domain::C, "type"),
+            Some(ObjectType::C(CObjectType::Type))
         );
     }
 
@@ -316,6 +323,16 @@ mod tests {
         );
         assert_eq!(ObjectType::from_role_name(Domain::Py, "struct"), None);
         assert_eq!(ObjectType::from_role_name(Domain::Py, "union"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_type_only_for_c() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::C, "type"),
+            Some(ObjectType::C(CObjectType::Type))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::Py, "type"), None);
     }
 
     #[test]
@@ -500,6 +517,15 @@ mod tests {
         assert_eq!(
             ObjectType::C(CObjectType::Union).role_alias_candidates(),
             &[ObjectType::C(CObjectType::Union)]
+        );
+    }
+
+    #[test]
+    fn test_role_alias_candidates_is_self_only_for_type() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::C(CObjectType::Type).role_alias_candidates(),
+            &[ObjectType::C(CObjectType::Type)]
         );
     }
 

@@ -175,14 +175,18 @@ fn index_domain_object(
     // the new current module, it never nests it under whatever module was
     // current before.
     let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
-    // `c:struct`/`c:union`/`c:member` nest under `CScope` instead of
+    // `c:struct`/`c:union`/`c:member`/`c:type` nest under `CScope` instead of
     // `PythonScope` — everything else, including `c:function`/`c:macro`,
-    // keeps using `scope` exactly as before this type existed.
+    // keeps using `scope` exactly as before this type existed. `c:type`
+    // joins this set because real Sphinx's C domain scopes nested
+    // declarations generically off whatever declaration they're indented
+    // under, not specifically off struct/union.
     let uses_c_scope = matches!(
         obj,
         DomainObjectBody::CStruct { .. }
             | DomainObjectBody::CUnion { .. }
             | DomainObjectBody::CMember { .. }
+            | DomainObjectBody::CType { .. }
     );
     let own_names = obj.names();
     // Only the primary name qualifies the *scope*: it alone decides what this
@@ -1357,6 +1361,13 @@ mod tests {
         }))
     }
 
+    fn c_macro(signature: &str) -> Node {
+        Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
+            signatures: NonEmptyVector::single(signature.to_string()),
+            body: vec![],
+        }))
+    }
+
     #[test]
     fn test_analyze_qualifies_bare_c_member_nested_under_c_struct() {
         // Given — `.. c:member:: int count` nested inside `.. c:struct:: Data`.
@@ -1459,6 +1470,125 @@ mod tests {
         // Then
         assert!(lookup_domain_object(&index, "c:function:helper").is_some());
         assert!(lookup_domain_object(&index, "c:function:Data.helper").is_none());
+    }
+
+    #[test]
+    fn test_analyze_registers_flat_c_macro_nested_under_c_type_without_qualification() {
+        // Given — the real CPython `c-api/memory.rst` shape (`known_bugs.md`):
+        // enum-style `.. c:macro::` constants nested inside `.. c:type::`.
+        // `c:type` joins `uses_c_scope` (it establishes a `CScope` container
+        // for descendants that read it), but `c:macro` — like `c:function` —
+        // never consults `CScope` regardless of what it's nested under (see
+        // `test_analyze_c_function_nested_in_c_struct_is_not_qualified_by_it`
+        // for the same, pre-existing behavior under `c:struct`), so the
+        // nested macro registers under its own bare name. This happens to
+        // match the actual bare-name constants CPython's docs render (real
+        // Sphinx would also qualify-then-reset via `.. c:namespace:: NULL`,
+        // which rusty-sphinx doesn't implement — the same bare-name result
+        // falls out here for an unrelated, simpler reason).
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![c_macro("PYMEM_DOMAIN_RAW")],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:macro:PYMEM_DOMAIN_RAW"),
+            Some(&"api.rst".to_string())
+        );
+        assert!(
+            lookup_domain_object(&index, "c:macro:PyMemAllocatorDomain.PYMEM_DOMAIN_RAW").is_none()
+        );
+    }
+
+    #[test]
+    fn test_analyze_qualifies_bare_c_member_nested_under_c_type() {
+        // Given — unlike `c:macro`/`c:function`, `c:member` does consult
+        // `CScope`, so nesting it under `c:type` (rather than
+        // `c:struct`/`c:union`) still qualifies it against the enclosing
+        // type's name.
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("Data".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![c_member("int count")],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:member:Data.count"),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_bare_c_type_without_nesting() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:type:PyMemAllocatorDomain"),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_no_index_suppresses_target_and_genindex_entry_for_c_type() {
+        // Given
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("Hidden".to_string()),
+                    no_index: true,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(lookup_domain_object(&index, "c:type:Hidden").is_none());
+        assert!(index.genindex_entries.is_empty());
     }
 
     #[test]

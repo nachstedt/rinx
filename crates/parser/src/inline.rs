@@ -30,6 +30,8 @@ static STRUCT_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?struct:`(?P<name>[^`]+)`").unwrap());
 static UNION_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?union:`(?P<name>[^`]+)`").unwrap());
+static TYPE_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?type:`(?P<name>[^`]+)`").unwrap());
 static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 static SIMPLE_LINK_REGEX: LazyLock<Regex> =
@@ -65,6 +67,7 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         let macro_match = MACRO_ROLE_REGEX.find(remaining);
         let struct_match = STRUCT_ROLE_REGEX.find(remaining);
         let union_match = UNION_ROLE_REGEX.find(remaining);
+        let type_match = TYPE_ROLE_REGEX.find(remaining);
         let phrased_match = PHRASED_LINK_REGEX.find(remaining);
         let simple_match = SIMPLE_LINK_REGEX.find(remaining);
         let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
@@ -110,6 +113,9 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
         }
         if let Some(m) = union_match {
             all_matches.push((m.start(), m.end(), "union", None));
+        }
+        if let Some(m) = type_match {
+            all_matches.push((m.start(), m.end(), "type", None));
         }
         if let Some(m) = anon_phrased_match {
             all_matches.push((m.start(), m.end(), "anon_phrased", None));
@@ -430,6 +436,23 @@ fn handle_union_match(m_str: &str, default_domain: Domain) -> InlineNode {
     }
 }
 
+/// Builds the `InlineNode` for a matched `:type:`/`:c:type:` role, falling
+/// back to plain text if the role doesn't resolve for the given domain
+/// (`type` is C-only, like `macro`/`struct`/`union`).
+fn handle_type_match(m_str: &str, default_domain: Domain) -> InlineNode {
+    let caps = TYPE_ROLE_REGEX.captures(m_str).unwrap();
+    let domain = caps
+        .name("domain")
+        .and_then(|m| m.as_str().parse::<Domain>().ok())
+        .unwrap_or(default_domain);
+    match ObjectType::from_role_name(domain, "type") {
+        Some(object_type) => {
+            parse_domain_object_target(&caps["name"]).into_inline_node(object_type)
+        }
+        None => InlineNode::Text(m_str.to_string()),
+    }
+}
+
 /// Splits a role's backtick content on Sphinx's optional explicit-title
 /// syntax (`Display text <target>`), shared by every role that supports it
 /// (`:term:`, `:ref:`, and the domain-object roles via
@@ -479,6 +502,7 @@ pub(super) fn handle_inline_match(
         "macro" => handle_macro_match(m_str, default_domain),
         "struct" => handle_struct_match(m_str, default_domain),
         "union" => handle_union_match(m_str, default_domain),
+        "type" => handle_type_match(m_str, default_domain),
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let (display, term) = split_display_and_target(&caps["content"]);
@@ -1253,6 +1277,61 @@ mod tests {
     fn test_handle_union_match_falls_back_to_text_when_domain_lacks_union_role() {
         let result = handle_union_match(":union:`Number`", Domain::Py);
         assert_eq!(result, InlineNode::Text(":union:`Number`".to_string()));
+    }
+
+    #[test]
+    fn test_handle_type_match_resolves_via_explicit_c_domain() {
+        let result = handle_type_match(":c:type:`PyMemAllocatorDomain`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Type),
+                name: "PyMemAllocatorDomain".to_string(),
+                display: "PyMemAllocatorDomain".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_type_match_resolves_bare_role_via_default_domain() {
+        let result = handle_type_match(":type:`PyMemAllocatorDomain`", Domain::C);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Type),
+                name: "PyMemAllocatorDomain".to_string(),
+                display: "PyMemAllocatorDomain".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_type_match_falls_back_to_text_when_domain_lacks_type_role() {
+        let result = handle_type_match(":type:`PyMemAllocatorDomain`", Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::Text(":type:`PyMemAllocatorDomain`".to_string())
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_type_variant_dispatches_through_handle_inline_match() {
+        let result =
+            handle_inline_match("type", ":c:type:`PyMemAllocatorDomain`", None, Domain::Py);
+        assert_eq!(
+            result,
+            InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Type),
+                name: "PyMemAllocatorDomain".to_string(),
+                display: "PyMemAllocatorDomain".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            }
+        );
     }
 
     #[test]
