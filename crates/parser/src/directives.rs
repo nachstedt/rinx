@@ -32,6 +32,7 @@ pub(super) enum DirectiveObjectType {
     CStruct,
     CUnion,
     CMember,
+    CType,
 }
 
 pub(super) fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
@@ -222,6 +223,7 @@ fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<Dire
         // real Sphinx (both register the same handler) — no forced-flag
         // distinction to carry, unlike `classmethod`/`staticmethod` above.
         (Domain::C, "member" | "var") => Some(DirectiveObjectType::CMember),
+        (Domain::C, "type") => Some(DirectiveObjectType::CType),
         _ => None,
     }
 }
@@ -775,6 +777,30 @@ mod tests {
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CMember));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_explicit_c_type_resolves() {
+        // Given
+        let name = "c:type";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::CType));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_type_uses_default_domain() {
+        // Given
+        let name = "type";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::CType));
     }
 
     #[test]

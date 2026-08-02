@@ -14,6 +14,7 @@ pub enum CObjectType {
     Member,
     Struct,
     Union,
+    Type,
 }
 
 impl CObjectType {
@@ -25,6 +26,7 @@ impl CObjectType {
             Self::Member => "member",
             Self::Struct => "struct",
             Self::Union => "union",
+            Self::Type => "type",
         }
     }
 }
@@ -39,6 +41,7 @@ impl std::str::FromStr for CObjectType {
             "member" => Ok(Self::Member),
             "struct" => Ok(Self::Struct),
             "union" => Ok(Self::Union),
+            "type" => Ok(Self::Type),
             _ => Err(()),
         }
     }
@@ -134,11 +137,25 @@ mod tests {
         let member = CObjectType::Member;
         let struct_ = CObjectType::Struct;
         let union_ = CObjectType::Union;
+        let type_ = CObjectType::Type;
 
         // When / Then
         assert!(function < macro_);
         assert!(macro_ < member);
         assert!(member < struct_);
         assert!(struct_ < union_);
+        assert!(union_ < type_);
+    }
+
+    #[test]
+    fn test_c_object_type_from_str_accepts_type() {
+        // Given / When / Then
+        assert_eq!("type".parse::<CObjectType>(), Ok(CObjectType::Type));
+    }
+
+    #[test]
+    fn test_c_object_type_as_str_returns_type() {
+        // Given / When / Then
+        assert_eq!(CObjectType::Type.as_str(), "type");
     }
 }

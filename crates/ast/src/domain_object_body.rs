@@ -146,6 +146,13 @@ pub enum DomainObjectBody {
         no_contents_entry: bool,
         body: Vec<Node>,
     },
+    CType {
+        signatures: NonEmptyVector<String>,
+        no_index: bool,
+        no_index_entry: bool,
+        no_contents_entry: bool,
+        body: Vec<Node>,
+    },
     PyMethod {
         signatures: NonEmptyVector<String>,
         is_classmethod: bool,
@@ -180,6 +187,7 @@ impl DomainObjectBody {
             Self::CStruct { .. } => ObjectType::C(CObjectType::Struct),
             Self::CUnion { .. } => ObjectType::C(CObjectType::Union),
             Self::CMember { .. } => ObjectType::C(CObjectType::Member),
+            Self::CType { .. } => ObjectType::C(CObjectType::Type),
             Self::PyMethod { .. } => ObjectType::Py(PyObjectType::Method),
             Self::PyClass { .. } => ObjectType::Py(PyObjectType::Class),
             Self::PyException { .. } => ObjectType::Py(PyObjectType::Exception),
@@ -209,7 +217,8 @@ impl DomainObjectBody {
             | Self::CMacro { signatures, .. }
             | Self::CStruct { signatures, .. }
             | Self::CUnion { signatures, .. }
-            | Self::CMember { signatures, .. } => {
+            | Self::CMember { signatures, .. }
+            | Self::CType { signatures, .. } => {
                 signatures.map(|signature| extract_c_object_name(signature))
             }
             Self::PyData { signatures, .. } | Self::PyAttribute { signatures, .. } => {
@@ -235,6 +244,7 @@ impl DomainObjectBody {
             | Self::CStruct { signatures, .. }
             | Self::CUnion { signatures, .. }
             | Self::CMember { signatures, .. }
+            | Self::CType { signatures, .. }
             | Self::PyMethod { signatures, .. }
             | Self::PyClass { signatures, .. }
             | Self::PyException { signatures, .. }
@@ -257,6 +267,7 @@ impl DomainObjectBody {
             | Self::CStruct { body, .. }
             | Self::CUnion { body, .. }
             | Self::CMember { body, .. }
+            | Self::CType { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
             | Self::PyException { body, .. } => body,
@@ -303,14 +314,21 @@ impl DomainObjectBody {
     #[must_use]
     pub fn deduce_local_scope(&self, new_segments: &[String]) -> Vec<String> {
         match self {
-            // `c:struct`/`c:union` nest exactly like `py:class`/`py:exception`
-            // (real lexical nesting, just under `CScope` rather than
-            // `PythonScope` — see the analyzer/renderer's `uses_c_scope`
-            // branch).
+            // `c:struct`/`c:union`/`c:type` nest exactly like
+            // `py:class`/`py:exception` (real lexical nesting, just under
+            // `CScope` rather than `PythonScope` — see the
+            // analyzer/renderer's `uses_c_scope` branch). Real Sphinx's C
+            // domain scopes nested declarations generically off whatever
+            // declaration they're indented under, not specifically off
+            // struct/union — confirmed by its own docs example nesting
+            // `c:var` inside `c:union` inside `c:struct` — so `c:type` gets
+            // the same treatment even though it has no members of its own
+            // the way struct/union do.
             Self::PyClass { .. }
             | Self::PyException { .. }
             | Self::CStruct { .. }
-            | Self::CUnion { .. } => new_segments.to_vec(),
+            | Self::CUnion { .. }
+            | Self::CType { .. } => new_segments.to_vec(),
             Self::PyFunction { .. }
             | Self::PyMethod { .. }
             | Self::PyData { .. }
@@ -341,6 +359,7 @@ impl DomainObjectBody {
             | Self::CStruct { body, .. }
             | Self::CUnion { body, .. }
             | Self::CMember { body, .. }
+            | Self::CType { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
             | Self::PyException { body, .. } => body,
@@ -355,7 +374,8 @@ impl DomainObjectBody {
         match self {
             Self::CStruct { no_index, .. }
             | Self::CUnion { no_index, .. }
-            | Self::CMember { no_index, .. } => *no_index,
+            | Self::CMember { no_index, .. }
+            | Self::CType { no_index, .. } => *no_index,
             Self::PyFunction { .. }
             | Self::PyModule { .. }
             | Self::PyData { .. }
@@ -389,6 +409,11 @@ impl DomainObjectBody {
                 no_index,
                 no_index_entry,
                 ..
+            }
+            | Self::CType {
+                no_index,
+                no_index_entry,
+                ..
             } => *no_index || *no_index_entry,
             Self::PyFunction { .. }
             | Self::PyModule { .. }
@@ -416,6 +441,9 @@ impl DomainObjectBody {
                 no_contents_entry, ..
             }
             | Self::CMember {
+                no_contents_entry, ..
+            }
+            | Self::CType {
                 no_contents_entry, ..
             } => *no_contents_entry,
             Self::PyFunction { .. }
@@ -1488,6 +1516,16 @@ mod tests {
         }
     }
 
+    fn plain_c_type(signature: &str) -> DomainObjectBody {
+        DomainObjectBody::CType {
+            signatures: NonEmptyVector::single(signature.to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        }
+    }
+
     #[test]
     fn test_domain_object_body_object_type_for_c_struct_union_member() {
         // Given / When / Then
@@ -1673,6 +1711,150 @@ mod tests {
 
         // When / Then
         assert!(member.no_index_entry());
+    }
+
+    #[test]
+    fn test_domain_object_body_object_type_for_c_type() {
+        // Given / When / Then
+        assert_eq!(
+            plain_c_type("PyMemAllocatorDomain").object_type(),
+            ObjectType::C(CObjectType::Type)
+        );
+    }
+
+    #[test]
+    fn test_domain_object_body_name_uses_bare_signature_for_c_type() {
+        // Given — bare typedef alias, no parens.
+        let type_ = plain_c_type("PyMemAllocatorDomain");
+
+        // When / Then
+        assert_eq!(type_.names().as_slice(), ["PyMemAllocatorDomain"]);
+    }
+
+    #[test]
+    fn test_domain_object_body_name_extracts_from_two_token_typedef_signature() {
+        // Given — real Sphinx's `type name` typedef-alias form.
+        let type_ = plain_c_type("unsigned long ulong");
+
+        // When / Then
+        assert_eq!(type_.names().as_slice(), ["ulong"]);
+    }
+
+    #[test]
+    fn test_domain_object_body_signature_text_shows_full_signature_for_c_type() {
+        // Given
+        let type_ = plain_c_type("unsigned long ulong");
+
+        // When / Then
+        assert_eq!(type_.signature_texts(), ["unsigned long ulong"]);
+    }
+
+    #[test]
+    fn test_deduce_local_scope_lends_all_new_segments_for_c_type() {
+        // Given — nesting under `c:type` scope-qualifies exactly like
+        // `c:struct`/`c:union`, confirmed against real Sphinx's C-domain
+        // docs (nesting is generic to any declaration, not struct/union
+        // specific).
+        let type_ = plain_c_type("PyMemAllocatorDomain");
+
+        // When
+        let scope = type_.deduce_local_scope(&["PyMemAllocatorDomain".to_string()]);
+
+        // Then
+        assert_eq!(scope, vec!["PyMemAllocatorDomain".to_string()]);
+    }
+
+    #[test]
+    fn test_domain_object_body_body_returns_shared_body_for_c_type() {
+        // Given
+        let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
+        let type_ = DomainObjectBody::CType {
+            signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![paragraph.clone()],
+        };
+
+        // When / Then
+        assert_eq!(type_.body(), std::slice::from_ref(&paragraph));
+    }
+
+    #[test]
+    fn test_no_index_reflects_flag_for_c_type() {
+        // Given
+        let mut type_ = plain_c_type("PyMemAllocatorDomain");
+
+        // When / Then
+        assert!(!type_.no_index());
+        if let DomainObjectBody::CType { no_index, .. } = &mut type_ {
+            *no_index = true;
+        }
+        assert!(type_.no_index());
+    }
+
+    #[test]
+    fn test_no_index_entry_is_true_when_no_index_entry_flag_set_for_c_type() {
+        // Given
+        let type_ = DomainObjectBody::CType {
+            signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+            no_index: false,
+            no_index_entry: true,
+            no_contents_entry: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert!(type_.no_index_entry());
+    }
+
+    #[test]
+    fn test_no_index_entry_is_implied_by_no_index_for_c_type() {
+        // Given
+        let type_ = DomainObjectBody::CType {
+            signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+            no_index: true,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert!(type_.no_index_entry());
+    }
+
+    #[test]
+    fn test_no_contents_entry_reflects_flag_for_c_type() {
+        // Given
+        let type_with_flag = DomainObjectBody::CType {
+            signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: true,
+            body: vec![],
+        };
+
+        // When / Then
+        assert!(type_with_flag.no_contents_entry());
+        assert!(!plain_c_type("PyMemAllocatorDomain").no_contents_entry());
+    }
+
+    #[test]
+    fn test_extract_c_object_name_misextracts_function_pointer_typedef() {
+        // Given — real Sphinx's `c:type` function-pointer-typedef signature
+        // grammar (e.g. `int (*type_name)(int arg1, int arg2)`); the
+        // pointer/name pair lives inside the first parenthesized group, but
+        // `extract_c_object_name`'s heuristic only looks before the first
+        // `(`, which here is just the bare return type. This test pins the
+        // known, documented limitation (see `spec_gaps.md`) rather than
+        // asserting correct behavior.
+        let signature = "int (*type_name)(int arg1, int arg2)";
+
+        // When
+        let name = extract_c_object_name(signature);
+
+        // Then — mis-extracts "int" instead of "type_name".
+        assert_eq!(name, "int");
     }
 
     #[test]

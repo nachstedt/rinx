@@ -305,6 +305,44 @@ C Domain
    is left out of the general index page — which would list neither this
    nor the ``:no-index:`` member above.
 
+.. c:type:: PyMemAllocatorDomain
+
+   Enumeration of possible memory allocator domains, the real-world CPython
+   ``c-api/memory.rst`` shape that motivated ``c:type`` support (previously
+   every definition nested inside a ``c:type`` body was silently dropped,
+   since the directive wasn't recognized at all).
+
+   .. c:macro:: PYMEM_DOMAIN_RAW
+
+      The raw domain. Nesting a ``c:macro`` inside ``c:type`` does *not*
+      qualify its name with the enclosing type — unlike ``c:member``,
+      ``c:macro`` (like ``c:function``) never consults the enclosing C
+      scope regardless of what it's nested under, so this is indexed as the
+      bare ``PYMEM_DOMAIN_RAW``, not ``PyMemAllocatorDomain.PYMEM_DOMAIN_RAW``.
+      This happens to match real Sphinx's actual rendered output too, though
+      for a different reason: real CPython's docs precede these macros with
+      ``.. c:namespace:: NULL`` to reset what would otherwise be automatic
+      qualification — ``c:namespace`` itself isn't implemented here yet.
+
+.. c:type:: unsigned long ulong
+
+   A ``type name`` typedef-alias signature, real Sphinx's other ``c:type``
+   form (as opposed to ``PyMemAllocatorDomain``'s bare-name form above).
+
+.. c:type:: Hidden
+   :no-index:
+
+   A type with ``:no-index:`` set: it is still typeset here, but gets no
+   cross-reference target at all, exactly like the ``c:member`` no-index
+   example above.
+
+.. c:type:: Quiet
+   :no-index-entry:
+
+   A type with only ``:no-index-entry:`` set: it still gets a
+   cross-reference target (:c:type:`Quiet` resolves normally), but is left
+   out of the general index page.
+
 Cross-References
 -----------------
 
@@ -343,6 +381,16 @@ repeating ``Data.`` at all — the same mechanism that lets :py:func:`.shout`
 :c:member:`PyTypeObject.tp_bases` references the flat, non-nested member
 defined above, and :c:var:`errno` references the ``.. c:var::`` global,
 confirming it produced the same kind of definition ``.. c:member::`` does.
+
+:c:type:`PyMemAllocatorDomain` and :c:type:`unsigned long ulong <ulong>`
+reference the two ``c:type`` definitions above — the second using explicit-title
+syntax, since ``ulong``'s own two-token signature isn't a valid target by
+itself. :c:macro:`PYMEM_DOMAIN_RAW` reaches the macro nested inside
+``PyMemAllocatorDomain``'s body by its bare name, confirming that nesting a
+macro under ``c:type`` leaves it unqualified. Unlike ``c:struct``/``c:union``
+and their ``c:member`` aliases, ``:c:type:`` has no real-Sphinx cross-role
+looseness with any other object type — it only resolves against
+``.. c:type::`` definitions.
 
 The :py:data:`DEFAULT_TIMEOUT` data item has no equivalent ``py:const``
 directive in real Sphinx — instead, :py:const:`DEFAULT_TIMEOUT` is simply
