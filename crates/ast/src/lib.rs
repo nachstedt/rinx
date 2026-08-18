@@ -3,6 +3,7 @@
 mod admonition_kind;
 mod bullet_list_item;
 mod c_object_type;
+mod c_signature;
 mod definition_list_item;
 mod directive;
 mod document;
@@ -26,12 +27,13 @@ mod version_change_kind;
 pub use admonition_kind::AdmonitionKind;
 pub use bullet_list_item::BulletListItem;
 pub use c_object_type::CObjectType;
+pub use c_signature::{CSignature, NameSource, extract_c_object_name};
 pub use definition_list_item::DefinitionListItem;
 pub use directive::Directive;
 pub use document::Document;
 pub use domain::Domain;
 pub use domain_object_body::{
-    DomainObjectBody, build_domain_object_key, extract_c_object_name, extract_python_object_name,
+    DomainObjectBody, build_domain_object_key, extract_python_object_name,
 };
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use hashed_content::HashedContent;

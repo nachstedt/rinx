@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::c_object_type::CObjectType;
+use crate::c_signature::CSignature;
 use crate::node::Node;
 use crate::non_empty_vector::NonEmptyVector;
 use crate::object_type::ObjectType;
@@ -23,28 +24,6 @@ pub fn extract_python_object_name(signature: &str) -> String {
         .next_back()
         .unwrap_or(before_parens)
         .to_string()
-}
-
-/// Extracts the referenceable name from a `c:*` domain object signature,
-/// e.g. `"int foo(int bar)"` -> `"foo"`.
-///
-/// Like [`extract_python_object_name`], takes the text before the first `(`
-/// and its last whitespace-separated token, but also strips a
-/// pointer-return-type sigil (`*`, `**`, ...) that ends up glued to the
-/// front of the name when the author writes `Type *name(...)` rather than
-/// `Type* name(...)` — e.g. `CPython`'s
-/// `"PyObject *PyUnicode_FromString(const char *str)"` ->
-/// `"PyUnicode_FromString"`. Still not real C declarator parsing: array
-/// declarators, function-pointer declarators, etc. are out of scope
-/// (tracked in `spec_gaps.md`).
-#[must_use]
-pub fn extract_c_object_name(signature: &str) -> String {
-    let before_parens = signature.split('(').next().unwrap_or(signature).trim();
-    let last_token = before_parens
-        .split_whitespace()
-        .next_back()
-        .unwrap_or(before_parens);
-    last_token.trim_start_matches('*').to_string()
 }
 
 /// Builds the qualified [`TargetName`] key shared by domain object
@@ -111,15 +90,15 @@ pub enum DomainObjectBody {
         body: Vec<Node>,
     },
     CFunction {
-        signatures: NonEmptyVector<String>,
+        signatures: NonEmptyVector<CSignature>,
         body: Vec<Node>,
     },
     CMacro {
-        signatures: NonEmptyVector<String>,
+        signatures: NonEmptyVector<CSignature>,
         body: Vec<Node>,
     },
     CStruct {
-        signatures: NonEmptyVector<String>,
+        signatures: NonEmptyVector<CSignature>,
         /// Suppresses the cross-reference target entirely (and, per real
         /// Sphinx, implies `no_index_entry`).
         no_index: bool,
@@ -133,21 +112,21 @@ pub enum DomainObjectBody {
         body: Vec<Node>,
     },
     CUnion {
-        signatures: NonEmptyVector<String>,
+        signatures: NonEmptyVector<CSignature>,
         no_index: bool,
         no_index_entry: bool,
         no_contents_entry: bool,
         body: Vec<Node>,
     },
     CMember {
-        signatures: NonEmptyVector<String>,
+        signatures: NonEmptyVector<CSignature>,
         no_index: bool,
         no_index_entry: bool,
         no_contents_entry: bool,
         body: Vec<Node>,
     },
     CType {
-        signatures: NonEmptyVector<String>,
+        signatures: NonEmptyVector<CSignature>,
         no_index: bool,
         no_index_entry: bool,
         no_contents_entry: bool,
@@ -219,7 +198,7 @@ impl DomainObjectBody {
             | Self::CUnion { signatures, .. }
             | Self::CMember { signatures, .. }
             | Self::CType { signatures, .. } => {
-                signatures.map(|signature| extract_c_object_name(signature))
+                signatures.map(|signature| signature.name().to_string())
             }
             Self::PyData { signatures, .. } | Self::PyAttribute { signatures, .. } => {
                 signatures.map(String::clone)
@@ -233,24 +212,29 @@ impl DomainObjectBody {
     /// dotted name for modules/data/attributes.
     ///
     /// Index-parallel to [`Self::names`] and equally non-empty; returns a
-    /// plain slice rather than a [`NonEmptyVector`] only because `PyModule`
-    /// stores a single `String` with no such vector to borrow.
+    /// `Vec` rather than a borrowed slice because the three storage shapes
+    /// differ — `py` objects hold plain `String`s, `c` objects hold
+    /// [`CSignature`]s, and `PyModule` holds a single name.
     #[must_use]
-    pub fn signature_texts(&self) -> &[String] {
+    pub fn signature_texts(&self) -> Vec<&str> {
         match self {
             Self::PyFunction { signatures, .. }
-            | Self::CFunction { signatures, .. }
-            | Self::CMacro { signatures, .. }
-            | Self::CStruct { signatures, .. }
-            | Self::CUnion { signatures, .. }
-            | Self::CMember { signatures, .. }
-            | Self::CType { signatures, .. }
             | Self::PyMethod { signatures, .. }
             | Self::PyClass { signatures, .. }
             | Self::PyException { signatures, .. }
             | Self::PyData { signatures, .. }
-            | Self::PyAttribute { signatures, .. } => signatures.as_slice(),
-            Self::PyModule { name, .. } => std::slice::from_ref(name),
+            | Self::PyAttribute { signatures, .. } => {
+                signatures.as_slice().iter().map(String::as_str).collect()
+            }
+            Self::CFunction { signatures, .. }
+            | Self::CMacro { signatures, .. }
+            | Self::CStruct { signatures, .. }
+            | Self::CUnion { signatures, .. }
+            | Self::CMember { signatures, .. }
+            | Self::CType { signatures, .. } => {
+                signatures.as_slice().iter().map(CSignature::text).collect()
+            }
+            Self::PyModule { name, .. } => vec![name.as_str()],
         }
     }
 
@@ -525,126 +509,6 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_c_object_name_simple_call() {
-        // Given
-        let signature = "foo(bar)";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "foo");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_no_parens() {
-        // Given
-        let signature = "foo";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "foo");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_empty_string() {
-        // Given
-        let signature = "";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_return_type_prefix() {
-        // Given
-        let signature = "int foo(int bar)";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "foo");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_strips_pointer_sigil_glued_to_name() {
-        // Given
-        let signature = "char *foo(void)";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "foo");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_strips_double_pointer_sigil() {
-        // Given
-        let signature = "int **foo(void)";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "foo");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_unaffected_when_sigil_glued_to_type() {
-        // Given
-        let signature = "PyObject* PyUnicode_FromStringAndSize(const char *str, Py_ssize_t size)";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "PyUnicode_FromStringAndSize");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_matches_cpython_unicode_fromstring() {
-        // Given — the real-world signature that surfaced the broken-link bug
-        let signature = "PyObject *PyUnicode_FromString(const char *str)";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "PyUnicode_FromString");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_bare_macro_name() {
-        // Given — object-like macros have no parens and no return type
-        let signature = "PY_SSIZE_T_MAX";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "PY_SSIZE_T_MAX");
-    }
-
-    #[test]
-    fn test_extract_c_object_name_function_like_macro() {
-        // Given — function-like macros have no return type to strip
-        let signature = "MAX(a, b)";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then
-        assert_eq!(name, "MAX");
-    }
-
-    #[test]
     fn test_build_domain_object_key_produces_expected_format() {
         // Given
         let object_type = ObjectType::Py(PyObjectType::Function);
@@ -872,12 +736,12 @@ mod tests {
         // Given — the `py:class` context is a py-domain-only concept.
         let function = DomainObjectBody::CFunction {
             signatures: NonEmptyVector::single(
-                "int PyList_Append(PyObject *list, PyObject *item)".to_string(),
+                "int PyList_Append(PyObject *list, PyObject *item)".into(),
             ),
             body: vec![],
         };
         let macro_ = DomainObjectBody::CMacro {
-            signatures: NonEmptyVector::single("PY_SSIZE_T_MAX".to_string()),
+            signatures: NonEmptyVector::single("PY_SSIZE_T_MAX".into()),
             body: vec![],
         };
 
@@ -952,7 +816,7 @@ mod tests {
         );
         assert_eq!(
             DomainObjectBody::CFunction {
-                signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
+                signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                 body: vec![],
             }
             .object_type(),
@@ -960,7 +824,7 @@ mod tests {
         );
         assert_eq!(
             DomainObjectBody::CMacro {
-                signatures: NonEmptyVector::single("MAX(a, b)".to_string()),
+                signatures: NonEmptyVector::single("MAX(a, b)".into()),
                 body: vec![],
             }
             .object_type(),
@@ -1014,7 +878,7 @@ mod tests {
     fn test_domain_object_body_name_extracts_from_signature_for_macros() {
         // Given
         let macro_ = DomainObjectBody::CMacro {
-            signatures: NonEmptyVector::single("MAX(a, b)".to_string()),
+            signatures: NonEmptyVector::single("MAX(a, b)".into()),
             body: vec![],
         };
 
@@ -1026,7 +890,7 @@ mod tests {
     fn test_domain_object_body_name_uses_bare_signature_for_object_like_macros() {
         // Given
         let macro_ = DomainObjectBody::CMacro {
-            signatures: NonEmptyVector::single("PY_SSIZE_T_MAX".to_string()),
+            signatures: NonEmptyVector::single("PY_SSIZE_T_MAX".into()),
             body: vec![],
         };
 
@@ -1195,7 +1059,7 @@ mod tests {
     fn test_domain_object_body_signature_text_shows_full_signature_for_functions() {
         // Given
         let function = DomainObjectBody::CFunction {
-            signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
+            signatures: NonEmptyVector::single("int add(int a, int b)".into()),
             body: vec![],
         };
 
@@ -1207,7 +1071,7 @@ mod tests {
     fn test_domain_object_body_signature_text_shows_full_signature_for_macros() {
         // Given
         let macro_ = DomainObjectBody::CMacro {
-            signatures: NonEmptyVector::single("MAX(a, b)".to_string()),
+            signatures: NonEmptyVector::single("MAX(a, b)".into()),
             body: vec![],
         };
 
@@ -1302,8 +1166,8 @@ mod tests {
         // Given
         let function = DomainObjectBody::CFunction {
             signatures: NonEmptyVector::new(
-                "int add(int a, int b)".to_string(),
-                vec!["PyObject *PyUnicode_FromString(const char *str)".to_string()],
+                "int add(int a, int b)".into(),
+                vec!["PyObject *PyUnicode_FromString(const char *str)".into()],
             ),
             body: vec![],
         };
@@ -1313,6 +1177,132 @@ mod tests {
 
         // Then
         assert_eq!(names.as_slice(), ["add", "PyUnicode_FromString"]);
+    }
+
+    #[test]
+    fn test_names_reads_the_name_parsed_from_a_function_pointer_typedef() {
+        // Given — `Doc/c-api/init.rst`'s `Py_tracefunc`, whose name sits
+        // inside the `(*…)` group. Reaching it needs the declaration parser;
+        // the older "text before the first parenthesis" heuristic reads the
+        // return type instead.
+        let type_ = DomainObjectBody::CType {
+            signatures: NonEmptyVector::single(
+                "int (*Py_tracefunc)(PyObject *obj, PyFrameObject *frame, int what, PyObject *arg)"
+                    .into(),
+            ),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+
+        // When
+        let names = type_.names();
+
+        // Then
+        assert_eq!(names.as_slice(), ["Py_tracefunc"]);
+    }
+
+    #[test]
+    fn test_names_reads_the_parsed_name_for_every_c_object_type() {
+        // Given — one of each `c` variant, all carrying a signature whose
+        // name only a real declarator parse recovers.
+        let function = DomainObjectBody::CFunction {
+            signatures: NonEmptyVector::single("PyObject *(*getattrofunc)(PyObject *)".into()),
+            body: vec![],
+        };
+        let macro_ = DomainObjectBody::CMacro {
+            signatures: NonEmptyVector::single("void (*freefunc)(void *)".into()),
+            body: vec![],
+        };
+        let struct_ = DomainObjectBody::CStruct {
+            signatures: NonEmptyVector::single("int (*inquiry)(PyObject *)".into()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+        let union_ = DomainObjectBody::CUnion {
+            signatures: NonEmptyVector::single("Py_ssize_t (*lenfunc)(PyObject *)".into()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+        let member = DomainObjectBody::CMember {
+            signatures: NonEmptyVector::single("int (*visitproc)(PyObject *o, void *arg)".into()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+        let type_ = DomainObjectBody::CType {
+            signatures: NonEmptyVector::single("PyObject *(*unaryfunc)(PyObject *)".into()),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(function.names().as_slice(), ["getattrofunc"]);
+        assert_eq!(macro_.names().as_slice(), ["freefunc"]);
+        assert_eq!(struct_.names().as_slice(), ["inquiry"]);
+        assert_eq!(union_.names().as_slice(), ["lenfunc"]);
+        assert_eq!(member.names().as_slice(), ["visitproc"]);
+        assert_eq!(type_.names().as_slice(), ["unaryfunc"]);
+    }
+
+    #[test]
+    fn test_signature_texts_returns_c_signatures_as_written() {
+        // Given — the rendered `<dt>` shows the whole declaration, so the
+        // stored text must survive the name extraction untouched.
+        let type_ = DomainObjectBody::CType {
+            signatures: NonEmptyVector::new(
+                "int (*Py_tracefunc)(PyObject *obj, int what)".into(),
+                vec!["unsigned long ulong".into()],
+            ),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+
+        // When
+        let texts = type_.signature_texts();
+
+        // Then
+        assert_eq!(
+            texts,
+            [
+                "int (*Py_tracefunc)(PyObject *obj, int what)",
+                "unsigned long ulong"
+            ]
+        );
+    }
+
+    #[test]
+    fn test_names_and_signature_texts_stay_index_parallel_for_c_objects() {
+        // Given — a multi-signature `c:type`, where each name is derived
+        // independently of its neighbours.
+        let type_ = DomainObjectBody::CType {
+            signatures: NonEmptyVector::new(
+                "int (*Py_tracefunc)(PyObject *obj)".into(),
+                vec!["unsigned long ulong".into(), "FILE".into()],
+            ),
+            no_index: false,
+            no_index_entry: false,
+            no_contents_entry: false,
+            body: vec![],
+        };
+
+        // When
+        let names = type_.names();
+        let texts = type_.signature_texts();
+
+        // Then
+        assert_eq!(names.as_slice().len(), texts.len());
+        assert_eq!(names.as_slice(), ["Py_tracefunc", "ulong", "FILE"]);
     }
 
     #[test]
@@ -1433,11 +1423,11 @@ mod tests {
             body: vec![paragraph.clone()],
         };
         let c_function = DomainObjectBody::CFunction {
-            signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
+            signatures: NonEmptyVector::single("int add(int a, int b)".into()),
             body: vec![paragraph.clone()],
         };
         let c_macro = DomainObjectBody::CMacro {
-            signatures: NonEmptyVector::single("MAX(a, b)".to_string()),
+            signatures: NonEmptyVector::single("MAX(a, b)".into()),
             body: vec![paragraph.clone()],
         };
         let method = DomainObjectBody::PyMethod {
@@ -1488,7 +1478,7 @@ mod tests {
 
     fn plain_c_member(signature: &str) -> DomainObjectBody {
         DomainObjectBody::CMember {
-            signatures: NonEmptyVector::single(signature.to_string()),
+            signatures: NonEmptyVector::single(signature.into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1498,7 +1488,7 @@ mod tests {
 
     fn plain_c_struct(signature: &str) -> DomainObjectBody {
         DomainObjectBody::CStruct {
-            signatures: NonEmptyVector::single(signature.to_string()),
+            signatures: NonEmptyVector::single(signature.into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1508,7 +1498,7 @@ mod tests {
 
     fn plain_c_union(signature: &str) -> DomainObjectBody {
         DomainObjectBody::CUnion {
-            signatures: NonEmptyVector::single(signature.to_string()),
+            signatures: NonEmptyVector::single(signature.into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1518,7 +1508,7 @@ mod tests {
 
     fn plain_c_type(signature: &str) -> DomainObjectBody {
         DomainObjectBody::CType {
-            signatures: NonEmptyVector::single(signature.to_string()),
+            signatures: NonEmptyVector::single(signature.into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1631,21 +1621,21 @@ mod tests {
         // Given
         let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
         let struct_ = DomainObjectBody::CStruct {
-            signatures: NonEmptyVector::single("Data".to_string()),
+            signatures: NonEmptyVector::single("Data".into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
             body: vec![paragraph.clone()],
         };
         let union_ = DomainObjectBody::CUnion {
-            signatures: NonEmptyVector::single("Number".to_string()),
+            signatures: NonEmptyVector::single("Number".into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
             body: vec![paragraph.clone()],
         };
         let member = DomainObjectBody::CMember {
-            signatures: NonEmptyVector::single("count".to_string()),
+            signatures: NonEmptyVector::single("count".into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1663,7 +1653,7 @@ mod tests {
         // Given / When / Then
         assert!(
             !DomainObjectBody::CFunction {
-                signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
+                signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                 body: vec![],
             }
             .no_index()
@@ -1687,7 +1677,7 @@ mod tests {
     fn test_no_index_entry_is_true_when_no_index_entry_flag_set() {
         // Given
         let member = DomainObjectBody::CMember {
-            signatures: NonEmptyVector::single("count".to_string()),
+            signatures: NonEmptyVector::single("count".into()),
             no_index: false,
             no_index_entry: true,
             no_contents_entry: false,
@@ -1702,7 +1692,7 @@ mod tests {
     fn test_no_index_entry_is_implied_by_no_index() {
         // Given — real Sphinx's `no-index` implies `no-index-entry`.
         let member = DomainObjectBody::CMember {
-            signatures: NonEmptyVector::single("count".to_string()),
+            signatures: NonEmptyVector::single("count".into()),
             no_index: true,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1769,7 +1759,7 @@ mod tests {
         // Given
         let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
         let type_ = DomainObjectBody::CType {
-            signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+            signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1797,7 +1787,7 @@ mod tests {
     fn test_no_index_entry_is_true_when_no_index_entry_flag_set_for_c_type() {
         // Given
         let type_ = DomainObjectBody::CType {
-            signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+            signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
             no_index: false,
             no_index_entry: true,
             no_contents_entry: false,
@@ -1812,7 +1802,7 @@ mod tests {
     fn test_no_index_entry_is_implied_by_no_index_for_c_type() {
         // Given
         let type_ = DomainObjectBody::CType {
-            signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+            signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
             no_index: true,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1827,7 +1817,7 @@ mod tests {
     fn test_no_contents_entry_reflects_flag_for_c_type() {
         // Given
         let type_with_flag = DomainObjectBody::CType {
-            signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+            signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: true,
@@ -1840,28 +1830,10 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_c_object_name_misextracts_function_pointer_typedef() {
-        // Given — real Sphinx's `c:type` function-pointer-typedef signature
-        // grammar (e.g. `int (*type_name)(int arg1, int arg2)`); the
-        // pointer/name pair lives inside the first parenthesized group, but
-        // `extract_c_object_name`'s heuristic only looks before the first
-        // `(`, which here is just the bare return type. This test pins the
-        // known, documented limitation (see `spec_gaps.md`) rather than
-        // asserting correct behavior.
-        let signature = "int (*type_name)(int arg1, int arg2)";
-
-        // When
-        let name = extract_c_object_name(signature);
-
-        // Then — mis-extracts "int" instead of "type_name".
-        assert_eq!(name, "int");
-    }
-
-    #[test]
     fn test_no_contents_entry_reflects_flag_for_c_struct() {
         // Given
         let struct_with_flag = DomainObjectBody::CStruct {
-            signatures: NonEmptyVector::single("Data".to_string()),
+            signatures: NonEmptyVector::single("Data".into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: true,

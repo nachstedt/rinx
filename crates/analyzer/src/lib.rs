@@ -1327,7 +1327,7 @@ mod tests {
                 )),
                 Node::Directive(Directive::DomainObject(
                     rusty_sphinx_ast::DomainObjectBody::CFunction {
-                        signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
+                        signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                         body: vec![],
                     },
                 )),
@@ -1353,7 +1353,7 @@ mod tests {
 
     fn c_member(signature: &str) -> Node {
         Node::Directive(Directive::DomainObject(DomainObjectBody::CMember {
-            signatures: NonEmptyVector::single(signature.to_string()),
+            signatures: NonEmptyVector::single(signature.into()),
             no_index: false,
             no_index_entry: false,
             no_contents_entry: false,
@@ -1363,7 +1363,7 @@ mod tests {
 
     fn c_macro(signature: &str) -> Node {
         Node::Directive(Directive::DomainObject(DomainObjectBody::CMacro {
-            signatures: NonEmptyVector::single(signature.to_string()),
+            signatures: NonEmptyVector::single(signature.into()),
             body: vec![],
         }))
     }
@@ -1375,7 +1375,7 @@ mod tests {
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CStruct {
-                    signatures: NonEmptyVector::single("Data".to_string()),
+                    signatures: NonEmptyVector::single("Data".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1403,7 +1403,7 @@ mod tests {
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CUnion {
-                    signatures: NonEmptyVector::single("Number".to_string()),
+                    signatures: NonEmptyVector::single("Number".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1450,13 +1450,13 @@ mod tests {
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CStruct {
-                    signatures: NonEmptyVector::single("Data".to_string()),
+                    signatures: NonEmptyVector::single("Data".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         DomainObjectBody::CFunction {
-                            signatures: NonEmptyVector::single("int helper(void)".to_string()),
+                            signatures: NonEmptyVector::single("int helper(void)".into()),
                             body: vec![],
                         },
                     ))],
@@ -1490,7 +1490,7 @@ mod tests {
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CType {
-                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1522,7 +1522,7 @@ mod tests {
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CType {
-                    signatures: NonEmptyVector::single("Data".to_string()),
+                    signatures: NonEmptyVector::single("Data".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1548,7 +1548,7 @@ mod tests {
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CType {
-                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1568,13 +1568,86 @@ mod tests {
     }
 
     #[test]
+    fn test_analyze_registers_a_function_pointer_typedef_under_its_declared_name() {
+        // Given — `Doc/c-api/init.rst`'s `Py_tracefunc`. Before the
+        // declaration parser this registered as `c:type:int` (the return
+        // type), leaving the eight `:c:type:` references to it in
+        // `Doc/c-api/profiling.rst` unresolvable.
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single(
+                        "int (*Py_tracefunc)(PyObject *obj, PyFrameObject *frame, int what, PyObject *arg)"
+                            .into(),
+                    ),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:type:Py_tracefunc"),
+            Some(&"api.rst".to_string())
+        );
+        assert_eq!(lookup_domain_object(&index, "c:type:int"), None);
+    }
+
+    #[test]
+    fn test_analyze_registers_slot_typedefs_with_pointer_return_types() {
+        // Given — `Doc/c-api/typeobj.rst` declares dozens of these, all of
+        // the `RETTYPE *(*NAME)(ARGS)` shape.
+        let doc = Document::new(
+            "typeobj.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("PyObject *(*unaryfunc)(PyObject *)".into()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                })),
+                Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single(
+                        "int (*visitproc)(PyObject *object, void *arg)".into(),
+                    ),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                })),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:type:unaryfunc"),
+            Some(&"typeobj.rst".to_string())
+        );
+        assert_eq!(
+            lookup_domain_object(&index, "c:type:visitproc"),
+            Some(&"typeobj.rst".to_string())
+        );
+    }
+
+    #[test]
     fn test_analyze_no_index_suppresses_target_and_genindex_entry_for_c_type() {
         // Given
         let doc = Document::new(
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CType {
-                    signatures: NonEmptyVector::single("Hidden".to_string()),
+                    signatures: NonEmptyVector::single("Hidden".into()),
                     no_index: true,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1598,7 +1671,7 @@ mod tests {
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CMember {
-                    signatures: NonEmptyVector::single("count".to_string()),
+                    signatures: NonEmptyVector::single("count".into()),
                     no_index: true,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1622,7 +1695,7 @@ mod tests {
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 DomainObjectBody::CMember {
-                    signatures: NonEmptyVector::single("count".to_string()),
+                    signatures: NonEmptyVector::single("count".into()),
                     no_index: false,
                     no_index_entry: true,
                     no_contents_entry: false,

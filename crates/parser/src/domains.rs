@@ -2,7 +2,7 @@ use super::blocks::parse_blocks;
 use super::bullet_list::unindent_body_lines;
 use super::directives::DirectiveObjectType;
 use super::headings::Adornment;
-use rusty_sphinx_ast::{Domain, DomainObjectBody, Node, NonEmptyVector};
+use rusty_sphinx_ast::{CSignature, Domain, DomainObjectBody, NameSource, Node, NonEmptyVector};
 
 /// Parses a domain object directive body (e.g. `.. py:function::`,
 /// `.. py:module::`, `.. c:function::`) into the matching [`DomainObjectBody`]
@@ -42,7 +42,7 @@ pub(super) fn parse_domain_object(
         | DirectiveObjectType::CMember
         | DirectiveObjectType::CType => parse_c_domain_object(
             object_type,
-            signatures,
+            &signatures,
             body_lines,
             adornment_order,
             diagnostics,
@@ -113,6 +113,30 @@ pub(super) fn parse_domain_object(
     }
 }
 
+/// Derives each signature's declared name up front, so it is computed once
+/// here at parse time rather than re-derived in every later phase.
+///
+/// Signatures whose declaration grammar isn't covered still yield a name (via
+/// [`CSignature`]'s heuristic fallback) so no cross-reference target is lost;
+/// each one emits a diagnostic instead, which is what makes the remaining
+/// grammar gaps countable against a real corpus.
+fn parse_c_signatures(
+    signatures: &NonEmptyVector<String>,
+    diagnostics: &mut Vec<String>,
+) -> NonEmptyVector<CSignature> {
+    let parsed = signatures.map(|text| CSignature::parse(text.clone()));
+    for signature in parsed.as_slice() {
+        if signature.name_source() == NameSource::Fallback {
+            diagnostics.push(format!(
+                "c signature: could not parse declaration '{}'; fell back to the name heuristic, which read '{}'",
+                signature.text(),
+                signature.name()
+            ));
+        }
+    }
+    parsed
+}
+
 /// Dispatches the six `c`-domain object types to their respective parsers —
 /// factored out of [`parse_domain_object`] purely to keep that function's
 /// line count manageable. Only ever called with a `DirectiveObjectType::C*`
@@ -120,12 +144,13 @@ pub(super) fn parse_domain_object(
 /// non-`c` variants are unreachable here.
 fn parse_c_domain_object(
     object_type: DirectiveObjectType,
-    signatures: NonEmptyVector<String>,
+    signatures: &NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
     default_domain: Domain,
 ) -> DomainObjectBody {
+    let signatures = parse_c_signatures(signatures, diagnostics);
     match object_type {
         DirectiveObjectType::CFunction => DomainObjectBody::CFunction {
             signatures,
@@ -374,7 +399,7 @@ fn parse_py_attribute(
 /// legacy spellings) off the front before parsing the rest as the docstring
 /// body.
 fn parse_c_struct(
-    signatures: NonEmptyVector<String>,
+    signatures: NonEmptyVector<CSignature>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -402,7 +427,7 @@ fn parse_c_struct(
 /// Parses a `.. c:union::` body — identical shape to [`parse_c_struct`],
 /// just producing the other container variant.
 fn parse_c_union(
-    signatures: NonEmptyVector<String>,
+    signatures: NonEmptyVector<CSignature>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -432,7 +457,7 @@ fn parse_c_union(
 /// options beyond them (the type is embedded in the signature itself, e.g.
 /// `int count`, unlike `py:data`/`py:attribute`'s separate `:type:` option).
 fn parse_c_member(
-    signatures: NonEmptyVector<String>,
+    signatures: NonEmptyVector<CSignature>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -465,7 +490,7 @@ fn parse_c_member(
 /// nested definitions (e.g. enum-style `.. c:macro::` constants) are indexed
 /// instead of silently dropped — see `known_bugs.md`'s former `c:type` entry.
 fn parse_c_type(
-    signatures: NonEmptyVector<String>,
+    signatures: NonEmptyVector<CSignature>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
@@ -669,6 +694,12 @@ fn extract_attribute_options(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The raw texts of parsed `c`-domain signatures, for asserting on what
+    /// was written rather than on the name derived from it.
+    fn signature_texts(signatures: &NonEmptyVector<CSignature>) -> Vec<&str> {
+        signatures.as_slice().iter().map(CSignature::text).collect()
+    }
     use crate::parse;
     use rusty_sphinx_ast::Directive;
 
@@ -1942,7 +1973,7 @@ mod tests {
             ..
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["int add(int a, int b)"]);
+            assert_eq!(signature_texts(signatures), ["int add(int a, int b)"]);
         } else {
             panic!("Expected CFunction, got {:?}", doc.nodes[0]);
         }
@@ -1963,7 +1994,7 @@ mod tests {
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["PY_SSIZE_T_MAX"]);
+            assert_eq!(signature_texts(signatures), ["PY_SSIZE_T_MAX"]);
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected CMacro, got {:?}", doc.nodes[0]);
@@ -1985,7 +2016,7 @@ mod tests {
             ..
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["MAX(a, b)"]);
+            assert_eq!(signature_texts(signatures), ["MAX(a, b)"]);
         } else {
             panic!("Expected CMacro, got {:?}", doc.nodes[0]);
         }
@@ -2009,7 +2040,7 @@ mod tests {
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["Data"]);
+            assert_eq!(signature_texts(signatures), ["Data"]);
             assert!(!no_index);
             assert!(!no_index_entry);
             assert!(!no_contents_entry);
@@ -2034,7 +2065,7 @@ mod tests {
             ..
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["Number"]);
+            assert_eq!(signature_texts(signatures), ["Number"]);
         } else {
             panic!("Expected CUnion, got {:?}", doc.nodes[0]);
         }
@@ -2055,7 +2086,10 @@ mod tests {
             ..
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["PyObject *PyTypeObject.tp_bases"]);
+            assert_eq!(
+                signature_texts(signatures),
+                ["PyObject *PyTypeObject.tp_bases"]
+            );
         } else {
             panic!("Expected CMember, got {:?}", doc.nodes[0]);
         }
@@ -2097,7 +2131,7 @@ mod tests {
             ..
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["int errno"]);
+            assert_eq!(signature_texts(signatures), ["int errno"]);
         } else {
             panic!("Expected CMember, got {:?}", doc.nodes[0]);
         }
@@ -2121,7 +2155,7 @@ mod tests {
             body,
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["PyMemAllocatorDomain"]);
+            assert_eq!(signature_texts(signatures), ["PyMemAllocatorDomain"]);
             assert!(!no_index);
             assert!(!no_index_entry);
             assert!(!no_contents_entry);
@@ -2146,7 +2180,7 @@ mod tests {
             ..
         })) = &doc.nodes[0]
         {
-            assert_eq!(signatures.as_slice(), ["unsigned long ulong"]);
+            assert_eq!(signature_texts(signatures), ["unsigned long ulong"]);
         } else {
             panic!("Expected CType, got {:?}", doc.nodes[0]);
         }
@@ -2287,5 +2321,120 @@ mod tests {
             "Expected Unknown directive, got {:?}",
             doc.nodes[0]
         );
+    }
+
+    // ── `c` signature parsing and its diagnostics ────────────────────────
+
+    #[test]
+    fn test_parse_derives_the_name_of_a_function_pointer_typedef() {
+        // Given — `Doc/c-api/init.rst`'s real declaration.
+        let input =
+            ".. c:type:: int (*Py_tracefunc)(PyObject *obj, int what)\n\n   A tracing function.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — the name comes from the declarator, not the return type.
+        let Node::Directive(Directive::DomainObject(object)) = &doc.nodes[0] else {
+            panic!("Expected a domain object, got {:?}", doc.nodes[0]);
+        };
+        assert_eq!(object.names().as_slice(), ["Py_tracefunc"]);
+    }
+
+    #[test]
+    fn test_parse_emits_no_diagnostic_for_a_well_formed_c_signature() {
+        // Given
+        let input = ".. c:type:: int (*Py_tracefunc)(PyObject *obj)\n\n   A tracing function.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert!(
+            !doc.diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.starts_with("c signature:")),
+            "unexpected signature diagnostics: {:?}",
+            doc.diagnostics
+        );
+    }
+
+    #[test]
+    fn test_parse_emits_a_diagnostic_for_an_unparseable_c_signature() {
+        // Given — prose where a declaration belongs, which still has to
+        // produce *some* target rather than being dropped.
+        let input = ".. c:type:: >>> not a declaration <<<\n\n   Body.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — one diagnostic, naming the offending signature.
+        let signature_diagnostics: Vec<&String> = doc
+            .diagnostics
+            .iter()
+            .filter(|diagnostic| diagnostic.starts_with("c signature:"))
+            .collect();
+        assert_eq!(signature_diagnostics.len(), 1);
+        assert!(
+            signature_diagnostics[0].contains(">>> not a declaration <<<"),
+            "diagnostic should quote the signature: {}",
+            signature_diagnostics[0]
+        );
+    }
+
+    #[test]
+    fn test_parse_reports_only_the_unparseable_signature_of_a_multi_signature_object() {
+        // Given — one directive declaring two aliases, only one of which is
+        // malformed; each signature is parsed independently.
+        let input = ".. c:type:: int (*Py_tracefunc)(PyObject *obj)\n            >>> nonsense <<<\n\n   Body.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        let signature_diagnostics: Vec<&String> = doc
+            .diagnostics
+            .iter()
+            .filter(|diagnostic| diagnostic.starts_with("c signature:"))
+            .collect();
+        assert_eq!(signature_diagnostics.len(), 1);
+        assert!(signature_diagnostics[0].contains(">>> nonsense <<<"));
+    }
+
+    #[test]
+    fn test_parse_c_signatures_records_the_name_source_per_signature() {
+        // Given — a parseable declaration followed by an unparseable one.
+        let signatures = NonEmptyVector::new(
+            "int (*Py_tracefunc)(PyObject *obj)".to_string(),
+            vec![">>> nonsense <<<".to_string()],
+        );
+        let mut diagnostics = Vec::new();
+
+        // When
+        let parsed = parse_c_signatures(&signatures, &mut diagnostics);
+
+        // Then
+        assert_eq!(parsed.as_slice()[0].name_source(), NameSource::Parsed);
+        assert_eq!(parsed.as_slice()[0].name(), "Py_tracefunc");
+        assert_eq!(parsed.as_slice()[1].name_source(), NameSource::Fallback);
+        assert_eq!(diagnostics.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_c_signatures_emits_no_diagnostics_when_all_signatures_parse() {
+        // Given
+        let signatures = NonEmptyVector::new(
+            "unsigned long ulong".to_string(),
+            vec!["PyObject *(*unaryfunc)(PyObject *)".to_string()],
+        );
+        let mut diagnostics = Vec::new();
+
+        // When
+        let parsed = parse_c_signatures(&signatures, &mut diagnostics);
+
+        // Then
+        assert!(diagnostics.is_empty());
+        assert_eq!(parsed.as_slice()[0].name(), "ulong");
+        assert_eq!(parsed.as_slice()[1].name(), "unaryfunc");
     }
 }
