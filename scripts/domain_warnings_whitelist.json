@@ -40,7 +40,7 @@
       "kind": "domain_object_reference",
       "target": "xmlparser",
       "requested_type": "py:class",
-      "comment": "`xmlparser` is cross-referenced with `:class:`xmlparser`` dozens of times in pyexpat.rst, but the class itself is never given a `.. class:: xmlparser` directive \u2014 only its methods are documented directly as `.. method:: xmlparser.Parse` etc. with no enclosing class definition. Real Sphinx fails to resolve `:class:`xmlparser`` too; expected, not a rusty-sphinx resolver gap."
+      "comment": "`xmlparser` is cross-referenced with `:class:`xmlparser`` dozens of times in pyexpat.rst, but the class itself is never given a `.. class:: xmlparser` directive — only its methods are documented directly as `.. method:: xmlparser.Parse` etc. with no enclosing class definition. Real Sphinx fails to resolve `:class:`xmlparser`` too; expected, not a rusty-sphinx resolver gap."
     },
     {
       "doc_path": "Doc/library/xml.dom",
@@ -209,6 +209,13 @@
       "target": "fcntl",
       "requested_type": "c:function",
       "comment": "The POSIX `fcntl(2)` system call, not a CPython C-API symbol, so it is never indexed by this doc set. CPython's own Doc/conf.py nitpick_ignore explicitly lists ('c:func', 'fcntl'). Real Sphinx also fails to resolve it; expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/c-api/unicode",
+      "kind": "domain_object_reference",
+      "target": "wchar_t",
+      "requested_type": "c:type",
+      "comment": "The standard C library's wide-character type from <wchar.h>, referenced via :c:type: throughout the Unicode C-API docs (e.g. PyUnicode_AsWideChar). CPython's docs never define it with a `.. c:type::` directive anywhere — it is a platform type, not a CPython C-API symbol — so real Sphinx fails to resolve it too, exactly like the `errno` and `fork` entries above. Expected, not a rusty-sphinx resolver gap."
     }
   ]
 }

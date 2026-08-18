@@ -1078,7 +1078,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CFunction {
-                    signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
+                    signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Adds two numbers.".to_string(),
                     )])],
@@ -1102,7 +1102,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CMacro {
-                    signatures: NonEmptyVector::single("MAX(a, b)".to_string()),
+                    signatures: NonEmptyVector::single("MAX(a, b)".into()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Expands to whichever of a or b is greater.".to_string(),
                     )])],
@@ -1126,13 +1126,13 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CStruct {
-                    signatures: NonEmptyVector::single("Data".to_string()),
+                    signatures: NonEmptyVector::single("Data".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         rusty_sphinx_ast::DomainObjectBody::CMember {
-                            signatures: NonEmptyVector::single("int count".to_string()),
+                            signatures: NonEmptyVector::single("int count".into()),
                             no_index: false,
                             no_index_entry: false,
                             no_contents_entry: false,
@@ -1162,7 +1162,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CUnion {
-                    signatures: NonEmptyVector::single("Number".to_string()),
+                    signatures: NonEmptyVector::single("Number".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1186,9 +1186,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CMember {
-                    signatures: NonEmptyVector::single(
-                        "PyObject *PyTypeObject.tp_bases".to_string(),
-                    ),
+                    signatures: NonEmptyVector::single("PyObject *PyTypeObject.tp_bases".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1219,13 +1217,13 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CType {
-                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".to_string()),
+                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         rusty_sphinx_ast::DomainObjectBody::CMacro {
-                            signatures: NonEmptyVector::single("PYMEM_DOMAIN_RAW".to_string()),
+                            signatures: NonEmptyVector::single("PYMEM_DOMAIN_RAW".into()),
                             body: vec![],
                         },
                     ))],
@@ -1252,13 +1250,13 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CType {
-                    signatures: NonEmptyVector::single("Data".to_string()),
+                    signatures: NonEmptyVector::single("Data".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
                     body: vec![Node::Directive(Directive::DomainObject(
                         rusty_sphinx_ast::DomainObjectBody::CMember {
-                            signatures: NonEmptyVector::single("int count".to_string()),
+                            signatures: NonEmptyVector::single("int count".into()),
                             no_index: false,
                             no_index_entry: false,
                             no_contents_entry: false,
@@ -1286,7 +1284,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CType {
-                    signatures: NonEmptyVector::single("unsigned long ulong".to_string()),
+                    signatures: NonEmptyVector::single("unsigned long ulong".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1305,13 +1303,43 @@ mod tests {
     }
 
     #[test]
+    fn test_render_anchors_a_function_pointer_typedef_at_its_declared_name() {
+        // Given — the anchor comes from the declarator inside the `(*…)`
+        // group, while the displayed text stays the full declaration.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single(
+                        "int (*Py_tracefunc)(PyObject *obj, int what)".into(),
+                    ),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dt id=\"c:type:py_tracefunc\">"));
+        assert!(!result.contains("<dt id=\"c:type:int\">"));
+        assert!(result.contains(
+            "<code class=\"sig-name\">int (*Py_tracefunc)(PyObject *obj, int what)</code>"
+        ));
+    }
+
+    #[test]
     fn test_render_omits_id_attribute_when_no_index_is_set_for_c_type() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CType {
-                    signatures: NonEmptyVector::single("Hidden".to_string()),
+                    signatures: NonEmptyVector::single("Hidden".into()),
                     no_index: true,
                     no_index_entry: false,
                     no_contents_entry: false,
@@ -1335,7 +1363,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rusty_sphinx_ast::DomainObjectBody::CMember {
-                    signatures: NonEmptyVector::single("int count".to_string()),
+                    signatures: NonEmptyVector::single("int count".into()),
                     no_index: true,
                     no_index_entry: false,
                     no_contents_entry: false,

@@ -144,7 +144,7 @@ mod tests {
     fn test_domain_object_directive_serialization_roundtrip() {
         // Given
         let directive = Directive::DomainObject(DomainObjectBody::CFunction {
-            signatures: NonEmptyVector::single("int add(int a, int b)".to_string()),
+            signatures: NonEmptyVector::single("int add(int a, int b)".into()),
             body: vec![Node::Paragraph(vec![InlineNode::Text(
                 "Adds two numbers.".to_string(),
             )])],

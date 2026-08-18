@@ -329,6 +329,26 @@ C Domain
    A ``type name`` typedef-alias signature, real Sphinx's other ``c:type``
    form (as opposed to ``PyMemAllocatorDomain``'s bare-name form above).
 
+.. c:type:: int (*Py_tracefunc)(PyObject *obj, PyFrameObject *frame, int what, PyObject *arg)
+
+   A function-pointer typedef, real Sphinx's third ``c:type`` signature
+   form and the shape CPython's ``c-api/init.rst`` declares ``Py_tracefunc``
+   with. The declared name sits inside the ``(*NAME)`` group rather than
+   before the first parenthesis, so recovering it takes a real C declarator
+   parse — a heuristic reading the text before the first ``(`` would index
+   this under the return type ``int`` instead.
+
+.. c:type:: PyObject *(*unaryfunc)(PyObject *)
+
+   The same shape with a pointer return type, as CPython's
+   ``c-api/typeobj.rst`` declares its slot typedefs.
+
+.. c:type:: int (*callbacks[8])(void *state)
+
+   An array declarator: ``callbacks`` is an array of function pointers.
+   Array and grouped declarators compose, and the name is still found at
+   the innermost position.
+
 .. c:type:: Hidden
    :no-index:
 
@@ -391,6 +411,13 @@ macro under ``c:type`` leaves it unqualified. Unlike ``c:struct``/``c:union``
 and their ``c:member`` aliases, ``:c:type:`` has no real-Sphinx cross-role
 looseness with any other object type — it only resolves against
 ``.. c:type::`` definitions.
+
+:c:type:`Py_tracefunc`, :c:type:`unaryfunc` and :c:type:`callbacks` reference
+the three declarator-shaped definitions above by the name their declarators
+bind, none of which is the leading token of the signature. Each is parsed by
+``rusty_sphinx_cdecl``; a signature whose grammar it cannot handle still
+yields a target via a name heuristic, and reports a parser diagnostic rather
+than being dropped.
 
 The :py:data:`DEFAULT_TIMEOUT` data item has no equivalent ``py:const``
 directive in real Sphinx — instead, :py:const:`DEFAULT_TIMEOUT` is simply

@@ -205,10 +205,15 @@ dependencies = [
 name = "rusty_sphinx_ast"
 version = "0.1.0"
 dependencies = [
+ "rusty_sphinx_cdecl",
  "serde",
  "serde_json",
  "sha2",
 ]
+
+[[package]]
+name = "rusty_sphinx_cdecl"
+version = "0.1.0"
 
 [[package]]
 name = "rusty_sphinx_index"
