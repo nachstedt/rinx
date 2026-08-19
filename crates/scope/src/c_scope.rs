@@ -1,3 +1,5 @@
+use rusty_sphinx_ast::TargetSearchOrder;
+
 /// The `c`-domain's enclosing lexical scope while indexing/rendering: the
 /// stack of enclosing `c:struct`/`c:union` names (lexical, pushed/popped
 /// around a nested body).
@@ -65,6 +67,40 @@ impl CScope {
         CQualification {
             qualified_name: parts.join("."),
             new_segments: new_segments.into_iter().map(str::to_string).collect(),
+        }
+    }
+
+    /// The qualified names a *reference* to `name` may denote, in the order
+    /// they should be tried, most-to-least qualified for
+    /// [`TargetSearchOrder::MostQualifiedFirst`] and reversed for
+    /// [`TargetSearchOrder::LeastQualifiedFirst`] — the reference-side
+    /// counterpart to [`Self::qualify`], mirroring
+    /// [`crate::PythonScope::reference_candidates`] (see that method's doc
+    /// comment for why nothing is absorbed here the way `qualify` absorbs a
+    /// repeated container prefix on the definition side).
+    ///
+    /// Walks every suffix of the container stack from the full path down to
+    /// the bare name, dropping the *innermost* container at each step (e.g.
+    /// `Outer.Inner.name`, then `Outer.name`, then `name`) — mirroring real
+    /// Sphinx's `Symbol.find_declaration`, which starts at the reference's
+    /// enclosing declaration and walks up through each ancestor scope in
+    /// turn, not just straight to the root.
+    #[must_use]
+    pub fn reference_candidates(&self, name: &str, order: TargetSearchOrder) -> Vec<String> {
+        let tiers: Vec<String> = (0..=self.containers.len())
+            .rev()
+            .map(|depth| {
+                if depth == 0 {
+                    name.to_string()
+                } else {
+                    format!("{}.{name}", self.containers[..depth].join("."))
+                }
+            })
+            .collect();
+
+        match order {
+            TargetSearchOrder::MostQualifiedFirst => tiers,
+            TargetSearchOrder::LeastQualifiedFirst => tiers.into_iter().rev().collect(),
         }
     }
 
@@ -211,5 +247,76 @@ mod tests {
 
         // Then
         assert_eq!(depth, 1);
+    }
+
+    #[test]
+    fn test_reference_candidates_yields_only_the_bare_name_with_empty_scope() {
+        // Given
+        let scope = CScope::default();
+
+        // When
+        let candidates = scope.reference_candidates("count", TargetSearchOrder::MostQualifiedFirst);
+
+        // Then
+        assert_eq!(candidates, vec!["count".to_string()]);
+    }
+
+    #[test]
+    fn test_reference_candidates_tries_the_enclosing_container_then_the_bare_name() {
+        // Given — the bug's own reproducer: `` :c:member:`digits` `` written
+        // inside `.. c:type:: PyLongExport`'s own body.
+        let mut scope = CScope::default();
+        scope.push_containers(&segments(&["PyLongExport"]));
+
+        // When
+        let candidates =
+            scope.reference_candidates("digits", TargetSearchOrder::MostQualifiedFirst);
+
+        // Then
+        assert_eq!(
+            candidates,
+            vec!["PyLongExport.digits".to_string(), "digits".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_reference_candidates_walks_every_ancestor_for_multi_level_nesting() {
+        // Given — a union nested inside a struct: `Outer.Inner.field` must be
+        // tried, then `Outer.field` (dropping only the innermost container,
+        // mirroring Sphinx's `Symbol.find_declaration` walking up one scope
+        // at a time), then the bare name.
+        let mut scope = CScope::default();
+        scope.push_containers(&segments(&["Outer"]));
+        scope.push_containers(&segments(&["Inner"]));
+
+        // When
+        let candidates = scope.reference_candidates("field", TargetSearchOrder::MostQualifiedFirst);
+
+        // Then
+        assert_eq!(
+            candidates,
+            vec![
+                "Outer.Inner.field".to_string(),
+                "Outer.field".to_string(),
+                "field".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_reference_candidates_least_qualified_first_reverses_the_tier_order() {
+        // Given
+        let mut scope = CScope::default();
+        scope.push_containers(&segments(&["PyLongExport"]));
+
+        // When
+        let candidates =
+            scope.reference_candidates("digits", TargetSearchOrder::LeastQualifiedFirst);
+
+        // Then
+        assert_eq!(
+            candidates,
+            vec!["digits".to_string(), "PyLongExport.digits".to_string()]
+        );
     }
 }
