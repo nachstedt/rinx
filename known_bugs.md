@@ -12,68 +12,14 @@ CPython ships `Doc/tools/.nitignore`, an explicit list of the only `.rst` files
 allowed to fail Sphinx's nit-picky mode in CI. Any file **not** in that list
 builds warning-free with `nitpicky = True`, so every cross-reference it
 contains — minus the symbols listed in `Doc/conf.py`'s `nitpick_ignore` — is
-known to resolve under real Sphinx. All three bugs below live in files absent
-from `.nitignore` and reference targets absent from `nitpick_ignore`.
+known to resolve under real Sphinx. Both numbered bugs below live in files
+absent from `.nitignore` and reference targets absent from `nitpick_ignore`
+— the third entry is a separately-discovered latent gap with no
+benchmark-observed warning (see its own note).
 
 ---
 
-## 1. Unqualified `c:member` references are not resolved against the enclosing C scope
-
-- **Warning:** `7  Doc/c-api/long: 'digits' (referenced as c:member)` (also
-  `value`, `negative`, `ndigits`, 1 occurrence each, same file and cause)
-- **Component:** `crates/renderer/src/domain_resolution.rs`
-
-`Doc/c-api/long.rst` declares
-
-```rst
-.. c:type:: PyLongExport
-
-   * If :c:member:`digits` is ``NULL``, only use the :c:member:`value` member.
-
-   .. c:member:: const void *digits
-```
-
-The analyzer indexes the definition correctly as `pylongexport.digits` — its
-`CScope` qualifies nested declarations under the enclosing `c:type`. The
-*resolver*, however, only ever receives a `PythonScope`; `CScope` is never
-consulted at resolution time, so an unqualified `digits` written inside
-`PyLongExport`'s own body is looked up as the bare top-level name `digits`
-and misses.
-
-Real Sphinx's C domain resolves this: `_resolve_xref_inner` starts from the
-node's `c:parent_key` (the enclosing declaration) and calls
-`Symbol.find_declaration(..., matchSelf=True)`, which walks up the nesting
-scopes. The existing dot-prefixed suffix search in
-`test_resolve_dot_prefixed_c_member_finds_nested_member_via_suffix_search`
-covers `` :c:member:`.digits` ``, but a plain target uses
-`TargetSearchOrder::LeastQualifiedFirst`, which does not allow the suffix
-fallback.
-
-**Reproducer** (parse → index → render emits `warning: broken domain object
-'digits' (referenced as c:member)`):
-
-```rst
-.. c:type:: PyLongExport
-
-   * If :c:member:`digits` is ``NULL``, only use the :c:member:`value` member.
-
-   .. c:member:: int64_t value
-
-      The native integer value.
-
-   .. c:member:: const void *digits
-
-      Read-only array of unsigned digits.
-```
-
-**Suggested fix:** thread the render-time `CScope` into
-`DomainObjectResolver::resolve` for `c`-domain references and try the
-enclosing-container prefixes (`PyLongExport.digits`, then `digits`) the way
-`PythonScope::reference_candidates` already does for the `py` domain.
-
----
-
-## 2. `.. decorator::` is not implemented, so decorators are never indexed
+## 1. `.. decorator::` is not implemented, so decorators are never indexed
 
 - **Warning:** `5  Doc/reference/datamodel: 'classmethod' (referenced as py:class)`
 - **Component:** `crates/parser/src/directives.rs` (`decorator: 69` in the
@@ -109,7 +55,7 @@ are the majority.
 
 ---
 
-## 3. `:c:func:` does not accept a `.. c:macro::` definition
+## 2. `:c:func:` does not accept a `.. c:macro::` definition
 
 - **Warnings:** `4  Doc/c-api/gcsupport: 'Py_VISIT' (referenced as c:function)`,
   `3  Doc/extending/newtypes_tutorial: 'Py_VISIT' (referenced as c:function)`
@@ -141,6 +87,43 @@ A typical traverse function calls the :c:func:`Py_VISIT` macro.
 
 **Suggested fix:** add `C(Macro)` to `C(Function)`'s alias list (and, for
 symmetry with the existing pair, consider `C(Function)` in `C(Macro)`'s).
+
+---
+
+## 3. `c:function`/`c:macro` are qualified against the enclosing `PythonScope`, not `CScope`
+
+- **Component:** `crates/scope/src/python_scope.rs` (`PythonScope::qualify`'s
+  domain gating: `include_module = domain == Domain::Py || !self.classes.is_empty()`),
+  consumed from `crates/renderer/src/directives.rs` and
+  `crates/analyzer/src/lib.rs` wherever `c:function`/`c:macro` fall through to
+  the non-`uses_c_scope` branch.
+
+A `.. c:function::`/`.. c:macro::` nested inside a `.. py:class::`/
+`.. py:exception::` body (so `PythonScope`'s class stack is non-empty when
+the C object is qualified) currently gets prefixed with that enclosing
+Python module+class name, per
+`test_qualify_includes_module_for_c_domain_when_class_scope_present` in
+`crates/scope/src/python_scope.rs`.
+
+Real Sphinx's C domain has no concept of a "current Python class" at all —
+the only namespacing mechanism a `c:function`/`c:macro` respects is
+`.. c:namespace::`, which rusty-sphinx does not implement. A C function
+nested inside a Python class in real Sphinx registers under its own bare
+name, unaffected by the enclosing class.
+
+No CPython doc source is currently known to trigger this — real docs never
+nest a `c:function`/`c:macro` inside a `py:class` body — so unlike the two
+bugs above this has no benchmark-observed symptom. Flagging it as a latent
+correctness gap found while investigating (and fixing) an earlier bug in
+this file about unqualified `c:member` reference resolution, not a triaged
+warning.
+
+**Suggested fix:** not yet investigated in depth. Candidates: stop
+consulting `PythonScope`'s module/class parts for `Domain::C` objects
+entirely (route `c:function`/`c:macro` through `CScope` for consistency with
+the rest of the `c` domain, even though they don't currently establish or
+consume container nesting), or simply always qualify them to their own
+bare/dotted name regardless of any enclosing `PythonScope`.
 
 ---
 

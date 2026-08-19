@@ -262,6 +262,12 @@ C Domain
    same way a ``py:method`` written inside ``py:class`` picks up its class
    prefix.
 
+   Referencing :c:member:`count` right here, unqualified and with no leading
+   dot, resolves against the enclosing ``c:struct`` scope — it was written
+   this way in real CPython docs (see ``c-api/long.rst``'s ``digits``) and
+   used to be a broken link, since resolution only ever consulted the
+   ``py`` domain's scope, never the ``c`` domain's own container nesting.
+
    .. c:member:: int count
 
       A count, indexed as ``Data.count`` even though the signature above
@@ -396,7 +402,10 @@ type — unlike the ``PY_SSIZE_T_MAX`` case above, this one *does* have a real
 ``.. c:member::`` definition backing it. A dot-prefixed target,
 :c:member:`.count`, finds the same nested member via suffix search without
 repeating ``Data.`` at all — the same mechanism that lets :py:func:`.shout`
-(demonstrated further below) reach into a module it never names.
+(demonstrated further below) reach into a module it never names. An
+unqualified target written *inside* ``Data``'s own body (see the
+``c:struct`` above) resolves too, via the enclosing ``c:struct`` container
+scope rather than the suffix search.
 
 :c:member:`PyTypeObject.tp_bases` references the flat, non-nested member
 defined above, and :c:var:`errno` references the ``.. c:var::`` global,

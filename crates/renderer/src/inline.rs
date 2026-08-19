@@ -98,7 +98,10 @@ pub(super) fn render_inline(
                     broken_links: ctx.broken_links,
                     object_type_mismatches: ctx.object_type_mismatches,
                 },
-                &ctx.python_scope,
+                &rusty_sphinx_scope::Scope {
+                    python: &ctx.python_scope,
+                    c: &ctx.c_scope,
+                },
             );
         }
     }
@@ -305,7 +308,7 @@ pub(super) fn render_inline_domain_object_reference(
     resolver: &DomainObjectResolver<'_>,
     doc_path: &str,
     diagnostics: &mut DomainObjectDiagnostics<'_>,
-    scope: &rusty_sphinx_scope::PythonScope,
+    scope: &rusty_sphinx_scope::Scope<'_>,
 ) {
     let DomainObjectRef {
         object_type,
@@ -868,7 +871,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -907,7 +913,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -944,7 +953,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -982,7 +994,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then — resolved, and the anchor matches the actual definition's
@@ -1022,7 +1037,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1054,7 +1072,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1100,7 +1121,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1141,7 +1165,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
         let mut const_html = String::new();
         render_inline_domain_object_reference(
@@ -1159,7 +1186,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1193,7 +1223,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1246,7 +1279,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &scope,
+            &rusty_sphinx_scope::Scope {
+                python: &scope,
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1291,7 +1327,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &scope,
+            &rusty_sphinx_scope::Scope {
+                python: &scope,
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1338,7 +1377,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &scope,
+            &rusty_sphinx_scope::Scope {
+                python: &scope,
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1382,7 +1424,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &scope,
+            &rusty_sphinx_scope::Scope {
+                python: &scope,
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1427,7 +1472,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &scope,
+            &rusty_sphinx_scope::Scope {
+                python: &scope,
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1468,7 +1516,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &scope,
+            &rusty_sphinx_scope::Scope {
+                python: &scope,
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then — linked to the module-qualified class, and no dot is shown.
@@ -1512,7 +1563,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then — nothing is linked, and the diagnostic names both options.
@@ -1561,7 +1615,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1593,7 +1650,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
@@ -1633,7 +1693,10 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::PythonScope::default(),
+            &rusty_sphinx_scope::Scope {
+                python: &rusty_sphinx_scope::PythonScope::default(),
+                c: &rusty_sphinx_scope::CScope::default(),
+            },
         );
 
         // Then
