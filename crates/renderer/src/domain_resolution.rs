@@ -80,7 +80,7 @@ impl<'a> DomainObjectResolver<'a> {
     /// `scope`, using the search order the role's target asked for.
     pub(crate) fn resolve(
         &self,
-        scope: &Scope<'_>,
+        scope: &Scope,
         object_type: ObjectType,
         name: &str,
         order: TargetSearchOrder,
@@ -198,28 +198,9 @@ fn reverse_dotted_segments(name: &str) -> String {
 mod tests {
     use super::*;
     use rusty_sphinx_ast::{CObjectType, PyObjectType};
-    use rusty_sphinx_scope::{CScope, PythonScope};
 
     fn py(object_type: PyObjectType) -> ObjectType {
         ObjectType::Py(object_type)
-    }
-
-    /// Owns both scopes so a [`Scope`] view can be borrowed from one local
-    /// binding — `Scope` itself only ever borrows, so tests need somewhere
-    /// to own the `PythonScope`/`CScope` values it borrows from.
-    #[derive(Default)]
-    struct OwnedScope {
-        python: PythonScope,
-        c: CScope,
-    }
-
-    impl OwnedScope {
-        fn as_scope(&self) -> Scope<'_> {
-            Scope {
-                python: &self.python,
-                c: &self.c,
-            }
-        }
     }
 
     /// An index holding the shape of `CPython`'s `datetime` docs: a module
@@ -251,8 +232,8 @@ mod tests {
         index
     }
 
-    fn module_scope(module: &str) -> OwnedScope {
-        let mut scope = OwnedScope::default();
+    fn module_scope(module: &str) -> Scope {
+        let mut scope = Scope::default();
         scope.python.set_module(module);
         scope
     }
@@ -282,7 +263,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &module_scope("datetime").as_scope(),
+            &module_scope("datetime"),
             py(PyObjectType::Class),
             "datetime",
             TargetSearchOrder::MostQualifiedFirst,
@@ -308,7 +289,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &module_scope("datetime").as_scope(),
+            &module_scope("datetime"),
             py(PyObjectType::Module),
             "datetime",
             TargetSearchOrder::LeastQualifiedFirst,
@@ -335,7 +316,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &scope.as_scope(),
+            &scope,
             py(PyObjectType::Attribute),
             "tzinfo",
             TargetSearchOrder::MostQualifiedFirst,
@@ -362,7 +343,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &module_scope("datetime").as_scope(),
+            &module_scope("datetime"),
             py(PyObjectType::Class),
             "datetime",
             TargetSearchOrder::LeastQualifiedFirst,
@@ -389,7 +370,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &OwnedScope::default().as_scope(),
+            &Scope::default(),
             py(PyObjectType::Exception),
             "fault",
             TargetSearchOrder::LeastQualifiedFirst,
@@ -420,7 +401,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &module_scope("shutil").as_scope(),
+            &module_scope("shutil"),
             py(PyObjectType::Method),
             "TarFile.close",
             TargetSearchOrder::MostQualifiedFirst,
@@ -453,7 +434,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &OwnedScope::default().as_scope(),
+            &Scope::default(),
             ObjectType::C(CObjectType::Member),
             "count",
             TargetSearchOrder::MostQualifiedFirst,
@@ -486,12 +467,12 @@ mod tests {
             "c-api/long.rst",
         );
         let resolver = DomainObjectResolver::new(&index);
-        let mut scope = OwnedScope::default();
+        let mut scope = Scope::default();
         scope.c.push_containers(&["PyLongExport".to_string()]);
 
         // When
         let resolution = resolver.resolve(
-            &scope.as_scope(),
+            &scope,
             ObjectType::C(CObjectType::Member),
             "digits",
             TargetSearchOrder::LeastQualifiedFirst,
@@ -526,7 +507,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &OwnedScope::default().as_scope(),
+            &Scope::default(),
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
@@ -563,7 +544,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &OwnedScope::default().as_scope(),
+            &Scope::default(),
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
@@ -593,7 +574,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &OwnedScope::default().as_scope(),
+            &Scope::default(),
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
@@ -617,7 +598,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &OwnedScope::default().as_scope(),
+            &Scope::default(),
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::LeastQualifiedFirst,
@@ -641,7 +622,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &module_scope("zipimport").as_scope(),
+            &module_scope("zipimport"),
             ObjectType::C(CObjectType::Function),
             "PyList_Append",
             TargetSearchOrder::LeastQualifiedFirst,
@@ -666,7 +647,7 @@ mod tests {
 
         // When
         let resolution = resolver.resolve(
-            &module_scope("datetime").as_scope(),
+            &module_scope("datetime"),
             py(PyObjectType::Function),
             "nonexistent",
             TargetSearchOrder::LeastQualifiedFirst,

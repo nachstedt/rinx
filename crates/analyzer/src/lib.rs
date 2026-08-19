@@ -10,7 +10,7 @@ pub use utils::normalize_path;
 
 use rusty_sphinx_ast::{Directive, Document, DomainObjectBody, IndexEntry, Node, TargetName};
 use rusty_sphinx_index::{GenIndexEntry, NavEntry, ProjectIndex, TargetLocation};
-use rusty_sphinx_scope::{CScope, PythonScope};
+use rusty_sphinx_scope::Scope;
 
 use std::collections::BTreeMap;
 
@@ -30,13 +30,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             found_title = true;
         }
     }
-    index_nodes(
-        &doc.nodes,
-        &doc.path,
-        &mut index,
-        &mut PythonScope::default(),
-        &mut CScope::default(),
-    );
+    index_nodes(&doc.nodes, &doc.path, &mut index, &mut Scope::default());
     index
 }
 
@@ -48,8 +42,8 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// cross-references to resolve, exactly like it's still rendered with a
 /// working anchor.
 ///
-/// `scope` carries the enclosing `py:class`/`py:exception` stack (lexical,
-/// pushed/popped around a nested body — see
+/// `scope.python` carries the enclosing `py:class`/`py:exception` stack
+/// (lexical, pushed/popped around a nested body — see
 /// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`], shared with
 /// the renderer so index keys and anchor `id`s can't drift apart) and the
 /// most recently seen `py:module` (document-order state, not lexical
@@ -57,18 +51,12 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
 /// documents as *siblings*, not nested underneath it, so it is never popped
 /// when returning from a nested body; a module stays "current" for the rest
 /// of the document until another `py:module`, or `py:currentmodule`,
-/// changes it). `c_scope` is the same idea for the `c` domain's
+/// changes it). `scope.c` is the same idea for the `c` domain's
 /// `c:struct`/`c:union` nesting — a wholly separate stack (see
 /// [`rusty_sphinx_scope::CScope`]'s doc comment for why it isn't a variant of
 /// `PythonScope`); `c:function`/`c:macro` never touch it and keep qualifying
-/// via `scope` exactly as before it existed.
-fn index_nodes(
-    nodes: &[Node],
-    doc_path: &str,
-    index: &mut ProjectIndex,
-    scope: &mut PythonScope,
-    c_scope: &mut CScope,
-) {
+/// via `scope.python` exactly as before it existed.
+fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: &mut Scope) {
     for node in nodes {
         match node {
             Node::Target { name, uri } => {
@@ -109,27 +97,27 @@ fn index_nodes(
                 }
             }
             Node::Directive(Directive::DomainObject(obj)) => {
-                index_domain_object(obj, doc_path, index, scope, c_scope);
+                index_domain_object(obj, doc_path, index, scope);
             }
             Node::Directive(Directive::PyCurrentModule { module }) => match module {
-                Some(name) => scope.set_module(name),
-                None => scope.clear_module(),
+                Some(name) => scope.python.set_module(name),
+                None => scope.python.clear_module(),
             },
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
                 | Directive::SeeAlso { body },
             ) => {
-                index_nodes(body, doc_path, index, scope, c_scope);
+                index_nodes(body, doc_path, index, scope);
             }
             Node::BulletList { items, .. } => {
                 for item in items {
-                    index_nodes(&item.nodes, doc_path, index, scope, c_scope);
+                    index_nodes(&item.nodes, doc_path, index, scope);
                 }
             }
             Node::DefinitionList { items } => {
                 for item in items {
-                    index_nodes(&item.definition, doc_path, index, scope, c_scope);
+                    index_nodes(&item.definition, doc_path, index, scope);
                 }
             }
             Node::Table {
@@ -138,7 +126,7 @@ fn index_nodes(
             } => {
                 for row in header_rows.iter().chain(body_rows) {
                     for cell in &row.cells {
-                        index_nodes(&cell.content, doc_path, index, scope, c_scope);
+                        index_nodes(&cell.content, doc_path, index, scope);
                     }
                 }
             }
@@ -151,7 +139,7 @@ fn index_nodes(
                 }
                 for row in rows {
                     for cell in &row.cells {
-                        index_nodes(&cell.content, doc_path, index, scope, c_scope);
+                        index_nodes(&cell.content, doc_path, index, scope);
                     }
                 }
             }
@@ -167,8 +155,7 @@ fn index_domain_object(
     obj: &rusty_sphinx_ast::DomainObjectBody,
     doc_path: &str,
     index: &mut ProjectIndex,
-    scope: &mut PythonScope,
-    c_scope: &mut CScope,
+    scope: &mut Scope,
 ) {
     // A `py:module`'s own name is never qualified against the *previous*
     // module: real Sphinx always writes it in full and sets it verbatim as
@@ -196,10 +183,12 @@ fn index_domain_object(
     let (qualified_primary, new_segments) = if is_module {
         (own_names.first().clone(), Vec::new())
     } else if uses_c_scope {
-        let qualification = c_scope.qualify(own_names.first());
+        let qualification = scope.c.qualify(own_names.first());
         (qualification.qualified_name, qualification.new_segments)
     } else {
-        let qualification = scope.qualify(obj.object_type().domain(), own_names.first());
+        let qualification = scope
+            .python
+            .qualify(obj.object_type().domain(), own_names.first());
         (qualification.qualified_name, qualification.new_segments)
     };
 
@@ -207,9 +196,10 @@ fn index_domain_object(
         let qualified_name = if index_in_object == 0 {
             qualified_primary.clone()
         } else if uses_c_scope {
-            c_scope.qualify(own_name).qualified_name
+            scope.c.qualify(own_name).qualified_name
         } else {
             scope
+                .python
                 .qualify(obj.object_type().domain(), own_name)
                 .qualified_name
         };
@@ -231,19 +221,19 @@ fn index_domain_object(
     }
 
     if is_module {
-        scope.set_module(&qualified_primary);
+        scope.python.set_module(&qualified_primary);
     }
     // The body is indexed exactly once, no matter how many names the object
     // declares — the aliases share it rather than each owning a copy.
     let lend = obj.deduce_local_scope(&new_segments);
     if uses_c_scope {
-        let depth = c_scope.push_containers(&lend);
-        index_nodes(obj.body(), doc_path, index, scope, c_scope);
-        c_scope.truncate_containers(depth);
+        let depth = scope.c.push_containers(&lend);
+        index_nodes(obj.body(), doc_path, index, scope);
+        scope.c.truncate_containers(depth);
     } else {
-        let depth = scope.push_classes(&lend);
-        index_nodes(obj.body(), doc_path, index, scope, c_scope);
-        scope.truncate_classes(depth);
+        let depth = scope.python.push_classes(&lend);
+        index_nodes(obj.body(), doc_path, index, scope);
+        scope.python.truncate_classes(depth);
     }
 }
 

@@ -1,25 +1,32 @@
 use crate::{CScope, PythonScope};
 use rusty_sphinx_ast::{Domain, TargetSearchOrder};
 
-/// A borrowing view over every domain's scope, so reference-resolution code
-/// (see `rusty_sphinx_renderer::domain_resolution::DomainObjectResolver::resolve`)
-/// takes one scope argument regardless of how many domains exist, instead of
-/// growing one parameter per domain.
+/// The scope for every domain, owned as one unit and threaded through both
+/// the analyzer's indexing traversal (`index_nodes`/`index_domain_object`)
+/// and the renderer's matching render traversal (`render_domain_object`),
+/// as well as through reference resolution
+/// (`rusty_sphinx_renderer::domain_resolution::DomainObjectResolver::resolve`)
+/// — one scope argument/field regardless of how many domains exist, instead
+/// of growing one parameter per domain everywhere a scope is needed.
 ///
-/// Deliberately borrows rather than owning [`PythonScope`]/[`CScope`]: the
-/// definition-side traversal (`RenderCtx`'s `python_scope`/`c_scope` fields,
-/// and the analyzer's equivalent `&mut` parameters) keeps qualifying against
-/// each domain's scope independently, exactly as before this type existed —
-/// only reference *resolution* needs both scopes at once, so a `Scope` is
-/// built transiently at that call site rather than replacing the fields it
-/// borrows from.
-#[derive(Debug, Clone, Copy)]
-pub struct Scope<'a> {
-    pub python: &'a PythonScope,
-    pub c: &'a CScope,
+/// `.python`/`.c` stay as two separate fields rather than being hidden
+/// behind a single dispatch method: on the *definition* side, which of the
+/// two a given object qualifies against is decided per `DomainObjectBody`
+/// variant, not per domain — `c:function`/`c:macro` are `c`-domain but keep
+/// qualifying via `.python` (see [`CScope`]'s doc comment for why), while
+/// `c:struct`/`c:union`/`c:member`/`c:type` use `.c`. Callers already branch
+/// on this (the `uses_c_scope` checks in `index_domain_object` and
+/// `render_domain_object`) and keep doing so here, just addressing `.python`/
+/// `.c` on one `Scope` instead of two separate parameters/fields. Only
+/// reference *resolution* has a clean per-domain split, which is what
+/// [`Self::reference_candidates`] provides.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Scope {
+    pub python: PythonScope,
+    pub c: CScope,
 }
 
-impl Scope<'_> {
+impl Scope {
     /// Dispatches to the scope matching `domain`'s
     /// `reference_candidates` — see [`PythonScope::reference_candidates`]
     /// and [`CScope::reference_candidates`] for what each domain's tiers
@@ -45,13 +52,8 @@ mod tests {
     #[test]
     fn test_reference_candidates_dispatches_to_python_scope_for_py_domain() {
         // Given
-        let mut python = PythonScope::default();
-        python.set_module("datetime");
-        let c = CScope::default();
-        let scope = Scope {
-            python: &python,
-            c: &c,
-        };
+        let mut scope = Scope::default();
+        scope.python.set_module("datetime");
 
         // When
         let candidates = scope.reference_candidates(
@@ -70,13 +72,8 @@ mod tests {
     #[test]
     fn test_reference_candidates_dispatches_to_c_scope_for_c_domain() {
         // Given
-        let python = PythonScope::default();
-        let mut c = CScope::default();
-        c.push_containers(&["PyLongExport".to_string()]);
-        let scope = Scope {
-            python: &python,
-            c: &c,
-        };
+        let mut scope = Scope::default();
+        scope.c.push_containers(&["PyLongExport".to_string()]);
 
         // When
         let candidates =

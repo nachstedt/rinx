@@ -127,8 +127,8 @@ pub(super) fn render_domain_object(
     // module: real Sphinx always writes it in full and sets it verbatim as
     // the new current module, matching `index_domain_object` in the analyzer.
     let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
-    // `c:struct`/`c:union`/`c:member`/`c:type` qualify against `ctx.c_scope`
-    // instead of `ctx.python_scope` — mirrors the analyzer's
+    // `c:struct`/`c:union`/`c:member`/`c:type` qualify against `ctx.scope.c`
+    // instead of `ctx.scope.python` — mirrors the analyzer's
     // `index_domain_object` exactly, so anchor `id`s never drift from the
     // index keys.
     let uses_c_scope = matches!(
@@ -144,16 +144,17 @@ pub(super) fn render_domain_object(
     let (qualified_primary, new_segments) = if is_module {
         (own_names.first().clone(), Vec::new())
     } else if uses_c_scope {
-        let qualification = ctx.c_scope.qualify(own_names.first());
+        let qualification = ctx.scope.c.qualify(own_names.first());
         (qualification.qualified_name, qualification.new_segments)
     } else {
         let qualification = ctx
-            .python_scope
+            .scope
+            .python
             .qualify(object_type.domain(), own_names.first());
         (qualification.qualified_name, qualification.new_segments)
     };
     if is_module {
-        ctx.python_scope.set_module(&qualified_primary);
+        ctx.scope.python.set_module(&qualified_primary);
     }
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
@@ -170,9 +171,10 @@ pub(super) fn render_domain_object(
         let qualified_name = if index_in_object == 0 {
             qualified_primary.clone()
         } else if uses_c_scope {
-            ctx.c_scope.qualify(own_name).qualified_name
+            ctx.scope.c.qualify(own_name).qualified_name
         } else {
-            ctx.python_scope
+            ctx.scope
+                .python
                 .qualify(object_type.domain(), own_name)
                 .qualified_name
         };
@@ -195,13 +197,13 @@ pub(super) fn render_domain_object(
     render_domain_object_options(html, obj);
     let lend = obj.deduce_local_scope(&new_segments);
     if uses_c_scope {
-        let depth = ctx.c_scope.push_containers(&lend);
+        let depth = ctx.scope.c.push_containers(&lend);
         super::render_nodes(html, obj.body(), ctx);
-        ctx.c_scope.truncate_containers(depth);
+        ctx.scope.c.truncate_containers(depth);
     } else {
-        let depth = ctx.python_scope.push_classes(&lend);
+        let depth = ctx.scope.python.push_classes(&lend);
         super::render_nodes(html, obj.body(), ctx);
-        ctx.python_scope.truncate_classes(depth);
+        ctx.scope.python.truncate_classes(depth);
     }
     let _ = writeln!(html, "</dd>");
     let _ = writeln!(html, "</dl>");
@@ -594,8 +596,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
-            python_scope: rusty_sphinx_scope::PythonScope::default(),
-            c_scope: rusty_sphinx_scope::CScope::default(),
+            scope: rusty_sphinx_scope::Scope::default(),
         };
 
         // When
@@ -635,8 +636,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
-            python_scope: rusty_sphinx_scope::PythonScope::default(),
-            c_scope: rusty_sphinx_scope::CScope::default(),
+            scope: rusty_sphinx_scope::Scope::default(),
         };
 
         // When
@@ -812,8 +812,7 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
-            python_scope: rusty_sphinx_scope::PythonScope::default(),
-            c_scope: rusty_sphinx_scope::CScope::default(),
+            scope: rusty_sphinx_scope::Scope::default(),
         };
 
         // When
