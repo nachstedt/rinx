@@ -20,7 +20,7 @@ use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, ObjectType, TableRow};
 use rusty_sphinx_index::ProjectIndex;
-use rusty_sphinx_scope::{CScope, PythonScope};
+use rusty_sphinx_scope::Scope;
 use std::fmt::Write as _;
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
@@ -113,17 +113,16 @@ pub(crate) struct RenderCtx<'a> {
     pub original_doc_path: &'a str,
     pub broken_links: &'a mut Vec<BrokenLink>,
     pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
-    /// The enclosing `py:class`/`py:exception` stack and current `py:module`,
-    /// mirroring the analyzer's `index_nodes` scope so a domain object's
-    /// anchor `id` always matches the qualified key the analyzer indexed it
-    /// under. Pushed/popped by `render_domain_object` around a nested body;
-    /// the module component is document-order state, never popped.
-    pub python_scope: PythonScope,
-    /// The enclosing `c:struct`/`c:union` stack, mirroring the analyzer's
-    /// `index_nodes` `c_scope` for the same reason `python_scope` mirrors
-    /// its `scope` — see [`rusty_sphinx_scope::CScope`]'s doc comment for why
-    /// it's a separate type rather than a `PythonScope` variant.
-    pub c_scope: CScope,
+    /// The enclosing scope for both domains, mirroring the analyzer's
+    /// `index_nodes`/`index_domain_object` scope so a domain object's anchor
+    /// `id` always matches the qualified key the analyzer indexed it under.
+    /// `.python` carries the enclosing `py:class`/`py:exception` stack and
+    /// current `py:module`; `.c` carries the enclosing `c:struct`/`c:union`
+    /// stack — see [`rusty_sphinx_scope::Scope`]'s doc comment for why they
+    /// stay separate fields rather than being unified further. Both are
+    /// pushed/popped by `render_domain_object` around a nested body; the
+    /// module component of `.python` is document-order state, never popped.
+    pub scope: Scope,
 }
 
 /// Renders a Document into HTML, reporting any cross-references that failed to resolve.
@@ -148,8 +147,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         original_doc_path: &doc.path,
         broken_links: &mut broken_links,
         object_type_mismatches: &mut object_type_mismatches,
-        python_scope: PythonScope::default(),
-        c_scope: CScope::default(),
+        scope: Scope::default(),
     };
 
     render_nodes(&mut html, &doc.nodes, &mut ctx);
@@ -392,8 +390,8 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
             ctx,
         ),
         Directive::PyCurrentModule { module } => match module {
-            Some(name) => ctx.python_scope.set_module(name),
-            None => ctx.python_scope.clear_module(),
+            Some(name) => ctx.scope.python.set_module(name),
+            None => ctx.scope.python.clear_module(),
         },
         Directive::Unknown { .. } => {}
     }

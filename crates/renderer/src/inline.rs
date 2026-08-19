@@ -98,10 +98,7 @@ pub(super) fn render_inline(
                     broken_links: ctx.broken_links,
                     object_type_mismatches: ctx.object_type_mismatches,
                 },
-                &rusty_sphinx_scope::Scope {
-                    python: &ctx.python_scope,
-                    c: &ctx.c_scope,
-                },
+                &ctx.scope,
             );
         }
     }
@@ -308,7 +305,7 @@ pub(super) fn render_inline_domain_object_reference(
     resolver: &DomainObjectResolver<'_>,
     doc_path: &str,
     diagnostics: &mut DomainObjectDiagnostics<'_>,
-    scope: &rusty_sphinx_scope::Scope<'_>,
+    scope: &rusty_sphinx_scope::Scope,
 ) {
     let DomainObjectRef {
         object_type,
@@ -871,10 +868,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -913,10 +907,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -953,10 +944,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -994,10 +982,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then — resolved, and the anchor matches the actual definition's
@@ -1037,10 +1022,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -1072,10 +1054,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -1121,10 +1100,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -1165,10 +1141,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
         let mut const_html = String::new();
         render_inline_domain_object_reference(
@@ -1186,10 +1159,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -1223,10 +1193,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -1259,8 +1226,8 @@ mod tests {
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
 
-        let mut scope = rusty_sphinx_scope::PythonScope::default();
-        scope.set_module("zipimport");
+        let mut scope = rusty_sphinx_scope::Scope::default();
+        scope.python.set_module("zipimport");
 
         // When — the reference is written bare, as real Sphinx docs do,
         // relying on `zipimport` being the current module.
@@ -1279,10 +1246,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &scope,
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &scope,
         );
 
         // Then
@@ -1306,9 +1270,9 @@ mod tests {
         let mut html = String::new();
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
-        let mut scope = rusty_sphinx_scope::PythonScope::default();
-        scope.set_module("zipimport");
-        scope.push_classes(&["zipimporter".to_string()]);
+        let mut scope = rusty_sphinx_scope::Scope::default();
+        scope.python.set_module("zipimport");
+        scope.python.push_classes(&["zipimporter".to_string()]);
 
         // When — the reference is written bare, resolved against the
         // innermost enclosing class, which wins over the current module.
@@ -1327,10 +1291,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &scope,
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &scope,
         );
 
         // Then
@@ -1357,9 +1318,9 @@ mod tests {
         let mut html = String::new();
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
-        let mut scope = rusty_sphinx_scope::PythonScope::default();
-        scope.set_module("zipimport");
-        scope.push_classes(&["zipimporter".to_string()]);
+        let mut scope = rusty_sphinx_scope::Scope::default();
+        scope.python.set_module("zipimport");
+        scope.python.push_classes(&["zipimporter".to_string()]);
 
         // When
         render_inline_domain_object_reference(
@@ -1377,10 +1338,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &scope,
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &scope,
         );
 
         // Then
@@ -1404,8 +1362,8 @@ mod tests {
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
 
-        let mut scope = rusty_sphinx_scope::PythonScope::default();
-        scope.set_module("other_module");
+        let mut scope = rusty_sphinx_scope::Scope::default();
+        scope.python.set_module("other_module");
 
         // When — the qualified attempt ("other_module.greet") misses, so
         // resolution must fall back to the bare key.
@@ -1424,10 +1382,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &scope,
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &scope,
         );
 
         // Then
@@ -1453,8 +1408,8 @@ mod tests {
         let mut html = String::new();
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
-        let mut scope = rusty_sphinx_scope::PythonScope::default();
-        scope.set_module("types");
+        let mut scope = rusty_sphinx_scope::Scope::default();
+        scope.python.set_module("types");
 
         // When
         render_inline_domain_object_reference(
@@ -1472,10 +1427,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &scope,
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &scope,
         );
 
         // Then
@@ -1497,8 +1449,8 @@ mod tests {
         let mut html = String::new();
         let mut broken_links = Vec::new();
         let mut object_type_mismatches = Vec::new();
-        let mut scope = rusty_sphinx_scope::PythonScope::default();
-        scope.set_module("datetime");
+        let mut scope = rusty_sphinx_scope::Scope::default();
+        scope.python.set_module("datetime");
 
         // When
         render_inline_domain_object_reference(
@@ -1516,10 +1468,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &scope,
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &scope,
         );
 
         // Then — linked to the module-qualified class, and no dot is shown.
@@ -1563,10 +1512,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then — nothing is linked, and the diagnostic names both options.
@@ -1615,10 +1561,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -1650,10 +1593,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
@@ -1693,10 +1633,7 @@ mod tests {
                 broken_links: &mut broken_links,
                 object_type_mismatches: &mut object_type_mismatches,
             },
-            &rusty_sphinx_scope::Scope {
-                python: &rusty_sphinx_scope::PythonScope::default(),
-                c: &rusty_sphinx_scope::CScope::default(),
-            },
+            &rusty_sphinx_scope::Scope::default(),
         );
 
         // Then
