@@ -56,6 +56,13 @@ pub fn build_domain_object_key(object_type: ObjectType, name: &str) -> TargetNam
 pub enum DomainObjectBody {
     PyFunction {
         signatures: NonEmptyVector<String>,
+        /// Set by the `.. decorator::` directive-name alias (real Sphinx's
+        /// `PyDecoratorFunction`, which registers exactly as a `py:function`
+        /// but additionally prefixes the rendered signature with a literal
+        /// `@`). No dedicated `ObjectType`/directive option corresponds to
+        /// this — it's parser-derived intent, not something an author can
+        /// set via a body option line the way `py:method`'s flags are.
+        is_decorator: bool,
         body: Vec<Node>,
     },
     PyModule {
@@ -138,6 +145,9 @@ pub enum DomainObjectBody {
         is_staticmethod: bool,
         is_abstractmethod: bool,
         is_async: bool,
+        /// Set by the `.. decoratormethod::` directive-name alias — the
+        /// `py:method` counterpart of `PyFunction::is_decorator`, see there.
+        is_decorator: bool,
         body: Vec<Node>,
     },
     PyClass {
@@ -603,6 +613,7 @@ mod tests {
         // `ZipFile`'s methods flat, with dotted signatures, so the method's
         // own name carries the class scope its body should resolve against.
         let method = DomainObjectBody::PyMethod {
+            is_decorator: false,
             signatures: NonEmptyVector::single("ZipFile.open(name, mode='r')".to_string()),
             is_classmethod: false,
             is_staticmethod: false,
@@ -622,6 +633,7 @@ mod tests {
     fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_function() {
         // Given
         let function = DomainObjectBody::PyFunction {
+            is_decorator: false,
             signatures: NonEmptyVector::single("path.join(a, *p)".to_string()),
             body: vec![],
         };
@@ -674,6 +686,7 @@ mod tests {
     fn test_deduce_local_scope_returns_empty_for_undotted_function() {
         // Given — an unqualified, module-less function has no prefix to lend.
         let function = DomainObjectBody::PyFunction {
+            is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
             body: vec![],
         };
@@ -689,6 +702,7 @@ mod tests {
     fn test_deduce_local_scope_returns_empty_for_undotted_method() {
         // Given
         let method = DomainObjectBody::PyMethod {
+            is_decorator: false,
             signatures: NonEmptyVector::single("find_spec(fullname)".to_string()),
             is_classmethod: false,
             is_staticmethod: false,
@@ -776,6 +790,7 @@ mod tests {
         // Given / When / Then
         assert_eq!(
             DomainObjectBody::PyFunction {
+                is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
                 body: vec![],
             }
@@ -832,6 +847,7 @@ mod tests {
         );
         assert_eq!(
             DomainObjectBody::PyMethod {
+                is_decorator: false,
                 signatures: NonEmptyVector::single("greet(self, name)".to_string()),
                 is_classmethod: false,
                 is_staticmethod: false,
@@ -863,9 +879,50 @@ mod tests {
     }
 
     #[test]
+    fn test_domain_object_body_object_type_is_function_for_decorator() {
+        // Given — a `.. decorator::`-derived `PyFunction`: real Sphinx
+        // registers it under the exact same object type as a plain
+        // `py:function` (`PyDecoratorFunction.run()` forces
+        // `self.name = 'py:function'`), so `is_decorator` must not change
+        // `object_type()`.
+        let decorator = DomainObjectBody::PyFunction {
+            signatures: NonEmptyVector::single("classmethod".to_string()),
+            is_decorator: true,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(
+            decorator.object_type(),
+            ObjectType::Py(PyObjectType::Function)
+        );
+    }
+
+    #[test]
+    fn test_domain_object_body_object_type_is_method_for_decoratormethod() {
+        // Given
+        let decorator_method = DomainObjectBody::PyMethod {
+            signatures: NonEmptyVector::single("register(cls)".to_string()),
+            is_classmethod: false,
+            is_staticmethod: false,
+            is_abstractmethod: false,
+            is_async: false,
+            is_decorator: true,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(
+            decorator_method.object_type(),
+            ObjectType::Py(PyObjectType::Method)
+        );
+    }
+
+    #[test]
     fn test_domain_object_body_name_extracts_from_signature_for_functions() {
         // Given
         let function = DomainObjectBody::PyFunction {
+            is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
             body: vec![],
         };
@@ -902,6 +959,7 @@ mod tests {
     fn test_domain_object_body_name_extracts_from_signature_for_methods() {
         // Given
         let method = DomainObjectBody::PyMethod {
+            is_decorator: false,
             signatures: NonEmptyVector::single("Greeter.greet(self, name)".to_string()),
             is_classmethod: false,
             is_staticmethod: false,
@@ -918,6 +976,7 @@ mod tests {
     fn test_domain_object_body_signature_text_shows_full_signature_for_methods() {
         // Given
         let method = DomainObjectBody::PyMethod {
+            is_decorator: false,
             signatures: NonEmptyVector::single("greet(self, name)".to_string()),
             is_classmethod: true,
             is_staticmethod: false,
@@ -1128,6 +1187,7 @@ mod tests {
         // Given — a multi-signature function: every entry needs the same
         // name extraction applied, not only the primary.
         let function = DomainObjectBody::PyFunction {
+            is_decorator: false,
             signatures: NonEmptyVector::new(
                 "spawnl(mode, file, *args)".to_string(),
                 vec!["spawnle(mode, file, *args, env)".to_string()],
@@ -1331,6 +1391,7 @@ mod tests {
         // Given — the `<dt>` display text keeps the full signature, unlike
         // `names()`.
         let function = DomainObjectBody::PyFunction {
+            is_decorator: false,
             signatures: NonEmptyVector::new(
                 "spawnl(mode, file, *args)".to_string(),
                 vec!["spawnle(mode, file, *args, env)".to_string()],
@@ -1373,6 +1434,7 @@ mod tests {
         // Given — the renderer zips the two to pair each anchor with its
         // display text, so they must have matching lengths and order.
         let method = DomainObjectBody::PyMethod {
+            is_decorator: false,
             signatures: NonEmptyVector::new(
                 "ZipFile.open(name)".to_string(),
                 vec!["ZipFile.read(name)".to_string()],
@@ -1399,6 +1461,7 @@ mod tests {
         // Given
         let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
         let function = DomainObjectBody::PyFunction {
+            is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
             body: vec![paragraph.clone()],
         };
@@ -1431,6 +1494,7 @@ mod tests {
             body: vec![paragraph.clone()],
         };
         let method = DomainObjectBody::PyMethod {
+            is_decorator: false,
             signatures: NonEmptyVector::single("greet(self, name)".to_string()),
             is_classmethod: false,
             is_staticmethod: false,
@@ -1465,6 +1529,7 @@ mod tests {
     fn test_body_mut_allows_in_place_rewrite() {
         // Given
         let mut function = DomainObjectBody::PyFunction {
+            is_decorator: false,
             signatures: NonEmptyVector::single("foo()".to_string()),
             body: vec![Node::Comment],
         };

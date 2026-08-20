@@ -12,50 +12,14 @@ CPython ships `Doc/tools/.nitignore`, an explicit list of the only `.rst` files
 allowed to fail Sphinx's nit-picky mode in CI. Any file **not** in that list
 builds warning-free with `nitpicky = True`, so every cross-reference it
 contains — minus the symbols listed in `Doc/conf.py`'s `nitpick_ignore` — is
-known to resolve under real Sphinx. Both numbered bugs below live in files
-absent from `.nitignore` and reference targets absent from `nitpick_ignore`
-— the third entry is a separately-discovered latent gap with no
-benchmark-observed warning (see its own note).
+known to resolve under real Sphinx. The first numbered bug below lives in a
+file absent from `.nitignore` and references a target absent from
+`nitpick_ignore` — the second entry is a separately-discovered latent gap
+with no benchmark-observed warning (see its own note).
 
 ---
 
-## 1. `.. decorator::` is not implemented, so decorators are never indexed
-
-- **Warning:** `5  Doc/reference/datamodel: 'classmethod' (referenced as py:class)`
-- **Component:** `crates/parser/src/directives.rs` (`decorator: 69` in the
-  benchmark's "Unsupported Directives Summary")
-
-`classmethod`, `staticmethod`, `property`-style builtins and every decorator
-in the stdlib docs are declared with `.. decorator:: name`, which rusty-sphinx
-does not parse — so they never enter the index at all and *every* reference to
-them breaks, whatever role is used.
-
-Real Sphinx maps `PyDecoratorFunction`/`PyDecoratorMethod` onto the
-`py:function` / `py:method` object types (`PyDecoratorFunction.run()` sets
-`self.name = 'py:function'` before delegating), so
-`.. decorator:: classmethod` registers exactly as if it had been written
-`.. function:: classmethod`.
-
-**Reproducer:**
-
-```rst
-.. decorator:: classmethod
-
-   Transform a method into a class method.
-
-Retrieving a :class:`classmethod` object.
-```
-
-**Suggested fix:** parse `decorator` / `decoratormethod` as aliases producing
-`DomainObjectBody::PyFunction` / `PyMethod`. Note this alone will not silence
-this particular warning — the reference uses `:class:` against what becomes a
-`py:function`, which is the separate deliberate strictness deviation noted at
-the bottom of this file — but it fixes the `:func:`/`:deco:` references, which
-are the majority.
-
----
-
-## 2. `:c:func:` does not accept a `.. c:macro::` definition
+## 1. `:c:func:` does not accept a `.. c:macro::` definition
 
 - **Warnings:** `4  Doc/c-api/gcsupport: 'Py_VISIT' (referenced as c:function)`,
   `3  Doc/extending/newtypes_tutorial: 'Py_VISIT' (referenced as c:function)`
@@ -90,7 +54,7 @@ symmetry with the existing pair, consider `C(Function)` in `C(Macro)`'s).
 
 ---
 
-## 3. `c:function`/`c:macro` are qualified against the enclosing `PythonScope`, not `CScope`
+## 2. `c:function`/`c:macro` are qualified against the enclosing `PythonScope`, not `CScope`
 
 - **Component:** `crates/scope/src/python_scope.rs` (`PythonScope::qualify`'s
   domain gating: `include_module = domain == Domain::Py || !self.classes.is_empty()`),
@@ -112,8 +76,8 @@ nested inside a Python class in real Sphinx registers under its own bare
 name, unaffected by the enclosing class.
 
 No CPython doc source is currently known to trigger this — real docs never
-nest a `c:function`/`c:macro` inside a `py:class` body — so unlike the two
-bugs above this has no benchmark-observed symptom. Flagging it as a latent
+nest a `c:function`/`c:macro` inside a `py:class` body — so unlike the bug
+above this has no benchmark-observed symptom. Flagging it as a latent
 correctness gap found while investigating (and fixing) an earlier bug in
 this file about unqualified `c:member` reference resolution, not a triaged
 warning.

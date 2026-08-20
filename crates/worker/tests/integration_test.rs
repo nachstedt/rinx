@@ -471,6 +471,83 @@ Invalidate the cache via :meth:`ZoneInfo.clear_cache`.
 }
 
 #[test]
+fn test_e2e_decorator_directive_is_indexed_and_resolves() {
+    // Given — `known_bugs.md`'s bug #1: CPython's `Doc/reference/datamodel`
+    // documents `classmethod` via `.. decorator::` and references it with
+    // `:func:` (real Sphinx registers a decorator exactly as a `py:function`
+    // — `PyDecoratorFunction.run()` forces `self.name = 'py:function'` before
+    // delegating), which rusty-sphinx used to drop entirely as an unknown
+    // directive, breaking every reference to it.
+    let input = "\
+.. decorator:: classmethod
+
+   Transform a method into a class method.
+
+Retrieving a :func:`classmethod` object.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then — the reference resolves against the `py:function` key a plain
+    // `.. function::` would have produced.
+    assert!(
+        output.broken_links.is_empty(),
+        "expected no broken links, got {:?}",
+        output.broken_links
+    );
+    assert!(output.html.contains("<dt id=\"py:function:classmethod\">"));
+    assert!(output.html.contains("#py:function:classmethod\""));
+    // And — real Sphinx's `PyDecoratorFunction` prefixes the rendered
+    // signature with a literal `@` (`desc_addname('@', '@')`).
+    assert!(
+        output
+            .html
+            .contains("<code class=\"sig-name\">@classmethod</code>")
+    );
+}
+
+#[test]
+fn test_e2e_decoratormethod_directive_is_indexed_and_resolves() {
+    // Given — the `py:method` counterpart: `.. decoratormethod::` nested
+    // inside a class, referenced via `:meth:` using its class-qualified name.
+    let input = "\
+.. class:: Traits
+
+   A trait-registering metaclass helper.
+
+   .. decoratormethod:: register(cls)
+
+      Registers the decorated class as a trait.
+
+See :meth:`Traits.register` for details.
+";
+
+    let ast = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&ast);
+    let output = renderer::render(&ast, &index, &ast.path);
+
+    // Then
+    assert!(
+        output.broken_links.is_empty(),
+        "expected no broken links, got {:?}",
+        output.broken_links
+    );
+    assert!(
+        output
+            .html
+            .contains("<dt id=\"py:method:traits.register\">")
+    );
+    assert!(output.html.contains("#py:method:traits.register\""));
+    assert!(
+        output
+            .html
+            .contains("<code class=\"sig-name\">@register(cls)</code>")
+    );
+}
+
+#[test]
 fn test_e2e_function_definition_does_not_resolve_exc_role_reference() {
     // Given — a negative case guarding the alias table stays intentionally
     // small (`class`/`exception` only, matching real Sphinx's `py` domain):
