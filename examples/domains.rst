@@ -347,22 +347,22 @@ C Domain
    every definition nested inside a ``c:type`` body was silently dropped,
    since the directive wasn't recognized at all).
 
+   .. c:namespace:: NULL
+
    .. c:macro:: PYMEM_DOMAIN_RAW
 
-      The raw domain. Nesting a ``c:macro`` inside ``c:type`` qualifies its
-      name with the enclosing type, exactly like ``c:member`` does — every
-      ``c``-domain object, including ``c:macro``/``c:function``, qualifies
-      against the same enclosing-container scope, matching real Sphinx's C
-      domain, which nests *any* declaration generically off whatever
-      declaration it's indented under. So this is indexed as
-      ``PyMemAllocatorDomain.PYMEM_DOMAIN_RAW``, not bare ``PYMEM_DOMAIN_RAW``.
+      The raw domain. Nesting a ``c:macro`` inside ``c:type`` would normally
+      qualify its name with the enclosing type, exactly like ``c:member``
+      does — every ``c``-domain object qualifies against the same enclosing
+      scope, matching real Sphinx's C domain, which nests *any* declaration
+      generically off whatever declaration it's indented under.
 
-      Real CPython's own ``c-api/memory.rst`` renders this constant *bare*
-      despite the same nesting, because its source precedes these macros
-      with ``.. c:namespace:: NULL`` — a directive that explicitly resets
-      the qualifier back to empty. ``c:namespace`` isn't implemented here
-      yet (see ``known_bugs.md``), so rusty-sphinx has no way to reproduce
-      that reset and qualifies this constant instead.
+      The ``.. c:namespace:: NULL`` above resets that scope back to global,
+      so this constant is indexed bare as ``PYMEM_DOMAIN_RAW`` rather than
+      ``PyMemAllocatorDomain.PYMEM_DOMAIN_RAW``. This is verbatim the shape
+      real CPython's ``c-api/memory.rst`` uses, and the reason its enum-style
+      constants document under their bare names despite being written inside
+      the type's body.
 
 .. c:type:: unsigned long ulong
 
@@ -402,6 +402,57 @@ C Domain
    A type with only ``:no-index-entry:`` set: it still gets a
    cross-reference target (:c:type:`Quiet` resolves normally), but is left
    out of the general index page.
+
+C Namespaces
+------------
+
+The ``c:namespace`` family moves the current ``c``-domain scope without
+documenting anything itself — the ``c``-domain counterpart to
+``py:currentmodule``. It shares one scope with the automatic nesting the
+``c:struct``/``c:union``/``c:type`` bodies above establish, which is what
+lets the ``.. c:namespace:: NULL`` inside ``PyMemAllocatorDomain`` reset
+that body's qualification.
+
+``.. c:namespace::`` sets the scope *absolutely* and resets the push/pop
+stack:
+
+.. c:namespace:: Outer.Inner
+
+.. c:macro:: NAMESPACED_CONSTANT
+
+   Declared under ``.. c:namespace:: Outer.Inner``, so it is indexed as
+   ``Outer.Inner.NAMESPACED_CONSTANT``.
+
+``.. c:namespace-push::`` extends the current scope *relatively*, and
+``.. c:namespace-pop::`` undoes that push in its entirety — not merely one
+dotted segment of it:
+
+.. c:namespace-push:: Deeper.Still
+
+.. c:macro:: PUSHED_CONSTANT
+
+   Declared after pushing ``Deeper.Still`` onto ``Outer.Inner``, so it is
+   indexed as ``Outer.Inner.Deeper.Still.PUSHED_CONSTANT``.
+
+.. c:namespace-pop::
+
+.. c:macro:: POPPED_CONSTANT
+
+   Declared after the pop. The whole two-segment ``Deeper.Still`` push is
+   undone at once, so this is back to ``Outer.Inner.POPPED_CONSTANT`` — not
+   ``Outer.Inner.Deeper.POPPED_CONSTANT``.
+
+A reference written while a namespace is current is searched for starting in
+that scope, so :c:macro:`NAMESPACED_CONSTANT` resolves here by its bare name
+even though it is indexed fully qualified.
+
+.. c:namespace:: NULL
+
+.. c:macro:: GLOBAL_AGAIN
+
+   ``.. c:namespace:: NULL`` (``0`` works too) resets to global scope, so
+   this is indexed bare — and the namespace no longer leaks into the
+   sections below.
 
 Cross-References
 -----------------
@@ -448,14 +499,13 @@ confirming it produced the same kind of definition ``.. c:member::`` does.
 :c:type:`PyMemAllocatorDomain` and :c:type:`unsigned long ulong <ulong>`
 reference the two ``c:type`` definitions above — the second using explicit-title
 syntax, since ``ulong``'s own two-token signature isn't a valid target by
-itself. :c:macro:`PyMemAllocatorDomain.PYMEM_DOMAIN_RAW` reaches the macro
-nested inside ``PyMemAllocatorDomain``'s body by its full dotted name,
-confirming that nesting a macro under ``c:type`` qualifies it just like
-nesting a member does; the dot-prefixed :c:macro:`.PYMEM_DOMAIN_RAW` finds
-the same target via suffix search, without repeating the type name. Unlike
-``c:struct``/``c:union`` and their ``c:member`` aliases, ``:c:type:`` has no
-real-Sphinx cross-role looseness with any other object type — it only
-resolves against ``.. c:type::`` definitions.
+itself. :c:macro:`PYMEM_DOMAIN_RAW` reaches the macro nested inside
+``PyMemAllocatorDomain``'s body by its *bare* name, confirming that the
+``.. c:namespace:: NULL`` written in that body reset the qualification the
+enclosing ``c:type`` would otherwise have applied. Unlike ``c:struct``/
+``c:union`` and their ``c:member`` aliases, ``:c:type:`` has no real-Sphinx
+cross-role looseness with any other object type — it only resolves against
+``.. c:type::`` definitions.
 
 :c:type:`Py_tracefunc`, :c:type:`unaryfunc` and :c:type:`callbacks` reference
 the three declarator-shaped definitions above by the name their declarators

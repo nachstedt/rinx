@@ -204,9 +204,9 @@ pub(super) fn render_domain_object(
     render_domain_object_options(html, obj);
     let lend = obj.deduce_local_scope(&new_segments);
     if uses_c_scope {
-        let depth = ctx.scope.c.push_containers(&lend);
+        let saved = ctx.scope.c.push_containers(&lend);
         super::render_nodes(html, obj.body(), ctx);
-        ctx.scope.c.truncate_containers(depth);
+        ctx.scope.c.restore_containers(saved);
     } else {
         let depth = ctx.scope.python.push_classes(&lend);
         super::render_nodes(html, obj.body(), ctx);

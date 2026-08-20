@@ -80,39 +80,48 @@ not the object's variant), so a definition qualified via `PythonScope` while
 in-document references to it resolved via `CScope` were silently out of sync
 whenever a class scope was in play. Both now agree.
 
-**Accepted trade-off — see entry 3 below:** because `CScope`'s container
-stack is shared by every `c`-domain object, `c:function`/`c:macro` nested
-inside `c:struct`/`c:union`/`c:type` are now qualified by that container too,
-which they weren't before. This is a deliberate, known regression against
-one real CPython-docs case, accepted because implementing `.. c:namespace::`
-support to compensate was out of scope for this fix.
+**Trade-off at the time, since resolved — see entry 3 below:** because
+`CScope`'s scope is shared by every `c`-domain object, `c:function`/`c:macro`
+nested inside `c:struct`/`c:union`/`c:type` became qualified by that
+container too, which they weren't before. That briefly regressed one real
+CPython-docs case; implementing `c:namespace` closed it.
 
 ---
 
-## 3. `c:macro` nested under `c:type` is now qualified, unlike real CPython docs (accepted trade-off from fixing bug 2)
+## 3. `c:macro` nested under `c:type` was qualified, unlike real CPython docs — FIXED
 
-- **Component:** same as bug 2 — `crates/scope/src/c_scope.rs`'s doc comment,
-  `test_analyze_qualifies_c_macro_nested_under_c_type` in
-  `crates/analyzer/src/lib.rs`.
+- **Component:** `crates/scope/src/c_scope.rs` (`CScope::set_namespace`/
+  `push_namespace`/`pop_namespace`), `Directive::CNamespace`/`CNamespacePush`/
+  `CNamespacePop` in `crates/ast/src/directive.rs`, parsed by
+  `try_parse_scope_directive` (`crates/parser/src/directives.rs`) and applied
+  in `crates/analyzer/src/lib.rs`'s `index_nodes` and
+  `crates/renderer/src/lib.rs`'s `render_directive`.
 
 CPython's `c-api/memory.rst` nests enum-style `.. c:macro::` constants (e.g.
 `PYMEM_DOMAIN_RAW`) inside `.. c:type:: PyMemAllocatorDomain`, but references
-and renders them under their **bare** name. Real Sphinx achieves this by
-qualifying the macro against the enclosing type and then resetting the
-qualifier with a `.. c:namespace:: NULL` directive — a mechanism
-rusty-sphinx does not implement.
+and renders them under their **bare** name, because the source writes a
+`.. c:namespace:: NULL` inside that body to reset the qualifier. Bug 2's fix
+made `c:macro` consult `CScope` like every other `c`-domain object, so
+without `c:namespace` support the constant wrongly indexed as
+`PyMemAllocatorDomain.PYMEM_DOMAIN_RAW`.
 
-Before bug 2's fix, rusty-sphinx got this case right by accident: `c:macro`
-never consulted `CScope` at all, so it always registered bare, regardless of
-nesting, for an unrelated reason. Now that `c:macro` consults `CScope` like
-every other `c`-domain object (needed to fix bug 2's `py:class`-nesting
-case), this specific real-world case regresses: the macro now indexes as
-`PyMemAllocatorDomain.PYMEM_DOMAIN_RAW` instead of bare
-`PYMEM_DOMAIN_RAW`.
+**Fix:** the full `c:namespace`/`c:namespace-push`/`c:namespace-pop` family
+is now implemented. `CScope` models the current scope as a stack of scopes
+whose last entry is in effect; lexical nesting and the namespace directives
+both operate on it, exactly as real Sphinx has both `CObject.before_content`/
+`after_content` and its namespace directives read and write the single
+`ref_context['c:parent_key']`. The body-close restore replaces the whole
+stack by value rather than truncating to a saved depth, so a `c:namespace`
+reset inside a body cannot strand the scope when that body closes. See
+`test_analyze_c_namespace_null_inside_c_type_body_unqualifies_nested_macro`
+and the `C Namespaces` section of `examples/domains.rst`.
 
-**Suggested fix:** implement `.. c:namespace::` (at least the `NULL`-reset
-form) so `CScope`'s container stack can be explicitly cleared mid-body,
-matching what real Sphinx's C domain actually does here.
+One deliberate deviation: an unmatched `c:namespace-push` inside a
+`c:struct`/`c:union`/`c:type` body is contained by that body's close, so it
+cannot be consumed by a later unrelated `c:namespace-pop`. Sphinx's
+`before_content`/`after_content` save only the current-scope pointer and not
+its namespace stack, so it appears to leak there; containing is simpler and
+more defensible for what is malformed input either way.
 
 ---
 

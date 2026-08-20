@@ -490,6 +490,39 @@ mod tests {
     }
 
     #[test]
+    fn test_resolve_finds_unqualified_c_object_via_the_current_c_namespace() {
+        // Given — real Sphinx: "the subsequent cross-references will be
+        // searched for starting in the current scope", so a `c:namespace`
+        // feeds reference resolution, not just definition qualification.
+        // Needs no resolution-side code of its own: `CScope` exposes the
+        // namespace through the same current scope `reference_candidates`
+        // already reads.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(ObjectType::C(CObjectType::Macro), "A.B.CONSTANT", "api.rst");
+        let resolver = DomainObjectResolver::new(&index);
+        let mut scope = Scope::default();
+        scope.c.set_namespace(Some("A.B"));
+
+        // When — a bare reference written under that namespace.
+        let resolution = resolver.resolve(
+            &scope,
+            ObjectType::C(CObjectType::Macro),
+            "CONSTANT",
+            TargetSearchOrder::LeastQualifiedFirst,
+        );
+
+        // Then
+        assert_eq!(
+            resolution,
+            DomainObjectResolution::Resolved {
+                object_type: ObjectType::C(CObjectType::Macro),
+                qualified_name: "A.B.CONSTANT".to_string(),
+                doc_path: "api.rst",
+            }
+        );
+    }
+
+    #[test]
     fn test_resolve_reports_every_candidate_when_a_suffix_match_is_ambiguous() {
         // Given — two classes documenting a `close` method.
         let mut index = ProjectIndex::default();
