@@ -349,15 +349,20 @@ C Domain
 
    .. c:macro:: PYMEM_DOMAIN_RAW
 
-      The raw domain. Nesting a ``c:macro`` inside ``c:type`` does *not*
-      qualify its name with the enclosing type — unlike ``c:member``,
-      ``c:macro`` (like ``c:function``) never consults the enclosing C
-      scope regardless of what it's nested under, so this is indexed as the
-      bare ``PYMEM_DOMAIN_RAW``, not ``PyMemAllocatorDomain.PYMEM_DOMAIN_RAW``.
-      This happens to match real Sphinx's actual rendered output too, though
-      for a different reason: real CPython's docs precede these macros with
-      ``.. c:namespace:: NULL`` to reset what would otherwise be automatic
-      qualification — ``c:namespace`` itself isn't implemented here yet.
+      The raw domain. Nesting a ``c:macro`` inside ``c:type`` qualifies its
+      name with the enclosing type, exactly like ``c:member`` does — every
+      ``c``-domain object, including ``c:macro``/``c:function``, qualifies
+      against the same enclosing-container scope, matching real Sphinx's C
+      domain, which nests *any* declaration generically off whatever
+      declaration it's indented under. So this is indexed as
+      ``PyMemAllocatorDomain.PYMEM_DOMAIN_RAW``, not bare ``PYMEM_DOMAIN_RAW``.
+
+      Real CPython's own ``c-api/memory.rst`` renders this constant *bare*
+      despite the same nesting, because its source precedes these macros
+      with ``.. c:namespace:: NULL`` — a directive that explicitly resets
+      the qualifier back to empty. ``c:namespace`` isn't implemented here
+      yet (see ``known_bugs.md``), so rusty-sphinx has no way to reproduce
+      that reset and qualifies this constant instead.
 
 .. c:type:: unsigned long ulong
 
@@ -443,12 +448,14 @@ confirming it produced the same kind of definition ``.. c:member::`` does.
 :c:type:`PyMemAllocatorDomain` and :c:type:`unsigned long ulong <ulong>`
 reference the two ``c:type`` definitions above — the second using explicit-title
 syntax, since ``ulong``'s own two-token signature isn't a valid target by
-itself. :c:macro:`PYMEM_DOMAIN_RAW` reaches the macro nested inside
-``PyMemAllocatorDomain``'s body by its bare name, confirming that nesting a
-macro under ``c:type`` leaves it unqualified. Unlike ``c:struct``/``c:union``
-and their ``c:member`` aliases, ``:c:type:`` has no real-Sphinx cross-role
-looseness with any other object type — it only resolves against
-``.. c:type::`` definitions.
+itself. :c:macro:`PyMemAllocatorDomain.PYMEM_DOMAIN_RAW` reaches the macro
+nested inside ``PyMemAllocatorDomain``'s body by its full dotted name,
+confirming that nesting a macro under ``c:type`` qualifies it just like
+nesting a member does; the dot-prefixed :c:macro:`.PYMEM_DOMAIN_RAW` finds
+the same target via suffix search, without repeating the type name. Unlike
+``c:struct``/``c:union`` and their ``c:member`` aliases, ``:c:type:`` has no
+real-Sphinx cross-role looseness with any other object type — it only
+resolves against ``.. c:type::`` definitions.
 
 :c:type:`Py_tracefunc`, :c:type:`unaryfunc` and :c:type:`callbacks` reference
 the three declarator-shaped definitions above by the name their declarators

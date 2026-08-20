@@ -8,10 +8,18 @@ use rusty_sphinx_ast::TargetSearchOrder;
 /// doc comment) — the `c` domain has no class nesting and no module concept,
 /// just a container stack, so this is `PythonScope`'s `classes` stack and its
 /// `qualify`/`absorb` algorithm on their own, with nothing module-shaped
-/// grafted on. `c:function`/`c:macro` do not use this type at all: they keep
-/// qualifying via `PythonScope`, exactly as before this type existed
-/// (including the edge case of a `c:function` nested inside a `py:class`
-/// body), since nothing about their behavior needed to change.
+/// grafted on. Every `c`-domain object type qualifies against this type,
+/// including `c:function`/`c:macro` (`known_bugs.md` #2: they used to keep
+/// qualifying via `PythonScope`, so a `c:function`/`c:macro` nested inside a
+/// `py:class`/`py:exception` body was wrongly prefixed with the enclosing
+/// Python module+class — real Sphinx's C domain has no concept of an
+/// enclosing Python class at all). Neither establishes container nesting of
+/// its own (see [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`]),
+/// but nesting one inside a `c:struct`/`c:union`/`c:type` body now qualifies
+/// it against that container, same as `c:member` — a known, accepted
+/// mismatch against the one real CPython-docs case with this shape
+/// (`c-api/memory.rst`'s macro constants, which real Sphinx renders bare via
+/// a `.. c:namespace:: NULL` reset that rusty-sphinx doesn't implement).
 ///
 /// Transient: built fresh by each of the analyzer's and renderer's document
 /// walks, never stored in the AST.
