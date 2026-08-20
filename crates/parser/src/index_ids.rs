@@ -153,6 +153,7 @@ mod tests {
         let mut nodes = vec![Node::Directive(Directive::DomainObject(
             DomainObjectBody::PyFunction {
                 signatures: NonEmptyVector::single("foo()".to_string()),
+                is_decorator: false,
                 body: vec![index_directive()],
             },
         ))];

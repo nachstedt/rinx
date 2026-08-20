@@ -12,18 +12,21 @@ use rusty_sphinx_ast::{Directive, Domain, Node};
 /// The domain-object directive names the parser recognizes, resolved from a
 /// directive's `domain:objtype` (or bare, default-domain-resolved) name.
 /// Deliberately independent of `ast::ObjectType`: directive-name syntax
-/// (including the legacy `classmethod`/`staticmethod` aliases, which have no
-/// `ast::ObjectType` of their own — they're just `py:method` with a flag
-/// forced) is a parser concern, so it's modeled entirely here rather than
-/// borrowing the shared object-type vocabulary the analyzer/renderer use.
+/// (including the legacy `classmethod`/`staticmethod` aliases, and
+/// `decorator`/`decoratormethod`, none of which have an `ast::ObjectType` of
+/// their own — they're just `py:function`/`py:method` with a flag forced) is
+/// a parser concern, so it's modeled entirely here rather than borrowing the
+/// shared object-type vocabulary the analyzer/renderer use.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum DirectiveObjectType {
     PyFunction,
+    PyDecorator,
     PyModule,
     PyData,
     PyMethod,
     PyClassmethod,
     PyStaticmethod,
+    PyDecoratorMethod,
     PyClass,
     PyAttribute,
     PyException,
@@ -199,19 +202,25 @@ pub(super) fn try_parse_directive(
 /// Resolves a directive name to a [`DirectiveObjectType`]: either an explicit
 /// `domain:objtype` form (e.g. `py:function`), or a bare `objtype` name
 /// (e.g. `function`) resolved via `default_domain`. The `classmethod`/
-/// `staticmethod` legacy `py:method` aliases are recognized here too, and
-/// only in the `py` domain — the domain/bare-name split gates them for free,
-/// so a bare `.. classmethod::` under a `c` default domain resolves `domain`
-/// to `Domain::C`, matches no arm, and falls through to `Directive::Unknown`.
+/// `staticmethod`/`decorator`/`decoratormethod` legacy aliases are recognized
+/// here too, and only in the `py` domain — the domain/bare-name split gates
+/// them for free, so a bare `.. classmethod::` under a `c` default domain
+/// resolves `domain` to `Domain::C`, matches no arm, and falls through to
+/// `Directive::Unknown`. Real Sphinx's `PythonDomain` registers `decorator`/
+/// `decoratormethod` the same `py`-only way (`PyDecoratorFunction`/
+/// `PyDecoratorMethod`, both delegating to `py:function`/`py:method`), so
+/// there's no `c:decorator` to reject specially — it simply matches no arm.
 fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<DirectiveObjectType> {
     let (domain, objtype_str) = split_domain_qualified_name(name, default_domain)?;
     match (domain, objtype_str) {
         (Domain::Py, "function") => Some(DirectiveObjectType::PyFunction),
+        (Domain::Py, "decorator") => Some(DirectiveObjectType::PyDecorator),
         (Domain::Py, "module") => Some(DirectiveObjectType::PyModule),
         (Domain::Py, "data") => Some(DirectiveObjectType::PyData),
         (Domain::Py, "method") => Some(DirectiveObjectType::PyMethod),
         (Domain::Py, "classmethod") => Some(DirectiveObjectType::PyClassmethod),
         (Domain::Py, "staticmethod") => Some(DirectiveObjectType::PyStaticmethod),
+        (Domain::Py, "decoratormethod") => Some(DirectiveObjectType::PyDecoratorMethod),
         (Domain::Py, "class") => Some(DirectiveObjectType::PyClass),
         (Domain::Py, "attribute") => Some(DirectiveObjectType::PyAttribute),
         (Domain::Py, "exception") => Some(DirectiveObjectType::PyException),
@@ -881,6 +890,57 @@ mod tests {
         // Given — a bare `classmethod` under a `c` default domain: the alias
         // is `py`-only, so this must not resolve
         let name = "classmethod";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+
+        // Then
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_decorator_resolves_in_py_domain() {
+        // Given — a bare `decorator` directive name under the `py` default
+        // domain (the legacy `py:function` alias; see `known_bugs.md` #1)
+        let name = "decorator";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::PyDecorator));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_decoratormethod_resolves_in_py_domain() {
+        // Given
+        let name = "decoratormethod";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::PyDecoratorMethod));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_explicit_py_decorator_resolves() {
+        // Given — the explicit `py:decorator` domain-prefixed form
+        let name = "py:decorator";
+
+        // When — resolved even when the default domain is `c`
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::PyDecorator));
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_bare_decorator_rejected_in_c_domain() {
+        // Given — a bare `decorator` under a `c` default domain: the alias is
+        // `py`-only, so this must not resolve (real Sphinx defines no
+        // `c:decorator`)
+        let name = "decorator";
 
         // When
         let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);

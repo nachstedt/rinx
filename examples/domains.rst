@@ -129,6 +129,35 @@ siblings of the class rather than nested in it — resolve as
    Returns a ``Greeter`` for an anonymous caller. Written with the legacy
    ``.. staticmethod::`` spelling.
 
+Decorator Directives
+'''''''''''''''''''''
+
+Real Sphinx also has ``.. decorator::``/``.. decoratormethod::`` directives
+for documenting decorators — CPython's own ``Doc/reference/datamodel``
+documents the ``classmethod``/``staticmethod`` builtins this way. Both are
+directive-name aliases too, but onto ``py:function``/``py:method`` rather
+than forcing an option flag the way ``.. classmethod::``/``.. staticmethod::``
+do: real Sphinx's ``PyDecoratorFunction``/``PyDecoratorMethod`` register
+exactly as ``py:function``/``py:method`` (so plain ``:func:``/``:meth:``
+references resolve them, with no dedicated ``:deco:`` role — real Sphinx
+defines none), and additionally prefix the rendered signature with a literal
+``@``.
+
+.. decorator:: classmethod
+
+   Transform a method into a class method, the built-in decorator itself.
+   Written with ``.. decorator::`` rather than ``.. function::``.
+
+.. py:class:: Registry
+
+   A plugin registry.
+
+   .. decoratormethod:: register(cls)
+
+      Registers *cls* as a plugin, for use as ``@Registry.register``. Nested
+      inside ``Registry`` like an ordinary method, so it's indexed and
+      cross-referenced as ``Registry.register``.
+
 .. py:class:: ImmutableGreeter
    :final:
 
@@ -478,6 +507,13 @@ staticmethod — both defined above with the legacy ``.. classmethod::`` /
 ``.. staticmethod::`` directive spellings — resolve through the ordinary
 ``:py:meth:`` role just like the ones written as ``.. py:method::``, proving
 the legacy aliases are indexed identically.
+
+The ``.. decorator::`` example above defines :func:`classmethod` — indexed
+as a plain ``py:function``, so the ordinary ``:func:`` role resolves it, and
+its rendered signature is prefixed ``@classmethod``. Likewise
+:meth:`Registry.register`, defined via ``.. decoratormethod::`` nested inside
+``Registry``, resolves through ``:meth:`` exactly like a nested
+``.. py:method::`` would, and renders as ``@register(cls)``.
 
 :py:class:`Greeter` and the bare role :class:`ImmutableGreeter` both
 resolve to their respective ``py:class`` definitions above. The nested class

@@ -10,7 +10,8 @@ use rusty_sphinx_ast::{CSignature, Domain, DomainObjectBody, NameSource, Node, N
 /// shape (only `py:module` has `platform`/`synopsis`/`deprecated`, for
 /// instance). The legacy `Classmethod`/`Staticmethod` directive-name aliases
 /// map to the same `py:method` body as `PyMethod`, with the matching flag
-/// forced on.
+/// forced on; `Decorator`/`DecoratorMethod` do the same onto `PyFunction`/
+/// `PyMethod`'s `is_decorator` flag (see [`parse_py_function`]).
 ///
 /// `argument` is the directive's own argument line and `continuations` the
 /// further argument lines that followed it (see
@@ -31,10 +32,6 @@ pub(super) fn parse_domain_object(
 ) -> DomainObjectBody {
     let signatures = NonEmptyVector::new(argument, continuations);
     match object_type {
-        DirectiveObjectType::PyFunction => DomainObjectBody::PyFunction {
-            signatures,
-            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
-        },
         DirectiveObjectType::CFunction
         | DirectiveObjectType::CMacro
         | DirectiveObjectType::CStruct
@@ -47,6 +44,51 @@ pub(super) fn parse_domain_object(
             adornment_order,
             diagnostics,
             default_domain,
+        ),
+        _ => parse_py_domain_object(
+            object_type,
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+        ),
+    }
+}
+
+/// Dispatches the ten `py`-domain object types (including the
+/// `classmethod`/`staticmethod`/`decorator`/`decoratormethod` directive-name
+/// aliases, which carry no `ast::ObjectType`/[`DomainObjectBody`] variant of
+/// their own) to their respective parsers — factored out of
+/// [`parse_domain_object`] purely to keep that function's line count
+/// manageable, mirroring [`parse_c_domain_object`]'s split for the `c`
+/// domain. Only ever called with a non-`c` variant (enforced by
+/// `parse_domain_object`'s own match arm), so the `C*` variants are
+/// unreachable here.
+fn parse_py_domain_object(
+    object_type: DirectiveObjectType,
+    signatures: NonEmptyVector<String>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> DomainObjectBody {
+    match object_type {
+        DirectiveObjectType::PyFunction => parse_py_function(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+            false,
+        ),
+        DirectiveObjectType::PyDecorator => parse_py_function(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            default_domain,
+            true,
         ),
         DirectiveObjectType::PyModule => parse_py_module(
             signatures.first().clone(),
@@ -62,32 +104,16 @@ pub(super) fn parse_domain_object(
             diagnostics,
             default_domain,
         ),
-        DirectiveObjectType::PyMethod => parse_py_method(
+        DirectiveObjectType::PyMethod
+        | DirectiveObjectType::PyClassmethod
+        | DirectiveObjectType::PyStaticmethod
+        | DirectiveObjectType::PyDecoratorMethod => parse_py_method(
             signatures,
             body_lines,
             adornment_order,
             diagnostics,
             default_domain,
-            false,
-            false,
-        ),
-        DirectiveObjectType::PyClassmethod => parse_py_method(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-            true,
-            false,
-        ),
-        DirectiveObjectType::PyStaticmethod => parse_py_method(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-            false,
-            true,
+            ForcedMethodFlags::for_directive(object_type),
         ),
         DirectiveObjectType::PyClass => parse_py_class(
             signatures,
@@ -110,6 +136,14 @@ pub(super) fn parse_domain_object(
             diagnostics,
             default_domain,
         ),
+        DirectiveObjectType::CFunction
+        | DirectiveObjectType::CMacro
+        | DirectiveObjectType::CStruct
+        | DirectiveObjectType::CUnion
+        | DirectiveObjectType::CMember
+        | DirectiveObjectType::CType => {
+            unreachable!("parse_py_domain_object called with a c object type")
+        }
     }
 }
 
@@ -189,11 +223,13 @@ fn parse_c_domain_object(
             default_domain,
         ),
         DirectiveObjectType::PyFunction
+        | DirectiveObjectType::PyDecorator
         | DirectiveObjectType::PyModule
         | DirectiveObjectType::PyData
         | DirectiveObjectType::PyMethod
         | DirectiveObjectType::PyClassmethod
         | DirectiveObjectType::PyStaticmethod
+        | DirectiveObjectType::PyDecoratorMethod
         | DirectiveObjectType::PyClass
         | DirectiveObjectType::PyAttribute
         | DirectiveObjectType::PyException => {
@@ -214,6 +250,31 @@ fn parse_body(
     let unindented_lines = unindent_body_lines(body_lines);
     let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
     parse_blocks(&body_content, adornment_order, diagnostics, default_domain)
+}
+
+/// Parses a `.. py:function::` body — no options to strip: unlike
+/// `py:method`, real Sphinx's `py:function` directive has no body-option
+/// flags at all, so the whole body is docstring content.
+///
+/// `forced_decorator` comes from the legacy `.. decorator::` directive-name
+/// alias (which is just `py:function` with `is_decorator` implied) — see
+/// [`DomainObjectBody::PyFunction::is_decorator`]. Unlike
+/// `forced_classmethod`/`forced_staticmethod` on [`parse_py_method`], there's
+/// no explicit body-option spelling to OR it against: real Sphinx has no
+/// `:decorator:` option, only the directive-name alias.
+fn parse_py_function(
+    signatures: NonEmptyVector<String>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+    forced_decorator: bool,
+) -> DomainObjectBody {
+    DomainObjectBody::PyFunction {
+        signatures,
+        is_decorator: forced_decorator,
+        body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+    }
 }
 
 /// Parses a `.. py:module::` body: strips `:platform:`/`:synopsis:`/
@@ -271,24 +332,72 @@ fn parse_py_data(
     }
 }
 
+/// The `py:method`-alias directive-name flags that [`parse_py_method`]
+/// forces on regardless of the body's own option lines — one field per
+/// legacy alias (`.. classmethod::`, `.. staticmethod::`,
+/// `.. decoratormethod::`), bundled into one type purely so the function
+/// accepting them stays under clippy's argument-count lint; a plain
+/// `.. py:method::` passes [`Self::NONE`].
+#[derive(Debug, Clone, Copy, Default)]
+struct ForcedMethodFlags {
+    classmethod: bool,
+    staticmethod: bool,
+    decorator: bool,
+}
+
+impl ForcedMethodFlags {
+    const NONE: Self = Self {
+        classmethod: false,
+        staticmethod: false,
+        decorator: false,
+    };
+
+    /// Derives the flags a `py:method`-family [`DirectiveObjectType`] forces
+    /// on. Only ever called with one of the four variants this covers
+    /// (enforced by [`parse_py_domain_object`]'s own match arm), so any other
+    /// variant is unreachable here — kept as a `const fn` on this type,
+    /// rather than inlined per call site, purely to keep
+    /// `parse_py_domain_object` under clippy's line-count lint.
+    fn for_directive(object_type: DirectiveObjectType) -> Self {
+        match object_type {
+            DirectiveObjectType::PyMethod => Self::NONE,
+            DirectiveObjectType::PyClassmethod => Self {
+                classmethod: true,
+                ..Self::NONE
+            },
+            DirectiveObjectType::PyStaticmethod => Self {
+                staticmethod: true,
+                ..Self::NONE
+            },
+            DirectiveObjectType::PyDecoratorMethod => Self {
+                decorator: true,
+                ..Self::NONE
+            },
+            _ => unreachable!("for_directive called with a non-py-method-family object type"),
+        }
+    }
+}
+
 /// Parses a `.. py:method::` body: strips `:classmethod:`/`:staticmethod:`/
 /// `:abstractmethod:`/`:async:` flag lines off the front before parsing the
 /// rest as the docstring body.
 ///
-/// `forced_classmethod`/`forced_staticmethod` come from the legacy
+/// `forced.classmethod`/`forced.staticmethod` come from the legacy
 /// `.. classmethod::`/`.. staticmethod::` directive-name aliases (which are
 /// just `py:method` with the matching flag implied); they are OR-ed with any
 /// flag the body's own `:classmethod:`/`:staticmethod:` option lines set, so
 /// the alias spelling and the explicit option spelling compose rather than
-/// conflict.
+/// conflict. `forced.decorator` comes from `.. decoratormethod::` the same
+/// way, but — like `py:function`'s `forced_decorator` in
+/// [`parse_py_function`] — has no explicit `:decorator:` option to OR
+/// against, since real Sphinx doesn't define one.
 fn parse_py_method(
     signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
     default_domain: Domain,
-    forced_classmethod: bool,
-    forced_staticmethod: bool,
+    forced: ForcedMethodFlags,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
     let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, options_consumed) =
@@ -302,10 +411,11 @@ fn parse_py_method(
 
     DomainObjectBody::PyMethod {
         signatures,
-        is_classmethod: is_classmethod || forced_classmethod,
-        is_staticmethod: is_staticmethod || forced_staticmethod,
+        is_classmethod: is_classmethod || forced.classmethod,
+        is_staticmethod: is_staticmethod || forced.staticmethod,
         is_abstractmethod,
         is_async,
+        is_decorator: forced.decorator,
         body,
     }
 }
@@ -951,6 +1061,7 @@ mod tests {
             is_staticmethod,
             is_abstractmethod,
             is_async,
+            is_decorator,
             body,
         })) = &doc.nodes[0]
         {
@@ -959,6 +1070,7 @@ mod tests {
             assert!(!is_staticmethod);
             assert!(!is_abstractmethod);
             assert!(!is_async);
+            assert!(!is_decorator);
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
@@ -1041,6 +1153,7 @@ mod tests {
             is_staticmethod,
             is_abstractmethod,
             is_async,
+            is_decorator,
             body,
         })) = &doc.nodes[0]
         {
@@ -1052,6 +1165,7 @@ mod tests {
             assert!(!is_staticmethod);
             assert!(!is_abstractmethod);
             assert!(!is_async);
+            assert!(!is_decorator);
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
@@ -1074,6 +1188,7 @@ mod tests {
             is_staticmethod,
             is_abstractmethod,
             is_async,
+            is_decorator,
             body,
         })) = &doc.nodes[0]
         {
@@ -1082,6 +1197,7 @@ mod tests {
             assert!(*is_staticmethod);
             assert!(!is_abstractmethod);
             assert!(!is_async);
+            assert!(!is_decorator);
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
@@ -1114,6 +1230,114 @@ mod tests {
             assert!(!is_async);
         } else {
             panic!("Expected PyMethod, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_decorator_alias_directive_forces_is_decorator_flag() {
+        // Given — the `known_bugs.md` #1 repro: `.. decorator::` under the
+        // default `py` domain, a bare name (as CPython's
+        // `Doc/reference/datamodel` writes `classmethod`/`staticmethod`)
+        let input = ".. decorator:: classmethod\n\n   Transform a method into a class method.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — it parses as a `py:function` with `is_decorator` forced on
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
+            signatures,
+            is_decorator,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(signatures.as_slice(), ["classmethod"]);
+            assert!(*is_decorator);
+            assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_explicit_py_decorator_directive_forces_is_decorator_flag() {
+        // Given — the explicit `py:decorator` domain-prefixed spelling
+        let input = ".. py:decorator:: coroutine\n\n   Mark a function as a coroutine.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
+            is_decorator,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(*is_decorator);
+        } else {
+            panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_plain_py_function_leaves_is_decorator_unset() {
+        // Given — a negative case: an ordinary `.. py:function::` must not
+        // pick up `is_decorator` just because the variant now has the field.
+        let input = ".. py:function:: greet(name)\n\n   Greets the given name.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
+            is_decorator,
+            ..
+        })) = &doc.nodes[0]
+        {
+            assert!(!is_decorator);
+        } else {
+            panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_decoratormethod_alias_directive_forces_is_decorator_flag() {
+        // Given — the `py:method` counterpart, nested inside a class the way
+        // real decorator-producing methods are documented
+        let input =
+            ".. class:: Traits\n\n   .. decoratormethod:: register(cls)\n\n      Registers cls.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
+            body, ..
+        })) = &doc.nodes[0]
+        {
+            let method = body.iter().find_map(|node| match node {
+                Node::Directive(Directive::DomainObject(
+                    method @ DomainObjectBody::PyMethod { .. },
+                )) => Some(method),
+                _ => None,
+            });
+            if let Some(DomainObjectBody::PyMethod {
+                signatures,
+                is_classmethod,
+                is_staticmethod,
+                is_decorator,
+                ..
+            }) = method
+            {
+                assert_eq!(signatures.as_slice(), ["register(cls)"]);
+                assert!(!is_classmethod);
+                assert!(!is_staticmethod);
+                assert!(*is_decorator);
+            } else {
+                panic!("Expected a nested PyMethod, got {method:?}");
+            }
+        } else {
+            panic!("Expected PyClass, got {:?}", doc.nodes[0]);
         }
     }
 
@@ -1466,8 +1690,14 @@ mod tests {
         );
 
         // Then
-        if let DomainObjectBody::PyFunction { signatures, body } = domain_object {
+        if let DomainObjectBody::PyFunction {
+            signatures,
+            is_decorator,
+            body,
+        } = domain_object
+        {
             assert_eq!(signatures.as_slice(), [signature]);
+            assert!(!is_decorator);
             assert_eq!(body.len(), 1);
             assert!(matches!(body[0], Node::Paragraph(_)));
         } else {
@@ -1609,10 +1839,12 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signatures,
+            is_decorator,
             body,
         })) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["greet(name)"]);
+            assert!(!is_decorator);
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
@@ -1816,6 +2048,7 @@ mod tests {
         // Then
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signatures,
+            is_decorator,
             body,
         })) = &doc.nodes[0]
         {
@@ -1826,6 +2059,7 @@ mod tests {
                     "spawnle(mode, file, *args, env)"
                 ]
             );
+            assert!(!is_decorator);
             assert_eq!(body.len(), 1);
         } else {
             panic!("Expected PyFunction, got {:?}", doc.nodes[0]);
