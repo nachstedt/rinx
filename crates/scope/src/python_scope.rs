@@ -133,30 +133,28 @@ impl PythonScope {
         candidates
     }
 
-    /// Qualifies `own_name` (a domain object's own, possibly dotted, name)
-    /// against this scope for an object of the given `domain`.
+    /// Qualifies `own_name` (a `py`-domain object's own, possibly dotted,
+    /// name) against this scope.
     ///
     /// This is the *definition* side — see [`Self::reference_candidates`] for
-    /// how a reference to a name is resolved, and why the two differ.
+    /// how a reference to a name is resolved, and why the two differ. Only
+    /// ever called for `py`-domain objects: `c`-domain objects qualify
+    /// against [`crate::CScope`] instead (see that type's doc comment).
     ///
     /// A dotted `own_name` that repeats (all or just the innermost segment
     /// of) the current class stack has that repeat absorbed, exactly once,
     /// before the scope is prefixed — the class stack is never compared
     /// against the module, so a class name that happens to equal the module
     /// name (`datetime`/`datetime`) is never mistaken for a module repeat.
-    /// The module is included only when `domain` is [`Domain::Py`], or when
-    /// a class scope applies at all (an enclosing class's own qualified name
-    /// already had the module folded in when the class itself was
-    /// qualified) — mirroring the domain gating the retired
-    /// `effective_qualifier` used to apply.
+    /// The module is always included when set, unlike the retired
+    /// `effective_qualifier` this superseded, which gated it on domain.
     #[must_use]
-    pub fn qualify(&self, domain: Domain, own_name: &str) -> Qualification {
+    pub fn qualify(&self, own_name: &str) -> Qualification {
         let sig_segments: Vec<&str> = own_name.split('.').collect();
         let new_segments = self.absorb(&sig_segments);
 
-        let include_module = domain == Domain::Py || !self.classes.is_empty();
         let mut parts: Vec<&str> = Vec::new();
-        if include_module && let Some(module) = &self.module {
+        if let Some(module) = &self.module {
             parts.push(module.as_str());
         }
         parts.extend(self.classes.iter().map(String::as_str));
@@ -206,7 +204,7 @@ mod tests {
         let scope = PythonScope::default();
 
         // When
-        let qualification = scope.qualify(Domain::Py, "greet");
+        let qualification = scope.qualify("greet");
 
         // Then
         assert_eq!(qualification.qualified_name, "greet");
@@ -220,24 +218,10 @@ mod tests {
         scope.set_module("types");
 
         // When
-        let qualification = scope.qualify(Domain::Py, "coroutine");
+        let qualification = scope.qualify("coroutine");
 
         // Then
         assert_eq!(qualification.qualified_name, "types.coroutine");
-    }
-
-    #[test]
-    fn test_qualify_never_applies_module_to_c_domain_with_no_class_scope() {
-        // Given — a `c:function` written as a later sibling after
-        // `py:module:: types` must not get "types." prepended.
-        let mut scope = PythonScope::default();
-        scope.set_module("types");
-
-        // When
-        let qualification = scope.qualify(Domain::C, "PyList_Append");
-
-        // Then
-        assert_eq!(qualification.qualified_name, "PyList_Append");
     }
 
     #[test]
@@ -249,7 +233,7 @@ mod tests {
         scope.push_classes(&segments(&["Random"]));
 
         // When
-        let qualification = scope.qualify(Domain::Py, "Random.seed");
+        let qualification = scope.qualify("Random.seed");
 
         // Then — not doubled to "random.Random.Random.seed".
         assert_eq!(qualification.qualified_name, "random.Random.seed");
@@ -265,7 +249,7 @@ mod tests {
         scope.push_classes(&segments(&["Inner"]));
 
         // When
-        let qualification = scope.qualify(Domain::Py, "Inner.method");
+        let qualification = scope.qualify("Inner.method");
 
         // Then
         assert_eq!(qualification.qualified_name, "Outer.Inner.method");
@@ -279,7 +263,7 @@ mod tests {
         scope.push_classes(&segments(&["Inner"]));
 
         // When
-        let qualification = scope.qualify(Domain::Py, "Outer.Inner.method");
+        let qualification = scope.qualify("Outer.Inner.method");
 
         // Then — not doubled to "Outer.Inner.Outer.Inner.method".
         assert_eq!(qualification.qualified_name, "Outer.Inner.method");
@@ -296,7 +280,7 @@ mod tests {
         scope.set_module("datetime");
 
         // When
-        let qualification = scope.qualify(Domain::Py, "datetime.strptime");
+        let qualification = scope.qualify("datetime.strptime");
 
         // Then
         assert_eq!(qualification.qualified_name, "datetime.datetime.strptime");
@@ -318,27 +302,10 @@ mod tests {
         scope.push_classes(&segments(&["ZipFile"]));
 
         // When
-        let qualification = scope.qualify(Domain::Py, "ZipFile.read");
+        let qualification = scope.qualify("ZipFile.read");
 
         // Then
         assert_eq!(qualification.qualified_name, "zipfile.ZipFile.read");
-    }
-
-    #[test]
-    fn test_qualify_includes_module_for_c_domain_when_class_scope_present() {
-        // Given — a `c:function` (structurally) nested inside a `py:class`
-        // body: the class's own qualified name already had the module
-        // folded in, so it applies here too, matching the retired
-        // `effective_qualifier`'s `class_qualifier.or(...)` precedence.
-        let mut scope = PythonScope::default();
-        scope.set_module("random");
-        scope.push_classes(&segments(&["Random"]));
-
-        // When
-        let qualification = scope.qualify(Domain::C, "seed");
-
-        // Then
-        assert_eq!(qualification.qualified_name, "random.Random.seed");
     }
 
     #[test]
@@ -351,7 +318,7 @@ mod tests {
 
         // When — truncate back to that depth once "Inner"'s body is done.
         scope.truncate_classes(depth);
-        let qualification = scope.qualify(Domain::Py, "method");
+        let qualification = scope.qualify("method");
 
         // Then — only "Outer" remains on the class stack.
         assert_eq!(qualification.qualified_name, "Outer.method");
@@ -380,7 +347,7 @@ mod tests {
         scope.truncate_classes(depth);
 
         // When
-        let qualification = scope.qualify(Domain::Py, "MIMEText");
+        let qualification = scope.qualify("MIMEText");
 
         // Then
         assert_eq!(qualification.qualified_name, "email.mime.MIMEText");
@@ -395,7 +362,7 @@ mod tests {
         scope.push_classes(&segments(&["StopIteration"]));
 
         // When
-        let qualification = scope.qualify(Domain::Py, "StopIteration.value");
+        let qualification = scope.qualify("StopIteration.value");
 
         // Then
         assert_eq!(qualification.qualified_name, "StopIteration.value");
@@ -510,7 +477,7 @@ mod tests {
 
         // When
         scope.clear_module();
-        let qualification = scope.qualify(Domain::Py, "Enum");
+        let qualification = scope.qualify("Enum");
 
         // Then
         assert_eq!(qualification.qualified_name, "Enum");
@@ -541,7 +508,7 @@ mod tests {
 
         // When
         scope.clear_module();
-        let qualification = scope.qualify(Domain::Py, "name");
+        let qualification = scope.qualify("name");
 
         // Then
         assert_eq!(qualification.qualified_name, "Flag.name");

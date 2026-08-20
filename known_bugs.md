@@ -54,40 +54,65 @@ symmetry with the existing pair, consider `C(Function)` in `C(Macro)`'s).
 
 ---
 
-## 2. `c:function`/`c:macro` are qualified against the enclosing `PythonScope`, not `CScope`
+## 2. `c:function`/`c:macro` are qualified against the enclosing `PythonScope`, not `CScope` — FIXED
 
-- **Component:** `crates/scope/src/python_scope.rs` (`PythonScope::qualify`'s
-  domain gating: `include_module = domain == Domain::Py || !self.classes.is_empty()`),
+- **Component:** `crates/scope/src/python_scope.rs`, `crates/scope/src/c_scope.rs`,
   consumed from `crates/renderer/src/directives.rs` and
-  `crates/analyzer/src/lib.rs` wherever `c:function`/`c:macro` fall through to
-  the non-`uses_c_scope` branch.
+  `crates/analyzer/src/lib.rs`'s `uses_c_scope` match.
 
 A `.. c:function::`/`.. c:macro::` nested inside a `.. py:class::`/
-`.. py:exception::` body (so `PythonScope`'s class stack is non-empty when
-the C object is qualified) currently gets prefixed with that enclosing
-Python module+class name, per
-`test_qualify_includes_module_for_c_domain_when_class_scope_present` in
-`crates/scope/src/python_scope.rs`.
+`.. py:exception::` body used to get prefixed with the enclosing Python
+module+class name, because it fell through to `PythonScope::qualify` like
+every other non-`c:struct`/`c:union`/`c:member`/`c:type` object. Real Sphinx's
+C domain has no concept of a "current Python class" at all, so this was
+wrong.
 
-Real Sphinx's C domain has no concept of a "current Python class" at all —
-the only namespacing mechanism a `c:function`/`c:macro` respects is
-`.. c:namespace::`, which rusty-sphinx does not implement. A C function
-nested inside a Python class in real Sphinx registers under its own bare
-name, unaffected by the enclosing class.
+**Fix:** `c:function`/`c:macro` joined the `uses_c_scope` set in both
+`index_domain_object` and `render_domain_object`, so every `c`-domain object
+type now qualifies against `CScope` uniformly, never `PythonScope`. See
+`test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it` /
+`test_render_formats_c_function_nested_in_py_class_is_not_qualified_by_it`.
 
-No CPython doc source is currently known to trigger this — real docs never
-nest a `c:function`/`c:macro` inside a `py:class` body — so unlike the bug
-above this has no benchmark-observed symptom. Flagging it as a latent
-correctness gap found while investigating (and fixing) an earlier bug in
-this file about unqualified `c:member` reference resolution, not a triaged
-warning.
+This also fixed a related, previously-undocumented asymmetry: reference
+*resolution* (`DomainObjectResolver::resolve`) already dispatched a `c:function`/
+`c:macro` reference through `CScope` (it keys off `object_type.domain()`,
+not the object's variant), so a definition qualified via `PythonScope` while
+in-document references to it resolved via `CScope` were silently out of sync
+whenever a class scope was in play. Both now agree.
 
-**Suggested fix:** not yet investigated in depth. Candidates: stop
-consulting `PythonScope`'s module/class parts for `Domain::C` objects
-entirely (route `c:function`/`c:macro` through `CScope` for consistency with
-the rest of the `c` domain, even though they don't currently establish or
-consume container nesting), or simply always qualify them to their own
-bare/dotted name regardless of any enclosing `PythonScope`.
+**Accepted trade-off — see entry 3 below:** because `CScope`'s container
+stack is shared by every `c`-domain object, `c:function`/`c:macro` nested
+inside `c:struct`/`c:union`/`c:type` are now qualified by that container too,
+which they weren't before. This is a deliberate, known regression against
+one real CPython-docs case, accepted because implementing `.. c:namespace::`
+support to compensate was out of scope for this fix.
+
+---
+
+## 3. `c:macro` nested under `c:type` is now qualified, unlike real CPython docs (accepted trade-off from fixing bug 2)
+
+- **Component:** same as bug 2 — `crates/scope/src/c_scope.rs`'s doc comment,
+  `test_analyze_qualifies_c_macro_nested_under_c_type` in
+  `crates/analyzer/src/lib.rs`.
+
+CPython's `c-api/memory.rst` nests enum-style `.. c:macro::` constants (e.g.
+`PYMEM_DOMAIN_RAW`) inside `.. c:type:: PyMemAllocatorDomain`, but references
+and renders them under their **bare** name. Real Sphinx achieves this by
+qualifying the macro against the enclosing type and then resetting the
+qualifier with a `.. c:namespace:: NULL` directive — a mechanism
+rusty-sphinx does not implement.
+
+Before bug 2's fix, rusty-sphinx got this case right by accident: `c:macro`
+never consulted `CScope` at all, so it always registered bare, regardless of
+nesting, for an unrelated reason. Now that `c:macro` consults `CScope` like
+every other `c`-domain object (needed to fix bug 2's `py:class`-nesting
+case), this specific real-world case regresses: the macro now indexes as
+`PyMemAllocatorDomain.PYMEM_DOMAIN_RAW` instead of bare
+`PYMEM_DOMAIN_RAW`.
+
+**Suggested fix:** implement `.. c:namespace::` (at least the `NULL`-reset
+form) so `CScope`'s container stack can be explicitly cleared mid-body,
+matching what real Sphinx's C domain actually does here.
 
 ---
 

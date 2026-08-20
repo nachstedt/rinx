@@ -12,14 +12,14 @@ use rusty_sphinx_ast::{Domain, TargetSearchOrder};
 /// `.python`/`.c` stay as two separate fields rather than being hidden
 /// behind a single dispatch method: on the *definition* side, which of the
 /// two a given object qualifies against is decided per `DomainObjectBody`
-/// variant, not per domain — `c:function`/`c:macro` are `c`-domain but keep
-/// qualifying via `.python` (see [`CScope`]'s doc comment for why), while
-/// `c:struct`/`c:union`/`c:member`/`c:type` use `.c`. Callers already branch
-/// on this (the `uses_c_scope` checks in `index_domain_object` and
-/// `render_domain_object`) and keep doing so here, just addressing `.python`/
-/// `.c` on one `Scope` instead of two separate parameters/fields. Only
-/// reference *resolution* has a clean per-domain split, which is what
-/// [`Self::reference_candidates`] provides.
+/// variant, not per domain — today that split happens to coincide with the
+/// domain boundary (every `c`-domain object, including `c:function`/
+/// `c:macro`, qualifies against `.c`; see [`CScope`]'s doc comment), but
+/// callers still branch on the object variant (the `uses_c_scope` checks in
+/// `index_domain_object` and `render_domain_object`) rather than the domain,
+/// matching `deduce_local_scope`'s exhaustive-match philosophy of deciding
+/// per object type. Only reference *resolution* has a clean per-domain
+/// split, which is what [`Self::reference_candidates`] provides.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Scope {
     pub python: PythonScope,

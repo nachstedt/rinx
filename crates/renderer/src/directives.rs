@@ -127,16 +127,19 @@ pub(super) fn render_domain_object(
     // module: real Sphinx always writes it in full and sets it verbatim as
     // the new current module, matching `index_domain_object` in the analyzer.
     let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
-    // `c:struct`/`c:union`/`c:member`/`c:type` qualify against `ctx.scope.c`
-    // instead of `ctx.scope.python` — mirrors the analyzer's
-    // `index_domain_object` exactly, so anchor `id`s never drift from the
-    // index keys.
+    // Every `c`-domain object qualifies against `ctx.scope.c` instead of
+    // `ctx.scope.python` — mirrors the analyzer's `index_domain_object`
+    // exactly, so anchor `id`s never drift from the index keys. See that
+    // function's doc comment (`known_bugs.md` #2) for why `c:function`/
+    // `c:macro` joined this set.
     let uses_c_scope = matches!(
         obj,
         rusty_sphinx_ast::DomainObjectBody::CStruct { .. }
             | rusty_sphinx_ast::DomainObjectBody::CUnion { .. }
             | rusty_sphinx_ast::DomainObjectBody::CMember { .. }
             | rusty_sphinx_ast::DomainObjectBody::CType { .. }
+            | rusty_sphinx_ast::DomainObjectBody::CFunction { .. }
+            | rusty_sphinx_ast::DomainObjectBody::CMacro { .. }
     );
     // Only the primary name qualifies the scope, exactly as in the analyzer's
     // `index_domain_object`; the rest are aliases that get their own `<dt>`
@@ -147,10 +150,7 @@ pub(super) fn render_domain_object(
         let qualification = ctx.scope.c.qualify(own_names.first());
         (qualification.qualified_name, qualification.new_segments)
     } else {
-        let qualification = ctx
-            .scope
-            .python
-            .qualify(object_type.domain(), own_names.first());
+        let qualification = ctx.scope.python.qualify(own_names.first());
         (qualification.qualified_name, qualification.new_segments)
     };
     if is_module {
@@ -173,10 +173,7 @@ pub(super) fn render_domain_object(
         } else if uses_c_scope {
             ctx.scope.c.qualify(own_name).qualified_name
         } else {
-            ctx.scope
-                .python
-                .qualify(object_type.domain(), own_name)
-                .qualified_name
+            ctx.scope.python.qualify(own_name).qualified_name
         };
         let sig_escaped = html_escape::encode_text(signature_text);
         // `no_index` means no cross-reference target — omit the `id`
@@ -1284,11 +1281,12 @@ mod tests {
     fn test_render_formats_c_type_domain_object_with_nested_macro() {
         // Given — the real CPython `c-api/memory.rst` shape (`known_bugs.md`):
         // enum-style `.. c:macro::` constants nested inside `.. c:type::`.
-        // `c:macro` never consults `CScope` regardless of what it's nested
-        // under (same pre-existing behavior as `c:function` nested in
-        // `c:struct` — see `test_render_...c_function...` equivalents in the
-        // analyzer), so the nested macro renders under its own bare name,
-        // not qualified by the enclosing type.
+        // `c:macro` now consults `CScope` like every other `c`-domain object
+        // (`known_bugs.md` #2's fix), so the nested macro renders qualified
+        // by the enclosing type — a known, accepted mismatch against
+        // CPython's actual bare-rendered constants, since rusty-sphinx
+        // doesn't implement the `.. c:namespace:: NULL` reset real Sphinx
+        // uses there (see the analyzer's equivalent test for detail).
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
@@ -1314,14 +1312,56 @@ mod tests {
         assert!(result.contains("<dl class=\"c type\">"));
         assert!(result.contains("<dt id=\"c:type:pymemallocatordomain\">"));
         assert!(result.contains("<dl class=\"c macro\">"));
-        assert!(result.contains("<dt id=\"c:macro:pymem_domain_raw\">"));
+        assert!(result.contains("<dt id=\"c:macro:pymemallocatordomain.pymem_domain_raw\">"));
+    }
+
+    #[test]
+    fn test_render_formats_c_function_nested_in_py_class_is_not_qualified_by_it() {
+        // Given — `known_bugs.md` #2's own reproducer: a `c:function`
+        // (structurally) nested inside a `py:class` body must render under
+        // its own bare name, not qualified by the enclosing Python
+        // module+class — real Sphinx's C domain has no concept of an
+        // enclosing Python class at all.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                        name: "greeter_module".to_string(),
+                        platform: None,
+                        synopsis: None,
+                        deprecated: false,
+                        body: vec![],
+                    },
+                )),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                        signatures: NonEmptyVector::single("Greeter".to_string()),
+                        is_final: false,
+                        body: vec![Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::CFunction {
+                                signatures: NonEmptyVector::single("int helper(void)".into()),
+                                body: vec![],
+                            },
+                        ))],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<dt id=\"c:function:helper\">"));
+        assert!(!result.contains("greeter_module.greeter.helper"));
     }
 
     #[test]
     fn test_render_formats_c_type_domain_object_with_nested_member() {
-        // Given — unlike `c:macro`, `c:member` does consult `CScope`, so
-        // nesting it under `c:type` still qualifies it against the enclosing
-        // type's name, exactly like nesting under `c:struct`/`c:union`.
+        // Given — `c:member` consults `CScope`, so nesting it under `c:type`
+        // still qualifies it against the enclosing type's name, exactly like
+        // nesting under `c:struct`/`c:union`.
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
