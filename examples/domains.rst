@@ -561,6 +561,30 @@ different target — e.g. :py:func:`the greet function <greet>` displays "the
 greet function" but links to the ``greet`` function defined above, exactly
 like :ref:`the site home <home-index>` already does for ``:ref:``.
 
+A target may also carry a trailing ``()``, so the reference reads as a call at
+the point of use — the shape CPython's C API docs use throughout, e.g.
+``:c:func:`Py_TYPE()```. The parens are markup, not part of any name:
+:c:func:`add()` and :c:macro:`MAX()` resolve against the plain
+``.. c:function:: int add(int a, int b)`` and ``.. c:macro:: MAX(a, b)``
+definitions above, because a declaration's name is always cut at its first
+``(``. The reader still sees ``add()`` and ``MAX()``. This is not a C-domain
+quirk: :py:func:`greet()` resolves the same way, since Sphinx's Python domain
+strips a trailing ``()`` from the target too.
+
+The two domains differ in exactly one respect, and that difference is
+reproduced rather than smoothed over. The C domain skips whitespace before the
+parens, so :c:func:`add ()` still resolves; the Python domain does not, so a
+Python target written ``:py:func:`greet ()``` stays unresolved and is reported,
+instead of being quietly repaired into something the author never wrote.
+
+The trailing ``()`` composes with the prefixes above. :py:func:`~greetings.shout()`
+shortens the display to ``shout()`` while still resolving ``greetings.shout``.
+:py:func:`the greet function <greet()>` puts the parens on the *target* inside
+the angle brackets, where they are stripped and never seen, since an explicit
+title decides the display on its own. And :py:func:`!not_a_real_function()`
+suppresses the link entirely, leaving ``not_a_real_function()`` as literal text
+that is never looked up — so, as with every ``!`` target, no warning either.
+
 Calling :py:func:`shout` — written bare, with no ``greetings.`` prefix — is
 the same as calling :py:func:`~greetings.shout`. This is the shape real-world
 Sphinx docs actually use (e.g. every CPython module page cross-references its
