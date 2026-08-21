@@ -478,6 +478,25 @@ object type, and real-world docs like CPython's ``c-api/module.rst`` rely on
 exactly this to reference macro-defined slot constants (e.g.
 ``Py_mod_exec``) via ``:c:data:``.
 
+The same looseness runs between ``c:function`` and ``c:macro``, in both
+directions. :c:func:`MAX` resolves against the ``.. c:macro:: MAX(a, b)``
+definition above, the shape CPython's ``c-api/gcsupport.rst`` uses when it
+documents the function-like macro ``Py_VISIT`` with ``.. c:macro::`` and then
+references it as ``:c:func:`Py_VISIT```. Conversely :c:macro:`add` resolves
+against the ``.. c:function:: int add(int a, int b)`` definition, the shape
+``c-api/structures.rst`` uses when it references ``Py_REFCNT`` — declared
+``.. c:function::`` over in ``c-api/refcounting.rst`` — as
+``:c:macro:`Py_REFCNT```. Both files build clean under real Sphinx's
+nit-picky mode, so both really do resolve there.
+
+Aliasing is mutual but *not* chained: ``c:function`` and ``c:macro`` accept
+each other, and ``c:macro`` and ``c:member`` accept each other, yet
+``c:function`` and ``c:member`` do not — each pair is modelled because
+real-world docs were found to collide on it, not because the C domain is
+treated as type-free in general. A role still has to name a compatible object
+type, and resolving through an alias is reported as a soft object-type
+mismatch rather than passing silently.
+
 :c:struct:`Data` and :c:union:`Number` reference the two containers above.
 :c:member:`Data.count` and :c:member:`Number.as_int` reference their nested
 members by full dotted name; the same target also resolves via
@@ -502,10 +521,10 @@ syntax, since ``ulong``'s own two-token signature isn't a valid target by
 itself. :c:macro:`PYMEM_DOMAIN_RAW` reaches the macro nested inside
 ``PyMemAllocatorDomain``'s body by its *bare* name, confirming that the
 ``.. c:namespace:: NULL`` written in that body reset the qualification the
-enclosing ``c:type`` would otherwise have applied. Unlike ``c:struct``/
-``c:union`` and their ``c:member`` aliases, ``:c:type:`` has no real-Sphinx
-cross-role looseness with any other object type — it only resolves against
-``.. c:type::`` definitions.
+enclosing ``c:type`` would otherwise have applied. Unlike the
+``c:macro``/``c:member`` and ``c:function``/``c:macro`` pairs above,
+``:c:type:`` has no confirmed cross-role collision with any other object
+type — it only resolves against ``.. c:type::`` definitions.
 
 :c:type:`Py_tracefunc`, :c:type:`unaryfunc` and :c:type:`callbacks` reference
 the three declarator-shaped definitions above by the name their declarators

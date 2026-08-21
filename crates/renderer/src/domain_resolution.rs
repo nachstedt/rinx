@@ -388,6 +388,98 @@ mod tests {
     }
 
     #[test]
+    fn test_resolve_accepts_a_c_macro_definition_for_a_c_function_role() {
+        // Given — `CPython`'s `c-api/gcsupport.rst` defines the function-like
+        // macro `Py_VISIT` with `.. c:macro::` and references it with
+        // `:c:func:` from the same file.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::C(CObjectType::Macro),
+            "Py_VISIT",
+            "c-api/gcsupport.rst",
+        );
+        let resolver = DomainObjectResolver::new(&index);
+
+        // When
+        let resolution = resolver.resolve(
+            &Scope::default(),
+            ObjectType::C(CObjectType::Function),
+            "Py_VISIT",
+            TargetSearchOrder::LeastQualifiedFirst,
+        );
+
+        // Then — resolved, reporting the type the *definition* has.
+        assert_eq!(
+            resolution,
+            DomainObjectResolution::Resolved {
+                object_type: ObjectType::C(CObjectType::Macro),
+                qualified_name: "Py_VISIT".to_string(),
+                doc_path: "c-api/gcsupport.rst",
+            }
+        );
+    }
+
+    #[test]
+    fn test_resolve_accepts_a_c_function_definition_for_a_c_macro_role() {
+        // Given — the reverse direction, equally real: `Py_REFCNT` is defined
+        // `.. c:function::` in `c-api/refcounting.rst` and referenced via
+        // `:c:macro:` from `c-api/structures.rst`.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::C(CObjectType::Function),
+            "Py_REFCNT",
+            "c-api/refcounting.rst",
+        );
+        let resolver = DomainObjectResolver::new(&index);
+
+        // When
+        let resolution = resolver.resolve(
+            &Scope::default(),
+            ObjectType::C(CObjectType::Macro),
+            "Py_REFCNT",
+            TargetSearchOrder::LeastQualifiedFirst,
+        );
+
+        // Then
+        assert_eq!(
+            resolution,
+            DomainObjectResolution::Resolved {
+                object_type: ObjectType::C(CObjectType::Function),
+                qualified_name: "Py_REFCNT".to_string(),
+                doc_path: "c-api/refcounting.rst",
+            }
+        );
+    }
+
+    #[test]
+    fn test_resolve_prefers_the_exact_object_type_over_an_alias() {
+        // Given — one name defined as both a `c:function` and a `c:macro`.
+        // Self comes first in the candidate list, so the requested type wins.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(ObjectType::C(CObjectType::Function), "MAX", "func.rst");
+        index.insert_domain_object(ObjectType::C(CObjectType::Macro), "MAX", "macro.rst");
+        let resolver = DomainObjectResolver::new(&index);
+
+        // When
+        let resolution = resolver.resolve(
+            &Scope::default(),
+            ObjectType::C(CObjectType::Macro),
+            "MAX",
+            TargetSearchOrder::LeastQualifiedFirst,
+        );
+
+        // Then — the `c:macro` definition, not the aliased `c:function` one.
+        assert_eq!(
+            resolution,
+            DomainObjectResolution::Resolved {
+                object_type: ObjectType::C(CObjectType::Macro),
+                qualified_name: "MAX".to_string(),
+                doc_path: "macro.rst",
+            }
+        );
+    }
+
+    #[test]
     fn test_resolve_falls_back_to_a_suffix_match_for_a_dot_prefixed_name() {
         // Given — the Sphinx documentation's own example: `:meth:`.TarFile.close``
         // resolves even though the current document is not `tarfile`.

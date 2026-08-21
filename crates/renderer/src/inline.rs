@@ -993,6 +993,94 @@ mod tests {
     }
 
     #[test]
+    fn test_render_inline_domain_object_reference_resolves_c_func_role_to_macro_definition() {
+        // Given — CPython's `c-api/gcsupport.rst` defines the function-like
+        // macro `Py_VISIT` via `.. c:macro::` but references it via `:c:func:`.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+            "Py_VISIT",
+            "gcsupport.rst",
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                name: "Py_VISIT",
+                display: "Py_VISIT",
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            },
+            &DomainObjectResolver::new(&index),
+            "doc.rst",
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
+            &rusty_sphinx_scope::Scope::default(),
+        );
+
+        // Then — resolved, anchored on the definition's own object type, and
+        // the role/definition disagreement recorded as a soft mismatch.
+        assert!(broken_links.is_empty());
+        assert!(html.contains("href=\"gcsupport.html#c:macro:py_visit\""));
+        assert_eq!(object_type_mismatches.len(), 1);
+        assert_eq!(
+            object_type_mismatches[0].requested_type,
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Function)
+        );
+        assert_eq!(
+            object_type_mismatches[0].resolved_type,
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Macro)
+        );
+    }
+
+    #[test]
+    fn test_render_inline_domain_object_reference_resolves_c_macro_role_to_function_definition() {
+        // Given — the reverse direction: `Py_REFCNT` is defined
+        // `.. c:function::` in `c-api/refcounting.rst` and referenced via
+        // `:c:macro:` from `c-api/structures.rst`.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+            "Py_REFCNT",
+            "refcounting.rst",
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+                name: "Py_REFCNT",
+                display: "Py_REFCNT",
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            },
+            &DomainObjectResolver::new(&index),
+            "doc.rst",
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
+            &rusty_sphinx_scope::Scope::default(),
+        );
+
+        // Then
+        assert!(broken_links.is_empty());
+        assert!(html.contains("href=\"refcounting.html#c:function:py_refcnt\""));
+        assert_eq!(object_type_mismatches.len(), 1);
+    }
+
+    #[test]
     fn test_render_inline_domain_object_reference_does_not_alias_unrelated_object_types() {
         // Given — `Fault` is defined only as a `py:function`, which has no
         // role-alias relationship with `py:exception`.

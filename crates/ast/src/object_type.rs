@@ -127,20 +127,39 @@ impl ObjectType {
     /// exhaustive match, not a wildcard fallback arm: adding a new object
     /// type later forces a decision about whether it aliases anything.
     ///
-    /// `C(Macro)`/`C(Member)` alias for a different reason than the `py` pair
-    /// above: real Sphinx's C domain `resolve_xref`
+    /// The `c` pairs alias for a different reason than the `py` pair above:
+    /// real Sphinx's C domain `resolve_xref`
     /// (`sphinx/domains/c/__init__.py`, `_resolve_xref_inner`) looks up a
     /// declaration by name only and never checks the role's requested type
     /// against the declaration's actual object type (there's a literal
     /// `# TODO: check role type vs. object type` at the point where it
-    /// would) — so a `:c:data:` role resolving against a `.. c:macro::`
-    /// definition, as `CPython`'s `c-api/module.rst` does for `Py_mod_exec`,
-    /// is a known real-Sphinx looseness rather than a deliberate aliasing
-    /// rule. This models only that one confirmed collision rather than
-    /// dropping type-checking for the whole domain (which would also let
-    /// `:c:func:` blindly match unrelated `data`/`macro` names). `Struct`/
-    /// `Union`/`Type` alias nothing: real Sphinx doesn't collide them with
-    /// anything.
+    /// would). Every `c`-domain role/object-type collision is therefore a
+    /// known real-Sphinx looseness rather than a deliberate aliasing rule,
+    /// and the whole domain would alias if we mirrored it. We deliberately
+    /// don't: the type check stays on every lookup path, and only the
+    /// collisions the `CPython` corpus actually confirms are modelled, so an
+    /// author's mistake is still reported instead of resolved to something
+    /// plausible. Two pairs are confirmed:
+    ///
+    /// - `C(Macro)`/`C(Member)` — `c-api/module.rst` references the
+    ///   macro-defined slot constant `Py_mod_exec` via `:c:data:`.
+    /// - `C(Function)`/`C(Macro)` — `c-api/gcsupport.rst` references the
+    ///   function-like macro `Py_VISIT` via `:c:func:`, and
+    ///   `c-api/structures.rst` references the function `Py_REFCNT` (defined
+    ///   `.. c:function::` in `c-api/refcounting.rst`) via `:c:macro:`.
+    ///   Neither file is in `CPython`'s `Doc/tools/.nitignore`, so both
+    ///   resolve under real Sphinx's nit-picky mode.
+    ///
+    /// The relation is symmetric but deliberately **not** transitive:
+    /// `Function` and `Member` do not alias each other, because no evidence
+    /// says they collide. That is a decision, not an oversight — each edge
+    /// earns its place separately. `Struct`/`Union`/`Type` alias nothing.
+    ///
+    /// Order within a list is load-bearing: the resolver walks it and takes
+    /// the first hit, with no ambiguity detection at this level. Self comes
+    /// first so an exact type always beats an alias; the rest follow
+    /// [`CObjectType`]'s declaration order, so the tie-break is stable and
+    /// explainable rather than incidental.
     #[must_use]
     pub const fn role_alias_candidates(self) -> &'static [Self] {
         match self {
@@ -157,10 +176,14 @@ impl ObjectType {
             Self::Py(PyObjectType::Data) => &[Self::Py(PyObjectType::Data)],
             Self::Py(PyObjectType::Method) => &[Self::Py(PyObjectType::Method)],
             Self::Py(PyObjectType::Attribute) => &[Self::Py(PyObjectType::Attribute)],
-            Self::C(CObjectType::Function) => &[Self::C(CObjectType::Function)],
-            Self::C(CObjectType::Macro) => {
-                &[Self::C(CObjectType::Macro), Self::C(CObjectType::Member)]
+            Self::C(CObjectType::Function) => {
+                &[Self::C(CObjectType::Function), Self::C(CObjectType::Macro)]
             }
+            Self::C(CObjectType::Macro) => &[
+                Self::C(CObjectType::Macro),
+                Self::C(CObjectType::Function),
+                Self::C(CObjectType::Member),
+            ],
             Self::C(CObjectType::Member) => {
                 &[Self::C(CObjectType::Member), Self::C(CObjectType::Macro)]
             }
@@ -495,6 +518,7 @@ mod tests {
             ObjectType::C(CObjectType::Macro).role_alias_candidates(),
             &[
                 ObjectType::C(CObjectType::Macro),
+                ObjectType::C(CObjectType::Function),
                 ObjectType::C(CObjectType::Member)
             ]
         );
@@ -505,6 +529,36 @@ mod tests {
                 ObjectType::C(CObjectType::Macro)
             ]
         );
+    }
+
+    #[test]
+    fn test_role_alias_candidates_aliases_c_function_and_macro_both_directions() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::C(CObjectType::Function).role_alias_candidates(),
+            &[
+                ObjectType::C(CObjectType::Function),
+                ObjectType::C(CObjectType::Macro)
+            ]
+        );
+        assert!(
+            ObjectType::C(CObjectType::Macro)
+                .role_alias_candidates()
+                .contains(&ObjectType::C(CObjectType::Function))
+        );
+    }
+
+    #[test]
+    fn test_role_alias_candidates_does_not_alias_c_function_and_member() {
+        // Given — `Function` aliases `Macro` and `Macro` aliases `Member`, but
+        // the relation is deliberately not transitive: no corpus evidence says
+        // a `:c:func:` role and a `.. c:member::` definition ever collide.
+        let function = ObjectType::C(CObjectType::Function);
+        let member = ObjectType::C(CObjectType::Member);
+
+        // When / Then
+        assert!(!function.role_alias_candidates().contains(&member));
+        assert!(!member.role_alias_candidates().contains(&function));
     }
 
     #[test]
@@ -552,9 +606,101 @@ mod tests {
             ObjectType::Py(PyObjectType::Attribute).role_alias_candidates(),
             &[ObjectType::Py(PyObjectType::Attribute)]
         );
-        assert_eq!(
-            ObjectType::C(CObjectType::Function).role_alias_candidates(),
-            &[ObjectType::C(CObjectType::Function)]
+    }
+    /// Every [`ObjectType`] variant, so the property tests below can assert
+    /// facts about the whole alias table rather than one row at a time.
+    /// Kept here rather than exposed as `ObjectType::ALL`: nothing in
+    /// production iterates object types, so a public constant would exist
+    /// only to serve its own tests.
+    const ALL_OBJECT_TYPES: &[ObjectType] = &[
+        ObjectType::Py(PyObjectType::Function),
+        ObjectType::Py(PyObjectType::Module),
+        ObjectType::Py(PyObjectType::Data),
+        ObjectType::Py(PyObjectType::Method),
+        ObjectType::Py(PyObjectType::Class),
+        ObjectType::Py(PyObjectType::Attribute),
+        ObjectType::Py(PyObjectType::Exception),
+        ObjectType::C(CObjectType::Function),
+        ObjectType::C(CObjectType::Macro),
+        ObjectType::C(CObjectType::Member),
+        ObjectType::C(CObjectType::Struct),
+        ObjectType::C(CObjectType::Union),
+        ObjectType::C(CObjectType::Type),
+    ];
+
+    /// Compile-time guard for [`ALL_OBJECT_TYPES`]: the match below is
+    /// exhaustive, so adding a new [`ObjectType`] variant stops this file
+    /// compiling until whoever added it also extends the list above — which
+    /// is what keeps the property tests covering the whole table.
+    fn assert_listed_in_all_object_types(object_type: ObjectType) {
+        match object_type {
+            ObjectType::Py(
+                PyObjectType::Function
+                | PyObjectType::Module
+                | PyObjectType::Data
+                | PyObjectType::Method
+                | PyObjectType::Class
+                | PyObjectType::Attribute
+                | PyObjectType::Exception,
+            )
+            | ObjectType::C(
+                CObjectType::Function
+                | CObjectType::Macro
+                | CObjectType::Member
+                | CObjectType::Struct
+                | CObjectType::Union
+                | CObjectType::Type,
+            ) => {}
+        }
+        assert!(
+            ALL_OBJECT_TYPES.contains(&object_type),
+            "{object_type:?} is missing from ALL_OBJECT_TYPES"
         );
+    }
+
+    #[test]
+    fn test_all_object_types_lists_every_variant() {
+        // Given / When / Then
+        for object_type in ALL_OBJECT_TYPES {
+            assert_listed_in_all_object_types(*object_type);
+        }
+    }
+
+    #[test]
+    fn test_role_alias_candidates_lists_itself_first() {
+        // Given — the resolver walks the candidate list and takes the first
+        // hit, so self coming first is what makes an exact object-type match
+        // always beat an aliased one.
+        for object_type in ALL_OBJECT_TYPES {
+            // When
+            let candidates = object_type.role_alias_candidates();
+
+            // Then
+            assert_eq!(
+                candidates.first(),
+                Some(object_type),
+                "{object_type:?} does not list itself first"
+            );
+        }
+    }
+
+    #[test]
+    fn test_role_alias_candidates_is_symmetric() {
+        // Given — aliasing is a mutual willingness to match: if a role asking
+        // for `a` accepts a definition of type `b`, the reverse must hold too.
+        // Pins that a future one-sided edit to the table is caught.
+        for a in ALL_OBJECT_TYPES {
+            for b in ALL_OBJECT_TYPES {
+                // When
+                let a_accepts_b = a.role_alias_candidates().contains(b);
+                let b_accepts_a = b.role_alias_candidates().contains(a);
+
+                // Then
+                assert_eq!(
+                    a_accepts_b, b_accepts_a,
+                    "aliasing between {a:?} and {b:?} is one-sided"
+                );
+            }
+        }
     }
 }

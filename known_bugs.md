@@ -12,116 +12,52 @@ CPython ships `Doc/tools/.nitignore`, an explicit list of the only `.rst` files
 allowed to fail Sphinx's nit-picky mode in CI. Any file **not** in that list
 builds warning-free with `nitpicky = True`, so every cross-reference it
 contains — minus the symbols listed in `Doc/conf.py`'s `nitpick_ignore` — is
-known to resolve under real Sphinx. The first numbered bug below lives in a
-file absent from `.nitignore` and references a target absent from
-`nitpick_ignore` — the second entry is a separately-discovered latent gap
-with no benchmark-observed warning (see its own note).
+known to resolve under real Sphinx. The open bug below lives in files absent
+from `.nitignore` and references targets absent from `nitpick_ignore`.
 
 ---
 
-## 1. `:c:func:` does not accept a `.. c:macro::` definition
+## 1. C-domain reference targets keep a trailing `()`
 
-- **Warnings:** `4  Doc/c-api/gcsupport: 'Py_VISIT' (referenced as c:function)`,
-  `3  Doc/extending/newtypes_tutorial: 'Py_VISIT' (referenced as c:function)`
-  (and, further down the list, `Py_REFCNT`/`Py_TYPE` in `Doc/c-api/structures`)
-- **Component:** `crates/ast/src/object_type.rs`
-  (`ObjectType::role_alias_candidates`)
+- **Warnings:** `1  Doc/c-api/object: 'Py_TYPE()' (referenced as c:function)`,
+  `1  Doc/c-api/refcounting: 'Py_REFCNT()' (referenced as c:function)`,
+  `1  Doc/c-api/refcounting: 'Py_SET_REFCNT()' (referenced as c:function)`,
+  `2  Doc/c-api/typeobj: 'Py_SIZE()' (referenced as c:function)`,
+  `1  Doc/c-api/structures: 'Py_TYPE()'`/`'Py_SIZE()'`, plus several
+  `whatsnew/*` occurrences — roughly ten in all.
+- **Component:** `crates/parser/src/inline.rs` (the domain-role handlers), or
+  wherever a `c`-domain reference target is normalized before it reaches
+  `DomainObjectResolver::resolve`.
 
-`Py_VISIT` is defined as `.. c:macro:: Py_VISIT(o)` in `c-api/gcsupport.rst`
-and referenced from the same file as ``:c:func:`Py_VISIT```, because it is a
-function-like macro. `role_alias_candidates` already models the C domain's
-type-blindness for the `Macro` ↔ `Member` pair, citing real Sphinx's literal
-`# TODO: check role type vs. object type` in `_resolve_xref_inner` — but
-`C(Function)` currently aliases nothing, so the same looseness is not extended
-to the `Function` ↔ `Macro` pair.
+CPython's docs routinely write a C function reference with empty parentheses,
+`` :c:func:`Py_TYPE()` ``, to read as a call at the point of use. Real Sphinx's
+C domain strips a trailing `()` from the target before looking it up, so these
+resolve against the plain `Py_TYPE` declaration. rusty-sphinx keeps the parens
+as part of the name, so the lookup misses and the reference breaks.
 
-This is a second *confirmed* collision of exactly the kind that comment says
-the alias table exists to model: `c-api/gcsupport.rst` is not in `.nitignore`,
-so real Sphinx resolves it today.
+The affected files — `c-api/object.rst`, `c-api/refcounting.rst`,
+`c-api/structures.rst`, `c-api/typeobj.rst` — are all absent from CPython's
+`Doc/tools/.nitignore`, and the targets are absent from `Doc/conf.py`'s
+`nitpick_ignore`, so real Sphinx resolves every one of them today.
+
+This overlaps with, but is independent of, the `function`/`macro` alias pair:
+some of these same symbols also collide on object type, and fixing the alias
+table did not help the paren-suffixed spellings at all.
 
 **Reproducer:**
 
 ```rst
-.. c:macro:: Py_VISIT(o)
+.. c:function:: PyTypeObject *Py_TYPE(PyObject *o)
 
-   A macro.
+   Returns the object's type.
 
-A typical traverse function calls the :c:func:`Py_VISIT` macro.
+Use :c:func:`Py_TYPE()` to inspect an object's type.
 ```
 
-**Suggested fix:** add `C(Macro)` to `C(Function)`'s alias list (and, for
-symmetry with the existing pair, consider `C(Function)` in `C(Macro)`'s).
-
----
-
-## 2. `c:function`/`c:macro` are qualified against the enclosing `PythonScope`, not `CScope` — FIXED
-
-- **Component:** `crates/scope/src/python_scope.rs`, `crates/scope/src/c_scope.rs`,
-  consumed from `crates/renderer/src/directives.rs` and
-  `crates/analyzer/src/lib.rs`'s `uses_c_scope` match.
-
-A `.. c:function::`/`.. c:macro::` nested inside a `.. py:class::`/
-`.. py:exception::` body used to get prefixed with the enclosing Python
-module+class name, because it fell through to `PythonScope::qualify` like
-every other non-`c:struct`/`c:union`/`c:member`/`c:type` object. Real Sphinx's
-C domain has no concept of a "current Python class" at all, so this was
-wrong.
-
-**Fix:** `c:function`/`c:macro` joined the `uses_c_scope` set in both
-`index_domain_object` and `render_domain_object`, so every `c`-domain object
-type now qualifies against `CScope` uniformly, never `PythonScope`. See
-`test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it` /
-`test_render_formats_c_function_nested_in_py_class_is_not_qualified_by_it`.
-
-This also fixed a related, previously-undocumented asymmetry: reference
-*resolution* (`DomainObjectResolver::resolve`) already dispatched a `c:function`/
-`c:macro` reference through `CScope` (it keys off `object_type.domain()`,
-not the object's variant), so a definition qualified via `PythonScope` while
-in-document references to it resolved via `CScope` were silently out of sync
-whenever a class scope was in play. Both now agree.
-
-**Trade-off at the time, since resolved — see entry 3 below:** because
-`CScope`'s scope is shared by every `c`-domain object, `c:function`/`c:macro`
-nested inside `c:struct`/`c:union`/`c:type` became qualified by that
-container too, which they weren't before. That briefly regressed one real
-CPython-docs case; implementing `c:namespace` closed it.
-
----
-
-## 3. `c:macro` nested under `c:type` was qualified, unlike real CPython docs — FIXED
-
-- **Component:** `crates/scope/src/c_scope.rs` (`CScope::set_namespace`/
-  `push_namespace`/`pop_namespace`), `Directive::CNamespace`/`CNamespacePush`/
-  `CNamespacePop` in `crates/ast/src/directive.rs`, parsed by
-  `try_parse_scope_directive` (`crates/parser/src/directives.rs`) and applied
-  in `crates/analyzer/src/lib.rs`'s `index_nodes` and
-  `crates/renderer/src/lib.rs`'s `render_directive`.
-
-CPython's `c-api/memory.rst` nests enum-style `.. c:macro::` constants (e.g.
-`PYMEM_DOMAIN_RAW`) inside `.. c:type:: PyMemAllocatorDomain`, but references
-and renders them under their **bare** name, because the source writes a
-`.. c:namespace:: NULL` inside that body to reset the qualifier. Bug 2's fix
-made `c:macro` consult `CScope` like every other `c`-domain object, so
-without `c:namespace` support the constant wrongly indexed as
-`PyMemAllocatorDomain.PYMEM_DOMAIN_RAW`.
-
-**Fix:** the full `c:namespace`/`c:namespace-push`/`c:namespace-pop` family
-is now implemented. `CScope` models the current scope as a stack of scopes
-whose last entry is in effect; lexical nesting and the namespace directives
-both operate on it, exactly as real Sphinx has both `CObject.before_content`/
-`after_content` and its namespace directives read and write the single
-`ref_context['c:parent_key']`. The body-close restore replaces the whole
-stack by value rather than truncating to a saved depth, so a `c:namespace`
-reset inside a body cannot strand the scope when that body closes. See
-`test_analyze_c_namespace_null_inside_c_type_body_unqualifies_nested_macro`
-and the `C Namespaces` section of `examples/domains.rst`.
-
-One deliberate deviation: an unmatched `c:namespace-push` inside a
-`c:struct`/`c:union`/`c:type` body is contained by that body's close, so it
-cannot be consumed by a later unrelated `c:namespace-pop`. Sphinx's
-`before_content`/`after_content` save only the current-scope pointer and not
-its namespace stack, so it appears to leak there; containing is simpler and
-more defensible for what is malformed input either way.
+**Suggested fix:** strip one trailing `()` from a `c`-domain reference target
+during parsing, recording it as markup rather than part of the name — the same
+"a sigil is markup, not part of a name" treatment the leading `.`/`~` prefixes
+already get. Note the display text should keep the parens, as Sphinx does.
 
 ---
 

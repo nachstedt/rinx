@@ -265,9 +265,10 @@ fn format_broken_link_warning(doc_path: &str, link: &renderer::BrokenLink) -> St
 /// warning line. Both the requested and resolved object types are shown
 /// domain-qualified (e.g. `"py:class"`, not just `"class"`) via
 /// [`rusty_sphinx_ast::ObjectType::domain_qualified_str`] — the alias
-/// fallback is domain-scoped today (only `py`'s `class`/`exception` alias
-/// each other), so the two domains always match in practice, but spelling
-/// both out avoids the reader having to assume that rather than see it.
+/// fallback is domain-scoped today (`py`'s `class`/`exception`, and `c`'s
+/// `macro`/`member` and `function`/`macro`), so the two domains always match
+/// in practice, but spelling both out avoids the reader having to assume
+/// that rather than see it.
 /// Unlike [`format_broken_link_warning`], this never feeds into
 /// [`check_broken_links_strict`] — the reference did resolve, so `--strict-links`
 /// never fails the build for it; the warning only flags that the reference's

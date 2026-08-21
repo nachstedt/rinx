@@ -74,7 +74,7 @@ The render step reports **domain-object** cross-references (`:func:`, `:py:class
 
 The two `kind` values distinguish the two failure modes:
 - `domain_object_reference` — the reference **didn't resolve at all**. Its `requested_type` records the object type the role asked for (the "missed type"), e.g. `py:class`.
-- `object_type_mismatch` — the reference **did** resolve, but to a different object type than the role asked for (via the `class`/`exception` alias fallback). It carries both `requested_type` and `resolved_type`.
+- `object_type_mismatch` — the reference **did** resolve, but to a different object type than the role asked for (via the alias fallback, e.g. `class`/`exception` or `c`'s `function`/`macro`). It carries both `requested_type` and `resolved_type`.
 
 An entry is matched to a warning by the exact triple `(doc_path, kind, target)` — the `requested_type`/`resolved_type` fields are informational, not part of the identity. `comment` is a free-text note explaining why the warning is accepted; it's yours to write and is preserved across runs.
 
