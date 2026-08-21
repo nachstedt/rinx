@@ -88,6 +88,22 @@ pub enum Directive {
     PyCurrentModule {
         module: Option<String>,
     },
+    /// `.. c:namespace::` — sets the `c`-domain scope absolutely for the rest
+    /// of the document and resets the namespace push/pop stack. `None` is the
+    /// reset-to-global form (`NULL` or `0`); both sentinels are resolved by
+    /// the parser so no later phase re-interprets the literal string.
+    CNamespace {
+        namespace: Option<String>,
+    },
+    /// `.. c:namespace-push::` — extends the current `c`-domain scope
+    /// relatively. Always carries a scope: an empty argument is malformed and
+    /// stays a [`Directive::Unknown`] rather than becoming a no-op push.
+    CNamespacePush {
+        namespace: String,
+    },
+    /// `.. c:namespace-pop::` — undoes the most recent
+    /// [`Directive::CNamespacePush`] in its entirety.
+    CNamespacePop,
     Unknown {
         name: String,
         argument: String,
@@ -214,6 +230,62 @@ mod tests {
     fn test_py_current_module_directive_serialization_roundtrip_with_reset() {
         // Given
         let directive = Directive::PyCurrentModule { module: None };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_c_namespace_directive_serialization_roundtrip_with_scope() {
+        // Given
+        let directive = Directive::CNamespace {
+            namespace: Some("A.B".to_string()),
+        };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_c_namespace_directive_serialization_roundtrip_with_reset() {
+        // Given — the `NULL`/`0` reset form.
+        let directive = Directive::CNamespace { namespace: None };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_c_namespace_push_directive_serialization_roundtrip() {
+        // Given
+        let directive = Directive::CNamespacePush {
+            namespace: "C.D".to_string(),
+        };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_c_namespace_pop_directive_serialization_roundtrip() {
+        // Given
+        let directive = Directive::CNamespacePop;
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");

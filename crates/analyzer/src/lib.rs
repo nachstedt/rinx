@@ -103,6 +103,13 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
                 Some(name) => scope.python.set_module(name),
                 None => scope.python.clear_module(),
             },
+            Node::Directive(Directive::CNamespace { namespace }) => {
+                scope.c.set_namespace(namespace.as_deref());
+            }
+            Node::Directive(Directive::CNamespacePush { namespace }) => {
+                scope.c.push_namespace(namespace);
+            }
+            Node::Directive(Directive::CNamespacePop) => scope.c.pop_namespace(),
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
@@ -226,9 +233,9 @@ fn index_domain_object(
     // declares — the aliases share it rather than each owning a copy.
     let lend = obj.deduce_local_scope(&new_segments);
     if uses_c_scope {
-        let depth = scope.c.push_containers(&lend);
+        let saved = scope.c.push_containers(&lend);
         index_nodes(obj.body(), doc_path, index, scope);
-        scope.c.truncate_containers(depth);
+        scope.c.restore_containers(saved);
     } else {
         let depth = scope.python.push_classes(&lend);
         index_nodes(obj.body(), doc_path, index, scope);
@@ -1471,16 +1478,11 @@ mod tests {
 
     #[test]
     fn test_analyze_qualifies_c_macro_nested_under_c_type() {
-        // Given — the real CPython `c-api/memory.rst` shape (`known_bugs.md`):
-        // enum-style `.. c:macro::` constants nested inside `.. c:type::`.
-        // Since `c:macro` joined `uses_c_scope` (see
-        // `test_analyze_c_function_nested_in_c_struct_is_qualified_by_it`),
-        // it now qualifies against the enclosing type like `c:member` always
-        // has — CPython's actual docs render this constant bare, because real
-        // Sphinx resets the qualifier with `.. c:namespace:: NULL`, which
-        // rusty-sphinx doesn't implement, so this is a known, accepted
-        // mismatch against that one real-world case rather than a target
-        // rusty-sphinx currently gets right.
+        // Given — a `.. c:macro::` nested inside `.. c:type::` with no
+        // `.. c:namespace::` to reset the scope: `c:macro` qualifies against
+        // the enclosing type like every other `c`-domain object. (CPython's
+        // own `c-api/memory.rst` adds the reset — see
+        // `test_analyze_c_namespace_null_inside_c_type_body_unqualifies_nested_macro`.)
         let doc = Document::new(
             "api.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
@@ -1503,6 +1505,123 @@ mod tests {
             Some(&"api.rst".to_string())
         );
         assert!(lookup_domain_object(&index, "c:macro:PYMEM_DOMAIN_RAW").is_none());
+    }
+
+    #[test]
+    fn test_analyze_c_namespace_null_inside_c_type_body_unqualifies_nested_macro() {
+        // Given — the real CPython `c-api/memory.rst` shape verbatim: a
+        // `.. c:namespace:: NULL` written *inside* the `c:type` body, before
+        // the enum-style macro constants, resetting the qualification that
+        // body would otherwise apply.
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![
+                        Node::Directive(Directive::CNamespace { namespace: None }),
+                        c_macro("PYMEM_DOMAIN_RAW"),
+                    ],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — bare, matching what CPython's docs actually publish.
+        assert_eq!(
+            lookup_domain_object(&index, "c:macro:PYMEM_DOMAIN_RAW"),
+            Some(&"api.rst".to_string())
+        );
+        assert!(
+            lookup_domain_object(&index, "c:macro:PyMemAllocatorDomain.PYMEM_DOMAIN_RAW").is_none()
+        );
+    }
+
+    #[test]
+    fn test_analyze_c_type_body_restores_scope_after_an_inner_namespace_reset() {
+        // Given — a sibling declaration *after* the `c:type` whose body reset
+        // the namespace: the reset must not leak past the body's close.
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![
+                Node::Directive(Directive::CNamespacePush {
+                    namespace: "Outer".to_string(),
+                }),
+                Node::Directive(Directive::DomainObject(DomainObjectBody::CType {
+                    signatures: NonEmptyVector::single("Inner".into()),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![Node::Directive(Directive::CNamespace { namespace: None })],
+                })),
+                c_macro("AFTER"),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — back under the pushed namespace, not stranded at global.
+        assert_eq!(
+            lookup_domain_object(&index, "c:macro:Outer.AFTER"),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_qualifies_declaration_after_c_namespace_directive() {
+        // Given — `.. c:namespace:: A.B` applies to subsequent siblings, the
+        // document-order semantics `py:currentmodule` already has.
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![
+                Node::Directive(Directive::CNamespace {
+                    namespace: Some("A.B".to_string()),
+                }),
+                c_macro("CONSTANT"),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "c:macro:A.B.CONSTANT"),
+            Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_c_namespace_pop_undoes_a_whole_multi_segment_push() {
+        // Given — real Sphinx's documented pop semantics: after pushing
+        // "C.D" onto "A.B", a pop returns to "A.B", not to "A.B.C".
+        let doc = Document::new(
+            "api.rst".to_string(),
+            vec![
+                Node::Directive(Directive::CNamespace {
+                    namespace: Some("A.B".to_string()),
+                }),
+                Node::Directive(Directive::CNamespacePush {
+                    namespace: "C.D".to_string(),
+                }),
+                c_macro("INNER"),
+                Node::Directive(Directive::CNamespacePop),
+                c_macro("OUTER"),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(lookup_domain_object(&index, "c:macro:A.B.C.D.INNER").is_some());
+        assert!(lookup_domain_object(&index, "c:macro:A.B.OUTER").is_some());
     }
 
     #[test]

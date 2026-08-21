@@ -393,6 +393,12 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
             Some(name) => ctx.scope.python.set_module(name),
             None => ctx.scope.python.clear_module(),
         },
+        // The `c:namespace` family mutates scope and renders nothing, exactly
+        // like `py:currentmodule` above — mirrored from the analyzer's
+        // `index_nodes` so anchor `id`s never drift from the index keys.
+        Directive::CNamespace { namespace } => ctx.scope.c.set_namespace(namespace.as_deref()),
+        Directive::CNamespacePush { namespace } => ctx.scope.c.push_namespace(namespace),
+        Directive::CNamespacePop => ctx.scope.c.pop_namespace(),
         Directive::Unknown { .. } => {}
     }
 }
@@ -545,6 +551,75 @@ mod tests {
 
         // Then
         assert_eq!(output.html, "");
+    }
+
+    #[test]
+    fn test_render_c_namespace_directives_emit_no_html() {
+        // Given — like `currentmodule`, the namespace family documents
+        // nothing; it only mutates scope.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::Directive(Directive::CNamespace {
+                    namespace: Some("A.B".to_string()),
+                }),
+                Node::Directive(Directive::CNamespacePush {
+                    namespace: "C.D".to_string(),
+                }),
+                Node::Directive(Directive::CNamespacePop),
+                Node::Directive(Directive::CNamespace { namespace: None }),
+            ],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(output.html, "");
+    }
+
+    #[test]
+    fn test_render_c_namespace_null_inside_c_type_body_unqualifies_nested_macro_anchor() {
+        // Given — the CPython `c-api/memory.rst` shape. The renderer must
+        // agree with the analyzer's index key, or the anchor `id` and the
+        // cross-reference target drift apart.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::CType {
+                    signatures: rusty_sphinx_ast::NonEmptyVector::single(
+                        "PyMemAllocatorDomain".into(),
+                    ),
+                    no_index: false,
+                    no_index_entry: false,
+                    no_contents_entry: false,
+                    body: vec![
+                        Node::Directive(Directive::CNamespace { namespace: None }),
+                        Node::Directive(Directive::DomainObject(
+                            rusty_sphinx_ast::DomainObjectBody::CMacro {
+                                signatures: rusty_sphinx_ast::NonEmptyVector::single(
+                                    "PYMEM_DOMAIN_RAW".into(),
+                                ),
+                                body: vec![],
+                            },
+                        )),
+                    ],
+                },
+            ))],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(output.html.contains("<dt id=\"c:macro:pymem_domain_raw\">"));
+        assert!(
+            !output
+                .html
+                .contains("c:macro:pymemallocatordomain.pymem_domain_raw")
+        );
     }
 
     #[test]
