@@ -7,15 +7,46 @@ Assembles the documentation from team_a and team_b into a single HTML site.
   bazel build //examples/team_a:docs   # build team_a in isolation
 """
 
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_doctest_tests", "rusty_sphinx_library", "rusty_sphinx_site")
+
+# Declared once and shared by the library and its doctest tests: Bazel macros
+# cannot read a target's providers, so the document list has to reach both.
+ROOT_DOCS = [
+    "index.rst",
+    "hyperlinks.rst",
+    "admonitions.rst",
+    "inline_roles.rst",
+    "version_changes.rst",
+    "seealso.rst",
+    "literal_blocks.rst",
+    "glossary.rst",
+    "definition_lists.rst",
+    "comments.rst",
+    "domains.rst",
+    "current_module.rst",
+    "transitions.rst",
+    "typography.rst",
+    "tables.rst",
+    "list_table.rst",
+    "index_entries.rst",
+    "doctests.rst",
+]
 
 rusty_sphinx_library(
     name = "root_docs",
-    srcs = ["index.rst", "hyperlinks.rst", "admonitions.rst", "inline_roles.rst", "version_changes.rst", "seealso.rst", "literal_blocks.rst", "glossary.rst", "definition_lists.rst", "comments.rst", "domains.rst", "current_module.rst", "transitions.rst", "typography.rst", "tables.rst", "list_table.rst", "index_entries.rst", "doctests.rst"],
+    srcs = ROOT_DOCS,
     deps = [
         "//examples/team_a:docs",
         "//examples/team_b:docs",
     ],
+)
+
+# One `bazel test` target per document. Building the site never reaches these,
+# so no Python toolchain is needed to produce HTML.
+rusty_sphinx_doctest_tests(
+    name = "root_docs_doctests",
+    lib = ":root_docs",
+    srcs = ROOT_DOCS,
 )
 
 rusty_sphinx_site(
