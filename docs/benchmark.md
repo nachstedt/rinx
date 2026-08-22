@@ -16,7 +16,26 @@ bazel run //scripts:benchmark
 
 ### What happens under the hood?
 
-1. **Cloning**: The script automatically performs a shallow clone of the CPython repository into a temporary directory (`rusty_sphinx_benchmark_cpython` under the system temp dir).
+1. **Cloning**: The script automatically performs a shallow clone of the CPython repository into a temporary directory (`rusty_sphinx_benchmark_cpython` under the system temp dir), at the **release tag** named by `PYTHON_VERSION` in `scripts/benchmark.py` — not at `main`.
+
+### Why the version is pinned
+
+`PYTHON_VERSION` is the single place the benchmark's Python version is decided, and it pins *both* halves of the corpus so they cannot drift apart:
+
+- the CPython release tag whose `Doc/` tree is cloned (`v3.14.2`), and
+- the interpreter the generated workspace resolves, via a `python.toolchain(python_version = ...)` written into the injected `MODULE.bazel`.
+
+This matters for two reasons. First, **doctests**: the script used to clone `main` while the interpreter came from rusty-sphinx's own `MODULE.bazel`, so the documentation described a development version whose APIs the interpreter did not have. Every doctest exercising a newly added API failed for a reason that had nothing to do with rusty-sphinx (`re.Pattern.prefixmatch`, `IPv4Network.next_network`, `PrettyPrinter(expand=...)`, `shlex.quote(force=...)` were all seen). Second, **reproducibility**: a benchmark against a moving branch produces numbers that change on their own, so a delta in `benchmark_result.txt` could never be attributed to a local change with confidence. A tag makes the corpus fixed.
+
+Overriding it for a one-off comparison:
+
+```bash
+bazel run //scripts:benchmark -- --python-version 3.13.11
+```
+
+A version must exist on **both** sides to be usable: as a `v<version>` tag in the CPython repository, and as an entry in rules_python's `TOOL_VERSIONS` (`python/versions.bzl`) for the rules_python release this workspace depends on. CPython ships later 3.14.x tags than rules_python 2.0.0 has interpreters for, which is why the default is 3.14.2 rather than the newest patch release.
+
+Note that `scripts/domain_warnings_whitelist.json` is tied to the pinned corpus: entries for documents that do not exist at that tag are pruned automatically. Changing `PYTHON_VERSION` will therefore churn the whitelist.
 2. **Bazel Project Generation**: A `BUILD.bazel` file is generated on the fly inside the `Doc/` directory of the clone, utilizing a `glob(["**/*.rst"])` statement to automatically capture all reStructuredText files into a single `rusty_sphinx_library` target. It also generates a `rusty_sphinx_site` target to assemble the HTML.
 3. **Execution**: The script runs `bazel build //Doc:site`. This triggers `rusty-sphinx` to parse, validate, and render every `.rst` file into HTML in parallel. The build currently succeeds outright against CPython's docs — toctree validation passes and HTML is produced for every page.
 4. **Analysis**: Once the build completes, the script traverses the generated Abstract Syntax Tree (`.ast`) JSON files located in `bazel-bin/`. It tallies up `Directive::Unknown` nodes (directives the parser doesn't recognize), `Toctree.ignored_options` (recognized toctree options the parser doesn't yet act on, e.g. `:caption:`), and per-document parser diagnostics, and prints each as a frequency map.
