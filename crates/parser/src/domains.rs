@@ -252,9 +252,10 @@ fn parse_body(
     parse_blocks(&body_content, adornment_order, diagnostics, default_domain)
 }
 
-/// Parses a `.. py:function::` body — no options to strip: unlike
-/// `py:method`, real Sphinx's `py:function` directive has no body-option
-/// flags at all, so the whole body is docstring content.
+/// Parses a `.. py:function::` body: strips a leading `:module:` option line
+/// off the front before parsing the rest as the docstring body — the only
+/// option real Sphinx's `py:function` directive has (unlike `py:method`,
+/// it has no body-option flags of its own).
 ///
 /// `forced_decorator` comes from the legacy `.. decorator::` directive-name
 /// alias (which is just `py:function` with `is_decorator` implied) — see
@@ -270,10 +271,20 @@ fn parse_py_function(
     default_domain: Domain,
     forced_decorator: bool,
 ) -> DomainObjectBody {
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (module, options_consumed) = extract_function_options(&unindented_lines);
+
+    let body_content: Vec<&str> = unindented_lines[options_consumed..]
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+
     DomainObjectBody::PyFunction {
+        module,
         signatures,
         is_decorator: forced_decorator,
-        body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+        body,
     }
 }
 
@@ -316,7 +327,7 @@ fn parse_py_data(
     default_domain: Domain,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
-    let (type_, value, options_consumed) = extract_data_options(&unindented_lines);
+    let (type_, value, module, options_consumed) = extract_data_options(&unindented_lines);
 
     let body_content: Vec<&str> = unindented_lines[options_consumed..]
         .iter()
@@ -325,6 +336,7 @@ fn parse_py_data(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyData {
+        module,
         signatures,
         type_,
         value,
@@ -400,7 +412,7 @@ fn parse_py_method(
     forced: ForcedMethodFlags,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
-    let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, options_consumed) =
+    let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, options_consumed) =
         extract_method_options(&unindented_lines);
 
     let body_content: Vec<&str> = unindented_lines[options_consumed..]
@@ -410,6 +422,7 @@ fn parse_py_method(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyMethod {
+        module,
         signatures,
         is_classmethod: is_classmethod || forced.classmethod,
         is_staticmethod: is_staticmethod || forced.staticmethod,
@@ -434,7 +447,7 @@ fn parse_py_class(
     default_domain: Domain,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
-    let (is_final, options_consumed) = extract_class_options(&unindented_lines);
+    let (is_final, module, options_consumed) = extract_class_options(&unindented_lines);
 
     let body_content: Vec<&str> = unindented_lines[options_consumed..]
         .iter()
@@ -443,6 +456,7 @@ fn parse_py_class(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyClass {
+        module,
         signatures,
         is_final,
         body,
@@ -462,7 +476,7 @@ fn parse_py_exception(
     default_domain: Domain,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
-    let (is_final, options_consumed) = extract_class_options(&unindented_lines);
+    let (is_final, module, options_consumed) = extract_class_options(&unindented_lines);
 
     let body_content: Vec<&str> = unindented_lines[options_consumed..]
         .iter()
@@ -471,6 +485,7 @@ fn parse_py_exception(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyException {
+        module,
         signatures,
         is_final,
         body,
@@ -487,7 +502,8 @@ fn parse_py_attribute(
     default_domain: Domain,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
-    let (type_, value, canonical, options_consumed) = extract_attribute_options(&unindented_lines);
+    let (type_, value, canonical, module, options_consumed) =
+        extract_attribute_options(&unindented_lines);
 
     let body_content: Vec<&str> = unindented_lines[options_consumed..]
         .iter()
@@ -496,6 +512,7 @@ fn parse_py_attribute(
     let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
 
     DomainObjectBody::PyAttribute {
+        module,
         signatures,
         type_,
         value,
@@ -625,6 +642,20 @@ fn parse_c_type(
     }
 }
 
+/// Parses a single leading option line as `:module:`, if it is one, e.g.
+/// `":module: multiprocessing.managers"` -> `Some("multiprocessing.managers")`
+/// (or `Some("")` for a bare `:module:` with no value). Shared by every
+/// per-object-type extractor below, since real Sphinx's `:module:` option is
+/// common to every `py:*` object-description directive except `py:module`
+/// itself (which is not a `PyObject` and has its own, disjoint
+/// `platform`/`synopsis`/`deprecated` option set — see
+/// [`extract_module_options`]).
+fn parse_module_option_line(trimmed: &str) -> Option<String> {
+    trimmed
+        .strip_prefix(":module:")
+        .map(|rest| rest.trim().to_string())
+}
+
 /// Extracts the object-description flag options common across domains
 /// (`:no-index:`, `:no-index-entry:`, `:no-contents-entry:`, plus their
 /// legacy pre-Sphinx-7 spellings `:noindex:`/`:noindexentry:`/
@@ -685,16 +716,44 @@ fn extract_module_options(lines: &[String]) -> (Option<String>, Option<String>, 
     (platform, synopsis, deprecated, consumed)
 }
 
-/// Extracts `.. py:data::`-specific options (`:type:`, `:value:`) from the
-/// leading lines of a domain object's body.
+/// Extracts `.. py:function::`-specific options (`:module:`, the only one
+/// real Sphinx's `py:function` directive has) from the leading lines of a
+/// domain object's body.
+///
+/// Scans from the start and stops at the first line that isn't `:module:`
+/// (e.g. a blank line or the start of the docstring body), returning how
+/// many leading lines were consumed as options so the caller can slice them
+/// off before parsing the remaining body content.
+fn extract_function_options(lines: &[String]) -> (Option<String>, usize) {
+    let mut module = None;
+    let mut consumed = 0;
+
+    for line in lines {
+        let trimmed = line.trim();
+        if let Some(value) = parse_module_option_line(trimmed) {
+            module = Some(value);
+        } else {
+            break;
+        }
+        consumed += 1;
+    }
+
+    (module, consumed)
+}
+
+/// Extracts `.. py:data::`-specific options (`:type:`, `:value:`, `:module:`)
+/// from the leading lines of a domain object's body.
 ///
 /// Scans from the start and stops at the first line that isn't one of these
 /// recognized options (e.g. a blank line or the start of the docstring body),
 /// returning how many leading lines were consumed as options so the caller
 /// can slice them off before parsing the remaining body content.
-fn extract_data_options(lines: &[String]) -> (Option<String>, Option<String>, usize) {
+fn extract_data_options(
+    lines: &[String],
+) -> (Option<String>, Option<String>, Option<String>, usize) {
     let mut type_ = None;
     let mut value = None;
+    let mut module = None;
     let mut consumed = 0;
 
     for line in lines {
@@ -703,37 +762,46 @@ fn extract_data_options(lines: &[String]) -> (Option<String>, Option<String>, us
             type_ = Some(rest.trim().to_string());
         } else if let Some(rest) = trimmed.strip_prefix(":value:") {
             value = Some(rest.trim().to_string());
+        } else if let Some(module_value) = parse_module_option_line(trimmed) {
+            module = Some(module_value);
         } else {
             break;
         }
         consumed += 1;
     }
 
-    (type_, value, consumed)
+    (type_, value, module, consumed)
 }
 
-/// Extracts `.. py:method::`-specific flag options (`:classmethod:`,
-/// `:staticmethod:`, `:abstractmethod:`, `:async:`) from the leading lines of
-/// a domain object's body.
+/// Extracts `.. py:method::`-specific options: the flags `:classmethod:`,
+/// `:staticmethod:`, `:abstractmethod:`, `:async:`, plus `:module:` (shared
+/// with every other `py:*` object-description directive) from the leading
+/// lines of a domain object's body.
 ///
 /// Scans from the start and stops at the first line that isn't one of these
-/// recognized flags (e.g. a blank line or the start of the docstring body),
+/// recognized options (e.g. a blank line or the start of the docstring body),
 /// returning how many leading lines were consumed as options so the caller
 /// can slice them off before parsing the remaining body content.
-fn extract_method_options(lines: &[String]) -> (bool, bool, bool, bool, usize) {
+fn extract_method_options(lines: &[String]) -> (bool, bool, bool, bool, Option<String>, usize) {
     let mut is_classmethod = false;
     let mut is_staticmethod = false;
     let mut is_abstractmethod = false;
     let mut is_async = false;
+    let mut module = None;
     let mut consumed = 0;
 
     for line in lines {
-        match line.trim() {
-            ":classmethod:" => is_classmethod = true,
-            ":staticmethod:" => is_staticmethod = true,
-            ":abstractmethod:" => is_abstractmethod = true,
-            ":async:" => is_async = true,
-            _ => break,
+        let trimmed = line.trim();
+        if let Some(module_value) = parse_module_option_line(trimmed) {
+            module = Some(module_value);
+        } else {
+            match trimmed {
+                ":classmethod:" => is_classmethod = true,
+                ":staticmethod:" => is_staticmethod = true,
+                ":abstractmethod:" => is_abstractmethod = true,
+                ":async:" => is_async = true,
+                _ => break,
+            }
         }
         consumed += 1;
     }
@@ -743,30 +811,39 @@ fn extract_method_options(lines: &[String]) -> (bool, bool, bool, bool, usize) {
         is_staticmethod,
         is_abstractmethod,
         is_async,
+        module,
         consumed,
     )
 }
 
-/// Extracts `.. py:class::`-specific flag options (`:final:`) from the
-/// leading lines of a domain object's body.
+/// Extracts `.. py:class::`/`.. py:exception::`-specific options: the
+/// `:final:` flag plus `:module:` (shared with every other `py:*`
+/// object-description directive) from the leading lines of a domain object's
+/// body.
 ///
-/// Scans from the start and stops at the first line that isn't `:final:`
-/// (e.g. a blank line, a nested directive, or the start of the docstring
-/// body), returning how many leading lines were consumed as options so the
-/// caller can slice them off before parsing the remaining body content.
-fn extract_class_options(lines: &[String]) -> (bool, usize) {
+/// Scans from the start and stops at the first line that isn't one of these
+/// recognized options (e.g. a blank line, a nested directive, or the start
+/// of the docstring body), returning how many leading lines were consumed as
+/// options so the caller can slice them off before parsing the remaining
+/// body content.
+fn extract_class_options(lines: &[String]) -> (bool, Option<String>, usize) {
     let mut is_final = false;
+    let mut module = None;
     let mut consumed = 0;
 
     for line in lines {
-        match line.trim() {
-            ":final:" => is_final = true,
-            _ => break,
+        let trimmed = line.trim();
+        if let Some(module_value) = parse_module_option_line(trimmed) {
+            module = Some(module_value);
+        } else if trimmed == ":final:" {
+            is_final = true;
+        } else {
+            break;
         }
         consumed += 1;
     }
 
-    (is_final, consumed)
+    (is_final, module, consumed)
 }
 
 /// Extracts `.. py:attribute::`-specific options (`:type:`, `:value:`,
@@ -778,10 +855,17 @@ fn extract_class_options(lines: &[String]) -> (bool, usize) {
 /// can slice them off before parsing the remaining body content.
 fn extract_attribute_options(
     lines: &[String],
-) -> (Option<String>, Option<String>, Option<String>, usize) {
+) -> (
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+    usize,
+) {
     let mut type_ = None;
     let mut value = None;
     let mut canonical = None;
+    let mut module = None;
     let mut consumed = 0;
 
     for line in lines {
@@ -792,13 +876,15 @@ fn extract_attribute_options(
             value = Some(rest.trim().to_string());
         } else if let Some(rest) = trimmed.strip_prefix(":canonical:") {
             canonical = Some(rest.trim().to_string());
+        } else if let Some(module_value) = parse_module_option_line(trimmed) {
+            module = Some(module_value);
         } else {
             break;
         }
         consumed += 1;
     }
 
-    (type_, value, canonical, consumed)
+    (type_, value, canonical, module, consumed)
 }
 
 #[cfg(test)]
@@ -878,11 +964,12 @@ mod tests {
         ];
 
         // When
-        let (type_, value, consumed) = extract_data_options(&lines);
+        let (type_, value, module, consumed) = extract_data_options(&lines);
 
         // Then
         assert_eq!(type_.as_deref(), Some("int"));
         assert_eq!(value.as_deref(), Some("30"));
+        assert_eq!(module, None);
         assert_eq!(consumed, 2);
     }
 
@@ -895,11 +982,12 @@ mod tests {
         ];
 
         // When
-        let (type_, value, consumed) = extract_data_options(&lines);
+        let (type_, value, module, consumed) = extract_data_options(&lines);
 
         // Then
         assert_eq!(type_.as_deref(), Some("int"));
         assert_eq!(value, None);
+        assert_eq!(module, None);
         assert_eq!(consumed, 1);
     }
 
@@ -909,12 +997,35 @@ mod tests {
         let lines = vec!["The default timeout in seconds.".to_string()];
 
         // When
-        let (type_, value, consumed) = extract_data_options(&lines);
+        let (type_, value, module, consumed) = extract_data_options(&lines);
 
         // Then
         assert_eq!(type_, None);
         assert_eq!(value, None);
+        assert_eq!(module, None);
         assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_extract_data_options_parses_module_option_alongside_others() {
+        // Given — the `known_bugs.md` shape: `ctypes.util`'s constants
+        // documented under a different module than the enclosing `.. module::`.
+        let lines = vec![
+            ":type: int".to_string(),
+            ":module: ctypes.util".to_string(),
+            ":value: 30".to_string(),
+            String::new(),
+            "The default timeout in seconds.".to_string(),
+        ];
+
+        // When
+        let (type_, value, module, consumed) = extract_data_options(&lines);
+
+        // Then — order-independent, like the other options.
+        assert_eq!(type_.as_deref(), Some("int"));
+        assert_eq!(value.as_deref(), Some("30"));
+        assert_eq!(module.as_deref(), Some("ctypes.util"));
+        assert_eq!(consumed, 3);
     }
 
     #[test]
@@ -930,7 +1041,7 @@ mod tests {
         ];
 
         // When
-        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, consumed) =
+        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, consumed) =
             extract_method_options(&lines);
 
         // Then
@@ -938,6 +1049,7 @@ mod tests {
         assert!(is_staticmethod);
         assert!(is_abstractmethod);
         assert!(is_async);
+        assert_eq!(module, None);
         assert_eq!(consumed, 4);
     }
 
@@ -947,7 +1059,7 @@ mod tests {
         let lines = vec![":classmethod:".to_string(), "Does the thing.".to_string()];
 
         // When
-        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, consumed) =
+        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, consumed) =
             extract_method_options(&lines);
 
         // Then
@@ -955,6 +1067,7 @@ mod tests {
         assert!(!is_staticmethod);
         assert!(!is_abstractmethod);
         assert!(!is_async);
+        assert_eq!(module, None);
         assert_eq!(consumed, 1);
     }
 
@@ -964,7 +1077,7 @@ mod tests {
         let lines = vec!["Does the thing.".to_string()];
 
         // When
-        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, consumed) =
+        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, consumed) =
             extract_method_options(&lines);
 
         // Then
@@ -972,7 +1085,32 @@ mod tests {
         assert!(!is_staticmethod);
         assert!(!is_abstractmethod);
         assert!(!is_async);
+        assert_eq!(module, None);
         assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_extract_method_options_parses_module_option_alongside_flags() {
+        // Given — `:module:` interleaved with the flag options, proving both
+        // recognition and order-independence.
+        let lines = vec![
+            ":classmethod:".to_string(),
+            ":module: multiprocessing.managers".to_string(),
+            ":async:".to_string(),
+            "Does the thing.".to_string(),
+        ];
+
+        // When
+        let (is_classmethod, is_staticmethod, is_abstractmethod, is_async, module, consumed) =
+            extract_method_options(&lines);
+
+        // Then
+        assert!(is_classmethod);
+        assert!(!is_staticmethod);
+        assert!(!is_abstractmethod);
+        assert!(is_async);
+        assert_eq!(module.as_deref(), Some("multiprocessing.managers"));
+        assert_eq!(consumed, 3);
     }
 
     #[test]
@@ -987,12 +1125,13 @@ mod tests {
         ];
 
         // When
-        let (type_, value, canonical, consumed) = extract_attribute_options(&lines);
+        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
 
         // Then
         assert_eq!(type_.as_deref(), Some("str"));
         assert_eq!(value.as_deref(), Some("\"anonymous\""));
         assert_eq!(canonical.as_deref(), Some("mymodule.MyClass.name"));
+        assert_eq!(module, None);
         assert_eq!(consumed, 3);
     }
 
@@ -1002,12 +1141,13 @@ mod tests {
         let lines = vec![":type: str".to_string(), "The greeter's name.".to_string()];
 
         // When
-        let (type_, value, canonical, consumed) = extract_attribute_options(&lines);
+        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
 
         // Then
         assert_eq!(type_.as_deref(), Some("str"));
         assert_eq!(value, None);
         assert_eq!(canonical, None);
+        assert_eq!(module, None);
         assert_eq!(consumed, 1);
     }
 
@@ -1017,12 +1157,13 @@ mod tests {
         let lines = vec!["The greeter's name.".to_string()];
 
         // When
-        let (type_, value, canonical, consumed) = extract_attribute_options(&lines);
+        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
 
         // Then
         assert_eq!(type_, None);
         assert_eq!(value, None);
         assert_eq!(canonical, None);
+        assert_eq!(module, None);
         assert_eq!(consumed, 0);
     }
 
@@ -1036,12 +1177,33 @@ mod tests {
         ];
 
         // When
-        let (type_, value, canonical, consumed) = extract_attribute_options(&lines);
+        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
 
         // Then
         assert_eq!(type_.as_deref(), Some("str"));
         assert_eq!(value.as_deref(), Some("\"anonymous\""));
         assert_eq!(canonical.as_deref(), Some("mymodule.MyClass.name"));
+        assert_eq!(module, None);
+        assert_eq!(consumed, 3);
+    }
+
+    #[test]
+    fn test_extract_attribute_options_parses_module_option_alongside_others() {
+        // Given
+        let lines = vec![
+            ":type: str".to_string(),
+            ":module: mymodule.other".to_string(),
+            ":value: \"anonymous\"".to_string(),
+        ];
+
+        // When
+        let (type_, value, canonical, module, consumed) = extract_attribute_options(&lines);
+
+        // Then
+        assert_eq!(type_.as_deref(), Some("str"));
+        assert_eq!(value.as_deref(), Some("\"anonymous\""));
+        assert_eq!(canonical, None);
+        assert_eq!(module.as_deref(), Some("mymodule.other"));
         assert_eq!(consumed, 3);
     }
 
@@ -1062,6 +1224,7 @@ mod tests {
             is_abstractmethod,
             is_async,
             is_decorator,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -1154,6 +1317,7 @@ mod tests {
             is_abstractmethod,
             is_async,
             is_decorator,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -1189,6 +1353,7 @@ mod tests {
             is_abstractmethod,
             is_async,
             is_decorator,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -1248,6 +1413,7 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signatures,
             is_decorator,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -1351,10 +1517,11 @@ mod tests {
         ];
 
         // When
-        let (is_final, consumed) = extract_class_options(&lines);
+        let (is_final, module, consumed) = extract_class_options(&lines);
 
         // Then
         assert!(is_final);
+        assert_eq!(module, None);
         assert_eq!(consumed, 1);
     }
 
@@ -1364,10 +1531,77 @@ mod tests {
         let lines = vec!["A greeter.".to_string()];
 
         // When
-        let (is_final, consumed) = extract_class_options(&lines);
+        let (is_final, module, consumed) = extract_class_options(&lines);
 
         // Then
         assert!(!is_final);
+        assert_eq!(module, None);
+        assert_eq!(consumed, 0);
+    }
+
+    #[test]
+    fn test_extract_class_options_parses_module_option_alongside_final_flag() {
+        // Given — the `known_bugs.md` motivating shape: CPython's
+        // `multiprocessing.shared_memory.rst` documents `SharedMemoryManager`
+        // under a different module via `:module:`.
+        let lines = vec![
+            ":module: multiprocessing.managers".to_string(),
+            ":final:".to_string(),
+            String::new(),
+            "A subclass of BaseManager.".to_string(),
+        ];
+
+        // When
+        let (is_final, module, consumed) = extract_class_options(&lines);
+
+        // Then — order-independent, like the other options.
+        assert!(is_final);
+        assert_eq!(module.as_deref(), Some("multiprocessing.managers"));
+        assert_eq!(consumed, 2);
+    }
+
+    #[test]
+    fn test_extract_class_options_parses_module_option_with_empty_value() {
+        // Given — real Sphinx's falsy-`modname` check: a bare `:module:`
+        // deliberately un-qualifies the object.
+        let lines = vec![":module:".to_string(), "A greeter.".to_string()];
+
+        // When
+        let (is_final, module, consumed) = extract_class_options(&lines);
+
+        // Then
+        assert!(!is_final);
+        assert_eq!(module.as_deref(), Some(""));
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_extract_function_options_parses_module_option() {
+        // Given — real Sphinx's `py:function` directive has no other options.
+        let lines = vec![
+            ":module: ctypes.util".to_string(),
+            String::new(),
+            "Finds a library.".to_string(),
+        ];
+
+        // When
+        let (module, consumed) = extract_function_options(&lines);
+
+        // Then
+        assert_eq!(module.as_deref(), Some("ctypes.util"));
+        assert_eq!(consumed, 1);
+    }
+
+    #[test]
+    fn test_extract_function_options_returns_defaults_when_no_options_present() {
+        // Given
+        let lines = vec!["Finds a library.".to_string()];
+
+        // When
+        let (module, consumed) = extract_function_options(&lines);
+
+        // Then
+        assert_eq!(module, None);
         assert_eq!(consumed, 0);
     }
 
@@ -1461,6 +1695,7 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
             signatures,
             is_final,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -1485,12 +1720,53 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
             signatures,
             is_final,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
             assert_eq!(signatures.as_slice(), ["Greeter(Base)"]);
             assert!(*is_final);
             assert_eq!(body.len(), 1);
+        } else {
+            panic!("Expected PyClass, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_py_class_with_module_option_reproduces_known_bugs_shape() {
+        // Given — the exact `known_bugs.md` shape:
+        // `Doc/library/multiprocessing.shared_memory.rst` documents
+        // `SharedMemoryManager` under a different module than the enclosing
+        // `.. module::` via `:module:`.
+        let input = ".. class:: SharedMemoryManager([address[, authkey]])\n   :module: multiprocessing.managers\n\n   A subclass of BaseManager.";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
+            signatures,
+            is_final,
+            module,
+            body,
+        })) = &doc.nodes[0]
+        {
+            assert_eq!(
+                signatures.as_slice(),
+                ["SharedMemoryManager([address[, authkey]])"]
+            );
+            assert!(!is_final);
+            assert_eq!(module.as_deref(), Some("multiprocessing.managers"));
+            // Symptom #2 from `known_bugs.md`: the `:module:` option line
+            // must be stripped as an option, not fall through to become the
+            // docstring's first paragraph.
+            assert_eq!(
+                body,
+                &[Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
+                    "A subclass of BaseManager.".to_string()
+                )])]
+            );
         } else {
             panic!("Expected PyClass, got {:?}", doc.nodes[0]);
         }
@@ -1554,6 +1830,7 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
             signatures,
             is_final,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -1578,6 +1855,7 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyException {
             signatures,
             is_final,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -1693,6 +1971,7 @@ mod tests {
         if let DomainObjectBody::PyFunction {
             signatures,
             is_decorator,
+            module: _,
             body,
         } = domain_object
         {
@@ -1840,6 +2119,7 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signatures,
             is_decorator,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -1947,6 +2227,7 @@ mod tests {
             signatures,
             type_,
             value,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -2049,6 +2330,7 @@ mod tests {
         if let Node::Directive(Directive::DomainObject(DomainObjectBody::PyFunction {
             signatures,
             is_decorator,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {
@@ -2129,6 +2411,7 @@ mod tests {
             type_,
             value,
             canonical,
+            module: _,
             body,
         })) = &doc.nodes[0]
         {

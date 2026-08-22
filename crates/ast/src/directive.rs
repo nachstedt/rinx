@@ -197,6 +197,7 @@ mod tests {
     fn test_domain_object_directive_serialization_roundtrip_with_data_options() {
         // Given
         let directive = Directive::DomainObject(DomainObjectBody::PyData {
+            module: None,
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: Some("int".to_string()),
             value: Some("30".to_string()),

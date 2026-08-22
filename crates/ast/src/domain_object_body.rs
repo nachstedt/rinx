@@ -63,6 +63,10 @@ pub enum DomainObjectBody {
         /// this — it's parser-derived intent, not something an author can
         /// set via a body option line the way `py:method`'s flags are.
         is_decorator: bool,
+        /// The `:module:` option: overrides the ambient `py:module`/
+        /// `py:currentmodule` context for this definition and its nested
+        /// body only, restored afterward. See [`Self::module_override`].
+        module: Option<String>,
         body: Vec<Node>,
     },
     PyModule {
@@ -81,6 +85,9 @@ pub enum DomainObjectBody {
         type_: Option<String>,
         /// The data item's value (e.g. `"30"`).
         value: Option<String>,
+        /// The `:module:` option — see [`PyFunction::module`] and
+        /// [`Self::module_override`].
+        module: Option<String>,
         body: Vec<Node>,
     },
     PyAttribute {
@@ -94,6 +101,9 @@ pub enum DomainObjectBody {
         /// Rendered as metadata only — no alias/cross-reference-redirect
         /// semantics.
         canonical: Option<String>,
+        /// The `:module:` option — see [`PyFunction::module`] and
+        /// [`Self::module_override`].
+        module: Option<String>,
         body: Vec<Node>,
     },
     CFunction {
@@ -148,16 +158,25 @@ pub enum DomainObjectBody {
         /// Set by the `.. decoratormethod::` directive-name alias — the
         /// `py:method` counterpart of `PyFunction::is_decorator`, see there.
         is_decorator: bool,
+        /// The `:module:` option — see [`PyFunction::module`] and
+        /// [`Self::module_override`].
+        module: Option<String>,
         body: Vec<Node>,
     },
     PyClass {
         signatures: NonEmptyVector<String>,
         is_final: bool,
+        /// The `:module:` option — see [`PyFunction::module`] and
+        /// [`Self::module_override`].
+        module: Option<String>,
         body: Vec<Node>,
     },
     PyException {
         signatures: NonEmptyVector<String>,
         is_final: bool,
+        /// The `:module:` option — see [`PyFunction::module`] and
+        /// [`Self::module_override`].
+        module: Option<String>,
         body: Vec<Node>,
     },
 }
@@ -421,6 +440,37 @@ impl DomainObjectBody {
         }
     }
 
+    /// The `:module:` option's override value: real Sphinx's `PyObject`
+    /// directives (every `py:*` object-description directive except
+    /// `py:module` itself, which is not a `PyObject` and has its own,
+    /// disjoint `platform`/`synopsis`/`deprecated` option set) accept a
+    /// `:module:` option that overrides the ambient `py:module`/
+    /// `py:currentmodule` context for this one definition and its nested
+    /// body, restored once the directive (including its nested content) is
+    /// fully processed — see `PythonScope::push_module_override`/
+    /// `restore_module`, which implement that scoped override, and
+    /// `deduce_local_scope`, whose class-nesting concept this is
+    /// independent of. `None` for object types that don't carry the option
+    /// or didn't set it.
+    #[must_use]
+    pub fn module_override(&self) -> Option<&str> {
+        match self {
+            Self::PyFunction { module, .. }
+            | Self::PyMethod { module, .. }
+            | Self::PyClass { module, .. }
+            | Self::PyException { module, .. }
+            | Self::PyData { module, .. }
+            | Self::PyAttribute { module, .. } => module.as_deref(),
+            Self::PyModule { .. }
+            | Self::CFunction { .. }
+            | Self::CMacro { .. }
+            | Self::CStruct { .. }
+            | Self::CUnion { .. }
+            | Self::CMember { .. }
+            | Self::CType { .. } => None,
+        }
+    }
+
     /// Whether this object is excluded from a local contents/TOC listing.
     /// Parsed and stored for the three object types that model it, but
     /// rusty-sphinx has no such listing for domain objects yet, so this has
@@ -577,6 +627,7 @@ mod tests {
     fn test_deduce_local_scope_lends_all_new_segments_for_classes() {
         // Given
         let class = DomainObjectBody::PyClass {
+            module: None,
             signatures: NonEmptyVector::single("zipimporter(archivepath)".to_string()),
             is_final: false,
             body: vec![],
@@ -594,6 +645,7 @@ mod tests {
         // Given — exceptions are classes in Python, so they scope their body
         // the same way.
         let exception = DomainObjectBody::PyException {
+            module: None,
             signatures: NonEmptyVector::single("ZipImportError".to_string()),
             is_final: false,
             body: vec![],
@@ -613,6 +665,7 @@ mod tests {
         // `ZipFile`'s methods flat, with dotted signatures, so the method's
         // own name carries the class scope its body should resolve against.
         let method = DomainObjectBody::PyMethod {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("ZipFile.open(name, mode='r')".to_string()),
             is_classmethod: false,
@@ -633,6 +686,7 @@ mod tests {
     fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_function() {
         // Given
         let function = DomainObjectBody::PyFunction {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("path.join(a, *p)".to_string()),
             body: vec![],
@@ -649,6 +703,7 @@ mod tests {
     fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_attribute() {
         // Given
         let attribute = DomainObjectBody::PyAttribute {
+            module: None,
             signatures: NonEmptyVector::single("ZipInfo.filename".to_string()),
             type_: None,
             value: None,
@@ -668,6 +723,7 @@ mod tests {
     fn test_deduce_local_scope_lends_all_but_last_new_segment_for_dotted_data() {
         // Given
         let data = DomainObjectBody::PyData {
+            module: None,
             signatures: NonEmptyVector::single("ZipFile.DEFAULT_TIMEOUT".to_string()),
             type_: None,
             value: None,
@@ -686,6 +742,7 @@ mod tests {
     fn test_deduce_local_scope_returns_empty_for_undotted_function() {
         // Given — an unqualified, module-less function has no prefix to lend.
         let function = DomainObjectBody::PyFunction {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
             body: vec![],
@@ -702,6 +759,7 @@ mod tests {
     fn test_deduce_local_scope_returns_empty_for_undotted_method() {
         // Given
         let method = DomainObjectBody::PyMethod {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("find_spec(fullname)".to_string()),
             is_classmethod: false,
@@ -790,6 +848,7 @@ mod tests {
         // Given / When / Then
         assert_eq!(
             DomainObjectBody::PyFunction {
+                module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
                 body: vec![],
@@ -810,6 +869,7 @@ mod tests {
         );
         assert_eq!(
             DomainObjectBody::PyData {
+                module: None,
                 signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
                 type_: None,
                 value: None,
@@ -820,6 +880,7 @@ mod tests {
         );
         assert_eq!(
             DomainObjectBody::PyAttribute {
+                module: None,
                 signatures: NonEmptyVector::single("Greeter.name".to_string()),
                 type_: None,
                 value: None,
@@ -847,6 +908,7 @@ mod tests {
         );
         assert_eq!(
             DomainObjectBody::PyMethod {
+                module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(self, name)".to_string()),
                 is_classmethod: false,
@@ -860,6 +922,7 @@ mod tests {
         );
         assert_eq!(
             DomainObjectBody::PyClass {
+                module: None,
                 signatures: NonEmptyVector::single("Greeter".to_string()),
                 is_final: false,
                 body: vec![],
@@ -869,6 +932,7 @@ mod tests {
         );
         assert_eq!(
             DomainObjectBody::PyException {
+                module: None,
                 signatures: NonEmptyVector::single("GreeterError".to_string()),
                 is_final: false,
                 body: vec![],
@@ -886,6 +950,7 @@ mod tests {
         // `self.name = 'py:function'`), so `is_decorator` must not change
         // `object_type()`.
         let decorator = DomainObjectBody::PyFunction {
+            module: None,
             signatures: NonEmptyVector::single("classmethod".to_string()),
             is_decorator: true,
             body: vec![],
@@ -902,6 +967,7 @@ mod tests {
     fn test_domain_object_body_object_type_is_method_for_decoratormethod() {
         // Given
         let decorator_method = DomainObjectBody::PyMethod {
+            module: None,
             signatures: NonEmptyVector::single("register(cls)".to_string()),
             is_classmethod: false,
             is_staticmethod: false,
@@ -922,6 +988,7 @@ mod tests {
     fn test_domain_object_body_name_extracts_from_signature_for_functions() {
         // Given
         let function = DomainObjectBody::PyFunction {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
             body: vec![],
@@ -959,6 +1026,7 @@ mod tests {
     fn test_domain_object_body_name_extracts_from_signature_for_methods() {
         // Given
         let method = DomainObjectBody::PyMethod {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("Greeter.greet(self, name)".to_string()),
             is_classmethod: false,
@@ -976,6 +1044,7 @@ mod tests {
     fn test_domain_object_body_signature_text_shows_full_signature_for_methods() {
         // Given
         let method = DomainObjectBody::PyMethod {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(self, name)".to_string()),
             is_classmethod: true,
@@ -993,6 +1062,7 @@ mod tests {
     fn test_domain_object_body_name_extracts_from_signature_for_classes() {
         // Given
         let class = DomainObjectBody::PyClass {
+            module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: false,
             body: vec![],
@@ -1006,6 +1076,7 @@ mod tests {
     fn test_domain_object_body_name_ignores_base_class_list() {
         // Given — base classes shouldn't leak into the referenceable name
         let class = DomainObjectBody::PyClass {
+            module: None,
             signatures: NonEmptyVector::single("Greeter(Base)".to_string()),
             is_final: false,
             body: vec![],
@@ -1019,6 +1090,7 @@ mod tests {
     fn test_domain_object_body_signature_text_shows_full_signature_for_classes() {
         // Given
         let class = DomainObjectBody::PyClass {
+            module: None,
             signatures: NonEmptyVector::single("Greeter(Base)".to_string()),
             is_final: true,
             body: vec![],
@@ -1032,6 +1104,7 @@ mod tests {
     fn test_domain_object_body_name_extracts_from_signature_for_exceptions() {
         // Given
         let exception = DomainObjectBody::PyException {
+            module: None,
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: false,
             body: vec![],
@@ -1045,6 +1118,7 @@ mod tests {
     fn test_domain_object_body_name_ignores_base_class_list_for_exceptions() {
         // Given — base classes shouldn't leak into the referenceable name
         let exception = DomainObjectBody::PyException {
+            module: None,
             signatures: NonEmptyVector::single("InvalidNameError(GreeterError)".to_string()),
             is_final: false,
             body: vec![],
@@ -1058,6 +1132,7 @@ mod tests {
     fn test_domain_object_body_signature_text_shows_full_signature_for_exceptions() {
         // Given
         let exception = DomainObjectBody::PyException {
+            module: None,
             signatures: NonEmptyVector::single("InvalidNameError(GreeterError)".to_string()),
             is_final: true,
             body: vec![],
@@ -1089,6 +1164,7 @@ mod tests {
     fn test_domain_object_body_name_uses_bare_name_for_data() {
         // Given
         let data = DomainObjectBody::PyData {
+            module: None,
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
             value: None,
@@ -1103,6 +1179,7 @@ mod tests {
     fn test_domain_object_body_name_uses_bare_name_for_attributes() {
         // Given
         let attribute = DomainObjectBody::PyAttribute {
+            module: None,
             signatures: NonEmptyVector::single("Greeter.name".to_string()),
             type_: None,
             value: None,
@@ -1157,6 +1234,7 @@ mod tests {
     fn test_domain_object_body_signature_text_shows_bare_name_for_data() {
         // Given
         let data = DomainObjectBody::PyData {
+            module: None,
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
             value: None,
@@ -1171,6 +1249,7 @@ mod tests {
     fn test_domain_object_body_signature_text_shows_bare_name_for_attributes() {
         // Given
         let attribute = DomainObjectBody::PyAttribute {
+            module: None,
             signatures: NonEmptyVector::single("Greeter.name".to_string()),
             type_: None,
             value: None,
@@ -1187,6 +1266,7 @@ mod tests {
         // Given — a multi-signature function: every entry needs the same
         // name extraction applied, not only the primary.
         let function = DomainObjectBody::PyFunction {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::new(
                 "spawnl(mode, file, *args)".to_string(),
@@ -1206,6 +1286,7 @@ mod tests {
     fn test_names_strips_base_class_lists_from_every_signature() {
         // Given
         let class = DomainObjectBody::PyClass {
+            module: None,
             signatures: NonEmptyVector::new(
                 "Greeter(Base)".to_string(),
                 vec!["PoliteGreeter(Greeter)".to_string()],
@@ -1370,6 +1451,7 @@ mod tests {
         // Given — the confirmed `library/socket.rst` shape: `py:data`
         // signatures are already bare names, so nothing is extracted.
         let data = DomainObjectBody::PyData {
+            module: None,
             signatures: NonEmptyVector::new(
                 "AF_UNIX".to_string(),
                 vec!["AF_INET".to_string(), "AF_INET6".to_string()],
@@ -1391,6 +1473,7 @@ mod tests {
         // Given — the `<dt>` display text keeps the full signature, unlike
         // `names()`.
         let function = DomainObjectBody::PyFunction {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::new(
                 "spawnl(mode, file, *args)".to_string(),
@@ -1434,6 +1517,7 @@ mod tests {
         // Given — the renderer zips the two to pair each anchor with its
         // display text, so they must have matching lengths and order.
         let method = DomainObjectBody::PyMethod {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::new(
                 "ZipFile.open(name)".to_string(),
@@ -1461,6 +1545,7 @@ mod tests {
         // Given
         let paragraph = Node::Paragraph(vec![InlineNode::Text("hello".to_string())]);
         let function = DomainObjectBody::PyFunction {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
             body: vec![paragraph.clone()],
@@ -1473,12 +1558,14 @@ mod tests {
             body: vec![paragraph.clone()],
         };
         let data = DomainObjectBody::PyData {
+            module: None,
             signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
             type_: None,
             value: None,
             body: vec![paragraph.clone()],
         };
         let attribute = DomainObjectBody::PyAttribute {
+            module: None,
             signatures: NonEmptyVector::single("Greeter.name".to_string()),
             type_: None,
             value: None,
@@ -1494,6 +1581,7 @@ mod tests {
             body: vec![paragraph.clone()],
         };
         let method = DomainObjectBody::PyMethod {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(self, name)".to_string()),
             is_classmethod: false,
@@ -1503,11 +1591,13 @@ mod tests {
             body: vec![paragraph.clone()],
         };
         let class = DomainObjectBody::PyClass {
+            module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: false,
             body: vec![paragraph.clone()],
         };
         let exception = DomainObjectBody::PyException {
+            module: None,
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: false,
             body: vec![paragraph.clone()],
@@ -1529,6 +1619,7 @@ mod tests {
     fn test_body_mut_allows_in_place_rewrite() {
         // Given
         let mut function = DomainObjectBody::PyFunction {
+            module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("foo()".to_string()),
             body: vec![Node::Comment],
@@ -1908,5 +1999,186 @@ mod tests {
         // When / Then
         assert!(struct_with_flag.no_contents_entry());
         assert!(!plain_c_struct("Data").no_contents_entry());
+    }
+
+    #[test]
+    fn test_module_override_is_none_by_default_for_every_py_variant_that_carries_it() {
+        // Given / When / Then
+        assert_eq!(
+            DomainObjectBody::PyFunction {
+                module: None,
+                is_decorator: false,
+                signatures: NonEmptyVector::single("greet(name)".to_string()),
+                body: vec![],
+            }
+            .module_override(),
+            None
+        );
+        assert_eq!(
+            DomainObjectBody::PyMethod {
+                module: None,
+                is_decorator: false,
+                signatures: NonEmptyVector::single("greet(self, name)".to_string()),
+                is_classmethod: false,
+                is_staticmethod: false,
+                is_abstractmethod: false,
+                is_async: false,
+                body: vec![],
+            }
+            .module_override(),
+            None
+        );
+        assert_eq!(
+            DomainObjectBody::PyClass {
+                module: None,
+                signatures: NonEmptyVector::single("Greeter".to_string()),
+                is_final: false,
+                body: vec![],
+            }
+            .module_override(),
+            None
+        );
+        assert_eq!(
+            DomainObjectBody::PyException {
+                module: None,
+                signatures: NonEmptyVector::single("GreeterError".to_string()),
+                is_final: false,
+                body: vec![],
+            }
+            .module_override(),
+            None
+        );
+        assert_eq!(
+            DomainObjectBody::PyData {
+                module: None,
+                signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
+                type_: None,
+                value: None,
+                body: vec![],
+            }
+            .module_override(),
+            None
+        );
+        assert_eq!(
+            DomainObjectBody::PyAttribute {
+                module: None,
+                signatures: NonEmptyVector::single("Greeter.name".to_string()),
+                type_: None,
+                value: None,
+                canonical: None,
+                body: vec![],
+            }
+            .module_override(),
+            None
+        );
+    }
+
+    #[test]
+    fn test_module_override_reflects_the_field_for_every_py_variant_that_carries_it() {
+        // Given / When / Then
+        assert_eq!(
+            DomainObjectBody::PyFunction {
+                module: Some("ctypes.util".to_string()),
+                is_decorator: false,
+                signatures: NonEmptyVector::single("find_library(name)".to_string()),
+                body: vec![],
+            }
+            .module_override(),
+            Some("ctypes.util")
+        );
+        assert_eq!(
+            DomainObjectBody::PyMethod {
+                module: Some("multiprocessing.managers".to_string()),
+                is_decorator: false,
+                signatures: NonEmptyVector::single("get_server()".to_string()),
+                is_classmethod: false,
+                is_staticmethod: false,
+                is_abstractmethod: false,
+                is_async: false,
+                body: vec![],
+            }
+            .module_override(),
+            Some("multiprocessing.managers")
+        );
+        assert_eq!(
+            DomainObjectBody::PyClass {
+                module: Some("multiprocessing.managers".to_string()),
+                signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
+                is_final: false,
+                body: vec![],
+            }
+            .module_override(),
+            Some("multiprocessing.managers")
+        );
+        assert_eq!(
+            DomainObjectBody::PyException {
+                module: Some("mymodule.other".to_string()),
+                signatures: NonEmptyVector::single("GreeterError".to_string()),
+                is_final: false,
+                body: vec![],
+            }
+            .module_override(),
+            Some("mymodule.other")
+        );
+        assert_eq!(
+            DomainObjectBody::PyData {
+                module: Some("ctypes.util".to_string()),
+                signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
+                type_: None,
+                value: None,
+                body: vec![],
+            }
+            .module_override(),
+            Some("ctypes.util")
+        );
+        assert_eq!(
+            DomainObjectBody::PyAttribute {
+                module: Some("mymodule.other".to_string()),
+                signatures: NonEmptyVector::single("Greeter.name".to_string()),
+                type_: None,
+                value: None,
+                canonical: None,
+                body: vec![],
+            }
+            .module_override(),
+            Some("mymodule.other")
+        );
+    }
+
+    #[test]
+    fn test_module_override_is_always_none_for_py_module_and_every_c_variant() {
+        // Given — `py:module` is not a `PyObject` and has no `:module:`
+        // option (it *is* the module declaration); no `c`-domain object
+        // carries the option either.
+        let module = DomainObjectBody::PyModule {
+            name: "greetings".to_string(),
+            platform: None,
+            synopsis: None,
+            deprecated: false,
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(module.module_override(), None);
+        assert_eq!(
+            DomainObjectBody::CFunction {
+                signatures: NonEmptyVector::single("int add(int a, int b)".into()),
+                body: vec![],
+            }
+            .module_override(),
+            None
+        );
+        assert_eq!(
+            DomainObjectBody::CMacro {
+                signatures: NonEmptyVector::single("MAX(a, b)".into()),
+                body: vec![],
+            }
+            .module_override(),
+            None
+        );
+        assert_eq!(plain_c_struct("Data").module_override(), None);
+        assert_eq!(plain_c_union("Number").module_override(), None);
+        assert_eq!(plain_c_member("count").module_override(), None);
+        assert_eq!(plain_c_type("PyMemAllocatorDomain").module_override(), None);
     }
 }
