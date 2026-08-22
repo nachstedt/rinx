@@ -24,6 +24,7 @@ Welcome to the Rusty-Sphinx example.
    tables
    list_table
    index_entries
+   doctests
    team_a/index
    team_b/index
 
