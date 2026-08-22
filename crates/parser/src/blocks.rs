@@ -385,6 +385,35 @@ pub(super) fn join_body_lines(body_lines: &[&str]) -> String {
     body
 }
 
+/// Strips the *minimum* common leading indentation from `body_lines` and joins
+/// them with newlines, preserving relative indentation within the block (RST
+/// spec behaviour) and normalising blank lines to empty strings.
+///
+/// This is what verbatim block content needs, and the opposite of what
+/// [`join_body_lines`] does — that one `trim_start`s every line, which is fine
+/// for prose but destroys the meaning of indentation-sensitive content such as
+/// Python source.
+pub(super) fn strip_common_indent(body_lines: &[&str]) -> String {
+    let min_indent = body_lines
+        .iter()
+        .filter(|l| !l.trim().is_empty())
+        .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
+        .min()
+        .unwrap_or(0);
+
+    body_lines
+        .iter()
+        .map(|l| {
+            if l.trim().is_empty() {
+                String::new()
+            } else {
+                l.chars().skip(min_indent).collect()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// Collects a literal block body starting at `start_index`.
 ///
 /// - Skips a leading blank line (mandatory after `::`).
@@ -438,26 +467,7 @@ pub(super) fn collect_literal_block_body(lines: &[&str], start_index: usize) -> 
         body_lines.pop();
     }
 
-    // Compute the minimum indentation of all non-blank lines
-    let min_indent = body_lines
-        .iter()
-        .filter(|l| !l.trim().is_empty())
-        .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
-        .min()
-        .unwrap_or(0);
-
-    // Strip the common indent; leave blank lines as empty strings
-    let content = body_lines
-        .iter()
-        .map(|l| {
-            if l.trim().is_empty() {
-                String::new()
-            } else {
-                l.chars().skip(min_indent).collect()
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let content = strip_common_indent(&body_lines);
 
     (current - start_index, content)
 }
@@ -516,6 +526,91 @@ fn parse_paragraph(lines: &[&str], i: usize, default_domain: Domain) -> (usize, 
 mod tests {
     use super::*;
     use rusty_sphinx_ast::InlineNode;
+
+    #[test]
+    fn test_strip_common_indent_removes_the_shared_leading_whitespace() {
+        // Given
+        let lines = vec!["    first", "    second"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "first\nsecond");
+    }
+
+    #[test]
+    fn test_strip_common_indent_preserves_relative_indentation() {
+        // Given — the property that makes this usable for Python source.
+        let lines = vec!["    def f():", "        return 1"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then — only the shared four spaces go; the inner four remain.
+        assert_eq!(content, "def f():\n    return 1");
+    }
+
+    #[test]
+    fn test_strip_common_indent_normalizes_blank_lines_to_empty_strings() {
+        // Given — a blank line that is shorter than the common indent.
+        let lines = vec!["    first", "", "    second"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then — the blank line must not influence the minimum, and must not
+        // become a run of stray spaces.
+        assert_eq!(content, "first\n\nsecond");
+    }
+
+    #[test]
+    fn test_strip_common_indent_uses_the_least_indented_line_as_the_baseline() {
+        // Given — the first line is deeper than a later one.
+        let lines = vec!["        deep", "    shallow"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "    deep\nshallow");
+    }
+
+    #[test]
+    fn test_strip_common_indent_leaves_unindented_lines_untouched() {
+        // Given
+        let lines = vec!["no indent", "still none"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "no indent\nstill none");
+    }
+
+    #[test]
+    fn test_strip_common_indent_returns_empty_string_for_no_lines() {
+        // Given
+        let lines: Vec<&str> = Vec::new();
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "");
+    }
+
+    #[test]
+    fn test_strip_common_indent_handles_only_blank_lines() {
+        // Given — no non-blank line to derive a minimum indent from.
+        let lines = vec!["", "   "];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "\n");
+    }
 
     #[test]
     fn test_collect_argument_continuation_lines_collects_every_further_signature() {

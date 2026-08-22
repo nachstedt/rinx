@@ -1,6 +1,7 @@
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::blocks::{
     collect_argument_continuation_lines, collect_directive_body, indent_width, join_body_lines,
+    strip_common_indent,
 };
 use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
@@ -257,23 +258,7 @@ fn parse_code_block(argument: String, body_lines: &[&str]) -> Node {
     } else {
         Some(argument)
     };
-    let min_indent = body_lines
-        .iter()
-        .filter(|l| !l.trim().is_empty())
-        .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
-        .min()
-        .unwrap_or(0);
-    let content = body_lines
-        .iter()
-        .map(|l| {
-            if l.trim().is_empty() {
-                String::new()
-            } else {
-                l.chars().skip(min_indent).collect()
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let content = strip_common_indent(body_lines);
     Node::LiteralBlock { language, content }
 }
 
