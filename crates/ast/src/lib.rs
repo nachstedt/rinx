@@ -23,6 +23,7 @@ mod table_align;
 mod target_name;
 mod target_search_order;
 mod version_change_kind;
+mod visit;
 
 pub use admonition_kind::AdmonitionKind;
 pub use bullet_list_item::BulletListItem;
@@ -49,3 +50,4 @@ pub use table_align::TableAlign;
 pub use target_name::TargetName;
 pub use target_search_order::TargetSearchOrder;
 pub use version_change_kind::VersionChangeKind;
+pub use visit::walk_nodes;

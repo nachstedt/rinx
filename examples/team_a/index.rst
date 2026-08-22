@@ -19,6 +19,19 @@ Download the latest package and follow the setup steps below.
     Bob --> Alice: Auth Response
     @enduml
 
+.. note::
+
+   Diagrams also work when nested inside another directive's body — the
+   extraction and validation phases walk the whole document tree, not just
+   its top level.
+
+   .. plantuml::
+
+       @startuml
+       Client -> Gateway: Nested Request
+       Gateway --> Client: Nested Response
+       @enduml
+
 .. function:: int subtract(int a, int b)
 
    Subtracts ``b`` from ``a``. Written without an explicit domain prefix —

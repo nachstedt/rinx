@@ -313,17 +313,15 @@ fn process_validate_images(ast_jsons: &[String], image_dir: &str) -> Result<()> 
 
     for json in ast_jsons {
         let doc: ast::Document = serde_json::from_str(json).context("Failed to deserialize AST")?;
-        for node in &doc.nodes {
-            if let ast::Node::Directive(ast::Directive::PlantUml(content)) = node {
-                let hash = content.hash();
-                let svg_name = format!("{hash}.svg");
-                let svg_path = std::path::Path::new(image_dir).join(&svg_name);
-                if !svg_path.exists() {
-                    missing_images.push(format!(
-                        "Image {svg_name} missing for document {}",
-                        doc.path
-                    ));
-                }
+        for content in collect_plantuml_contents(&doc) {
+            let hash = content.hash();
+            let svg_name = format!("{hash}.svg");
+            let svg_path = std::path::Path::new(image_dir).join(&svg_name);
+            if !svg_path.exists() {
+                missing_images.push(format!(
+                    "Image {svg_name} missing for document {}",
+                    doc.path
+                ));
             }
         }
     }
@@ -338,17 +336,31 @@ fn process_validate_images(ast_jsons: &[String], image_dir: &str) -> Result<()> 
     }
 }
 
+/// Collects every `.. plantuml::` directive in `doc`, however deeply nested.
+///
+/// Shared by [`process_extract_diagrams`] and [`process_validate_images`] so the
+/// set of diagrams that gets *compiled* and the set that gets *validated* can
+/// never drift apart — when the two disagreed, a nested diagram silently
+/// produced a broken `<img>` that validation did not catch.
+fn collect_plantuml_contents(doc: &ast::Document) -> Vec<&ast::HashedContent> {
+    let mut contents = Vec::new();
+    ast::walk_nodes(&doc.nodes, &mut |node| {
+        if let ast::Node::Directive(ast::Directive::PlantUml(content)) = node {
+            contents.push(content);
+        }
+    });
+    contents
+}
+
 fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Result<()> {
     let doc: ast::Document = serde_json::from_str(ast_json).context("Failed to deserialize AST")?;
 
     fs::create_dir_all(outdir_path).with_context(|| format!("Error creating '{outdir_path}'"))?;
 
-    for node in &doc.nodes {
-        if let ast::Node::Directive(ast::Directive::PlantUml(content)) = node {
-            let path = std::path::Path::new(outdir_path).join(format!("{}.puml", content.hash()));
-            fs::write(&path, content.body())
-                .with_context(|| format!("Error writing {}", path.display()))?;
-        }
+    for content in collect_plantuml_contents(&doc) {
+        let path = std::path::Path::new(outdir_path).join(format!("{}.puml", content.hash()));
+        fs::write(&path, content.body())
+            .with_context(|| format!("Error writing {}", path.display()))?;
     }
 
     Ok(())
@@ -1185,6 +1197,112 @@ mod tests {
         assert_eq!(std::fs::read_to_string(&path).unwrap(), "A -> B");
 
         let _ = std::fs::remove_dir_all(outdir);
+    }
+
+    /// Wraps `inner` in a `.. note::` so a directive sits one level below the
+    /// document root — the shape the old top-level-only scan used to miss.
+    fn note_containing(inner: ast::Node) -> ast::Node {
+        ast::Node::Directive(ast::Directive::Admonition {
+            kind: ast::AdmonitionKind::Note,
+            title: None,
+            collapsible: None,
+            body: vec![inner],
+        })
+    }
+
+    #[test]
+    fn test_process_extract_diagrams_extracts_a_diagram_nested_in_an_admonition() {
+        // Given — a `.. plantuml::` inside a `.. note::`.
+        let content = ast::HashedContent::new("A -> B".to_string());
+        let expected_hash = content.hash().to_string();
+        let doc = ast::Document::new(
+            "test.rst".to_string(),
+            vec![note_containing(ast::Node::Directive(
+                ast::Directive::PlantUml(content),
+            ))],
+        );
+        let ast_json = serde_json::to_string(&doc).unwrap();
+        let outdir = std::env::temp_dir().join(format!(
+            "puml_nested_test_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+
+        // When
+        process_extract_diagrams(&ast_json, outdir.to_str().unwrap()).unwrap();
+
+        // Then — the nested diagram is extracted, not silently skipped.
+        let path = outdir.join(format!("{expected_hash}.puml"));
+        assert!(path.exists());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "A -> B");
+
+        let _ = std::fs::remove_dir_all(outdir);
+    }
+
+    #[test]
+    fn test_process_validate_images_fails_when_a_nested_diagrams_svg_is_missing() {
+        // Given — a nested diagram whose SVG was never produced.
+        let content = ast::HashedContent::new("A -> B".to_string());
+        let doc = ast::Document::new(
+            "test.rst".to_string(),
+            vec![note_containing(ast::Node::Directive(
+                ast::Directive::PlantUml(content),
+            ))],
+        );
+        let ast_json = serde_json::to_string(&doc).unwrap();
+        let empty_image_dir = std::env::temp_dir().join(format!(
+            "puml_validate_nested_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&empty_image_dir).unwrap();
+
+        // When
+        let result = process_validate_images(&[ast_json], empty_image_dir.to_str().unwrap());
+
+        // Then — validation catches it instead of passing a broken <img> through.
+        assert!(result.is_err());
+
+        let _ = std::fs::remove_dir_all(empty_image_dir);
+    }
+
+    #[test]
+    fn test_collect_plantuml_contents_returns_diagrams_in_document_order() {
+        // Given — one top-level diagram and one nested inside an admonition.
+        let doc = ast::Document::new(
+            "test.rst".to_string(),
+            vec![
+                ast::Node::Directive(ast::Directive::PlantUml(ast::HashedContent::new(
+                    "first".to_string(),
+                ))),
+                note_containing(ast::Node::Directive(ast::Directive::PlantUml(
+                    ast::HashedContent::new("second".to_string()),
+                ))),
+            ],
+        );
+
+        // When
+        let contents = collect_plantuml_contents(&doc);
+
+        // Then
+        let bodies: Vec<&str> = contents.iter().map(|c| c.body()).collect();
+        assert_eq!(bodies, vec!["first", "second"]);
+    }
+
+    #[test]
+    fn test_collect_plantuml_contents_returns_empty_for_a_document_without_diagrams() {
+        // Given
+        let doc = ast::Document::new("test.rst".to_string(), vec![ast::Node::Transition]);
+
+        // When
+        let contents = collect_plantuml_contents(&doc);
+
+        // Then
+        assert!(contents.is_empty());
     }
 
     #[test]
