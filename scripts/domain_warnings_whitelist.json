@@ -335,6 +335,139 @@
       "target": "Rounded",
       "requested_type": "py:data",
       "comment": "Same signal-constant mismatch as the existing 'Inexact' entry: `Rounded` is defined via `.. class:: Rounded` in decimal.rst but is predominantly cross-referenced with ``:const:`Rounded``` (a py:data-equivalent role) when listed among the context's signal flags and traps. rusty-sphinx deliberately checks the requested object type on every reference, including non-dot-prefixed ones; real Sphinx's `PythonDomain.find_obj` skips that check unless the target is dot-prefixed ('NOTE: searching for exact match, object type is not considered'), so it links this silently. See the module doc of `crates/renderer/src/domain_resolution.rs` for why the stricter behaviour is intended. The doc inconsistency is CPython's, not a resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/functools",
+      "kind": "domain_object_reference",
+      "target": "singledispatch.register",
+      "requested_type": "py:function",
+      "comment": "`singledispatch.register` is defined via `.. method:: singledispatch.register()` nested inside `.. decorator:: singledispatch` (which, like Sphinx's `PyFunction`, opens no class scope), so it is indexed as the *method* `functools.singledispatch.register`, while functools.rst cross-references it as ``:func:`~singledispatch.register``` eleven times \u2014 it documents an attribute of a decorator, not a free function. rusty-sphinx deliberately checks the requested object type on every reference, including non-dot-prefixed ones; real Sphinx's `PythonDomain.find_obj` skips that check unless the target is dot-prefixed ('NOTE: searching for exact match, object type is not considered'), so it links this silently. See the module doc of `crates/renderer/src/domain_resolution.rs` for why the stricter behaviour is intended. The doc inconsistency is CPython's, not a resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/functools.rst` is *not* in it, so this reference resolves warning-free under real Sphinx today."
+    },
+    {
+      "doc_path": "Doc/library/logging.config",
+      "kind": "domain_object_reference",
+      "target": "DictConfigurator",
+      "requested_type": "py:class",
+      "comment": "`DictConfigurator` is the class `logging.config.dictConfig` delegates dictionary parsing to; logging.config.rst describes it in prose ('Parsing is performed by the :class:`DictConfigurator` class') and in the 'Customizing the configuration' notes, but no `.. class:: DictConfigurator` directive exists anywhere in Doc/ \u2014 it is an implementation detail of the module, deliberately left undocumented as a Sphinx object. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/logging.config.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/logging.config",
+      "kind": "domain_object_reference",
+      "target": "dictConfigClass",
+      "requested_type": "py:attribute",
+      "comment": "Same undocumented-implementation-detail issue as 'DictConfigurator' in this file: `dictConfigClass` is the module-level hook you rebind to substitute your own configurator, mentioned only in prose (':attr:`dictConfigClass` ... is initially set to :class:`DictConfigurator`'), never given a `.. data::`/`.. attribute::` directive. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/logging.config.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/optparse",
+      "kind": "domain_object_reference",
+      "target": "add_option",
+      "requested_type": "py:method",
+      "comment": "`add_option` *is* defined, but as `.. method:: OptionParser.add_option(option)` at module level, i.e. under the qualified name `optparse.OptionParser.add_option`. The failing references write the bare ``:meth:`add_option``` from prose that is not inside any class directive, so no class scope supplies the `OptionParser.` prefix. Real Sphinx's `find_obj` tries only `add_option` and `optparse.add_option` for a plain target with no class context and therefore fails identically \u2014 it never searches by suffix. Expected, not a rusty-sphinx resolver gap. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/optparse.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/optparse",
+      "kind": "domain_object_reference",
+      "target": "make_option",
+      "requested_type": "py:function",
+      "comment": "`make_option` is the factory that optparse.rst describes as 'a factory function for creating Option instances', but neither it nor the `Option` class it wraps is ever given a directive \u2014 the module's own docs note optparse 'may split Option into several classes' and leave both undocumented as Sphinx objects. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/optparse.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/optparse",
+      "kind": "domain_object_reference",
+      "target": "ensure_value",
+      "requested_type": "py:method",
+      "comment": "`ensure_value` is a `Values` method described only in the 'Adding new actions' prose ('the very useful :meth:`ensure_value` method'); the `Values` class has no `.. class::` directive in optparse.rst and none of its methods are given `.. method::` directives either. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/optparse.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/pickle",
+      "kind": "domain_object_reference",
+      "target": "object.__slots__",
+      "requested_type": "py:attribute",
+      "comment": "`object.__slots__` is defined in `Doc/reference/datamodel.rst` via `.. data:: object.__slots__`, i.e. as a `data` object, but pickle.rst cross-references it as ``:attr:`~object.__slots__``` when explaining `__getstate__`'s default state. rusty-sphinx deliberately checks the requested object type on every reference, including non-dot-prefixed ones; real Sphinx's `PythonDomain.find_obj` skips that check unless the target is dot-prefixed ('NOTE: searching for exact match, object type is not considered'), so it links this silently. See the module doc of `crates/renderer/src/domain_resolution.rs` for why the stricter behaviour is intended. The doc inconsistency is CPython's, not a resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/pickle.rst` is *not* in it, so this reference resolves warning-free under real Sphinx today."
+    },
+    {
+      "doc_path": "Doc/library/socket",
+      "kind": "domain_object_reference",
+      "target": "in_addr",
+      "requested_type": "c:struct",
+      "comment": "The POSIX `struct in_addr` from `<netinet/in.h>`, referenced by the `inet_aton`/`inet_ntoa` docs ('convert ... to its 32-bit packed binary format (a string of four characters in length) ... :c:struct:`in_addr`'). It is a C library type, not a CPython C-API symbol, so it is never indexed by this doc set. CPython's own `Doc/conf.py` nitpick_ignore explicitly lists ('c:struct', 'in_addr') for exactly this reason, so real Sphinx also fails to resolve it. Expected, not a rusty-sphinx resolver gap."
+    },
+    {
+      "doc_path": "Doc/library/ssl",
+      "kind": "domain_object_reference",
+      "target": "SSLSocket.recv",
+      "requested_type": "py:method",
+      "comment": "`SSLSocket` inherits `recv` (and `send`) from `socket.socket` without redefining them, so ssl.rst documents neither: it only points at them from the deprecation notes on `SSLSocket.read`/`SSLSocket.write` ('Use :meth:`~SSLSocket.recv` instead of :meth:`~SSLSocket.read`'). No `.. method:: SSLSocket.recv` directive exists, and `socket.socket.recv` is a different qualified name. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/ssl.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/string",
+      "kind": "domain_object_reference",
+      "target": "str",
+      "requested_type": "py:function",
+      "comment": "`str` is defined via `.. class:: str(*, encoding='utf-8', errors='strict')` in both functions.rst and stdtypes.rst, i.e. as a `class`, but string.rst cross-references it as ``:func:`str``` when describing the `'!s'` conversion flag and the default format behaviour \u2014 the usual CPython habit of writing built-in types called as constructors with the function role. rusty-sphinx deliberately checks the requested object type on every reference, including non-dot-prefixed ones; real Sphinx's `PythonDomain.find_obj` skips that check unless the target is dot-prefixed ('NOTE: searching for exact match, object type is not considered'), so it links this silently. See the module doc of `crates/renderer/src/domain_resolution.rs` for why the stricter behaviour is intended. The doc inconsistency is CPython's, not a resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/string.rst` is *not* in it, so this reference resolves warning-free under real Sphinx today."
+    },
+    {
+      "doc_path": "Doc/library/unittest.mock-examples",
+      "kind": "domain_object_reference",
+      "target": "call",
+      "requested_type": "py:data",
+      "comment": "`call` is defined via `.. function:: call(*args, **kwargs)` in unittest.mock.rst, i.e. as a `function`, but the examples page cross-references it as ``:data:`call``` ('You use the :data:`call` object to construct lists for comparing with') because it is used as a sentinel-like helper object rather than called for effect. rusty-sphinx deliberately checks the requested object type on every reference, including non-dot-prefixed ones; real Sphinx's `PythonDomain.find_obj` skips that check unless the target is dot-prefixed ('NOTE: searching for exact match, object type is not considered'), so it links this silently. See the module doc of `crates/renderer/src/domain_resolution.rs` for why the stricter behaviour is intended. The doc inconsistency is CPython's, not a resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/unittest.mock-examples.rst` is *not* in it, so this reference resolves warning-free under real Sphinx today."
+    },
+    {
+      "doc_path": "Doc/library/warnings",
+      "kind": "domain_object_reference",
+      "target": "sys.flags.context_aware_warnings",
+      "requested_type": "py:data",
+      "comment": "`sys.flags.context_aware_warnings` is defined in sys.rst via `.. attribute:: flags.context_aware_warnings` inside the `sys.flags` field table, i.e. as an `attribute`, but warnings.rst cross-references it as ``:data:`sys.flags.context_aware_warnings``` in the free-threading notes. rusty-sphinx deliberately checks the requested object type on every reference, including non-dot-prefixed ones; real Sphinx's `PythonDomain.find_obj` skips that check unless the target is dot-prefixed ('NOTE: searching for exact match, object type is not considered'), so it links this silently. See the module doc of `crates/renderer/src/domain_resolution.rs` for why the stricter behaviour is intended. The doc inconsistency is CPython's, not a resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/warnings.rst` is *not* in it, so this reference resolves warning-free under real Sphinx today."
+    },
+    {
+      "doc_path": "Doc/library/wsgiref",
+      "kind": "domain_object_reference",
+      "target": "items",
+      "requested_type": "py:method",
+      "comment": "The `Headers` mapping's `items` method is described only in prose ('The lists returned by :meth:`keys` and :meth:`items` can ...'); wsgiref.rst gives `Headers` a `.. class::` directive but documents none of its mapping methods with `.. method::` directives, so there is no `wsgiref.headers.Headers.items` object to link to. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/wsgiref.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/wsgiref",
+      "kind": "domain_object_reference",
+      "target": "environ",
+      "requested_type": "py:attribute",
+      "comment": "The handler attribute `environ` is referenced bare (':attr:`environ` attribute', 'Set the :attr:`environ` attribute to a fully populated WSGI environment') but never defined: wsgiref.rst documents `BaseHandler.os_environ` and `BaseHandler.setup_environ()` with directives, and leaves the instance attribute they populate undocumented as a Sphinx object. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/wsgiref.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/xml.dom",
+      "kind": "domain_object_reference",
+      "target": "NamedNodeMap",
+      "requested_type": "py:class",
+      "comment": "Same undocumented-DOM-interface issue as 'Node' in this file: only the members `.. attribute:: NamedNodeMap.length` and `.. method:: NamedNodeMap.item(index)` carry directives, while the interface itself never gets a `.. class:: NamedNodeMap`. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/xml.dom.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/xml.dom",
+      "kind": "domain_object_reference",
+      "target": "tagName",
+      "requested_type": "py:attribute",
+      "comment": "`tagName` *is* defined, but as `.. attribute:: Element.tagName`, i.e. under `xml.dom.Element.tagName`. The failing references write the bare ``:attr:`tagName``` from the bodies of `.. attribute:: Node.localName`/`Node.prefix`/`Node.nodeName` \u2014 and an `.. attribute::` directive opens no class scope (in Sphinx, only class-like directives set `py:class`), so nothing supplies the `Element.` prefix. Real Sphinx's `find_obj` tries only `tagName` and `xml.dom.tagName` here and fails identically. Expected, not a rusty-sphinx resolver gap. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/xml.dom.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/xml.sax.reader",
+      "kind": "domain_object_reference",
+      "target": "Attributes",
+      "requested_type": "py:class",
+      "comment": "Same undocumented-interface issue as 'xmlparser' in pyexpat.rst: xml.sax.reader.rst documents the `Attributes` interface's methods directly (`.. method:: Attributes.getLength()` and friends) and even gives it a section heading, but never a `.. class:: Attributes` directive \u2014 only the concrete `AttributesImpl`/`AttributesNSImpl` implementations get one. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/xml.sax.reader.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/library/xml.sax.reader",
+      "kind": "domain_object_reference",
+      "target": "SAXNotRecognizedException",
+      "requested_type": "py:exception",
+      "comment": "The exception is defined in a *different* module's page: `.. exception:: SAXNotRecognizedException(msg, exception=None)` in xml.sax.rst under `.. module:: xml.sax`, so its qualified name is `xml.sax.SAXNotRecognizedException`. xml.sax.reader.rst declares `.. module:: xml.sax.xmlreader` and references it bare, so the only names tried are `SAXNotRecognizedException` and `xml.sax.xmlreader.SAXNotRecognizedException`. Real Sphinx's `find_obj` tries exactly those two and fails identically \u2014 it never walks up parent packages. Expected, not a rusty-sphinx resolver gap. Real Sphinx fails to resolve it too; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/xml.sax.reader.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
+    },
+    {
+      "doc_path": "Doc/reference/datamodel",
+      "kind": "domain_object_reference",
+      "target": "object.__annotate__",
+      "requested_type": "py:attribute",
+      "comment": "`object.__annotate__` is defined in this same file via `.. method:: object.__annotate__(format)`, i.e. as a `method` (it really is a callable taking a format argument), but the surrounding prose cross-references it as ``:attr:`~object.__annotate__``` because it is reached as an attribute of the object. rusty-sphinx deliberately checks the requested object type on every reference, including non-dot-prefixed ones; real Sphinx's `PythonDomain.find_obj` skips that check unless the target is dot-prefixed ('NOTE: searching for exact match, object type is not considered'), so it links this silently. See the module doc of `crates/renderer/src/domain_resolution.rs` for why the stricter behaviour is intended. The doc inconsistency is CPython's, not a resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/reference/datamodel.rst` is *not* in it, so this reference resolves warning-free under real Sphinx today."
     }
   ]
 }
