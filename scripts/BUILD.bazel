@@ -20,3 +20,25 @@ py_test(
     srcs = ["benchmark_test.py"],
     deps = [":benchmark_lib"],
 )
+
+# The doctest plan runner. Exposed as a library so `rusty_sphinx_doctest_tests`
+# can depend on it, and as a binary for running a plan by hand.
+py_library(
+    name = "doctest_runner_lib",
+    srcs = ["doctest_runner.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "doctest_runner",
+    srcs = ["doctest_runner.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    name = "doctest_runner_test",
+    size = "small",
+    srcs = ["doctest_runner_test.py"],
+    deps = [":doctest_runner_lib"],
+)
