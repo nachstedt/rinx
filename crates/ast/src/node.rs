@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::bullet_list_item::BulletListItem;
 use crate::definition_list_item::DefinitionListItem;
 use crate::directive::Directive;
+use crate::hashed_content::HashedContent;
 use crate::inline_node::InlineNode;
 use crate::table::TableRow;
 use crate::target_name::TargetName;
@@ -42,6 +43,17 @@ pub enum Node {
         /// Verbatim content with common leading indentation stripped.
         content: String,
     },
+    /// A docutils *doctest block*: a text block beginning with `>>> ` and
+    /// ending at a blank line, with no directive introducing it.
+    ///
+    /// Deliberately its own variant rather than a flag on [`Self::LiteralBlock`].
+    /// The distinction is not cosmetic: a `::`-introduced literal block is
+    /// *never* executed, while a doctest block *is* — Sphinx tests these by
+    /// default and places them in the `default` group, sharing one Python
+    /// namespace with any `.. doctest::` directives in the same document.
+    /// Expressing that as a boolean on one variant would make the two
+    /// confusable; separate variants make a mix-up a type error.
+    DoctestBlock(HashedContent),
     /// An RST comment (`.. text` or `..` followed by an indented body).
     /// Comments produce no output and are discarded during rendering.
     Comment,

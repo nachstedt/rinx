@@ -114,6 +114,37 @@ documentation is *about* doctest itself:
    >>> print("some long value")  # doctest: +NORMALIZE_WHITESPACE
    some long value
 
+Blocks without a directive
+--------------------------
+
+A text block that simply begins with ``>>>`` is a *doctest block* — a docutils
+construct needing no directive at all. It is tested like a ``.. doctest::``
+block and shares the ``default`` group's namespace, so a name bound here is
+visible to the directives above and below:
+
+>>> shared_by_bare_block = "visible to the default group"
+
+Far more often such a block is indented, because the paragraph introducing it
+ends in a single colon and so opens a block quote:
+
+   >>> len(shared_by_bare_block)
+   28
+
+A block ends at the first blank line, which is why an expected blank line has
+to be written ``<BLANKLINE>``. Blocks also work inside other directives:
+
+.. note::
+
+   >>> shared_by_bare_block.split()[0]
+   'visible'
+
+Note the contrast with a literal block. Ending a paragraph with two colons
+makes the indented text that follows *illustrative only* — it is displayed but
+never executed, so the deliberately wrong result below breaks nothing::
+
+    >>> 2 + 2
+    5
+
 Conditional execution
 ---------------------
 

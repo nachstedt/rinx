@@ -86,12 +86,14 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
                     }
                 }
             }
-            // Leaf nodes: no block-level children to descend into.
+            // Leaf nodes: no block-level children to descend into. A doctest
+            // block's body is verbatim text, not nested nodes.
             Node::Heading { .. }
             | Node::Paragraph(_)
             | Node::Target { .. }
             | Node::AnonymousTarget { .. }
             | Node::LiteralBlock { .. }
+            | Node::DoctestBlock(_)
             | Node::Comment
             | Node::Transition => {}
         }

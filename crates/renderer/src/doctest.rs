@@ -5,7 +5,7 @@
 //! or passed. That is what lets page rendering stay a pure, cacheable step while
 //! test execution lives in a separate, opt-in Bazel target.
 
-use rusty_sphinx_ast::{DocTestBlock, DocTestTrim};
+use rusty_sphinx_ast::{DocTestBlock, DocTestTrim, HashedContent};
 use std::fmt::Write as _;
 
 /// The project-wide default for `trim_doctest_flags`, matching Sphinx's own
@@ -33,8 +33,29 @@ pub(crate) fn render_doctest_block(block: &DocTestBlock) -> Option<String> {
         DocTestBlock::Setup { .. } | DocTestBlock::Cleanup { .. } => return None,
     };
 
-    let display = display_text(block);
-    let escaped = html_escape::encode_text(&display);
+    Some(render_code_block(&display_text(block), language))
+}
+
+/// Renders a docutils *doctest block* — the directive-less `>>>` form.
+///
+/// It shows exactly like a `.. doctest::` block, because that is what it is:
+/// Sphinx puts both in the `default` group and highlights both as a console
+/// session. The display derivation is therefore shared rather than restated,
+/// and the trim tri-state is `Unset` because a bare block carries no options of
+/// its own and so always follows the project default.
+#[must_use]
+pub(crate) fn render_bare_doctest_block(content: &HashedContent) -> String {
+    let display =
+        maybe_strip_flag_comments(&strip_blankline_markers(content.body()), DocTestTrim::Unset);
+    render_code_block(&display, Some("pycon"))
+}
+
+/// Emits the `<pre><code>` markup for already-derived display text.
+///
+/// Matches the shape `Node::LiteralBlock` renders with, so a code block looks
+/// the same however it was written.
+fn render_code_block(display: &str, language: Option<&str>) -> String {
+    let escaped = html_escape::encode_text(display);
 
     let mut html = String::new();
     if let Some(lang) = language {
@@ -45,7 +66,7 @@ pub(crate) fn render_doctest_block(block: &DocTestBlock) -> Option<String> {
     } else {
         let _ = writeln!(html, "<pre><code>{escaped}</code></pre>");
     }
-    Some(html)
+    html
 }
 
 /// Derives the text shown on the page from the block's verbatim body.
@@ -282,6 +303,57 @@ mod tests {
         // Then
         assert!(html.contains("&lt;b&gt;"));
         assert!(!html.contains("<b>"));
+    }
+
+    #[test]
+    fn test_render_bare_doctest_block_renders_as_pycon() {
+        // Given
+        let content = HashedContent::new(">>> 1 + 1\n2".to_string());
+
+        // When
+        let html = render_bare_doctest_block(&content);
+
+        // Then — identical markup to the directive form, as in Sphinx.
+        assert_eq!(
+            html,
+            "<pre><code class=\"language-pycon\">&gt;&gt;&gt; 1 + 1\n2</code></pre>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_bare_doctest_block_applies_the_project_trim_default() {
+        // Given — a bare block carries no options, so it follows the default.
+        let content = HashedContent::new(">>> f()  # doctest: +SKIP".to_string());
+
+        // When
+        let html = render_bare_doctest_block(&content);
+
+        // Then
+        assert!(!html.contains("doctest:"));
+    }
+
+    #[test]
+    fn test_render_bare_doctest_block_removes_blankline_markers() {
+        // Given
+        let content = HashedContent::new(">>> f()\nline\n<BLANKLINE>".to_string());
+
+        // When
+        let html = render_bare_doctest_block(&content);
+
+        // Then
+        assert!(!html.contains("BLANKLINE"));
+    }
+
+    #[test]
+    fn test_render_bare_doctest_block_escapes_html() {
+        // Given
+        let content = HashedContent::new(">>> print('<b>')".to_string());
+
+        // When
+        let html = render_bare_doctest_block(&content);
+
+        // Then
+        assert!(html.contains("&lt;b&gt;"));
     }
 
     #[test]

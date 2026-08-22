@@ -110,7 +110,27 @@ pub fn build_doctest_plan(doc: &ast::Document) -> Result<DocTestPlan, String> {
     let mut problems: Vec<String> = Vec::new();
 
     // Pass 1 — named groups, created in first-appearance order.
-    for block in &blocks {
+    for source in &blocks {
+        let block = match source {
+            // A bare `>>>` block joins the `default` group with no options,
+            // interleaved with the directives in document order. Ordering is
+            // what makes the shared namespace work: an `import` written as a
+            // bare block has to run before a directive that relies on it.
+            PlanSource::BareBlock(content) => {
+                let index = group_index(&mut groups, ast::DocTestGroup::DEFAULT_NAME);
+                groups[index].cases.push(DocTestCase::Interactive {
+                    source: content.body().to_string(),
+                    conditions: RunConditions {
+                        pyversion: None,
+                        skipif: None,
+                    },
+                    flags: Vec::new(),
+                });
+                continue;
+            }
+            PlanSource::Directive(block) => *block,
+        };
+
         if selects_all_groups(block) {
             all_group_blocks.push(block);
             continue;
@@ -147,14 +167,34 @@ pub fn build_doctest_plan(doc: &ast::Document) -> Result<DocTestPlan, String> {
     }
 }
 
-/// Collects every doctest block in `doc`, however deeply nested, in document
+/// One testable thing found in a document, in the two forms it can take.
+///
+/// Kept as a borrowed enum rather than normalising bare blocks into synthetic
+/// [`DocTestBlock`] values: fabricating AST nodes that no parser produced would
+/// make the plan harder to trace back to its source, and the two forms differ
+/// in what they can carry anyway.
+enum PlanSource<'a> {
+    /// One of the five `sphinx.ext.doctest` directives.
+    Directive(&'a DocTestBlock),
+    /// A docutils `>>>` block: always the `default` group, never any options.
+    BareBlock(&'a ast::HashedContent),
+}
+
+/// Collects every testable block in `doc`, however deeply nested, in document
 /// order.
-fn collect_doctest_blocks(doc: &ast::Document) -> Vec<&DocTestBlock> {
+///
+/// Document order matters more here than it looks: a group is one Python
+/// namespace, so a bare `>>> import re` must reach the plan before the
+/// `.. doctest::` that calls `re.split`. Interleaving the two forms in one pass
+/// is what preserves that.
+fn collect_doctest_blocks(doc: &ast::Document) -> Vec<PlanSource<'_>> {
     let mut blocks = Vec::new();
-    ast::walk_nodes(&doc.nodes, &mut |node| {
-        if let ast::Node::Directive(ast::Directive::DocTest(block)) = node {
-            blocks.push(block);
+    ast::walk_nodes(&doc.nodes, &mut |node| match node {
+        ast::Node::Directive(ast::Directive::DocTest(block)) => {
+            blocks.push(PlanSource::Directive(block));
         }
+        ast::Node::DoctestBlock(content) => blocks.push(PlanSource::BareBlock(content)),
+        _ => {}
     });
     blocks
 }
@@ -299,6 +339,20 @@ mod tests {
             DocTestCase::CodeWithOutput { code, expected } => (code, expected.as_ref()),
             DocTestCase::Interactive { .. } => {
                 panic!("expected a code/output pair, got an interactive case")
+            }
+        }
+    }
+
+    /// Unwraps an interactive case, failing the test on any other case.
+    fn interactive_case(case: &DocTestCase) -> (&str, &RunConditions, &[DocTestFlagSpec]) {
+        match case {
+            DocTestCase::Interactive {
+                source,
+                conditions,
+                flags,
+            } => (source, conditions, flags),
+            DocTestCase::CodeWithOutput { .. } => {
+                panic!("expected an interactive case, got a code/output pair")
             }
         }
     }
@@ -630,6 +684,103 @@ mod tests {
 
         // Then — both reported, so one build shows the author everything.
         assert_eq!(problems.lines().count(), 2);
+    }
+
+    #[test]
+    fn test_collects_a_bare_doctest_block_into_the_default_group() {
+        // Given — no directive at all, just a `>>>` block.
+        let rst = ">>> 1 + 1\n2\n";
+
+        // When
+        let plan = plan_of(rst);
+
+        // Then
+        assert_eq!(plan.groups.len(), 1);
+        assert_eq!(plan.groups[0].name, "default");
+        assert_eq!(plan.groups[0].cases.len(), 1);
+    }
+
+    #[test]
+    fn test_a_bare_block_carries_no_options() {
+        // Given
+        let rst = ">>> 1 + 1\n2\n";
+
+        // When
+        let plan = plan_of(rst);
+
+        // Then
+        let (source, conditions, flags) = interactive_case(&plan.groups[0].cases[0]);
+        assert_eq!(source, ">>> 1 + 1\n2");
+        assert_eq!(conditions.pyversion, None);
+        assert_eq!(conditions.skipif, None);
+        assert!(flags.is_empty());
+    }
+
+    #[test]
+    fn test_interleaves_bare_blocks_with_directives_in_document_order() {
+        // Given — the shape that makes `re.rst` work: an import written as a
+        // bare block, used later by a directive in the same group. Ordering is
+        // the whole point, since a group is one namespace.
+        let rst = concat!(
+            "Intro:\n\n",
+            "   >>> import re\n\n",
+            ".. doctest::\n\n",
+            "   >>> re.escape('a')\n   'a'\n",
+        );
+
+        // When
+        let plan = plan_of(rst);
+
+        // Then — one group, the import first.
+        assert_eq!(plan.groups.len(), 1);
+        assert_eq!(plan.groups[0].cases.len(), 2);
+        let (source, _, _) = interactive_case(&plan.groups[0].cases[0]);
+        assert_eq!(source, ">>> import re", "the import must run first");
+    }
+
+    #[test]
+    fn test_a_literal_block_is_not_collected() {
+        // Given — a `::` block must never become executable.
+        let rst = "Example::\n\n   >>> 1 + 1\n   2\n";
+
+        // When
+        let plan = plan_of(rst);
+
+        // Then
+        assert!(plan.groups.is_empty());
+    }
+
+    #[test]
+    fn test_a_bare_block_creates_a_group_for_a_star_setup_to_reach() {
+        // Given — a document whose only named group comes from a bare block.
+        // Sphinx distributes `*` blocks over groups that already exist, so the
+        // setup now has somewhere to land where previously it had none.
+        let rst = concat!(
+            ".. testsetup:: *\n\n   import math\n\n",
+            "Intro:\n\n",
+            "   >>> int(math.pi)\n   3\n",
+        );
+
+        // When
+        let plan = plan_of(rst);
+
+        // Then
+        assert_eq!(plan.groups.len(), 1);
+        assert_eq!(plan.groups[0].setup.len(), 1);
+        assert_eq!(plan.groups[0].cases.len(), 1);
+    }
+
+    #[test]
+    fn test_finds_bare_blocks_nested_inside_directives() {
+        // Given
+        let rst = ".. note::\n\n   Try it:\n\n   >>> 1 + 1\n   2\n";
+
+        // When
+        let plan = plan_of(rst);
+
+        // Then
+        assert_eq!(plan.groups.len(), 1);
+        assert_eq!(plan.groups[0].cases.len(), 1);
     }
 
     #[test]

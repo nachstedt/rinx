@@ -16,7 +16,7 @@ use directives::{
     ListTableParams, render_admonition, render_domain_object, render_glossary, render_index_anchor,
     render_list_table, render_seealso, render_version_change,
 };
-use doctest::render_doctest_block;
+use doctest::{render_bare_doctest_block, render_doctest_block};
 use domain_resolution::DomainObjectResolver;
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
@@ -316,6 +316,12 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                 } else {
                     let _ = writeln!(html, "<pre><code>{escaped}</code></pre>");
                 }
+            }
+            // A bare `>>>` block. Rendered like the `.. doctest::` directive
+            // form, which is what Sphinx does — and, unlike the literal block
+            // above, this one is also executed.
+            Node::DoctestBlock(content) => {
+                html.push_str(&render_bare_doctest_block(content));
             }
         }
     }
