@@ -255,6 +255,54 @@ module definition, not literal ``:py:mod:`greetings``` text.
    rest of the document until changed, so anything documented after a
    ``py:module`` directive is implicitly considered part of it.
 
+The ``:module:`` Option Override
+""""""""""""""""""""""""""""""""
+
+Every ``py:*`` object-description directive except ``py:module`` itself
+(which has no such option — it *is* the module declaration) accepts a
+``:module:`` option that overrides the ambient module context for that one
+definition and its nested body only, then restores it afterward. Real
+CPython docs use this to document a class on a *different* module's page
+than the one it lives under — ``Doc/library/multiprocessing.shared_memory.rst``
+documents ``SharedMemoryManager`` this way, which is the shape reproduced
+below.
+
+.. py:module:: multiprocessing.shared_memory
+
+   Provides shared memory for direct access across processes.
+
+.. py:class:: SharedMemoryManager([address[, authkey]])
+   :module: multiprocessing.managers
+
+   Written under the ``multiprocessing.shared_memory`` module above, but the
+   ``:module:`` option qualifies this as
+   ``multiprocessing.managers.SharedMemoryManager`` instead — a subclass of
+   ``BaseManager`` which can be used for the management of shared memory
+   blocks across processes.
+
+   .. py:method:: get_server()
+
+      Nested inside the overridden class, so it inherits the override too:
+      this qualifies as
+      ``multiprocessing.managers.SharedMemoryManager.get_server``, not
+      ``multiprocessing.shared_memory.SharedMemoryManager.get_server``.
+
+.. py:function:: track(size)
+
+   Documented as a sibling *after* the overridden class, with no
+   ``:module:`` of its own — the override is scoped to
+   ``SharedMemoryManager`` alone (and its nested body), so this reverts to
+   the enclosing ``multiprocessing.shared_memory`` module, qualifying as
+   ``multiprocessing.shared_memory.track`` rather than
+   ``multiprocessing.managers.track``.
+
+.. currentmodule:: greetings
+
+Restores the current module to ``greetings`` for the rest of this page —
+real Sphinx's module context is sequential and document-order, so without
+this the bare ``shout`` references further below would resolve against
+``multiprocessing.shared_memory`` instead.
+
 C Domain
 --------
 

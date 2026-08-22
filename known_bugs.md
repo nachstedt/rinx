@@ -18,63 +18,6 @@ in files absent from `.nitignore` and references targets absent from
 
 ---
 
-## The `:module:` option on Python domain objects is ignored
-
-**Status:** open.
-**Symptom:** `Doc/library/multiprocessing.shared_memory: 'multiprocessing.managers.SharedMemoryManager' (referenced as py:class)`, 4 occurrences.
-
-Sphinx's Python-domain object directives accept a `:module:` option that
-overrides the module a definition is filed under, independently of the
-enclosing `.. module::`/`.. currentmodule::`. CPython uses it to document a
-class on a *different* module's page:
-
-```rst
-.. module:: multiprocessing.shared_memory
-
-...
-
-.. class:: SharedMemoryManager([address[, authkey]])
-   :module: multiprocessing.managers
-
-   A subclass of :class:`multiprocessing.managers.BaseManager` which can be
-   used for the management of shared memory blocks across processes.
-```
-
-Real Sphinx indexes that as `multiprocessing.managers.SharedMemoryManager`, so
-the four `` :class:`~multiprocessing.managers.SharedMemoryManager` ``
-references in the same file resolve. `Doc/library/multiprocessing.shared_memory.rst`
-is absent from `.nitignore`, confirming they resolve warning-free today.
-
-rusty-sphinx has no handling for the option at all. Two consequences, both
-visible in the built artifacts:
-
-1. **Wrong index key.** `bazel-bin/Doc/site.project.index` holds
-   `multiprocessing.shared_memory.sharedmemorymanager`, filed under the
-   enclosing `.. module::` instead of the override, so every reference to the
-   real name misses. The nested `.. method::`s inherit the same wrong prefix
-   (`multiprocessing.shared_memory.sharedmemorymanager.shareablelist` etc.).
-2. **The option leaks into the rendered body.** The parsed AST for that
-   directive starts with
-   `{"Paragraph": [{"Text": ":module: multiprocessing.managers"}]}` — the
-   unrecognized option line is not consumed as an option and is parsed as the
-   first paragraph of the docstring, so it is rendered as prose on the page.
-
-The fix belongs with the other per-directive option extraction in
-`crates/parser/src/domains.rs` — `extract_common_object_description_options`
-handles the `:no-index:` family and `extract_module_options` handles
-`:platform:`/`:synopsis:`/`:deprecated:`; `:module:` needs an equivalent that
-feeds the analyzer's `PythonScope` module component for that one object rather
-than just being stripped. Sphinx applies it to every `py:` object directive,
-not only `py:class`.
-
-`Doc/library/ctypes.rst` uses `:module: ctypes.util` the same way six times,
-and `benchmark_result.txt` shows the matching fallout: unresolved
-`ctypes.util.dllist`, `ctypes.util.struct`, `ctypes.util.wrap_dll_function`
-and `ctypes.util.find_library` references from ctypes.rst and the whatsnew
-pages. The same fix clears those.
-
----
-
 ## Note on the whitelist's justifications
 
 While triaging, the `.nitignore` oracle contradicted a claim that
@@ -113,3 +56,23 @@ modules" rule is deliberately not reproduced here.
   `strip_trailing_call_parens` in `crates/parser/src/inline.rs` now keeps the
   parens out of the lookup name and in the display text, per domain;
   `spec_gaps.md` records the details.
+
+- **The `:module:` option on Python domain objects was ignored.**
+  Every `py:*` object-description directive except `py:module` itself now
+  parses a leading `:module:` option line (`crates/parser/src/domains.rs`,
+  alongside each type's other options) into a new `module: Option<String>`
+  field on `DomainObjectBody`, exposed via `DomainObjectBody::module_override`.
+  Both the analyzer's `index_domain_object` and the renderer's
+  `render_domain_object` push it onto `PythonScope` for the duration of the
+  object's own qualification and nested body via the new
+  `PythonScope::push_module_override`/`restore_module`, mirroring real
+  Sphinx's `PyObject.before_content()`/`after_content()` push/pop of
+  `ref_context['py:module']` — restored afterward so a later sibling with no
+  override of its own reverts to the enclosing `.. module::`/
+  `.. currentmodule::`. This fixes both consequences noted above: the wrong
+  index key (`multiprocessing.shared_memory.sharedmemorymanager` instead of
+  `multiprocessing.managers.sharedmemorymanager`) and the option leaking into
+  the rendered body as a stray paragraph. An empty `:module:` value clears
+  the module instead of setting it, matching real Sphinx's falsy-`modname`
+  check in `add_target_and_index`. See the "The `:module:` Option Override"
+  section of `examples/domains.rst` and `spec_gaps.md` for details.

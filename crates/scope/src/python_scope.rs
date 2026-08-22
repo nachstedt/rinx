@@ -58,6 +58,37 @@ impl PythonScope {
         self.module = None;
     }
 
+    /// Temporarily overrides the current `py:module` for the duration of one
+    /// domain object's own qualification and nested body — the `:module:`
+    /// option's effect, mirroring real Sphinx's `PyObject.before_content()`
+    /// pushing `ref_context['py:module']` (and `after_content()` popping it,
+    /// via [`Self::restore_module`]). Unlike [`Self::set_module`], this is
+    /// lexically scoped, not document-order: the caller must restore the
+    /// prior value once the object (including its nested body) is fully
+    /// processed, exactly like [`Self::push_classes`]/[`Self::truncate_classes`].
+    ///
+    /// An empty `module` clears the module instead of setting it, matching
+    /// real Sphinx's `add_target_and_index`, which only prefixes when
+    /// `options.get('module', ...)` is truthy — so `:module:` written with no
+    /// value deliberately un-qualifies the object even with an ambient
+    /// module in scope.
+    ///
+    /// Returns the previous module so the caller can restore it via
+    /// [`Self::restore_module`].
+    pub fn push_module_override(&mut self, module: &str) -> Option<String> {
+        let previous = self.module.take();
+        if !module.is_empty() {
+            self.module = Some(module.to_string());
+        }
+        previous
+    }
+
+    /// Restores `py:module` to a value previously returned by
+    /// [`Self::push_module_override`] — real Sphinx's `after_content()` pop.
+    pub fn restore_module(&mut self, previous: Option<String>) {
+        self.module = previous;
+    }
+
     /// Pushes lexically nested class segments (innermost last) onto the
     /// scope, returning the prior depth so a caller can restore it with
     /// [`Self::truncate_classes`] once the nested body has been processed.
@@ -560,5 +591,84 @@ mod tests {
                 "random.Random.Random.seed",
             ])
         );
+    }
+
+    #[test]
+    fn test_push_module_override_replaces_current_module_and_returns_previous() {
+        // Given
+        let mut scope = PythonScope::default();
+        scope.set_module("multiprocessing.shared_memory");
+
+        // When
+        let previous = scope.push_module_override("multiprocessing.managers");
+
+        // Then
+        assert_eq!(previous.as_deref(), Some("multiprocessing.shared_memory"));
+        assert_eq!(
+            scope.qualify("SharedMemoryManager").qualified_name,
+            "multiprocessing.managers.SharedMemoryManager"
+        );
+    }
+
+    #[test]
+    fn test_push_module_override_returns_none_with_no_prior_module() {
+        // Given
+        let mut scope = PythonScope::default();
+
+        // When
+        let previous = scope.push_module_override("ctypes.util");
+
+        // Then
+        assert_eq!(previous, None);
+        assert_eq!(
+            scope.qualify("find_library").qualified_name,
+            "ctypes.util.find_library"
+        );
+    }
+
+    #[test]
+    fn test_restore_module_puts_back_previous_value() {
+        // Given
+        let mut scope = PythonScope::default();
+        scope.set_module("multiprocessing.shared_memory");
+        let previous = scope.push_module_override("multiprocessing.managers");
+
+        // When
+        scope.restore_module(previous);
+
+        // Then
+        assert_eq!(
+            scope.qualify("SharedMemoryManager").qualified_name,
+            "multiprocessing.shared_memory.SharedMemoryManager"
+        );
+    }
+
+    #[test]
+    fn test_restore_module_puts_back_none_when_there_was_no_prior_module() {
+        // Given
+        let mut scope = PythonScope::default();
+        let previous = scope.push_module_override("ctypes.util");
+
+        // When
+        scope.restore_module(previous);
+
+        // Then
+        assert_eq!(scope.qualify("find_library").qualified_name, "find_library");
+    }
+
+    #[test]
+    fn test_push_module_override_with_empty_value_clears_the_module() {
+        // Given — real Sphinx's `add_target_and_index` only prefixes when
+        // `options.get('module', ...)` is truthy, so a bare `:module:` (an
+        // empty option value) un-qualifies the object even with an ambient
+        // module in scope.
+        let mut scope = PythonScope::default();
+        scope.set_module("ctypes");
+
+        // When
+        scope.push_module_override("");
+
+        // Then
+        assert_eq!(scope.qualify("greet").qualified_name, "greet");
     }
 }
