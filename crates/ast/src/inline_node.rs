@@ -57,6 +57,15 @@ pub enum InlineNode {
     /// A leading `.` prefix is likewise consumed by the parser: it never
     /// survives into `name` or `display` (it is markup, not part of any
     /// object's name), and is recorded as `search_order` instead.
+    ///
+    /// A *trailing* `()` — written so the reference reads as a call at the
+    /// point of use (`` :c:func:`Py_TYPE()` ``) — is markup too, and splits
+    /// the other way round from `~`: it is stripped from `name`, because no
+    /// declaration ever registers a name with parens in it, but kept in
+    /// `display`, because that is what the reader is meant to see. Real
+    /// Sphinx arrives at the same split by stripping the parens at resolution
+    /// time and never showing them to the title; doing it while parsing keeps
+    /// `name` a plain name at every later phase.
     DomainObjectReference {
         object_type: ObjectType,
         name: String,

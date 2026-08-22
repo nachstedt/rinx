@@ -6,58 +6,21 @@ CPython doc source. Unlike the entries in `scripts/domain_warnings_whitelist.jso
 these are cases where real Sphinx _would_ resolve the reference — the warning
 is a rusty-sphinx shortcoming, not a CPython doc inconsistency.
 
+**No bugs are currently open.** The last one, "C-domain reference targets keep
+a trailing `()`", is fixed: `strip_trailing_call_parens` in
+`crates/parser/src/inline.rs` now keeps the parens out of the lookup name and
+in the display text, per domain, and `spec_gaps.md` records the details. Triage
+the next batch out of `benchmark_result.txt` when adding to this list.
+
 ## How "real Sphinx would resolve it" was established
 
 CPython ships `Doc/tools/.nitignore`, an explicit list of the only `.rst` files
 allowed to fail Sphinx's nit-picky mode in CI. Any file **not** in that list
 builds warning-free with `nitpicky = True`, so every cross-reference it
 contains — minus the symbols listed in `Doc/conf.py`'s `nitpick_ignore` — is
-known to resolve under real Sphinx. The open bug below lives in files absent
-from `.nitignore` and references targets absent from `nitpick_ignore`.
-
----
-
-## 1. C-domain reference targets keep a trailing `()`
-
-- **Warnings:** `1  Doc/c-api/object: 'Py_TYPE()' (referenced as c:function)`,
-  `1  Doc/c-api/refcounting: 'Py_REFCNT()' (referenced as c:function)`,
-  `1  Doc/c-api/refcounting: 'Py_SET_REFCNT()' (referenced as c:function)`,
-  `2  Doc/c-api/typeobj: 'Py_SIZE()' (referenced as c:function)`,
-  `1  Doc/c-api/structures: 'Py_TYPE()'`/`'Py_SIZE()'`, plus several
-  `whatsnew/*` occurrences — roughly ten in all.
-- **Component:** `crates/parser/src/inline.rs` (the domain-role handlers), or
-  wherever a `c`-domain reference target is normalized before it reaches
-  `DomainObjectResolver::resolve`.
-
-CPython's docs routinely write a C function reference with empty parentheses,
-`` :c:func:`Py_TYPE()` ``, to read as a call at the point of use. Real Sphinx's
-C domain strips a trailing `()` from the target before looking it up, so these
-resolve against the plain `Py_TYPE` declaration. rusty-sphinx keeps the parens
-as part of the name, so the lookup misses and the reference breaks.
-
-The affected files — `c-api/object.rst`, `c-api/refcounting.rst`,
-`c-api/structures.rst`, `c-api/typeobj.rst` — are all absent from CPython's
-`Doc/tools/.nitignore`, and the targets are absent from `Doc/conf.py`'s
-`nitpick_ignore`, so real Sphinx resolves every one of them today.
-
-This overlaps with, but is independent of, the `function`/`macro` alias pair:
-some of these same symbols also collide on object type, and fixing the alias
-table did not help the paren-suffixed spellings at all.
-
-**Reproducer:**
-
-```rst
-.. c:function:: PyTypeObject *Py_TYPE(PyObject *o)
-
-   Returns the object's type.
-
-Use :c:func:`Py_TYPE()` to inspect an object's type.
-```
-
-**Suggested fix:** strip one trailing `()` from a `c`-domain reference target
-during parsing, recording it as markup rather than part of the name — the same
-"a sigil is markup, not part of a name" treatment the leading `.`/`~` prefixes
-already get. Note the display text should keep the parens, as Sphinx does.
+known to resolve under real Sphinx. A bug earns a place below only if it lives
+in files absent from `.nitignore` and references targets absent from
+`nitpick_ignore`.
 
 ---
 

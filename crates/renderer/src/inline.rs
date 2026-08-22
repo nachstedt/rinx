@@ -916,6 +916,47 @@ mod tests {
     }
 
     #[test]
+    fn test_render_inline_domain_object_reference_keeps_call_parens_in_the_text_only() {
+        // Given — the two halves the parser split apart for
+        // `known_bugs.md` #1's `` :c:func:`Py_TYPE()` ``: a paren-free `name`
+        // to key the lookup by, and a `display` that still reads as a call.
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+            "Py_TYPE",
+            "c-api/object.rst",
+        );
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+        let mut object_type_mismatches = Vec::new();
+
+        // When
+        render_inline_domain_object_reference(
+            &mut html,
+            DomainObjectRef {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                name: "Py_TYPE",
+                display: "Py_TYPE()",
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+            },
+            &DomainObjectResolver::new(&index),
+            "c-api/refcounting.rst",
+            &mut DomainObjectDiagnostics {
+                broken_links: &mut broken_links,
+                object_type_mismatches: &mut object_type_mismatches,
+            },
+            &rusty_sphinx_scope::Scope::default(),
+        );
+
+        // Then — the anchor is built from the resolved, paren-free name,
+        // while the reader still sees the parens.
+        assert!(html.contains("href=\"object.html#c:function:py_type\""));
+        assert!(html.contains(">Py_TYPE()</code>"));
+        assert!(broken_links.is_empty());
+    }
+
+    #[test]
     fn test_render_inline_domain_object_reference_resolved_c_macro() {
         // Given
         let mut index = ProjectIndex::default();
