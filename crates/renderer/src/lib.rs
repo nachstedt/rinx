@@ -2,6 +2,7 @@
 
 pub mod config;
 mod directives;
+mod doctest;
 mod domain_resolution;
 mod genindex;
 mod inline;
@@ -15,6 +16,7 @@ use directives::{
     ListTableParams, render_admonition, render_domain_object, render_glossary, render_index_anchor,
     render_list_table, render_seealso, render_version_change,
 };
+use doctest::render_doctest_block;
 use domain_resolution::DomainObjectResolver;
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
@@ -399,6 +401,14 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         Directive::CNamespace { namespace } => ctx.scope.c.set_namespace(namespace.as_deref()),
         Directive::CNamespacePush { namespace } => ctx.scope.c.push_namespace(namespace),
         Directive::CNamespacePop => ctx.scope.c.pop_namespace(),
+        // Presentation only — whether this block's code passes, fails, or is
+        // never run is decided by a separate, opt-in test target, and cannot
+        // influence the HTML.
+        Directive::DocTest(block) => {
+            if let Some(rendered) = render_doctest_block(block) {
+                html.push_str(&rendered);
+            }
+        }
         Directive::Unknown { .. } => {}
     }
 }

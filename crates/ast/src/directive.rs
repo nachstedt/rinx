@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::admonition_kind::AdmonitionKind;
+use crate::doctest_block::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
 use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
@@ -81,6 +82,18 @@ pub enum Directive {
         rows: Vec<TableRow>,
     },
     DomainObject(DomainObjectBody),
+    /// One block of the `sphinx.ext.doctest` family (`doctest`, `testcode`,
+    /// `testoutput`, `testsetup`, `testcleanup`).
+    ///
+    /// A newtype variant, like [`Self::DomainObject`], because the five
+    /// directives form their own closed family with their own option sets —
+    /// see [`DocTestBlock`] for why they are not one struct.
+    ///
+    /// Note that *rendering* these is entirely independent of *executing*
+    /// them: the AST carries what a page needs to display, and a separate,
+    /// opt-in Bazel test target runs the code. Nothing on this variant depends
+    /// on a test having been run.
+    DocTest(DocTestBlock),
     /// `.. py:currentmodule::` — sets the `py`-domain module context for the
     /// rest of the document without documenting a module. `None` is the
     /// reset form (`.. currentmodule:: None`); the sentinel is resolved by

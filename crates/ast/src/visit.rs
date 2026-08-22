@@ -120,8 +120,10 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
             }
         }
         Directive::DomainObject(body) => walk_nodes(body.body(), visit),
-        // Directives with no block-level children.
-        Directive::Toctree { .. }
+        // Directives with no block-level children. A doctest block's body is
+        // verbatim text, not nested nodes, so there is nothing to descend into.
+        Directive::DocTest(_)
+        | Directive::Toctree { .. }
         | Directive::PlantUml(_)
         | Directive::Index { .. }
         | Directive::PyCurrentModule { .. }
