@@ -11,6 +11,7 @@
 //! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
 //! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links] [--warnings-output <file.warnings.json>]
 //! rusty-sphinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>
+//! rusty-sphinx extract_doctests --input <file.ast> --output <file.doctests.json>
 //! rusty-sphinx validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>
 //! ```
 //!
@@ -25,7 +26,7 @@ use rusty_sphinx_analyzer as analyzer;
 use rusty_sphinx_ast as ast;
 use rusty_sphinx_parser as parser;
 use rusty_sphinx_renderer::{self as renderer, config};
-use rusty_sphinx_worker::{domain_warnings, process_rst, validator};
+use rusty_sphinx_worker::{doctest_plan, domain_warnings, process_rst, validator};
 use std::env;
 use std::fs;
 use std::io::{self, Read};
@@ -352,6 +353,20 @@ fn collect_plantuml_contents(doc: &ast::Document) -> Vec<&ast::HashedContent> {
     contents
 }
 
+/// Projects a document's doctest blocks into the runnable plan the Python
+/// runner consumes.
+///
+/// Deliberately cheap and deliberately *lossy*: the plan drops everything
+/// presentational, so a prose edit re-runs this step but leaves its output
+/// bytes unchanged — which is what stops Bazel from re-running the tests. See
+/// [`rusty_sphinx_worker::doctest_plan`] for the full reasoning.
+fn process_extract_doctests(ast_json: &str) -> Result<String> {
+    let doc: ast::Document = serde_json::from_str(ast_json).context("Failed to deserialize AST")?;
+    let plan = doctest_plan::build_doctest_plan(&doc)
+        .map_err(|problems| anyhow!("Doctest extraction failed:\n{problems}"))?;
+    serde_json::to_string(&plan).context("Serialization error")
+}
+
 fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Result<()> {
     let doc: ast::Document = serde_json::from_str(ast_json).context("Failed to deserialize AST")?;
 
@@ -502,6 +517,17 @@ fn cmd_extract_diagrams(args: &[String]) -> Result<()> {
     Ok(())
 }
 
+fn cmd_extract_doctests(args: &[String]) -> Result<()> {
+    let input = flag_value(args, "--input")?;
+    let output = flag_value(args, "--output")?;
+
+    let ast_json =
+        fs::read_to_string(&input).with_context(|| format!("Error reading '{input}'"))?;
+    let plan_json = process_extract_doctests(&ast_json)?;
+    fs::write(&output, plan_json).with_context(|| format!("Error writing '{output}'"))?;
+    Ok(())
+}
+
 fn cmd_validate_images(args: &[String]) -> Result<()> {
     let inputs = flag_values(args, "--inputs")?;
     let image_dir = flag_value(args, "--image-dir")?;
@@ -587,6 +613,7 @@ fn run(args: &[String]) -> Result<()> {
         Some("parse") => cmd_parse(&args[2..]),
         Some("validate_toctree") => cmd_validate_toctree(&args[2..]),
         Some("extract_diagrams") => cmd_extract_diagrams(&args[2..]),
+        Some("extract_doctests") => cmd_extract_doctests(&args[2..]),
         Some("validate_images") => cmd_validate_images(&args[2..]),
         Some("index") => cmd_index(&args[2..]),
         Some("render") => cmd_render(&args[2..]),
@@ -600,6 +627,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} <file.rst>                                   (legacy preview)\n\
                    {program} parse  --input <file.rst> --output <file.ast> [--default-domain <py|c>]\n\
                    {program} extract_diagrams --input <file.ast> --outdir <puml_dir>\n\
+                   {program} extract_doctests --input <file.ast> --output <file.doctests.json>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
                    {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--strict-links] [--warnings-output <file.warnings.json>]\n\
@@ -1168,6 +1196,85 @@ mod tests {
         assert!(html.contains("class=\"broken-link\""));
         assert_eq!(broken_links.len(), 1);
         assert_eq!(broken_links[0].target, "missing");
+    }
+
+    #[test]
+    fn test_process_extract_doctests_emits_a_plan() {
+        // Given
+        let doc = parser::parse(
+            "test.rst",
+            ".. testcode::\n\n   print(1)\n\n.. testoutput::\n\n   1\n",
+        );
+        let ast_json = serde_json::to_string(&doc).unwrap();
+
+        // When
+        let plan_json = process_extract_doctests(&ast_json).expect("should extract");
+
+        // Then
+        let plan: doctest_plan::DocTestPlan = serde_json::from_str(&plan_json).unwrap();
+        assert_eq!(plan.doc_path, "test.rst");
+        assert_eq!(plan.groups.len(), 1);
+    }
+
+    #[test]
+    fn test_process_extract_doctests_emits_an_empty_plan_without_doctests() {
+        // Given — every document gets a plan, so the Bazel action can be
+        // declared unconditionally like the diagram extraction is.
+        let doc = parser::parse("test.rst", "Title\n=====\n\nProse.");
+        let ast_json = serde_json::to_string(&doc).unwrap();
+
+        // When
+        let plan_json = process_extract_doctests(&ast_json).expect("should extract");
+
+        // Then
+        let plan: doctest_plan::DocTestPlan = serde_json::from_str(&plan_json).unwrap();
+        assert!(plan.groups.is_empty());
+    }
+
+    #[test]
+    fn test_process_extract_doctests_fails_on_an_orphan_testoutput() {
+        // Given
+        let doc = parser::parse("test.rst", ".. testoutput::\n\n   42\n");
+        let ast_json = serde_json::to_string(&doc).unwrap();
+
+        // When
+        let result = process_extract_doctests(&ast_json);
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_process_extract_doctests_returns_error_for_invalid_ast_json() {
+        // Given
+        let ast_json = "{not json";
+
+        // When
+        let result = process_extract_doctests(ast_json);
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_process_extract_doctests_is_unchanged_by_a_prose_edit() {
+        // Given — the same tests, different prose around them. This is the
+        // cache firewall as the subcommand actually emits it.
+        let before = parser::parse(
+            "test.rst",
+            "Title\n=====\n\nOriginal prose.\n\n.. testcode::\n\n   print(1)\n",
+        );
+        let after = parser::parse(
+            "test.rst",
+            "Title\n=====\n\nRewritten, much longer prose.\n\n.. testcode::\n\n   print(1)\n",
+        );
+
+        // When
+        let left = process_extract_doctests(&serde_json::to_string(&before).unwrap()).unwrap();
+        let right = process_extract_doctests(&serde_json::to_string(&after).unwrap()).unwrap();
+
+        // Then — byte-identical, so Bazel does not re-run the tests.
+        assert_eq!(left, right);
     }
 
     #[test]
