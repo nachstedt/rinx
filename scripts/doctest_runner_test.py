@@ -6,10 +6,12 @@ rather than as a silently skipped test.
 """
 
 import doctest
+import json
 import os
 import tempfile
 import unittest
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 import doctest_runner
 
@@ -448,7 +450,7 @@ class ReportingTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "p.json"
             path.write_text(
-                __import__("json").dumps(
+                json.dumps(
                     plan(group(cases=[code_with_output("print(1)", "1")]))
                 )
             )
@@ -464,7 +466,7 @@ class ReportingTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "p.json"
             path.write_text(
-                __import__("json").dumps(
+                json.dumps(
                     plan(group(cases=[code_with_output("print(1)", "2")]))
                 )
             )
@@ -481,7 +483,7 @@ class ReportingTest(unittest.TestCase):
             plan_path = Path(tmp) / "p.json"
             xml_path = Path(tmp) / "out.xml"
             plan_path.write_text(
-                __import__("json").dumps(
+                json.dumps(
                     plan(group(cases=[code_with_output("print(1)", "2")]))
                 )
             )
@@ -498,12 +500,98 @@ class ReportingTest(unittest.TestCase):
         self.assertIn("<failure", content)
         self.assertIn('name="default[0]"', content)
 
+    def test_writes_one_junit_suite_per_document(self):
+        # Given — one target now runs every document of a library.
+        with tempfile.TemporaryDirectory() as tmp:
+            xml_path = Path(tmp) / "out.xml"
+            paths = []
+            for doc in ("first.rst", "second.rst"):
+                plan_path = Path(tmp) / (doc + ".json")
+                plan_path.write_text(
+                    json.dumps(
+                        plan(
+                            group(cases=[code_with_output("print(1)", "1")]),
+                            doc_path=doc,
+                        )
+                    )
+                )
+                paths.append(str(plan_path))
+            os.environ["XML_OUTPUT_FILE"] = str(xml_path)
+            try:
+                # When
+                code = doctest_runner.main(paths)
+            finally:
+                del os.environ["XML_OUTPUT_FILE"]
+
+            # Then — both documents are named, under one root.
+            root = ET.parse(xml_path).getroot()
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            [suite.get("name") for suite in root], ["first.rst", "second.rst"]
+        )
+
     def test_empty_plan_passes(self):
         # Given — every document gets a plan, most have no tests.
         report = run(plan())
 
         # Then
         self.assertEqual(report.results, [])
+
+
+class JUnitXmlTest(unittest.TestCase):
+    def test_a_suite_counts_each_outcome(self):
+        # Given — one of each status.
+        report = doctest_runner.RunReport(
+            [
+                doctest_runner.CaseResult("default", 0, "passed"),
+                doctest_runner.CaseResult("default", 1, "failed", "boom"),
+                doctest_runner.CaseResult("default", 2, "skipped", "too old"),
+            ]
+        )
+
+        # When
+        suite = doctest_runner.build_testsuite("doc.rst", report)
+
+        # Then
+        self.assertEqual(suite.get("name"), "doc.rst")
+        self.assertEqual(suite.get("tests"), "3")
+        self.assertEqual(suite.get("failures"), "1")
+        self.assertEqual(suite.get("skipped"), "1")
+        self.assertEqual(suite.find("testcase/failure").text, "boom")
+        self.assertEqual(
+            suite.find("testcase[@name='default[2]']/skipped").get("message"),
+            "too old",
+        )
+
+    def test_every_case_is_classified_by_its_document(self):
+        # Given — one process runs several documents, so the class name is
+        # what tells their cases apart in the test UI.
+        report = doctest_runner.RunReport(
+            [doctest_runner.CaseResult("default", 0, "passed")]
+        )
+
+        # When
+        suite = doctest_runner.build_testsuite("doc.rst", report)
+
+        # Then
+        self.assertEqual(suite.find("testcase").get("classname"), "doc.rst")
+
+    def test_all_suites_share_one_root(self):
+        # Given
+        suites = [ET.Element("testsuite", name="a"), ET.Element("testsuite", name="b")]
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "out.xml"
+
+            # When
+            doctest_runner.write_junit_xml(str(path), suites)
+
+            # Then
+            root = ET.parse(path).getroot()
+
+        self.assertEqual(root.tag, "testsuites")
+        self.assertEqual([suite.get("name") for suite in root], ["a", "b"])
 
 
 class CompileModeTest(unittest.TestCase):

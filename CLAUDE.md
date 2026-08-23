@@ -70,21 +70,21 @@ Two independent dependency mechanisms, don't confuse them:
 
 (A third attribute, `py_deps` on `rusty_sphinx_doctest_tests`, is *not* a third mechanism of rusty-sphinx's own — it is rules_python's ordinary `py_test.deps`, surfaced so documented code is importable while doctests run. It has nothing to do with either of the above.)
 
-See `examples/BUILD.bazel` + `examples/team_a`, `examples/team_b` for a concrete two-team library/site setup, and `tests/test_strict_deps.sh` for how the strict-toctree-dep enforcement is tested (it mutates `examples/BUILD.bazel` temporarily to prove a missing dep fails the build).
+See `examples/BUILD.bazel` + `examples/team_a`, `examples/team_b` for a concrete two-team library/site setup, and `tests/test_strict_deps.sh` for how the strict-toctree-dep enforcement is tested (it mutates `examples/BUILD.bazel` temporarily to prove a missing dep fails the build). Note `examples/BUILD.bazel` declares *two* libraries in one package: `root_docs` and the `doctest_docs` it depends on — see the doctest section below for why that split exists.
 
-### Doctests: rendered by the build, executed by tests (`rules/doctest.bzl`)
+### Doctests: rendered by the build, executed by tests (`rules/doctest.bzl`, see `docs/decisions/002-doctest-execution.md`)
 
 The `sphinx.ext.doctest` family (`doctest`, `testcode`, `testoutput`, `testsetup`, `testcleanup`) is split across Bazel's build/test line, and the split is the design:
 
 - **Rendering** happens in the normal pipeline. `bazel build //examples:site` produces HTML for these blocks and never starts a Python interpreter.
-- **Execution** is `rusty_sphinx_doctest_tests`, a macro emitting one stock `py_test` per document plus a `test_suite`. It is opt-in and enforced by `tests/test_doctest_isolation.sh`.
+- **Execution** is `rusty_sphinx_doctest_tests`, a macro emitting one stock `py_test` per `rusty_sphinx_library`. It is opt-in and enforced by `tests/test_doctest_isolation.sh`.
 
 Between them sits the **cache firewall**. `rusty_sphinx_library` declares an `extract_doctests` action per document (`crates/worker/src/doctest_plan.rs`) producing a `.doctests.json` that keeps only what changes how the code runs — never `:hide:`, the trim tri-state, or line numbers. A prose edit re-runs that cheap AST walk but leaves its bytes identical, so `bazel test` reports `(cached)` and no interpreter starts. `tests/test_doctest_cache_firewall.sh` asserts both directions.
 
 Two details worth knowing before touching this:
 
-- The plans live in **non-default output groups** (`doctest_plan_<doc>`, plus an aggregate `doctest_plans`), so building a site never produces them. `_doctest_plan_key` is duplicated in `rules/library.bzl` and `rules/doctest.bzl` on purpose: macros cannot read providers at loading time, so the two sides agree by naming convention. Change one, change the other.
-- The macro needs the document list repeated (`srcs`), for the same reason. Declare it once as a variable and pass it to both the library and the tests.
+- The plans live in a **non-default output group** (`doctest_plans`), so building a site never produces them. The macro consumes that group through a `filegroup` — this is the whole interface between the two files, and the reason neither needs the document list.
+- Granularity is the library, not the document: a code edit in one document re-runs its library's other documents, and they all share one interpreter. **Split the library** to narrow that — `examples/BUILD.bazel` keeps `doctests.rst` in its own `doctest_docs` library for exactly this reason.
 
 `scripts/doctest_runner.py` drives CPython's stdlib `doctest` rather than reimplementing its comparison semantics. Note the one non-obvious mechanism: `doctest` hard-codes `compile(..., "single", ...)`, which rejects the multi-statement code a `testcode` block normally holds, so the runner replaces the `compile` that `doctest`'s module globals resolve — the same workaround Sphinx uses.
 

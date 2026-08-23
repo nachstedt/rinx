@@ -14,7 +14,7 @@ set -euo pipefail
 
 BAZEL=${BAZEL:-bazel}
 DOC=examples/doctests.rst
-TARGET=//examples:root_docs_doctests_doctests
+TARGET=//examples:doctest_docs_doctests
 
 cp "$DOC" "$DOC.bak"
 restore() { mv "$DOC.bak" "$DOC"; }

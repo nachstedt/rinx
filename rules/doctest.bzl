@@ -1,32 +1,41 @@
 """rusty_sphinx_doctest_tests macro.
 
-Runs the doctest blocks of a `rusty_sphinx_library`'s documents, one Bazel test
-per document.
+Runs the doctest blocks of a `rusty_sphinx_library`'s documents as one Bazel
+test. See `docs/decisions/002-doctest-execution.md` for the full rationale; the
+notes below are what you need before editing this file.
 
-# Why a macro over stock `py_test`, rather than a custom test rule
+# Why one test per library, not per document
 
-A custom `rule(test = True)` would have to hand-roll a launcher that rebuilds
-`PYTHONPATH` from each dependency's `PyInfo.imports` and merges runfiles —
-reimplementing rules_python's bootstrap, for no gain. Emitting stock `py_test`
-targets gets all of that, plus test timeouts, `--runs_per_test`,
-`--flaky_test_attempts`, JUnit XML and `--cache_test_results`, behaving exactly
-as they do everywhere else.
+`rusty_sphinx_library` is the unit of ownership everywhere else in this ruleset,
+exactly like `cc_library`, and a macro cannot read its providers at loading
+time. Testing per document therefore meant repeating the document list in the
+BUILD file and connecting the two sides by a duplicated naming convention. Per
+library, the macro just consumes the library's aggregate `doctest_plans` output
+group and neither duplication exists.
 
-# Why execution is a test, not a build action
+Someone who wants finer granularity splits the library, which is the same thing
+they would do for any other reason — `examples/BUILD.bazel` keeps the one
+document with executable content in its own `doctest_docs` library for exactly
+this reason.
 
-An earlier design ran the doctests in a cached build action and left the test
-target to inspect the result. That is worse in three ways: `bazel build //...`
-builds test targets' runfiles, so the wildcard build CI runs would have executed
-every doctest; build actions have no timeout, so one `input()` call hangs the
-build with no `--test_timeout` to stop it; and `--cache_test_results=no` would
-have become a silent no-op, reporting PASSED from a stale file.
+Two consequences, both accepted: editing test code in one document re-runs that
+library's other documents too, and a library's documents share one interpreter,
+so process-global side effects (`sys.modules`, `os.chdir`, monkeypatching) can
+leak between them. Per-*group* namespaces are unaffected. The second moves
+*closer* to Sphinx, whose `make doctest` runs a whole project in one process.
 
-None of that is needed to get the caching win. Bazel already caches test results
-on the test's runfiles, so when a document's only data runfile is its
-`.doctests.json` — whose bytes ignore prose, `:hide:` and trim options — a prose
-edit leaves the key unchanged and `bazel test` reports `(cached)` without
-starting an interpreter. The firewall is the extraction step, which stays a
-build action.
+# Why a macro over stock `py_test`, and why a test at all
+
+Both argued in full in the ADR. In short: a custom `rule(test = True)` would have
+to reimplement rules_python's bootstrap for no gain, and running the doctests in
+a build action instead would execute them under `bazel build //...`, lose
+`--test_timeout`, and make `--cache_test_results=no` a silent no-op.
+
+Bazel already caches test results on the test's runfiles, so when the only data
+runfiles are the library's `.doctests.json` plans — whose bytes ignore prose,
+`:hide:` and trim options — a prose edit leaves the key unchanged and
+`bazel test` reports `(cached)` without starting an interpreter. The firewall is
+the extraction step, which stays a build action.
 
 # Keeping Python out of the build
 
@@ -38,37 +47,22 @@ registered. `tests/test_doctest_isolation.sh` enforces that.
 
 load("@rules_python//python:defs.bzl", "py_test")
 
-def _doctest_plan_key(relative_path):
-    """Mirrors `_doctest_plan_key` in rules/library.bzl.
-
-    The two must agree: the rule derives its key from a source's
-    package-relative path, and this derives the same key from the `srcs` string
-    the BUILD file passes. Providers are not visible at loading time, so a
-    shared naming convention is what connects them.
-    """
-    return relative_path.replace("/", "_").replace(".", "_").replace("-", "_")
-
 def rusty_sphinx_doctest_tests(
         name,
         lib,
-        srcs,
         py_deps = None,
         global_setup = None,
         global_cleanup = None,
         size = "small",
         tags = None,
         **kwargs):
-    """Defines one doctest test per document, plus a suite over all of them.
+    """Defines the doctest test for one `rusty_sphinx_library`.
 
     Args:
-      name: Name of the generated `test_suite`. Individual tests are named
-        `<name>_<document>`.
-      lib: The `rusty_sphinx_library` whose documents to test.
-      srcs: The same `.rst` list given to `lib`. Bazel macros cannot read a
-        target's providers, so the document list has to be repeated here;
-        define it once as a variable (or `glob`) and pass it to both. A name
-        listed here but absent from `lib` fails the build; one omitted here is
-        simply not tested.
+      name: Name of the generated `py_test`.
+      lib: The `rusty_sphinx_library` whose documents to test. Every document it
+        owns is tested; its `deps` are not, since each library carries the test
+        target for its own documents.
       py_deps: `py_library` targets to put on the path, so documented code is
         importable. This is rules_python's ordinary `deps`, surfaced — not a
         third dependency mechanism of rusty-sphinx's own. Note it is unrelated
@@ -79,11 +73,9 @@ def rusty_sphinx_doctest_tests(
       global_cleanup: A `.py` file run after every group.
       size: Bazel test size; `small` (60s) by default. A doctest that needs
         longer is usually a doctest that should not be one.
-      tags: Applied to the generated tests *and* to the suite. Both are needed
-        for `manual` to work: a `test_suite` that explicitly lists a target
-        re-includes it in wildcard expansion, so tagging only the tests would
-        leave them running under `bazel test //...`.
-      **kwargs: Passed to each generated `py_test` (`timeout`, `flaky`, …).
+      tags: Applied to the generated test, e.g. `manual` to keep it out of
+        `bazel test //...`.
+      **kwargs: Passed to the generated `py_test` (`timeout`, `flaky`, …).
     """
     py_deps = py_deps or []
     tags = tags or []
@@ -97,40 +89,25 @@ def rusty_sphinx_doctest_tests(
         shared_args += ["--global-cleanup", "$(location %s)" % global_cleanup]
         shared_data.append(global_cleanup)
 
-    tests = []
-    for src in srcs:
-        if not src.endswith(".rst"):
-            fail("rusty_sphinx_doctest_tests: srcs must be .rst files, got %r" % src)
+    # The library's plans are its only data runfiles, so the test-result cache
+    # key tracks its test code and nothing else.
+    plan_target = "%s_plans" % name
+    native.filegroup(
+        name = plan_target,
+        srcs = [lib],
+        output_group = "doctest_plans",
+        testonly = True,
+    )
 
-        key = _doctest_plan_key(src.removesuffix(".rst"))
-        plan_target = "%s_%s_plan" % (name, key)
-
-        # Extract just this document's plan from the library's output group,
-        # so it is the test's only data runfile and the cache key tracks one
-        # document's test code.
-        native.filegroup(
-            name = plan_target,
-            srcs = [lib],
-            output_group = "doctest_plan_" + key,
-            testonly = True,
-        )
-
-        test_name = "%s_%s" % (name, key)
-        py_test(
-            name = test_name,
-            srcs = ["@rusty_sphinx//scripts:doctest_runner.py"],
-            main = "doctest_runner.py",
-            args = ["$(location :%s)" % plan_target] + shared_args,
-            data = [":" + plan_target] + shared_data,
-            deps = py_deps,
-            size = size,
-            tags = tags,
-            **kwargs
-        )
-        tests.append(":" + test_name)
-
-    native.test_suite(
+    py_test(
         name = name,
-        tests = tests,
+        srcs = ["@rusty_sphinx//scripts:doctest_runner.py"],
+        main = "doctest_runner.py",
+        # `locations`, plural: one argument per document in the library.
+        args = ["$(locations :%s)" % plan_target] + shared_args,
+        data = [":" + plan_target] + shared_data,
+        deps = py_deps,
+        size = size,
         tags = tags,
+        **kwargs
     )

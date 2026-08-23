@@ -471,8 +471,8 @@ def run_plan(
 # ---------------------------------------------------------------------------
 
 
-def write_junit_xml(path: str, doc_path: str, report: RunReport) -> None:
-    """Writes Bazel's ``$XML_OUTPUT_FILE`` so failures surface in the test UI."""
+def build_testsuite(doc_path: str, report: RunReport) -> ET.Element:
+    """Builds the ``<testsuite>`` element describing one document's run."""
     suite = ET.Element(
         "testsuite",
         name=doc_path,
@@ -489,9 +489,19 @@ def write_junit_xml(path: str, doc_path: str, report: RunReport) -> None:
             failure.text = result.detail
         elif result.status == "skipped":
             ET.SubElement(case, "skipped", message=result.detail)
+    return suite
 
+
+def write_junit_xml(path: str, suites: list[ET.Element]) -> None:
+    """Writes Bazel's ``$XML_OUTPUT_FILE`` so failures surface in the test UI.
+
+    One invocation runs every document of a library, so the root carries one
+    suite per document and the test UI keeps naming the document a failure came
+    from.
+    """
     tree = ET.ElementTree(ET.Element("testsuites"))
-    tree.getroot().append(suite)
+    for suite in suites:
+        tree.getroot().append(suite)
     tree.write(path, encoding="unicode", xml_declaration=True)
 
 
@@ -528,6 +538,7 @@ def main(argv: list[str] | None = None) -> int:
     global_cleanup = read_optional_file(args.global_cleanup)
 
     failed = 0
+    suites: list[ET.Element] = []
     for plan_path in args.plans:
         with open(plan_path, encoding="utf-8") as handle:
             plan = json.load(handle)
@@ -535,10 +546,11 @@ def main(argv: list[str] | None = None) -> int:
         report = RunReport(run_plan(plan, global_setup, global_cleanup))
         print_report(plan["doc_path"], report)
         failed += len(report.failed)
+        suites.append(build_testsuite(plan["doc_path"], report))
 
-        xml_path = os.environ.get("XML_OUTPUT_FILE")
-        if xml_path and len(args.plans) == 1:
-            write_junit_xml(xml_path, plan["doc_path"], report)
+    xml_path = os.environ.get("XML_OUTPUT_FILE")
+    if xml_path:
+        write_junit_xml(xml_path, suites)
 
     return 1 if failed else 0
 

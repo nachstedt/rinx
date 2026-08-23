@@ -7,29 +7,12 @@ rusty-sphinx worker binary and propagates them via RustySphinxInfo.
 
 load("//:providers.bzl", "RustySphinxInfo")
 
-def _doctest_plan_key(relative_path):
-    """Turns a package-relative document path into an output-group key.
-
-    Output group names travel through `--output_groups=` on the command line,
-    so they are reduced to letters, digits and underscores. The macro in
-    rules/doctest.bzl applies the identical transformation to its `srcs`, which
-    is what lets the two sides agree without the rule's providers being visible
-    at loading time.
-    """
-    return relative_path.replace("/", "_").replace(".", "_").replace("-", "_")
-
 def _rusty_sphinx_library_impl(ctx):
     worker = ctx.executable._worker
     plantuml = ctx.executable._plantuml
     ast_files = []
     svg_dirs = []
     doctest_plans = []
-
-    # Per-document output groups, so `rusty_sphinx_doctest_tests` can address a
-    # single document's plan by label. Keyed by the source's package-relative
-    # path so the macro can compute the same key from its `srcs`.
-    doctest_plan_groups = {}
-    package_prefix = ctx.label.package + "/" if ctx.label.package else ""
 
     local_doc_names = [src.short_path.removesuffix(".rst") for src in ctx.files.srcs]
     
@@ -104,11 +87,6 @@ def _rusty_sphinx_library_impl(ctx):
         )
         doctest_plans.append(doctest_plan)
 
-        doc_key = _doctest_plan_key(
-            src.short_path.removeprefix(package_prefix).removesuffix(".rst"),
-        )
-        doctest_plan_groups["doctest_plan_" + doc_key] = depset([doctest_plan])
-
         # Phase 1.8: Extract PlantUML diagrams
         puml_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_puml", sibling = src)
         args_puml = ctx.actions.args()
@@ -158,16 +136,13 @@ fi
     transitive_asts = [dep[RustySphinxInfo].ast_files for dep in ctx.attr.deps]
     transitive_svg_dirs = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps]
 
-    # `doctest_plans` collects this library's own plans for convenience
-    # (`--output_groups=doctest_plans` builds them all); the per-document
-    # groups are what the test macro actually consumes. Neither is in
-    # DefaultInfo, so `bazel build` of a site never produces them.
-    output_groups = dict(doctest_plan_groups)
-    output_groups["doctest_plans"] = depset(doctest_plans)
-
+    # `doctest_plans` carries this library's own plans, and is what
+    # `rusty_sphinx_doctest_tests` consumes. It is deliberately not in
+    # DefaultInfo, so `bazel build` of a site never produces them; ask for them
+    # by hand with `--output_groups=doctest_plans`.
     return [
         DefaultInfo(files = depset(ast_files)),
-        OutputGroupInfo(**output_groups),
+        OutputGroupInfo(doctest_plans = depset(doctest_plans)),
         RustySphinxInfo(
             ast_files = depset(ast_files, transitive = transitive_asts),
             direct_doc_names = local_doc_names,

@@ -9,17 +9,14 @@ not stop the documentation from being published.
 
 load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_doctest_tests", "rusty_sphinx_library", "rusty_sphinx_site")
 
-FAILING_DOCS = ["failing.rst"]
-
 rusty_sphinx_library(
     name = "docs",
-    srcs = FAILING_DOCS,
+    srcs = ["failing.rst"],
     visibility = ["//visibility:public"],
 )
 
 rusty_sphinx_doctest_tests(
     name = "doctests",
-    srcs = FAILING_DOCS,
     lib = ":docs",
     # Kept out of `bazel test //...`, which must stay green.
     tags = ["manual"],
