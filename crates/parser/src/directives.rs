@@ -1,7 +1,9 @@
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::blocks::{
     collect_argument_continuation_lines, collect_directive_body, indent_width, join_body_lines,
+    strip_common_indent,
 };
+use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
 use super::headings::Adornment;
@@ -129,74 +131,102 @@ pub(super) fn try_parse_directive(
     }
 
     let (consumed_lines, body_lines) = collect_directive_body(lines, i + 1, min_indent);
+    let node = parse_body_directive(
+        name,
+        argument,
+        &body_lines,
+        adornment_order,
+        diagnostics,
+        default_domain,
+    );
+    Some((1 + consumed_lines, node))
+}
 
+/// Dispatches every directive whose body is collected the ordinary way — that
+/// is, all of them except domain objects, which peel extra signature lines off
+/// the argument before their body starts and so are handled by the caller.
+///
+/// Falls back to [`Directive::Unknown`], which is what the benchmark counts as
+/// an unsupported directive.
+fn parse_body_directive(
+    name: String,
+    argument: String,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Vec<String>,
+    default_domain: Domain,
+) -> Node {
     if name == "toctree" {
-        let directive = parse_toctree(&body_lines, diagnostics);
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        let directive = parse_toctree(body_lines, diagnostics);
+        return Node::Directive(directive);
     }
     if name == "plantuml" {
         let directive = Directive::PlantUml(rusty_sphinx_ast::HashedContent::new(join_body_lines(
-            &body_lines,
+            body_lines,
         )));
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        return Node::Directive(directive);
     }
     if name == "code-block" {
-        let node = parse_code_block(argument, &body_lines);
-        return Some((1 + consumed_lines, node));
+        let node = parse_code_block(argument, body_lines);
+        return node;
     }
     if let Ok(kind) = name.parse::<rusty_sphinx_ast::VersionChangeKind>() {
         let directive = parse_version_change(
             kind,
             argument,
-            &body_lines,
+            body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         );
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        return Node::Directive(directive);
     }
     if name == "seealso" {
-        let directive = parse_seealso(&body_lines, adornment_order, diagnostics, default_domain);
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        let directive = parse_seealso(body_lines, adornment_order, diagnostics, default_domain);
+        return Node::Directive(directive);
     }
     if let Ok(kind) = name.parse::<rusty_sphinx_ast::AdmonitionKind>() {
         let directive = parse_admonition(
             kind,
             argument,
-            &body_lines,
+            body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         );
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        return Node::Directive(directive);
     }
     if name == "glossary" {
-        let directive = parse_glossary(&body_lines, adornment_order, diagnostics, default_domain);
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        let directive = parse_glossary(body_lines, adornment_order, diagnostics, default_domain);
+        return Node::Directive(directive);
     }
     if name == "list-table" {
         let directive = parse_list_table(
             argument,
-            &body_lines,
+            body_lines,
             adornment_order,
             diagnostics,
             default_domain,
         );
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        return Node::Directive(directive);
     }
     if name == "index" {
-        let directive = parse_index_directive(&argument, &body_lines, diagnostics);
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        let directive = parse_index_directive(&argument, body_lines, diagnostics);
+        return Node::Directive(directive);
+    }
+    if let Some(kind) = DocTestDirectiveKind::from_name(&name) {
+        let directive = parse_doctest_directive(kind, &argument, body_lines, diagnostics);
+        return Node::Directive(directive);
     }
     if let Some(directive) = try_parse_scope_directive(&name, &argument, default_domain) {
-        return Some((1 + consumed_lines, Node::Directive(directive)));
+        return Node::Directive(directive);
     }
     let directive = Directive::Unknown {
         name,
         argument,
-        body: join_body_lines(&body_lines),
+        body: join_body_lines(body_lines),
     };
-    Some((1 + consumed_lines, Node::Directive(directive)))
+    Node::Directive(directive)
 }
 
 /// Resolves a directive name to a [`DirectiveObjectType`]: either an explicit
@@ -257,23 +287,7 @@ fn parse_code_block(argument: String, body_lines: &[&str]) -> Node {
     } else {
         Some(argument)
     };
-    let min_indent = body_lines
-        .iter()
-        .filter(|l| !l.trim().is_empty())
-        .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
-        .min()
-        .unwrap_or(0);
-    let content = body_lines
-        .iter()
-        .map(|l| {
-            if l.trim().is_empty() {
-                String::new()
-            } else {
-                l.chars().skip(min_indent).collect()
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let content = strip_common_indent(body_lines);
     Node::LiteralBlock { language, content }
 }
 
@@ -368,6 +382,91 @@ mod tests {
     use super::*;
     use crate::parse;
     use rusty_sphinx_ast::HashedContent;
+
+    /// Dispatches `name`/`argument`/`body` through [`parse_body_directive`]
+    /// with throwaway state, returning the node and any diagnostics.
+    fn dispatch(name: &str, argument: &str, body: &[&str]) -> (Node, Vec<String>) {
+        let mut adornment_order = Vec::new();
+        let mut diagnostics = Vec::new();
+        let node = parse_body_directive(
+            name.to_string(),
+            argument.to_string(),
+            body,
+            &mut adornment_order,
+            &mut diagnostics,
+            Domain::Py,
+        );
+        (node, diagnostics)
+    }
+
+    #[test]
+    fn test_parse_body_directive_dispatches_a_known_directive() {
+        // Given
+        let body = ["   Careful."];
+
+        // When
+        let (node, _) = dispatch("note", "", &body);
+
+        // Then
+        assert!(matches!(
+            node,
+            Node::Directive(Directive::Admonition { .. })
+        ));
+    }
+
+    #[test]
+    fn test_parse_body_directive_dispatches_the_doctest_family() {
+        // Given
+        let body = ["   >>> 1"];
+
+        // When
+        let (node, _) = dispatch("doctest", "", &body);
+
+        // Then
+        assert!(matches!(node, Node::Directive(Directive::DocTest(_))));
+    }
+
+    #[test]
+    fn test_parse_body_directive_returns_a_literal_block_for_code_block() {
+        // Given — the one dispatch arm that yields a non-directive node.
+        let body = ["   print(1)"];
+
+        // When
+        let (node, _) = dispatch("code-block", "python", &body);
+
+        // Then
+        assert!(matches!(node, Node::LiteralBlock { .. }));
+    }
+
+    #[test]
+    fn test_parse_body_directive_falls_back_to_unknown() {
+        // Given — this is what the benchmark counts as unsupported.
+        let body = ["   content"];
+
+        // When
+        let (node, _) = dispatch("not-a-real-directive", "arg", &body);
+
+        // Then
+        match node {
+            Node::Directive(Directive::Unknown { name, argument, .. }) => {
+                assert_eq!(name, "not-a-real-directive");
+                assert_eq!(argument, "arg");
+            }
+            other => panic!("expected an unknown directive, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_parse_body_directive_forwards_diagnostics() {
+        // Given
+        let body = ["   :bogus:", "", "   >>> 1"];
+
+        // When
+        let (_, diagnostics) = dispatch("doctest", "", &body);
+
+        // Then
+        assert!(!diagnostics.is_empty());
+    }
 
     #[test]
     fn test_parse_creates_admonition() {

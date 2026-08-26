@@ -190,13 +190,6 @@
       "comment": "`_dispatch` describes a duck-typed method that a user-supplied `instance` object may optionally implement to customize dispatch; it is cross-referenced with `:meth:`_dispatch`` repeatedly but is never given a `.. method::` (or any other) directive anywhere, since it belongs to a class the user defines, not one xmlrpc.server itself documents. Real Sphinx also fails to resolve it; expected, not a rusty-sphinx resolver gap. Corroborated by CPython's `Doc/tools/.nitignore`, the list of files exempted from the nit-picky CI build: `Doc/library/xmlrpc.server.rst` is listed there, i.e. CPython itself accepts that real Sphinx does not resolve everything in this file."
     },
     {
-      "doc_path": "Doc/extending/first-extension-module",
-      "kind": "domain_object_reference",
-      "target": "system",
-      "requested_type": "c:function",
-      "comment": "The C standard library's `system()` call, not a CPython C-API symbol, so it is never indexed by this doc set. CPython's own Doc/conf.py nitpick_ignore explicitly lists ('c:func', 'system'). Real Sphinx also fails to resolve it; expected, not a rusty-sphinx resolver gap."
-    },
-    {
       "doc_path": "Doc/library/bdb",
       "kind": "domain_object_reference",
       "target": "Bdb.set_quit",
@@ -272,13 +265,6 @@
       "target": "errno",
       "requested_type": "c:member",
       "comment": "Same standard-C-global issue as 'errno' in c-api/complex: `PyErr_SetFromErrno` and friends describe the POSIX `errno` variable via ``:c:data:`errno```. Covered by ('c:data', 'errno') in CPython's own `Doc/conf.py` nitpick_ignore. Real Sphinx also fails to resolve it. Expected, not a rusty-sphinx resolver gap."
-    },
-    {
-      "doc_path": "Doc/c-api/threads",
-      "kind": "domain_object_reference",
-      "target": "fork",
-      "requested_type": "c:function",
-      "comment": "Same POSIX `fork(2)` issue as the existing 'Doc/c-api/sys' entry: referenced by the sub-interpreter and GIL docs when describing fork() semantics. CPython's own `Doc/conf.py` nitpick_ignore explicitly lists ('c:func', 'fork'). Real Sphinx also fails to resolve it. Expected, not a rusty-sphinx resolver gap."
     },
     {
       "doc_path": "Doc/library/unittest.mock",

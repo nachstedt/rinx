@@ -2,6 +2,7 @@
 
 pub mod config;
 mod directives;
+mod doctest;
 mod domain_resolution;
 mod genindex;
 mod inline;
@@ -15,6 +16,7 @@ use directives::{
     ListTableParams, render_admonition, render_domain_object, render_glossary, render_index_anchor,
     render_list_table, render_seealso, render_version_change,
 };
+use doctest::{render_bare_doctest_block, render_doctest_block};
 use domain_resolution::DomainObjectResolver;
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
@@ -315,6 +317,12 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                     let _ = writeln!(html, "<pre><code>{escaped}</code></pre>");
                 }
             }
+            // A bare `>>>` block. Rendered like the `.. doctest::` directive
+            // form, which is what Sphinx does — and, unlike the literal block
+            // above, this one is also executed.
+            Node::DoctestBlock(content) => {
+                html.push_str(&render_bare_doctest_block(content));
+            }
         }
     }
 }
@@ -399,6 +407,14 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         Directive::CNamespace { namespace } => ctx.scope.c.set_namespace(namespace.as_deref()),
         Directive::CNamespacePush { namespace } => ctx.scope.c.push_namespace(namespace),
         Directive::CNamespacePop => ctx.scope.c.pop_namespace(),
+        // Presentation only — whether this block's code passes, fails, or is
+        // never run is decided by a separate, opt-in test target, and cannot
+        // influence the HTML.
+        Directive::DocTest(block) => {
+            if let Some(rendered) = render_doctest_block(block) {
+                html.push_str(&rendered);
+            }
+        }
         Directive::Unknown { .. } => {}
     }
 }

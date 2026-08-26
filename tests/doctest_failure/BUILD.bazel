@@ -1,0 +1,29 @@
+"""A document whose doctests fail on purpose.
+
+`tests/test_doctest_failure.sh` asserts two things about it: that
+`bazel test` reports the failure, and that building HTML from the very same
+document still succeeds. That pairing is the point of keeping rendering and
+execution on opposite sides of Bazel's build/test line — a broken example must
+not stop the documentation from being published.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_doctest_tests", "rusty_sphinx_library", "rusty_sphinx_site")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = ["failing.rst"],
+    visibility = ["//visibility:public"],
+)
+
+rusty_sphinx_doctest_tests(
+    name = "doctests",
+    lib = ":docs",
+    # Kept out of `bazel test //...`, which must stay green.
+    tags = ["manual"],
+)
+
+# Proves the failing document still renders.
+rusty_sphinx_site(
+    name = "site",
+    deps = [":docs"],
+)

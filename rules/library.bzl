@@ -12,6 +12,7 @@ def _rusty_sphinx_library_impl(ctx):
     plantuml = ctx.executable._plantuml
     ast_files = []
     svg_dirs = []
+    doctest_plans = []
 
     local_doc_names = [src.short_path.removesuffix(".rst") for src in ctx.files.srcs]
     
@@ -55,6 +56,36 @@ def _rusty_sphinx_library_impl(ctx):
             progress_message = "Validating toctree in %s" % src.short_path,
         )
         ast_files.append(ast_out)
+
+        # Phase 1.7: Extract the doctest plan.
+        #
+        # Declared for every document but kept out of DefaultInfo, so it is
+        # only ever built when a doctest test target (or an explicit
+        # --output_groups request) asks for it. Bazel is demand-driven at
+        # execution time, so a site that never runs doctests pays only the
+        # analysis-phase cost of the action object, not the CPU.
+        #
+        # This action is the cache firewall: its output depends only on the
+        # test code, so a prose edit re-runs this cheap AST walk but leaves the
+        # bytes identical, and the Python test does not re-run.
+        doctest_plan = ctx.actions.declare_file(
+            src.basename.removesuffix(".rst") + ".doctests.json",
+            sibling = src,
+        )
+        args_doctests = ctx.actions.args()
+        args_doctests.add("extract_doctests")
+        args_doctests.add("--input", ast_out.path)
+        args_doctests.add("--output", doctest_plan.path)
+
+        ctx.actions.run(
+            executable = worker,
+            arguments = [args_doctests],
+            inputs = [ast_out],
+            outputs = [doctest_plan],
+            mnemonic = "RustySphinxExtractDoctests",
+            progress_message = "Extracting doctests from %s" % src.short_path,
+        )
+        doctest_plans.append(doctest_plan)
 
         # Phase 1.8: Extract PlantUML diagrams
         puml_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_puml", sibling = src)
@@ -105,8 +136,13 @@ fi
     transitive_asts = [dep[RustySphinxInfo].ast_files for dep in ctx.attr.deps]
     transitive_svg_dirs = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps]
 
+    # `doctest_plans` carries this library's own plans, and is what
+    # `rusty_sphinx_doctest_tests` consumes. It is deliberately not in
+    # DefaultInfo, so `bazel build` of a site never produces them; ask for them
+    # by hand with `--output_groups=doctest_plans`.
     return [
         DefaultInfo(files = depset(ast_files)),
+        OutputGroupInfo(doctest_plans = depset(doctest_plans)),
         RustySphinxInfo(
             ast_files = depset(ast_files, transitive = transitive_asts),
             direct_doc_names = local_doc_names,

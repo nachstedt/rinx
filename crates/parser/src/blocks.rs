@@ -279,11 +279,63 @@ pub(super) fn parse_blocks(
             continue;
         }
 
+        if let Some((consumed, node)) = try_parse_doctest_block(lines, i) {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
         let (consumed, new_nodes) = parse_paragraph(lines, i, default_domain);
         nodes.extend(new_nodes);
         i += consumed;
     }
     nodes
+}
+
+/// Whether `line` opens a doctest block: `>>>` followed by a space or nothing,
+/// ignoring indentation.
+///
+/// Requiring the space (or end of line) is what keeps this disjoint from a
+/// transition, which needs four or more *identical* punctuation characters —
+/// `>>>` is too short to be one and `>>>>` has no space, so neither construct
+/// can be mistaken for the other.
+fn opens_doctest_block(line: &str) -> bool {
+    let trimmed = line.trim_start();
+    match trimmed.strip_prefix(">>>") {
+        Some(rest) => rest.is_empty() || rest.starts_with(' '),
+        None => false,
+    }
+}
+
+/// Parses a docutils *doctest block*: a text block beginning with `>>> ` and
+/// running to the next blank line.
+///
+/// Everything up to that blank line belongs to the block — `...` continuation
+/// lines and the expected output, which is why a doctest that wants to expect
+/// an empty line has to write `<BLANKLINE>` rather than a real one.
+///
+/// This is reached only from the block-level dispatch chain, and only in
+/// block-*start* position, so a `>>>` appearing partway through a paragraph
+/// stays prose (as it does in docutils). Content introduced by `::` never
+/// arrives here at all: `parse_paragraph` detects the trailing `::` and
+/// `collect_literal_block_body` consumes the whole indented run, so a `>>>`
+/// inside a literal block is never re-examined — which is what keeps those
+/// blocks non-executable.
+pub(super) fn try_parse_doctest_block(lines: &[&str], i: usize) -> Option<(usize, Node)> {
+    if !opens_doctest_block(lines[i]) {
+        return None;
+    }
+
+    let end = lines[i..]
+        .iter()
+        .position(|line| line.trim().is_empty())
+        .map_or(lines.len(), |offset| i + offset);
+
+    let content = strip_common_indent(&lines[i..end]);
+    Some((
+        end - i,
+        Node::DoctestBlock(rusty_sphinx_ast::HashedContent::new(content)),
+    ))
 }
 
 /// Counts the leading whitespace characters on a line, char-based (not
@@ -385,6 +437,35 @@ pub(super) fn join_body_lines(body_lines: &[&str]) -> String {
     body
 }
 
+/// Strips the *minimum* common leading indentation from `body_lines` and joins
+/// them with newlines, preserving relative indentation within the block (RST
+/// spec behaviour) and normalising blank lines to empty strings.
+///
+/// This is what verbatim block content needs, and the opposite of what
+/// [`join_body_lines`] does — that one `trim_start`s every line, which is fine
+/// for prose but destroys the meaning of indentation-sensitive content such as
+/// Python source.
+pub(super) fn strip_common_indent(body_lines: &[&str]) -> String {
+    let min_indent = body_lines
+        .iter()
+        .filter(|l| !l.trim().is_empty())
+        .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
+        .min()
+        .unwrap_or(0);
+
+    body_lines
+        .iter()
+        .map(|l| {
+            if l.trim().is_empty() {
+                String::new()
+            } else {
+                l.chars().skip(min_indent).collect()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// Collects a literal block body starting at `start_index`.
 ///
 /// - Skips a leading blank line (mandatory after `::`).
@@ -438,26 +519,7 @@ pub(super) fn collect_literal_block_body(lines: &[&str], start_index: usize) -> 
         body_lines.pop();
     }
 
-    // Compute the minimum indentation of all non-blank lines
-    let min_indent = body_lines
-        .iter()
-        .filter(|l| !l.trim().is_empty())
-        .map(|l| l.chars().take_while(|c| c.is_whitespace()).count())
-        .min()
-        .unwrap_or(0);
-
-    // Strip the common indent; leave blank lines as empty strings
-    let content = body_lines
-        .iter()
-        .map(|l| {
-            if l.trim().is_empty() {
-                String::new()
-            } else {
-                l.chars().skip(min_indent).collect()
-            }
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+    let content = strip_common_indent(&body_lines);
 
     (current - start_index, content)
 }
@@ -516,6 +578,206 @@ fn parse_paragraph(lines: &[&str], i: usize, default_domain: Domain) -> (usize, 
 mod tests {
     use super::*;
     use rusty_sphinx_ast::InlineNode;
+
+    #[test]
+    fn test_opens_doctest_block_accepts_a_prompt_with_code() {
+        // Given / When / Then
+        assert!(opens_doctest_block(">>> 1 + 1"));
+    }
+
+    #[test]
+    fn test_opens_doctest_block_accepts_an_indented_prompt() {
+        // Given — essentially every real-world doctest block is indented,
+        // sitting inside a block quote after a paragraph ending in `:`.
+        assert!(opens_doctest_block("      >>> import re"));
+    }
+
+    #[test]
+    fn test_opens_doctest_block_accepts_a_bare_prompt() {
+        // Given / When / Then
+        assert!(opens_doctest_block(">>>"));
+    }
+
+    #[test]
+    fn test_opens_doctest_block_rejects_a_transition() {
+        // Given — four or more repeated punctuation characters are a
+        // transition; the two constructs are disjoint by spec, so neither
+        // detector needs loosening to accommodate the other.
+        assert!(!opens_doctest_block(">>>>"));
+    }
+
+    #[test]
+    fn test_opens_doctest_block_rejects_a_prompt_without_separation() {
+        // Given — `>>>x` is not the interactive prompt.
+        assert!(!opens_doctest_block(">>>x = 1"));
+    }
+
+    #[test]
+    fn test_opens_doctest_block_rejects_ordinary_prose() {
+        // Given / When / Then
+        assert!(!opens_doctest_block("Some prose about >>> prompts."));
+    }
+
+    #[test]
+    fn test_try_parse_doctest_block_collects_until_a_blank_line() {
+        // Given — continuation and expected-output lines belong to the block.
+        let lines = vec![">>> f()", "... more", "result", "", "After."];
+
+        // When
+        let (consumed, node) = try_parse_doctest_block(&lines, 0).expect("should parse");
+
+        // Then
+        assert_eq!(consumed, 3);
+        match node {
+            Node::DoctestBlock(content) => {
+                assert_eq!(content.body(), ">>> f()\n... more\nresult");
+            }
+            other => panic!("expected a doctest block, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_parse_doctest_block_strips_the_common_indent() {
+        // Given
+        let lines = vec!["      >>> import re", "      >>> re.escape('x')", ""];
+
+        // When
+        let (_, node) = try_parse_doctest_block(&lines, 0).expect("should parse");
+
+        // Then
+        match node {
+            Node::DoctestBlock(content) => {
+                assert_eq!(content.body(), ">>> import re\n>>> re.escape('x')");
+            }
+            other => panic!("expected a doctest block, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_parse_doctest_block_preserves_relative_indentation() {
+        // Given — a continuation line indented under the prompt.
+        let lines = vec!["   >>> def f():", "   ...     return 1", ""];
+
+        // When
+        let (_, node) = try_parse_doctest_block(&lines, 0).expect("should parse");
+
+        // Then
+        match node {
+            Node::DoctestBlock(content) => {
+                assert_eq!(content.body(), ">>> def f():\n...     return 1");
+            }
+            other => panic!("expected a doctest block, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_try_parse_doctest_block_runs_to_end_of_input() {
+        // Given — no trailing blank line.
+        let lines = vec![">>> 1 + 1", "2"];
+
+        // When
+        let (consumed, _) = try_parse_doctest_block(&lines, 0).expect("should parse");
+
+        // Then
+        assert_eq!(consumed, 2);
+    }
+
+    #[test]
+    fn test_try_parse_doctest_block_declines_a_non_prompt_line() {
+        // Given
+        let lines = vec!["Just prose."];
+
+        // When
+        let result = try_parse_doctest_block(&lines, 0);
+
+        // Then
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_strip_common_indent_removes_the_shared_leading_whitespace() {
+        // Given
+        let lines = vec!["    first", "    second"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "first\nsecond");
+    }
+
+    #[test]
+    fn test_strip_common_indent_preserves_relative_indentation() {
+        // Given — the property that makes this usable for Python source.
+        let lines = vec!["    def f():", "        return 1"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then — only the shared four spaces go; the inner four remain.
+        assert_eq!(content, "def f():\n    return 1");
+    }
+
+    #[test]
+    fn test_strip_common_indent_normalizes_blank_lines_to_empty_strings() {
+        // Given — a blank line that is shorter than the common indent.
+        let lines = vec!["    first", "", "    second"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then — the blank line must not influence the minimum, and must not
+        // become a run of stray spaces.
+        assert_eq!(content, "first\n\nsecond");
+    }
+
+    #[test]
+    fn test_strip_common_indent_uses_the_least_indented_line_as_the_baseline() {
+        // Given — the first line is deeper than a later one.
+        let lines = vec!["        deep", "    shallow"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "    deep\nshallow");
+    }
+
+    #[test]
+    fn test_strip_common_indent_leaves_unindented_lines_untouched() {
+        // Given
+        let lines = vec!["no indent", "still none"];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "no indent\nstill none");
+    }
+
+    #[test]
+    fn test_strip_common_indent_returns_empty_string_for_no_lines() {
+        // Given
+        let lines: Vec<&str> = Vec::new();
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "");
+    }
+
+    #[test]
+    fn test_strip_common_indent_handles_only_blank_lines() {
+        // Given — no non-blank line to derive a minimum indent from.
+        let lines = vec!["", "   "];
+
+        // When
+        let content = strip_common_indent(&lines);
+
+        // Then
+        assert_eq!(content, "\n");
+    }
 
     #[test]
     fn test_collect_argument_continuation_lines_collects_every_further_signature() {
@@ -1285,6 +1547,116 @@ mod integration_tests {
                 text: vec![InlineNode::Text("Heading".to_string())]
             }
         );
+    }
+
+    #[test]
+    fn test_parse_keeps_a_literal_block_containing_prompts_literal() {
+        // Given — THE case this feature must not break. A `::`-introduced
+        // block is a literal block in docutils, never a doctest block, and
+        // Sphinx does not execute it. In the CPython corpus 1711 nodes have
+        // this shape against 448 real doctest blocks, so a detector that fired
+        // here would make a great deal of illustrative code suddenly runnable.
+        let input = "Example::\n\n    >>> 1 + 1\n    2\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — paragraph plus LiteralBlock; no DoctestBlock anywhere.
+        assert_eq!(doc.nodes.len(), 2);
+        assert!(matches!(doc.nodes[1], Node::LiteralBlock { .. }));
+        assert!(!doc.nodes.iter().any(|n| matches!(n, Node::DoctestBlock(_))));
+    }
+
+    #[test]
+    fn test_parse_creates_a_doctest_block_after_a_single_colon() {
+        // Given — the real-world shape: one colon, so a block quote rather
+        // than a literal block, and the indented run is a doctest block.
+        let input =
+            "Use search rather than match:\n\n   >>> import re\n   >>> re.search('a', 'ba')\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        match &doc.nodes[1] {
+            Node::DoctestBlock(content) => {
+                assert_eq!(content.body(), ">>> import re\n>>> re.search('a', 'ba')");
+            }
+            other => panic!("expected a doctest block, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn test_parse_creates_a_doctest_block_at_the_left_margin() {
+        // Given
+        let input = ">>> 1 + 1\n2\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert!(matches!(doc.nodes[0], Node::DoctestBlock(_)));
+    }
+
+    #[test]
+    fn test_parse_leaves_a_mid_paragraph_prompt_as_prose() {
+        // Given — a doctest block has to *start* a text block, in docutils and
+        // here alike; 3 CPython paragraphs rely on this.
+        let input = "Some prose.\n>>> f()\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 1);
+        assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
+    }
+
+    #[test]
+    fn test_parse_keeps_a_transition_a_transition() {
+        // Given — `>>>>` is four repeated punctuation characters.
+        let input = "Before.\n\n>>>>\n\nAfter.\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert!(doc.nodes.iter().any(|n| matches!(n, Node::Transition)));
+        assert!(!doc.nodes.iter().any(|n| matches!(n, Node::DoctestBlock(_))));
+    }
+
+    #[test]
+    fn test_parse_finds_a_doctest_block_nested_in_an_admonition() {
+        // Given — directive bodies are parsed recursively, so bare blocks
+        // inside them are found too (and `walk_nodes` reaches them later).
+        let input = ".. note::\n\n   Try it:\n\n   >>> 1 + 1\n   2\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        let mut found = false;
+        rusty_sphinx_ast::walk_nodes(&doc.nodes, &mut |node| {
+            if matches!(node, Node::DoctestBlock(_)) {
+                found = true;
+            }
+        });
+        assert!(found, "expected a doctest block inside the admonition");
+    }
+
+    #[test]
+    fn test_parse_separates_two_doctest_blocks_by_a_blank_line() {
+        // Given
+        let input = ">>> a = 1\n\n>>> b = 2\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(doc.nodes.len(), 2);
+        assert!(doc.nodes.iter().all(|n| matches!(n, Node::DoctestBlock(_))));
     }
 
     #[test]

@@ -5,6 +5,7 @@ pub(crate) mod blocks;
 pub(crate) mod bullet_list;
 pub(crate) mod definition_list;
 pub(crate) mod directives;
+pub(crate) mod doctest;
 pub(crate) mod domains;
 pub(crate) mod glossary;
 pub(crate) mod headings;

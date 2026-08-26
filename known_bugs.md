@@ -52,6 +52,23 @@ modules" rule is deliberately not reproduced here.
 
 ## Fixed
 
+- **Nested `.. plantuml::` diagrams were silently dropped, and validation did
+  not catch it.** Both `process_extract_diagrams` and `process_validate_images`
+  in `crates/worker/src/main.rs` iterated only `doc.nodes`, so a diagram inside
+  any container — an admonition, a `seealso`, a list item, a table cell, a
+  domain-object body — produced no `.puml`, hence no `.svg`, hence a dangling
+  `<img src="_images/<hash>.svg">` in the output. Because the *validator* had
+  the identical blind spot, the `.images.validated` sentinel passed anyway, so
+  the "documentation builds should fail loudly on missing diagram images"
+  guarantee did not hold for nested diagrams. Both now share a single
+  `collect_plantuml_contents` helper built on the new
+  `rusty_sphinx_ast::walk_nodes` pre-order walker (`crates/ast/src/visit.rs`),
+  so the compiled set and the validated set cannot drift apart again. The
+  walker's inner match is exhaustive, so a future `Node`/`Directive` variant
+  carrying child nodes is a compile error rather than another silent gap.
+  `examples/team_a/index.rst` covers the case with a diagram inside a
+  `.. note::`.
+
 - **C-domain reference targets keep a trailing `()`.**
   `strip_trailing_call_parens` in `crates/parser/src/inline.rs` now keeps the
   parens out of the lookup name and in the display text, per domain;

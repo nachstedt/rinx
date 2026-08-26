@@ -7,15 +7,52 @@ Assembles the documentation from team_a and team_b into a single HTML site.
   bazel build //examples/team_a:docs   # build team_a in isolation
 """
 
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_doctest_tests", "rusty_sphinx_library", "rusty_sphinx_site")
 
 rusty_sphinx_library(
     name = "root_docs",
-    srcs = ["index.rst", "hyperlinks.rst", "admonitions.rst", "inline_roles.rst", "version_changes.rst", "seealso.rst", "literal_blocks.rst", "glossary.rst", "definition_lists.rst", "comments.rst", "domains.rst", "current_module.rst", "transitions.rst", "typography.rst", "tables.rst", "list_table.rst", "index_entries.rst"],
+    srcs = [
+        "index.rst",
+        "hyperlinks.rst",
+        "admonitions.rst",
+        "inline_roles.rst",
+        "version_changes.rst",
+        "seealso.rst",
+        "literal_blocks.rst",
+        "glossary.rst",
+        "definition_lists.rst",
+        "comments.rst",
+        "domains.rst",
+        "current_module.rst",
+        "transitions.rst",
+        "typography.rst",
+        "tables.rst",
+        "list_table.rst",
+        "index_entries.rst",
+    ],
     deps = [
+        # `index.rst`'s toctree pulls in `doctests`, so the library owning it
+        # has to be a declared dep.
+        ":doctest_docs",
         "//examples/team_a:docs",
         "//examples/team_b:docs",
     ],
+)
+
+# The only document in this project with executable content, kept in its own
+# library so it is the only one a `bazel test` re-runs. Doctests are tested per
+# library, so splitting the library is how you narrow what a code edit
+# invalidates.
+rusty_sphinx_library(
+    name = "doctest_docs",
+    srcs = ["doctests.rst"],
+)
+
+# Building the site never reaches this target, so no Python toolchain is needed
+# to produce HTML.
+rusty_sphinx_doctest_tests(
+    name = "doctest_docs_doctests",
+    lib = ":doctest_docs",
 )
 
 rusty_sphinx_site(
@@ -23,9 +60,8 @@ rusty_sphinx_site(
     config = "rusty_sphinx.toml",
     template = "custom_template.html",
     strict_links = True,
-    deps = [
-        ":root_docs",
-        "//examples/team_a:docs",
-        "//examples/team_b:docs",
-    ],
+    # Only the root library. Every other library reaches the site transitively
+    # through `root_docs`'s toctree deps — `RustySphinxInfo.ast_files` is a
+    # depset that carries its deps' ASTs along.
+    deps = [":root_docs"],
 )

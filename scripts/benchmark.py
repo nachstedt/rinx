@@ -10,11 +10,44 @@ import tempfile
 
 TARGET_DIR = Path(tempfile.gettempdir()) / "rusty_sphinx_benchmark_cpython"
 REPO_URL = "https://github.com/python/cpython.git"
+
+# The one place the benchmark's Python version is decided.
+#
+# It pins BOTH halves of the corpus so they cannot drift apart: the CPython
+# release tag whose `Doc/` we build (`v3.14.2`), and the interpreter the
+# generated workspace resolves (`python.toolchain(python_version = ...)`).
+# Previously the script cloned `main` while the toolchain came from
+# rusty-sphinx's own MODULE.bazel, so the documentation described a
+# development version whose APIs the interpreter did not have — every doctest
+# using a newly added API failed for a reason that had nothing to do with
+# rusty-sphinx. Examples seen: `re.Pattern.prefixmatch`,
+# `IPv4Network.next_network`, `PrettyPrinter(expand=...)`, `shlex.quote(force=...)`.
+#
+# Changing this requires a version that exists on *both* sides:
+#   - a `v<version>` tag in the CPython repository, and
+#   - an entry in rules_python's `TOOL_VERSIONS` (python/versions.bzl) for the
+#     rules_python release this workspace depends on.
+# 3.14.2 is the newest that satisfies both today; CPython has later 3.14.x
+# tags, but rules_python 2.0.0 does not ship interpreters for them.
+PYTHON_VERSION = "3.14.2"
+
+# Configuration flags shared by the inner `bazel build` and the `bazel info`
+# used to locate its outputs. They must stay identical: `bazel info bazel-bin`
+# answers for whichever configuration it is asked about, so querying with
+# different flags returns a different (wrong) output directory.
+BUILD_CONFIG_FLAGS = ["-c", "opt", "--host_compilation_mode=opt"]
 # Hand-authored list of domain-object warnings we accept, relative to the
 # workspace root (main() chdirs there via BUILD_WORKSPACE_DIRECTORY).
 WHITELIST_PATH = Path("scripts/domain_warnings_whitelist.json")
 
-def clone_repo():
+def clone_repo(python_version: str):
+    """Shallow-clones the CPython release tag matching `python_version`.
+
+    Deliberately a tag rather than `main`: the documentation has to describe the
+    same interpreter the generated workspace runs, or doctests fail on APIs that
+    simply do not exist yet.
+    """
+    tag = f"v{python_version}"
     print(f"Target directory: {TARGET_DIR}")
     if TARGET_DIR.exists():
         print("Directory already exists. Removing it for a fresh clone...")
@@ -23,21 +56,47 @@ def clone_repo():
             # This could happen on some filesystems due to latency or locks
             print("Warning: Directory still exists after rmtree, attempting one more time...")
             shutil.rmtree(TARGET_DIR, ignore_errors=True)
-    
-    print(f"Cloning {REPO_URL}...")
-    TARGET_DIR.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(["git", "clone", "--depth", "1", REPO_URL, str(TARGET_DIR)], check=True)
 
-def generate_bazel_project(workspace_root: str):
+    print(f"Cloning {REPO_URL} at tag {tag}...")
+    TARGET_DIR.parent.mkdir(parents=True, exist_ok=True)
+    result = subprocess.run(
+        ["git", "clone", "--depth", "1", "--branch", tag, REPO_URL, str(TARGET_DIR)],
+    )
+    if result.returncode != 0:
+        raise SystemExit(
+            f"Failed to clone CPython at tag {tag!r}.\n"
+            f"Check that the tag exists (`git ls-remote --tags {REPO_URL} '{tag}'`) "
+            f"and that rules_python ships an interpreter for {python_version} — "
+            f"both are required, see PYTHON_VERSION in this file."
+        )
+
+def generate_bazel_project(workspace_root: str, python_version: str):
     print("Generating artificial Bazel project in /tmp (MODULE.bazel, BUILD.bazel, config, and template)...")
-    
+
     # Create MODULE.bazel
+    #
+    # The Python toolchain is pinned to the exact patch release whose `Doc/`
+    # tree this workspace was cloned from, so an interpreter and the
+    # documentation describing it can never disagree. `is_default = True` is
+    # honoured only for the root module, and this generated workspace *is* the
+    # root when the benchmark builds — so this pin wins over the 3.x toolchain
+    # rusty-sphinx registers for its own tests.
     module_bazel = f"""module(name = "cpython_docs_bench")
 
 bazel_dep(name = "rusty_sphinx", version = "0.0.0")
 local_path_override(
     module_name = "rusty_sphinx",
     path = "{workspace_root}",
+)
+
+# Pinned to the exact release this corpus was cloned from ({python_version});
+# see PYTHON_VERSION in scripts/benchmark.py.
+bazel_dep(name = "rules_python", version = "2.0.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    python_version = "{python_version}",
+    is_default = True,
 )
 """
     (TARGET_DIR / "MODULE.bazel").write_text(module_bazel)
@@ -83,11 +142,48 @@ rusty_sphinx_site(
 """
     (doc_dir / "BUILD.bazel").write_text(build_bazel)
 
+def discard_stale_corpus_outputs():
+    """Removes generated outputs for a corpus that is no longer checked out.
+
+    The workspace directory is deleted and re-cloned on every run, but Bazel's
+    output base lives outside it and survives — so `.ast` and `.warnings.json`
+    files belonging to a *previous* corpus stay behind. That went unnoticed
+    while every run cloned the same branch and simply overwrote them; pinning a
+    release tag makes the file sets genuinely differ, and the leftovers then get
+    picked up by the `bazel-bin/Doc/**` globs in `analyze_results` and
+    `collect_domain_warnings`, inflating every count with documents that are not
+    part of this build.
+
+    Only the corpus outputs are discarded, not the whole cache — the Rust
+    toolchain and worker binary stay warm. The `.ast` files have to be rebuilt
+    regardless, since their sources changed.
+    """
+    # `bazel info bazel-bin` reports the path for the configuration it is asked
+    # about, so it has to be given the same flags as the build — without them it
+    # answers for `fastbuild` while the build writes to `opt`, and the wrong
+    # directory gets deleted.
+    info = subprocess.run(
+        ["bazel", "info", *BUILD_CONFIG_FLAGS, "bazel-bin"],
+        cwd=str(TARGET_DIR),
+        capture_output=True,
+        text=True,
+    )
+    if info.returncode != 0:
+        return
+
+    stale = Path(info.stdout.strip()) / "Doc"
+    if stale.exists():
+        print("Discarding generated outputs from a previous corpus...")
+        shutil.rmtree(stale, ignore_errors=True)
+
+
 def run_benchmark(clean: bool = False):
     if clean:
         # Run bazel clean to avoid caching from previous runs
         print("Cleaning Bazel cache...")
         subprocess.run(["bazel", "clean"], cwd=str(TARGET_DIR), capture_output=True)
+    else:
+        discard_stale_corpus_outputs()
 
     print("Running Bazel build...")
 
@@ -95,7 +191,7 @@ def run_benchmark(clean: bool = False):
     
     # Run bazel build inside the decoupled workspace
     result = subprocess.run(
-        ["bazel", "build", "-c", "opt", "--host_compilation_mode=opt", "--spawn_strategy=local", "--profile=profile.json.gz", "//Doc:site"],
+        ["bazel", "build", *BUILD_CONFIG_FLAGS, "--spawn_strategy=local", "--profile=profile.json.gz", "//Doc:site"],
         cwd=str(TARGET_DIR),
         capture_output=True,
         text=True
@@ -456,6 +552,16 @@ def print_benchmark_summary(result_path, unknown, toctree_opts, diagnostics, dom
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--clean", action="store_true", help="Clear the Bazel cache before building")
+    parser.add_argument(
+        "--python-version",
+        default=PYTHON_VERSION,
+        help=(
+            "CPython release to benchmark against. Selects both the cloned "
+            f"release tag and the pinned toolchain (default: {PYTHON_VERSION}). "
+            "Must exist as a v<version> tag in CPython and as an entry in "
+            "rules_python's TOOL_VERSIONS."
+        ),
+    )
     args = parser.parse_args()
 
     # If run via `bazel run`, change to the workspace root
@@ -467,8 +573,9 @@ def main():
         print("Please run this script from the root of the rusty-sphinx workspace.")
         return
         
-    clone_repo()
-    generate_bazel_project(workspace_dir)
+    print(f"Benchmarking against CPython {args.python_version}.")
+    clone_repo(args.python_version)
+    generate_bazel_project(workspace_dir, args.python_version)
     build_succeeded = run_benchmark(clean=args.clean)
     analyze_results(build_succeeded=build_succeeded)
 

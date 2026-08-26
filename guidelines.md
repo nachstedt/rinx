@@ -35,3 +35,4 @@
 - When a table of related cases is maintained by hand, test its structural invariants (reflexivity, symmetry) across all entries rather than only asserting the individual rows, so a half-finished edit fails.
 - When a reference implementation's subsystems implement the same rule with different strictness, reproduce each subsystem's rule rather than unifying them behind the more lenient one.
 - When porting logic from a reference implementation, reproduce its observable outcome rather than its literal operation, since your own normalizing types can silently turn its miss into a hit.
+- Derive a target's inputs from the target it depends on rather than repeating them in the build file; where the build system cannot express that, choose the coarser granularity over a duplicated naming convention.
