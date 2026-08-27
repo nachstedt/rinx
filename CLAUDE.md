@@ -100,7 +100,7 @@ Templates are rendered with MiniJinja (chosen over compile-time Rust templates o
 
 ### Spec coverage
 
-`spec_gaps.md` tracks which RST/Sphinx features are implemented vs. missing (bold/italic inline markup and several block types are still unimplemented, for instance). It's a living checklist — update it when you add or fix parser/renderer coverage for a construct, and don't trust it blindly if it looks stale relative to recent commits.
+`spec_gaps.md` tracks which RST/Sphinx features are implemented vs. missing (field lists and several block types are still unimplemented, for instance). It's a living checklist — update it when you add or fix parser/renderer coverage for a construct, and don't trust it blindly if it looks stale relative to recent commits.
 
 ## Working conventions
 
