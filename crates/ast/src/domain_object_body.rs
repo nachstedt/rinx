@@ -6,6 +6,7 @@ use crate::node::Node;
 use crate::non_empty_vector::NonEmptyVector;
 use crate::object_type::ObjectType;
 use crate::py_object_type::PyObjectType;
+use crate::std_object_type::StdObjectType;
 use crate::target_name::TargetName;
 
 /// Extracts the referenceable name from a `py:*` domain object signature.
@@ -24,6 +25,55 @@ pub fn extract_python_object_name(signature: &str) -> String {
         .next_back()
         .unwrap_or(before_parens)
         .to_string()
+}
+
+/// Splits one raw `.. option::`/`.. cmdoption::` argument *line* into its
+/// comma-separated specs, e.g. `"-c, --compress"` -> `["-c", "--compress"]`.
+/// A line with no comma yields a single-element result (`"-m <module>"` ->
+/// `["-m <module>"]`). Each piece is trimmed; empty pieces (a stray leading/
+/// trailing/doubled comma) are dropped rather than kept as an empty spec.
+#[must_use]
+pub fn split_option_line_specs(line: &str) -> Vec<String> {
+    line.split(',')
+        .map(str::trim)
+        .filter(|spec| !spec.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+/// Extracts the referenceable flag name from one `.. option::` spec,
+/// mirroring real Sphinx's `option_desc_re`
+/// (`(?:/|--|-|\+)[^\s=]+`): a leading `-`, `--`, `/`, or `+` sigil followed
+/// by the run of non-whitespace, non-`=` characters after it — e.g.
+/// `"-m <module>"` -> `"-m"`, `"--check-hash-based-pycs default|always|never"`
+/// -> `"--check-hash-based-pycs"`, `"--with-wheel-pkg-dir=PATH"` ->
+/// `"--with-wheel-pkg-dir"`.
+///
+/// Falls back to the whole trimmed spec when no sigil matches at all, rather
+/// than dropping it — the same "never lose content, degrade to a heuristic
+/// instead" convention `extract_c_object_name` follows for a signature its
+/// real parser can't handle.
+#[must_use]
+pub fn extract_option_name(spec: &str) -> String {
+    let spec = spec.trim();
+    let sigil_len = if spec.starts_with("--") {
+        2
+    } else if spec.starts_with(['-', '/', '+']) {
+        1
+    } else {
+        return spec.to_string();
+    };
+    let (sigil, rest) = spec.split_at(sigil_len);
+    let flag_body_len = rest
+        .find(|c: char| c.is_whitespace() || c == '=')
+        .unwrap_or(rest.len());
+    if flag_body_len == 0 {
+        // A bare sigil with nothing after it (e.g. just `"-"`) is not a
+        // valid flag — fall back to the whole spec rather than returning an
+        // empty/meaningless name.
+        return spec.to_string();
+    }
+    format!("{sigil}{}", &rest[..flag_body_len])
 }
 
 /// Builds the qualified [`TargetName`] key shared by domain object
@@ -179,6 +229,20 @@ pub enum DomainObjectBody {
         module: Option<String>,
         body: Vec<Node>,
     },
+    /// `.. option::`/`.. cmdoption::` (the `std` domain's only object type
+    /// modeled today). One entry per raw argument *line*, stored verbatim —
+    /// unlike every other variant, one line may itself name *several*
+    /// independently-referenceable flags at once (comma-separated, e.g.
+    /// `"-c, --compress"`), which real Sphinx renders as one shared `<dt>`
+    /// with multiple anchor ids. That per-line/per-spec split (via
+    /// [`split_option_line_specs`]/[`extract_option_name`]) happens in
+    /// `index_domain_object`/`render_domain_object`, not here, and neither
+    /// analyzer nor renderer route `StdCmdoption` through the generic
+    /// `names()`-driven one-`<dt>`-per-name loop other variants share.
+    StdCmdoption {
+        signatures: NonEmptyVector<String>,
+        body: Vec<Node>,
+    },
 }
 
 impl DomainObjectBody {
@@ -199,6 +263,7 @@ impl DomainObjectBody {
             Self::PyMethod { .. } => ObjectType::Py(PyObjectType::Method),
             Self::PyClass { .. } => ObjectType::Py(PyObjectType::Class),
             Self::PyException { .. } => ObjectType::Py(PyObjectType::Exception),
+            Self::StdCmdoption { .. } => ObjectType::Std(StdObjectType::Cmdoption),
         }
     }
 
@@ -233,6 +298,24 @@ impl DomainObjectBody {
                 signatures.map(String::clone)
             }
             Self::PyModule { name, .. } => NonEmptyVector::single(name.clone()),
+            // Every flag across every raw line, flattened — e.g. a directive
+            // written as `.. option:: -c, --compress` yields `["-c",
+            // "--compress"]` here even though it is a *single* signature
+            // line. This is the one variant where `names()` and
+            // `signature_texts()` below are not index-parallel: `StdCmdoption`
+            // is deliberately never routed through the generic
+            // one-`<dt>`-per-name loop that relies on that parallelism (see
+            // `index_domain_object`/`render_domain_object`), so nothing
+            // depends on the lengths matching here.
+            Self::StdCmdoption { signatures, .. } => {
+                let mut names = signatures
+                    .as_slice()
+                    .iter()
+                    .flat_map(|line| split_option_line_specs(line))
+                    .map(|spec| extract_option_name(&spec));
+                let first = names.next().unwrap_or_default();
+                NonEmptyVector::new(first, names.collect())
+            }
         }
     }
 
@@ -243,7 +326,8 @@ impl DomainObjectBody {
     /// Index-parallel to [`Self::names`] and equally non-empty; returns a
     /// `Vec` rather than a borrowed slice because the three storage shapes
     /// differ — `py` objects hold plain `String`s, `c` objects hold
-    /// [`CSignature`]s, and `PyModule` holds a single name.
+    /// [`CSignature`]s, and `PyModule` holds a single name. **Except**
+    /// `StdCmdoption`, whose entries are one per raw *line* (see [`Self::names`]).
     #[must_use]
     pub fn signature_texts(&self) -> Vec<&str> {
         match self {
@@ -252,7 +336,8 @@ impl DomainObjectBody {
             | Self::PyClass { signatures, .. }
             | Self::PyException { signatures, .. }
             | Self::PyData { signatures, .. }
-            | Self::PyAttribute { signatures, .. } => {
+            | Self::PyAttribute { signatures, .. }
+            | Self::StdCmdoption { signatures, .. } => {
                 signatures.as_slice().iter().map(String::as_str).collect()
             }
             Self::CFunction { signatures, .. }
@@ -283,7 +368,8 @@ impl DomainObjectBody {
             | Self::CType { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
-            | Self::PyException { body, .. } => body,
+            | Self::PyException { body, .. }
+            | Self::StdCmdoption { body, .. } => body,
         }
     }
 
@@ -351,10 +437,14 @@ impl DomainObjectBody {
                 .unwrap_or_default(),
             // Nothing nests under a `c:member` in real Sphinx, unlike
             // `py:data`/`py:attribute`, which lend a dotted prefix.
+            // `StdCmdoption` lends nothing either: options never nest, and are
+            // qualified against the ambient `.. program::` context, not
+            // against a class/container stack.
             Self::PyModule { .. }
             | Self::CFunction { .. }
             | Self::CMacro { .. }
-            | Self::CMember { .. } => Vec::new(),
+            | Self::CMember { .. }
+            | Self::StdCmdoption { .. } => Vec::new(),
         }
     }
 
@@ -375,7 +465,8 @@ impl DomainObjectBody {
             | Self::CType { body, .. }
             | Self::PyMethod { body, .. }
             | Self::PyClass { body, .. }
-            | Self::PyException { body, .. } => body,
+            | Self::PyException { body, .. }
+            | Self::StdCmdoption { body, .. } => body,
         }
     }
 
@@ -397,7 +488,8 @@ impl DomainObjectBody {
             | Self::CMacro { .. }
             | Self::PyMethod { .. }
             | Self::PyClass { .. }
-            | Self::PyException { .. } => false,
+            | Self::PyException { .. }
+            | Self::StdCmdoption { .. } => false,
         }
     }
 
@@ -436,7 +528,8 @@ impl DomainObjectBody {
             | Self::CMacro { .. }
             | Self::PyMethod { .. }
             | Self::PyClass { .. }
-            | Self::PyException { .. } => false,
+            | Self::PyException { .. }
+            | Self::StdCmdoption { .. } => false,
         }
     }
 
@@ -467,7 +560,8 @@ impl DomainObjectBody {
             | Self::CStruct { .. }
             | Self::CUnion { .. }
             | Self::CMember { .. }
-            | Self::CType { .. } => None,
+            | Self::CType { .. }
+            | Self::StdCmdoption { .. } => None,
         }
     }
 
@@ -498,7 +592,8 @@ impl DomainObjectBody {
             | Self::CMacro { .. }
             | Self::PyMethod { .. }
             | Self::PyClass { .. }
-            | Self::PyException { .. } => false,
+            | Self::PyException { .. }
+            | Self::StdCmdoption { .. } => false,
         }
     }
 }
@@ -566,6 +661,198 @@ mod tests {
 
         // Then
         assert_eq!(name, "");
+    }
+
+    #[test]
+    fn test_split_option_line_specs_splits_comma_separated_flags() {
+        // Given
+        let line = "-c, --compress";
+
+        // When
+        let specs = split_option_line_specs(line);
+
+        // Then
+        assert_eq!(specs, vec!["-c".to_string(), "--compress".to_string()]);
+    }
+
+    #[test]
+    fn test_split_option_line_specs_single_flag_with_no_comma() {
+        // Given
+        let line = "-m <module>";
+
+        // When
+        let specs = split_option_line_specs(line);
+
+        // Then
+        assert_eq!(specs, vec!["-m <module>".to_string()]);
+    }
+
+    #[test]
+    fn test_split_option_line_specs_drops_empty_pieces() {
+        // Given — a stray trailing comma.
+        let line = "-h, --help,";
+
+        // When
+        let specs = split_option_line_specs(line);
+
+        // Then
+        assert_eq!(specs, vec!["-h".to_string(), "--help".to_string()]);
+    }
+
+    #[test]
+    fn test_extract_option_name_short_flag() {
+        // Given / When / Then
+        assert_eq!(extract_option_name("-m <module>"), "-m");
+    }
+
+    #[test]
+    fn test_extract_option_name_long_flag() {
+        // Given / When / Then
+        assert_eq!(extract_option_name("--module <module>"), "--module");
+    }
+
+    #[test]
+    fn test_extract_option_name_long_flag_with_choices_argument() {
+        // Given / When / Then
+        assert_eq!(
+            extract_option_name("--check-hash-based-pycs default|always|never"),
+            "--check-hash-based-pycs"
+        );
+    }
+
+    #[test]
+    fn test_extract_option_name_equals_joined_argument() {
+        // Given / When / Then
+        assert_eq!(
+            extract_option_name("--with-wheel-pkg-dir=PATH"),
+            "--with-wheel-pkg-dir"
+        );
+    }
+
+    #[test]
+    fn test_extract_option_name_bare_flag_with_no_argument() {
+        // Given / When / Then
+        assert_eq!(extract_option_name("-h"), "-h");
+    }
+
+    #[test]
+    fn test_extract_option_name_slash_and_plus_sigils() {
+        // Given / When / Then — Windows-style `/` and the rare `+` sigil,
+        // both accepted by real Sphinx's `option_desc_re`.
+        assert_eq!(extract_option_name("/Wall"), "/Wall");
+        assert_eq!(extract_option_name("+x"), "+x");
+    }
+
+    #[test]
+    fn test_extract_option_name_falls_back_to_whole_spec_when_no_sigil_matches() {
+        // Given — malformed: no leading `-`/`--`/`/`/`+`.
+        let spec = "not-a-flag";
+
+        // When
+        let name = extract_option_name(spec);
+
+        // Then — never lose content, matching `extract_c_object_name`'s
+        // fallback philosophy.
+        assert_eq!(name, "not-a-flag");
+    }
+
+    #[test]
+    fn test_extract_option_name_falls_back_for_bare_sigil() {
+        // Given — a lone `-` with nothing after it.
+        let spec = "-";
+
+        // When
+        let name = extract_option_name(spec);
+
+        // Then
+        assert_eq!(name, "-");
+    }
+
+    #[test]
+    fn test_cmdoption_object_type_is_std_cmdoption() {
+        // Given
+        let obj = DomainObjectBody::StdCmdoption {
+            signatures: NonEmptyVector::single("-h".to_string()),
+            body: vec![],
+        };
+
+        // When / Then
+        assert_eq!(
+            obj.object_type(),
+            ObjectType::Std(crate::std_object_type::StdObjectType::Cmdoption)
+        );
+    }
+
+    #[test]
+    fn test_cmdoption_names_flattens_comma_separated_specs_across_lines() {
+        // Given — one line with two comma-separated specs, and a second,
+        // single-spec continuation line.
+        let obj = DomainObjectBody::StdCmdoption {
+            signatures: NonEmptyVector::new(
+                "-c, --compress".to_string(),
+                vec!["--level <n>".to_string()],
+            ),
+            body: vec![],
+        };
+
+        // When
+        let names = obj.names();
+
+        // Then
+        assert_eq!(
+            names.as_slice(),
+            &[
+                "-c".to_string(),
+                "--compress".to_string(),
+                "--level".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_cmdoption_signature_texts_is_one_per_raw_line_not_per_spec() {
+        // Given — deliberately asymmetric with `names()` (see its doc
+        // comment): one raw line yields two names but one display text.
+        let obj = DomainObjectBody::StdCmdoption {
+            signatures: NonEmptyVector::single("-c, --compress".to_string()),
+            body: vec![],
+        };
+
+        // When
+        let texts = obj.signature_texts();
+
+        // Then
+        assert_eq!(texts, vec!["-c, --compress"]);
+    }
+
+    #[test]
+    fn test_cmdoption_deduce_local_scope_lends_nothing() {
+        // Given
+        let obj = DomainObjectBody::StdCmdoption {
+            signatures: NonEmptyVector::single("-h".to_string()),
+            body: vec![],
+        };
+
+        // When
+        let lend = obj.deduce_local_scope(&["irrelevant".to_string()]);
+
+        // Then — options never nest, so nothing is lent to the body.
+        assert!(lend.is_empty());
+    }
+
+    #[test]
+    fn test_cmdoption_has_no_index_options_modeled() {
+        // Given
+        let obj = DomainObjectBody::StdCmdoption {
+            signatures: NonEmptyVector::single("-h".to_string()),
+            body: vec![],
+        };
+
+        // When / Then — real Sphinx's `Cmdoption` has none of these options.
+        assert!(!obj.no_index());
+        assert!(!obj.no_index_entry());
+        assert!(!obj.no_contents_entry());
+        assert_eq!(obj.module_override(), None);
     }
 
     #[test]

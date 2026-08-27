@@ -132,6 +132,7 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         | Directive::CNamespace { .. }
         | Directive::CNamespacePush { .. }
         | Directive::CNamespacePop
+        | Directive::StdProgram { .. }
         | Directive::Unknown { .. } => {}
     }
 }
@@ -409,6 +410,9 @@ mod tests {
         // Given — a directive family that carries no block-level children.
         let nodes = vec![
             Node::Directive(Directive::CNamespacePop),
+            Node::Directive(Directive::StdProgram {
+                name: Some("dis".to_string()),
+            }),
             Node::Directive(Directive::Unknown {
                 name: "doctest".to_string(),
                 argument: String::new(),
@@ -420,7 +424,7 @@ mod tests {
         let mut visited = 0;
         walk_nodes(&nodes, &mut |_| visited += 1);
 
-        // Then — the two directives themselves, and nothing more.
-        assert_eq!(visited, 2);
+        // Then — the three directives themselves, and nothing more.
+        assert_eq!(visited, 3);
     }
 }

@@ -110,6 +110,10 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
                 scope.c.push_namespace(namespace);
             }
             Node::Directive(Directive::CNamespacePop) => scope.c.pop_namespace(),
+            Node::Directive(Directive::StdProgram { name }) => match name {
+                Some(name) => scope.program.set(name),
+                None => scope.program.clear(),
+            },
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
@@ -164,6 +168,36 @@ fn index_domain_object(
     index: &mut ProjectIndex,
     scope: &mut Scope,
 ) {
+    // `StdCmdoption` qualifies against `scope.program`, not `scope.python`/
+    // `scope.c`, and — because a multi-flag `.. option:: -c, --compress`
+    // registers *several* independently-indexed names sharing *one* rendered
+    // `<dt>` (see `DomainObjectBody::StdCmdoption`'s doc comment) — doesn't fit
+    // the single-name-per-`<dt>` loop below at all. Handled as its own early
+    // branch rather than folded into the `is_module`/`uses_c_scope` chain.
+    if let DomainObjectBody::StdCmdoption { signatures, .. } = obj {
+        for line in signatures.as_slice() {
+            for spec in rusty_sphinx_ast::split_option_line_specs(line) {
+                let optname = rusty_sphinx_ast::extract_option_name(&spec);
+                let qualified_name = scope.program.qualify(&optname);
+                index.insert_domain_object(obj.object_type(), &qualified_name, doc_path);
+                let anchor =
+                    rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
+                index.genindex_entries.push(GenIndexEntry {
+                    primary: format!("{qualified_name} ({})", obj.object_type().as_str()),
+                    subentry: None,
+                    main: false,
+                    doc_path: doc_path.to_string(),
+                    anchor: anchor.as_str().to_string(),
+                });
+            }
+        }
+        // Options never nest (`deduce_local_scope` is empty for `StdCmdoption`),
+        // so the shared body is indexed with no scope push/pop, unlike the
+        // `is_module`/`uses_c_scope`/plain-`py` branches below.
+        index_nodes(obj.body(), doc_path, index, scope);
+        return;
+    }
+
     // A `py:module`'s own name is never qualified against the *previous*
     // module: real Sphinx always writes it in full and sets it verbatim as
     // the new current module, it never nests it under whatever module was
@@ -1167,6 +1201,168 @@ mod tests {
         assert_eq!(
             lookup_domain_object(&index, "py:data:DEFAULT_TIMEOUT"),
             Some(&"api.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_cmdoption_domain_object_without_program() {
+        // Given
+        let doc = Document::new(
+            "cmdline.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                    signatures: NonEmptyVector::single("-m <module-name>".to_string()),
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — no ambient `.. program::`, so the key is bare.
+        assert_eq!(index.domain_objects.len(), 1);
+        assert_eq!(
+            lookup_domain_object(&index, "std:cmdoption:-m"),
+            Some(&"cmdline.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_cmdoption_domain_object_qualified_by_program() {
+        // Given
+        let doc = Document::new(
+            "dis.rst".to_string(),
+            vec![
+                Node::Directive(Directive::StdProgram {
+                    name: Some("dis".to_string()),
+                }),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                        signatures: NonEmptyVector::single("-O".to_string()),
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(
+            lookup_domain_object(&index, "std:cmdoption:dis.-o"),
+            Some(&"dis.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_each_flag_of_a_comma_separated_cmdoption_spec() {
+        // Given — real Sphinx's `.. option:: -c, --compress` shape: one raw
+        // line, two independently-referenceable flags.
+        let doc = Document::new(
+            "zipapp.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                    signatures: NonEmptyVector::single("-c, --compress".to_string()),
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then — both flags resolve independently, from one directive.
+        assert_eq!(index.domain_objects.len(), 2);
+        assert_eq!(
+            lookup_domain_object(&index, "std:cmdoption:-c"),
+            Some(&"zipapp.rst".to_string())
+        );
+        assert_eq!(
+            lookup_domain_object(&index, "std:cmdoption:--compress"),
+            Some(&"zipapp.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_each_flag_of_a_continuation_line_cmdoption() {
+        // Given — the `mimetypes.rst` shape: one flag per line, no commas.
+        let doc = Document::new(
+            "mimetypes.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                    signatures: NonEmptyVector::new("-h".to_string(), vec!["--help".to_string()]),
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.domain_objects.len(), 2);
+        assert_eq!(
+            lookup_domain_object(&index, "std:cmdoption:-h"),
+            Some(&"mimetypes.rst".to_string())
+        );
+        assert_eq!(
+            lookup_domain_object(&index, "std:cmdoption:--help"),
+            Some(&"mimetypes.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_analyze_registers_genindex_entry_for_each_cmdoption_flag() {
+        // Given
+        let doc = Document::new(
+            "zipapp.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                    signatures: NonEmptyVector::single("-c, --compress".to_string()),
+                    body: vec![],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert_eq!(index.genindex_entries.len(), 2);
+        assert_eq!(index.genindex_entries[0].anchor, "std:cmdoption:-c");
+        assert_eq!(index.genindex_entries[1].anchor, "std:cmdoption:--compress");
+    }
+
+    #[test]
+    fn test_analyze_indexes_a_cmdoptions_body_once_shared_across_flags() {
+        // Given — a glossary term nested in the shared description, reachable
+        // regardless of how many flags share it.
+        let doc = Document::new(
+            "zipapp.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                    signatures: NonEmptyVector::single("-c, --compress".to_string()),
+                    body: vec![Node::Directive(Directive::Glossary {
+                        entries: vec![rusty_sphinx_ast::GlossaryEntry {
+                            terms: vec!["compression".to_string()],
+                            definition: vec![],
+                        }],
+                        sorted: false,
+                    })],
+                },
+            ))],
+        );
+
+        // When
+        let index = analyze(&doc);
+
+        // Then
+        assert!(
+            index
+                .glossary_terms
+                .contains_key(&TargetName::new("compression"))
         );
     }
 

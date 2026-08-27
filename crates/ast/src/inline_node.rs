@@ -78,6 +78,23 @@ pub enum InlineNode {
         #[serde(default)]
         search_order: TargetSearchOrder,
     },
+    /// An inline cross-reference produced by the `:option:` role, linking to
+    /// a `.. option::`/`.. cmdoption::` definition.
+    ///
+    /// Unlike [`Self::DomainObjectReference`], this carries no `object_type`
+    /// (always `std:cmdoption`) and no `search_order` — `:option:`'s
+    /// resolution is a distinct ambient-program/global-fallback/embedded-
+    /// program search (see `rusty_sphinx_renderer::option_resolution`), not
+    /// the dot-prefixed most/least-qualified search [`TargetSearchOrder`]
+    /// models. `target` is carried through close to verbatim: only the
+    /// explicit-title split (this role's `` `display <target>` `` syntax)
+    /// happens at parse time, because the rest of the algorithm depends on
+    /// the *merged* project index, not on anything knowable from one file's
+    /// parse.
+    OptionReference {
+        display: String,
+        target: String,
+    },
 }
 
 /// Flattens a sequence of inline nodes down to the plain text a reader would
@@ -101,7 +118,8 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             }
             InlineNode::Reference { display, .. }
             | InlineNode::TermReference { display, .. }
-            | InlineNode::DomainObjectReference { display, .. } => display.as_str(),
+            | InlineNode::DomainObjectReference { display, .. }
+            | InlineNode::OptionReference { display, .. } => display.as_str(),
         })
         .collect()
 }
@@ -115,6 +133,22 @@ mod tests {
     fn test_inline_node_program_serialization_roundtrip() {
         // Given
         let node = InlineNode::Program("curl".to_string());
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_option_reference_serialization_roundtrip() {
+        // Given
+        let node = InlineNode::OptionReference {
+            display: "-O <dis --show-offsets>".to_string(),
+            target: "dis --show-offsets".to_string(),
+        };
 
         // When
         let json = serde_json::to_string(&node).expect("Failed to serialize");

@@ -4,6 +4,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::c_object_type::CObjectType;
 use crate::domain::Domain;
 use crate::py_object_type::PyObjectType;
+use crate::std_object_type::StdObjectType;
 
 /// A domain together with one of its object types.
 ///
@@ -25,6 +26,7 @@ use crate::py_object_type::PyObjectType;
 pub enum ObjectType {
     Py(PyObjectType),
     C(CObjectType),
+    Std(StdObjectType),
 }
 
 impl Serialize for ObjectType {
@@ -59,6 +61,7 @@ impl ObjectType {
         match self {
             Self::Py(_) => Domain::Py,
             Self::C(_) => Domain::C,
+            Self::Std(_) => Domain::Std,
         }
     }
 
@@ -67,6 +70,7 @@ impl ObjectType {
         match self {
             Self::Py(t) => t.as_str(),
             Self::C(t) => t.as_str(),
+            Self::Std(t) => t.as_str(),
         }
     }
 
@@ -90,6 +94,7 @@ impl ObjectType {
         match domain {
             Domain::Py => name.parse::<PyObjectType>().ok().map(Self::Py),
             Domain::C => name.parse::<CObjectType>().ok().map(Self::C),
+            Domain::Std => name.parse::<StdObjectType>().ok().map(Self::Std),
         }
     }
 
@@ -115,6 +120,7 @@ impl ObjectType {
             (Domain::C, "struct") => Some(Self::C(CObjectType::Struct)),
             (Domain::C, "union") => Some(Self::C(CObjectType::Union)),
             (Domain::C, "type") => Some(Self::C(CObjectType::Type)),
+            (Domain::Std, "option") => Some(Self::Std(StdObjectType::Cmdoption)),
             _ => None,
         }
     }
@@ -190,6 +196,7 @@ impl ObjectType {
             Self::C(CObjectType::Struct) => &[Self::C(CObjectType::Struct)],
             Self::C(CObjectType::Union) => &[Self::C(CObjectType::Union)],
             Self::C(CObjectType::Type) => &[Self::C(CObjectType::Type)],
+            Self::Std(StdObjectType::Cmdoption) => &[Self::Std(StdObjectType::Cmdoption)],
         }
     }
 }
@@ -203,10 +210,12 @@ mod tests {
         // Given
         let py_type = ObjectType::Py(PyObjectType::Function);
         let c_type = ObjectType::C(CObjectType::Function);
+        let std_type = ObjectType::Std(StdObjectType::Cmdoption);
 
         // When / Then
         assert_eq!(py_type.domain(), Domain::Py);
         assert_eq!(c_type.domain(), Domain::C);
+        assert_eq!(std_type.domain(), Domain::Std);
     }
 
     #[test]
@@ -256,6 +265,19 @@ mod tests {
         assert_eq!(
             ObjectType::from_directive_name(Domain::C, "type"),
             Some(ObjectType::C(CObjectType::Type))
+        );
+    }
+
+    #[test]
+    fn test_object_type_from_directive_name_resolves_cmdoption_for_std() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_directive_name(Domain::Std, "cmdoption"),
+            Some(ObjectType::Std(StdObjectType::Cmdoption))
+        );
+        assert_eq!(
+            ObjectType::from_directive_name(Domain::Py, "cmdoption"),
+            None
         );
     }
 
@@ -366,6 +388,16 @@ mod tests {
             Some(ObjectType::Py(PyObjectType::Attribute))
         );
         assert_eq!(ObjectType::from_role_name(Domain::C, "attr"), None);
+    }
+
+    #[test]
+    fn test_object_type_from_role_name_resolves_option_only_for_std() {
+        // Given / When / Then
+        assert_eq!(
+            ObjectType::from_role_name(Domain::Std, "option"),
+            Some(ObjectType::Std(StdObjectType::Cmdoption))
+        );
+        assert_eq!(ObjectType::from_role_name(Domain::Py, "option"), None);
     }
 
     #[test]
@@ -606,6 +638,10 @@ mod tests {
             ObjectType::Py(PyObjectType::Attribute).role_alias_candidates(),
             &[ObjectType::Py(PyObjectType::Attribute)]
         );
+        assert_eq!(
+            ObjectType::Std(StdObjectType::Cmdoption).role_alias_candidates(),
+            &[ObjectType::Std(StdObjectType::Cmdoption)]
+        );
     }
     /// Every [`ObjectType`] variant, so the property tests below can assert
     /// facts about the whole alias table rather than one row at a time.
@@ -626,6 +662,7 @@ mod tests {
         ObjectType::C(CObjectType::Struct),
         ObjectType::C(CObjectType::Union),
         ObjectType::C(CObjectType::Type),
+        ObjectType::Std(StdObjectType::Cmdoption),
     ];
 
     /// Compile-time guard for [`ALL_OBJECT_TYPES`]: the match below is
@@ -650,7 +687,8 @@ mod tests {
                 | CObjectType::Struct
                 | CObjectType::Union
                 | CObjectType::Type,
-            ) => {}
+            )
+            | ObjectType::Std(StdObjectType::Cmdoption) => {}
         }
         assert!(
             ALL_OBJECT_TYPES.contains(&object_type),

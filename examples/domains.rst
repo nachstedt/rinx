@@ -758,3 +758,62 @@ objects share a suffix, the reference is reported as ambiguous, listing the
 candidates, and is left unlinked rather than silently pointing at whichever
 one happened to sort first — so no such case appears on this page, which is
 built with ``strict_links``.
+
+Standard Domain
+------------------
+
+The ``std`` domain has no language affiliation. ``.. option::`` (and its
+legacy directive-name alias ``.. cmdoption::``) documents a command-line
+flag; ``.. program::`` sets the "current program" flags are scoped under, so
+the same flag name (e.g. ``-h``) can be documented once per tool without
+colliding. Neither is gated by this library's ``default_domain`` the way
+``py``/``c`` directives are — both are recognized unconditionally, and
+neither affects the ``py``/``c`` scope state used above on this page.
+
+.. program:: greet
+
+.. option:: -c <name>, --config <name>
+
+   Load configuration from *name*. Comma-separated specs on one line share a
+   single ``<dt>`` — both ``-c`` and ``--config`` resolve independently
+   (as ``greet.-c``/``greet.--config``), but are typeset together.
+
+.. cmdoption:: -q
+                --quiet
+
+   Suppress the banner. Written one flag per line instead of
+   comma-separated: real Sphinx (and this renderer) treats each *line* as
+   its own signature, so ``-q`` and ``--quiet`` each get their own ``<dt>``,
+   sharing this description — unlike the comma-joined pair above.
+
+.. option:: -h
+
+   Show a short help message and exit. Still under the ``greet`` program
+   set above: indexed as ``greet.-h``.
+
+:option:`-h` and :option:`--config` both resolve here, against the ambient
+``.. program:: greet`` in effect at this point in the document — the same
+document-order persistence ``.. py:currentmodule::``/``.. c:namespace::``
+already have. The explicit-title form also works:
+:option:`the config flag <-c>` links to the same target as :option:`-c` but
+displays different text.
+
+.. program:: None
+
+.. option:: -x
+
+   A bare, no-program option — the shape CPython's own top-level
+   ``using/cmdline.rst`` uses for e.g. ``-X``: no ``.. program::`` at all.
+   Indexed as a bare ``-x``, the ``.. program:: None`` reset form above
+   having cleared the ambient program.
+
+:option:`-x` resolves here with no ambient program in effect. A reference
+can also *name* a different program directly inside its target, regardless
+of what is ambient where the role is written: :option:`--config <greet --config>`
+still finds ``greet.--config`` even though no ``.. program::`` is currently
+in effect — the reference text's own leading word is peeled off and tried as
+an explicit program name once the ambient-scoped and bare lookups both miss.
+This is the same idiom real CPython docs use to cross-reference one tool's
+options from another tool's page — e.g. ``dis.rst`` referencing
+``ast.rst``'s ``--feature-version`` as
+``:option:`--feature-version <ast --feature-version>```.

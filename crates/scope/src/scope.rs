@@ -1,4 +1,4 @@
-use crate::{CScope, PythonScope};
+use crate::{CScope, ProgramScope, PythonScope};
 use rusty_sphinx_ast::{Domain, TargetSearchOrder};
 
 /// The scope for every domain, owned as one unit and threaded through both
@@ -24,6 +24,13 @@ use rusty_sphinx_ast::{Domain, TargetSearchOrder};
 pub struct Scope {
     pub python: PythonScope,
     pub c: CScope,
+    /// The `std`-domain "current program" context (`.. program::`),
+    /// consulted only by `StdCmdoption` definitions/`:option:` references — see
+    /// [`ProgramScope`]. Reference resolution for `:option:` does not go
+    /// through [`Self::reference_candidates`] (its algorithm has no scope
+    /// tiers), so `Domain::Std` there is inert; see that method's doc
+    /// comment.
+    pub program: ProgramScope,
 }
 
 impl Scope {
@@ -31,6 +38,14 @@ impl Scope {
     /// `reference_candidates` — see [`PythonScope::reference_candidates`]
     /// and [`CScope::reference_candidates`] for what each domain's tiers
     /// look like.
+    ///
+    /// `Domain::Std` has no tiered scope search of its own — `:option:`
+    /// resolution is a distinct ambient-program/global-fallback/embedded-
+    /// program search over `ProjectIndex::domain_objects` directly (see
+    /// `rusty_sphinx_renderer::option_resolution::OptionResolver`), which
+    /// never calls this method. The arm below exists purely to keep this
+    /// match exhaustive as `Domain` gains variants; it is not exercised by
+    /// `:option:` reference resolution in practice.
     #[must_use]
     pub fn reference_candidates(
         &self,
@@ -41,6 +56,7 @@ impl Scope {
         match domain {
             Domain::Py => self.python.reference_candidates(domain, name, order),
             Domain::C => self.c.reference_candidates(name, order),
+            Domain::Std => vec![name.to_string()],
         }
     }
 }
@@ -67,6 +83,20 @@ mod tests {
             candidates,
             vec!["datetime.datetime".to_string(), "datetime".to_string()]
         );
+    }
+
+    #[test]
+    fn test_reference_candidates_is_inert_passthrough_for_std_domain() {
+        // Given — `:option:` never calls this method (see the doc comment),
+        // so this just pins that the arm exists and is harmless.
+        let scope = Scope::default();
+
+        // When
+        let candidates =
+            scope.reference_candidates(Domain::Std, "-X", TargetSearchOrder::LeastQualifiedFirst);
+
+        // Then
+        assert_eq!(candidates, vec!["-X".to_string()]);
     }
 
     #[test]

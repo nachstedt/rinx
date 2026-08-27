@@ -7,6 +7,7 @@ mod domain_resolution;
 mod genindex;
 mod inline;
 mod nav;
+mod option_resolution;
 mod page;
 
 pub use genindex::render_genindex;
@@ -20,6 +21,7 @@ use doctest::{render_bare_doctest_block, render_doctest_block};
 use domain_resolution::DomainObjectResolver;
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
+use option_resolution::OptionResolver;
 use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, ObjectType, TableRow};
 use rusty_sphinx_index::ProjectIndex;
 use rusty_sphinx_scope::Scope;
@@ -36,6 +38,8 @@ pub enum BrokenLinkKind {
     AnonymousReference,
     /// A `:term:` role (`InlineNode::TermReference`).
     TermReference,
+    /// A `:option:` role (`InlineNode::OptionReference`).
+    OptionReference,
     /// A domain-object role (`:func:`, `:py:func:`, etc.). Carries the object
     /// type the role asked for (e.g. `py:function`) — the "missed type", known
     /// at the point resolution failed and worth surfacing in diagnostics even
@@ -62,6 +66,7 @@ impl BrokenLinkKind {
             Self::Hyperlink => "hyperlink",
             Self::AnonymousReference => "anonymous reference",
             Self::TermReference => "term",
+            Self::OptionReference => "option",
             Self::DomainObjectReference(_) => "domain object",
             Self::AmbiguousDomainObjectReference { .. } => "ambiguous domain object",
         }
@@ -109,6 +114,10 @@ pub(crate) struct RenderCtx<'a> {
     /// Resolves domain-object references against `index`. Held for the whole
     /// document so its derived suffix index is built at most once per page.
     pub domain_resolver: &'a DomainObjectResolver<'a>,
+    /// Resolves `:option:` references against `index` — a separate resolver
+    /// from `domain_resolver` since the search it performs has no scope
+    /// tiers or object-type aliasing (see `option_resolution`'s doc comment).
+    pub option_resolver: &'a OptionResolver<'a>,
     pub doc_path: &'a str,
     pub anon_targets: &'a [String],
     pub anon_index: &'a mut usize,
@@ -140,9 +149,11 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
     let mut object_type_mismatches = Vec::new();
 
     let domain_resolver = DomainObjectResolver::new(index);
+    let option_resolver = OptionResolver::new(index);
     let mut ctx = RenderCtx {
         index,
         domain_resolver: &domain_resolver,
+        option_resolver: &option_resolver,
         doc_path,
         anon_targets: &anon_targets,
         anon_index: &mut anon_index,
@@ -407,6 +418,14 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         Directive::CNamespace { namespace } => ctx.scope.c.set_namespace(namespace.as_deref()),
         Directive::CNamespacePush { namespace } => ctx.scope.c.push_namespace(namespace),
         Directive::CNamespacePop => ctx.scope.c.pop_namespace(),
+        // `.. program::` mutates scope and renders nothing, exactly like
+        // `py:currentmodule`/`c:namespace` above — mirrored from the
+        // analyzer's `index_nodes` so `StdCmdoption` anchor `id`s never drift
+        // from the index keys.
+        Directive::StdProgram { name } => match name {
+            Some(name) => ctx.scope.program.set(name),
+            None => ctx.scope.program.clear(),
+        },
         // Presentation only — whether this block's code passes, fails, or is
         // never run is decided by a separate, opt-in test target, and cannot
         // influence the HTML.
@@ -422,7 +441,9 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{HashedContent, InlineNode, TargetName, TargetSearchOrder};
+    use rusty_sphinx_ast::{
+        HashedContent, InlineNode, NonEmptyVector, TargetName, TargetSearchOrder,
+    };
 
     #[test]
     fn test_render_returns_empty_string_for_empty_document() {
@@ -567,6 +588,157 @@ mod tests {
 
         // Then
         assert_eq!(output.html, "");
+    }
+
+    #[test]
+    fn test_render_program_directive_emits_no_html() {
+        // Given — like `currentmodule`/`c:namespace`, `.. program::`
+        // documents nothing; it only mutates scope.
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::StdProgram {
+                name: Some("dis".to_string()),
+            })],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert_eq!(output.html, "");
+    }
+
+    #[test]
+    fn test_render_cmdoption_domain_object_produces_dt_and_dd() {
+        // Given
+        let doc = Document::new(
+            "cmdline.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                    signatures: NonEmptyVector::single("-m <module-name>".to_string()),
+                    body: vec![Node::Paragraph(vec![InlineNode::Text(
+                        "Run a module.".to_string(),
+                    )])],
+                },
+            ))],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(output.html.contains("<dl class=\"std cmdoption\">"));
+        assert!(output.html.contains(
+            "<dt id=\"std:cmdoption:-m\"><code class=\"sig-name\">-m &lt;module-name&gt;</code></dt>"
+        ));
+        assert!(output.html.contains("<dd><p>Run a module.</p>\n</dd>"));
+    }
+
+    #[test]
+    fn test_render_cmdoption_comma_separated_flags_share_one_dt_with_two_anchors() {
+        // Given — real Sphinx's `.. option:: -c, --compress` shape.
+        let doc = Document::new(
+            "zipapp.rst".to_string(),
+            vec![Node::Directive(Directive::DomainObject(
+                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                    signatures: NonEmptyVector::single("-c, --compress".to_string()),
+                    body: vec![],
+                },
+            ))],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then — one shared `<dt>`, the first flag's id, and the second
+        // flag as an invisible anchor inside the same `<dt>`.
+        assert!(output.html.contains(
+            "<dt id=\"std:cmdoption:-c\"><a id=\"std:cmdoption:--compress\"></a><code class=\"sig-name\">-c, --compress</code></dt>"
+        ));
+    }
+
+    #[test]
+    fn test_render_cmdoption_qualifies_anchor_by_ambient_program() {
+        // Given
+        let doc = Document::new(
+            "dis.rst".to_string(),
+            vec![
+                Node::Directive(Directive::StdProgram {
+                    name: Some("dis".to_string()),
+                }),
+                Node::Directive(Directive::DomainObject(
+                    rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                        signatures: NonEmptyVector::single("-O".to_string()),
+                        body: vec![],
+                    },
+                )),
+            ],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(output.html.contains("<dt id=\"std:cmdoption:dis.-o\">"));
+    }
+
+    #[test]
+    fn test_render_option_reference_resolves_to_link() {
+        // Given — resolution goes through the ambient-program tier, so the
+        // reference is preceded by the matching `.. program::`.
+        let doc = Document::new(
+            "dis.rst".to_string(),
+            vec![
+                Node::Directive(Directive::StdProgram {
+                    name: Some("dis".to_string()),
+                }),
+                Node::Paragraph(vec![InlineNode::OptionReference {
+                    display: "-O".to_string(),
+                    target: "-O".to_string(),
+                }]),
+            ],
+        );
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            rusty_sphinx_ast::ObjectType::Std(rusty_sphinx_ast::StdObjectType::Cmdoption),
+            "dis.-o",
+            "library/dis.rst",
+        );
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(output.html.contains(
+            "<a class=\"reference internal\" href=\"library/dis.html#std:cmdoption:dis.-o\">"
+        ));
+        assert!(output.broken_links.is_empty());
+    }
+
+    #[test]
+    fn test_render_option_reference_not_found_produces_broken_link() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::OptionReference {
+                display: "-Z".to_string(),
+                target: "-Z".to_string(),
+            }])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(output.html.contains("class=\"broken-link\""));
+        assert_eq!(output.broken_links.len(), 1);
+        assert_eq!(output.broken_links[0].kind, BrokenLinkKind::OptionReference);
+        assert_eq!(output.broken_links[0].target, "-Z");
     }
 
     #[test]
