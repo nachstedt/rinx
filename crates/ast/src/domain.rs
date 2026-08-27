@@ -10,6 +10,13 @@ use serde::{Deserialize, Serialize};
 pub enum Domain {
     Py,
     C,
+    /// The "standard" domain: constructs with no language affiliation (e.g.
+    /// `.. option::`/`:option:`). Unlike `Py`/`C`, std-domain directives and
+    /// roles are recognized unconditionally by the parser, independent of a
+    /// library's `default_domain` attribute — this variant exists only so
+    /// `ObjectType`'s `domain:objtype` keys and (de)serialization stay
+    /// uniform across all three domains, not to gate dispatch.
+    Std,
 }
 
 impl Domain {
@@ -18,6 +25,7 @@ impl Domain {
         match self {
             Self::Py => "py",
             Self::C => "c",
+            Self::Std => "std",
         }
     }
 }
@@ -29,6 +37,7 @@ impl std::str::FromStr for Domain {
         match s {
             "py" => Ok(Self::Py),
             "c" => Ok(Self::C),
+            "std" => Ok(Self::Std),
             _ => Err(()),
         }
     }
@@ -49,6 +58,7 @@ mod tests {
         // Given / When / Then
         assert_eq!("py".parse::<Domain>(), Ok(Domain::Py));
         assert_eq!("c".parse::<Domain>(), Ok(Domain::C));
+        assert_eq!("std".parse::<Domain>(), Ok(Domain::Std));
     }
 
     #[test]

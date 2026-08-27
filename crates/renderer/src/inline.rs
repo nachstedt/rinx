@@ -1,8 +1,9 @@
 //! Inline node rendering helpers.
 
 use crate::domain_resolution::{DomainObjectResolution, DomainObjectResolver};
+use crate::option_resolution::{OptionResolution, OptionResolver};
 use crate::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch, RenderCtx};
-use rusty_sphinx_ast::{ObjectType, TargetName};
+use rusty_sphinx_ast::{ObjectType, StdObjectType, TargetName};
 use rusty_sphinx_index::{ProjectIndex, TargetLocation};
 use std::fmt::Write as _;
 
@@ -46,9 +47,7 @@ pub(super) fn render_inline(
             );
         }
         rusty_sphinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
-            let text_escaped = html_escape::encode_text(text);
-            let target_attr = html_escape::encode_double_quoted_attribute(target);
-            let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
+            render_inline_anonymous_hyperlink(html, text, target);
         }
         rusty_sphinx_ast::InlineNode::Emphasis(text) => {
             let _ = write!(html, "<em>{}</em>", html_escape::encode_text(text));
@@ -99,6 +98,17 @@ pub(super) fn render_inline(
                     object_type_mismatches: ctx.object_type_mismatches,
                 },
                 &ctx.scope,
+            );
+        }
+        rusty_sphinx_ast::InlineNode::OptionReference { display, target } => {
+            render_inline_option_reference(
+                html,
+                display,
+                target,
+                ctx.option_resolver,
+                ctx.scope.program.current(),
+                ctx.doc_path,
+                ctx.broken_links,
             );
         }
     }
@@ -219,6 +229,14 @@ pub(super) fn render_inline_anonymous_reference(
             target: text.to_string(),
         });
     }
+}
+
+/// Renders an anonymous hyperlink (`` `text <target>`__ ``) — no index lookup,
+/// since the target is written inline right there.
+fn render_inline_anonymous_hyperlink(html: &mut String, text: &str, target: &str) {
+    let text_escaped = html_escape::encode_text(text);
+    let target_attr = html_escape::encode_double_quoted_attribute(target);
+    let _ = write!(html, "<a href=\"{target_attr}\">{text_escaped}</a>");
 }
 
 /// Renders a glossary term reference (`:term:`). Resolves the term via the project
@@ -369,6 +387,58 @@ pub(super) fn render_inline_domain_object_reference(
         }
         DomainObjectResolution::NotFound => {
             render_unresolved(BrokenLinkKind::DomainObjectReference(object_type));
+        }
+    }
+}
+
+/// Renders a `:option:` cross-reference.
+///
+/// Delegates the search to [`crate::option_resolution`] (its module doc
+/// comment documents the ambient-program/global-fallback/embedded-program
+/// search order) and only decides here what each outcome looks like on the
+/// page — the same split [`render_inline_domain_object_reference`] makes for
+/// `:func:`/`:py:func:`/etc.
+pub(super) fn render_inline_option_reference(
+    html: &mut String,
+    display: &str,
+    target: &str,
+    resolver: &OptionResolver<'_>,
+    ambient_program: Option<&str>,
+    doc_path: &str,
+    broken_links: &mut Vec<BrokenLink>,
+) {
+    let display_escaped = html_escape::encode_text(display);
+    let literal =
+        format!("<code class=\"xref std cmdoption docutils literal\">{display_escaped}</code>");
+
+    match resolver.resolve(ambient_program, target) {
+        OptionResolution::Resolved {
+            qualified_name,
+            doc_path: target_doc_path,
+        } => {
+            let anchor = rusty_sphinx_ast::build_domain_object_key(
+                ObjectType::Std(StdObjectType::Cmdoption),
+                &qualified_name,
+            );
+            let current_dir = std::path::Path::new(doc_path)
+                .parent()
+                .unwrap_or_else(|| std::path::Path::new(""));
+            let target_html_path = std::path::Path::new(target_doc_path).with_extension("html");
+            let relative_path =
+                pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
+            let href = format!("{}#{}", relative_path.display(), anchor.as_str());
+            let href_attr = html_escape::encode_double_quoted_attribute(&href);
+            let _ = write!(
+                html,
+                "<a class=\"reference internal\" href=\"{href_attr}\">{literal}</a>"
+            );
+        }
+        OptionResolution::NotFound => {
+            let _ = write!(html, "<a href=\"#\" class=\"broken-link\">{literal}</a>");
+            broken_links.push(BrokenLink {
+                kind: BrokenLinkKind::OptionReference,
+                target: target.to_string(),
+            });
         }
     }
 }

@@ -121,6 +121,11 @@ pub(super) fn render_domain_object(
     obj: &rusty_sphinx_ast::DomainObjectBody,
     ctx: &mut RenderCtx<'_>,
 ) {
+    if let rusty_sphinx_ast::DomainObjectBody::StdCmdoption { signatures, body } = obj {
+        render_cmdoption(html, signatures, body, ctx);
+        return;
+    }
+
     let object_type = obj.object_type();
     let own_names = obj.names();
     // A `py:module`'s own name is never qualified against the *previous*
@@ -227,6 +232,62 @@ pub(super) fn render_domain_object(
     if let Some(previous) = restore_module {
         ctx.scope.python.restore_module(previous);
     }
+}
+
+/// Renders a `.. option::`/`.. cmdoption::` definition.
+///
+/// Split out of [`render_domain_object`] because `StdCmdoption` doesn't fit
+/// that function's one-`<dt>`-per-name loop: real Sphinx renders every
+/// comma-separated spec on one raw signature *line* together, in a single
+/// `<dt>` (e.g. `.. option:: -c, --compress` → one `<dt>` reading
+/// `-c, --compress`), even though each spec is independently
+/// cross-referenceable. Each declared line still gets its own `<dt>`,
+/// sharing one `<dd>` below — matching every other multi-signature object
+/// type — but *within* one line's `<dt>`, only the first spec's anchor
+/// becomes the `<dt>`'s own `id`; every additional spec on that line gets an
+/// invisible zero-width `<a id="...">` anchor placed inside the same `<dt>`,
+/// so each flag still resolves to its own fragment id on one shared visible
+/// block (the same technique docutils' own HTML writer uses for a node
+/// registered under multiple ids).
+///
+/// Qualification (`ctx.scope.program.qualify`) mirrors the analyzer's
+/// `index_domain_object` exactly, so anchor `id`s never drift from index
+/// keys. Options never nest (`deduce_local_scope` is empty for `StdCmdoption`),
+/// so the shared body renders with no scope push/pop.
+fn render_cmdoption(
+    html: &mut String,
+    signatures: &rusty_sphinx_ast::NonEmptyVector<String>,
+    body: &[Node],
+    ctx: &mut RenderCtx<'_>,
+) {
+    let object_type = rusty_sphinx_ast::ObjectType::Std(rusty_sphinx_ast::StdObjectType::Cmdoption);
+
+    let _ = writeln!(html, "<dl class=\"std cmdoption\">");
+    for line in signatures.as_slice() {
+        let specs = rusty_sphinx_ast::split_option_line_specs(line);
+        let line_escaped = html_escape::encode_text(line);
+        let mut dt_open = String::from("  <dt");
+        let mut secondary_anchors = String::new();
+        for (spec_index, spec) in specs.iter().enumerate() {
+            let optname = rusty_sphinx_ast::extract_option_name(spec);
+            let qualified_name = ctx.scope.program.qualify(&optname);
+            let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
+            let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
+            if spec_index == 0 {
+                let _ = write!(dt_open, " id=\"{id_attr}\"");
+            } else {
+                let _ = write!(secondary_anchors, "<a id=\"{id_attr}\"></a>");
+            }
+        }
+        let _ = writeln!(
+            html,
+            "{dt_open}>{secondary_anchors}<code class=\"sig-name\">{line_escaped}</code></dt>"
+        );
+    }
+    let _ = write!(html, "  <dd>");
+    super::render_nodes(html, body, ctx);
+    let _ = writeln!(html, "</dd>");
+    let _ = writeln!(html, "</dl>");
 }
 
 /// Canonical, deterministic prefix-label order for a domain object's `<dt>`
@@ -370,7 +431,8 @@ fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::Domai
         | rusty_sphinx_ast::DomainObjectBody::CType { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyMethod { .. }
         | rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
-        | rusty_sphinx_ast::DomainObjectBody::PyException { .. } => {}
+        | rusty_sphinx_ast::DomainObjectBody::PyException { .. }
+        | rusty_sphinx_ast::DomainObjectBody::StdCmdoption { .. } => {}
     }
 }
 
@@ -621,9 +683,11 @@ mod tests {
         let anon_targets = vec![];
         let mut anon_index = 0;
         let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
+        let option_resolver = crate::option_resolution::OptionResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,
+            option_resolver: &option_resolver,
             doc_path: "test.rst",
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,
@@ -661,9 +725,11 @@ mod tests {
         let anon_targets = vec![];
         let mut anon_index = 0;
         let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
+        let option_resolver = crate::option_resolution::OptionResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,
+            option_resolver: &option_resolver,
             doc_path: "test.rst",
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,
@@ -837,9 +903,11 @@ mod tests {
         let anon_targets = vec![];
         let mut anon_index = 0;
         let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
+        let option_resolver = crate::option_resolution::OptionResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,
+            option_resolver: &option_resolver,
             doc_path: "test.rst",
             anon_targets: &anon_targets,
             anon_index: &mut anon_index,

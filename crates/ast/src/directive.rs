@@ -117,6 +117,16 @@ pub enum Directive {
     /// `.. c:namespace-pop::` — undoes the most recent
     /// [`Directive::CNamespacePush`] in its entirety.
     CNamespacePop,
+    /// `.. program::` — sets the `std`-domain "current program" context for
+    /// `.. option::`/`.. cmdoption::` definitions and `:option:` references
+    /// for the rest of the document. `None` is the reset form
+    /// (`.. program:: None`), mirroring [`Directive::PyCurrentModule`]/
+    /// [`Directive::CNamespace`] exactly. `name` is already normalized
+    /// (whitespace runs collapsed to a single `-`, matching real Sphinx's
+    /// `ws_re.sub('-', name)`) by the parser.
+    StdProgram {
+        name: Option<String>,
+    },
     Unknown {
         name: String,
         argument: String,
@@ -272,6 +282,34 @@ mod tests {
     fn test_c_namespace_directive_serialization_roundtrip_with_reset() {
         // Given — the `NULL`/`0` reset form.
         let directive = Directive::CNamespace { namespace: None };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_program_directive_serialization_roundtrip_with_name() {
+        // Given
+        let directive = Directive::StdProgram {
+            name: Some("dis".to_string()),
+        };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_program_directive_serialization_roundtrip_with_reset() {
+        // Given — the `.. program:: None` reset form.
+        let directive = Directive::StdProgram { name: None };
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");

@@ -3,9 +3,11 @@
 //! against the same enclosing scope, so both phases always agree.
 
 mod c_scope;
+mod program_scope;
 mod python_scope;
 mod scope;
 
 pub use c_scope::{CQualification, CScope};
+pub use program_scope::ProgramScope;
 pub use python_scope::{PythonScope, Qualification};
 pub use scope::Scope;

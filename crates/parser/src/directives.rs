@@ -38,6 +38,13 @@ pub(super) enum DirectiveObjectType {
     CUnion,
     CMember,
     CType,
+    /// `.. option::` or its legacy directive-name alias `.. cmdoption::` —
+    /// domain-agnostic (the `std` domain), recognized regardless of
+    /// `default_domain` and with no `domain:objtype`-qualified spelling
+    /// modeled, matching this parser's existing bare-only treatment of
+    /// `:ref:`/`:term:`/`.. toctree::`/`.. index::`. See
+    /// [`resolve_domain_object_type`].
+    StdCmdoption,
 }
 
 pub(super) fn parse_toctree(body_lines: &[&str], diagnostics: &mut Vec<String>) -> Directive {
@@ -241,6 +248,14 @@ fn parse_body_directive(
 /// `PyDecoratorMethod`, both delegating to `py:function`/`py:method`), so
 /// there's no `c:decorator` to reject specially — it simply matches no arm.
 fn resolve_domain_object_type(name: &str, default_domain: Domain) -> Option<DirectiveObjectType> {
+    // `std`-domain directives bypass `default_domain`/`split_domain_qualified_name`
+    // entirely, unlike every `py`/`c` arm below: they're recognized
+    // unconditionally, the same way `.. toctree::`/`.. index::` are matched
+    // by plain string equality before any domain logic runs. `cmdoption` is
+    // real Sphinx's legacy directive-name alias for the same directive.
+    if matches!(name, "option" | "cmdoption") {
+        return Some(DirectiveObjectType::StdCmdoption);
+    }
     let (domain, objtype_str) = split_domain_qualified_name(name, default_domain)?;
     match (domain, objtype_str) {
         (Domain::Py, "function") => Some(DirectiveObjectType::PyFunction),
@@ -316,6 +331,15 @@ fn try_parse_scope_directive(
     argument: &str,
     default_domain: Domain,
 ) -> Option<Directive> {
+    // `.. program::` is `std`-domain and bypasses `default_domain` entirely,
+    // exactly like `.. option::`/`.. cmdoption::` above (see
+    // `resolve_domain_object_type`) — recognized unconditionally rather than
+    // gated by `split_domain_qualified_name`.
+    if name == "program" {
+        return Some(Directive::StdProgram {
+            name: parse_program_argument(argument),
+        });
+    }
     match split_domain_qualified_name(name, default_domain) {
         Some((Domain::Py, "currentmodule")) => Some(Directive::PyCurrentModule {
             module: parse_current_module_argument(argument),
@@ -374,6 +398,20 @@ fn parse_current_module_argument(argument: &str) -> Option<String> {
         None
     } else {
         Some(argument.to_string())
+    }
+}
+
+/// Parses a `.. program::` argument. `None` (real Sphinx's `.. program:: None`
+/// reset form) and an empty argument both clear the current program;
+/// anything else is normalized like real Sphinx's `ws_re.sub('-', name)` —
+/// every run of whitespace collapsed to a single `-` — and kept as the new
+/// current program, e.g. `"python -m py_compile"` -> `"python--m-py_compile"`,
+/// `"unittest discover"` -> `"unittest-discover"`.
+fn parse_program_argument(argument: &str) -> Option<String> {
+    if argument.is_empty() || argument == "None" {
+        None
+    } else {
+        Some(argument.split_whitespace().collect::<Vec<_>>().join("-"))
     }
 }
 
@@ -930,6 +968,34 @@ mod tests {
     }
 
     #[test]
+    fn test_resolve_domain_object_type_option_resolves_regardless_of_default_domain() {
+        // Given — `std`-domain, so it must not be gated by `default_domain`.
+        let name = "option";
+
+        // When / Then
+        assert_eq!(
+            resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py),
+            Some(DirectiveObjectType::StdCmdoption)
+        );
+        assert_eq!(
+            resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C),
+            Some(DirectiveObjectType::StdCmdoption)
+        );
+    }
+
+    #[test]
+    fn test_resolve_domain_object_type_cmdoption_is_a_legacy_alias_for_option() {
+        // Given — real Sphinx's legacy directive name for the same directive.
+        let name = "cmdoption";
+
+        // When
+        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+
+        // Then
+        assert_eq!(result, Some(DirectiveObjectType::StdCmdoption));
+    }
+
+    #[test]
     fn test_resolve_domain_object_type_explicit_c_type_resolves() {
         // Given
         let name = "c:type";
@@ -1295,5 +1361,78 @@ mod tests {
             &doc.nodes[0],
             Node::Directive(Directive::Unknown { name, .. }) if name == "namespace"
         ));
+    }
+
+    #[test]
+    fn test_parse_creates_program_directive() {
+        // Given
+        let input = ".. program:: dis";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes,
+            vec![Node::Directive(Directive::StdProgram {
+                name: Some("dis".to_string())
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_program_none_argument_resets() {
+        // Given
+        let input = ".. program:: None";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes,
+            vec![Node::Directive(Directive::StdProgram { name: None })]
+        );
+    }
+
+    #[test]
+    fn test_parse_program_recognized_under_any_default_domain() {
+        // Given — `std`-domain, so unlike `.. currentmodule::`/`.. namespace::`
+        // it must not be gated by `default_domain`.
+        let input = ".. program:: dis";
+
+        // When
+        let doc = crate::parse_with_domain("test.rst", input, rusty_sphinx_ast::Domain::C);
+
+        // Then
+        assert_eq!(
+            doc.nodes,
+            vec![Node::Directive(Directive::StdProgram {
+                name: Some("dis".to_string())
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_program_multi_word_name_collapses_whitespace_to_hyphens() {
+        // Given — matches real Sphinx's `ws_re.sub('-', name)`.
+        let input = ".. program:: python -m py_compile";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        assert_eq!(
+            doc.nodes,
+            vec![Node::Directive(Directive::StdProgram {
+                name: Some("python--m-py_compile".to_string())
+            })]
+        );
+    }
+
+    #[test]
+    fn test_parse_program_argument_empty_clears() {
+        // Given / When / Then
+        assert_eq!(parse_program_argument(""), None);
     }
 }

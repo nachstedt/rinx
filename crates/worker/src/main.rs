@@ -88,12 +88,27 @@ fn process_parse(path: &str, rst_content: &str, default_domain: ast::Domain) -> 
 
 /// Parses the optional `--default-domain` flag, defaulting to `py` — this is
 /// how `rusty_sphinx_library`'s Bazel attribute reaches the `parse`/`preview`
-/// subcommands (see `rules/library.bzl`).
+/// subcommands (see `rules/library.bzl`, whose `default_domain` attribute
+/// restricts to the same two values via `values = ["py", "c"]`).
+///
+/// Deliberately narrower than `ast::Domain::FromStr`, which also accepts
+/// `"std"` (needed so `ObjectType`'s `"std:cmdoption:..."` keys round-trip):
+/// `default_domain` is the domain a *bare* directive/role resolves to, and
+/// several bare-role code paths (e.g. `handle_func_match`'s
+/// `.expect("every domain defines a 'func' role")`) assume it is always `py`
+/// or `c` — `std`-domain constructs (`.. option::`, `:option:`, ...) are
+/// recognized unconditionally instead, never via `default_domain` (see
+/// `resolve_domain_object_type`/`try_parse_scope_directive` in
+/// `rusty_sphinx_parser`), so accepting `"std"` here would only invite a
+/// runtime panic with no corresponding feature.
 fn parse_default_domain_flag(args: &[String]) -> Result<ast::Domain> {
     match flag_value_opt(args, "--default-domain") {
-        Some(s) => s
-            .parse::<ast::Domain>()
-            .map_err(|()| anyhow!("Invalid --default-domain '{s}', expected 'py' or 'c'")),
+        Some(s) => match s.parse::<ast::Domain>() {
+            Ok(domain @ (ast::Domain::Py | ast::Domain::C)) => Ok(domain),
+            _ => Err(anyhow!(
+                "Invalid --default-domain '{s}', expected 'py' or 'c'"
+            )),
+        },
         None => Ok(ast::Domain::Py),
     }
 }
@@ -928,6 +943,26 @@ mod tests {
     fn test_parse_default_domain_flag_rejects_invalid_value() {
         // Given
         let args = vec!["--default-domain".to_string(), "rust".to_string()];
+
+        // When
+        let result = parse_default_domain_flag(&args);
+
+        // Then
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid --default-domain")
+        );
+    }
+
+    #[test]
+    fn test_parse_default_domain_flag_rejects_std() {
+        // Given — `std` is a valid `ast::Domain` (needed for `ObjectType`
+        // keys), but not a valid *default* domain: several bare-role code
+        // paths assume `default_domain` is always `py` or `c`.
+        let args = vec!["--default-domain".to_string(), "std".to_string()];
 
         // When
         let result = parse_default_domain_flag(&args);

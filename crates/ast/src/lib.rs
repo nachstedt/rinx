@@ -22,6 +22,7 @@ mod non_empty_vector;
 mod object_type;
 mod py_object_type;
 mod py_version_spec;
+mod std_object_type;
 mod table;
 mod table_align;
 mod target_name;
@@ -41,7 +42,8 @@ pub use doctest_group::{DocTestGroup, DocTestGroupSelector};
 pub use document::Document;
 pub use domain::Domain;
 pub use domain_object_body::{
-    DomainObjectBody, build_domain_object_key, extract_python_object_name,
+    DomainObjectBody, build_domain_object_key, extract_option_name, extract_python_object_name,
+    split_option_line_specs,
 };
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use hashed_content::HashedContent;
@@ -53,6 +55,7 @@ pub use non_empty_vector::NonEmptyVector;
 pub use object_type::ObjectType;
 pub use py_object_type::PyObjectType;
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
+pub use std_object_type::StdObjectType;
 pub use table::{TableCell, TableRow};
 pub use table_align::TableAlign;
 pub use target_name::TargetName;

@@ -9,6 +9,8 @@ static PROGRAM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":program:`(?P<name>[^`]+)`").unwrap());
 static TERM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":term:`(?P<content>[^`]+)`").unwrap());
+static OPTION_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":option:`(?P<content>[^`]+)`").unwrap());
 static FUNC_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py|c):)?func:`(?P<name>[^`]+)`").unwrap());
 static MOD_ROLE_REGEX: LazyLock<Regex> =
@@ -43,6 +45,35 @@ static ANONYMOUS_PHRASED_REGEX: LazyLock<Regex> =
 static ANONYMOUS_SIMPLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\b(?P<name>[a-zA-Z0-9_.-]+)__\b").unwrap());
 
+/// Every role/link regex tried by [`parse_inline_text`], paired with the
+/// `kind` tag [`handle_inline_match`] dispatches on. A table rather than one
+/// `let X_match = ...; if let Some(m) = X_match { ... }` pair per regex
+/// (which is what this used to be, and grew one clippy line-count warning
+/// past its limit the moment a 20th regex — `:option:`'s — joined it): match
+/// order here doesn't matter, since [`parse_inline_text`] always picks the
+/// earliest (then longest) match regardless of table position.
+static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
+    (&REF_REGEX, "ref"),
+    (&PROGRAM_ROLE_REGEX, "program"),
+    (&TERM_ROLE_REGEX, "term"),
+    (&OPTION_ROLE_REGEX, "option"),
+    (&FUNC_ROLE_REGEX, "func"),
+    (&MOD_ROLE_REGEX, "mod"),
+    (&DATA_ROLE_REGEX, "data"),
+    (&METH_ROLE_REGEX, "meth"),
+    (&CLASS_ROLE_REGEX, "class"),
+    (&ATTR_ROLE_REGEX, "attr"),
+    (&EXC_ROLE_REGEX, "exc"),
+    (&MACRO_ROLE_REGEX, "macro"),
+    (&STRUCT_ROLE_REGEX, "struct"),
+    (&UNION_ROLE_REGEX, "union"),
+    (&TYPE_ROLE_REGEX, "type"),
+    (&ANONYMOUS_PHRASED_REGEX, "anon_phrased"),
+    (&PHRASED_LINK_REGEX, "phrased"),
+    (&ANONYMOUS_SIMPLE_REGEX, "anon_simple"),
+    (&SIMPLE_LINK_REGEX, "simple"),
+];
+
 /// Parses a plain text string into a list of [`InlineNode`]s.
 ///
 /// `default_domain` resolves any bare (unprefixed) domain role, e.g. `:func:`,
@@ -54,82 +85,13 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
     while last_match_end < paragraph_text.len() {
         let remaining = &paragraph_text[last_match_end..];
 
-        let ref_match = REF_REGEX.find(remaining);
-        let program_match = PROGRAM_ROLE_REGEX.find(remaining);
-        let term_match = TERM_ROLE_REGEX.find(remaining);
-        let func_match = FUNC_ROLE_REGEX.find(remaining);
-        let mod_match = MOD_ROLE_REGEX.find(remaining);
-        let data_match = DATA_ROLE_REGEX.find(remaining);
-        let meth_match = METH_ROLE_REGEX.find(remaining);
-        let class_match = CLASS_ROLE_REGEX.find(remaining);
-        let attr_match = ATTR_ROLE_REGEX.find(remaining);
-        let exc_match = EXC_ROLE_REGEX.find(remaining);
-        let macro_match = MACRO_ROLE_REGEX.find(remaining);
-        let struct_match = STRUCT_ROLE_REGEX.find(remaining);
-        let union_match = UNION_ROLE_REGEX.find(remaining);
-        let type_match = TYPE_ROLE_REGEX.find(remaining);
-        let phrased_match = PHRASED_LINK_REGEX.find(remaining);
-        let simple_match = SIMPLE_LINK_REGEX.find(remaining);
-        let anon_phrased_match = ANONYMOUS_PHRASED_REGEX.find(remaining);
-        let anon_simple_match = ANONYMOUS_SIMPLE_REGEX.find(remaining);
-        let inline_markup_match = find_inline_markup(paragraph_text, last_match_end);
-
         let mut all_matches = Vec::new();
-        if let Some(m) = ref_match {
-            all_matches.push((m.start(), m.end(), "ref", None));
+        for (regex, kind) in SIMPLE_ROLE_REGEXES {
+            if let Some(m) = regex.find(remaining) {
+                all_matches.push((m.start(), m.end(), *kind, None));
+            }
         }
-        if let Some(m) = program_match {
-            all_matches.push((m.start(), m.end(), "program", None));
-        }
-        if let Some(m) = term_match {
-            all_matches.push((m.start(), m.end(), "term", None));
-        }
-        if let Some(m) = func_match {
-            all_matches.push((m.start(), m.end(), "func", None));
-        }
-        if let Some(m) = mod_match {
-            all_matches.push((m.start(), m.end(), "mod", None));
-        }
-        if let Some(m) = data_match {
-            all_matches.push((m.start(), m.end(), "data", None));
-        }
-        if let Some(m) = meth_match {
-            all_matches.push((m.start(), m.end(), "meth", None));
-        }
-        if let Some(m) = class_match {
-            all_matches.push((m.start(), m.end(), "class", None));
-        }
-        if let Some(m) = attr_match {
-            all_matches.push((m.start(), m.end(), "attr", None));
-        }
-        if let Some(m) = exc_match {
-            all_matches.push((m.start(), m.end(), "exc", None));
-        }
-        if let Some(m) = macro_match {
-            all_matches.push((m.start(), m.end(), "macro", None));
-        }
-        if let Some(m) = struct_match {
-            all_matches.push((m.start(), m.end(), "struct", None));
-        }
-        if let Some(m) = union_match {
-            all_matches.push((m.start(), m.end(), "union", None));
-        }
-        if let Some(m) = type_match {
-            all_matches.push((m.start(), m.end(), "type", None));
-        }
-        if let Some(m) = anon_phrased_match {
-            all_matches.push((m.start(), m.end(), "anon_phrased", None));
-        }
-        if let Some(m) = phrased_match {
-            all_matches.push((m.start(), m.end(), "phrased", None));
-        }
-        if let Some(m) = anon_simple_match {
-            all_matches.push((m.start(), m.end(), "anon_simple", None));
-        }
-        if let Some(m) = simple_match {
-            all_matches.push((m.start(), m.end(), "simple", None));
-        }
-        if let Some((start, end, node)) = inline_markup_match {
+        if let Some((start, end, node)) = find_inline_markup(paragraph_text, last_match_end) {
             all_matches.push((start, end, "inline", Some(node)));
         }
 
@@ -318,6 +280,15 @@ fn strip_trailing_call_parens(name: &str, domain: Domain) -> &str {
         Domain::C => head.trim_end(),
         Domain::Py if head.ends_with(char::is_whitespace) => return name,
         Domain::Py => head,
+        // Only ever reached via a role's explicit `py:`/`c:` prefix or
+        // `default_domain` — the role regexes never capture `std` as an
+        // explicit prefix, and `default_domain` is restricted to `py`/`c` at
+        // the CLI/Bazel-attribute boundary (`parse_default_domain_flag`,
+        // `rules/library.bzl`'s `values = ["py", "c"]`) precisely because
+        // other bare-role code paths make the same assumption. `:option:`
+        // (the one `std`-domain role) has its own `InlineNode::OptionReference`
+        // parse path and never calls this function.
+        Domain::Std => unreachable!("strip_trailing_call_parens called with Domain::Std"),
     };
     if head.is_empty() { name } else { head }
 }
@@ -568,6 +539,11 @@ pub(super) fn handle_inline_match(
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let (display, term) = split_display_and_target(&caps["content"]);
             InlineNode::TermReference { display, term }
+        }
+        "option" => {
+            let caps = OPTION_ROLE_REGEX.captures(m_str).unwrap();
+            let (display, target) = split_display_and_target(&caps["content"]);
+            InlineNode::OptionReference { display, target }
         }
         "phrased" => {
             let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
@@ -2707,6 +2683,81 @@ mod integration_tests {
                 assert_eq!(display, "the env");
                 assert_eq!(term, "environment");
             }
+        } else {
+            panic!("Expected Paragraph");
+        }
+    }
+
+    #[test]
+    fn test_parse_option_role_basic() {
+        let input = "See :option:`-h` for details.\n";
+        let doc = parse("test.rst", input);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            let option_ref = inlines
+                .iter()
+                .find(|n| matches!(n, InlineNode::OptionReference { .. }));
+            assert!(
+                option_ref.is_some(),
+                "Expected OptionReference in paragraph"
+            );
+            if let Some(InlineNode::OptionReference { display, target }) = option_ref {
+                assert_eq!(display, "-h");
+                assert_eq!(target, "-h");
+            }
+        } else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_option_role_with_display_text() {
+        let input = "See :option:`-W default <-W>` here.\n";
+        let doc = parse("test.rst", input);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            let option_ref = inlines
+                .iter()
+                .find(|n| matches!(n, InlineNode::OptionReference { .. }));
+            assert!(option_ref.is_some());
+            if let Some(InlineNode::OptionReference { display, target }) = option_ref {
+                assert_eq!(display, "-W default");
+                assert_eq!(target, "-W");
+            }
+        } else {
+            panic!("Expected Paragraph");
+        }
+    }
+
+    #[test]
+    fn test_parse_option_role_with_embedded_program_in_target() {
+        // Given — the whole target is carried through verbatim; splitting it
+        // into program + optname happens at render time (see
+        // `rusty_sphinx_renderer::option_resolution`).
+        let input = "See :option:`-O <dis --show-offsets>` here.\n";
+        let doc = parse("test.rst", input);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            let option_ref = inlines
+                .iter()
+                .find(|n| matches!(n, InlineNode::OptionReference { .. }));
+            assert!(option_ref.is_some());
+            if let Some(InlineNode::OptionReference { display, target }) = option_ref {
+                assert_eq!(display, "-O");
+                assert_eq!(target, "dis --show-offsets");
+            }
+        } else {
+            panic!("Expected Paragraph");
+        }
+    }
+
+    #[test]
+    fn test_parse_option_role_mixed_with_surrounding_text() {
+        let input = "Before :option:`-x` after.\n";
+        let doc = parse("test.rst", input);
+        if let Node::Paragraph(inlines) = &doc.nodes[0] {
+            assert!(inlines.len() >= 3, "Expected text + option + text");
+            assert!(matches!(&inlines[0], InlineNode::Text(t) if t == "Before "));
+            assert!(
+                matches!(&inlines[1], InlineNode::OptionReference { target, .. } if target == "-x")
+            );
         } else {
             panic!("Expected Paragraph");
         }
