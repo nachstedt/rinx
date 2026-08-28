@@ -1,12 +1,8 @@
 use super::blocks::parse_blocks;
-use super::bullet_list::strip_indent;
+use super::bullet_list::{leading_whitespace_count, strip_indent};
 use super::headings::Adornment;
 use rusty_sphinx_ast::{Domain, Node, TableCell, TableRow};
 use std::collections::BTreeMap;
-
-fn leading_whitespace_count(line: &str) -> usize {
-    line.chars().take_while(|c| c.is_whitespace()).count()
-}
 
 /// Checks whether `line` is a full grid-table border line: starts and ends
 /// with `+`, and every character in between is `-`/`+` (or additionally `=`
@@ -111,9 +107,6 @@ struct GridCtx<'a> {
 
 /// Extracts a resolved cell's text, spanning grid columns `[col_start,
 /// col_end)` and raw offsets `[row_start, row_end]` within one row-block.
-/// Strips the shared leading margin and trailing whitespace per line (RST
-/// spec: cell margins "are removed before processing"), and trims leading/
-/// trailing blank lines.
 fn extract_cell_text(
     grid: &[Vec<char>],
     top: usize,
@@ -125,10 +118,20 @@ fn extract_cell_text(
 ) -> Vec<String> {
     let left = col_bounds[col_start] + 1;
     let right = col_bounds[col_end];
-    let mut cell_lines: Vec<String> = (row_start..=row_end)
+    let cell_lines: Vec<String> = (row_start..=row_end)
         .map(|offset| grid[top + 1 + offset][left..right].iter().collect())
         .collect();
 
+    normalize_cell_lines(cell_lines)
+}
+
+/// Normalizes the raw character rectangle sliced out for one table cell:
+/// strips the shared leading margin and trailing whitespace per line (RST
+/// spec: cell margins "are removed before processing"), and trims leading/
+/// trailing blank lines. Shared with [`super::simple_table`], whose cells are
+/// delimited by whitespace columns rather than `|` but need the exact same
+/// treatment once sliced.
+pub(super) fn normalize_cell_lines(mut cell_lines: Vec<String>) -> Vec<String> {
     let min_indent = cell_lines
         .iter()
         .filter(|l| !l.trim().is_empty())

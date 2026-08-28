@@ -68,7 +68,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Grid tables (`+---+` / `|` / `=` ASCII art) | ✅ | Column/row spans and hierarchical/nested headers supported |
-| Simple tables (whitespace-column `===` style) | ❌ | — |
+| Simple tables (whitespace-column `===` style) | 🔶 | Header rules, `-` column-span underlines, multi-line cells and the unbounded rightmost column are supported. An empty first-column cell needs the escaped space `\ ` docutils prescribes, which renders as a literal backslash — the parser has no general text-level backslash unescaping |
 | `.. list-table::` | ✅ | `:name:` resolves to the document, not a fragment precisely at the table (same limitation as every other internal `:ref:` target) |
 | `.. csv-table::` directive | ❌ | — |
 | `.. table::` (table title/caption/options) | ❌ | — |
