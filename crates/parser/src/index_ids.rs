@@ -12,7 +12,7 @@ use rusty_sphinx_ast::{Directive, Node};
 /// Walks `nodes` mutably, in document order, assigning `format!("index-{n}")`
 /// to every `Directive::Index`'s `id` field. Recurses into exactly the
 /// container shapes `rusty_sphinx_analyzer::index_nodes` also recurses into
-/// (bullet/definition lists, tables, admonition/version-change/seealso
+/// (bullet/enumerated/definition lists, tables, admonition/version-change/seealso
 /// bodies, domain-object bodies) — anything outside that set (e.g. nested
 /// inside a glossary entry's definition) is a placement the analyzer
 /// wouldn't index either, so no id is needed there.
@@ -36,7 +36,7 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
             Node::Directive(Directive::DomainObject(obj)) => {
                 assign_index_ids(obj.body_mut(), counter);
             }
-            Node::BulletList { items, .. } => {
+            Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
                     assign_index_ids(&mut item.nodes, counter);
                 }
@@ -65,8 +65,7 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
 mod tests {
     use super::*;
     use rusty_sphinx_ast::{
-        AdmonitionKind, BulletListItem, DomainObjectBody, IndexEntry, NonEmptyVector, TableCell,
-        TableRow,
+        AdmonitionKind, DomainObjectBody, IndexEntry, ListItem, NonEmptyVector, TableCell, TableRow,
     };
 
     fn index_directive() -> Node {
@@ -108,7 +107,7 @@ mod tests {
         // Given
         let mut nodes = vec![Node::BulletList {
             bullet: '-',
-            items: vec![BulletListItem {
+            items: vec![ListItem {
                 nodes: vec![index_directive()],
             }],
         }];
@@ -204,7 +203,7 @@ mod tests {
             index_directive(),
             Node::BulletList {
                 bullet: '-',
-                items: vec![BulletListItem {
+                items: vec![ListItem {
                     nodes: vec![index_directive()],
                 }],
             },

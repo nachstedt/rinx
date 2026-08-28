@@ -121,7 +121,7 @@ fn index_nodes(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex, scope: 
             ) => {
                 index_nodes(body, doc_path, index, scope);
             }
-            Node::BulletList { items, .. } => {
+            Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
                     index_nodes(&item.nodes, doc_path, index, scope);
                 }
@@ -2277,7 +2277,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::BulletList {
                 bullet: '-',
-                items: vec![rusty_sphinx_ast::BulletListItem {
+                items: vec![rusty_sphinx_ast::ListItem {
                     nodes: vec![Node::Directive(Directive::DomainObject(
                         rusty_sphinx_ast::DomainObjectBody::PyFunction {
                             module: None,
@@ -3108,7 +3108,7 @@ mod tests {
             "guide.rst".to_string(),
             vec![Node::BulletList {
                 bullet: '-',
-                items: vec![rusty_sphinx_ast::BulletListItem {
+                items: vec![rusty_sphinx_ast::ListItem {
                     nodes: vec![Node::Directive(Directive::Index {
                         entries: vec![rusty_sphinx_ast::IndexEntry::Term {
                             primary: "execution".to_string(),

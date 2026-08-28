@@ -1,6 +1,7 @@
 use super::bullet_list::try_parse_bullet_list;
 use super::definition_list::try_parse_definition_list;
 use super::directives::try_parse_directive;
+use super::enumerated_list::try_parse_enumerated_list;
 use super::headings::{Adornment, detect_adornment, try_parse_heading};
 use super::inline::parse_inline_text;
 use super::table::try_parse_grid_table;
@@ -265,6 +266,18 @@ pub(super) fn parse_blocks(
 
         if let Some((consumed, node)) =
             try_parse_bullet_list(lines, i, adornment_order, diagnostics, default_domain)
+        {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
+        // Before the definition list: `detect_definition_term` matches any line
+        // followed by a more-indented one, which every multi-line enumerated
+        // item also is. docutils resolves this the same way, trying its
+        // `enumerator` transition before falling through to text.
+        if let Some((consumed, node)) =
+            try_parse_enumerated_list(lines, i, adornment_order, diagnostics, default_domain)
         {
             nodes.push(node);
             i += consumed;

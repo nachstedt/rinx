@@ -1,7 +1,6 @@
 //! Abstract Syntax Tree representations for the Rusty-Sphinx Document.
 
 mod admonition_kind;
-mod bullet_list_item;
 mod c_object_type;
 mod c_signature;
 mod definition_list_item;
@@ -12,10 +11,14 @@ mod doctest_group;
 mod document;
 mod domain;
 mod domain_object_body;
+mod enumerator;
+mod enumerator_format;
+mod enumerator_sequence;
 mod glossary_entry;
 mod hashed_content;
 mod index_entry;
 mod inline_node;
+mod list_item;
 mod list_table_widths;
 mod node;
 mod non_empty_vector;
@@ -31,7 +34,6 @@ mod version_change_kind;
 mod visit;
 
 pub use admonition_kind::AdmonitionKind;
-pub use bullet_list_item::BulletListItem;
 pub use c_object_type::CObjectType;
 pub use c_signature::{CSignature, NameSource, extract_c_object_name};
 pub use definition_list_item::DefinitionListItem;
@@ -45,10 +47,14 @@ pub use domain_object_body::{
     DomainObjectBody, build_domain_object_key, extract_option_name, extract_python_object_name,
     split_option_line_specs,
 };
+pub use enumerator::{Enumerator, EnumeratorError};
+pub use enumerator_format::EnumeratorFormat;
+pub use enumerator_sequence::EnumeratorSequence;
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use hashed_content::HashedContent;
 pub use index_entry::IndexEntry;
 pub use inline_node::{InlineNode, inline_plain_text};
+pub use list_item::ListItem;
 pub use list_table_widths::ListTableWidths;
 pub use node::Node;
 pub use non_empty_vector::NonEmptyVector;

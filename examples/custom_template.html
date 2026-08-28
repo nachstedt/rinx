@@ -195,6 +195,59 @@
       margin-bottom: 0.5rem;
       font-size: 0.9rem;
     }
+
+    /* Enumerated lists carry two classes: the enumeration sequence, which
+       picks the glyphs, and the punctuation format. A template that ships no
+       rules for these renders every list as plain decimal, losing the
+       distinction the source made — which is why this standalone theme has to
+       restate them, exactly as it restates the admonition and table rules
+       above. The equivalents for the default theme live in
+       `assets/default.css`. */
+    ol.arabic { list-style-type: decimal; }
+    ol.loweralpha { list-style-type: lower-alpha; }
+    ol.upperalpha { list-style-type: upper-alpha; }
+    ol.lowerroman { list-style-type: lower-roman; }
+    ol.upperroman { list-style-type: upper-roman; }
+
+    /* The period format is what the browser's own marker already draws, so
+       only the two parenthesised formats need counters. The `counter-reset`
+       seeding a list that does not start at 1 is emitted inline by the
+       renderer. */
+    ol.rparen,
+    ol.parens {
+      list-style: none;
+      counter-reset: rsl;
+      padding-left: 3rem;
+    }
+
+    ol.rparen > li,
+    ol.parens > li {
+      position: relative;
+      counter-increment: rsl;
+    }
+
+    /* Absolutely positioned so the marker leaves the item's normal flow: an
+       item's content is a block `<p>`, which an in-flow marker would push onto
+       the next line. */
+    ol.rparen > li::before,
+    ol.parens > li::before {
+      position: absolute;
+      right: 100%;
+      margin-right: 0.4rem;
+      white-space: nowrap;
+    }
+
+    ol.arabic.rparen > li::before { content: counter(rsl, decimal) ")"; }
+    ol.loweralpha.rparen > li::before { content: counter(rsl, lower-alpha) ")"; }
+    ol.upperalpha.rparen > li::before { content: counter(rsl, upper-alpha) ")"; }
+    ol.lowerroman.rparen > li::before { content: counter(rsl, lower-roman) ")"; }
+    ol.upperroman.rparen > li::before { content: counter(rsl, upper-roman) ")"; }
+
+    ol.arabic.parens > li::before { content: "(" counter(rsl, decimal) ")"; }
+    ol.loweralpha.parens > li::before { content: "(" counter(rsl, lower-alpha) ")"; }
+    ol.upperalpha.parens > li::before { content: "(" counter(rsl, upper-alpha) ")"; }
+    ol.lowerroman.parens > li::before { content: "(" counter(rsl, lower-roman) ")"; }
+    ol.upperroman.parens > li::before { content: "(" counter(rsl, upper-roman) ")"; }
   </style>
 </head>
 <body>

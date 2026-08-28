@@ -16,6 +16,7 @@ Welcome to the Rusty-Sphinx example.
    literal_blocks
    glossary
    definition_lists
+   enumerated_lists
    comments
    domains
    current_module

@@ -35,11 +35,11 @@ use crate::node::Node;
 /// # Examples
 ///
 /// ```
-/// use rusty_sphinx_ast::{walk_nodes, BulletListItem, Node};
+/// use rusty_sphinx_ast::{walk_nodes, ListItem, Node};
 ///
 /// let nodes = vec![Node::BulletList {
 ///     bullet: '-',
-///     items: vec![BulletListItem {
+///     items: vec![ListItem {
 ///         nodes: vec![Node::Comment],
 ///     }],
 /// }];
@@ -66,7 +66,7 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
 
         match node {
             Node::Directive(directive) => walk_directive(directive, visit),
-            Node::BulletList { items, .. } => {
+            Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
                     walk_nodes(&item.nodes, visit);
                 }
@@ -141,12 +141,12 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
 mod tests {
     use super::*;
     use crate::admonition_kind::AdmonitionKind;
-    use crate::bullet_list_item::BulletListItem;
     use crate::definition_list_item::DefinitionListItem;
     use crate::domain_object_body::DomainObjectBody;
     use crate::glossary_entry::GlossaryEntry;
     use crate::hashed_content::HashedContent;
     use crate::inline_node::InlineNode;
+    use crate::list_item::ListItem;
     use crate::non_empty_vector::NonEmptyVector;
     use crate::table::{TableCell, TableRow};
 
@@ -194,7 +194,7 @@ mod tests {
         // Given
         let nodes = vec![Node::BulletList {
             bullet: '-',
-            items: vec![BulletListItem {
+            items: vec![ListItem {
                 nodes: vec![Node::Transition],
             }],
         }];
@@ -263,10 +263,10 @@ mod tests {
         let nodes = vec![Node::BulletList {
             bullet: '*',
             items: vec![
-                BulletListItem {
+                ListItem {
                     nodes: vec![diagram("item-one")],
                 },
-                BulletListItem {
+                ListItem {
                     nodes: vec![diagram("item-two")],
                 },
             ],
@@ -374,7 +374,7 @@ mod tests {
         let nodes = vec![Node::Directive(Directive::SeeAlso {
             body: vec![Node::BulletList {
                 bullet: '-',
-                items: vec![BulletListItem {
+                items: vec![ListItem {
                     nodes: vec![Node::Directive(Directive::Admonition {
                         kind: AdmonitionKind::Warning,
                         title: None,

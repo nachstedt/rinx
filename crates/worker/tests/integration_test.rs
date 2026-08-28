@@ -856,3 +856,70 @@ See :attr:`method.__self__` for details.
         "<a class=\"reference internal\" href=\"test.html#py:attribute:method.__self__\">"
     ));
 }
+
+#[test]
+fn test_e2e_enumerated_list_round_trips_from_rst_to_html() {
+    // Given a parenthesised lower-roman list that does not start at one
+    let input = "(iv) Fourth\n(v) Fifth\n";
+
+    // When running it through the parse, analyze and render pipeline
+    let doc = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&doc);
+    let html = renderer::render(&doc, &index, &doc.path).html;
+
+    // Then the sequence, format and start value all survive to the HTML
+    assert_eq!(
+        html,
+        "<ol class=\"lowerroman parens\" start=\"4\" style=\"counter-reset: rsl 3\">\n\
+         <li><p>Fourth</p>\n</li>\n<li><p>Fifth</p>\n</li>\n</ol>\n"
+    );
+}
+
+#[test]
+fn test_e2e_cross_reference_inside_an_enumerated_item_resolves() {
+    // Given a document whose enumerated list item references a module defined
+    // in the same document
+    let input = "\
+.. py:module:: widgets
+
+.. py:function:: build()
+
+   Builds a widget.
+
+1. See :py:func:`build` for details.
+2. Second item.
+";
+
+    // When indexing and rendering it
+    let doc = parser::parse("test.rst", input);
+    let index = analyzer::analyze(&doc);
+    let output = renderer::render(&doc, &index, &doc.path);
+
+    // Then the reference inside the list item resolves, proving the analyzer
+    // descends into enumerated items rather than skipping the container
+    assert!(output.broken_links.is_empty(), "{:?}", output.broken_links);
+    assert!(
+        output.html.contains("#py:function:widgets.build"),
+        "{}",
+        output.html
+    );
+}
+
+#[test]
+fn test_e2e_doctest_block_nested_in_an_enumerated_item_is_found() {
+    // Given a doctest block written inside an enumerated list item
+    let input = "1. Try it:\n\n   >>> 1 + 1\n   2\n";
+
+    // When walking the parsed document
+    let doc = parser::parse("test.rst", input);
+    let mut found = 0;
+    ast::walk_nodes(&doc.nodes, &mut |node| {
+        if matches!(node, ast::Node::DoctestBlock(_)) {
+            found += 1;
+        }
+    });
+
+    // Then the walker reaches it, so doctest extraction and diagram collection
+    // see content nested in enumerated lists
+    assert_eq!(found, 1);
+}
