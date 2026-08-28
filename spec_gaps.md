@@ -45,6 +45,7 @@ Legend: ✅ implemented · 🔶 partial · ❌ not implemented
 | `` :index:`term` `` role (inline index entry, distinct from the `.. index::` directive) | ❌ | — |
 | `` :sub:`text` ``/`` :subscript:`text` ``, `` :sup:`text` ``/`` :superscript:`text` `` roles | ❌ | — |
 | Default role for unadorned `` `text` `` (single backtick, no role prefix — resolves to title-reference in real docutils/Sphinx) | ❌ | — |
+| Backslash escapes (`\.`, `\*`, …) outside inline-markup context | ❌ | The backslash suppresses construct detection (so `A\. Einstein` correctly stays a paragraph rather than becoming an enumerated list) but is not stripped from the output text |
 | Semantic markup roles: `:abbr:`, `:command:`, `:dfn:`, `:file:`, `:guilabel:`, `:kbd:`, `:mailheader:`, `:makevar:`, `:manpage:`, `:menuselection:`, `:mimetype:`, `:newsgroup:`, `:regexp:`, `:samp:` | ❌ | Real-Sphinx text-formatting-only roles (no cross-reference target); none render any HTML wrapper here |
 
 Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:attr:`, `:exc:`, `:macro:`, `:struct:`, `:union:`, `:type:`, `:data:`/`:const:`/`:var:`/`:member:`) and `:option:` are tracked per-role under the domain they belong to in the `## Domains` section below, not in this table.
@@ -54,7 +55,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Bullet lists (`-`, `*`, `+`) | ✅ | — |
-| Enumerated lists (`1.`, `a.`, `i.`, …) | ❌ | — |
+| Enumerated lists (`1.`, `a.`, `i.`, …) | ✅ | All five sequences (arabic, lower/upper alpha, lower/upper roman), all three formats (`1.`, `1)`, `(1)`), the `#` auto-enumerator, and non-1 start values. Deliberate divergence from Sphinx: the prefix/suffix are *rendered* (via a format class plus CSS counters) rather than dropped, so `(a)` and `a.` are distinguishable in the HTML |
 | Definition lists | 🔶 | Term classifiers (`term : classifier`) not supported; glossary's "multiple terms share one definition" quirk uses a separate implementation |
 | Field lists (`:field: value`) | ❌ | — |
 | Option lists | ❌ | — |

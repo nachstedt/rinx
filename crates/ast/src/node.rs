@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::bullet_list_item::BulletListItem;
 use crate::definition_list_item::DefinitionListItem;
 use crate::directive::Directive;
+use crate::enumerator::Enumerator;
 use crate::hashed_content::HashedContent;
 use crate::inline_node::InlineNode;
+use crate::list_item::ListItem;
 use crate::table::TableRow;
 use crate::target_name::TargetName;
 
@@ -25,7 +26,20 @@ pub enum Node {
     },
     BulletList {
         bullet: char,
-        items: Vec<BulletListItem>,
+        items: Vec<ListItem>,
+    },
+    /// An enumerated (ordered) list.
+    ///
+    /// `start` is the *list's* enumerator, not the first item's content: it
+    /// carries the enumeration sequence, the punctuation format, and the
+    /// ordinal the list begins at — docutils' `enumtype`/`prefix`/`suffix`/
+    /// `start` attributes bundled into one validated value. Item *n* is
+    /// implicitly `start` advanced *n-1* times, because the parser only keeps
+    /// consecutive enumerators in one list: any break in the sequence, format
+    /// or ordering starts a new list instead of being recorded here.
+    EnumeratedList {
+        start: Enumerator,
+        items: Vec<ListItem>,
     },
     DefinitionList {
         items: Vec<DefinitionListItem>,

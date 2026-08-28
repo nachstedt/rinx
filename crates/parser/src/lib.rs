@@ -7,6 +7,7 @@ pub(crate) mod definition_list;
 pub(crate) mod directives;
 pub(crate) mod doctest;
 pub(crate) mod domains;
+pub(crate) mod enumerated_list;
 pub(crate) mod glossary;
 pub(crate) mod headings;
 pub(crate) mod index_directive;

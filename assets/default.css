@@ -202,6 +202,58 @@ hr {
   margin-bottom: 0.5rem;
 }
 
+/* Enumerated lists carry two classes: the enumeration sequence and the
+   punctuation format. The sequence picks the glyphs. */
+.document ol.arabic { list-style-type: decimal; }
+.document ol.loweralpha { list-style-type: lower-alpha; }
+.document ol.upperalpha { list-style-type: upper-alpha; }
+.document ol.lowerroman { list-style-type: lower-roman; }
+.document ol.upperroman { list-style-type: upper-roman; }
+
+/* The period format is what a browser's own marker already renders, so only
+   the two parenthesised formats need counters. Sphinx drops the punctuation
+   entirely, rendering `(a)` and `a.` identically; these rules are what keep
+   the author's own notation visible. The `counter-reset` seeding a list that
+   does not start at 1 is emitted inline by the renderer. */
+.document ol.rparen,
+.document ol.parens {
+  list-style: none;
+  counter-reset: rsl;
+  padding-left: 3rem;
+}
+
+.document ol.rparen > li,
+.document ol.parens > li {
+  position: relative;
+  counter-increment: rsl;
+}
+
+/* Absolutely positioned so the marker leaves the item's normal flow. An item's
+   content is a block `<p>`, so an in-flow marker — however it is displayed —
+   would push that block onto the next line. `right: 100%` puts the marker's
+   right edge at the content edge, which right-aligns markers of any width
+   without reserving a fixed one; leaving `top` unset keeps the marker on the
+   static position, level with the first line of text. */
+.document ol.rparen > li::before,
+.document ol.parens > li::before {
+  position: absolute;
+  right: 100%;
+  margin-right: 0.4rem;
+  white-space: nowrap;
+}
+
+.document ol.arabic.rparen > li::before { content: counter(rsl, decimal) ")"; }
+.document ol.loweralpha.rparen > li::before { content: counter(rsl, lower-alpha) ")"; }
+.document ol.upperalpha.rparen > li::before { content: counter(rsl, upper-alpha) ")"; }
+.document ol.lowerroman.rparen > li::before { content: counter(rsl, lower-roman) ")"; }
+.document ol.upperroman.rparen > li::before { content: counter(rsl, upper-roman) ")"; }
+
+.document ol.arabic.parens > li::before { content: "(" counter(rsl, decimal) ")"; }
+.document ol.loweralpha.parens > li::before { content: "(" counter(rsl, lower-alpha) ")"; }
+.document ol.upperalpha.parens > li::before { content: "(" counter(rsl, upper-alpha) ")"; }
+.document ol.lowerroman.parens > li::before { content: "(" counter(rsl, lower-roman) ")"; }
+.document ol.upperroman.parens > li::before { content: "(" counter(rsl, upper-roman) ")"; }
+
 .document code {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.9em;

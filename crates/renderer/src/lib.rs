@@ -22,7 +22,9 @@ use domain_resolution::DomainObjectResolver;
 use inline::render_inline;
 use nav::{find_nav_entry, render_nav_entry};
 use option_resolution::OptionResolver;
-use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, ObjectType, TableRow};
+use rusty_sphinx_ast::{
+    Directive, Document, Enumerator, InlineNode, ListItem, Node, ObjectType, TableRow,
+};
 use rusty_sphinx_index::ProjectIndex;
 use rusty_sphinx_scope::Scope;
 use std::fmt::Write as _;
@@ -172,6 +174,57 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
     }
 }
 
+/// Renders the `<li>` elements shared by both list kinds.
+///
+/// The two kinds differ only in their wrapper element — docutils models both
+/// with one `list_item` node, and so does [`rusty_sphinx_ast::ListItem`].
+fn render_list_items(html: &mut String, items: &[ListItem], ctx: &mut RenderCtx) {
+    for item in items {
+        let _ = write!(html, "<li>");
+        render_nodes(html, &item.nodes, ctx);
+        let _ = writeln!(html, "</li>");
+    }
+}
+
+/// Builds the opening `<ol>` tag for an enumerated list.
+///
+/// Sphinx emits only the sequence class here — its HTML writers carry a
+/// literal `@@@ To do: prefix, suffix.` and drop the punctuation, so `(a)`,
+/// `a)` and `a.` all render identically. rusty-sphinx keeps the distinction:
+/// the format class lets the stylesheet reproduce the parentheses the author
+/// actually wrote. Do not "simplify" this back to Sphinx's output.
+///
+/// `start` is emitted only when the list does not begin at 1, matching
+/// docutils. For the parenthesised formats the browser's own marker is
+/// suppressed in CSS, so the starting point is additionally handed to the
+/// counter as an inline `counter-reset`; the `start` attribute is still
+/// present so the list numbers correctly without the stylesheet.
+fn open_enumerated_list_tag(start: Enumerator) -> String {
+    let mut tag = format!(
+        "<ol class=\"{} {}\"",
+        start.sequence().css_class(),
+        start.format().css_class()
+    );
+    if start.ordinal() != 1 {
+        let _ = write!(tag, " start=\"{}\"", start.ordinal());
+    }
+    if !start.format().is_native_marker() {
+        let _ = write!(
+            tag,
+            " style=\"counter-reset: rsl {}\"",
+            i64::from(start.ordinal()) - 1
+        );
+    }
+    tag.push('>');
+    tag
+}
+
+/// Collects the URIs of anonymous hyperlink targets, in document order.
+///
+/// The match is deliberately exhaustive: every block-level container has to be
+/// descended into, or an anonymous target written inside one silently fails to
+/// pair with its reference. Leaving a `_` arm here is what let list, table and
+/// definition-list bodies go unvisited for as long as they did.
 fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
     for node in nodes {
         match node {
@@ -198,7 +251,36 @@ fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
                     }
                 }
             }
-            _ => {}
+            Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
+                for item in items {
+                    collect_anonymous_targets(&item.nodes, targets);
+                }
+            }
+            Node::DefinitionList { items } => {
+                for item in items {
+                    collect_anonymous_targets(&item.definition, targets);
+                }
+            }
+            Node::Table {
+                header_rows,
+                body_rows,
+            } => {
+                for row in header_rows.iter().chain(body_rows) {
+                    for cell in &row.cells {
+                        collect_anonymous_targets(&cell.content, targets);
+                    }
+                }
+            }
+            // Every other directive's payload is inline or verbatim, and the
+            // remaining node kinds have no block-level children at all.
+            Node::Directive(_)
+            | Node::Heading { .. }
+            | Node::Paragraph(_)
+            | Node::Target { .. }
+            | Node::LiteralBlock { .. }
+            | Node::DoctestBlock(_)
+            | Node::Comment
+            | Node::Transition => {}
         }
     }
 }
@@ -278,12 +360,13 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
             Node::Directive(directive) => render_directive(html, directive, ctx),
             Node::BulletList { items, .. } => {
                 let _ = writeln!(html, "<ul>");
-                for item in items {
-                    let _ = write!(html, "<li>");
-                    render_nodes(html, &item.nodes, ctx);
-                    let _ = writeln!(html, "</li>");
-                }
+                render_list_items(html, items, ctx);
                 let _ = writeln!(html, "</ul>");
+            }
+            Node::EnumeratedList { start, items } => {
+                let _ = writeln!(html, "{}", open_enumerated_list_tag(*start));
+                render_list_items(html, items, ctx);
+                let _ = writeln!(html, "</ol>");
             }
             Node::DefinitionList { items } => {
                 let _ = writeln!(html, "<dl>");
@@ -442,7 +525,8 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
 mod tests {
     use super::*;
     use rusty_sphinx_ast::{
-        HashedContent, InlineNode, NonEmptyVector, TargetName, TargetSearchOrder,
+        EnumeratorFormat, EnumeratorSequence, HashedContent, InlineNode, NonEmptyVector,
+        TargetName, TargetSearchOrder,
     };
 
     #[test]
@@ -1293,12 +1377,12 @@ mod tests {
             vec![Node::BulletList {
                 bullet: '*',
                 items: vec![
-                    rusty_sphinx_ast::BulletListItem {
+                    rusty_sphinx_ast::ListItem {
                         nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                             "Item 1".to_string(),
                         )])],
                     },
-                    rusty_sphinx_ast::BulletListItem {
+                    rusty_sphinx_ast::ListItem {
                         nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                             "Item 2".to_string(),
                         )])],
@@ -1325,12 +1409,12 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::BulletList {
                 bullet: '*',
-                items: vec![rusty_sphinx_ast::BulletListItem {
+                items: vec![rusty_sphinx_ast::ListItem {
                     nodes: vec![
                         Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
                         Node::BulletList {
                             bullet: '-',
-                            items: vec![rusty_sphinx_ast::BulletListItem {
+                            items: vec![rusty_sphinx_ast::ListItem {
                                 nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                                     "Child".to_string(),
                                 )])],
@@ -1358,7 +1442,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::BulletList {
                 bullet: '*',
-                items: vec![rusty_sphinx_ast::BulletListItem {
+                items: vec![rusty_sphinx_ast::ListItem {
                     nodes: vec![
                         Node::Paragraph(vec![InlineNode::Text("Para 1".to_string())]),
                         Node::Paragraph(vec![InlineNode::Text("Para 2".to_string())]),
@@ -1373,6 +1457,267 @@ mod tests {
 
         // Then
         assert!(result.contains("<li><p>Para 1</p>\n<p>Para 2</p>\n</li>"));
+    }
+
+    /// Builds a two-item enumerated list starting at `ordinal`.
+    fn enumerated_list(
+        sequence: EnumeratorSequence,
+        format: EnumeratorFormat,
+        ordinal: u32,
+    ) -> Node {
+        Node::EnumeratedList {
+            start: Enumerator::new(sequence, format, ordinal).expect("valid ordinal"),
+            items: vec![
+                ListItem {
+                    nodes: vec![Node::Paragraph(vec![InlineNode::Text("One".to_string())])],
+                },
+                ListItem {
+                    nodes: vec![Node::Paragraph(vec![InlineNode::Text("Two".to_string())])],
+                },
+            ],
+        }
+    }
+
+    #[test]
+    fn test_render_enumerated_list() {
+        // Given a plain arabic list starting at one
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![enumerated_list(
+                EnumeratorSequence::Arabic,
+                EnumeratorFormat::Period,
+                1,
+            )],
+        );
+        let index = ProjectIndex::default();
+
+        // When rendering it
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then it becomes an `<ol>` carrying its sequence and format classes,
+        // with no `start` attribute and no counter styling
+        assert_eq!(
+            result,
+            "<ol class=\"arabic period\">\n<li><p>One</p>\n</li>\n<li><p>Two</p>\n</li>\n</ol>\n"
+        );
+    }
+
+    #[test]
+    fn test_render_enumerated_list_carries_each_sequence_class() {
+        // Given each enumeration sequence
+        let expected = [
+            (EnumeratorSequence::Arabic, "arabic"),
+            (EnumeratorSequence::LowerAlpha, "loweralpha"),
+            (EnumeratorSequence::UpperAlpha, "upperalpha"),
+            (EnumeratorSequence::LowerRoman, "lowerroman"),
+            (EnumeratorSequence::UpperRoman, "upperroman"),
+        ];
+        let index = ProjectIndex::default();
+
+        for (sequence, class) in expected {
+            let doc = Document::new(
+                "test.rst".to_string(),
+                vec![enumerated_list(sequence, EnumeratorFormat::Period, 1)],
+            );
+
+            // When rendering it
+            let result = render(&doc, &index, &doc.path).html;
+
+            // Then the class names the sequence, matching Sphinx's vocabulary
+            assert!(
+                result.starts_with(&format!("<ol class=\"{class} period\">")),
+                "{sequence:?}: {result}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_render_enumerated_list_distinguishes_the_punctuation_formats() {
+        // Given the same list in each format
+        let expected = [
+            (EnumeratorFormat::Period, "period"),
+            (EnumeratorFormat::RightParen, "rparen"),
+            (EnumeratorFormat::Parens, "parens"),
+        ];
+        let index = ProjectIndex::default();
+
+        for (format, class) in expected {
+            let doc = Document::new(
+                "test.rst".to_string(),
+                vec![enumerated_list(EnumeratorSequence::Arabic, format, 1)],
+            );
+
+            // When rendering it
+            let result = render(&doc, &index, &doc.path).html;
+
+            // Then the format reaches the HTML. Sphinx drops it, so `(1)` and
+            // `1.` are indistinguishable in its output; keeping the class is
+            // what lets the stylesheet reproduce the author's punctuation.
+            assert!(
+                result.contains(&format!("class=\"arabic {class}\"")),
+                "{format:?}: {result}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_render_enumerated_list_emits_a_start_attribute_only_when_it_is_not_one() {
+        // Given lists starting at one and at five
+        let index = ProjectIndex::default();
+        let from_one = Document::new(
+            "test.rst".to_string(),
+            vec![enumerated_list(
+                EnumeratorSequence::Arabic,
+                EnumeratorFormat::Period,
+                1,
+            )],
+        );
+        let from_five = Document::new(
+            "test.rst".to_string(),
+            vec![enumerated_list(
+                EnumeratorSequence::Arabic,
+                EnumeratorFormat::Period,
+                5,
+            )],
+        );
+
+        // When rendering both
+        let default_start = render(&from_one, &index, &from_one.path).html;
+        let shifted_start = render(&from_five, &index, &from_five.path).html;
+
+        // Then only the shifted list carries the attribute
+        assert!(!default_start.contains("start="), "{default_start}");
+        assert!(shifted_start.contains("start=\"5\""), "{shifted_start}");
+    }
+
+    #[test]
+    fn test_render_enumerated_list_seeds_the_counter_for_parenthesised_formats() {
+        // Given a parenthesised list starting at five
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![enumerated_list(
+                EnumeratorSequence::LowerAlpha,
+                EnumeratorFormat::Parens,
+                5,
+            )],
+        );
+        let index = ProjectIndex::default();
+
+        // When rendering it
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then the CSS counter is seeded one below the start, since the
+        // stylesheet suppresses the browser's own marker for this format
+        assert!(
+            result.contains("style=\"counter-reset: rsl 4\""),
+            "{result}"
+        );
+    }
+
+    #[test]
+    fn test_render_enumerated_list_does_not_seed_a_counter_for_the_period_format() {
+        // Given a period-format list starting at five
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![enumerated_list(
+                EnumeratorSequence::Arabic,
+                EnumeratorFormat::Period,
+                5,
+            )],
+        );
+        let index = ProjectIndex::default();
+
+        // When rendering it
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then no counter styling is emitted — the browser's own marker already
+        // renders this format, and `start` alone positions it
+        assert!(!result.contains("counter-reset"), "{result}");
+    }
+
+    #[test]
+    fn test_render_enumerated_list_seeds_a_negative_counter_for_a_zero_start() {
+        // Given a list starting at zero, which docutils accepts from `0.`
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![enumerated_list(
+                EnumeratorSequence::Arabic,
+                EnumeratorFormat::RightParen,
+                0,
+            )],
+        );
+        let index = ProjectIndex::default();
+
+        // When rendering it
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then the counter is seeded below zero rather than clamped, so the
+        // first item still shows `0)`
+        assert!(
+            result.contains("style=\"counter-reset: rsl -1\""),
+            "{result}"
+        );
+    }
+
+    #[test]
+    fn test_render_enumerated_list_nested() {
+        // Given an enumerated list whose first item contains another
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::EnumeratedList {
+                start: Enumerator::new(EnumeratorSequence::Arabic, EnumeratorFormat::Period, 1)
+                    .unwrap(),
+                items: vec![ListItem {
+                    nodes: vec![
+                        Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
+                        enumerated_list(
+                            EnumeratorSequence::LowerAlpha,
+                            EnumeratorFormat::Parens,
+                            1,
+                        ),
+                    ],
+                }],
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When rendering it
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then the inner list nests inside the outer item
+        assert!(
+            result.contains("<li><p>Parent</p>\n<ol class=\"loweralpha parens\""),
+            "{result}"
+        );
+        assert!(result.contains("</ol>\n</li>\n</ol>\n"), "{result}");
+    }
+
+    #[test]
+    fn test_render_collects_an_anonymous_target_nested_in_a_list_item() {
+        // Given an anonymous hyperlink target written inside a list item
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![
+                Node::EnumeratedList {
+                    start: Enumerator::new(EnumeratorSequence::Arabic, EnumeratorFormat::Period, 1)
+                        .unwrap(),
+                    items: vec![ListItem {
+                        nodes: vec![Node::AnonymousTarget {
+                            uri: "https://example.com/".to_string(),
+                        }],
+                    }],
+                },
+                Node::Paragraph(vec![InlineNode::AnonymousReference("here".to_string())]),
+            ],
+        );
+        let index = ProjectIndex::default();
+
+        // When rendering the document
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then the reference resolves: the collector descends into list items
+        // rather than stopping at the container, as it once did
+        assert!(result.contains("https://example.com/"), "{result}");
     }
 
     #[test]

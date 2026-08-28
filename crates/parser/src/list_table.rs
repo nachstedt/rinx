@@ -2,8 +2,7 @@ use super::blocks::{join_body_lines, parse_blocks};
 use super::bullet_list::unindent_body_lines;
 use super::headings::Adornment;
 use rusty_sphinx_ast::{
-    BulletListItem, Directive, Domain, ListTableWidths, Node, TableAlign, TableCell, TableRow,
-    TargetName,
+    Directive, Domain, ListItem, ListTableWidths, Node, TableAlign, TableCell, TableRow, TargetName,
 };
 
 /// The recognized `.. list-table::` options, scanned off the leading
@@ -144,7 +143,7 @@ fn parse_list_table_options(
 /// (HTML tolerates ragged rows fine, and there's no ambiguity to resolve
 /// here unlike a grid table's character alignment).
 fn lower_list_table_rows(
-    row_items: &[BulletListItem],
+    row_items: &[ListItem],
     diagnostics: &mut Vec<String>,
 ) -> (Vec<TableRow>, usize) {
     let mut rows = Vec::new();

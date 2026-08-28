@@ -138,7 +138,7 @@ pub(super) fn try_parse_bullet_list(
             let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
             let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, default_domain);
 
-            items.push(rusty_sphinx_ast::BulletListItem { nodes: body_nodes });
+            items.push(rusty_sphinx_ast::ListItem { nodes: body_nodes });
         } else {
             break;
         }
