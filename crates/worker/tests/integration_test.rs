@@ -784,6 +784,57 @@ Call :meth:`.close` when done.
 }
 
 #[test]
+fn test_e2e_simple_table_renders_header_body_and_column_span() {
+    // Given a simple table with a header rule and a `-` span underline
+    let input = "\
+=====  =====
+col 1  col 2
+=====  =====
+1      2
+a span
+------------
+3      4
+=====  =====
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    let expected_html = "\
+<table>
+<thead>
+<tr>
+<th><p>col 1</p>
+</th>
+<th><p>col 2</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>1</p>
+</td>
+<td><p>2</p>
+</td>
+</tr>
+<tr>
+<td colspan=\"2\"><p>a span</p>
+</td>
+</tr>
+<tr>
+<td><p>3</p>
+</td>
+<td><p>4</p>
+</td>
+</tr>
+</tbody>
+</table>
+";
+    assert_eq!(result, expected_html);
+}
+
+#[test]
 fn test_e2e_list_table_basic_renders_as_table() {
     // Given
     let input = "\

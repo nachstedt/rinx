@@ -4,6 +4,7 @@ use super::directives::try_parse_directive;
 use super::enumerated_list::try_parse_enumerated_list;
 use super::headings::{Adornment, detect_adornment, try_parse_heading};
 use super::inline::parse_inline_text;
+use super::simple_table::try_parse_simple_table;
 use super::table::try_parse_grid_table;
 use rusty_sphinx_ast::{Document, Domain, Node, TargetName};
 
@@ -258,6 +259,14 @@ pub(super) fn parse_blocks(
 
         if let Some((consumed, node)) =
             try_parse_grid_table(lines, i, adornment_order, diagnostics, default_domain)
+        {
+            nodes.push(node);
+            i += consumed;
+            continue;
+        }
+
+        if let Some((consumed, node)) =
+            try_parse_simple_table(lines, i, adornment_order, diagnostics, default_domain)
         {
             nodes.push(node);
             i += consumed;

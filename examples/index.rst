@@ -23,6 +23,7 @@ Welcome to the Rusty-Sphinx example.
    transitions
    typography
    tables
+   simple_tables
    list_table
    index_entries
    doctests

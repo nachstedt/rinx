@@ -1,12 +1,8 @@
 use super::blocks::parse_blocks;
-use super::bullet_list::strip_indent;
+use super::bullet_list::{leading_whitespace_count, strip_indent};
 use super::headings::Adornment;
 use super::inline::parse_inline_text;
 use rusty_sphinx_ast::{DefinitionListItem, Domain, Node};
-
-fn leading_whitespace_count(line: &str) -> usize {
-    line.chars().take_while(|c| c.is_whitespace()).count()
-}
 
 /// Detects whether `lines[i]` is the term of a definition-list entry: a
 /// non-blank line immediately followed (no blank line in between) by a
