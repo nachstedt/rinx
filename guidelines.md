@@ -14,6 +14,8 @@
 - Documentation builds should fail loudly if content invariants (like missing diagram images) are violated.
 - Tests should always follow the Given-When-Then pattern.
 - Do not commit changes unless explicitly requested by the user.
+- Give every commit a conventional-commit subject line, e.g. `feat: support simple tables`.
+- Always follow that subject with a body summarizing at a high level what the commit does and the notable decisions behind it; a bare subject line is never enough.
 - Always add examples for all variants of a new feature to the example project.
 - Always create unit tests for new functions introduced during refactoring.
 - Use enums for fields with a fixed set of predefined values to ensure type safety.
@@ -41,3 +43,5 @@
 - Give two constructs one shared type when they are structurally identical and carry no kind-specific data; split them into separate types only when they differ in the fields they need.
 - When porting a reference implementation, port its full diagnostic set, and additionally invent diagnostics of your own wherever it silently degrades valid-looking input into something else.
 - Before keeping an invented diagnostic, measure its false-positive rate over the benchmark corpus; a heuristic that stays silent across real documents is safe to keep unnarrowed.
+- When the reference implementation defines a rule over full Unicode character classes, port those classes rather than an ASCII approximation that happens to satisfy the current tests.
+- Transcribe a reference implementation's pre-generated tables rather than re-deriving them, so the two cannot drift apart as either side's inputs change.

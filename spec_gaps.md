@@ -34,6 +34,7 @@ Legend: ✅ implemented · 🔶 partial · ❌ not implemented
 | Hyperlink references (`link text <URL>`_) | ✅ | — |
 | Anonymous hyperlinks (`link text <URL>`__) | ✅ | — |
 | Smart typography (`---` → em dash, `--` → en dash, `...` → ellipsis) | ✅ | Not applied inside inline literals, `:program:`, code blocks, or glossary terms |
+| Inline-markup recognition rules (start/end-string context) | 🔶 | A start-string must open the text or follow whitespace/an opener/a delimiter, and an end-string must end the text or precede whitespace/a closer/a delimiter, using docutils' own Unicode character classes (`crates/parser/src/punctuation.rs`). docutils' rule 5 — rejecting a marker wrapped in a *matching* quote pair, e.g. `"*"` — is not implemented |
 | `` :any:`target` `` cross-reference role (finds any cross-reference target) | ❌ | — |
 | `` :doc:`page` `` cross-reference role (links to another document) | ❌ | — |
 | `` :download:`file` `` role (links to a downloadable file) | ❌ | — |
@@ -45,7 +46,7 @@ Legend: ✅ implemented · 🔶 partial · ❌ not implemented
 | `` :index:`term` `` role (inline index entry, distinct from the `.. index::` directive) | ❌ | — |
 | `` :sub:`text` ``/`` :subscript:`text` ``, `` :sup:`text` ``/`` :superscript:`text` `` roles | ❌ | — |
 | Default role for unadorned `` `text` `` (single backtick, no role prefix — resolves to title-reference in real docutils/Sphinx) | ❌ | — |
-| Backslash escapes (`\.`, `\*`, …) outside inline-markup context | ❌ | The backslash suppresses construct detection (so `A\. Einstein` correctly stays a paragraph rather than becoming an enumerated list) but is not stripped from the output text |
+| Backslash escapes (`\.`, `\*`, …) outside inline-markup context | ✅ | Ported from docutils' two-phase model (`crates/parser/src/escapes.rs`): escapes become markers before markup recognition and are removed when text is emitted. Escaped whitespace disappears entirely (`foo\ *bar*`), inline literals keep their backslashes verbatim, and smart typography sees the escaped form so `\-\-` stays two hyphens |
 | Semantic markup roles: `:abbr:`, `:command:`, `:dfn:`, `:file:`, `:guilabel:`, `:kbd:`, `:mailheader:`, `:makevar:`, `:manpage:`, `:menuselection:`, `:mimetype:`, `:newsgroup:`, `:regexp:`, `:samp:` | ❌ | Real-Sphinx text-formatting-only roles (no cross-reference target); none render any HTML wrapper here |
 
 Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:attr:`, `:exc:`, `:macro:`, `:struct:`, `:union:`, `:type:`, `:data:`/`:const:`/`:var:`/`:member:`) and `:option:` are tracked per-role under the domain they belong to in the `## Domains` section below, not in this table.
@@ -68,7 +69,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Grid tables (`+---+` / `|` / `=` ASCII art) | ✅ | Column/row spans and hierarchical/nested headers supported |
-| Simple tables (whitespace-column `===` style) | 🔶 | Header rules, `-` column-span underlines, multi-line cells and the unbounded rightmost column are supported. An empty first-column cell needs the escaped space `\ ` docutils prescribes, which renders as a literal backslash — the parser has no general text-level backslash unescaping |
+| Simple tables (whitespace-column `===` style) | ✅ | Header rules, `-` column-span underlines, multi-line cells, the unbounded rightmost column, and the escaped space `\ ` for a deliberately empty first-column cell |
 | `.. list-table::` | ✅ | `:name:` resolves to the document, not a fragment precisely at the table (same limitation as every other internal `:ref:` target) |
 | `.. csv-table::` directive | ❌ | — |
 | `.. table::` (table title/caption/options) | ❌ | — |

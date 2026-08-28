@@ -22,6 +22,7 @@ Welcome to the Rusty-Sphinx example.
    current_module
    transitions
    typography
+   escapes
    tables
    simple_tables
    list_table
