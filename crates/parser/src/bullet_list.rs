@@ -2,6 +2,12 @@ use super::blocks::parse_blocks;
 use super::headings::Adornment;
 use rusty_sphinx_ast::{Domain, Node};
 
+/// Counts the leading whitespace characters of `line`, in `char`s (not bytes),
+/// which is the unit every indentation-sensitive construct measures in.
+pub(super) fn leading_whitespace_count(line: &str) -> usize {
+    line.chars().take_while(|c| c.is_whitespace()).count()
+}
+
 pub(super) fn strip_indent(s: &str, indent_chars: usize) -> &str {
     let mut indices = s.char_indices();
     if let Some((idx, _)) = indices.nth(indent_chars) {
