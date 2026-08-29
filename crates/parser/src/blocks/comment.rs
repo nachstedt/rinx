@@ -1,4 +1,5 @@
-use super::directive_body::{collect_directive_body, indent_width};
+use crate::directives::body::collect_directive_body;
+use crate::indent::indent_width;
 use rusty_sphinx_ast::Node;
 
 /// Tries to parse an RST comment starting at line `i`.
