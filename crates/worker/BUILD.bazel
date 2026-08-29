@@ -3,12 +3,7 @@ load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 
 rust_library(
     name = "rusty_sphinx_worker_lib",
-    srcs = [
-        "src/doctest_plan.rs",
-        "src/domain_warnings.rs",
-        "src/lib.rs",
-        "src/validator.rs",
-    ],
+    srcs = glob(["src/**/*.rs"]),
     crate_name = "rusty_sphinx_worker",
     edition = "2024",
     deps = all_crate_deps(
@@ -23,7 +18,7 @@ rust_library(
 
 rust_binary(
     name = "rusty_sphinx_worker",
-    srcs = ["src/main.rs"],
+    srcs = glob(["src/**/*.rs"]),
     edition = "2024",
     visibility = ["//visibility:public"],
     deps = all_crate_deps(
