@@ -31,8 +31,12 @@ rusty_sphinx_library(
         "tables.rst",
         "simple_tables.rst",
         "list_table.rst",
+        "csv_table.rst",
         "index_entries.rst",
     ],
+    # `csv_table.rst` reads this via `.. csv-table:: :file:`. Declaring it here
+    # is what puts it in the parse action's sandbox — see `rules/library.bzl`.
+    csv_data = ["data/fruits.csv"],
     deps = [
         # `index.rst`'s toctree pulls in `doctests`, so the library owning it
         # has to be a declared dep.

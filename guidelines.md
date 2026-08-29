@@ -95,6 +95,9 @@ entry under the heading it belongs to, as a single short sentence.
 - Always add examples for all variants of a new feature to the example project.
 - When adding new `.rst` files to the example project, always declare them in `srcs` in the corresponding `BUILD.bazel` file.
 - Derive a target's inputs from the target it depends on rather than repeating them in the build file; where the build system cannot express that, choose the coarser granularity over a duplicated naming convention.
+- Give data a build target reads its own attribute, separate from the attribute that declares dependencies on other targets.
+- A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
+- Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
 - In spec_gaps.md, mark a row 🔶 partial rather than ✅ whenever its own Notes say a specific argument/option/variant of that feature is unsupported, even though the feature's core case works.
 
 ## Workflow and commits
