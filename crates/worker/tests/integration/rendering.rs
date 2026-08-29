@@ -142,6 +142,78 @@ fn test_e2e_list_table_basic_renders_as_table() {
 }
 
 #[test]
+fn test_e2e_csv_table_basic_renders_as_table() {
+    // Given
+    let input = "\
+.. csv-table::
+   :header-rows: 1
+
+   Fruit, Colour
+   Apple, Red
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — identical chrome to the list-table above apart from the class,
+    // since both directives render through one code path.
+    let expected_html = "\
+<table class=\"csv-table\">
+<thead>
+<tr>
+<th><p>Fruit</p>
+</th>
+<th><p>Colour</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Apple</p>
+</td>
+<td><p>Red</p>
+</td>
+</tr>
+</tbody>
+</table>
+";
+    assert_eq!(result, expected_html);
+}
+
+#[test]
+fn test_e2e_csv_table_quoted_field_keeps_its_comma() {
+    // Given
+    let input = "\
+.. csv-table::
+
+   \"Apple, Braeburn\", Red
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    assert!(result.contains("<p>Apple, Braeburn</p>"), "{result}");
+}
+
+#[test]
+fn test_e2e_csv_table_cell_content_is_reparsed_as_rst() {
+    // Given
+    let input = "\
+.. csv-table::
+
+   *Apple*, ``Red``
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    assert!(result.contains("<em>Apple</em>"), "{result}");
+    assert!(result.contains("<code"), "{result}");
+}
+
+#[test]
 fn test_e2e_list_table_known_bug_regression_nested_domain_object_resolves() {
     // Given — the known_bugs.md `reference/datamodel.rst` scenario: a
     // domain-object definition nested inside a list-table cell, referenced

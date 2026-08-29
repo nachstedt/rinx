@@ -8,7 +8,7 @@ use crate::indent::{indent_width, strip_common_indent};
 
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::body::{collect_argument_continuation_lines, collect_directive_body, join_body_lines};
-use super::data_table::parse_list_table;
+use super::data_table::{parse_csv_table, parse_list_table};
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
 use super::domains::parse_domain_object;
@@ -139,6 +139,10 @@ fn parse_body_directive(
     }
     if name == "list-table" {
         let directive = parse_list_table(argument, body_lines, adornment_order, diagnostics, ctx);
+        return Node::Directive(directive);
+    }
+    if name == "csv-table" {
+        let directive = parse_csv_table(argument, body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if name == "index" {

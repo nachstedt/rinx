@@ -10,6 +10,7 @@ use std::fs;
 use std::io::{self, Read};
 
 use super::cli_args::{flag_value, flag_value_opt};
+use super::csv_files::{DocumentRelativeCsvFiles, parse_ctx};
 use super::diagnostics::{format_broken_link_warning, format_object_type_mismatch_warning};
 use super::parse::parse_default_domain_flag;
 
@@ -20,12 +21,13 @@ pub(super) fn process_preview(
     template_str: &str,
     doc_path: &str,
     default_domain: ast::Domain,
+    csv_files: &DocumentRelativeCsvFiles,
 ) -> Result<(
     String,
     Vec<renderer::BrokenLink>,
     Vec<renderer::ObjectTypeMismatch>,
 )> {
-    let doc = parser::parse_with_domain(doc_path, rst, default_domain);
+    let doc = parser::parse_with_ctx(doc_path, rst, &parse_ctx(default_domain, csv_files));
     let mut index = if let Some(json) = index_json {
         serde_json::from_str(json).context("Failed to deserialize global index")?
     } else {
@@ -110,6 +112,9 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
         &template_str,
         &doc_path,
         default_domain,
+        // The editor previews a real file on disk, so `:file:` resolves
+        // against its directory exactly as it does in the `parse` subcommand.
+        &DocumentRelativeCsvFiles::for_document(&doc_path),
     )?;
 
     // Preview is deliberately lenient (it renders over incomplete/WIP
@@ -132,6 +137,12 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
 mod tests {
     use super::*;
 
+    /// A loader rooted at a directory holding no CSV files, for the tests
+    /// whose input has no `:file:` option.
+    fn no_csv_files() -> DocumentRelativeCsvFiles {
+        DocumentRelativeCsvFiles::for_document("test.rst")
+    }
+
     #[test]
     fn test_process_preview_renders_html_with_merged_index() {
         // Given
@@ -149,6 +160,7 @@ mod tests {
             template,
             "test.rst",
             ast::Domain::Py,
+            &no_csv_files(),
         )
         .unwrap();
 
@@ -167,8 +179,16 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let (html, broken_links, _) =
-            process_preview(rst, None, &config, template, "test.rst", ast::Domain::Py).unwrap();
+        let (html, broken_links, _) = process_preview(
+            rst,
+            None,
+            &config,
+            template,
+            "test.rst",
+            ast::Domain::Py,
+            &no_csv_files(),
+        )
+        .unwrap();
 
         // Then
         assert!(html.contains("<h1>Section A</h1>"));
@@ -183,8 +203,16 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let (html, broken_links, _) =
-            process_preview(rst, None, &config, template, "test.rst", ast::Domain::Py).unwrap();
+        let (html, broken_links, _) = process_preview(
+            rst,
+            None,
+            &config,
+            template,
+            "test.rst",
+            ast::Domain::Py,
+            &no_csv_files(),
+        )
+        .unwrap();
 
         // Then
         assert!(html.contains("class=\"broken-link\""));
