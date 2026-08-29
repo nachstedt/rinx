@@ -6,7 +6,7 @@ use rusty_sphinx_ast as ast;
 use rusty_sphinx_worker::doctest_plan;
 use std::fs;
 
-use crate::cli_args::flag_value;
+use super::cli_args::flag_value;
 
 /// Deliberately cheap and deliberately *lossy*: the plan drops everything
 /// presentational, so a prose edit re-runs this step but leaves its output
@@ -19,7 +19,7 @@ pub(super) fn process_extract_doctests(ast_json: &str) -> Result<String> {
     serde_json::to_string(&plan).context("Serialization error")
 }
 
-pub(super) fn cmd_extract_doctests(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_extract_doctests(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let output = flag_value(args, "--output")?;
 

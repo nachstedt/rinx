@@ -1,0 +1,261 @@
+//! Target-registration, document-title and glossary-term tests for
+//! [`super::analyze`] — the parts of a document's index that need no
+//! domain or scope handling.
+
+use super::*;
+use rusty_sphinx_ast::{InlineNode, ObjectType, PyObjectType, TargetSearchOrder};
+
+#[test]
+fn test_analyze_returns_default_index_for_empty_document() {
+    // Given
+    let doc = Document::new("test.rst".to_string(), vec![]);
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    let _ = format!("{index:?}"); // Ensures it doesn't panic
+}
+
+#[test]
+fn test_analyze_returns_default_index_for_populated_document() {
+    // Given
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Heading {
+            level: 1,
+            text: vec![InlineNode::Text("Title".to_string())],
+        }],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    // Currently analyze does not populate anything, but it shouldn't panic
+    let _ = format!("{index:?}");
+}
+
+#[test]
+fn test_analyze_populates_targets_for_target_nodes() {
+    // Given
+    let doc = Document::new(
+        "docs/my-file.rst".to_string(),
+        vec![
+            Node::Target {
+                name: TargetName::new("section-1"),
+                uri: None,
+            },
+            Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
+        ],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(index.targets.len(), 1);
+    assert_eq!(
+        index.targets.get(&TargetName::new("section-1")).unwrap(),
+        &TargetLocation::Internal("docs/my-file.rst".to_string())
+    );
+}
+
+#[test]
+fn test_analyze_extracts_h1_title() {
+    // Given
+    let doc = Document::new(
+        "docs/my-file.rst".to_string(),
+        vec![
+            Node::Paragraph(vec![InlineNode::Text("some text".to_string())]),
+            Node::Heading {
+                level: 1,
+                text: vec![InlineNode::Text("My Title".to_string())],
+            },
+            Node::Heading {
+                level: 1,
+                text: vec![InlineNode::Text("Ignored Second H1".to_string())],
+            },
+        ],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(index.document_titles.len(), 1);
+    assert_eq!(
+        index.document_titles.get("docs/my-file.rst").unwrap(),
+        "My Title"
+    );
+}
+
+#[test]
+fn test_analyze_extracts_h1_title_as_plain_text_when_heading_has_domain_object_reference() {
+    // Given — a heading containing a `~`-shortened domain-object reference
+    let doc = Document::new(
+        "docs/greetings.rst".to_string(),
+        vec![Node::Heading {
+            level: 1,
+            text: vec![
+                InlineNode::Text("The ".to_string()),
+                InlineNode::DomainObjectReference {
+                    object_type: ObjectType::Py(PyObjectType::Module),
+                    name: "pkg.greetings".to_string(),
+                    display: "greetings".to_string(),
+                    link: true,
+                    search_order: TargetSearchOrder::LeastQualifiedFirst,
+                },
+                InlineNode::Text(" Module".to_string()),
+            ],
+        }],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — the title is flattened to plain text, using the shortened display
+    assert_eq!(
+        index.document_titles.get("docs/greetings.rst").unwrap(),
+        "The greetings Module"
+    );
+}
+
+#[test]
+fn test_analyze_registers_glossary_terms() {
+    // Given
+    let doc = Document::new(
+        "glossary.rst".to_string(),
+        vec![Node::Directive(Directive::Glossary {
+            entries: vec![rusty_sphinx_ast::GlossaryEntry {
+                terms: vec!["environment".to_string()],
+                definition: vec![],
+            }],
+            sorted: false,
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(index.glossary_terms.len(), 1);
+    assert_eq!(
+        index.glossary_terms.get(&TargetName::new("environment")),
+        Some(&"glossary.rst".to_string())
+    );
+}
+
+#[test]
+fn test_analyze_registers_all_terms_in_multi_term_entry() {
+    // Given
+    let doc = Document::new(
+        "glossary.rst".to_string(),
+        vec![Node::Directive(Directive::Glossary {
+            entries: vec![rusty_sphinx_ast::GlossaryEntry {
+                terms: vec!["term 1".to_string(), "term 2".to_string()],
+                definition: vec![],
+            }],
+            sorted: false,
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(index.glossary_terms.len(), 2);
+    assert!(
+        index
+            .glossary_terms
+            .contains_key(&TargetName::new("term 1"))
+    );
+    assert!(
+        index
+            .glossary_terms
+            .contains_key(&TargetName::new("term 2"))
+    );
+}
+
+#[test]
+fn test_analyze_registers_target_nested_in_table_cell() {
+    // Given — a target nested inside a grid-table cell
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Table {
+            header_rows: vec![],
+            body_rows: vec![rusty_sphinx_ast::TableRow {
+                cells: vec![rusty_sphinx_ast::TableCell {
+                    colspan: 1,
+                    rowspan: 1,
+                    content: vec![Node::Target {
+                        name: TargetName::new("nested-target"),
+                        uri: None,
+                    }],
+                }],
+            }],
+        }],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("nested-target")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_registers_list_table_name_as_target() {
+    // Given — a `.. list-table::` with a `:name:` option
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Directive(Directive::ListTable {
+            title: None,
+            header_rows: 0,
+            stub_columns: 0,
+            widths: None,
+            width: None,
+            align: None,
+            classes: vec![],
+            name: Some(TargetName::new("fruit-table")),
+            rows: vec![],
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("fruit-table")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_list_table_without_name_registers_no_target() {
+    // Given — a `.. list-table::` with no `:name:` option
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Directive(Directive::ListTable {
+            title: None,
+            header_rows: 0,
+            stub_columns: 0,
+            widths: None,
+            width: None,
+            align: None,
+            classes: vec![],
+            name: None,
+            rows: vec![],
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.targets.is_empty());
+}

@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 use crate::admonition_kind::AdmonitionKind;
-use crate::doctest_block::DocTestBlock;
+use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
 use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
 use crate::index_entry::IndexEntry;
-use crate::list_table_widths::ListTableWidths;
 use crate::node::Node;
+use crate::table::ListTableWidths;
+use crate::table::TableAlign;
 use crate::table::TableRow;
-use crate::table_align::TableAlign;
 use crate::target_name::TargetName;
 use crate::version_change_kind::VersionChangeKind;
 

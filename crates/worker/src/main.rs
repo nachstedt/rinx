@@ -21,30 +21,17 @@
 //! rusty-sphinx <file.rst>    # prints HTML to stdout
 //! ```
 
-mod cli_args;
-mod cmd_extract_doctests;
-mod cmd_genindex;
-mod cmd_index;
-mod cmd_parse;
-mod cmd_preview;
-mod cmd_render;
-mod cmd_validate_toctree;
-mod diagnostics;
-mod diagrams;
+mod commands;
 
 use anyhow::{Context, Result, anyhow};
 use rusty_sphinx_worker::process_rst;
 use std::env;
 use std::fs;
 
-use cmd_extract_doctests::cmd_extract_doctests;
-use cmd_genindex::cmd_genindex;
-use cmd_index::cmd_index;
-use cmd_parse::cmd_parse;
-use cmd_preview::cmd_preview;
-use cmd_render::cmd_render;
-use cmd_validate_toctree::cmd_validate_toctree;
-use diagrams::{cmd_extract_diagrams, cmd_validate_images};
+use commands::{
+    cmd_extract_diagrams, cmd_extract_doctests, cmd_genindex, cmd_index, cmd_parse, cmd_preview,
+    cmd_render, cmd_validate_images, cmd_validate_toctree,
+};
 
 fn cmd_legacy(path: &str) -> Result<()> {
     let rst = fs::read_to_string(path).with_context(|| format!("Error reading '{path}'"))?;

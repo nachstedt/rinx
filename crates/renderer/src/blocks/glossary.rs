@@ -2,7 +2,7 @@
 
 use std::fmt::Write as _;
 
-use super::RenderCtx;
+use crate::RenderCtx;
 
 /// Renders a `glossary` directive as a definition list (`<dl>`).
 pub(super) fn render_glossary(

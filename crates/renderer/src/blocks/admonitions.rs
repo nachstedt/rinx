@@ -4,7 +4,7 @@
 use rusty_sphinx_ast::Node;
 use std::fmt::Write as _;
 
-use super::RenderCtx;
+use crate::RenderCtx;
 
 /// Renders an admonition directive (note, warning, hint, etc.) as HTML.
 pub(super) fn render_admonition(
@@ -167,8 +167,8 @@ mod tests {
         let index = ProjectIndex::default();
         let anon_targets = vec![];
         let mut anon_index = 0;
-        let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
-        let option_resolver = crate::option_resolution::OptionResolver::new(&index);
+        let resolver = crate::resolution::DomainObjectResolver::new(&index);
+        let option_resolver = crate::resolution::OptionResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,
@@ -208,8 +208,8 @@ mod tests {
         let index = ProjectIndex::default();
         let anon_targets = vec![];
         let mut anon_index = 0;
-        let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
-        let option_resolver = crate::option_resolution::OptionResolver::new(&index);
+        let resolver = crate::resolution::DomainObjectResolver::new(&index);
+        let option_resolver = crate::resolution::OptionResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,
@@ -380,8 +380,8 @@ mod tests {
         let index = ProjectIndex::default();
         let anon_targets = vec![];
         let mut anon_index = 0;
-        let resolver = crate::domain_resolution::DomainObjectResolver::new(&index);
-        let option_resolver = crate::option_resolution::OptionResolver::new(&index);
+        let resolver = crate::resolution::DomainObjectResolver::new(&index);
+        let option_resolver = crate::resolution::OptionResolver::new(&index);
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,

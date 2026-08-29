@@ -4,12 +4,12 @@ use std::fmt::Write as _;
 
 use rusty_sphinx_ast::{ObjectType, StdObjectType};
 
-use crate::option_resolution::{OptionResolution, OptionResolver};
+use crate::resolution::{OptionResolution, OptionResolver};
 use crate::{BrokenLink, BrokenLinkKind};
 
 /// Renders a `:option:` cross-reference.
 ///
-/// Delegates the search to [`crate::option_resolution`] (its module doc
+/// Delegates the search to [`crate::resolution::option`] (its module doc
 /// comment documents the ambient-program/global-fallback/embedded-program
 /// search order) and only decides here what each outcome looks like on the
 /// page — the same split [`super::domain_object_reference::render_inline_domain_object_reference`]

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::doctest_flag::DocTestFlag;
-use crate::doctest_group::DocTestGroupSelector;
+use crate::doctest::DocTestFlag;
+use crate::doctest::DocTestGroupSelector;
 use crate::hashed_content::HashedContent;
 use crate::non_empty_vector::NonEmptyVector;
 use crate::py_version_spec::PyVersionSpec;
@@ -169,8 +169,8 @@ impl DocTestBlock {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::doctest_flag::DocTestFlagName;
-    use crate::doctest_group::DocTestGroup;
+    use crate::doctest::DocTestFlagName;
+    use crate::doctest::DocTestGroup;
 
     /// A single-selector group list naming `name`.
     fn groups_named(name: &str) -> NonEmptyVector<DocTestGroupSelector> {

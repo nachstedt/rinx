@@ -6,7 +6,7 @@ use anyhow::{Context, Result, anyhow};
 use rusty_sphinx_ast as ast;
 use std::fs;
 
-use crate::cli_args::{flag_value, flag_values};
+use super::cli_args::{flag_value, flag_values};
 
 /// Collects every `.. plantuml::` directive in `doc`, however deeply nested.
 ///
@@ -38,7 +38,7 @@ pub(super) fn process_extract_diagrams(ast_json: &str, outdir_path: &str) -> Res
     Ok(())
 }
 
-pub(super) fn cmd_extract_diagrams(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_extract_diagrams(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let outdir = flag_value(args, "--outdir")?;
 
@@ -76,7 +76,7 @@ pub(super) fn process_validate_images(ast_jsons: &[String], image_dir: &str) -> 
     }
 }
 
-pub(super) fn cmd_validate_images(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_validate_images(args: &[String]) -> Result<()> {
     let inputs = flag_values(args, "--inputs")?;
     let image_dir = flag_value(args, "--image-dir")?;
     let output = flag_value(args, "--output").ok();

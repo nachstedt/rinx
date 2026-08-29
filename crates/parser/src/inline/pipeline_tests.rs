@@ -531,7 +531,7 @@ fn test_parse_option_role_with_display_text() {
 fn test_parse_option_role_with_embedded_program_in_target() {
     // Given — the whole target is carried through verbatim; splitting it
     // into program + optname happens at render time (see
-    // `rusty_sphinx_renderer::option_resolution`).
+    // `rusty_sphinx_renderer::resolution::option`).
     let input = "See :option:`-O <dis --show-offsets>` here.\n";
     let doc = parse("test.rst", input);
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
