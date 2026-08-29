@@ -131,12 +131,21 @@ pub(super) fn detect_enumerator(
 /// the sequence at the *same* indent. The trailing space after the successor's
 /// marker is deliberate — a bare `2.` with nothing after it does not continue a
 /// list, matching docutils' `next_enumerator = prefix + text + suffix + ' '`.
+///
+/// A marker *alone* on its line is held to the stricter rule in
+/// [`bare_marker_owns_content`] — see there for why this departs from docutils.
 pub(super) fn is_enumerated_list_item(
     lines: &[&str],
     i: usize,
+    candidate: &EnumeratorMatch,
     enumerator: Enumerator,
-    is_auto: bool,
 ) -> bool {
+    let is_auto = candidate.is_auto;
+    if candidate.body_indent.is_none() && !bare_marker_owns_content(lines, i, candidate, enumerator)
+    {
+        return false;
+    }
+
     let Some(next_line) = lines.get(i + 1).map(|l| l.trim_end()) else {
         return true;
     };
@@ -162,6 +171,58 @@ pub(super) fn is_enumerated_list_item(
     // An auto-enumerated item stands for whatever position the list has reached,
     // so only its own `#` form can be predicted, never a literal successor.
     if is_auto {
+        return false;
+    }
+    enumerator
+        .successor()
+        .is_some_and(|next| next_rest.starts_with(&format!("{next} ")))
+}
+
+/// Whether a marker alone on its line actually has an item to own: a body
+/// indented under it, or a sibling item after it.
+///
+/// **Deliberate departure from docutils.** docutils accepts a bare marker with
+/// nothing following it and produces a list whose single item is empty, which
+/// silently *destroys* the marker text — `(n)` in a table cell (meaning "n
+/// bits") renders as an empty `<li>` and the reader never sees it. Per this
+/// repo's rule about not reproducing a reference implementation's information
+/// loss, such a line stays prose instead. Do not "simplify" this back to
+/// returning `true`: `examples/tables.rst` regresses immediately.
+///
+/// Blank lines are skipped before judging, so `1.` + blank + indented body is
+/// still a list.
+fn bare_marker_owns_content(
+    lines: &[&str],
+    i: usize,
+    candidate: &EnumeratorMatch,
+    enumerator: Enumerator,
+) -> bool {
+    let Some(next_line) = lines
+        .iter()
+        .skip(i + 1)
+        .map(|l| l.trim_end())
+        .find(|l| !l.trim().is_empty())
+    else {
+        // Nothing follows at all, so there is no item here — only the text.
+        return false;
+    };
+
+    let next_indent = indent_width(next_line);
+    if next_indent > candidate.item_indent {
+        return true;
+    }
+    if next_indent != candidate.item_indent {
+        return false;
+    }
+
+    // A sibling item means the author really was writing a list, and meant
+    // this one to be empty.
+    let format = enumerator.format();
+    let next_rest = strip_indent(next_line, next_indent);
+    if next_rest.starts_with(&format!("{}#{} ", format.prefix(), format.suffix())) {
+        return true;
+    }
+    if candidate.is_auto {
         return false;
     }
     enumerator
@@ -328,98 +389,129 @@ mod tests {
         assert_eq!(resolve_sequence("?", None), None);
     }
 
+    /// Runs the real recognition path for `lines[i]`, deriving the candidate
+    /// from the line exactly as the item loop does.
+    fn recognises(lines: &[&str], i: usize) -> bool {
+        let candidate = detect_enumerator(lines[i], None).expect("line should carry an enumerator");
+        let enumerator = candidate
+            .enumerator
+            .expect("enumerator should denote an ordinal");
+        is_enumerated_list_item(lines, i, &candidate, enumerator)
+    }
+
     #[test]
     fn test_is_enumerated_list_item_accepts_a_blank_or_absent_next_line() {
         // Given an enumerator whose next line is blank, or which ends the input
-        let enumerator =
-            Enumerator::new(EnumeratorSequence::Arabic, EnumeratorFormat::Period, 1).unwrap();
 
         // When testing it
         // Then both shapes are accepted
-        assert!(is_enumerated_list_item(&["1. a", ""], 0, enumerator, false));
-        assert!(is_enumerated_list_item(&["1. a"], 0, enumerator, false));
+        assert!(recognises(&["1. a", ""], 0));
+        assert!(recognises(&["1. a"], 0));
     }
 
     #[test]
     fn test_is_enumerated_list_item_accepts_an_indented_next_line() {
         // Given an enumerator whose next line is indented further
-        let enumerator =
-            Enumerator::new(EnumeratorSequence::Arabic, EnumeratorFormat::Period, 1).unwrap();
 
         // When testing it
         // Then it is accepted as a continuation
-        assert!(is_enumerated_list_item(
-            &["1. a", "   more"],
-            0,
-            enumerator,
-            false
-        ));
+        assert!(recognises(&["1. a", "   more"], 0));
     }
 
     #[test]
     fn test_is_enumerated_list_item_rejects_a_sibling_line_at_the_list_indent() {
         // Given an indented list whose next line sits at the same indent but is
         // not the successor
-        let enumerator =
-            Enumerator::new(EnumeratorSequence::Arabic, EnumeratorFormat::Period, 1).unwrap();
 
         // When testing it
         // Then it is rejected — the indent comparison has to be relative to the
         // enumerator, not to column zero
-        assert!(!is_enumerated_list_item(
-            &["   1. a", "   Not a continuation"],
-            0,
-            enumerator,
-            false
-        ));
+        assert!(!recognises(&["   1. a", "   Not a continuation"], 0));
     }
 
     #[test]
     fn test_is_enumerated_list_item_accepts_the_auto_marker_as_a_successor() {
         // Given an explicit enumerator followed by an auto-enumerated item
-        let enumerator =
-            Enumerator::new(EnumeratorSequence::Arabic, EnumeratorFormat::Period, 1).unwrap();
 
         // When testing it
         // Then the `#` marker counts as the next enumerator
-        assert!(is_enumerated_list_item(
-            &["1. a", "#. b"],
-            0,
-            enumerator,
-            false
-        ));
+        assert!(recognises(&["1. a", "#. b"], 0));
     }
 
     #[test]
     fn test_is_enumerated_list_item_rejects_a_literal_successor_after_an_auto_item() {
         // Given an auto-enumerated item followed by an explicit enumerator
-        let enumerator =
-            Enumerator::new(EnumeratorSequence::Arabic, EnumeratorFormat::Period, 1).unwrap();
 
         // When testing it
         // Then it is rejected: an auto item stands for an unknown position, so
         // only another `#` can be predicted to follow it
-        assert!(!is_enumerated_list_item(
-            &["#. a", "2. b"],
-            0,
-            enumerator,
-            true
-        ));
+        assert!(!recognises(&["#. a", "2. b"], 0));
     }
 
     #[test]
     fn test_is_enumerated_list_item_rejects_a_successor_at_the_end_of_a_sequence() {
         // Given the last enumerator its sequence can express
-        let enumerator =
-            Enumerator::new(EnumeratorSequence::LowerAlpha, EnumeratorFormat::Period, 26).unwrap();
 
         // When testing it against a following unindented line
         // Then it is rejected, since no successor exists to match against
-        assert!(!is_enumerated_list_item(
-            &["z. a", "next line"],
+        assert!(!recognises(&["z. a", "next line"], 0));
+    }
+
+    #[test]
+    fn test_is_enumerated_list_item_rejects_a_bare_marker_with_nothing_after_it() {
+        // Given a marker alone on the only line, as a table cell like `(n)`
+        // produces
+
+        // When testing it
+        // Then it is not a list item — accepting it would drop the text
+        assert!(!recognises(&["(n)"], 0));
+    }
+
+    #[test]
+    fn test_bare_marker_owns_content_accepts_an_indented_body_across_a_blank() {
+        // Given a bare marker whose body follows after a blank line
+        let lines = ["1.", "", "   body"];
+        let candidate = detect_enumerator(lines[0], None).expect("should detect");
+
+        // When asking whether it owns an item
+        // Then the blank line is skipped and the indented body counts
+        assert!(bare_marker_owns_content(
+            &lines,
             0,
-            enumerator,
-            false
+            &candidate,
+            candidate.enumerator.unwrap()
+        ));
+    }
+
+    #[test]
+    fn test_bare_marker_owns_content_accepts_a_sibling_item() {
+        // Given a deliberately empty item followed by its successor
+        let lines = ["1.", "2. Second"];
+        let candidate = detect_enumerator(lines[0], None).expect("should detect");
+
+        // When asking whether it owns an item
+        // Then the sibling proves the author meant a list
+        assert!(bare_marker_owns_content(
+            &lines,
+            0,
+            &candidate,
+            candidate.enumerator.unwrap()
+        ));
+    }
+
+    #[test]
+    fn test_bare_marker_owns_content_rejects_unindented_prose() {
+        // Given a bare marker followed by prose at the same indent
+        let lines = ["(n)", "", "Some prose."];
+        let candidate = detect_enumerator(lines[0], None).expect("should detect");
+
+        // When asking whether it owns an item
+        // Then it does not, so the marker stays text
+        assert!(!bare_marker_owns_content(
+            &lines,
+            0,
+            &candidate,
+            candidate.enumerator.unwrap()
         ));
     }
 }
