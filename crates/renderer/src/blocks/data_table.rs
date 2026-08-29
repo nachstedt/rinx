@@ -1,20 +1,24 @@
-//! `.. list-table::` directive rendering.
+//! `.. list-table::` and `.. csv-table::` directive rendering.
+//!
+//! Both parse into one `Directive::DataTable`, so both render through this
+//! module; `source` decides only which CSS class the `<table>` carries.
 
-use rusty_sphinx_ast::{ListTableWidths, TableAlign, TableRow, TargetName};
+use rusty_sphinx_ast::{TableAlign, TableRow, TableSource, TableWidths, TargetName};
 use std::fmt::Write as _;
 
 use crate::RenderCtx;
 
-/// The fields `render_list_table` needs, borrowed straight from
-/// [`rusty_sphinx_ast::Directive::ListTable`] — grouped into one struct
+/// The fields `render_data_table` needs, borrowed straight from
+/// [`rusty_sphinx_ast::Directive::DataTable`] — grouped into one struct
 /// (rather than ten separate parameters) purely to keep the function's
 /// arity reasonable.
 #[derive(Clone, Copy)]
-pub(super) struct ListTableParams<'a> {
+pub(super) struct DataTableParams<'a> {
+    pub source: TableSource,
     pub title: Option<&'a str>,
     pub header_rows: usize,
     pub stub_columns: usize,
-    pub widths: Option<&'a ListTableWidths>,
+    pub widths: Option<&'a TableWidths>,
     pub width: Option<&'a str>,
     pub align: Option<TableAlign>,
     pub classes: &'a [String],
@@ -22,15 +26,17 @@ pub(super) struct ListTableParams<'a> {
     pub rows: &'a [TableRow],
 }
 
-/// Renders a `.. list-table::` directive as HTML, reusing the grid-table
-/// row/cell rendering machinery ([`super::tables::render_table_cell`]) so both table
-/// forms share one code path for the actual `<td>`/`<th>` output.
-pub(super) fn render_list_table(
+/// Renders a `.. list-table::` or `.. csv-table::` directive as HTML,
+/// reusing the grid-table row/cell rendering machinery
+/// ([`super::tables::render_table_cell`]) so every table form shares one code
+/// path for the actual `<td>`/`<th>` output.
+pub(super) fn render_data_table(
     html: &mut String,
-    params: ListTableParams<'_>,
+    params: DataTableParams<'_>,
     ctx: &mut RenderCtx<'_>,
 ) {
-    let ListTableParams {
+    let DataTableParams {
+        source,
         title,
         header_rows,
         stub_columns,
@@ -50,7 +56,10 @@ pub(super) fn render_list_table(
         let _ = writeln!(html, "<a id=\"{escaped}\"></a>");
     }
 
-    let mut class_list = vec!["list-table".to_string()];
+    // The directive's own name is the table's first class, so a stylesheet
+    // can target `.list-table` and `.csv-table` separately even though the two
+    // render identically otherwise.
+    let mut class_list = vec![source.as_str().to_string()];
     class_list.extend(classes.iter().cloned());
     if let Some(align) = align {
         class_list.push(format!("align-{}", align.as_str()));
@@ -69,11 +78,11 @@ pub(super) fn render_list_table(
         let _ = writeln!(html, "<caption>{title_escaped}</caption>");
     }
 
-    render_list_table_colgroup(html, widths);
+    render_data_table_colgroup(html, widths);
 
     // Defensively re-clamp: `header_rows` is already clamped to `rows.len()`
     // at parse time, but nothing at the type level stops a directly
-    // constructed `Directive::ListTable` (e.g. loaded from a hand-edited
+    // constructed `Directive::DataTable` (e.g. loaded from a hand-edited
     // `.ast` file) from violating that, and slicing `rows[..header_rows]`
     // below would otherwise panic.
     let header_rows = header_rows.min(rows.len());
@@ -81,13 +90,13 @@ pub(super) fn render_list_table(
     if header_rows > 0 {
         let _ = writeln!(html, "<thead>");
         for (row_idx, row) in rows[..header_rows].iter().enumerate() {
-            render_list_table_row(html, row, row_idx, header_rows, stub_columns, ctx);
+            render_data_table_row(html, row, row_idx, header_rows, stub_columns, ctx);
         }
         let _ = writeln!(html, "</thead>");
     }
     let _ = writeln!(html, "<tbody>");
     for (offset, row) in rows[header_rows..].iter().enumerate() {
-        render_list_table_row(
+        render_data_table_row(
             html,
             row,
             header_rows + offset,
@@ -104,8 +113,8 @@ pub(super) fn render_list_table(
 /// normalizing the values as *relative* weights (per the spec) rather than
 /// literal percentages. `Auto`/`Grid`/`None` all mean "let the renderer
 /// decide" — no `<colgroup>` at all.
-fn render_list_table_colgroup(html: &mut String, widths: Option<&ListTableWidths>) {
-    let Some(ListTableWidths::Explicit(cols)) = widths else {
+fn render_data_table_colgroup(html: &mut String, widths: Option<&TableWidths>) {
+    let Some(TableWidths::Explicit(cols)) = widths else {
         return;
     };
     let total: u32 = cols.iter().sum();
@@ -120,13 +129,13 @@ fn render_list_table_colgroup(html: &mut String, widths: Option<&ListTableWidths
     let _ = writeln!(html, "</colgroup>");
 }
 
-/// Renders one list-table row, picking `th`/`td` per cell rather than
+/// Renders one data-table row, picking `th`/`td` per cell rather than
 /// uniformly per row (unlike grid tables): a cell is a header (`th`) when
 /// its row is one of the leading `header_rows`, or when its column is one
 /// of the leading `stub_columns` — the latter also gets `scope="row"`
 /// (skipped for a cell that's already a header via `header_rows`, since its
 /// header-ness there is a column header, not a row header).
-fn render_list_table_row(
+fn render_data_table_row(
     html: &mut String,
     row: &TableRow,
     row_idx: usize,
@@ -160,7 +169,7 @@ mod tests {
         crate::render(doc, &index, &doc.path).html
     }
 
-    fn list_table_row(cells: &[&str]) -> TableRow {
+    fn table_row(cells: &[&str]) -> TableRow {
         rusty_sphinx_ast::TableRow {
             cells: cells
                 .iter()
@@ -173,12 +182,83 @@ mod tests {
         }
     }
 
+    /// A minimal table carrying only `source`, for the tests that care about
+    /// nothing else.
+    fn data_table(source: TableSource) -> Document {
+        Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DataTable {
+                source,
+                title: None,
+                header_rows: 0,
+                stub_columns: 0,
+                widths: None,
+                width: None,
+                align: None,
+                classes: vec![],
+                name: None,
+                rows: vec![table_row(&["Fruit", "Colour"])],
+            })],
+        )
+    }
+
     #[test]
-    fn test_render_list_table_basic_two_by_two() {
+    fn test_render_data_table_uses_the_list_table_class_for_a_list_source() {
+        // Given
+        let doc = data_table(TableSource::List);
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<table class=\"list-table\">"), "{result}");
+    }
+
+    #[test]
+    fn test_render_data_table_uses_the_csv_table_class_for_a_csv_source() {
+        // Given
+        let doc = data_table(TableSource::Csv);
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("<table class=\"csv-table\">"), "{result}");
+    }
+
+    #[test]
+    fn test_render_data_table_puts_extra_classes_after_the_source_class() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::Csv,
+                title: None,
+                header_rows: 0,
+                stub_columns: 0,
+                widths: None,
+                width: None,
+                align: None,
+                classes: vec!["compact".to_string()],
+                name: None,
+                rows: vec![table_row(&["Fruit"])],
+            })],
+        );
+
+        // When
+        let result = render_doc(&doc);
+
+        // Then
+        assert!(result.contains("class=\"csv-table compact\""), "{result}");
+    }
+
+    #[test]
+    fn test_render_data_table_basic_two_by_two() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: None,
                 header_rows: 0,
                 stub_columns: 0,
@@ -188,8 +268,8 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![
-                    list_table_row(&["Fruit", "Colour"]),
-                    list_table_row(&["Apple", "Red"]),
+                    table_row(&["Fruit", "Colour"]),
+                    table_row(&["Apple", "Red"]),
                 ],
             })],
         );
@@ -204,11 +284,12 @@ mod tests {
         assert!(result.contains("<p>Fruit</p>"));
     }
     #[test]
-    fn test_render_list_table_header_rows_produces_thead() {
+    fn test_render_data_table_header_rows_produces_thead() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: None,
                 header_rows: 1,
                 stub_columns: 0,
@@ -218,8 +299,8 @@ mod tests {
                 classes: vec![],
                 name: None,
                 rows: vec![
-                    list_table_row(&["Fruit", "Colour"]),
-                    list_table_row(&["Apple", "Red"]),
+                    table_row(&["Fruit", "Colour"]),
+                    table_row(&["Apple", "Red"]),
                 ],
             })],
         );
@@ -233,11 +314,12 @@ mod tests {
         assert!(result.contains("<tbody>"));
     }
     #[test]
-    fn test_render_list_table_stub_columns_produces_mixed_th_td_in_body_row() {
+    fn test_render_data_table_stub_columns_produces_mixed_th_td_in_body_row() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: None,
                 header_rows: 0,
                 stub_columns: 1,
@@ -246,7 +328,7 @@ mod tests {
                 align: None,
                 classes: vec![],
                 name: None,
-                rows: vec![list_table_row(&["Stub", "Cell"])],
+                rows: vec![table_row(&["Stub", "Cell"])],
             })],
         );
 
@@ -258,11 +340,12 @@ mod tests {
         assert!(result.contains("<td>"));
     }
     #[test]
-    fn test_render_list_table_title_produces_caption() {
+    fn test_render_data_table_title_produces_caption() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: Some("Fruit".to_string()),
                 header_rows: 0,
                 stub_columns: 0,
@@ -271,7 +354,7 @@ mod tests {
                 align: None,
                 classes: vec![],
                 name: None,
-                rows: vec![list_table_row(&["Cell"])],
+                rows: vec![table_row(&["Cell"])],
             })],
         );
 
@@ -282,20 +365,21 @@ mod tests {
         assert!(result.contains("<caption>Fruit</caption>"));
     }
     #[test]
-    fn test_render_list_table_explicit_widths_produces_colgroup() {
+    fn test_render_data_table_explicit_widths_produces_colgroup() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: None,
                 header_rows: 0,
                 stub_columns: 0,
-                widths: Some(ListTableWidths::Explicit(vec![30, 70])),
+                widths: Some(TableWidths::Explicit(vec![30, 70])),
                 width: None,
                 align: None,
                 classes: vec![],
                 name: None,
-                rows: vec![list_table_row(&["A", "B"])],
+                rows: vec![table_row(&["A", "B"])],
             })],
         );
 
@@ -308,11 +392,12 @@ mod tests {
         assert!(result.contains("<col style=\"width: 70.00%\" />"));
     }
     #[test]
-    fn test_render_list_table_width_option_produces_inline_style() {
+    fn test_render_data_table_width_option_produces_inline_style() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: None,
                 header_rows: 0,
                 stub_columns: 0,
@@ -321,7 +406,7 @@ mod tests {
                 align: None,
                 classes: vec![],
                 name: None,
-                rows: vec![list_table_row(&["Cell"])],
+                rows: vec![table_row(&["Cell"])],
             })],
         );
 
@@ -332,11 +417,12 @@ mod tests {
         assert!(result.contains("style=\"width: 50%\""));
     }
     #[test]
-    fn test_render_list_table_align_option_produces_class() {
+    fn test_render_data_table_align_option_produces_class() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: None,
                 header_rows: 0,
                 stub_columns: 0,
@@ -345,7 +431,7 @@ mod tests {
                 align: Some(TableAlign::Center),
                 classes: vec![],
                 name: None,
-                rows: vec![list_table_row(&["Cell"])],
+                rows: vec![table_row(&["Cell"])],
             })],
         );
 
@@ -356,11 +442,12 @@ mod tests {
         assert!(result.contains("class=\"list-table align-center\""));
     }
     #[test]
-    fn test_render_list_table_class_option_appends_extra_classes() {
+    fn test_render_data_table_class_option_appends_extra_classes() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: None,
                 header_rows: 0,
                 stub_columns: 0,
@@ -369,7 +456,7 @@ mod tests {
                 align: None,
                 classes: vec!["custom".to_string()],
                 name: None,
-                rows: vec![list_table_row(&["Cell"])],
+                rows: vec![table_row(&["Cell"])],
             })],
         );
 
@@ -380,11 +467,12 @@ mod tests {
         assert!(result.contains("class=\"list-table custom\""));
     }
     #[test]
-    fn test_render_list_table_name_option_produces_anchor() {
+    fn test_render_data_table_name_option_produces_anchor() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Directive(Directive::ListTable {
+            vec![Node::Directive(Directive::DataTable {
+                source: TableSource::List,
                 title: None,
                 header_rows: 0,
                 stub_columns: 0,
@@ -393,7 +481,7 @@ mod tests {
                 align: None,
                 classes: vec![],
                 name: Some(TargetName::new("fruit-table")),
-                rows: vec![list_table_row(&["Cell"])],
+                rows: vec![table_row(&["Cell"])],
             })],
         );
 
@@ -404,14 +492,14 @@ mod tests {
         assert!(result.contains("<a id=\"fruit-table\"></a>"));
     }
     #[test]
-    fn test_render_list_table_colgroup_skipped_for_auto_and_grid_widths() {
+    fn test_render_data_table_colgroup_skipped_for_auto_and_grid_widths() {
         // Given
         let mut html = String::new();
 
         // When
-        render_list_table_colgroup(&mut html, Some(&ListTableWidths::Auto));
-        render_list_table_colgroup(&mut html, Some(&ListTableWidths::Grid));
-        render_list_table_colgroup(&mut html, None);
+        render_data_table_colgroup(&mut html, Some(&TableWidths::Auto));
+        render_data_table_colgroup(&mut html, Some(&TableWidths::Grid));
+        render_data_table_colgroup(&mut html, None);
 
         // Then
         assert!(html.is_empty());
@@ -424,8 +512,8 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Table {
-                header_rows: vec![list_table_row(&["Fruit", "Colour"])],
-                body_rows: vec![list_table_row(&["Apple", "Red"])],
+                header_rows: vec![table_row(&["Fruit", "Colour"])],
+                body_rows: vec![table_row(&["Apple", "Red"])],
             }],
         );
 

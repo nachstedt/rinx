@@ -6,10 +6,10 @@ use rusty_sphinx_ast::{Directive, Enumerator, InlineNode, ListItem, Node};
 use std::fmt::Write as _;
 
 use super::admonitions::{render_admonition, render_seealso, render_version_change};
+use super::data_table::{DataTableParams, render_data_table};
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
 use super::glossary::{render_glossary, render_index_anchor};
-use super::list_table::{ListTableParams, render_list_table};
 use super::nav::{find_nav_entry, render_nav_entry};
 use super::scope_directives::apply_scope_directive;
 use crate::RenderCtx;
@@ -85,7 +85,7 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String
                     collect_anonymous_targets(&entry.definition, targets);
                 }
             }
-            Node::Directive(Directive::ListTable { rows, .. }) => {
+            Node::Directive(Directive::DataTable { rows, .. }) => {
                 for row in rows {
                     for cell in &row.cells {
                         collect_anonymous_targets(&cell.content, targets);
@@ -269,7 +269,8 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
         Directive::Index { id, .. } => render_index_anchor(html, id),
         Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
-        Directive::ListTable {
+        Directive::DataTable {
+            source,
             title,
             header_rows,
             stub_columns,
@@ -279,9 +280,10 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
             classes,
             name,
             rows,
-        } => render_list_table(
+        } => render_data_table(
             html,
-            ListTableParams {
+            DataTableParams {
+                source: *source,
                 title: title.as_deref(),
                 header_rows: *header_rows,
                 stub_columns: *stub_columns,

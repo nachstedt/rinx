@@ -2,27 +2,28 @@
 //! parser for its kind — the domain-object family via [`super::domains`],
 //! everything else by directive name.
 
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_common_indent};
 
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::body::{collect_argument_continuation_lines, collect_directive_body, join_body_lines};
+use super::data_table::parse_list_table;
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
 use super::domains::parse_domain_object;
 use super::glossary::parse_glossary;
 use super::index_directive::parse_index_directive;
-use super::list_table::parse_list_table;
 use super::scope::try_parse_scope_directive;
 use super::toctree::parse_toctree;
-use rusty_sphinx_ast::{Directive, Domain, Node};
+use rusty_sphinx_ast::{Directive, Node};
 
 pub(crate) fn try_parse_directive(
     lines: &[&str],
     i: usize,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let line = lines[i].trim_end();
     if !(line.trim().starts_with(".. ") && line.contains("::")) {
@@ -42,7 +43,7 @@ pub(crate) fn try_parse_directive(
     // remains is its body. No other directive name can reach this branch —
     // `resolve_domain_object_type` matches a disjoint set of names from the
     // ones handled afterwards.
-    if let Some(object_type) = resolve_domain_object_type(&name, default_domain) {
+    if let Some(object_type) = resolve_domain_object_type(&name, ctx.default_domain) {
         let (continuations_consumed, continuations) =
             if object_type_supports_multiple_signatures(object_type) {
                 collect_argument_continuation_lines(lines, i + 1, min_indent)
@@ -58,7 +59,7 @@ pub(crate) fn try_parse_directive(
             &body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
         );
         return Some((
             1 + continuations_consumed + consumed_lines,
@@ -73,7 +74,7 @@ pub(crate) fn try_parse_directive(
         &body_lines,
         adornment_order,
         diagnostics,
-        default_domain,
+        ctx,
     );
     Some((1 + consumed_lines, node))
 }
@@ -90,7 +91,7 @@ fn parse_body_directive(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Node {
     if name == "toctree" {
         let directive = parse_toctree(body_lines, diagnostics);
@@ -113,12 +114,12 @@ fn parse_body_directive(
             body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
         );
         return Node::Directive(directive);
     }
     if name == "seealso" {
-        let directive = parse_seealso(body_lines, adornment_order, diagnostics, default_domain);
+        let directive = parse_seealso(body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if let Ok(kind) = name.parse::<rusty_sphinx_ast::AdmonitionKind>() {
@@ -128,22 +129,16 @@ fn parse_body_directive(
             body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
         );
         return Node::Directive(directive);
     }
     if name == "glossary" {
-        let directive = parse_glossary(body_lines, adornment_order, diagnostics, default_domain);
+        let directive = parse_glossary(body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if name == "list-table" {
-        let directive = parse_list_table(
-            argument,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        );
+        let directive = parse_list_table(argument, body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if name == "index" {
@@ -154,7 +149,7 @@ fn parse_body_directive(
         let directive = parse_doctest_directive(kind, &argument, body_lines, diagnostics);
         return Node::Directive(directive);
     }
-    if let Some(directive) = try_parse_scope_directive(&name, &argument, default_domain) {
+    if let Some(directive) = try_parse_scope_directive(&name, &argument, ctx.default_domain) {
         return Node::Directive(directive);
     }
     let directive = Directive::Unknown {
@@ -193,6 +188,7 @@ fn parse_code_block(argument: String, body_lines: &[&str]) -> Node {
 mod tests {
     use super::*;
     use crate::parse;
+    use rusty_sphinx_ast::Domain;
     use rusty_sphinx_ast::HashedContent;
 
     /// Dispatches `name`/`argument`/`body` through [`parse_body_directive`]
@@ -206,7 +202,7 @@ mod tests {
             body,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
         (node, diagnostics)
     }

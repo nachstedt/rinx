@@ -2,10 +2,11 @@
 //! body, and deciding when the list ends.
 
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::indent_width;
 use crate::indent::strip_indent;
-use rusty_sphinx_ast::{Domain, Enumerator, EnumeratorFormat, EnumeratorSequence, ListItem, Node};
+use rusty_sphinx_ast::{Enumerator, EnumeratorFormat, EnumeratorSequence, ListItem, Node};
 
 use super::diagnostics::diagnose_unrecognised_list;
 use super::format::{EnumeratorMatch, detect_enumerator, is_enumerated_list_item};
@@ -47,7 +48,7 @@ pub(crate) fn try_parse_enumerated_list(
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let mut items: Vec<ListItem> = Vec::new();
     let mut state: Option<ListState> = None;
@@ -94,7 +95,7 @@ pub(crate) fn try_parse_enumerated_list(
         blank_finish = item_blank_finish;
 
         let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-        let nodes = parse_blocks(&body_refs, adornment_order, diagnostics, default_domain);
+        let nodes = parse_blocks(&body_refs, adornment_order, diagnostics, ctx);
         items.push(ListItem { nodes });
 
         state = Some(match state {

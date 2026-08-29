@@ -1,9 +1,10 @@
 //! The simple-table parse itself: walking the table's lines, delimiting rows
 //! at each column-span underline, and lowering each row into cells.
 
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
-use rusty_sphinx_ast::{Domain, Node, TableRow};
+use rusty_sphinx_ast::{Node, TableRow};
 
 use super::borders::{is_simple_table_top, parse_column_spans};
 use super::layout::{HeadBodyRule, collect_simple_table_lines, find_head_body_rule};
@@ -24,7 +25,7 @@ pub(crate) fn try_parse_simple_table(
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let first_line = lines[start_i].trim_end();
     let indent = indent_width(first_line);
@@ -49,7 +50,7 @@ pub(crate) fn try_parse_simple_table(
         start_i,
         adornment_order,
         diagnostics,
-        default_domain,
+        parse_ctx: ctx,
     };
     let rows = build_rows(&mut ctx, raw_rows.len())?;
 

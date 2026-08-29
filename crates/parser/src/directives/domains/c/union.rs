@@ -1,7 +1,8 @@
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{CSignature, Domain, DomainObjectBody, NonEmptyVector};
+use rusty_sphinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. c:union::` body — identical shape to
 /// [`super::struct_::parse_c_struct`], just producing the other container
@@ -11,7 +12,7 @@ pub(crate) fn parse_c_union(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
     let (no_index, no_index_entry, no_contents_entry, options_consumed) =
@@ -21,7 +22,7 @@ pub(crate) fn parse_c_union(
         .iter()
         .map(String::as_str)
         .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     DomainObjectBody::CUnion {
         signatures,

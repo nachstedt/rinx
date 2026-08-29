@@ -1,8 +1,9 @@
 use super::borders::{ColumnSpan, is_span_line, parse_column_spans};
 use crate::blocks::parse_blocks;
 use crate::blocks::table::normalize_cell_lines;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
-use rusty_sphinx_ast::{Domain, TableCell, TableRow};
+use rusty_sphinx_ast::{TableCell, TableRow};
 
 /// The immutable table geometry plus the mutable parse state that recursive
 /// cell-content parsing needs. Mirrors [`super::table`]'s `GridCtx`.
@@ -16,7 +17,7 @@ pub(super) struct SimpleTableCtx<'a> {
     pub(super) start_i: usize,
     pub(super) adornment_order: &'a mut Vec<Adornment>,
     pub(super) diagnostics: &'a mut Vec<String>,
-    pub(super) default_domain: Domain,
+    pub(super) parse_ctx: &'a ParseCtx<'a>,
 }
 
 impl SimpleTableCtx<'_> {
@@ -192,7 +193,7 @@ fn build_row(
             &content_refs,
             ctx.adornment_order,
             ctx.diagnostics,
-            ctx.default_domain,
+            ctx.parse_ctx,
         );
         cells.push(TableCell {
             colspan,
@@ -255,6 +256,7 @@ pub(super) fn build_rows(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_ast::Domain;
 
     // --- row-level helpers, through a built context ---
 
@@ -274,7 +276,7 @@ mod tests {
                 start_i: 0,
                 adornment_order: &mut adornment_order,
                 diagnostics: &mut diagnostics,
-                default_domain: Domain::Py,
+                parse_ctx: &ParseCtx::with_domain(Domain::Py),
             };
             body(&mut ctx)
         };

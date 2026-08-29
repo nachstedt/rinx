@@ -1,8 +1,9 @@
 use super::dispatch::parse_module_option_line;
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{Domain, DomainObjectBody, NonEmptyVector};
+use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:function::` body: strips a leading `:module:` option line
 /// off the front before parsing the rest as the docstring body — the only
@@ -20,7 +21,7 @@ pub(crate) fn parse_py_function(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
     forced_decorator: bool,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
@@ -30,7 +31,7 @@ pub(crate) fn parse_py_function(
         .iter()
         .map(String::as_str)
         .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     DomainObjectBody::PyFunction {
         module,

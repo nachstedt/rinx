@@ -1,16 +1,17 @@
 //! Glossary directive parsing for RST documents.
 
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{Directive, Domain};
+use rusty_sphinx_ast::Directive;
 
 /// Parses a `.. glossary::` directive body into a `Directive::Glossary` node.
 pub(super) fn parse_glossary(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Directive {
     // Strip the base indentation from all lines.
     let unindented = unindent_body_lines(body_lines);
@@ -74,8 +75,7 @@ pub(super) fn parse_glossary(
                 // Flush the completed entry.
                 let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
                 let mut dummy_adorn = adornment_order.clone();
-                let def_nodes =
-                    parse_blocks(&def_strs, &mut dummy_adorn, diagnostics, default_domain);
+                let def_nodes = parse_blocks(&def_strs, &mut dummy_adorn, diagnostics, ctx);
                 entries.push(rusty_sphinx_ast::GlossaryEntry {
                     terms: std::mem::take(&mut current_terms),
                     definition: def_nodes,
@@ -90,7 +90,7 @@ pub(super) fn parse_glossary(
     // Flush any remaining entry.
     if !current_terms.is_empty() {
         let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
-        let def_nodes = parse_blocks(&def_strs, adornment_order, diagnostics, default_domain);
+        let def_nodes = parse_blocks(&def_strs, adornment_order, diagnostics, ctx);
         entries.push(rusty_sphinx_ast::GlossaryEntry {
             terms: current_terms,
             definition: def_nodes,
@@ -120,6 +120,7 @@ pub(super) fn parse_glossary(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_ast::Domain;
 
     #[test]
     fn test_parse_glossary_parses_a_single_term_and_definition() {
@@ -133,7 +134,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then a single entry with the parsed term is produced
@@ -158,7 +159,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then the sorted flag is set
@@ -181,7 +182,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then no entries are produced
@@ -207,7 +208,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then it does not panic

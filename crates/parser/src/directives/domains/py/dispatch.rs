@@ -1,7 +1,8 @@
 //! The `py`-domain object-type dispatch, and the `:module:` option line
 //! every `py:*` object-description directive shares.
 
-use rusty_sphinx_ast::{Domain, DomainObjectBody, NonEmptyVector};
+use crate::context::ParseCtx;
+use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
 
 use crate::headings::Adornment;
 
@@ -25,7 +26,7 @@ pub(crate) fn parse_py_domain_object(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     match object_type {
         DirectiveObjectType::PyFunction => parse_py_function(
@@ -33,7 +34,7 @@ pub(crate) fn parse_py_domain_object(
             body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
             false,
         ),
         DirectiveObjectType::PyDecorator => parse_py_function(
@@ -41,7 +42,7 @@ pub(crate) fn parse_py_domain_object(
             body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
             true,
         ),
         DirectiveObjectType::PyModule => parse_py_module(
@@ -49,15 +50,11 @@ pub(crate) fn parse_py_domain_object(
             body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
         ),
-        DirectiveObjectType::PyData => parse_py_data(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
+        DirectiveObjectType::PyData => {
+            parse_py_data(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
         DirectiveObjectType::PyMethod
         | DirectiveObjectType::PyClassmethod
         | DirectiveObjectType::PyStaticmethod
@@ -66,30 +63,18 @@ pub(crate) fn parse_py_domain_object(
             body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
             ForcedMethodFlags::for_directive(object_type),
         ),
-        DirectiveObjectType::PyClass => parse_py_class(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
-        DirectiveObjectType::PyException => parse_py_exception(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
-        DirectiveObjectType::PyAttribute => parse_py_attribute(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
+        DirectiveObjectType::PyClass => {
+            parse_py_class(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
+        DirectiveObjectType::PyException => {
+            parse_py_exception(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
+        DirectiveObjectType::PyAttribute => {
+            parse_py_attribute(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
         DirectiveObjectType::CFunction
         | DirectiveObjectType::CMacro
         | DirectiveObjectType::CStruct

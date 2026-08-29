@@ -3,7 +3,7 @@
 //! domain or scope handling.
 
 use super::*;
-use rusty_sphinx_ast::{InlineNode, ObjectType, PyObjectType, TargetSearchOrder};
+use rusty_sphinx_ast::{InlineNode, ObjectType, PyObjectType, TableSource, TargetSearchOrder};
 
 #[test]
 fn test_analyze_returns_default_index_for_empty_document() {
@@ -212,7 +212,8 @@ fn test_analyze_registers_list_table_name_as_target() {
     // Given — a `.. list-table::` with a `:name:` option
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::ListTable {
+        vec![Node::Directive(Directive::DataTable {
+            source: TableSource::List,
             title: None,
             header_rows: 0,
             stub_columns: 0,
@@ -240,7 +241,8 @@ fn test_analyze_list_table_without_name_registers_no_target() {
     // Given — a `.. list-table::` with no `:name:` option
     let doc = Document::new(
         "test.rst".to_string(),
-        vec![Node::Directive(Directive::ListTable {
+        vec![Node::Directive(Directive::DataTable {
+            source: TableSource::List,
             title: None,
             header_rows: 0,
             stub_columns: 0,

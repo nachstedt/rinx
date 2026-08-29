@@ -1,7 +1,8 @@
 //! The `c`-domain object-type dispatch, up-front signature parsing, and the
 //! object-description flag options its container types share.
 
-use rusty_sphinx_ast::{CSignature, Domain, DomainObjectBody, NameSource, NonEmptyVector};
+use crate::context::ParseCtx;
+use rusty_sphinx_ast::{CSignature, DomainObjectBody, NameSource, NonEmptyVector};
 
 use crate::headings::Adornment;
 
@@ -22,46 +23,30 @@ pub(crate) fn parse_c_domain_object(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     let signatures = parse_c_signatures(signatures, diagnostics);
     match object_type {
         DirectiveObjectType::CFunction => DomainObjectBody::CFunction {
             signatures,
-            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+            body: parse_body(body_lines, adornment_order, diagnostics, ctx),
         },
         DirectiveObjectType::CMacro => DomainObjectBody::CMacro {
             signatures,
-            body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+            body: parse_body(body_lines, adornment_order, diagnostics, ctx),
         },
-        DirectiveObjectType::CStruct => parse_c_struct(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
-        DirectiveObjectType::CUnion => parse_c_union(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
-        DirectiveObjectType::CMember => parse_c_member(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
-        DirectiveObjectType::CType => parse_c_type(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
+        DirectiveObjectType::CStruct => {
+            parse_c_struct(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
+        DirectiveObjectType::CUnion => {
+            parse_c_union(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
+        DirectiveObjectType::CMember => {
+            parse_c_member(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
+        DirectiveObjectType::CType => {
+            parse_c_type(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
         DirectiveObjectType::PyFunction
         | DirectiveObjectType::PyDecorator
         | DirectiveObjectType::PyModule
@@ -139,6 +124,7 @@ pub(super) fn extract_common_object_description_options(
 mod tests {
     use super::*;
     use crate::parse;
+    use rusty_sphinx_ast::Domain;
     use rusty_sphinx_ast::{Directive, Node};
 
     /// The raw texts of parsed `c`-domain signatures, for asserting on what

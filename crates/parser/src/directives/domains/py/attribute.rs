@@ -1,8 +1,9 @@
 use super::dispatch::parse_module_option_line;
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{Domain, DomainObjectBody, NonEmptyVector};
+use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:attribute::` body: strips `:type:`/`:value:`/`:canonical:`
 /// option lines off the front before parsing the rest as the docstring body.
@@ -11,7 +12,7 @@ pub(crate) fn parse_py_attribute(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
     let (type_, value, canonical, module, options_consumed) =
@@ -21,7 +22,7 @@ pub(crate) fn parse_py_attribute(
         .iter()
         .map(String::as_str)
         .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     DomainObjectBody::PyAttribute {
         module,

@@ -3,17 +3,17 @@
 //!
 //! [`dispatch`] owns the traversal and the entry points the crate root calls;
 //! every other module here is something it delegates to — [`admonitions`],
-//! [`doctest`], [`glossary`], [`list_table`], [`scope_directives`],
+//! [`data_table`], [`doctest`], [`glossary`], [`scope_directives`],
 //! [`tables`], the toctree sidebar markup in [`nav`], and the domain-object
 //! directives in [`domain_object`]. Inline markup inside these constructs goes
 //! to [`crate::inline`].
 
 mod admonitions;
+mod data_table;
 mod dispatch;
 mod doctest;
 mod domain_object;
 mod glossary;
-mod list_table;
 mod nav;
 mod scope_directives;
 mod tables;

@@ -1,8 +1,9 @@
 use super::dispatch::parse_module_option_line;
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{Domain, DomainObjectBody, NonEmptyVector};
+use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:class::` body: strips a leading `:final:` flag line off
 /// the front before parsing the rest as the docstring body. Any nested
@@ -15,7 +16,7 @@ pub(crate) fn parse_py_class(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
     let (is_final, module, options_consumed) = extract_class_options(&unindented_lines);
@@ -24,7 +25,7 @@ pub(crate) fn parse_py_class(
         .iter()
         .map(String::as_str)
         .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     DomainObjectBody::PyClass {
         module,
@@ -44,7 +45,7 @@ pub(crate) fn parse_py_exception(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
     let (is_final, module, options_consumed) = extract_class_options(&unindented_lines);
@@ -53,7 +54,7 @@ pub(crate) fn parse_py_exception(
         .iter()
         .map(String::as_str)
         .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     DomainObjectBody::PyException {
         module,
@@ -97,6 +98,7 @@ fn extract_class_options(lines: &[String]) -> (bool, Option<String>, usize) {
 mod tests {
     use super::*;
     use crate::parse;
+    use rusty_sphinx_ast::Domain;
     use rusty_sphinx_ast::{Directive, Node};
 
     #[test]

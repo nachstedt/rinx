@@ -7,9 +7,10 @@ use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
 use crate::index_entry::IndexEntry;
 use crate::node::Node;
-use crate::table::ListTableWidths;
 use crate::table::TableAlign;
 use crate::table::TableRow;
+use crate::table::TableSource;
+use crate::table::TableWidths;
 use crate::target_name::TargetName;
 use crate::version_change_kind::VersionChangeKind;
 
@@ -48,26 +49,35 @@ pub enum Directive {
         entries: Vec<IndexEntry>,
         id: String,
     },
-    /// `.. list-table::` — a table specified as a nested bullet list (outer
-    /// list = rows, each row's own bullet list = cells) rather than
-    /// character-art. Reuses [`TableRow`]/[`TableCell`] from the grid-table
-    /// implementation for its rows (`colspan`/`rowspan` always 1, since
-    /// list-table has no span syntax), but gets its own variant rather than
-    /// folding into `Node::Table` because grid tables have none of these
-    /// options and would otherwise carry meaningless defaults forever.
-    ListTable {
+    /// A table written as *data* plus options rather than as character-art:
+    /// `.. list-table::` (rows as a nested bullet list) and `.. csv-table::`
+    /// (rows as CSV). Both spell their rows out differently in source, but
+    /// that difference is fully consumed while parsing — what survives into
+    /// the AST is identical, so they share one variant and record which
+    /// directive they came from in `source`.
+    ///
+    /// Reuses [`TableRow`]/[`TableCell`] from the grid-table implementation
+    /// for its rows (`colspan`/`rowspan` always 1, since neither directive
+    /// has a span syntax), but gets its own variant rather than folding into
+    /// `Node::Table` because grid tables have none of these options and would
+    /// otherwise carry meaningless defaults forever.
+    DataTable {
+        /// Which directive produced this table — drives the rendered CSS
+        /// class and nothing else about the table's structure.
+        source: TableSource,
         /// The directive argument — the table's title/caption. `None` when
         /// no argument was given.
         title: Option<String>,
         /// `:header-rows:` — how many leading rows in `rows` are header
-        /// rows. 0 (the spec default) when the option is omitted; clamped
-        /// to `rows.len()` at parse time.
+        /// rows. 0 (the spec default) when the option is omitted; never
+        /// exceeds `rows.len()` (list-table clamps it, csv-table rejects an
+        /// oversized value outright, as docutils does).
         header_rows: usize,
         /// `:stub-columns:` — how many leading columns in every row are
-        /// stub (row-header) columns. 0 by default; clamped to the actual
-        /// column count at parse time.
+        /// stub (row-header) columns. 0 by default; bounded against the
+        /// actual column count at parse time the same way.
         stub_columns: usize,
-        widths: Option<ListTableWidths>,
+        widths: Option<TableWidths>,
         /// `:width:` — an opaque CSS length/percentage (e.g. `"100%"`),
         /// passed through verbatim since it's only ever re-emitted as a
         /// `style` attribute.
@@ -348,15 +358,16 @@ mod tests {
     }
 
     #[test]
-    fn test_list_table_directive_serialization_roundtrip() {
+    fn test_data_table_directive_serialization_roundtrip() {
         // Given
         use crate::table::TableCell;
 
-        let directive = Directive::ListTable {
+        let directive = Directive::DataTable {
+            source: TableSource::List,
             title: Some("Fruit".to_string()),
             header_rows: 1,
             stub_columns: 0,
-            widths: Some(ListTableWidths::Explicit(vec![30, 70])),
+            widths: Some(TableWidths::Explicit(vec![30, 70])),
             width: Some("100%".to_string()),
             align: Some(TableAlign::Center),
             classes: vec!["custom".to_string()],

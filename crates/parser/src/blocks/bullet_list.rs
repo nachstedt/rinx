@@ -1,7 +1,8 @@
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::strip_indent;
-use rusty_sphinx_ast::{Domain, Node};
+use rusty_sphinx_ast::Node;
 
 pub(super) fn detect_bullet_item(line: &str) -> Option<(char, usize, usize)> {
     let mut chars = line.chars();
@@ -40,7 +41,7 @@ pub(super) fn try_parse_bullet_list(
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let mut items = Vec::new();
     let mut i = start_i;
@@ -109,7 +110,7 @@ pub(super) fn try_parse_bullet_list(
             }
 
             let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-            let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, default_domain);
+            let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, ctx);
 
             items.push(rusty_sphinx_ast::ListItem { nodes: body_nodes });
         } else {

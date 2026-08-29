@@ -1,7 +1,8 @@
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{Directive, Domain};
+use rusty_sphinx_ast::Directive;
 
 pub(super) fn parse_admonition(
     kind: rusty_sphinx_ast::AdmonitionKind,
@@ -9,7 +10,7 @@ pub(super) fn parse_admonition(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let title = if kind == rusty_sphinx_ast::AdmonitionKind::Admonition {
         if argument.is_empty() {
@@ -65,7 +66,7 @@ pub(super) fn parse_admonition(
         .iter()
         .map(String::as_str)
         .collect();
-    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     Directive::Admonition {
         kind,
@@ -81,7 +82,7 @@ pub(super) fn parse_version_change(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let version = if argument.is_empty() {
         diagnostics.push(format!("'{}' requires a version argument.", kind.as_str()));
@@ -100,7 +101,7 @@ pub(super) fn parse_version_change(
     }
 
     let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
-    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     Directive::VersionChange {
         kind,
@@ -113,7 +114,7 @@ pub(super) fn parse_seealso(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let unindented_lines = unindent_body_lines(body_lines);
     if unindented_lines.is_empty() {
@@ -121,7 +122,7 @@ pub(super) fn parse_seealso(
     }
 
     let body_content: Vec<&str> = unindented_lines.iter().map(String::as_str).collect();
-    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     Directive::SeeAlso { body: body_nodes }
 }
@@ -130,6 +131,7 @@ pub(super) fn parse_seealso(
 mod tests {
     use super::*;
     use crate::parse;
+    use rusty_sphinx_ast::Domain;
     use rusty_sphinx_ast::Node;
 
     #[test]
@@ -148,7 +150,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -180,7 +182,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -208,7 +210,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -235,7 +237,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -261,7 +263,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then it does not panic
@@ -386,7 +388,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then it does not panic
@@ -501,7 +503,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -528,7 +530,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then it does not panic

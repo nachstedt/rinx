@@ -2,6 +2,7 @@
 //! `parse_blocks` loop each construct plugs into, and the paragraph fallback
 //! every line that matches nothing else lands in.
 
+use crate::context::ParseCtx;
 use crate::directives::try_parse_directive;
 use crate::headings::{Adornment, detect_adornment, try_parse_heading};
 use crate::inline::parse_inline_text;
@@ -42,22 +43,29 @@ pub fn parse(path: &str, input: &str) -> Document {
 /// (unprefixed) domain directive or role — e.g. `.. function::` or `:func:` —
 /// via `default_domain`. `parse` is a thin wrapper defaulting to `Domain::Py`.
 ///
+/// The parse runs with no filesystem access, so a `.. csv-table::` carrying a
+/// `:file:` option reports a diagnostic instead of reading anything. Callers
+/// that *can* resolve paths use [`parse_with_ctx`] instead.
+#[must_use]
+pub fn parse_with_domain(path: &str, input: &str, default_domain: Domain) -> Document {
+    parse_with_ctx(path, input, &ParseCtx::with_domain(default_domain))
+}
+
+/// Parses an RST-formatted string into a `Document` under a fully specified
+/// [`ParseCtx`] — the entry point for callers that can supply a
+/// [`crate::CsvFileLoader`] alongside the default domain.
+///
 /// # Panics
 ///
 /// The internal implementation uses `expect()` on an iterator that is guaranteed
 /// to be non-empty by preceding checks.
 #[must_use]
-pub fn parse_with_domain(path: &str, input: &str, default_domain: Domain) -> Document {
+pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     let lines: Vec<&str> = input.lines().collect();
     let mut adornment_order: Vec<Adornment> = Vec::new();
     let mut diagnostics = Vec::new();
 
-    let mut nodes = parse_blocks(
-        &lines,
-        &mut adornment_order,
-        &mut diagnostics,
-        default_domain,
-    );
+    let mut nodes = parse_blocks(&lines, &mut adornment_order, &mut diagnostics, ctx);
 
     let mut index_id_counter = 0;
     super::index_ids::assign_index_ids(&mut nodes, &mut index_id_counter);
@@ -77,7 +85,7 @@ pub(crate) fn parse_blocks(
     lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Vec<Node> {
     let mut nodes = Vec::new();
     let mut i = 0;
@@ -91,7 +99,7 @@ pub(crate) fn parse_blocks(
         }
 
         if let Some((consumed, node)) =
-            try_parse_directive(lines, i, adornment_order, diagnostics, default_domain)
+            try_parse_directive(lines, i, adornment_order, diagnostics, ctx)
         {
             nodes.push(node);
             i += consumed;
@@ -116,7 +124,8 @@ pub(crate) fn parse_blocks(
             continue;
         }
 
-        if let Some((consumed, node)) = try_parse_heading(lines, i, adornment_order, default_domain)
+        if let Some((consumed, node)) =
+            try_parse_heading(lines, i, adornment_order, ctx.default_domain)
         {
             nodes.push(node);
             i += consumed;
@@ -124,7 +133,7 @@ pub(crate) fn parse_blocks(
         }
 
         if let Some((consumed, node)) =
-            try_parse_grid_table(lines, i, adornment_order, diagnostics, default_domain)
+            try_parse_grid_table(lines, i, adornment_order, diagnostics, ctx)
         {
             nodes.push(node);
             i += consumed;
@@ -132,7 +141,7 @@ pub(crate) fn parse_blocks(
         }
 
         if let Some((consumed, node)) =
-            try_parse_simple_table(lines, i, adornment_order, diagnostics, default_domain)
+            try_parse_simple_table(lines, i, adornment_order, diagnostics, ctx)
         {
             nodes.push(node);
             i += consumed;
@@ -140,7 +149,7 @@ pub(crate) fn parse_blocks(
         }
 
         if let Some((consumed, node)) =
-            try_parse_bullet_list(lines, i, adornment_order, diagnostics, default_domain)
+            try_parse_bullet_list(lines, i, adornment_order, diagnostics, ctx)
         {
             nodes.push(node);
             i += consumed;
@@ -152,7 +161,7 @@ pub(crate) fn parse_blocks(
         // item also is. docutils resolves this the same way, trying its
         // `enumerator` transition before falling through to text.
         if let Some((consumed, node)) =
-            try_parse_enumerated_list(lines, i, adornment_order, diagnostics, default_domain)
+            try_parse_enumerated_list(lines, i, adornment_order, diagnostics, ctx)
         {
             nodes.push(node);
             i += consumed;
@@ -160,7 +169,7 @@ pub(crate) fn parse_blocks(
         }
 
         if let Some((consumed, node)) =
-            try_parse_definition_list(lines, i, adornment_order, diagnostics, default_domain)
+            try_parse_definition_list(lines, i, adornment_order, diagnostics, ctx)
         {
             nodes.push(node);
             i += consumed;
@@ -173,13 +182,13 @@ pub(crate) fn parse_blocks(
             continue;
         }
 
-        let (consumed, new_nodes) = parse_paragraph(lines, i, default_domain);
+        let (consumed, new_nodes) = parse_paragraph(lines, i, ctx);
         nodes.extend(new_nodes);
         i += consumed;
     }
     nodes
 }
-fn parse_paragraph(lines: &[&str], i: usize, default_domain: Domain) -> (usize, Vec<Node>) {
+fn parse_paragraph(lines: &[&str], i: usize, ctx: &ParseCtx<'_>) -> (usize, Vec<Node>) {
     let mut paragraph_text = String::new();
     let mut current_pos_line = i;
 
@@ -201,7 +210,7 @@ fn parse_paragraph(lines: &[&str], i: usize, default_domain: Domain) -> (usize, 
         }
     }
 
-    let inlines = parse_inline_text(&paragraph_text, default_domain);
+    let inlines = parse_inline_text(&paragraph_text, ctx.default_domain);
 
     // Detect trailing "::" to introduce a literal block
     let trailing_double_colon = paragraph_text.trim_end().ends_with("::");
@@ -222,7 +231,7 @@ fn parse_paragraph(lines: &[&str], i: usize, default_domain: Domain) -> (usize, 
         }
         // Strip trailing "::" → ":" and emit paragraph + literal block
         let stripped = trimmed[..trimmed.len() - 1].trim_end().to_string();
-        let inlines = parse_inline_text(&stripped, default_domain);
+        let inlines = parse_inline_text(&stripped, ctx.default_domain);
         return (total_consumed, vec![Node::Paragraph(inlines), literal_node]);
     }
 
@@ -239,7 +248,12 @@ mod tests {
     fn test_parse_blocks_empty_input() {
         let mut adornment_order = Vec::new();
         let mut diagnostics = Vec::new();
-        let nodes = parse_blocks(&[], &mut adornment_order, &mut diagnostics, Domain::Py);
+        let nodes = parse_blocks(
+            &[],
+            &mut adornment_order,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         assert!(nodes.is_empty());
     }
 
@@ -248,7 +262,12 @@ mod tests {
         let mut adornment_order = Vec::new();
         let mut diagnostics = Vec::new();
         let lines = vec!["Hello world"];
-        let nodes = parse_blocks(&lines, &mut adornment_order, &mut diagnostics, Domain::Py);
+        let nodes = parse_blocks(
+            &lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         assert_eq!(nodes.len(), 1);
         match &nodes[0] {
             Node::Paragraph(inlines) => {
@@ -265,11 +284,21 @@ mod tests {
         let mut diagnostics = Vec::new();
 
         let lines1 = vec!["Title 1", "======="];
-        let nodes1 = parse_blocks(&lines1, &mut adornment_order, &mut diagnostics, Domain::Py);
+        let nodes1 = parse_blocks(
+            &lines1,
+            &mut adornment_order,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         assert_eq!(nodes1.len(), 1);
 
         let lines2 = vec!["Title 2", "-------"];
-        let nodes2 = parse_blocks(&lines2, &mut adornment_order, &mut diagnostics, Domain::Py);
+        let nodes2 = parse_blocks(
+            &lines2,
+            &mut adornment_order,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         assert_eq!(nodes2.len(), 1);
 
         assert_eq!(adornment_order.len(), 2);
@@ -282,7 +311,12 @@ mod tests {
 
         // This will trigger a diagnostic because of the unknown option
         let lines = vec![".. toctree::", "   :unknown_option: value"];
-        let nodes = parse_blocks(&lines, &mut adornment_order, &mut diagnostics, Domain::Py);
+        let nodes = parse_blocks(
+            &lines,
+            &mut adornment_order,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         assert_eq!(nodes.len(), 1);
         assert!(!diagnostics.is_empty());

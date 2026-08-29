@@ -1,7 +1,8 @@
 //! The top-level domain-object dispatch: routes a resolved
 //! [`DirectiveObjectType`] to the `c`, `std` or `py` domain's own parser.
 
-use rusty_sphinx_ast::{Domain, DomainObjectBody, NonEmptyVector};
+use crate::context::ParseCtx;
+use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
 
 use crate::headings::Adornment;
 
@@ -17,7 +18,7 @@ pub(crate) fn parse_domain_object(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     let signatures = NonEmptyVector::new(argument, continuations);
     match object_type {
@@ -32,22 +33,18 @@ pub(crate) fn parse_domain_object(
             body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
         ),
-        DirectiveObjectType::StdCmdoption => parse_cmdoption(
-            signatures,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            default_domain,
-        ),
+        DirectiveObjectType::StdCmdoption => {
+            parse_cmdoption(signatures, body_lines, adornment_order, diagnostics, ctx)
+        }
         _ => parse_py_domain_object(
             object_type,
             signatures,
             body_lines,
             adornment_order,
             diagnostics,
-            default_domain,
+            ctx,
         ),
     }
 }
@@ -56,6 +53,7 @@ pub(crate) fn parse_domain_object(
 mod tests {
     use super::*;
     use crate::parse;
+    use rusty_sphinx_ast::Domain;
     use rusty_sphinx_ast::{Directive, Node};
 
     #[test]
@@ -75,7 +73,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -111,7 +109,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::C,
+            &ParseCtx::with_domain(Domain::C),
         );
 
         // Then
@@ -139,7 +137,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -166,7 +164,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -202,7 +200,7 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then it does not panic

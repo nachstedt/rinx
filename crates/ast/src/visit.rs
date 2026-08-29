@@ -114,7 +114,7 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
                 walk_nodes(&entry.definition, visit);
             }
         }
-        Directive::ListTable { rows, .. } => {
+        Directive::DataTable { rows, .. } => {
             for row in rows {
                 for cell in &row.cells {
                     walk_nodes(&cell.content, visit);
@@ -312,9 +312,10 @@ mod tests {
     }
 
     #[test]
-    fn test_walk_nodes_descends_into_list_table_cells() {
+    fn test_walk_nodes_descends_into_data_table_cells() {
         // Given
-        let nodes = vec![Node::Directive(Directive::ListTable {
+        let nodes = vec![Node::Directive(Directive::DataTable {
+            source: crate::TableSource::List,
             title: None,
             header_rows: 0,
             stub_columns: 0,
