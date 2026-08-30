@@ -430,3 +430,73 @@ fn test_a_list_does_not_interrupt_the_paragraph_above_it() {
     // bullet lists already work this way, so this is not a bug to "fix"
     assert!(matches!(doc.nodes.as_slice(), [Node::Paragraph(_)]));
 }
+
+#[test]
+fn test_bare_enumerator_alone_in_the_input_stays_a_paragraph() {
+    // Given — the shape a grid-table cell like `| (n) |` produces: an
+    // enumerator-looking token alone, with nothing that could be its body.
+    let input = "(n)\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then it is prose, not a list whose only item is empty
+    assert_eq!(
+        inline_plain_text(match doc.nodes.as_slice() {
+            [Node::Paragraph(inlines)] => inlines,
+            other => panic!("Expected a paragraph, got {other:?}"),
+        }),
+        "(n)"
+    );
+    assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+}
+
+#[test]
+fn test_bare_enumerator_followed_by_unindented_prose_stays_a_paragraph() {
+    // Given a bare marker whose following text is not indented under it
+    let input = "(n)\n\nSome prose.\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then nothing is swallowed into an empty list item
+    assert!(
+        matches!(
+            doc.nodes.as_slice(),
+            [Node::Paragraph(_), Node::Paragraph(_)]
+        ),
+        "Expected two paragraphs, got {:?}",
+        doc.nodes
+    );
+    assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+}
+
+#[test]
+fn test_bare_enumerator_with_an_indented_body_still_opens_a_list() {
+    // Given a bare marker whose body follows on an indented line
+    let input = "1.\n\n   The body.\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then the list is still recognised
+    let (start, items) = only_list(&doc);
+    assert_eq!(start.ordinal(), 1);
+    assert_eq!(items.len(), 1);
+    assert_eq!(item_text(&items[0]), "The body.");
+}
+
+#[test]
+fn test_bare_enumerator_followed_by_a_sibling_item_still_opens_a_list() {
+    // Given a deliberately empty first item followed by a real second one
+    let input = "1.\n2. Second\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then both items are kept, the first one empty
+    let (_, items) = only_list(&doc);
+    assert_eq!(items.len(), 2);
+    assert!(items[0].nodes.is_empty());
+    assert_eq!(item_text(&items[1]), "Second");
+}

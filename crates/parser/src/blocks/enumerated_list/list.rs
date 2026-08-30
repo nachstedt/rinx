@@ -78,7 +78,7 @@ pub(crate) fn try_parse_enumerated_list(
         }
         // Checked before the item is consumed, so a line that turns out to be
         // prose is left for `parse_blocks` to re-dispatch as a paragraph.
-        if !is_enumerated_list_item(lines, i, enumerator, candidate.is_auto) {
+        if !is_enumerated_list_item(lines, i, &candidate, enumerator) {
             if state.is_none() {
                 diagnose_unrecognised_list(lines, i, &candidate, enumerator, diagnostics);
             }
