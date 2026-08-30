@@ -2,7 +2,10 @@
 //! object-description flag options its container types share.
 
 use crate::context::ParseCtx;
-use rusty_sphinx_ast::{CSignature, DomainObjectBody, NameSource, NonEmptyVector};
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{
+    CSignature, Diagnostic, DiagnosticCode, DomainObjectBody, NameSource, NonEmptyVector, Span,
+};
 
 use crate::headings::Adornment;
 
@@ -22,10 +25,11 @@ pub(crate) fn parse_c_domain_object(
     signatures: &NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
+    signature_span: Option<Span>,
 ) -> DomainObjectBody {
-    let signatures = parse_c_signatures(signatures, diagnostics);
+    let signatures = parse_c_signatures(signatures, diagnostics, signature_span);
     match object_type {
         DirectiveObjectType::CFunction => DomainObjectBody::CFunction {
             signatures,
@@ -73,15 +77,20 @@ pub(crate) fn parse_c_domain_object(
 /// grammar gaps countable against a real corpus.
 fn parse_c_signatures(
     signatures: &NonEmptyVector<String>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> NonEmptyVector<CSignature> {
     let parsed = signatures.map(|text| CSignature::parse(text.clone()));
     for signature in parsed.as_slice() {
         if signature.name_source() == NameSource::Fallback {
-            diagnostics.push(format!(
-                "c signature: could not parse declaration '{}'; fell back to the name heuristic, which read '{}'",
-                signature.text(),
-                signature.name()
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::CDeclUnparsed,
+                format!(
+                    "c signature: could not parse declaration '{}'; fell back to the name heuristic, which read '{}'",
+                    signature.text(),
+                    signature.name()
+                ),
+                span,
             ));
         }
     }
@@ -324,7 +333,7 @@ mod tests {
         assert!(
             !doc.diagnostics
                 .iter()
-                .any(|diagnostic| diagnostic.starts_with("c signature:")),
+                .any(|diagnostic| diagnostic.message.starts_with("c signature:")),
             "unexpected signature diagnostics: {:?}",
             doc.diagnostics
         );
@@ -339,16 +348,18 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then — one diagnostic, naming the offending signature.
-        let signature_diagnostics: Vec<&String> = doc
+        let signature_diagnostics: Vec<&Diagnostic> = doc
             .diagnostics
             .iter()
-            .filter(|diagnostic| diagnostic.starts_with("c signature:"))
+            .filter(|diagnostic| diagnostic.message.starts_with("c signature:"))
             .collect();
         assert_eq!(signature_diagnostics.len(), 1);
         assert!(
-            signature_diagnostics[0].contains(">>> not a declaration <<<"),
-            "diagnostic should quote the signature: {}",
             signature_diagnostics[0]
+                .message
+                .contains(">>> not a declaration <<<"),
+            "diagnostic should quote the signature: {}",
+            signature_diagnostics[0].message
         );
     }
     #[test]
@@ -361,13 +372,17 @@ mod tests {
         let doc = parse("test.rst", input);
 
         // Then
-        let signature_diagnostics: Vec<&String> = doc
+        let signature_diagnostics: Vec<&Diagnostic> = doc
             .diagnostics
             .iter()
-            .filter(|diagnostic| diagnostic.starts_with("c signature:"))
+            .filter(|diagnostic| diagnostic.message.starts_with("c signature:"))
             .collect();
         assert_eq!(signature_diagnostics.len(), 1);
-        assert!(signature_diagnostics[0].contains(">>> nonsense <<<"));
+        assert!(
+            signature_diagnostics[0]
+                .message
+                .contains(">>> nonsense <<<")
+        );
     }
     #[test]
     fn test_parse_c_signatures_records_the_name_source_per_signature() {
@@ -376,10 +391,10 @@ mod tests {
             "int (*Py_tracefunc)(PyObject *obj)".to_string(),
             vec![">>> nonsense <<<".to_string()],
         );
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let parsed = parse_c_signatures(&signatures, &mut diagnostics);
+        let parsed = parse_c_signatures(&signatures, &mut diagnostics, None);
 
         // Then
         assert_eq!(parsed.as_slice()[0].name_source(), NameSource::Parsed);
@@ -394,10 +409,10 @@ mod tests {
             "unsigned long ulong".to_string(),
             vec!["PyObject *(*unaryfunc)(PyObject *)".to_string()],
         );
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let parsed = parse_c_signatures(&signatures, &mut diagnostics);
+        let parsed = parse_c_signatures(&signatures, &mut diagnostics, None);
 
         // Then
         assert!(diagnostics.is_empty());

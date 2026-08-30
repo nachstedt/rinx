@@ -6,7 +6,16 @@
 //! split-out sibling modules is a better home than this one.
 
 use crate::parse;
-use rusty_sphinx_ast::{InlineNode, Node};
+use rusty_sphinx_ast::{InlineNode, Node, Position, Span};
+
+/// A single-line span from `start` to `end`, both 1-based columns.
+///
+/// These pipeline tests are where inline *positions* are asserted end to end:
+/// the structural assertions elsewhere deliberately clear spans, so if this
+/// module stopped checking them nothing would.
+fn at(line: u32, start: u32, end: u32) -> Span {
+    Span::new(Position::new(line, start), Position::new(line, end))
+}
 
 #[test]
 fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
@@ -20,6 +29,7 @@ fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
             InlineNode::Reference {
                 display: "my-target".to_string(),
                 target: "my-target".to_string(),
+                span: Some(at(1, 11, 27))
             },
             InlineNode::Text(" link.".to_string()),
         ])
@@ -36,7 +46,8 @@ fn test_parse_creates_phrased_hyperlink_node() {
             InlineNode::Text("Check the ".to_string()),
             InlineNode::Hyperlink {
                 text: "Python Guide".to_string(),
-                target: "Python Guide".to_string()
+                target: "Python Guide".to_string(),
+                span: Some(at(1, 11, 26))
             },
             InlineNode::Text(" for more.".to_string()),
         ])
@@ -53,7 +64,8 @@ fn test_parse_creates_embedded_uri_hyperlink_node() {
             InlineNode::Text("Check ".to_string()),
             InlineNode::Hyperlink {
                 text: "Google".to_string(),
-                target: "https://google.com".to_string()
+                target: "https://google.com".to_string(),
+                span: Some(at(1, 7, 37))
             },
             InlineNode::Text(" now.".to_string()),
         ])
@@ -70,7 +82,8 @@ fn test_parse_creates_simple_link_node() {
             InlineNode::Text("Refer to ".to_string()),
             InlineNode::Hyperlink {
                 text: "target".to_string(),
-                target: "target".to_string()
+                target: "target".to_string(),
+                span: Some(at(1, 10, 17))
             },
             InlineNode::Text(" for details.".to_string()),
         ])
@@ -117,7 +130,8 @@ fn test_parse_creates_simple_link_node_for_target_name_containing_underscore() {
             InlineNode::Text("See ".to_string()),
             InlineNode::Hyperlink {
                 text: "my_target".to_string(),
-                target: "my_target".to_string()
+                target: "my_target".to_string(),
+                span: Some(at(1, 5, 15))
             },
             InlineNode::Text(" here.".to_string()),
         ])
@@ -158,11 +172,17 @@ fn test_parse_creates_anonymous_reference() {
         assert_eq!(inlines.len(), 4);
         assert_eq!(
             inlines[1],
-            InlineNode::AnonymousReference("Example".to_string())
+            InlineNode::AnonymousReference {
+                text: "Example".to_string(),
+                span: Some(at(1, 5, 16)),
+            }
         );
         assert_eq!(
             inlines[3],
-            InlineNode::AnonymousReference("link".to_string())
+            InlineNode::AnonymousReference {
+                text: "link".to_string(),
+                span: Some(at(1, 21, 27)),
+            }
         );
     } else {
         panic!("Expected paragraph");
@@ -465,7 +485,7 @@ fn test_parse_term_role_basic() {
             .iter()
             .find(|n| matches!(n, InlineNode::TermReference { .. }));
         assert!(term_ref.is_some(), "Expected TermReference in paragraph");
-        if let Some(InlineNode::TermReference { display, term }) = term_ref {
+        if let Some(InlineNode::TermReference { display, term, .. }) = term_ref {
             assert_eq!(display, "environment");
             assert_eq!(term, "environment");
         }
@@ -482,7 +502,7 @@ fn test_parse_term_role_with_display_text() {
             .iter()
             .find(|n| matches!(n, InlineNode::TermReference { .. }));
         assert!(term_ref.is_some());
-        if let Some(InlineNode::TermReference { display, term }) = term_ref {
+        if let Some(InlineNode::TermReference { display, term, .. }) = term_ref {
             assert_eq!(display, "the env");
             assert_eq!(term, "environment");
         }
@@ -502,7 +522,10 @@ fn test_parse_option_role_basic() {
             option_ref.is_some(),
             "Expected OptionReference in paragraph"
         );
-        if let Some(InlineNode::OptionReference { display, target }) = option_ref {
+        if let Some(InlineNode::OptionReference {
+            display, target, ..
+        }) = option_ref
+        {
             assert_eq!(display, "-h");
             assert_eq!(target, "-h");
         }
@@ -519,7 +542,10 @@ fn test_parse_option_role_with_display_text() {
             .iter()
             .find(|n| matches!(n, InlineNode::OptionReference { .. }));
         assert!(option_ref.is_some());
-        if let Some(InlineNode::OptionReference { display, target }) = option_ref {
+        if let Some(InlineNode::OptionReference {
+            display, target, ..
+        }) = option_ref
+        {
             assert_eq!(display, "-W default");
             assert_eq!(target, "-W");
         }
@@ -539,7 +565,10 @@ fn test_parse_option_role_with_embedded_program_in_target() {
             .iter()
             .find(|n| matches!(n, InlineNode::OptionReference { .. }));
         assert!(option_ref.is_some());
-        if let Some(InlineNode::OptionReference { display, target }) = option_ref {
+        if let Some(InlineNode::OptionReference {
+            display, target, ..
+        }) = option_ref
+        {
             assert_eq!(display, "-O");
             assert_eq!(target, "dis --show-offsets");
         }
@@ -570,7 +599,10 @@ fn test_parse_ref_role_with_display_text() {
             .iter()
             .find(|n| matches!(n, InlineNode::Reference { .. }));
         assert!(reference.is_some());
-        if let Some(InlineNode::Reference { display, target }) = reference {
+        if let Some(InlineNode::Reference {
+            display, target, ..
+        }) = reference
+        {
             assert_eq!(display, "GenericAlias");
             assert_eq!(target, "types-genericalias");
         }

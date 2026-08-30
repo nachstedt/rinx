@@ -23,6 +23,7 @@ impl DomainObjectTarget {
             display: self.display,
             link: self.link,
             search_order: self.search_order,
+            span: None,
         }
     }
 }

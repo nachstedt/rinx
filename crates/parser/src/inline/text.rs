@@ -8,13 +8,28 @@ use super::dispatch::handle_inline_match;
 use super::escapes::{EscapedText, unescape, unescape_keeping_backslashes};
 use super::markup::find_inline_markup;
 use super::regexes::SIMPLE_ROLE_REGEXES;
+use super::source_map::SourceMap;
 use super::typography::apply_smart_typography;
+use crate::context::ParseCtx;
 
-/// Parses a plain text string into a list of [`InlineNode`]s.
+/// Parses a plain text string into a list of [`InlineNode`]s, recording where
+/// each cross-reference role was written.
 ///
 /// `default_domain` resolves any bare (unprefixed) domain role, e.g. `:func:`,
 /// to a concrete [`Domain`] — mirroring how bare directives are resolved.
-pub(crate) fn parse_inline_text(raw_text: &str, default_domain: Domain) -> Vec<InlineNode> {
+///
+/// The positions come from `map`, which the caller built while it reflowed the
+/// source into `raw_text`; `ctx` is what turns the map's own line/column
+/// offsets into absolute ones. Spans land on the nodes here rather than inside
+/// each role parser because this is the only place a match's extent is known:
+/// `start`/`end` below are exactly it, and the escape rewrite is deliberately
+/// length-preserving so they still address the original text.
+pub(crate) fn parse_inline_text_mapped(
+    raw_text: &str,
+    default_domain: Domain,
+    map: &SourceMap,
+    ctx: &ParseCtx<'_>,
+) -> Vec<InlineNode> {
     // Rewrite escapes to markers once, up front, and match markup over that
     // form for the rest of the function. The rewrite preserves byte lengths,
     // so every offset below means the same thing it did before.
@@ -48,12 +63,11 @@ pub(crate) fn parse_inline_text(raw_text: &str, default_domain: Domain) -> Vec<I
                 ))));
             }
             let m_str = &remaining[start..end];
-            inlines.push(unescape_node(handle_inline_match(
-                kind,
-                m_str,
-                node_opt,
-                default_domain,
-            )));
+            let span = map.span(last_match_end + start, last_match_end + end, ctx);
+            inlines.push(
+                unescape_node(handle_inline_match(kind, m_str, node_opt, default_domain))
+                    .with_span(span),
+            );
             last_match_end += end;
         } else {
             inlines.push(unescape_node(InlineNode::Text(apply_smart_typography(
@@ -66,7 +80,7 @@ pub(crate) fn parse_inline_text(raw_text: &str, default_domain: Domain) -> Vec<I
 }
 
 /// Strips escape markers from every text field of a node on its way out of
-/// [`parse_inline_text`].
+/// [`parse_inline_text_mapped`].
 ///
 /// Every node is funnelled through here rather than unescaped at each of the
 /// two dozen places one gets built, because that turns the "no marker ever
@@ -88,26 +102,45 @@ fn unescape_node(node: InlineNode) -> InlineNode {
         InlineNode::Emphasis(text) => InlineNode::Emphasis(unescape(&text)),
         InlineNode::Strong(text) => InlineNode::Strong(unescape(&text)),
         InlineNode::Program(name) => InlineNode::Program(unescape(&name)),
-        InlineNode::AnonymousReference(text) => InlineNode::AnonymousReference(unescape(&text)),
-        InlineNode::Reference { display, target } => InlineNode::Reference {
+        InlineNode::AnonymousReference { text, span } => InlineNode::AnonymousReference {
+            text: unescape(&text),
+            span,
+        },
+        InlineNode::Reference {
+            display,
+            target,
+            span,
+        } => InlineNode::Reference {
             display: unescape(&display),
             target: unescape(&target),
+            span,
         },
-        InlineNode::Hyperlink { text, target } => InlineNode::Hyperlink {
+        InlineNode::Hyperlink { text, target, span } => InlineNode::Hyperlink {
             text: unescape(&text),
             target: unescape(&target),
+            span,
         },
         InlineNode::AnonymousHyperlink { text, target } => InlineNode::AnonymousHyperlink {
             text: unescape(&text),
             target: unescape(&target),
         },
-        InlineNode::TermReference { display, term } => InlineNode::TermReference {
+        InlineNode::TermReference {
+            display,
+            term,
+            span,
+        } => InlineNode::TermReference {
             display: unescape(&display),
             term: unescape(&term),
+            span,
         },
-        InlineNode::OptionReference { display, target } => InlineNode::OptionReference {
+        InlineNode::OptionReference {
+            display,
+            target,
+            span,
+        } => InlineNode::OptionReference {
             display: unescape(&display),
             target: unescape(&target),
+            span,
         },
         InlineNode::DomainObjectReference {
             object_type,
@@ -115,12 +148,14 @@ fn unescape_node(node: InlineNode) -> InlineNode {
             display,
             link,
             search_order,
+            span,
         } => InlineNode::DomainObjectReference {
             object_type,
             name: unescape(&name),
             display: unescape(&display),
             link,
             search_order,
+            span,
         },
     }
 }

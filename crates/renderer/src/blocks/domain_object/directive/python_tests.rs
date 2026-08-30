@@ -416,9 +416,10 @@ fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("greet(name)".to_string()),
-                    body: vec![Node::Paragraph(vec![InlineNode::AnonymousReference(
-                        "See more".to_string(),
-                    )])],
+                    body: vec![Node::Paragraph(vec![InlineNode::AnonymousReference {
+                        text: "See more".to_string(),
+                        span: None,
+                    }])],
                 },
             )),
             Node::AnonymousTarget {

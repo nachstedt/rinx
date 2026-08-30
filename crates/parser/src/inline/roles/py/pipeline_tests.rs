@@ -8,6 +8,19 @@ use rusty_sphinx_ast::{
     CObjectType, Domain, InlineNode, Node, ObjectType, PyObjectType, TargetSearchOrder,
 };
 
+/// The nodes with every source position cleared.
+///
+/// These tests are about what the roles *resolve to* — object type, name,
+/// display text, link suppression. Where each one sits in the file is
+/// asserted separately, in `crate::inline::pipeline_tests`, so that a change
+/// to one concern cannot fail the other's tests.
+fn without_spans(inlines: &[InlineNode]) -> Vec<InlineNode> {
+    inlines
+        .iter()
+        .map(|inline| inline.clone().with_span(None))
+        .collect()
+}
+
 #[test]
 fn test_parse_bare_func_role_resolves_via_default_domain() {
     // Given
@@ -19,13 +32,14 @@ fn test_parse_bare_func_role_resolves_via_default_domain() {
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
         assert_eq!(
-            inlines[1],
+            inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::C(CObjectType::Function),
                 name: "greet".to_string(),
                 display: "greet".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     } else {
@@ -42,20 +56,26 @@ fn test_parse_prefixed_func_role_ignores_default_domain() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Function),
-            name: "greet".to_string(),
-            display: "greet".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::C(CObjectType::Function),
-            name: "add".to_string(),
-            display: "add".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Function),
+                name: "greet".to_string(),
+                display: "greet".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(CObjectType::Function),
+                name: "add".to_string(),
+                display: "add".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -71,13 +91,14 @@ fn test_parse_bare_mod_role_resolves_via_default_domain() {
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
         assert_eq!(
-            inlines[1],
+            inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Module),
                 name: "greetings".to_string(),
                 display: "greetings".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     } else {
@@ -94,13 +115,16 @@ fn test_parse_prefixed_mod_role_ignores_default_domain() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Module),
-            name: "greetings".to_string(),
-            display: "greetings".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Module),
+                name: "greetings".to_string(),
+                display: "greetings".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -115,13 +139,16 @@ fn test_parse_mod_role_with_bang_prefix_suppresses_link_end_to_end() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Module),
-            name: "curses".to_string(),
-            display: "curses".to_string(),
-            link: false,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Module),
+                name: "curses".to_string(),
+                display: "curses".to_string(),
+                link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -137,13 +164,14 @@ fn test_parse_bare_data_role_resolves_via_default_domain() {
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
         assert_eq!(
-            inlines[1],
+            inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Data),
                 name: "DEFAULT_TIMEOUT".to_string(),
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     } else {
@@ -162,13 +190,16 @@ fn test_parse_prefixed_const_role_ignores_default_domain_and_matches_data_target
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Data),
-            name: "DEFAULT_TIMEOUT".to_string(),
-            display: "DEFAULT_TIMEOUT".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Data),
+                name: "DEFAULT_TIMEOUT".to_string(),
+                display: "DEFAULT_TIMEOUT".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -183,13 +214,16 @@ fn test_parse_data_role_with_bang_prefix_suppresses_link_end_to_end() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Data),
-            name: "SECRET_KEY".to_string(),
-            display: "SECRET_KEY".to_string(),
-            link: false,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Data),
+                name: "SECRET_KEY".to_string(),
+                display: "SECRET_KEY".to_string(),
+                link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -205,13 +239,14 @@ fn test_parse_bare_meth_role_resolves_via_default_domain() {
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
         assert_eq!(
-            inlines[1],
+            inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Method),
                 name: "greet".to_string(),
                 display: "greet".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     } else {
@@ -228,13 +263,16 @@ fn test_parse_prefixed_meth_role_ignores_default_domain() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Method),
-            name: "greet".to_string(),
-            display: "greet".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Method),
+                name: "greet".to_string(),
+                display: "greet".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -249,13 +287,16 @@ fn test_parse_meth_role_with_bang_prefix_suppresses_link_end_to_end() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Method),
-            name: "secret_method".to_string(),
-            display: "secret_method".to_string(),
-            link: false,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Method),
+                name: "secret_method".to_string(),
+                display: "secret_method".to_string(),
+                link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -271,13 +312,14 @@ fn test_parse_bare_class_role_resolves_via_default_domain() {
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
         assert_eq!(
-            inlines[1],
+            inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Class),
                 name: "Greeter".to_string(),
                 display: "Greeter".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     } else {
@@ -294,13 +336,16 @@ fn test_parse_prefixed_class_role_ignores_default_domain() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Class),
-            name: "Greeter".to_string(),
-            display: "Greeter".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Class),
+                name: "Greeter".to_string(),
+                display: "Greeter".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -316,13 +361,14 @@ fn test_parse_bare_attr_role_resolves_via_default_domain() {
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
         assert_eq!(
-            inlines[1],
+            inlines[1].clone().with_span(None),
             InlineNode::DomainObjectReference {
                 object_type: ObjectType::Py(PyObjectType::Attribute),
                 name: "Greeter.name".to_string(),
                 display: "Greeter.name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     } else {
@@ -339,13 +385,16 @@ fn test_parse_prefixed_attr_role_ignores_default_domain() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Attribute),
-            name: "Greeter.name".to_string(),
-            display: "Greeter.name".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Attribute),
+                name: "Greeter.name".to_string(),
+                display: "Greeter.name".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -361,7 +410,9 @@ fn test_parse_bare_attr_role_under_c_default_domain_falls_back_to_text() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::Text(":attr:`Greeter.name`".to_string())));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::Text(":attr:`Greeter.name`".to_string()))
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -376,13 +427,16 @@ fn test_parse_attr_role_with_bang_prefix_suppresses_link_end_to_end() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Attribute),
-            name: "Greeter.secret".to_string(),
-            display: "Greeter.secret".to_string(),
-            link: false,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Attribute),
+                name: "Greeter.secret".to_string(),
+                display: "Greeter.secret".to_string(),
+                link: false,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -397,13 +451,16 @@ fn test_parse_func_role_with_tilde_prefix_shortens_display_end_to_end() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::Py(PyObjectType::Function),
-            name: "greetings.shout".to_string(),
-            display: "shout".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::Py(PyObjectType::Function),
+                name: "greetings.shout".to_string(),
+                display: "shout".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
@@ -418,13 +475,16 @@ fn test_parse_func_role_with_call_parens_resolves_the_bare_name_end_to_end() {
 
     // Then
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
-        assert!(inlines.contains(&InlineNode::DomainObjectReference {
-            object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
-            name: "Py_TYPE".to_string(),
-            display: "Py_TYPE()".to_string(),
-            link: true,
-            search_order: TargetSearchOrder::LeastQualifiedFirst,
-        }));
+        assert!(
+            without_spans(inlines).contains(&InlineNode::DomainObjectReference {
+                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                name: "Py_TYPE".to_string(),
+                display: "Py_TYPE()".to_string(),
+                link: true,
+                search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
+            })
+        );
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }

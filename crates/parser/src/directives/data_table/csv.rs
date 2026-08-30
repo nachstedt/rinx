@@ -1,6 +1,9 @@
 //! `.. csv-table::` — a table whose rows are CSV data.
 
-use rusty_sphinx_ast::{Directive, Node, TableCell, TableRow, TableSource};
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{
+    Diagnostic, DiagnosticCode, Directive, Node, Span, TableCell, TableRow, TableSource,
+};
 
 use super::csv_dialect::{CsvDialect, parse_csv_rows};
 use super::options::{
@@ -53,7 +56,7 @@ pub(in crate::directives) fn parse_csv_table(
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Directive {
     let title = if argument.is_empty() {
@@ -65,15 +68,15 @@ pub(in crate::directives) fn parse_csv_table(
     let unindented_lines = unindent_body_lines(body_lines);
     let (option_lines, body_start) = scan_option_lines(&unindented_lines);
     let (options, unrecognized) =
-        parse_shared_table_options(&option_lines, TableSource::Csv, diagnostics);
+        parse_shared_table_options(&option_lines, TableSource::Csv, diagnostics, ctx);
 
     let mut dialect = CsvDialect::default();
     let mut source = CsvSource::default();
     let unclaimed: Vec<&OptionLine> = unrecognized
         .into_iter()
-        .filter(|line| !dialect.apply_option(line, diagnostics) && !source.apply_option(line))
+        .filter(|line| !dialect.apply_option(line, diagnostics, ctx) && !source.apply_option(line))
         .collect();
-    report_unknown_options(&unclaimed, TableSource::Csv, diagnostics);
+    report_unknown_options(&unclaimed, TableSource::Csv, diagnostics, ctx);
 
     let inline_data = join_body_lines(
         &unindented_lines[body_start..]
@@ -82,12 +85,23 @@ pub(in crate::directives) fn parse_csv_table(
             .collect::<Vec<&str>>(),
     );
 
-    let Some(data) = resolve_csv_data(&inline_data, &source, ctx, diagnostics) else {
+    // Every diagnostic about the table's *data* points at the directive body
+    // as a whole: the data may come from a `:file:`, and even inline data has
+    // been through a CSV reader by the time a row is found wanting, so no
+    // finer source position survives.
+    let table_span = ctx.line_span(0, body_lines.first().unwrap_or(&""));
+
+    let Some(data) = resolve_csv_data(&inline_data, &source, ctx, diagnostics, table_span) else {
         return unknown_csv_table(argument, body_lines);
     };
 
-    let Some(rows) = collect_csv_rows(&data, source.header.as_deref(), &dialect, diagnostics)
-    else {
+    let Some(rows) = collect_csv_rows(
+        &data,
+        source.header.as_deref(),
+        &dialect,
+        diagnostics,
+        table_span,
+    ) else {
         return unknown_csv_table(argument, body_lines);
     };
     let header_rows = source.header.as_deref().map_or(0, |header| {
@@ -95,13 +109,16 @@ pub(in crate::directives) fn parse_csv_table(
     });
 
     build_csv_table(
-        title,
-        options,
-        header_rows,
+        CsvTableSpec {
+            title,
+            options,
+            header_option_rows: header_rows,
+        },
         rows,
         adornment_order,
         diagnostics,
         ctx,
+        table_span,
     )
     .unwrap_or_else(|| unknown_csv_table(argument, body_lines))
 }
@@ -117,12 +134,17 @@ fn resolve_csv_data(
     inline_data: &str,
     source: &CsvSource,
     ctx: &ParseCtx<'_>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> Option<String> {
     if source.url.is_some() {
-        diagnostics.push(format!(
-            "{DIRECTIVE}: the :url: option is not supported — fetching over the network \
-             would make the build non-hermetic; download the data and use :file: instead"
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::CsvUrlUnsupported,
+            format!(
+                "{DIRECTIVE}: the :url: option is not supported — fetching over the network \
+                 would make the build non-hermetic; download the data and use :file: instead"
+            ),
+            span,
         ));
         return None;
     }
@@ -130,22 +152,32 @@ fn resolve_csv_data(
     let has_inline = !inline_data.trim().is_empty();
     match (&source.file, has_inline) {
         (Some(_), true) => {
-            diagnostics.push(format!(
-                "{DIRECTIVE}: cannot have both a :file: option and directive content"
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::CsvFileAndContent,
+                format!("{DIRECTIVE}: cannot have both a :file: option and directive content"),
+                span,
             ));
             None
         }
         (None, false) => {
-            diagnostics.push(format!("{DIRECTIVE}: no table data"));
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::CsvNoData,
+                format!("{DIRECTIVE}: no table data"),
+                span,
+            ));
             None
         }
         (None, true) => Some(inline_data.to_string()),
         (Some(path), false) => {
-            check_encoding(source.encoding.as_deref(), diagnostics)?;
+            check_encoding(source.encoding.as_deref(), diagnostics, span)?;
             match ctx.csv_files.load(path) {
                 Ok(data) => Some(data),
                 Err(message) => {
-                    diagnostics.push(format!("{DIRECTIVE}: {message}"));
+                    diagnostics.push(Diagnostic::at(
+                        DiagnosticCode::CsvFileUnreadable,
+                        format!("{DIRECTIVE}: {message}"),
+                        span,
+                    ));
                     None
                 }
             }
@@ -160,7 +192,11 @@ fn resolve_csv_data(
 /// no document in the benchmark corpus exercises, so anything else is refused
 /// with a diagnostic naming the limitation rather than mis-decoding the file
 /// into replacement characters.
-fn check_encoding(encoding: Option<&str>, diagnostics: &mut Vec<String>) -> Option<()> {
+fn check_encoding(
+    encoding: Option<&str>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
+) -> Option<()> {
     let Some(encoding) = encoding else {
         return Some(());
     };
@@ -168,9 +204,13 @@ fn check_encoding(encoding: Option<&str>, diagnostics: &mut Vec<String>) -> Opti
     if matches!(normalized.as_str(), "utf-8" | "utf8" | "ascii" | "us-ascii") {
         Some(())
     } else {
-        diagnostics.push(format!(
-            "{DIRECTIVE}: :encoding: '{encoding}' is not supported — only UTF-8 \
-             (and its ASCII subset) can be decoded"
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::CsvEncodingUnsupported,
+            format!(
+                "{DIRECTIVE}: :encoding: '{encoding}' is not supported — only UTF-8 \
+                 (and its ASCII subset) can be decoded"
+            ),
+            span,
         ));
         None
     }
@@ -185,14 +225,19 @@ fn collect_csv_rows(
     data: &str,
     header: Option<&str>,
     dialect: &CsvDialect,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> Option<Vec<Vec<String>>> {
     let mut rows = Vec::new();
     if let Some(header) = header {
         match parse_csv_rows(header, dialect) {
             Ok(header_rows) => rows.extend(header_rows),
             Err(message) => {
-                diagnostics.push(format!("{DIRECTIVE}: malformed :header: data: {message}"));
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::CsvMalformedHeader,
+                    format!("{DIRECTIVE}: malformed :header: data: {message}"),
+                    span,
+                ));
                 return None;
             }
         }
@@ -200,7 +245,11 @@ fn collect_csv_rows(
     match parse_csv_rows(data, dialect) {
         Ok(data_rows) => rows.extend(data_rows),
         Err(message) => {
-            diagnostics.push(format!("{DIRECTIVE}: malformed CSV data: {message}"));
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::CsvMalformedData,
+                format!("{DIRECTIVE}: malformed CSV data: {message}"),
+                span,
+            ));
             return None;
         }
     }
@@ -221,36 +270,63 @@ fn collect_csv_rows(
 /// there, and unlike a list-table (whose row count is nothing but the bullet
 /// list's length) a csv-table's author has stated a count that the data
 /// contradicts, which is worth reporting rather than quietly clamping.
-fn build_csv_table(
+/// What the author declared about a `.. csv-table::`, as opposed to the data
+/// it holds.
+///
+/// Bundled because the three travel together and are all *claims* that the
+/// data may contradict: `header_option_rows` (the rows `:header:` supplied)
+/// adds to `options.header_rows`, and both are checked against the row count
+/// below.
+struct CsvTableSpec {
     title: Option<String>,
     options: SharedTableOptions,
+    /// Rows contributed by the `:header:` option, over and above
+    /// `options.header_rows`.
     header_option_rows: usize,
+}
+
+fn build_csv_table(
+    spec: CsvTableSpec,
     field_rows: Vec<Vec<String>>,
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
+    span: Option<Span>,
 ) -> Option<Directive> {
+    let CsvTableSpec {
+        title,
+        options,
+        header_option_rows,
+    } = spec;
     let ncols = field_rows.first().map_or(0, Vec::len);
     let header_rows = header_option_rows + options.header_rows;
 
     if header_rows > field_rows.len() {
-        diagnostics.push(format!(
-            "{DIRECTIVE}: {header_rows} header row(s) requested, but the table has only {} row(s)",
-            field_rows.len()
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::CsvHeaderRowsExceed,
+            format!(
+                "{DIRECTIVE}: {header_rows} header row(s) requested, but the table has only {} row(s)",
+                field_rows.len()
+            ),
+            span,
         ));
         return None;
     }
     if options.stub_columns > ncols {
-        diagnostics.push(format!(
-            "{DIRECTIVE}: :stub-columns: {} exceeds the table's {ncols} column(s)",
-            options.stub_columns
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::CsvStubColumnsExceed,
+            format!(
+                "{DIRECTIVE}: :stub-columns: {} exceeds the table's {ncols} column(s)",
+                options.stub_columns
+            ),
+            span,
         ));
         return None;
     }
 
     let widths = options
         .widths_raw
-        .and_then(|raw| parse_widths_option(&raw, ncols, DIRECTIVE, diagnostics));
+        .and_then(|raw| parse_widths_option(&raw, ncols, DIRECTIVE, diagnostics, span));
 
     let rows = field_rows
         .into_iter()
@@ -283,14 +359,20 @@ fn build_csv_table(
 /// Re-parses one field's text as block-level RST. A field may span several
 /// lines (a quoted field can contain newlines), so it is split back into
 /// lines for the block parser.
+///
+/// The nested parse runs under a *synthetic* context: a field is what the CSV
+/// reader produced, not a slice of the `.rst`, so its lines correspond to no
+/// source position — a `:file:`'s data is not even in this document. Anything
+/// diagnosed inside a cell is therefore reported without a span rather than
+/// against a line that does not contain it.
 fn parse_cell_content(
     field: &str,
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Vec<Node> {
     let lines: Vec<&str> = field.lines().collect();
-    parse_blocks(&lines, adornment_order, diagnostics, ctx)
+    parse_blocks(&lines, adornment_order, diagnostics, &ctx.synthetic())
 }
 
 fn unknown_csv_table(argument: String, body_lines: &[&str]) -> Directive {
@@ -329,9 +411,9 @@ mod tests {
         }
     }
 
-    fn parse_with(body_lines: &[&str], ctx: &ParseCtx<'_>) -> (Directive, Vec<String>) {
+    fn parse_with(body_lines: &[&str], ctx: &ParseCtx<'_>) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         let directive = parse_csv_table(
             String::new(),
             body_lines,
@@ -342,7 +424,7 @@ mod tests {
         (directive, diagnostics)
     }
 
-    fn parse(body_lines: &[&str]) -> (Directive, Vec<String>) {
+    fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
         parse_with(body_lines, &ParseCtx::with_domain(Domain::Py))
     }
 
@@ -403,7 +485,7 @@ mod tests {
         // Given
         let body_lines = vec!["   Apple, Red"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_csv_table(
@@ -622,10 +704,7 @@ mod tests {
     fn test_parse_csv_table_reads_the_file_option() {
         // Given
         let loader = FakeCsvFiles::with("data/fruits.csv", "Apple, Red\nBanana, Yellow\n");
-        let ctx = ParseCtx {
-            default_domain: Domain::Py,
-            csv_files: &loader,
-        };
+        let ctx = ParseCtx::new(Domain::Py, &loader);
         let body_lines = vec!["   :file: data/fruits.csv"];
 
         // When
@@ -643,10 +722,7 @@ mod tests {
     fn test_parse_csv_table_reports_an_unreadable_file() {
         // Given
         let loader = FakeCsvFiles::with("data/fruits.csv", "Apple, Red\n");
-        let ctx = ParseCtx {
-            default_domain: Domain::Py,
-            csv_files: &loader,
-        };
+        let ctx = ParseCtx::new(Domain::Py, &loader);
         let body_lines = vec!["   :file: data/missing.csv"];
 
         // When
@@ -655,9 +731,9 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].contains("data/missing.csv"),
+            diagnostics[0].message.contains("data/missing.csv"),
             "{}",
-            diagnostics[0]
+            diagnostics[0].message
         );
         assert!(matches!(directive, Directive::Unknown { name, .. } if name == "csv-table"));
     }
@@ -672,7 +748,11 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains(":file:"), "{}", diagnostics[0]);
+        assert!(
+            diagnostics[0].message.contains(":file:"),
+            "{}",
+            diagnostics[0].message
+        );
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
 
@@ -686,8 +766,16 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains(":url:"), "{}", diagnostics[0]);
-        assert!(diagnostics[0].contains("hermetic"), "{}", diagnostics[0]);
+        assert!(
+            diagnostics[0].message.contains(":url:"),
+            "{}",
+            diagnostics[0].message
+        );
+        assert!(
+            diagnostics[0].message.contains("hermetic"),
+            "{}",
+            diagnostics[0].message
+        );
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
 
@@ -695,10 +783,7 @@ mod tests {
     fn test_parse_csv_table_rejects_both_file_and_inline_content() {
         // Given
         let loader = FakeCsvFiles::with("data/fruits.csv", "Apple, Red\n");
-        let ctx = ParseCtx {
-            default_domain: Domain::Py,
-            csv_files: &loader,
-        };
+        let ctx = ParseCtx::new(Domain::Py, &loader);
         let body_lines = vec!["   :file: data/fruits.csv", "", "   Banana, Yellow"];
 
         // When
@@ -706,7 +791,11 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("both"), "{}", diagnostics[0]);
+        assert!(
+            diagnostics[0].message.contains("both"),
+            "{}",
+            diagnostics[0].message
+        );
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
 
@@ -721,9 +810,9 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].contains("no table data"),
+            diagnostics[0].message.contains("no table data"),
             "{}",
-            diagnostics[0]
+            diagnostics[0].message
         );
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
@@ -732,10 +821,7 @@ mod tests {
     fn test_parse_csv_table_accepts_a_utf8_encoding() {
         // Given
         let loader = FakeCsvFiles::with("data/fruits.csv", "Äpfel, Rot\n");
-        let ctx = ParseCtx {
-            default_domain: Domain::Py,
-            csv_files: &loader,
-        };
+        let ctx = ParseCtx::new(Domain::Py, &loader);
         let body_lines = vec!["   :file: data/fruits.csv", "   :encoding: UTF-8"];
 
         // When
@@ -750,10 +836,7 @@ mod tests {
     fn test_parse_csv_table_rejects_a_non_utf8_encoding() {
         // Given
         let loader = FakeCsvFiles::with("data/fruits.csv", "Apple, Red\n");
-        let ctx = ParseCtx {
-            default_domain: Domain::Py,
-            csv_files: &loader,
-        };
+        let ctx = ParseCtx::new(Domain::Py, &loader);
         let body_lines = vec!["   :file: data/fruits.csv", "   :encoding: latin-1"];
 
         // When
@@ -761,7 +844,11 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("latin-1"), "{}", diagnostics[0]);
+        assert!(
+            diagnostics[0].message.contains("latin-1"),
+            "{}",
+            diagnostics[0].message
+        );
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
 
@@ -775,7 +862,11 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("header row"), "{}", diagnostics[0]);
+        assert!(
+            diagnostics[0].message.contains("header row"),
+            "{}",
+            diagnostics[0].message
+        );
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
 
@@ -790,9 +881,9 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].contains(":stub-columns:"),
+            diagnostics[0].message.contains(":stub-columns:"),
             "{}",
-            diagnostics[0]
+            diagnostics[0].message
         );
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
@@ -808,9 +899,9 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].contains("malformed CSV"),
+            diagnostics[0].message.contains("malformed CSV"),
             "{}",
-            diagnostics[0]
+            diagnostics[0].message
         );
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
@@ -825,7 +916,11 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains(":header:"), "{}", diagnostics[0]);
+        assert!(
+            diagnostics[0].message.contains(":header:"),
+            "{}",
+            diagnostics[0].message
+        );
     }
 
     #[test]
@@ -839,9 +934,11 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].contains("Invalid or non-standard Sphinx csv-table option"),
-            "{}",
             diagnostics[0]
+                .message
+                .contains("Invalid or non-standard Sphinx csv-table option"),
+            "{}",
+            diagnostics[0].message
         );
     }
 
@@ -874,28 +971,34 @@ mod tests {
     #[test]
     fn test_check_encoding_accepts_the_utf8_family() {
         // Given
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When / Then
         for encoding in ["utf-8", "UTF8", "us_ascii", "ascii"] {
             assert_eq!(
-                check_encoding(Some(encoding), &mut diagnostics),
+                check_encoding(Some(encoding), &mut diagnostics, None),
                 Some(()),
                 "{encoding} should be accepted"
             );
         }
-        assert_eq!(check_encoding(None, &mut diagnostics), Some(()));
+        assert_eq!(check_encoding(None, &mut diagnostics, None), Some(()));
         assert!(diagnostics.is_empty());
     }
 
     #[test]
     fn test_collect_csv_rows_pads_every_row_to_the_widest() {
         // Given
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_csv_rows("a,b,c\nd\n", None, &CsvDialect::default(), &mut diagnostics)
-            .expect("well-formed CSV");
+        let rows = collect_csv_rows(
+            "a,b,c\nd\n",
+            None,
+            &CsvDialect::default(),
+            &mut diagnostics,
+            None,
+        )
+        .expect("well-formed CSV");
 
         // Then
         assert_eq!(rows, vec![vec!["a", "b", "c"], vec!["d", "", ""]]);
@@ -905,7 +1008,7 @@ mod tests {
     #[test]
     fn test_collect_csv_rows_puts_header_rows_first() {
         // Given
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let rows = collect_csv_rows(
@@ -913,6 +1016,7 @@ mod tests {
             Some("Fruit,Colour"),
             &CsvDialect::default(),
             &mut diagnostics,
+            None,
         )
         .expect("well-formed CSV");
 
@@ -931,11 +1035,13 @@ mod tests {
             name: "file".to_string(),
             value: "data/fruits.csv".to_string(),
             raw: ":file: data/fruits.csv".to_string(),
+            line_index: 0,
         });
         let claimed_other = source.apply_option(&OptionLine {
             name: "delim".to_string(),
             value: ";".to_string(),
             raw: ":delim: ;".to_string(),
+            line_index: 0,
         });
 
         // Then

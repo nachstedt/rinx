@@ -2,7 +2,7 @@
 //! failed to resolve against the [`ProjectIndex`](rusty_sphinx_index::ProjectIndex),
 //! and references that resolved only through an object-type fallback.
 
-use rusty_sphinx_ast::ObjectType;
+use rusty_sphinx_ast::{DiagnosticCode, ObjectType, Span};
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -35,6 +35,21 @@ pub enum BrokenLinkKind {
 }
 
 impl BrokenLinkKind {
+    /// The diagnostic code this kind reports under — what a `.. noqa:`
+    /// comment names to suppress it.
+    #[must_use]
+    pub const fn code(&self) -> DiagnosticCode {
+        match self {
+            Self::Reference => DiagnosticCode::LinkBrokenRef,
+            Self::Hyperlink => DiagnosticCode::LinkBrokenHyperlink,
+            Self::AnonymousReference => DiagnosticCode::LinkBrokenAnonymous,
+            Self::TermReference => DiagnosticCode::LinkBrokenTerm,
+            Self::OptionReference => DiagnosticCode::LinkBrokenOption,
+            Self::DomainObjectReference(_) => DiagnosticCode::LinkBrokenObject,
+            Self::AmbiguousDomainObjectReference { .. } => DiagnosticCode::LinkAmbiguousObject,
+        }
+    }
+
     /// Returns a short, human-readable label for this kind, used in CLI diagnostics.
     #[must_use]
     pub fn as_str(&self) -> &'static str {
@@ -55,6 +70,19 @@ impl BrokenLinkKind {
 pub struct BrokenLink {
     pub kind: BrokenLinkKind,
     pub target: String,
+    /// Where the offending role was written, when the AST node carried a
+    /// position. `None` for a reference the parser could not place — content
+    /// generated after the parse, such as a `.. csv-table::` cell.
+    pub span: Option<Span>,
+}
+
+impl BrokenLink {
+    /// The diagnostic code this reports under, delegated to its
+    /// [`BrokenLinkKind`].
+    #[must_use]
+    pub const fn code(&self) -> DiagnosticCode {
+        self.kind.code()
+    }
 }
 
 /// A domain-object reference that *did* resolve, but only via
@@ -69,6 +97,9 @@ pub struct BrokenLink {
 pub struct ObjectTypeMismatch {
     /// The qualified name the reference resolved against.
     pub name: String,
+    /// Where the offending role was written, when known — see
+    /// [`BrokenLink::span`].
+    pub span: Option<Span>,
     /// The object type the role asked for (e.g. `exception`, from `:exc:`).
     pub requested_type: ObjectType,
     /// The object type the definition actually has (e.g. `class`).

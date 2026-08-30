@@ -1,6 +1,7 @@
 use super::dispatch::parse_module_option_line;
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
@@ -20,7 +21,7 @@ pub(crate) fn parse_py_function(
     signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
     forced_decorator: bool,
 ) -> DomainObjectBody {

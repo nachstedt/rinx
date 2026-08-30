@@ -2,8 +2,11 @@
 //! scanning the options off the body, splitting the group argument, and
 //! assembling the variant for the directive's kind.
 
+use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use rusty_sphinx_ast::{
-    Directive, DocTestBlock, DocTestGroupSelector, HashedContent, NonEmptyVector,
+    Diagnostic, DiagnosticCode, Directive, DocTestBlock, DocTestGroupSelector, HashedContent,
+    NonEmptyVector, Span,
 };
 
 use crate::indent::strip_common_indent;
@@ -19,14 +22,22 @@ pub(crate) fn parse_doctest_directive(
     kind: DocTestDirectiveKind,
     argument: &str,
     body_lines: &[&str],
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let (options, content_start) = scan_options(kind, body_lines, diagnostics);
+    let (options, content_start) = scan_options(kind, body_lines, diagnostics, ctx);
+    // The directive's body as a whole, for the diagnostics that are about the
+    // block rather than about one option line.
+    let block_span = ctx.line_span(0, body_lines.first().unwrap_or(&""));
     let content_lines = skip_leading_blank_lines(&body_lines[content_start..]);
     let content_text = strip_common_indent(content_lines);
 
     if content_text.trim().is_empty() {
-        diagnostics.push(format!("{}: no code in block", kind.as_name()));
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::DoctestNoCode,
+            format!("{}: no code in block", kind.as_name()),
+            block_span,
+        ));
         return Directive::Unknown {
             name: kind.as_name().to_string(),
             argument: argument.to_string(),
@@ -34,7 +45,7 @@ pub(crate) fn parse_doctest_directive(
         };
     }
 
-    let groups = parse_group_argument(kind, argument, diagnostics);
+    let groups = parse_group_argument(kind, argument, diagnostics, block_span);
     let content = HashedContent::new(content_text);
 
     Directive::DocTest(build_block(kind, groups, content, options))
@@ -103,7 +114,8 @@ fn build_block(
 fn parse_group_argument(
     kind: DocTestDirectiveKind,
     argument: &str,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> NonEmptyVector<DocTestGroupSelector> {
     if argument.trim().is_empty() {
         return NonEmptyVector::single(DocTestGroupSelector::new(""));
@@ -113,9 +125,13 @@ fn parse_group_argument(
         .split(',')
         .map(|token| {
             if token.trim().is_empty() {
-                diagnostics.push(format!(
-                    "{}: empty group name in argument '{argument}', using the default group",
-                    kind.as_name()
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::DoctestEmptyGroup,
+                    format!(
+                        "{}: empty group name in argument '{argument}', using the default group",
+                        kind.as_name()
+                    ),
+                    span,
                 ));
             }
             DocTestGroupSelector::new(token)
@@ -143,13 +159,21 @@ pub(super) mod tests {
     ///
     /// `pub(super)` because [`super::super::options`]'s own test module also
     /// drives directive parsing through this same helper.
+    use rusty_sphinx_ast::Domain;
+
     pub(in crate::directives::doctest) fn parse(
         kind: DocTestDirectiveKind,
         argument: &str,
         body: &[&str],
-    ) -> (Directive, Vec<String>) {
-        let mut diagnostics = Vec::new();
-        let directive = parse_doctest_directive(kind, argument, body, &mut diagnostics);
+    ) -> (Directive, Diagnostics) {
+        let mut diagnostics = Diagnostics::default();
+        let directive = parse_doctest_directive(
+            kind,
+            argument,
+            body,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         (directive, diagnostics)
     }
 
@@ -249,7 +273,7 @@ pub(super) mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("empty group name"));
+        assert!(diagnostics[0].message.contains("empty group name"));
     }
 
     #[test]
@@ -262,7 +286,11 @@ pub(super) mod tests {
 
         // Then
         assert!(matches!(directive, Directive::Unknown { .. }));
-        assert!(diagnostics.iter().any(|d| d.contains("no code in block")));
+        assert!(
+            diagnostics
+                .iter()
+                .any(|d| d.message.contains("no code in block"))
+        );
     }
 
     #[test]
@@ -287,7 +315,7 @@ pub(super) mod tests {
         let (_, diagnostics) = parse(DocTestDirectiveKind::TestCleanup, "", &body);
 
         // Then
-        assert!(diagnostics[0].starts_with("testcleanup:"));
+        assert!(diagnostics[0].message.starts_with("testcleanup:"));
     }
 
     #[test]

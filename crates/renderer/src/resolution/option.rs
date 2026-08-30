@@ -278,6 +278,7 @@ mod pipeline_tests {
                 Node::Paragraph(vec![InlineNode::OptionReference {
                     display: "-O".to_string(),
                     target: "-O".to_string(),
+                    span: None,
                 }]),
             ],
         );
@@ -305,6 +306,7 @@ mod pipeline_tests {
             vec![Node::Paragraph(vec![InlineNode::OptionReference {
                 display: "-Z".to_string(),
                 target: "-Z".to_string(),
+                span: None,
             }])],
         );
         let index = ProjectIndex::default();

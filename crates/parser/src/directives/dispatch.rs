@@ -3,6 +3,7 @@
 //! everything else by directive name.
 
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_common_indent};
 
@@ -11,18 +12,32 @@ use super::body::{collect_argument_continuation_lines, collect_directive_body, j
 use super::data_table::{parse_csv_table, parse_list_table};
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
-use super::domains::parse_domain_object;
+use super::domains::{DirectiveSignatures, parse_domain_object};
 use super::glossary::parse_glossary;
 use super::index_directive::parse_index_directive;
 use super::scope::try_parse_scope_directive;
 use super::toctree::parse_toctree;
 use rusty_sphinx_ast::{Directive, Node};
 
+/// The indentation every directive-body parser strips before parsing, so a
+/// `ParseCtx` can be shifted by the same amount.
+///
+/// Mirrors [`crate::indent::unindent_body_lines`]'s rule exactly — the first
+/// non-blank line's indent — because that is the function whose effect this
+/// compensates for. Without it every position inside a directive body would
+/// be short by the body's indent.
+fn body_indent(body_lines: &[&str]) -> usize {
+    body_lines
+        .iter()
+        .find(|line| !line.trim().is_empty())
+        .map_or(0, |line| indent_width(line))
+}
+
 pub(crate) fn try_parse_directive(
     lines: &[&str],
     i: usize,
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let line = lines[i].trim_end();
@@ -50,31 +65,43 @@ pub(crate) fn try_parse_directive(
             } else {
                 (0, Vec::new())
             };
-        let (consumed_lines, body_lines) =
-            collect_directive_body(lines, i + 1 + continuations_consumed, min_indent);
+        let body = collect_directive_body(lines, i + 1 + continuations_consumed, min_indent);
+        let body_ctx = ctx.nested(
+            i + 1 + continuations_consumed + body.first_line_offset,
+            body_indent(&body.lines),
+        );
         let domain_object = parse_domain_object(
             object_type,
-            argument,
-            continuations,
-            &body_lines,
+            DirectiveSignatures {
+                argument,
+                continuations,
+                span: ctx.line_span(i, line),
+            },
+            &body.lines,
             adornment_order,
             diagnostics,
-            ctx,
+            &body_ctx,
         );
         return Some((
-            1 + continuations_consumed + consumed_lines,
+            1 + continuations_consumed + body.consumed,
             Node::Directive(Directive::DomainObject(domain_object)),
         ));
     }
 
-    let (consumed_lines, body_lines) = collect_directive_body(lines, i + 1, min_indent);
+    let body = collect_directive_body(lines, i + 1, min_indent);
+    // Every directive parser below receives a context already positioned at
+    // its own body's first line *and* column, so none of them has to know
+    // where in the document the directive was written. The column shift
+    // matters because the parsers unindent the body before parsing it.
+    let body_ctx = ctx.nested(i + 1 + body.first_line_offset, body_indent(&body.lines));
+    let (consumed_lines, body_lines) = (body.consumed, body.lines);
     let node = parse_body_directive(
         name,
         argument,
         &body_lines,
         adornment_order,
         diagnostics,
-        ctx,
+        &body_ctx,
     );
     Some((1 + consumed_lines, node))
 }
@@ -90,11 +117,11 @@ fn parse_body_directive(
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Node {
     if name == "toctree" {
-        let directive = parse_toctree(body_lines, diagnostics);
+        let directive = parse_toctree(body_lines, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if name == "plantuml" {
@@ -146,11 +173,11 @@ fn parse_body_directive(
         return Node::Directive(directive);
     }
     if name == "index" {
-        let directive = parse_index_directive(&argument, body_lines, diagnostics);
+        let directive = parse_index_directive(&argument, body_lines, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if let Some(kind) = DocTestDirectiveKind::from_name(&name) {
-        let directive = parse_doctest_directive(kind, &argument, body_lines, diagnostics);
+        let directive = parse_doctest_directive(kind, &argument, body_lines, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if let Some(directive) = try_parse_scope_directive(&name, &argument, ctx.default_domain) {
@@ -197,9 +224,9 @@ mod tests {
 
     /// Dispatches `name`/`argument`/`body` through [`parse_body_directive`]
     /// with throwaway state, returning the node and any diagnostics.
-    fn dispatch(name: &str, argument: &str, body: &[&str]) -> (Node, Vec<String>) {
+    fn dispatch(name: &str, argument: &str, body: &[&str]) -> (Node, Diagnostics) {
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         let node = parse_body_directive(
             name.to_string(),
             argument.to_string(),

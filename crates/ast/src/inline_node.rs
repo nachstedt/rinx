@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::object_type::ObjectType;
+use crate::span::Span;
 use crate::target_search_order::TargetSearchOrder;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -15,12 +16,20 @@ pub enum InlineNode {
     Reference {
         display: String,
         target: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
     Hyperlink {
         text: String,
         target: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
-    AnonymousReference(String),
+    AnonymousReference {
+        text: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
     AnonymousHyperlink {
         text: String,
         target: String,
@@ -38,6 +47,8 @@ pub enum InlineNode {
     TermReference {
         display: String,
         term: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
     /// An inline cross-reference produced by a domain role (e.g. `:func:`,
     /// `:py:func:`, `:c:func:`), linking to a `Directive::DomainObject`.
@@ -77,6 +88,8 @@ pub enum InlineNode {
         /// faithful reading.
         #[serde(default)]
         search_order: TargetSearchOrder,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
     /// An inline cross-reference produced by the `:option:` role, linking to
     /// a `.. option::`/`.. cmdoption::` definition.
@@ -94,7 +107,50 @@ pub enum InlineNode {
     OptionReference {
         display: String,
         target: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
+}
+
+impl InlineNode {
+    /// Where this node's markup was written, for the variants that can
+    /// produce a diagnostic; `None` for every other variant.
+    ///
+    /// Only the cross-reference roles carry a position, because only they can
+    /// fail to resolve. Giving every variant one would double the size of a
+    /// parsed document to record something nothing reads.
+    #[must_use]
+    pub const fn span(&self) -> Option<Span> {
+        match self {
+            Self::Reference { span, .. }
+            | Self::Hyperlink { span, .. }
+            | Self::AnonymousReference { span, .. }
+            | Self::TermReference { span, .. }
+            | Self::DomainObjectReference { span, .. }
+            | Self::OptionReference { span, .. } => *span,
+            _ => None,
+        }
+    }
+
+    /// Records where this node's markup was written, for the variants that
+    /// carry a position; every other variant is returned unchanged.
+    ///
+    /// Exists so the inline scan can attach positions in exactly one place —
+    /// it is the only code that knows a match's offsets — instead of every
+    /// role parser having to thread them through its own construction.
+    #[must_use]
+    pub fn with_span(mut self, at: Option<Span>) -> Self {
+        match &mut self {
+            Self::Reference { span, .. }
+            | Self::Hyperlink { span, .. }
+            | Self::AnonymousReference { span, .. }
+            | Self::TermReference { span, .. }
+            | Self::DomainObjectReference { span, .. }
+            | Self::OptionReference { span, .. } => *span = at,
+            _ => {}
+        }
+        self
+    }
 }
 
 /// Flattens a sequence of inline nodes down to the plain text a reader would
@@ -112,7 +168,7 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             | InlineNode::Strong(text)
             | InlineNode::Literal(text)
             | InlineNode::Program(text)
-            | InlineNode::AnonymousReference(text) => text.as_str(),
+            | InlineNode::AnonymousReference { text, .. } => text.as_str(),
             InlineNode::Hyperlink { text, .. } | InlineNode::AnonymousHyperlink { text, .. } => {
                 text.as_str()
             }
@@ -148,6 +204,7 @@ mod tests {
         let node = InlineNode::OptionReference {
             display: "-O <dis --show-offsets>".to_string(),
             target: "dis --show-offsets".to_string(),
+            span: None,
         };
 
         // When
@@ -164,6 +221,7 @@ mod tests {
         let node = InlineNode::Reference {
             display: "GenericAlias".to_string(),
             target: "types-genericalias".to_string(),
+            span: None,
         };
 
         // When
@@ -183,10 +241,14 @@ mod tests {
         let node = InlineNode::Reference {
             display: label.to_string(),
             target: label.to_string(),
+            span: None,
         };
 
         // Then
-        if let InlineNode::Reference { display, target } = node {
+        if let InlineNode::Reference {
+            display, target, ..
+        } = node
+        {
             assert_eq!(display, target);
         } else {
             panic!("Expected Reference");
@@ -199,6 +261,7 @@ mod tests {
         let node = InlineNode::TermReference {
             display: "the environment".to_string(),
             term: "environment".to_string(),
+            span: None,
         };
 
         // When
@@ -218,10 +281,11 @@ mod tests {
         let node = InlineNode::TermReference {
             display: term_text.to_string(),
             term: term_text.to_string(),
+            span: None,
         };
 
         // Then
-        if let InlineNode::TermReference { display, term } = node {
+        if let InlineNode::TermReference { display, term, .. } = node {
             assert_eq!(display, term);
         } else {
             panic!("Expected TermReference");
@@ -237,6 +301,7 @@ mod tests {
             display: "foo".to_string(),
             link: true,
             search_order: TargetSearchOrder::MostQualifiedFirst,
+            span: None,
         };
 
         // When
@@ -264,6 +329,7 @@ mod tests {
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -289,6 +355,7 @@ mod tests {
         let nodes = vec![InlineNode::Reference {
             display: "GenericAlias".to_string(),
             target: "types-genericalias".to_string(),
+            span: None,
         }];
 
         // When
@@ -307,6 +374,7 @@ mod tests {
             display: "submodule".to_string(),
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
+            span: None,
         }];
 
         // When
@@ -322,6 +390,7 @@ mod tests {
         let nodes = vec![InlineNode::TermReference {
             display: "the env".to_string(),
             term: "environment".to_string(),
+            span: None,
         }];
 
         // When

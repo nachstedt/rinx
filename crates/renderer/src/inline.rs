@@ -7,13 +7,18 @@
 //! forms, [`term_reference`] for `:term:`, [`option_reference`] for
 //! `:option:`, and [`domain_object_reference`] for the domain roles. The
 //! latter two resolve through [`crate::resolution`].
+//!
+//! [`RefText`] is the one shape they all share: the visible text, the target
+//! to resolve, and where the role was written.
 
 mod anonymous_reference;
 mod dispatch;
 mod domain_object_reference;
 mod hyperlink;
 mod option_reference;
+mod ref_text;
 mod reference;
 mod term_reference;
 
 pub(crate) use dispatch::render_inline;
+use ref_text::RefText;

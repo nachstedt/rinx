@@ -1,5 +1,6 @@
-use super::inline::parse_inline_text;
-use rusty_sphinx_ast::{Domain, Node};
+use super::inline::{SourceMap, parse_inline_text_mapped};
+use crate::context::ParseCtx;
+use rusty_sphinx_ast::Node;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum AdornmentStyle {
@@ -73,9 +74,15 @@ pub(super) fn try_parse_heading(
     lines: &[&str],
     i: usize,
     adornment_order: &mut Vec<Adornment>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let (consumed, adornment, text) = detect_adornment(lines, i)?;
+    // The heading's *text* line, which is the one below the overline in the
+    // three-line form and the line itself in the two-line form.
+    let text_line = match adornment.style {
+        AdornmentStyle::Overline => i + 1,
+        AdornmentStyle::Underline => i,
+    };
 
     let level = adornment_order
         .iter()
@@ -91,7 +98,19 @@ pub(super) fn try_parse_heading(
     #[allow(clippy::cast_possible_truncation)]
     let level = level as u8;
 
-    let text = parse_inline_text(&text, default_domain);
+    let text = parse_inline_text_mapped(
+        &text,
+        ctx.default_domain,
+        &SourceMap::single_line(
+            &text,
+            text_line,
+            lines[text_line]
+                .chars()
+                .take_while(|c| c.is_whitespace())
+                .count(),
+        ),
+        ctx,
+    );
 
     Some((consumed, Node::Heading { level, text }))
 }
@@ -396,6 +415,12 @@ mod tests {
                         display: "greetings".to_string(),
                         link: true,
                         search_order: TargetSearchOrder::LeastQualifiedFirst,
+                        // `The ` is four characters, and the role is sixteen —
+                        // a heading's text is mapped like any other line.
+                        span: Some(rusty_sphinx_ast::Span::new(
+                            rusty_sphinx_ast::Position::new(1, 5),
+                            rusty_sphinx_ast::Position::new(1, 21),
+                        )),
                     },
                     InlineNode::Text(" Module".to_string()),
                 ]

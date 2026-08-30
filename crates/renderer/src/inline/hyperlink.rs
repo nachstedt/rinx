@@ -2,6 +2,7 @@
 
 use std::fmt::Write as _;
 
+use super::RefText;
 use rusty_sphinx_ast::TargetName;
 use rusty_sphinx_index::{ProjectIndex, TargetLocation};
 
@@ -14,12 +15,16 @@ use crate::{BrokenLink, BrokenLinkKind};
 /// 4. No match — broken-link fallback.
 pub(super) fn render_inline_hyperlink(
     html: &mut String,
-    text: &str,
-    target: &str,
+    reference: RefText<'_>,
     index: &ProjectIndex,
     doc_path: &str,
     broken_links: &mut Vec<BrokenLink>,
 ) {
+    let RefText {
+        display: text,
+        target,
+        span,
+    } = reference;
     let text_escaped = html_escape::encode_text(text);
     if target.starts_with("http://")
         || target.starts_with("https://")
@@ -55,6 +60,7 @@ pub(super) fn render_inline_hyperlink(
             broken_links.push(BrokenLink {
                 kind: BrokenLinkKind::Hyperlink,
                 target: target.to_string(),
+                span,
             });
         }
     }
@@ -74,8 +80,11 @@ mod tests {
         // When
         render_inline_hyperlink(
             &mut html,
-            "Click here",
-            "https://example.com",
+            RefText {
+                display: "Click here",
+                target: "https://example.com",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -95,8 +104,11 @@ mod tests {
         // When
         render_inline_hyperlink(
             &mut html,
-            "Email us",
-            "mailto:hello@example.com",
+            RefText {
+                display: "Email us",
+                target: "mailto:hello@example.com",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -120,8 +132,11 @@ mod tests {
         // When
         render_inline_hyperlink(
             &mut html,
-            "Python",
-            "Python",
+            RefText {
+                display: "Python",
+                target: "Python",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -145,8 +160,11 @@ mod tests {
         // When
         render_inline_hyperlink(
             &mut html,
-            "See other",
-            "my-label",
+            RefText {
+                display: "See other",
+                target: "my-label",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -166,8 +184,11 @@ mod tests {
         // When
         render_inline_hyperlink(
             &mut html,
-            "No target",
-            "no-target",
+            RefText {
+                display: "No target",
+                target: "no-target",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -180,6 +201,7 @@ mod tests {
             vec![BrokenLink {
                 kind: BrokenLinkKind::Hyperlink,
                 target: "no-target".to_string(),
+                span: None,
             }]
         );
     }

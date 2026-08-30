@@ -70,10 +70,7 @@ pub(super) fn parse_ctx(
     default_domain: rusty_sphinx_ast::Domain,
     csv_files: &DocumentRelativeCsvFiles,
 ) -> parser::ParseCtx<'_> {
-    parser::ParseCtx {
-        default_domain,
-        csv_files,
-    }
+    parser::ParseCtx::new(default_domain, csv_files)
 }
 
 #[cfg(test)]

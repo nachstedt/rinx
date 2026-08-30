@@ -2,7 +2,8 @@
 //! [`DirectiveObjectType`] to the `c`, `std` or `py` domain's own parser.
 
 use crate::context::ParseCtx;
-use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector, Span};
 
 use crate::headings::Adornment;
 
@@ -11,15 +12,36 @@ use super::object_type::DirectiveObjectType;
 use super::py::parse_py_domain_object;
 use super::std_::cmdoption::parse_cmdoption;
 
+/// What a domain-object directive declared, and where it declared it.
+///
+/// The three parts arrive together and stay together: a directive's argument
+/// and its continuation lines are one list of signatures split across lines
+/// (see [`crate::directives::body::collect_argument_continuation_lines`]), and
+/// `span` is the marker line they were all written on. It is worth carrying
+/// because it is *not* derivable downstream — the marker sits one line above
+/// the body every later `ParseCtx` is positioned at.
+pub(crate) struct DirectiveSignatures {
+    /// The directive's own argument, e.g. `AF_UNIX` in `.. data:: AF_UNIX`.
+    pub(crate) argument: String,
+    /// Any further signature lines written below the marker.
+    pub(crate) continuations: Vec<String>,
+    /// The marker line, for diagnostics about the signatures themselves.
+    pub(crate) span: Option<Span>,
+}
+
 pub(crate) fn parse_domain_object(
     object_type: DirectiveObjectType,
-    argument: String,
-    continuations: Vec<String>,
+    declared: DirectiveSignatures,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
+    let DirectiveSignatures {
+        argument,
+        continuations,
+        span: signature_span,
+    } = declared;
     let signatures = NonEmptyVector::new(argument, continuations);
     match object_type {
         DirectiveObjectType::CFunction
@@ -34,10 +56,16 @@ pub(crate) fn parse_domain_object(
             adornment_order,
             diagnostics,
             ctx,
+            signature_span,
         ),
-        DirectiveObjectType::StdCmdoption => {
-            parse_cmdoption(signatures, body_lines, adornment_order, diagnostics, ctx)
-        }
+        DirectiveObjectType::StdCmdoption => parse_cmdoption(
+            signatures,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+            signature_span,
+        ),
         _ => parse_py_domain_object(
             object_type,
             signatures,
@@ -63,13 +91,16 @@ mod tests {
         let signature = "greet(name)".to_string();
         let body_lines = vec!["   Greets the given name."];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let domain_object = parse_domain_object(
             object_type,
-            signature.clone(),
-            Vec::new(),
+            DirectiveSignatures {
+                argument: signature.clone(),
+                continuations: Vec::new(),
+                span: None,
+            },
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -99,13 +130,16 @@ mod tests {
         let signature = "int add(int a, int b)".to_string();
         let body_lines = vec!["   * Adds two numbers.", "   * Returns their sum."];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let domain_object = parse_domain_object(
             object_type,
-            signature,
-            Vec::new(),
+            DirectiveSignatures {
+                argument: signature,
+                continuations: Vec::new(),
+                span: None,
+            },
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -127,13 +161,16 @@ mod tests {
         let signature = "greet(name)".to_string();
         let body_lines: Vec<&str> = vec![];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let domain_object = parse_domain_object(
             object_type,
-            signature,
-            Vec::new(),
+            DirectiveSignatures {
+                argument: signature,
+                continuations: Vec::new(),
+                span: None,
+            },
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -154,13 +191,16 @@ mod tests {
         let signature = "greet(name)".to_string();
         let body_lines = vec!["     Indented more than needed."];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let domain_object = parse_domain_object(
             object_type,
-            signature,
-            Vec::new(),
+            DirectiveSignatures {
+                argument: signature,
+                continuations: Vec::new(),
+                span: None,
+            },
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -190,13 +230,16 @@ mod tests {
         let signature = "greet(name)".to_string();
         let body_lines = vec!["   First line normal indent.", "  éfoo"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When parsing the domain object body
         let domain_object = parse_domain_object(
             object_type,
-            signature,
-            Vec::new(),
+            DirectiveSignatures {
+                argument: signature,
+                continuations: Vec::new(),
+                span: None,
+            },
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,

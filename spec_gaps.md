@@ -208,3 +208,19 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | Comments (`.. comment text`) | ✅ | — |
 | Substitution definitions (`.. |name| replace::`) | ❌ | Includes the `.. unicode::` and `.. date::` substitution-definition helper directives |
 | Footnotes and citations | ❌ | — |
+
+## Diagnostics
+
+Reporting behaviour rather than RST coverage. Sphinx has no equivalent of the
+last two rows — they are rusty-sphinx extensions, described in
+[ADR-003](docs/decisions/003-diagnostics.md).
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Source positions on warnings | ✅ | Every warning reports `path:line:column`, both parse-time and render-time. Positions are ranges internally; the terminal prints the start |
+| Positions inside nested constructs | ✅ | Resolve correctly through directive bodies, all three list kinds, glossary definitions and table cells, at any nesting depth |
+| Positions for `.. csv-table::` cell content | 🔶 | Rows built from CSV data correspond to no `.rst` line (a `:file:`'s data is not even in the document), so diagnostics raised inside a cell are reported without a position rather than against a wrong one |
+| Stable diagnostic codes (`link.broken-ref`, `table.grid.no-columns`, …) | ✅ | One per reporting site; part of the documented surface once written into a `.. noqa:` |
+| `.. noqa:` suppression comments | ✅ | **rusty-sphinx extension.** Silences the named codes for the block that follows; a bare `.. noqa` covers every code. Resolves against the enclosing block when nested. Suppresses the warning, the `--strict-links` failure and the sidecar entry alike |
+| `noqa.unknown-code` for a mistyped id | ✅ | **rusty-sphinx extension.** A typo is reported rather than silently suppressing nothing |
+| `noqa.unused` for a suppression that matched nothing | ❌ | Undecidable in one phase: parse-time and render-time diagnostics are evaluated in different processes |

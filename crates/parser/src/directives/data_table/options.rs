@@ -7,7 +7,9 @@
 //! directives have in common — handing back whatever is left so each
 //! directive can claim its own options and diagnose the rest.
 
-use rusty_sphinx_ast::{TableAlign, TableSource, TargetName};
+use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableAlign, TableSource, TargetName};
 
 /// One `:name: value` line, with the source text kept so a diagnostic can
 /// quote the line exactly as the author wrote it.
@@ -15,6 +17,10 @@ pub(super) struct OptionLine {
     pub name: String,
     pub value: String,
     pub raw: String,
+    /// This line's index within the directive body, so a diagnostic about the
+    /// option can point at the line the author wrote rather than at the
+    /// directive as a whole.
+    pub line_index: usize,
 }
 
 /// Splits the leading `:option:` lines off an already-unindented directive
@@ -44,6 +50,7 @@ pub(super) fn scan_option_lines(unindented_lines: &[String]) -> (Vec<OptionLine>
             name: name.to_string(),
             value: value.to_string(),
             raw: line.to_string(),
+            line_index: index,
         });
         index += 1;
     }
@@ -87,7 +94,8 @@ impl SharedTableOptions {
 pub(super) fn parse_shared_table_options<'a>(
     option_lines: &'a [OptionLine],
     source: TableSource,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> (SharedTableOptions, Vec<&'a OptionLine>) {
     let mut options = SharedTableOptions::empty();
     let mut unrecognized = Vec::new();
@@ -97,19 +105,23 @@ pub(super) fn parse_shared_table_options<'a>(
         match line.name.as_str() {
             "header-rows" => {
                 options.header_rows =
-                    parse_nonneg_int_option(&line.value, "header-rows", directive, diagnostics);
+                    parse_nonneg_int_option(&line.value, "header-rows", directive, diagnostics, ctx.line_span(line.line_index, &line.raw));
             }
             "stub-columns" => {
                 options.stub_columns =
-                    parse_nonneg_int_option(&line.value, "stub-columns", directive, diagnostics);
+                    parse_nonneg_int_option(&line.value, "stub-columns", directive, diagnostics, ctx.line_span(line.line_index, &line.raw));
             }
             "widths" => options.widths_raw = Some(line.value.clone()),
             "width" => options.width = Some(line.value.clone()),
             "align" => match line.value.parse::<TableAlign>() {
                 Ok(parsed) => options.align = Some(parsed),
-                Err(()) => diagnostics.push(format!(
-                    "{directive}: invalid :align: value '{}', expected 'left', 'center', or 'right'",
-                    line.value
+                Err(()) => diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::TableDataAlignInvalid,
+                    format!(
+                        "{directive}: invalid :align: value '{}', expected 'left', 'center', or 'right'",
+                        line.value
+                    ),
+                    ctx.line_span(line.line_index, &line.raw),
                 )),
             },
             "class" => options.classes = line.value.split_whitespace().map(str::to_string).collect(),
@@ -126,13 +138,18 @@ pub(super) fn parse_shared_table_options<'a>(
 pub(super) fn report_unknown_options(
     unrecognized: &[&OptionLine],
     source: TableSource,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) {
     for line in unrecognized {
-        diagnostics.push(format!(
-            "Invalid or non-standard Sphinx {} option encountered: {}",
-            source.as_str(),
-            line.raw
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::DirectiveUnknownOption,
+            format!(
+                "Invalid or non-standard Sphinx {} option encountered: {}",
+                source.as_str(),
+                line.raw
+            ),
+            ctx.line_span(line.line_index, &line.raw),
         ));
     }
 }
@@ -144,13 +161,16 @@ pub(super) fn parse_nonneg_int_option(
     raw: &str,
     option_name: &str,
     directive: &str,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> usize {
     if let Ok(value) = raw.parse::<usize>() {
         value
     } else {
-        diagnostics.push(format!(
-            "{directive}: :{option_name}: value '{raw}' is not a nonnegative integer"
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TableDataIntegerInvalid,
+            format!("{directive}: :{option_name}: value '{raw}' is not a nonnegative integer"),
+            span,
         ));
         0
     }
@@ -159,6 +179,7 @@ pub(super) fn parse_nonneg_int_option(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_ast::Domain;
 
     fn lines(raw: &[&str]) -> Vec<String> {
         raw.iter().map(|s| (*s).to_string()).collect()
@@ -261,11 +282,15 @@ mod tests {
             ":name: My Table",
         ]);
         let (option_lines, _) = scan_option_lines(&body);
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let (options, unrecognized) =
-            parse_shared_table_options(&option_lines, TableSource::List, &mut diagnostics);
+        let (options, unrecognized) = parse_shared_table_options(
+            &option_lines,
+            TableSource::List,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert!(diagnostics.is_empty());
@@ -284,11 +309,15 @@ mod tests {
         // Given
         let body = lines(&[":header-rows: 1", ":delim: tab", ":bogus: x"]);
         let (option_lines, _) = scan_option_lines(&body);
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let (_, unrecognized) =
-            parse_shared_table_options(&option_lines, TableSource::Csv, &mut diagnostics);
+        let (_, unrecognized) = parse_shared_table_options(
+            &option_lines,
+            TableSource::Csv,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert!(diagnostics.is_empty());
@@ -301,19 +330,25 @@ mod tests {
         // Given
         let body = lines(&[":align: diagonal"]);
         let (option_lines, _) = scan_option_lines(&body);
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let (options, _) =
-            parse_shared_table_options(&option_lines, TableSource::Csv, &mut diagnostics);
+        let (options, _) = parse_shared_table_options(
+            &option_lines,
+            TableSource::Csv,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(options.align, None);
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].starts_with("csv-table: invalid :align:"),
-            "{}",
             diagnostics[0]
+                .message
+                .starts_with("csv-table: invalid :align:"),
+            "{}",
+            diagnostics[0].message
         );
     }
 
@@ -322,17 +357,22 @@ mod tests {
         // Given
         let body = lines(&[":header-rows: many"]);
         let (option_lines, _) = scan_option_lines(&body);
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        parse_shared_table_options(&option_lines, TableSource::Csv, &mut diagnostics);
+        parse_shared_table_options(
+            &option_lines,
+            TableSource::Csv,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].starts_with("csv-table:"),
+            diagnostics[0].message.starts_with("csv-table:"),
             "{}",
-            diagnostics[0]
+            diagnostics[0].message
         );
     }
 
@@ -342,29 +382,35 @@ mod tests {
         let body = lines(&[":bogus: value"]);
         let (option_lines, _) = scan_option_lines(&body);
         let unrecognized: Vec<&OptionLine> = option_lines.iter().collect();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        report_unknown_options(&unrecognized, TableSource::List, &mut diagnostics);
+        report_unknown_options(
+            &unrecognized,
+            TableSource::List,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].contains(
+            diagnostics[0].message.contains(
                 "Invalid or non-standard Sphinx list-table option encountered: :bogus: value"
             ),
             "{}",
-            diagnostics[0]
+            diagnostics[0].message
         );
     }
 
     #[test]
     fn test_parse_nonneg_int_option_accepts_a_number() {
         // Given
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let value = parse_nonneg_int_option("3", "header-rows", "list-table", &mut diagnostics);
+        let value =
+            parse_nonneg_int_option("3", "header-rows", "list-table", &mut diagnostics, None);
 
         // Then
         assert_eq!(value, 3);
@@ -374,14 +420,15 @@ mod tests {
     #[test]
     fn test_parse_nonneg_int_option_rejects_non_numeric_value() {
         // Given
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let value = parse_nonneg_int_option("abc", "header-rows", "list-table", &mut diagnostics);
+        let value =
+            parse_nonneg_int_option("abc", "header-rows", "list-table", &mut diagnostics, None);
 
         // Then
         assert_eq!(value, 0);
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("header-rows"));
+        assert!(diagnostics[0].message.contains("header-rows"));
     }
 }

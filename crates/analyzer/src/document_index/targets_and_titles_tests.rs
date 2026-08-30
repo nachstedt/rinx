@@ -105,6 +105,7 @@ fn test_analyze_extracts_h1_title_as_plain_text_when_heading_has_domain_object_r
                     display: "greetings".to_string(),
                     link: true,
                     search_order: TargetSearchOrder::LeastQualifiedFirst,
+                    span: None,
                 },
                 InlineNode::Text(" Module".to_string()),
             ],

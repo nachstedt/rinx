@@ -687,6 +687,7 @@ mod tests {
                             display: "curses.ascii".to_string(),
                             link: true,
                             search_order: TargetSearchOrder::LeastQualifiedFirst,
+                            span: None,
                         },
                     ],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(

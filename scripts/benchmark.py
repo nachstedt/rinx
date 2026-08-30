@@ -456,9 +456,16 @@ def analyze_results(build_succeeded=False):
             # Check for document diagnostics
             if "diagnostics" in node and isinstance(node["diagnostics"], list):
                 for diag in node["diagnostics"]:
-                    # Aggregate by message prefix to avoid explosion if unique values are present
-                    msg = diag.split(":")[0]
-                    parser_diagnostics[msg] = parser_diagnostics.get(msg, 0) + 1
+                    # Aggregate by the diagnostic's own code. This used to key
+                    # off the message's prefix as a stand-in; the code is the
+                    # thing that prefix was approximating, and unlike a message
+                    # it never varies with the offending text.
+                    if isinstance(diag, dict):
+                        code = diag.get("code", "unknown")
+                    else:
+                        # An .ast written before diagnostics were structured.
+                        code = str(diag).split(":")[0]
+                    parser_diagnostics[code] = parser_diagnostics.get(code, 0) + 1
 
             # Recursively traverse all values
             for v in node.values():

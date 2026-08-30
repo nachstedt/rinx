@@ -2,6 +2,7 @@
 //! at each column-span underline, and lowering each row into cells.
 
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
 use rusty_sphinx_ast::{Node, TableRow};
@@ -24,7 +25,7 @@ pub(crate) fn try_parse_simple_table(
     lines: &[&str],
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let first_line = lines[start_i].trim_end();
@@ -33,9 +34,9 @@ pub(crate) fn try_parse_simple_table(
         return None;
     }
 
-    let mut raw_rows = collect_simple_table_lines(lines, start_i, diagnostics)?;
+    let mut raw_rows = collect_simple_table_lines(lines, start_i, diagnostics, ctx)?;
     let consumed = raw_rows.len();
-    let head_body_rule = match find_head_body_rule(&mut raw_rows, start_i, diagnostics) {
+    let head_body_rule = match find_head_body_rule(&mut raw_rows, start_i, diagnostics, ctx) {
         HeadBodyRule::Ambiguous => return None,
         HeadBodyRule::Absent => None,
         HeadBodyRule::At(index) => Some(index),
@@ -47,6 +48,7 @@ pub(crate) fn try_parse_simple_table(
     let mut ctx = SimpleTableCtx {
         grid: &grid,
         columns: &columns,
+        indent,
         start_i,
         adornment_order,
         diagnostics,
@@ -372,7 +374,11 @@ A      B
         // Then — the table still parses, but the dropped text is reported
         assert!(matches!(doc.nodes[0], Node::Table { .. }));
         assert_eq!(doc.diagnostics.len(), 1);
-        assert!(doc.diagnostics[0].contains("empty first-column cell"));
+        assert!(
+            doc.diagnostics[0]
+                .message
+                .contains("empty first-column cell")
+        );
     }
 
     #[test]
@@ -388,7 +394,11 @@ A      B
 
         // Then
         assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
-        assert!(doc.diagnostics[0].contains("text in the column margin"));
+        assert!(
+            doc.diagnostics[0]
+                .message
+                .contains("text in the column margin")
+        );
     }
 
     #[test]
@@ -406,6 +416,10 @@ a span
 
         // Then
         assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
-        assert!(doc.diagnostics[0].contains("column span incomplete"));
+        assert!(
+            doc.diagnostics[0]
+                .message
+                .contains("column span incomplete")
+        );
     }
 }

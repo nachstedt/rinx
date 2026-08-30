@@ -37,6 +37,7 @@ mod tests {
                 display: "greet".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }

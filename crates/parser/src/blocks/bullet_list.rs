@@ -1,8 +1,9 @@
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::strip_indent;
-use rusty_sphinx_ast::Node;
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Node};
 
 pub(super) fn detect_bullet_item(line: &str) -> Option<(char, usize, usize)> {
     let mut chars = line.chars();
@@ -40,7 +41,7 @@ pub(super) fn try_parse_bullet_list(
     lines: &[&str],
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let mut items = Vec::new();
@@ -66,8 +67,12 @@ pub(super) fn try_parse_bullet_list(
                         break;
                     } else if bullet != cur_bullet {
                         if i > 0 && !lines[i - 1].trim().is_empty() {
-                            diagnostics.push(format!(
-                                "Different bullet characters in adjacent lists ('{cur_bullet}' and '{bullet}'). A blank line is required to separate lists.",
+                            diagnostics.push(Diagnostic::at(
+                                DiagnosticCode::ListBulletChanged,
+                                format!(
+                                    "Different bullet characters in adjacent lists ('{cur_bullet}' and '{bullet}'). A blank line is required to separate lists.",
+                                ),
+                                ctx.line_span(i, line),
                             ));
                         }
                         break;
@@ -75,6 +80,10 @@ pub(super) fn try_parse_bullet_list(
                 }
             }
 
+            // Where this item's body begins in the document. Recorded before
+            // `i` advances past it, since every body line is dedented by
+            // `body_indent` and so needs both offsets to map back.
+            let item_start = i;
             let mut body_lines = Vec::new();
             let first_line_body = if line.len() > body_indent {
                 strip_indent(line, body_indent)
@@ -110,7 +119,8 @@ pub(super) fn try_parse_bullet_list(
             }
 
             let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-            let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, ctx);
+            let item_ctx = ctx.nested(item_start, body_indent);
+            let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, &item_ctx);
 
             items.push(rusty_sphinx_ast::ListItem { nodes: body_nodes });
         } else {
@@ -200,7 +210,11 @@ mod tests {
         // Should be 2 lists because of different bullets
         assert_eq!(doc.nodes.len(), 2);
         assert!(!doc.diagnostics.is_empty());
-        assert!(doc.diagnostics[0].contains("Different bullet characters in adjacent lists"));
+        assert!(
+            doc.diagnostics[0]
+                .message
+                .contains("Different bullet characters in adjacent lists")
+        );
     }
 
     #[test]

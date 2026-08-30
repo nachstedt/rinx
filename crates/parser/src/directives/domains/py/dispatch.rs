@@ -2,6 +2,7 @@
 //! every `py:*` object-description directive shares.
 
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
 
 use crate::headings::Adornment;
@@ -25,7 +26,7 @@ pub(crate) fn parse_py_domain_object(
     signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     match object_type {

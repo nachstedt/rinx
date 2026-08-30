@@ -2,6 +2,7 @@
 
 use std::fmt::Write as _;
 
+use super::RefText;
 use rusty_sphinx_ast::{ObjectType, StdObjectType};
 
 use crate::resolution::{OptionResolution, OptionResolver};
@@ -16,13 +17,17 @@ use crate::{BrokenLink, BrokenLinkKind};
 /// makes for `:func:`/`:py:func:`/etc.
 pub(super) fn render_inline_option_reference(
     html: &mut String,
-    display: &str,
-    target: &str,
+    reference: RefText<'_>,
     resolver: &OptionResolver<'_>,
     ambient_program: Option<&str>,
     doc_path: &str,
     broken_links: &mut Vec<BrokenLink>,
 ) {
+    let RefText {
+        display,
+        target,
+        span,
+    } = reference;
     let display_escaped = html_escape::encode_text(display);
     let literal =
         format!("<code class=\"xref std cmdoption docutils literal\">{display_escaped}</code>");
@@ -54,6 +59,7 @@ pub(super) fn render_inline_option_reference(
             broken_links.push(BrokenLink {
                 kind: BrokenLinkKind::OptionReference,
                 target: target.to_string(),
+                span,
             });
         }
     }

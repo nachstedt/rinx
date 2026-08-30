@@ -1,9 +1,53 @@
-//! Broken-link / object-type-mismatch warning formatting and the
-//! `--strict-links` enforcement, shared by the `render` and `preview`
-//! subcommands.
+//! Warning formatting and the `--strict-links` enforcement, shared by the
+//! `parse`, `render` and `preview` subcommands.
+//!
+//! Every warning this crate prints goes through one of the formatters here,
+//! so they all read the same way:
+//!
+//! ```text
+//! warning: guide/intro.rst:42:18: link.broken-ref: broken ref 'missing'
+//! ```
+//!
+//! The position is the *start* of the diagnostic's span — a range reads as
+//! noise on a terminal, and the end is there for the language server, not for
+//! this output. A diagnostic with no span (see
+//! [`rusty_sphinx_ast::Diagnostic::span`]) simply omits that part rather than
+//! pointing at a line it cannot vouch for.
 
 use anyhow::{Result, anyhow};
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span};
 use rusty_sphinx_renderer::{self as renderer};
+
+/// Renders `path` plus a span's start as the `file:line:column:` prefix every
+/// warning opens with, or just `path:` when there is no span.
+fn location(doc_path: &str, span: Option<Span>) -> String {
+    span.map_or_else(
+        || format!("{doc_path}:"),
+        |span| format!("{doc_path}:{}:{}:", span.start.line, span.start.column),
+    )
+}
+
+/// Formats a parse-time diagnostic as a human-readable warning line.
+pub(super) fn format_diagnostic(doc_path: &str, diagnostic: &Diagnostic) -> String {
+    format!(
+        "warning: {} {}: {}",
+        location(doc_path, diagnostic.span),
+        diagnostic.code,
+        diagnostic.message
+    )
+}
+
+/// Prints one parse diagnostic to stderr.
+///
+/// Printing lives here rather than in `rusty_sphinx_parser` — where it used to
+/// happen, inside `parse_with_ctx` — because the parser must only *record*
+/// what went wrong. Deciding whether a diagnostic is shown at all is the
+/// build step's business, and a parser that printed as it went could not
+/// honour a `.. noqa:` comment appearing anywhere in the document. Which
+/// diagnostics reach here is [`super::suppression`]'s decision.
+pub(super) fn report_diagnostic(doc_path: &str, diagnostic: &Diagnostic) {
+    eprintln!("{}", format_diagnostic(doc_path, diagnostic));
+}
 
 /// Formats a single broken-link diagnostic as a human-readable warning line.
 ///
@@ -29,7 +73,9 @@ pub(super) fn format_broken_link_warning(doc_path: &str, link: &renderer::Broken
         _ => String::new(),
     };
     format!(
-        "warning: broken {} '{}'{requested} in {doc_path}",
+        "warning: {} {}: broken {} '{}'{requested}",
+        location(doc_path, link.span),
+        link.code(),
         link.kind.as_str(),
         link.target
     )
@@ -53,7 +99,9 @@ pub(super) fn format_object_type_mismatch_warning(
     mismatch: &renderer::ObjectTypeMismatch,
 ) -> String {
     format!(
-        "warning: domain object '{}' referenced as '{}' but defined as '{}' in {doc_path}",
+        "warning: {} {}: domain object '{}' referenced as '{}' but defined as '{}'",
+        location(doc_path, mismatch.span),
+        DiagnosticCode::LinkTypeMismatch,
         mismatch.name,
         mismatch.requested_type.domain_qualified_str(),
         mismatch.resolved_type.domain_qualified_str(),
@@ -86,22 +134,111 @@ pub(super) fn check_broken_links_strict(
 mod tests {
     use super::*;
 
+    use rusty_sphinx_ast::Position;
+
+    fn a_span() -> Span {
+        Span::new(Position::new(42, 18), Position::new(42, 35))
+    }
+
     #[test]
-    fn test_format_broken_link_warning_includes_kind_target_and_doc_path() {
-        // Given
+    fn test_format_broken_link_warning_names_the_position_code_kind_and_target() {
+        // Given a broken reference the parser could place
         let link = renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::Reference,
             target: "missing-section".to_string(),
+            span: Some(a_span()),
         };
 
         // When
         let message = format_broken_link_warning("guide/intro.rst", &link);
 
+        // Then — the span's *start* is shown, not the range
+        assert_eq!(
+            message,
+            "warning: guide/intro.rst:42:18: link.broken-ref: broken ref 'missing-section'"
+        );
+    }
+
+    #[test]
+    fn test_format_broken_link_warning_omits_the_position_when_there_is_none() {
+        // Given a reference from generated content, which has no source line
+        let link = renderer::BrokenLink {
+            kind: renderer::BrokenLinkKind::Reference,
+            target: "missing-section".to_string(),
+            span: None,
+        };
+
+        // When
+        let message = format_broken_link_warning("guide/intro.rst", &link);
+
+        // Then — the document is still named; no line is invented for it
+        assert_eq!(
+            message,
+            "warning: guide/intro.rst: link.broken-ref: broken ref 'missing-section'"
+        );
+    }
+
+    #[test]
+    fn test_format_diagnostic_names_the_position_code_and_message() {
+        // Given a parse-time diagnostic
+        let diagnostic = Diagnostic::new(
+            DiagnosticCode::TableGridNoColumns,
+            "grid table: top border defines no columns",
+            a_span(),
+        );
+
+        // When
+        let message = format_diagnostic("guide/tables.rst", &diagnostic);
+
         // Then
         assert_eq!(
             message,
-            "warning: broken ref 'missing-section' in guide/intro.rst"
+            "warning: guide/tables.rst:42:18: table.grid.no-columns: grid table: top border defines no columns"
         );
+    }
+
+    #[test]
+    fn test_format_diagnostic_omits_the_position_when_there_is_none() {
+        // Given a diagnostic about content with no source position
+        let diagnostic =
+            Diagnostic::without_span(DiagnosticCode::CsvMalformedData, "csv-table: malformed row");
+
+        // When
+        let message = format_diagnostic("guide/tables.rst", &diagnostic);
+
+        // Then
+        assert_eq!(
+            message,
+            "warning: guide/tables.rst: csv.malformed-data: csv-table: malformed row"
+        );
+    }
+
+    #[test]
+    fn test_every_broken_link_kind_maps_to_a_distinct_code() {
+        // Given every kind a broken link can have
+        let kinds = [
+            renderer::BrokenLinkKind::Reference,
+            renderer::BrokenLinkKind::Hyperlink,
+            renderer::BrokenLinkKind::AnonymousReference,
+            renderer::BrokenLinkKind::TermReference,
+            renderer::BrokenLinkKind::OptionReference,
+            renderer::BrokenLinkKind::DomainObjectReference(rusty_sphinx_ast::ObjectType::Py(
+                rusty_sphinx_ast::PyObjectType::Function,
+            )),
+            renderer::BrokenLinkKind::AmbiguousDomainObjectReference {
+                object_type: rusty_sphinx_ast::ObjectType::Py(
+                    rusty_sphinx_ast::PyObjectType::Function,
+                ),
+                candidates: Vec::new(),
+            },
+        ];
+
+        // When
+        let codes: std::collections::HashSet<_> =
+            kinds.iter().map(renderer::BrokenLinkKind::code).collect();
+
+        // Then — a shared code would make one kind unsuppressible on its own
+        assert_eq!(codes.len(), kinds.len());
     }
 
     #[test]
@@ -110,6 +247,7 @@ mod tests {
         let broken_links = vec![renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::Reference,
             target: "missing".to_string(),
+            span: None,
         }];
 
         // When
@@ -137,6 +275,7 @@ mod tests {
         let broken_links = vec![renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::Reference,
             target: "missing".to_string(),
+            span: None,
         }];
 
         // When
@@ -158,6 +297,7 @@ mod tests {
                 rusty_sphinx_ast::PyObjectType::Exception,
             ),
             resolved_type: rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            span: Some(a_span()),
         };
 
         // When
@@ -166,7 +306,7 @@ mod tests {
         // Then
         assert_eq!(
             message,
-            "warning: domain object 'fault' referenced as 'py:exception' but defined as 'py:class' in xmlrpc.client.rst"
+            "warning: xmlrpc.client.rst:42:18: link.type-mismatch: domain object 'fault' referenced as 'py:exception' but defined as 'py:class'"
         );
     }
 }

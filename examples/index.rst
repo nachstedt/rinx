@@ -28,6 +28,7 @@ Welcome to the Rusty-Sphinx example.
    list_table
    csv_table
    index_entries
+   noqa
    doctests
    team_a/index
    team_b/index

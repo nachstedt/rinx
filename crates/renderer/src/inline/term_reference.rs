@@ -2,6 +2,7 @@
 
 use std::fmt::Write as _;
 
+use super::RefText;
 use rusty_sphinx_ast::TargetName;
 use rusty_sphinx_index::ProjectIndex;
 
@@ -12,12 +13,16 @@ use crate::{BrokenLink, BrokenLinkKind};
 /// broken-link fallback if the term is not found in the index.
 pub(super) fn render_inline_term_reference(
     html: &mut String,
-    display: &str,
-    term: &str,
+    reference: RefText<'_>,
     index: &ProjectIndex,
     doc_path: &str,
     broken_links: &mut Vec<BrokenLink>,
 ) {
+    let RefText {
+        display,
+        target: term,
+        span,
+    } = reference;
     let display_escaped = html_escape::encode_text(display);
     let term_name = TargetName::new(term);
     if let Some(glossary_doc_path) = index.glossary_terms.get(&term_name) {
@@ -42,6 +47,7 @@ pub(super) fn render_inline_term_reference(
         broken_links.push(BrokenLink {
             kind: BrokenLinkKind::TermReference,
             target: term.to_string(),
+            span,
         });
     }
 }
@@ -63,8 +69,11 @@ mod tests {
         // When
         render_inline_term_reference(
             &mut html,
-            "widget",
-            "widget",
+            RefText {
+                display: "widget",
+                target: "widget",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -87,8 +96,11 @@ mod tests {
         // When
         render_inline_term_reference(
             &mut html,
-            "unknown term",
-            "unknown",
+            RefText {
+                display: "unknown term",
+                target: "unknown",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -103,6 +115,7 @@ mod tests {
             vec![BrokenLink {
                 kind: BrokenLinkKind::TermReference,
                 target: "unknown".to_string(),
+                span: None,
             }]
         );
     }
@@ -120,8 +133,11 @@ mod tests {
         // When
         render_inline_term_reference(
             &mut html,
-            "API",
-            "api",
+            RefText {
+                display: "API",
+                target: "api",
+                span: None,
+            },
             &index,
             "guide/intro.rst",
             &mut broken_links,
@@ -145,8 +161,11 @@ mod tests {
         // When
         render_inline_term_reference(
             &mut html,
-            "the env",
-            "environment",
+            RefText {
+                display: "the env",
+                target: "environment",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,

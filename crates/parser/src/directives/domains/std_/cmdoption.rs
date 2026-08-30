@@ -1,7 +1,8 @@
 use super::super::body::parse_body;
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVector, Span};
 
 /// Parses a `.. option::`/`.. cmdoption::` body. Unlike every other domain
 /// object type, `StdCmdoption` has no directive-specific option lines to strip
@@ -24,14 +25,19 @@ pub(crate) fn parse_cmdoption(
     signatures: NonEmptyVector<String>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
+    span: Option<Span>,
 ) -> DomainObjectBody {
     for line in signatures.as_slice() {
         for spec in rusty_sphinx_ast::split_option_line_specs(line) {
             if !looks_like_option_spec(&spec) {
-                diagnostics.push(format!(
-                    "option: malformed option spec '{spec}', should look like \"opt\", \"-opt args\", \"--opt args\", \"/opt args\", or \"+opt args\""
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::OptionMalformedSpec,
+                    format!(
+                        "option: malformed option spec '{spec}', should look like \"opt\", \"-opt args\", \"--opt args\", \"/opt args\", or \"+opt args\""
+                    ),
+                    span,
                 ));
             }
         }
@@ -186,7 +192,7 @@ mod tests {
         assert!(
             doc.diagnostics
                 .iter()
-                .any(|d| d.contains("malformed option spec"))
+                .any(|d| d.message.contains("malformed option spec"))
         );
     }
 }

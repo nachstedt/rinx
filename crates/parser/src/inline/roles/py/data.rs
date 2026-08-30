@@ -46,6 +46,7 @@ mod tests {
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -70,6 +71,7 @@ mod tests {
                 display: "Py_mod_exec".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -125,6 +127,7 @@ mod tests {
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -139,6 +142,7 @@ mod tests {
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -153,6 +157,7 @@ mod tests {
                 display: "SECRET_KEY".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -167,6 +172,7 @@ mod tests {
                 display: "CONST".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -194,6 +200,7 @@ mod tests {
                 display: "Py_mod_exec".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -208,6 +215,7 @@ mod tests {
                 display: "errno".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -222,6 +230,7 @@ mod tests {
                 display: "Py_tp_bases".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }

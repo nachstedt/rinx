@@ -1,5 +1,8 @@
 use super::borders::is_equals_border;
+use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::indent::{indent_width, strip_indent};
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode};
 
 /// Collects the table's physical lines, from the top border at `start_i`
 /// through the bottom border, with the top border's indentation stripped off
@@ -14,7 +17,8 @@ use crate::indent::{indent_width, strip_indent};
 pub(super) fn collect_simple_table_lines(
     lines: &[&str],
     start_i: usize,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> Option<Vec<String>> {
     let top = lines[start_i].trim_end();
     let indent = indent_width(top);
@@ -33,9 +37,12 @@ pub(super) fn collect_simple_table_lines(
 
         let this_indent = indent_width(line);
         if this_indent < indent {
-            diagnostics.push(format!(
-                "simple table: line {} is indented less than the top border (expected at least {indent}, got {this_indent})",
-                offset + 1,
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::TableSimpleUnderIndented,
+                format!(
+                    "simple table: indented less than the top border (expected at least {indent}, got {this_indent})"
+                ),
+                ctx.line_span(offset, line),
             ));
             return None;
         }
@@ -43,9 +50,12 @@ pub(super) fn collect_simple_table_lines(
 
         if is_equals_border(&content) {
             if content.chars().count() != top_width {
-                diagnostics.push(format!(
-                    "simple table: the border on line {} does not match the top border's width ({top_width})",
-                    offset + 1,
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::TableSimpleBorderWidthMismatch,
+                    format!(
+                        "simple table: this border does not match the top border's width ({top_width})"
+                    ),
+                    ctx.line_span(offset, line),
                 ));
                 return None;
             }
@@ -64,12 +74,16 @@ pub(super) fn collect_simple_table_lines(
         rows.push(content);
     }
 
-    diagnostics.push(if borders_found > 0 {
-        "simple table: no bottom border found, or no blank line after the table's bottom border"
-            .to_string()
-    } else {
-        "simple table: no bottom border found".to_string()
-    });
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::TableSimpleNoBottomBorder,
+        if borders_found > 0 {
+            "simple table: no bottom border found, or no blank line after the table's bottom border"
+        } else {
+            "simple table: no bottom border found"
+        },
+        // The table ran to the end of input, so the whole of it is at fault.
+        ctx.lines_span(start_i, lines.len() - 1, lines[lines.len() - 1]),
+    ));
     None
 }
 
@@ -94,7 +108,8 @@ pub(super) enum HeadBodyRule {
 pub(super) fn find_head_body_rule(
     rows: &mut [String],
     start_i: usize,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> HeadBodyRule {
     let last = rows.len() - 1;
     rows[0] = rows[0].replace('=', "-");
@@ -106,10 +121,12 @@ pub(super) fn find_head_body_rule(
             continue;
         }
         if let HeadBodyRule::At(previous) = rule {
-            diagnostics.push(format!(
-                "simple table: multiple head/body row separators (lines {} and {}); only one allowed",
-                start_i + previous + 1,
-                start_i + idx + 1,
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::TableSimpleMultipleHeaderSeparators,
+                "simple table: multiple head/body row separators; only one allowed",
+                // Both rules, since either one alone would be fine — it is
+                // having two that is the error.
+                ctx.lines_span(start_i + previous, start_i + idx, row),
             ));
             return HeadBodyRule::Ambiguous;
         }
@@ -123,6 +140,7 @@ pub(super) fn find_head_body_rule(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_ast::Domain;
 
     // --- collect_simple_table_lines ---
 
@@ -130,10 +148,16 @@ mod tests {
     fn test_collect_simple_table_lines_takes_the_whole_table() {
         // Given a headerless table followed by a paragraph
         let lines = vec!["=====  =====", "1      2", "=====  =====", "", "after"];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_simple_table_lines(&lines, 0, &mut diagnostics).expect("should collect");
+        let rows = collect_simple_table_lines(
+            &lines,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        )
+        .expect("should collect");
 
         // Then — the table stops at its bottom border
         assert_eq!(rows, vec!["=====  =====", "1      2", "=====  ====="]);
@@ -151,10 +175,16 @@ mod tests {
             "1      2",
             "=====  =====",
         ];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_simple_table_lines(&lines, 0, &mut diagnostics).expect("should collect");
+        let rows = collect_simple_table_lines(
+            &lines,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        )
+        .expect("should collect");
 
         // Then
         assert_eq!(rows.len(), 5);
@@ -165,10 +195,16 @@ mod tests {
     fn test_collect_simple_table_lines_keeps_interior_blank_lines() {
         // Given a table with a blank line separating two rows
         let lines = vec!["=====  =====", "1      a", "", "2      b", "=====  ====="];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_simple_table_lines(&lines, 0, &mut diagnostics).expect("should collect");
+        let rows = collect_simple_table_lines(
+            &lines,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        )
+        .expect("should collect");
 
         // Then — one entry per source line, so the caller's line count is right
         assert_eq!(rows.len(), 5);
@@ -184,10 +220,16 @@ mod tests {
             "         continued",
             "  =====  =====",
         ];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_simple_table_lines(&lines, 0, &mut diagnostics).expect("should collect");
+        let rows = collect_simple_table_lines(
+            &lines,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        )
+        .expect("should collect");
 
         // Then — only the table's own indent goes; cell indentation survives
         assert_eq!(rows[0], "=====  =====");
@@ -198,29 +240,49 @@ mod tests {
     fn test_collect_simple_table_lines_rejects_a_mismatched_border() {
         // Given a bottom border narrower than the top one
         let lines = vec!["=====  =====", "1      2", "=====  ===", ""];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_simple_table_lines(&lines, 0, &mut diagnostics);
+        let rows = collect_simple_table_lines(
+            &lines,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert!(rows.is_none());
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("does not match the top border's width"));
+        assert!(
+            diagnostics[0]
+                .message
+                .contains("does not match the top border's width")
+        );
     }
 
     #[test]
     fn test_collect_simple_table_lines_rejects_an_unterminated_table() {
         // Given a table with no bottom border at all
         let lines = vec!["=====  =====", "1      2"];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_simple_table_lines(&lines, 0, &mut diagnostics);
+        let rows = collect_simple_table_lines(
+            &lines,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert!(rows.is_none());
-        assert_eq!(diagnostics, vec!["simple table: no bottom border found"]);
+        assert_eq!(
+            diagnostics
+                .iter()
+                .map(|d| d.message.as_str())
+                .collect::<Vec<_>>(),
+            vec!["simple table: no bottom border found"]
+        );
     }
 
     #[test]
@@ -228,28 +290,42 @@ mod tests {
         // Given a header rule but no closing border, so the table runs off the
         // end of the input
         let lines = vec!["=====  =====", "A      B", "=====  =====", "1      2"];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_simple_table_lines(&lines, 0, &mut diagnostics);
+        let rows = collect_simple_table_lines(
+            &lines,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert!(rows.is_none());
-        assert!(diagnostics[0].contains("no blank line after"));
+        assert!(diagnostics[0].message.contains("no blank line after"));
     }
 
     #[test]
     fn test_collect_simple_table_lines_rejects_an_under_indented_line() {
         // Given an indented table with a line that escapes its indentation
         let lines = vec!["  =====  =====", "1      2", "  =====  =====", ""];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rows = collect_simple_table_lines(&lines, 0, &mut diagnostics);
+        let rows = collect_simple_table_lines(
+            &lines,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert!(rows.is_none());
-        assert!(diagnostics[0].contains("indented less than the top border"));
+        assert!(
+            diagnostics[0]
+                .message
+                .contains("indented less than the top border")
+        );
     }
 
     // --- find_head_body_rule ---
@@ -264,10 +340,15 @@ mod tests {
             "1      2".to_string(),
             "=====  =====".to_string(),
         ];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rule = find_head_body_rule(&mut rows, 0, &mut diagnostics);
+        let rule = find_head_body_rule(
+            &mut rows,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then — the rule is found and every border is now a span line
         assert_eq!(rule, HeadBodyRule::At(2));
@@ -284,10 +365,15 @@ mod tests {
             "1      2".to_string(),
             "=====  =====".to_string(),
         ];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rule = find_head_body_rule(&mut rows, 0, &mut diagnostics);
+        let rule = find_head_body_rule(
+            &mut rows,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(rule, HeadBodyRule::Absent);
@@ -306,13 +392,22 @@ mod tests {
             "3      4".to_string(),
             "=====  =====".to_string(),
         ];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let rule = find_head_body_rule(&mut rows, 0, &mut diagnostics);
+        let rule = find_head_body_rule(
+            &mut rows,
+            0,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(rule, HeadBodyRule::Ambiguous);
-        assert!(diagnostics[0].contains("multiple head/body row separators"));
+        assert!(
+            diagnostics[0]
+                .message
+                .contains("multiple head/body row separators")
+        );
     }
 }

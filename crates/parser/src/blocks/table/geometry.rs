@@ -1,7 +1,9 @@
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use rusty_sphinx_ast::TableCell;
+use crate::indent::indent_width;
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableCell};
 
 pub(super) fn is_border_line(line: &str, allow_equals: bool) -> bool {
     let chars: Vec<char> = line.chars().collect();
@@ -97,8 +99,30 @@ pub(super) struct GridCtx<'a> {
     pub(super) grid: &'a [Vec<char>],
     pub(super) col_bounds: &'a [usize],
     pub(super) adornment_order: &'a mut Vec<Adornment>,
-    pub(super) diagnostics: &'a mut Vec<String>,
+    pub(super) diagnostics: &'a mut Diagnostics,
     pub(super) parse_ctx: &'a ParseCtx<'a>,
+    /// Index into `lines` of the table's top border, so a `grid`-relative row
+    /// offset can be turned back into a source position.
+    pub(super) start_i: usize,
+    /// The document lines the table was sliced out of. `grid` holds the
+    /// dedented, width-normalized form, which cannot address a real column.
+    pub(super) lines: &'a [&'a str],
+}
+
+impl GridCtx<'_> {
+    /// A span covering the source line holding row `row` of the grid.
+    pub(super) fn row_span(&self, row: usize) -> Option<Span> {
+        let line = self.start_i + row;
+        self.parse_ctx.line_span(line, self.lines.get(line)?)
+    }
+
+    /// The indent the whole table was stripped of, which every `grid` column
+    /// index is relative to.
+    pub(super) fn table_indent(&self) -> usize {
+        self.lines
+            .get(self.start_i)
+            .map_or(0, |line| indent_width(line))
+    }
 }
 
 /// Extracts a resolved cell's text, spanning grid columns `[col_start,
@@ -111,7 +135,7 @@ fn extract_cell_text(
     col_end: usize,
     row_start: usize,
     row_end: usize,
-) -> Vec<String> {
+) -> NormalizedCell {
     let left = col_bounds[col_start] + 1;
     let right = col_bounds[col_end];
     let cell_lines: Vec<String> = (row_start..=row_end)
@@ -121,13 +145,30 @@ fn extract_cell_text(
     normalize_cell_lines(cell_lines)
 }
 
+/// One table cell's content after normalization, together with where that
+/// content starts relative to the rectangle it was sliced from.
+///
+/// The two offsets exist so a diagnostic raised while parsing the cell's
+/// content can still name a real line and column in the `.rst`: normalization
+/// deliberately throws away leading blank lines and a shared left margin, and
+/// without recording how much it dropped, every position inside a table cell
+/// would be wrong by that amount.
+#[derive(Debug)]
+pub(crate) struct NormalizedCell {
+    pub(crate) lines: Vec<String>,
+    /// Blank lines dropped from the top of the rectangle.
+    pub(crate) first_line_offset: usize,
+    /// Characters of shared margin stripped from the left of every line.
+    pub(crate) column_offset: usize,
+}
+
 /// Normalizes the raw character rectangle sliced out for one table cell:
 /// strips the shared leading margin and trailing whitespace per line (RST
 /// spec: cell margins "are removed before processing"), and trims leading/
 /// trailing blank lines. Shared with [`super::simple_table`], whose cells are
 /// delimited by whitespace columns rather than `|` but need the exact same
 /// treatment once sliced.
-pub(crate) fn normalize_cell_lines(mut cell_lines: Vec<String>) -> Vec<String> {
+pub(crate) fn normalize_cell_lines(mut cell_lines: Vec<String>) -> NormalizedCell {
     let min_indent = cell_lines
         .iter()
         .filter(|l| !l.trim().is_empty())
@@ -145,14 +186,20 @@ pub(crate) fn normalize_cell_lines(mut cell_lines: Vec<String>) -> Vec<String> {
         }
     }
 
+    let mut first_line_offset = 0;
     while cell_lines.first().is_some_and(String::is_empty) {
         cell_lines.remove(0);
+        first_line_offset += 1;
     }
     while cell_lines.last().is_some_and(String::is_empty) {
         cell_lines.pop();
     }
 
-    cell_lines
+    NormalizedCell {
+        lines: cell_lines,
+        first_line_offset,
+        column_offset: min_indent,
+    }
 }
 
 /// Resolves one logical row's worth of [`ColumnRun`]s (all sharing the same
@@ -190,10 +237,15 @@ pub(super) fn build_row_cells(
             let is_absorbed =
                 (start..=end).all(|offset| ctx.grid[top + 1 + offset][boundary_col] != '|');
             if !is_absorbed {
-                ctx.diagnostics.push(format!(
-                    "grid table: inconsistent column boundary between columns {} and {}",
-                    column + colspan - 1,
-                    column + colspan,
+                let span = ctx.row_span(top + 1 + start);
+                ctx.diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::TableGridInconsistentColumnBoundary,
+                    format!(
+                        "grid table: inconsistent column boundary between columns {} and {}",
+                        column + colspan - 1,
+                        column + colspan,
+                    ),
+                    span,
                 ));
                 return None;
             }
@@ -201,7 +253,7 @@ pub(super) fn build_row_cells(
             next_idx += 1;
         }
 
-        let content_lines = extract_cell_text(
+        let cell = extract_cell_text(
             ctx.grid,
             top,
             ctx.col_bounds,
@@ -210,13 +262,16 @@ pub(super) fn build_row_cells(
             start,
             end,
         );
-        let content_refs: Vec<&str> = content_lines.iter().map(String::as_str).collect();
-        let content = parse_blocks(
-            &content_refs,
-            ctx.adornment_order,
-            ctx.diagnostics,
-            ctx.parse_ctx,
+        let content_refs: Vec<&str> = cell.lines.iter().map(String::as_str).collect();
+        // The cell's first content line, and its left edge, in the original
+        // document: the grid row it was sliced from, past the blank lines
+        // normalization dropped, and the table's own indent plus the `|` and
+        // the margin that were stripped.
+        let nested = ctx.parse_ctx.nested(
+            ctx.start_i + top + 1 + start + cell.first_line_offset,
+            ctx.table_indent() + ctx.col_bounds[column] + 1 + cell.column_offset,
         );
+        let content = parse_blocks(&content_refs, ctx.adornment_order, ctx.diagnostics, &nested);
         cells.push(TableCell {
             colspan,
             rowspan,
@@ -387,9 +442,13 @@ mod tests {
         ];
         let col_bounds = vec![0, 6];
 
-        let lines = extract_cell_text(&grid, 0, &col_bounds, 0, 1, 0, 1);
+        let cell = extract_cell_text(&grid, 0, &col_bounds, 0, 1, 0, 1);
 
-        assert_eq!(lines, vec!["hi".to_string(), "yo".to_string()]);
+        assert_eq!(cell.lines, vec!["hi".to_string(), "yo".to_string()]);
+        // Two spaces of margin were stripped, and no blank line preceded the
+        // content — both are what a position inside the cell is offset by.
+        assert_eq!(cell.column_offset, 2);
+        assert_eq!(cell.first_line_offset, 0);
     }
 
     #[test]
@@ -403,8 +462,24 @@ mod tests {
         ];
         let col_bounds = vec![0, 6];
 
-        let lines = extract_cell_text(&grid, 0, &col_bounds, 0, 1, 0, 2);
+        let cell = extract_cell_text(&grid, 0, &col_bounds, 0, 1, 0, 2);
 
-        assert_eq!(lines, vec!["hi".to_string()]);
+        assert_eq!(cell.lines, vec!["hi".to_string()]);
+        // The one dropped blank line must be counted, or every diagnostic
+        // inside this cell would point one line too high.
+        assert_eq!(cell.first_line_offset, 1);
+    }
+
+    #[test]
+    fn test_normalize_cell_lines_reports_no_offsets_for_flush_content() {
+        // Given a rectangle with neither a margin nor leading blank lines
+        let cell_lines = vec!["hi".to_string(), "yo".to_string()];
+
+        // When
+        let cell = normalize_cell_lines(cell_lines);
+
+        // Then
+        assert_eq!(cell.first_line_offset, 0);
+        assert_eq!(cell.column_offset, 0);
     }
 }

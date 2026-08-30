@@ -15,4 +15,4 @@ pub(super) mod object_type;
 mod py;
 mod std_;
 
-pub(super) use object::parse_domain_object;
+pub(super) use object::{DirectiveSignatures, parse_domain_object};

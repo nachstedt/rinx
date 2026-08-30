@@ -14,7 +14,7 @@
 //! rather than in the renderer crate: the renderer's diagnostic types stay
 //! plain in-memory values, and only the worker knows about the on-disk shape.
 
-use rusty_sphinx_ast::ObjectType;
+use rusty_sphinx_ast::{ObjectType, Span};
 use rusty_sphinx_renderer::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 use serde::{Deserialize, Serialize};
 
@@ -58,6 +58,14 @@ pub struct DomainWarning {
     /// warning.
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub candidates: Option<Vec<String>>,
+    /// Where the offending role was written. Absent for a reference the parser
+    /// could not place — content generated after the parse, such as a
+    /// `.. csv-table::` cell.
+    ///
+    /// The whole range is recorded, not just its start: the terminal prints a
+    /// position, but a tool reading this file may want to highlight the role.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub span: Option<Span>,
 }
 
 /// All domain-object warnings emitted while rendering one document.
@@ -92,6 +100,7 @@ pub fn build_domain_warning_report(
                 requested_type: Some(*requested_type),
                 resolved_type: None,
                 candidates: None,
+                span: link.span,
             }),
             BrokenLinkKind::AmbiguousDomainObjectReference {
                 object_type,
@@ -102,6 +111,7 @@ pub fn build_domain_warning_report(
                 requested_type: Some(*object_type),
                 resolved_type: None,
                 candidates: Some(candidates.clone()),
+                span: link.span,
             }),
             _ => {}
         }
@@ -114,6 +124,7 @@ pub fn build_domain_warning_report(
             requested_type: Some(mismatch.requested_type),
             resolved_type: Some(mismatch.resolved_type),
             candidates: None,
+            span: mismatch.span,
         });
     }
 
@@ -139,22 +150,27 @@ mod tests {
             BrokenLink {
                 kind: BrokenLinkKind::Reference,
                 target: "some-ref".to_string(),
+                span: None,
             },
             BrokenLink {
                 kind: BrokenLinkKind::Hyperlink,
                 target: "some link".to_string(),
+                span: None,
             },
             BrokenLink {
                 kind: BrokenLinkKind::AnonymousReference,
                 target: "anon".to_string(),
+                span: None,
             },
             BrokenLink {
                 kind: BrokenLinkKind::TermReference,
                 target: "glossary term".to_string(),
+                span: None,
             },
             BrokenLink {
                 kind: BrokenLinkKind::DomainObjectReference(py(PyObjectType::Class)),
                 target: "os.PathLike".to_string(),
+                span: None,
             },
         ];
 
@@ -190,6 +206,7 @@ mod tests {
                 ],
             },
             target: "close".to_string(),
+            span: None,
         }];
 
         // When
@@ -225,6 +242,7 @@ mod tests {
             requested_type: Some(py(PyObjectType::Method)),
             resolved_type: None,
             candidates: Some(vec!["tarfile.tarfile.close".to_string()]),
+            span: None,
         };
 
         // When
@@ -243,6 +261,7 @@ mod tests {
             name: "Fault".to_string(),
             requested_type: py(PyObjectType::Exception),
             resolved_type: py(PyObjectType::Class),
+            span: None,
         }];
 
         // When
@@ -274,6 +293,7 @@ mod tests {
             name: "Fault".to_string(),
             requested_type: py(PyObjectType::Exception),
             resolved_type: py(PyObjectType::Class),
+            span: None,
         }];
         let report = build_domain_warning_report("Doc/library/xmlrpc.client", &[], &mismatches);
 
@@ -294,6 +314,7 @@ mod tests {
         let broken_links = vec![BrokenLink {
             kind: BrokenLinkKind::DomainObjectReference(py(PyObjectType::Function)),
             target: "os.PathLike".to_string(),
+            span: None,
         }];
         let report = build_domain_warning_report("Doc/library/os", &broken_links, &[]);
 
@@ -314,11 +335,13 @@ mod tests {
         let broken_links = vec![BrokenLink {
             kind: BrokenLinkKind::DomainObjectReference(py(PyObjectType::Function)),
             target: "os.PathLike".to_string(),
+            span: None,
         }];
         let mismatches = vec![ObjectTypeMismatch {
             name: "Fault".to_string(),
             requested_type: py(PyObjectType::Exception),
             resolved_type: py(PyObjectType::Class),
+            span: None,
         }];
         let report = build_domain_warning_report("Doc/library/os", &broken_links, &mismatches);
 
@@ -341,5 +364,43 @@ mod tests {
             serde_json::to_string(&DomainWarningKind::ObjectTypeMismatch).unwrap(),
             "\"object_type_mismatch\""
         );
+    }
+
+    #[test]
+    fn test_a_warning_carries_the_span_of_the_role_that_produced_it() {
+        // Given a broken domain-object reference the parser could place
+        let span = Span::new(
+            rusty_sphinx_ast::Position::new(42, 18),
+            rusty_sphinx_ast::Position::new(42, 35),
+        );
+        let links = [BrokenLink {
+            kind: BrokenLinkKind::DomainObjectReference(py(PyObjectType::Function)),
+            target: "missing".to_string(),
+            span: Some(span),
+        }];
+
+        // When
+        let report = build_domain_warning_report("guide.rst", &links, &[]);
+
+        // Then — the sidecar records the whole range, so a tool reading it can
+        // highlight the role rather than just jump to a line
+        assert_eq!(report.warnings[0].span, Some(span));
+    }
+
+    #[test]
+    fn test_a_warning_without_a_position_omits_the_span_entirely() {
+        // Given a reference from generated content
+        let links = [BrokenLink {
+            kind: BrokenLinkKind::DomainObjectReference(py(PyObjectType::Function)),
+            target: "missing".to_string(),
+            span: None,
+        }];
+
+        // When
+        let report = build_domain_warning_report("guide.rst", &links, &[]);
+        let json = serde_json::to_string(&report.warnings[0]).expect("Failed to serialize");
+
+        // Then — absent rather than null, matching the other optional fields
+        assert!(!json.contains("span"), "{json}");
     }
 }

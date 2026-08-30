@@ -197,6 +197,7 @@ mod tests {
             vec![Node::Paragraph(vec![InlineNode::TermReference {
                 display: "environment".to_string(),
                 term: "environment".to_string(),
+                span: None,
             }])],
         );
         let mut index = ProjectIndex::default();
@@ -220,6 +221,7 @@ mod tests {
             vec![Node::Paragraph(vec![InlineNode::TermReference {
                 display: "the env".to_string(),
                 term: "environment".to_string(),
+                span: None,
             }])],
         );
         let mut index = ProjectIndex::default();
@@ -242,6 +244,7 @@ mod tests {
             vec![Node::Paragraph(vec![InlineNode::TermReference {
                 display: "unknown".to_string(),
                 term: "unknown".to_string(),
+                span: None,
             }])],
         );
         let index = ProjectIndex::default(); // empty — no glossary terms
@@ -261,6 +264,7 @@ mod tests {
             vec![Node::Paragraph(vec![InlineNode::TermReference {
                 display: "foo".to_string(),
                 term: "foo".to_string(),
+                span: None,
             }])],
         );
         let mut index = ProjectIndex::default();

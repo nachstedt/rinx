@@ -1,13 +1,26 @@
 use serde::{Deserialize, Serialize};
 
+use crate::diagnostic::Diagnostic;
 use crate::node::Node;
+use crate::suppression::Suppression;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Document {
     pub path: String,
     pub nodes: Vec<Node>,
+    /// What went wrong while parsing, recorded rather than raised — the
+    /// parser degrades bad input and lets the build step decide whether any
+    /// of this is fatal.
     #[serde(default)]
-    pub diagnostics: Vec<String>,
+    pub diagnostics: Vec<Diagnostic>,
+    /// The `.. noqa:` comments this document carries, already resolved to the
+    /// line ranges they cover.
+    ///
+    /// Serialized with the AST because the diagnostics they silence are not
+    /// all raised in the same process: a broken link is found at *render*
+    /// time, long after the comment that excuses it was parsed.
+    #[serde(default)]
+    pub suppressions: Vec<Suppression>,
 }
 
 impl Document {
@@ -17,6 +30,7 @@ impl Document {
             path,
             nodes,
             diagnostics: Vec::new(),
+            suppressions: Vec::new(),
         }
     }
 }

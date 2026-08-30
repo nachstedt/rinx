@@ -1,5 +1,7 @@
 use super::format::{EnumeratorMatch, detect_enumerator};
-use rusty_sphinx_ast::Enumerator;
+use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Enumerator};
 
 /// Why two adjacent enumerators do not form one list.
 ///
@@ -79,7 +81,8 @@ pub(super) fn diagnose_unrecognised_list(
     i: usize,
     candidate: &EnumeratorMatch,
     enumerator: Enumerator,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) {
     let Some(next_line) = lines.get(i + 1).map(|l| l.trim_end()) else {
         return;
@@ -114,9 +117,15 @@ pub(super) fn diagnose_unrecognised_list(
     } else {
         enumerator.to_string()
     };
-    diagnostics.push(format!(
-        "Enumerated list not recognised: \"{first_text}\" is followed by \"{next_text}\" ({}), so the block was parsed as a paragraph. Separate adjacent lists with a blank line, or renumber so the enumerators run consecutively.",
-        reason.describe()
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::ListEnumeratedNotRecognised,
+        format!(
+            "Enumerated list not recognised: \"{first_text}\" is followed by \"{next_text}\" ({}), so the block was parsed as a paragraph. Separate adjacent lists with a blank line, or renumber so the enumerators run consecutively.",
+            reason.describe()
+        ),
+        // Both lines, since the diagnostic is about the pair: neither is wrong
+        // on its own, only their succession is.
+        ctx.lines_span(i, i + 1, next_line),
     ));
 }
 
@@ -124,6 +133,7 @@ pub(super) fn diagnose_unrecognised_list(
 mod tests {
     use super::*;
     use crate::parse;
+    use rusty_sphinx_ast::Domain;
     use rusty_sphinx_ast::{EnumeratorFormat, EnumeratorSequence};
 
     /// Parses `input` and returns only the "not recognised" diagnostics.
@@ -131,7 +141,8 @@ mod tests {
         parse("test.rst", input)
             .diagnostics
             .into_iter()
-            .filter(|d| d.starts_with("Enumerated list not recognised"))
+            .filter(|d| d.message.starts_with("Enumerated list not recognised"))
+            .map(|d| d.message)
             .collect()
     }
 
@@ -306,7 +317,7 @@ mod tests {
         // where the mismatch is nesting rather than a broken list
         let lines = ["1. a", "  1) b"];
         let candidate = detect_enumerator(lines[0], None).expect("should detect");
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When diagnosing
         diagnose_unrecognised_list(
@@ -315,6 +326,7 @@ mod tests {
             &candidate,
             candidate.enumerator.unwrap(),
             &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then nothing is reported

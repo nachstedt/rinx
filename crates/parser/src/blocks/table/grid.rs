@@ -2,9 +2,10 @@
 //! rows and cells, using [`super::geometry`] for the column/divider maths.
 
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
-use rusty_sphinx_ast::{Node, TableRow};
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Node, TableRow};
 use std::collections::BTreeMap;
 
 use super::geometry::{
@@ -59,7 +60,8 @@ fn build_row_block(ctx: &mut GridCtx<'_>, top: usize, bottom: usize) -> Option<V
 fn collect_grid_rows(
     lines: &[&str],
     start_i: usize,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> Option<Vec<String>> {
     let first_line = lines[start_i].trim_end();
     let indent = indent_width(first_line);
@@ -75,19 +77,25 @@ fn collect_grid_rows(
         let line = raw_line.trim_end();
         let this_indent = indent_width(line);
         if this_indent != indent {
-            diagnostics.push(format!(
-                "grid table: line {} has inconsistent indentation (expected {indent}, got {this_indent})",
-                start_i + offset + 1,
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::TableGridInconsistentIndent,
+                format!(
+                    "grid table: inconsistent indentation (expected {indent}, got {this_indent})"
+                ),
+                ctx.line_span(start_i + offset, line),
             ));
             return None;
         }
         let content = strip_indent(line, indent);
         if content.chars().count() != expected_width {
-            diagnostics.push(format!(
-                "grid table: line {} width ({}) does not match the top border's width ({}) — a `+`/`|` column boundary is misaligned",
-                start_i + offset + 1,
-                content.chars().count(),
-                expected_width,
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::TableGridWidthMismatch,
+                format!(
+                    "grid table: width ({}) does not match the top border's width ({}) — a `+`/`|` column boundary is misaligned",
+                    content.chars().count(),
+                    expected_width,
+                ),
+                ctx.line_span(start_i + offset, line),
             ));
             return None;
         }
@@ -95,7 +103,11 @@ fn collect_grid_rows(
     }
 
     if raw_rows.len() < 2 || !is_border_line(raw_rows.last().expect("checked len >= 2"), true) {
-        diagnostics.push("grid table: not terminated by a border line".to_string());
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TableGridUnterminated,
+            "grid table: not terminated by a border line",
+            ctx.lines_span(start_i, end - 1, lines[end - 1]),
+        ));
         return None;
     }
 
@@ -114,7 +126,10 @@ fn collect_grid_rows(
 /// can't be validated more strictly.
 fn classify_border_rows(
     raw_rows: &[String],
-    diagnostics: &mut Vec<String>,
+    lines: &[&str],
+    start_i: usize,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(Vec<usize>, Option<usize>)> {
     let mut header_sep_idx: Option<usize> = None;
     let mut border_indices: Vec<usize> = Vec::new();
@@ -124,9 +139,11 @@ fn classify_border_rows(
         };
         if has_equals {
             if header_sep_idx.is_some() {
-                diagnostics.push(
-                    "grid table: more than one header/body separator (`=` line) found".to_string(),
-                );
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::TableGridMultipleHeaderSeparators,
+                    "grid table: more than one header/body separator (`=` line) found",
+                    ctx.line_span(start_i + r, lines[start_i + r]),
+                ));
                 return None;
             }
             header_sep_idx = Some(r);
@@ -135,7 +152,15 @@ fn classify_border_rows(
     }
 
     if border_indices.len() < 2 {
-        diagnostics.push("grid table: no row content between borders".to_string());
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TableGridNoRows,
+            "grid table: no row content between borders",
+            ctx.lines_span(
+                start_i,
+                start_i + raw_rows.len() - 1,
+                lines[start_i + raw_rows.len() - 1],
+            ),
+        ));
         return None;
     }
 
@@ -167,7 +192,7 @@ pub(crate) fn try_parse_grid_table(
     lines: &[&str],
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let first_line = lines[start_i].trim_end();
@@ -176,7 +201,7 @@ pub(crate) fn try_parse_grid_table(
         return None;
     }
 
-    let raw_rows = collect_grid_rows(lines, start_i, diagnostics)?;
+    let raw_rows = collect_grid_rows(lines, start_i, diagnostics, ctx)?;
     let grid: Vec<Vec<char>> = raw_rows.iter().map(|r| r.chars().collect()).collect();
 
     let mut col_bounds: Vec<usize> = grid
@@ -191,25 +216,32 @@ pub(crate) fn try_parse_grid_table(
     col_bounds.sort_unstable();
     col_bounds.dedup();
     if col_bounds.len() < 2 {
-        diagnostics.push("grid table: top border defines no columns".to_string());
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TableGridNoColumns,
+            "grid table: top border defines no columns",
+            ctx.line_span(start_i, first_line),
+        ));
         return None;
     }
 
-    let (border_indices, header_sep_idx) = classify_border_rows(&raw_rows, diagnostics)?;
+    let (border_indices, header_sep_idx) =
+        classify_border_rows(&raw_rows, lines, start_i, diagnostics, ctx)?;
 
-    let mut ctx = GridCtx {
+    let mut grid_ctx = GridCtx {
         grid: &grid,
         col_bounds: &col_bounds,
         adornment_order,
         diagnostics,
         parse_ctx: ctx,
+        start_i,
+        lines,
     };
 
     let mut header_rows = Vec::new();
     let mut body_rows = Vec::new();
     for window in border_indices.windows(2) {
         let (top, bottom) = (window[0], window[1]);
-        let rows = build_row_block(&mut ctx, top, bottom)?;
+        let rows = build_row_block(&mut grid_ctx, top, bottom)?;
         if header_sep_idx.is_some_and(|h| bottom <= h) {
             header_rows.extend(rows);
         } else {
@@ -218,8 +250,15 @@ pub(crate) fn try_parse_grid_table(
     }
 
     if body_rows.is_empty() {
-        ctx.diagnostics
-            .push("grid table: has no body rows".to_string());
+        grid_ctx.diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TableGridNoBodyRows,
+            "grid table: has no body rows",
+            ctx.lines_span(
+                start_i,
+                start_i + raw_rows.len() - 1,
+                lines[start_i + raw_rows.len() - 1],
+            ),
+        ));
         return None;
     }
 
@@ -409,7 +448,7 @@ mod tests {
         assert!(
             doc.diagnostics
                 .iter()
-                .any(|d| d.contains("not terminated by a border line"))
+                .any(|d| d.message.contains("not terminated by a border line"))
         );
     }
 
@@ -428,7 +467,7 @@ mod tests {
         assert!(
             doc.diagnostics
                 .iter()
-                .any(|d| d.contains("does not match the top border's width"))
+                .any(|d| d.message.contains("does not match the top border's width"))
         );
     }
 

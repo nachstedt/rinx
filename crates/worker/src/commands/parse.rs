@@ -7,6 +7,8 @@ use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::csv_files::{DocumentRelativeCsvFiles, parse_ctx};
+use super::diagnostics::report_diagnostic;
+use super::suppression::retain_reportable;
 
 /// `csv_files` is injected rather than built here so this stays the pure,
 /// I/O-free half of the subcommand: a test can hand in a loader that reads
@@ -18,6 +20,10 @@ pub(super) fn process_parse(
     csv_files: &DocumentRelativeCsvFiles,
 ) -> Result<String> {
     let doc = parser::parse_with_ctx(path, rst_content, &parse_ctx(default_domain, csv_files));
+    // The document's own `.. noqa:` comments decide what is worth showing.
+    for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
+        report_diagnostic(path, diagnostic);
+    }
     serde_json::to_string(&doc).context("Serialization error")
 }
 

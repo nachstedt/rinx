@@ -74,6 +74,17 @@ entry under the heading it belongs to, as a single short sentence.
 - When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
 - When porting a reference implementation, port its full diagnostic set, and additionally invent diagnostics of your own wherever it silently degrades valid-looking input into something else.
 - Before keeping an invented diagnostic, measure its false-positive rate over the benchmark corpus; a heuristic that stays silent across real documents is safe to keep unnarrowed.
+- Every diagnostic carries a source position and a stable code; the position goes in a span and the code in an enum, never formatted into the message text.
+- Report a position as a range rather than a point, even while only its start is printed, because the end is free wherever the start is and retrofitting it later re-touches every reporting site.
+- Name a file a reader can actually open in a diagnostic — the source path, not an internal logical path that merely looks like one.
+- Count columns in characters, not bytes, and convert to a protocol's encoding at that protocol's boundary rather than in the middle.
+- Any code that dedents or re-slices lines before parsing them must rebase the position context by the same amount, so a helper that trims should return how much it trimmed rather than discarding it.
+- Report no position rather than a wrong one for content that corresponds to no source line.
+- Author-facing suppression belongs in the document, spelled as a construct the reference implementation already ignores, so the file stays buildable by both tools.
+- Apply suppression at the reporting boundary, never where a problem is detected: the detecting phase must record everything, and only the reporting phase sees every phase's output.
+- A suppression must lift the consequence as well as the message — the strict-build failure and the machine-readable sidecar too — or it only hides the problem.
+- Diagnose a suppression that names an unknown code, since one that silently matches nothing is the same silent degradation the diagnostics exist to catch.
+- Generate an enum's string mapping and its parse-back from one table when both directions must be exact inverses.
 
 ## Testing
 
