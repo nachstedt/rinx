@@ -1,0 +1,454 @@
+//! End-to-end `parse()` tests for the block level: headings, paragraphs,
+//! targets, literal blocks, doctest blocks and transitions, and how they
+//! interact. Kept separate from [`super::dispatch`]'s own unit tests purely
+//! for file size.
+
+use crate::parse;
+use rusty_sphinx_ast::TargetName;
+use rusty_sphinx_ast::{InlineNode, Node};
+
+#[test]
+fn test_parse_returns_empty_document_for_empty_input() {
+    // Given
+    let input = "";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 0);
+}
+
+#[test]
+fn test_parse_creates_paragraph_node() {
+    // Given
+    let input = "Just some\ntext";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 1);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Paragraph(vec![InlineNode::Text("Just some\ntext".to_string())])
+    );
+}
+
+#[test]
+fn test_parse_creates_mixed_nodes_for_heading_and_paragraph() {
+    // Given
+    let input = "Title\n=====\n\nText.";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Heading {
+            level: 1,
+            text: vec![InlineNode::Text("Title".to_string())]
+        }
+    );
+    assert_eq!(
+        doc.nodes[1],
+        Node::Paragraph(vec![InlineNode::Text("Text.".to_string())])
+    );
+}
+
+#[test]
+fn test_parse_creates_paragraph_for_shorter_underline() {
+    // Given
+    let input = "Long Heading\n===";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 1);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Paragraph(vec![InlineNode::Text("Long Heading\n===".to_string())])
+    );
+}
+
+#[test]
+fn test_parse_ignores_surrounding_whitespace_for_heading() {
+    // Given
+    let input = "Heading  \n  =======  \n\nNext";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Heading {
+            level: 1,
+            text: vec![InlineNode::Text("Heading".to_string())]
+        }
+    );
+    assert_eq!(
+        doc.nodes[1],
+        Node::Paragraph(vec![InlineNode::Text("Next".to_string())])
+    );
+}
+
+#[test]
+fn test_parse_creates_multiple_paragraphs_ignoring_blank_lines() {
+    // Given
+    let input = "Para 1\n\n\nPara 2\n\nPara 3";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 3);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Paragraph(vec![InlineNode::Text("Para 1".to_string())])
+    );
+    assert_eq!(
+        doc.nodes[1],
+        Node::Paragraph(vec![InlineNode::Text("Para 2".to_string())])
+    );
+    assert_eq!(
+        doc.nodes[2],
+        Node::Paragraph(vec![InlineNode::Text("Para 3".to_string())])
+    );
+}
+
+#[test]
+fn test_parse_handles_carriage_returns_gracefully() {
+    // Given
+    let input = "Heading\r\n=======\r\n\r\nPara\r\nline 2";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Heading {
+            level: 1,
+            text: vec![InlineNode::Text("Heading".to_string())]
+        }
+    );
+    assert_eq!(
+        doc.nodes[1],
+        Node::Paragraph(vec![InlineNode::Text("Para\nline 2".to_string())])
+    );
+}
+
+#[test]
+fn test_parse_creates_target_node_for_explicit_target() {
+    // Given
+    let input = ".. _my-target:\n\nSome text.";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Target {
+            name: TargetName::new("my-target"),
+            uri: None
+        }
+    );
+    assert_eq!(
+        doc.nodes[1],
+        Node::Paragraph(vec![InlineNode::Text("Some text.".to_string())])
+    );
+}
+
+#[test]
+fn test_parse_creates_external_target_node() {
+    // Given
+    let input = ".. _my-link: https://example.com\n\nSome text.";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Target {
+            name: TargetName::new("my-link"),
+            uri: Some("https://example.com".to_string())
+        }
+    );
+}
+
+#[test]
+fn test_parse_creates_indented_external_target_node() {
+    // Given
+    let input = ".. _my-link:\n   https://example.com\n\nSome text.";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Target {
+            name: TargetName::new("my-link"),
+            uri: Some("https://example.com".to_string())
+        }
+    );
+}
+
+#[test]
+fn test_parse_paragraph_breaks_at_overline() {
+    // Given
+    let input = "Para text.\n#######\nHeading\n#######";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Paragraph(vec![InlineNode::Text("Para text.".to_string())])
+    );
+    assert_eq!(
+        doc.nodes[1],
+        Node::Heading {
+            level: 1,
+            text: vec![InlineNode::Text("Heading".to_string())]
+        }
+    );
+}
+
+#[test]
+fn test_parse_keeps_a_literal_block_containing_prompts_literal() {
+    // Given — THE case this feature must not break. A `::`-introduced
+    // block is a literal block in docutils, never a doctest block, and
+    // Sphinx does not execute it. In the CPython corpus 1711 nodes have
+    // this shape against 448 real doctest blocks, so a detector that fired
+    // here would make a great deal of illustrative code suddenly runnable.
+    let input = "Example::\n\n    >>> 1 + 1\n    2\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then — paragraph plus LiteralBlock; no DoctestBlock anywhere.
+    assert_eq!(doc.nodes.len(), 2);
+    assert!(matches!(doc.nodes[1], Node::LiteralBlock { .. }));
+    assert!(!doc.nodes.iter().any(|n| matches!(n, Node::DoctestBlock(_))));
+}
+
+#[test]
+fn test_parse_creates_a_doctest_block_after_a_single_colon() {
+    // Given — the real-world shape: one colon, so a block quote rather
+    // than a literal block, and the indented run is a doctest block.
+    let input = "Use search rather than match:\n\n   >>> import re\n   >>> re.search('a', 'ba')\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    match &doc.nodes[1] {
+        Node::DoctestBlock(content) => {
+            assert_eq!(content.body(), ">>> import re\n>>> re.search('a', 'ba')");
+        }
+        other => panic!("expected a doctest block, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_parse_creates_a_doctest_block_at_the_left_margin() {
+    // Given
+    let input = ">>> 1 + 1\n2\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    assert_eq!(doc.nodes.len(), 1);
+    assert!(matches!(doc.nodes[0], Node::DoctestBlock(_)));
+}
+
+#[test]
+fn test_parse_leaves_a_mid_paragraph_prompt_as_prose() {
+    // Given — a doctest block has to *start* a text block, in docutils and
+    // here alike; 3 CPython paragraphs rely on this.
+    let input = "Some prose.\n>>> f()\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    assert_eq!(doc.nodes.len(), 1);
+    assert!(matches!(doc.nodes[0], Node::Paragraph(_)));
+}
+
+#[test]
+fn test_parse_keeps_a_transition_a_transition() {
+    // Given — `>>>>` is four repeated punctuation characters.
+    let input = "Before.\n\n>>>>\n\nAfter.\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    assert!(doc.nodes.iter().any(|n| matches!(n, Node::Transition)));
+    assert!(!doc.nodes.iter().any(|n| matches!(n, Node::DoctestBlock(_))));
+}
+
+#[test]
+fn test_parse_finds_a_doctest_block_nested_in_an_admonition() {
+    // Given — directive bodies are parsed recursively, so bare blocks
+    // inside them are found too (and `walk_nodes` reaches them later).
+    let input = ".. note::\n\n   Try it:\n\n   >>> 1 + 1\n   2\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    let mut found = false;
+    rusty_sphinx_ast::walk_nodes(&doc.nodes, &mut |node| {
+        if matches!(node, Node::DoctestBlock(_)) {
+            found = true;
+        }
+    });
+    assert!(found, "expected a doctest block inside the admonition");
+}
+
+#[test]
+fn test_parse_separates_two_doctest_blocks_by_a_blank_line() {
+    // Given
+    let input = ">>> a = 1\n\n>>> b = 2\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    assert!(doc.nodes.iter().all(|n| matches!(n, Node::DoctestBlock(_))));
+}
+
+#[test]
+fn test_parse_double_colon_paragraph_emits_literal_block() {
+    // Given: a paragraph ending with :: followed by an indented block
+    let input = "Here is some code::\n\n    def hello():\n        pass\n";
+    // When
+    let doc = parse("test.rst", input);
+    // Then: two nodes — paragraph (with :: reduced to :) and LiteralBlock
+    assert_eq!(doc.nodes.len(), 2);
+    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+        let text = match &inlines[0] {
+            InlineNode::Text(t) => t.as_str(),
+            other => panic!("Expected Text inline, got {other:?}"),
+        };
+        assert_eq!(text, "Here is some code:");
+    } else {
+        panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+    }
+    if let Node::LiteralBlock { language, content } = &doc.nodes[1] {
+        assert!(language.is_none());
+        assert_eq!(content, "def hello():\n    pass");
+    } else {
+        panic!("Expected LiteralBlock, got {:?}", doc.nodes[1]);
+    }
+}
+
+#[test]
+fn test_parse_standalone_double_colon_suppresses_paragraph() {
+    // Given: a line of only "::" introduces a literal block with no visible paragraph
+    let input = "::\n\n    verbatim content\n";
+    // When
+    let doc = parse("test.rst", input);
+    // Then: only the LiteralBlock is emitted (no paragraph)
+    assert_eq!(doc.nodes.len(), 1);
+    if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
+        assert!(language.is_none());
+        assert_eq!(content, "verbatim content");
+    } else {
+        panic!("Expected LiteralBlock, got {:?}", doc.nodes[0]);
+    }
+}
+
+#[test]
+fn test_parse_double_colon_strips_to_single_colon() {
+    // Given: text followed by "::" — the "::" becomes ":"
+    let input = "Example::\n\n    content\n";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    if let Node::Paragraph(inlines) = &doc.nodes[0] {
+        let text = match &inlines[0] {
+            InlineNode::Text(t) => t.as_str(),
+            other => panic!("Expected Text, got {other:?}"),
+        };
+        assert_eq!(text, "Example:");
+    } else {
+        panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+    }
+}
+
+#[test]
+fn test_parse_literal_block_preserves_internal_blank_lines() {
+    // Given: blank lines inside the block must be kept
+    let input = "Example::\n\n    line one\n\n    line three\n";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 2);
+    if let Node::LiteralBlock { content, .. } = &doc.nodes[1] {
+        assert_eq!(content, "line one\n\nline three");
+    } else {
+        panic!("Expected LiteralBlock, got {:?}", doc.nodes[1]);
+    }
+}
+
+#[test]
+fn test_parse_literal_block_strips_common_indentation() {
+    // Given: all lines indented 4 spaces; inner block adds 4 more
+    let input = "Example::\n\n    outer\n        inner\n    outer again\n";
+    // When
+    let doc = parse("test.rst", input);
+    // Then: 4 spaces stripped from all lines; inner keeps its extra 4
+    assert_eq!(doc.nodes.len(), 2);
+    if let Node::LiteralBlock { content, .. } = &doc.nodes[1] {
+        assert_eq!(content, "outer\n    inner\nouter again");
+    } else {
+        panic!("Expected LiteralBlock, got {:?}", doc.nodes[1]);
+    }
+}
+
+#[test]
+fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_following_paragraph() {
+    // Given — mirrors real CPython usage (Doc/glossary.rst): a bodyless
+    // `.. index::` directive nested inside a glossary term's definition,
+    // immediately followed by a plain paragraph at the SAME indentation
+    // (not a deeper one). Before the indentation-depth fix, the
+    // paragraph was swallowed into the directive's body and mis-parsed
+    // as bogus index entries.
+    let input = "\
+.. glossary::
+
+   magic method
+      .. index:: pair: magic; method
+
+      An informal synonym for something.
+";
+    // When
+    let doc = parse("test.rst", input);
+    // Then
+    assert_eq!(doc.nodes.len(), 1);
+    let Node::Directive(rusty_sphinx_ast::Directive::Glossary { entries, .. }) = &doc.nodes[0]
+    else {
+        panic!("Expected Glossary directive, got {:?}", doc.nodes[0]);
+    };
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].terms, vec!["magic method".to_string()]);
+    // The definition must contain the Index directive AND the paragraph
+    // as two separate sibling nodes — not one node with the paragraph's
+    // text corrupted into bogus index entries.
+    assert_eq!(entries[0].definition.len(), 2);
+    assert!(matches!(
+        entries[0].definition[0],
+        Node::Directive(rusty_sphinx_ast::Directive::Index { .. })
+    ));
+    assert_eq!(
+        entries[0].definition[1],
+        Node::Paragraph(vec![InlineNode::Text(
+            "An informal synonym for something.".to_string()
+        )])
+    );
+    // No diagnostics about invalid/unknown index entries should be emitted.
+    assert!(
+        !doc.diagnostics
+            .iter()
+            .any(|d| d.contains(".. index::") || d.contains("index:"))
+    );
+}
