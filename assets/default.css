@@ -686,6 +686,87 @@ table.list-table caption {
   font-size: 0.9rem;
 }
 
+/* ── Math ──────────────────────────────────────────────────────── */
+
+/* Equations are MathML, rendered natively by the browser — no script is
+   loaded for them, and no webfont is downloaded. Correct rendering of the
+   stretchy constructs (matrices, `cases`) does depend on a math font being
+   installed locally; the `math` rule below names the common ones. */
+
+.math {
+  /* A long equation scrolls inside its own box rather than widening the page. */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+span.math {
+  /* Inline math sits in the run of text; only a block gets its own box. */
+  display: inline;
+}
+
+div.math {
+  display: flex;
+  align-items: center;
+  margin: 1.75rem 0;
+}
+
+div.math math {
+  /* The equation takes the middle, so it stays centred whether or not the
+     block carries a number. */
+  flex: 1 1 auto;
+  text-align: center;
+}
+
+math {
+  /* The stretchy brackets a `cases` or a matrix grows to fit are drawn from an
+     OpenType MATH table's glyph variants. A text font has no such table, so
+     without naming a math font here the browser has nothing to stretch with
+     and draws `(` at its ordinary character size. The `math` generic family
+     (CSS Fonts 4) defers to the browser's own default math font where it is
+     supported; the names before it cover the common installs. */
+  font-family: "Latin Modern Math", "STIX Two Math", "XITS Math",
+    "Cambria Math", "TeX Gyre Termes Math", "DejaVu Math TeX Gyre",
+    "Noto Sans Math", math;
+  font-size: 1.05em;
+}
+
+div.math .eqno {
+  /* The number sits at the right margin, as in a printed paper. */
+  order: 2;
+  flex: 0 0 auto;
+  margin-left: 1rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+div.math .eqno .headerlink {
+  opacity: 0;
+  margin-left: 0.35rem;
+  text-decoration: none;
+  transition: opacity 0.15s ease-in-out;
+}
+
+div.math:hover .eqno .headerlink,
+div.math .eqno .headerlink:focus {
+  opacity: 1;
+}
+
+/* An `:eq:` reference shows the number it points at. */
+a .eqno {
+  color: inherit;
+}
+
+/* LaTeX the math backend could not read: the source is shown as written, so
+   the page still says what the author meant. */
+.math-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.95em;
+}
+
 /* ── Responsive ────────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {

@@ -11,6 +11,12 @@
 //! `align`, `class`, `name`) are shared by every option-bearing table
 //! directive, not just the two that spell their rows out as data — [`table`]
 //! needs them too, and produces no `Directive::DataTable` at all.
+//!
+//! [`options`] sits one level more general still: scanning a body's leading
+//! `:name: value` run and diagnosing unclaimed options is common to *every*
+//! directive, tables included, so it is named for what it does rather than
+//! for the first construct that needed it ([`math`] reads its
+//! `:label:`/`:nowrap:`/`:class:` off the same scan).
 
 mod admonitions;
 // `pub(crate)` rather than private: `blocks::comment` reaches
@@ -23,6 +29,8 @@ mod doctest;
 mod domains;
 mod glossary;
 mod index_directive;
+mod math;
+mod options;
 mod scope;
 mod table;
 mod table_options;

@@ -17,6 +17,8 @@ pub enum BrokenLinkKind {
     TermReference,
     /// A `:option:` role (`InlineNode::OptionReference`).
     OptionReference,
+    /// An `:eq:` role (`InlineNode::EquationReference`).
+    EquationReference,
     /// A domain-object role (`:func:`, `:py:func:`, etc.). Carries the object
     /// type the role asked for (e.g. `py:function`) — the "missed type", known
     /// at the point resolution failed and worth surfacing in diagnostics even
@@ -45,6 +47,7 @@ impl BrokenLinkKind {
             Self::AnonymousReference => DiagnosticCode::LinkBrokenAnonymous,
             Self::TermReference => DiagnosticCode::LinkBrokenTerm,
             Self::OptionReference => DiagnosticCode::LinkBrokenOption,
+            Self::EquationReference => DiagnosticCode::LinkBrokenEquation,
             Self::DomainObjectReference(_) => DiagnosticCode::LinkBrokenObject,
             Self::AmbiguousDomainObjectReference { .. } => DiagnosticCode::LinkAmbiguousObject,
         }
@@ -59,6 +62,7 @@ impl BrokenLinkKind {
             Self::AnonymousReference => "anonymous reference",
             Self::TermReference => "term",
             Self::OptionReference => "option",
+            Self::EquationReference => "equation",
             Self::DomainObjectReference(_) => "domain object",
             Self::AmbiguousDomainObjectReference { .. } => "ambiguous domain object",
         }

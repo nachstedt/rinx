@@ -157,5 +157,18 @@ fn unescape_node(node: InlineNode) -> InlineNode {
             search_order,
             span,
         },
+        // LaTeX is a verbatim context, like `InlineNode::Literal`: its
+        // backslashes are content (`\alpha`, `\\`), so the markers turn back
+        // into backslashes rather than being dropped.
+        InlineNode::Math { latex, span } => InlineNode::Math {
+            latex: unescape_keeping_backslashes(&latex),
+            span,
+        },
+        // A label is an identifier, not LaTeX, so it takes the display form
+        // like every other cross-reference target.
+        InlineNode::EquationReference { label, span } => InlineNode::EquationReference {
+            label: unescape(&label),
+            span,
+        },
     }
 }

@@ -82,6 +82,25 @@ Equally, a comment before a container covers everything nested inside it:
    Both :ref:`missing-one` and :ref:`missing-two` are covered by the single
    comment above this note, because the note *is* the block that follows it.
 
+Math warnings
+-------------
+
+The mechanism is not limited to links. LaTeX the math converter cannot read is
+reported as ``math.invalid-latex``, and an ``:eq:`` naming no labeled equation
+as ``link.broken-eq``; both suppress the same way. The equation below is
+deliberately malformed, and its warning is silenced — the page still shows the
+source the author wrote:
+
+.. noqa: math.invalid-latex
+
+.. math::
+
+   \frac{1}{2
+
+.. noqa: link.broken-eq
+
+This reference to a nonexistent equation is suppressed too: :eq:`no-such-equation`.
+
 Mistyped codes
 --------------
 

@@ -50,7 +50,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}],"glossary_terms":{},"domain_objects":{},"genindex_entries":[]}"#
+            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"nav_tree":[{"title":"Title","path":"test.rst","children":[]}],"glossary_terms":{},"domain_objects":{},"genindex_entries":[],"equations":{}}"#
         );
     }
 }

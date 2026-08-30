@@ -134,8 +134,10 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         }
         Directive::DomainObject(body) => walk_nodes(body.body(), visit),
         // Directives with no block-level children. A doctest block's body is
-        // verbatim text, not nested nodes, so there is nothing to descend into.
+        // verbatim text, not nested nodes, and a math block's is verbatim
+        // LaTeX, so there is nothing to descend into.
         Directive::DocTest(_)
+        | Directive::Math { .. }
         | Directive::Toctree { .. }
         | Directive::PlantUml(_)
         | Directive::Index { .. }

@@ -10,6 +10,7 @@ use super::data_table::{DataTableParams, render_data_table};
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
 use super::glossary::{render_glossary, render_index_anchor};
+use super::math::render_math;
 use super::nav::{find_nav_entry, render_nav_entry};
 use super::scope_directives::apply_scope_directive;
 use super::table_directive::{TableDirectiveParams, render_table_directive};
@@ -286,6 +287,13 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
         Directive::Index { id, .. } => render_index_anchor(html, id),
         Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
+        Directive::Math {
+            parts,
+            label,
+            nowrap,
+            classes,
+            span,
+        } => render_math(html, parts, label.as_ref(), *nowrap, classes, *span, ctx),
         Directive::DataTable {
             source,
             title,

@@ -40,7 +40,8 @@ Legend: ✅ implemented · 🔶 partial · ❌ not implemented
 | `` :download:`file` `` role (links to a downloadable file) | ❌ | — |
 | `` :numref:`target` `` cross-reference role (numbered reference to a figure/table/section) | ❌ | — |
 | `` :code:`text` `` role (inline code with an optional highlighted language) | ❌ | — |
-| `` :math:`...` `` / `` :eq:`label` `` roles (inline math / equation-number reference) | ❌ | — |
+| `` :math:`...` `` role (inline math) | ✅ | LaTeX is converted to `MathML` at build time, so no JavaScript runs and no webfont is downloaded, and invalid LaTeX is a build warning (`math.invalid-latex`) rather than a silent failure in the reader's browser. Brackets that stretch to fit a matrix or `cases` need a locally installed math font (the stylesheets name the common ones); without one the equation is still correct and readable, but its brackets stay at character size |
+| `` :eq:`label` `` role (equation-number reference) | ✅ | Resolves across documents; renders the target equation's number as the link text |
 | `` :pep:`num` `` / `` :rfc:`num` `` roles (generate a URL to the PEP/RFC) | ❌ | — |
 | `` :cve:`num` `` / `` :cwe:`num` `` roles (generate a URL to the CVE/CWE entry) | ❌ | — |
 | `` :index:`term` `` role (inline index entry, distinct from the `.. index::` directive) | ❌ | — |
@@ -107,7 +108,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | `.. centered::` (deprecated in real Sphinx in favor of `.. rst-class:: centered`) | ❌ | — |
 | `.. hlist::` (compact multi-column bullet list) | ❌ | — |
 | `.. highlight::` (sets the default `.. code-block::` language for following blocks) | ❌ | — |
-| `.. math::` (display math block) | ❌ | — |
+| `.. math::` (display math block) | 🔶 | `:label:`, `:name:` (a spelling of `:label:`), `:nowrap:`/`:no-wrap:` and `:class:` supported, as are the argument form (`.. math:: a = b`), blank-line-separated multi-equation bodies and `\\`-aligned multi-line equations. Three deviations: Sphinx wraps a multi-line equation in `split`, which the `MathML` converter does not implement, so `aligned` is emitted instead (same alignment); `math_number_all` and `math_numfig` are unsupported, so only labeled equations are numbered and numbers restart per document rather than being section-scoped (`(1.2)`); and under `:nowrap:` a self-numbering environment such as `align` restarts its own count in every directive, since each block is converted independently |
 | `.. productionlist::` (formal grammar production rules) | ❌ | — |
 | `.. only::` (conditionally includes content based on build tags) | ❌ | — |
 | `.. sectionauthor::` / `.. moduleauthor::` / `.. codeauthor::` (author metadata; no visible output by default in real Sphinx either) | ❌ | — |
@@ -219,6 +220,7 @@ last two rows — they are rusty-sphinx extensions, described in
 |---------|--------|-------|
 | Source positions on warnings | ✅ | Every warning reports `path:line:column`, both parse-time and render-time. Positions are ranges internally; the terminal prints the start |
 | Positions inside nested constructs | ✅ | Resolve correctly through directive bodies, all three list kinds, glossary definitions and table cells, at any nesting depth |
+| Positions for `.. math::` LaTeX errors | 🔶 | The `.. math::` directive is the only one whose AST node carries a span, so a LaTeX error found while rendering can be placed at all. It points at the directive body's first line rather than at the offending character: by then the equation has been rejoined from several lines, so no finer position survives |
 | Positions for `.. csv-table::` cell content | 🔶 | Rows built from CSV data correspond to no `.rst` line (a `:file:`'s data is not even in the document), so diagnostics raised inside a cell are reported without a position rather than against a wrong one |
 | Stable diagnostic codes (`link.broken-ref`, `table.grid.no-columns`, …) | ✅ | One per reporting site; part of the documented surface once written into a `.. noqa:` |
 | `.. noqa:` suppression comments | ✅ | **rusty-sphinx extension.** Silences the named codes for the block that follows; a bare `.. noqa` covers every code. Resolves against the enclosing block when nested. Suppresses the warning, the `--strict-links` failure and the sidecar entry alike |

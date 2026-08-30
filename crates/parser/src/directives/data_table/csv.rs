@@ -1,6 +1,7 @@
 //! `.. csv-table::` — a table whose rows are CSV data.
 
 use crate::diagnostics::Diagnostics;
+use crate::directives::body::body_span;
 use rusty_sphinx_ast::{
     Diagnostic, DiagnosticCode, Directive, Node, Span, TableCell, TableRow, TableSource,
 };
@@ -10,7 +11,7 @@ use super::options::{SharedTableOptions, parse_shared_table_options};
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::directives::body::join_body_lines;
-use crate::directives::table_options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
@@ -87,7 +88,7 @@ pub(in crate::directives) fn parse_csv_table(
     // as a whole: the data may come from a `:file:`, and even inline data has
     // been through a CSV reader by the time a row is found wanting, so no
     // finer source position survives.
-    let table_span = ctx.line_span(0, body_lines.first().unwrap_or(&""));
+    let table_span = body_span(body_lines, ctx);
 
     let Some(data) = resolve_csv_data(&inline_data, &source, ctx, diagnostics, table_span) else {
         return unknown_csv_table(argument, body_lines);

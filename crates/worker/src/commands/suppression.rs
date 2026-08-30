@@ -10,7 +10,7 @@
 //! only the `.ast` in between carries both.
 
 use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, Suppression};
-use rusty_sphinx_renderer::{BrokenLink, ObjectTypeMismatch};
+use rusty_sphinx_renderer::{BrokenLink, MathError, ObjectTypeMismatch};
 
 /// Whether any of `suppressions` silences `code` reported at `span`.
 pub(super) fn is_suppressed(
@@ -47,6 +47,22 @@ pub(super) fn retain_reportable_links(
     links
         .iter()
         .filter(|link| !is_suppressed(suppressions, link.code(), link.span))
+        .cloned()
+        .collect()
+}
+
+/// The math errors that survive `suppressions`.
+///
+/// Owned for the same reason [`retain_reportable_links`] returns owned links:
+/// what survives here is what the warning sidecar records, so a suppressed
+/// equation must leave no trace behind either.
+pub(super) fn retain_reportable_math_errors(
+    errors: &[MathError],
+    suppressions: &[Suppression],
+) -> Vec<MathError> {
+    errors
+        .iter()
+        .filter(|error| !is_suppressed(suppressions, error.code(), error.span))
         .cloned()
         .collect()
 }

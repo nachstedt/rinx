@@ -7,6 +7,7 @@ use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
 use crate::index_entry::IndexEntry;
 use crate::node::Node;
+use crate::span::Span;
 use crate::table::TableAlign;
 use crate::table::TableRow;
 use crate::table::TableSource;
@@ -121,6 +122,36 @@ pub enum Directive {
         name: Option<TargetName>,
         header_rows: Vec<TableRow>,
         body_rows: Vec<TableRow>,
+    },
+    /// `.. math::` — one or more display equations written in LaTeX.
+    ///
+    /// The LaTeX is stored exactly as the author wrote it and only turned into
+    /// markup while rendering, so the AST stays a faithful record of the
+    /// source and the choice of math backend never leaks into a `.ast` file.
+    Math {
+        /// The equations, in source order. RST separates several equations in
+        /// one directive with blank lines; that split is consumed here rather
+        /// than left to the renderer, so the structure the author expressed is
+        /// visible in the AST. Under `:nowrap:` this always holds exactly one
+        /// entry — the body verbatim, blank lines included.
+        parts: Vec<String>,
+        /// `:label:` (or its `:name:` spelling) — reuses [`TargetName`] like
+        /// the table directives do, so an `:eq:` reference resolves against it
+        /// with no extra conversion.
+        label: Option<TargetName>,
+        /// `:nowrap:` — the author supplies their own LaTeX environment, so
+        /// nothing may be wrapped around the body. Suppresses equation
+        /// numbering too, matching Sphinx.
+        nowrap: bool,
+        /// `:class:` — space-separated class names, already split.
+        classes: Vec<String>,
+        /// Where the directive was written. The only [`Directive`] to carry a
+        /// span, because it is the only one whose content can still fail to
+        /// render *after* parsing succeeds — invalid LaTeX is diagnosed by the
+        /// renderer, which would otherwise have no position to report (see
+        /// `docs/decisions/003-diagnostics.md`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
     },
     DomainObject(DomainObjectBody),
     /// One block of the `sphinx.ext.doctest` family (`doctest`, `testcode`,

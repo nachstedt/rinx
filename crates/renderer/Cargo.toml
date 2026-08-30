@@ -9,6 +9,7 @@ rusty_sphinx_index = { path = "../index" }
 rusty_sphinx_scope = { path = "../scope" }
 anyhow = "1.0.102"
 html-escape = "0.2.13"
+math-core = "0.8"
 minijinja = "2"
 pathdiff = "0.2.3"
 serde = { version = "1", features = ["derive"] }

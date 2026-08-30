@@ -56,6 +56,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Two directives that differ only in how their source spells out the same data should share one AST node, with a small enum recording which one wrote it.
 - Keep parse-time configuration in one context object threaded through the parsers, rather than adding a parameter per setting.
 - A pure phase should take an injected trait object for anything it cannot do itself (like reading a file) rather than acquiring the capability directly.
+- Convert an embedded notation (LaTeX, CSV) with an established library during the build rather than shipping a client-side script, so the output stays self-contained and malformed input becomes a build diagnostic instead of a silent failure in the reader's browser.
+- Store an embedded notation in the AST exactly as written and convert it only while rendering, so the choice of backend never reaches a serialized `.ast` file.
 
 ## Porting from a reference implementation
 

@@ -8,7 +8,8 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::table_options::{OptionLine, parse_common_table_options};
+use crate::directives::options::OptionLine;
+use crate::directives::table_options::parse_common_table_options;
 use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableAlign, TargetName};
 
 /// The seven options `.. list-table::` and `.. csv-table::` share — the five
@@ -101,7 +102,7 @@ pub(super) fn parse_nonneg_int_option(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::directives::table_options::scan_option_lines;
+    use crate::directives::options::scan_option_lines;
     use rusty_sphinx_ast::Domain;
 
     fn lines(raw: &[&str]) -> Vec<String> {

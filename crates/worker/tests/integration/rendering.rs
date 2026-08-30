@@ -313,3 +313,95 @@ fn test_e2e_doctest_block_nested_in_an_enumerated_item_is_found() {
     // see content nested in enumerated lists
     assert_eq!(found, 1);
 }
+
+#[test]
+fn test_e2e_numbers_a_labeled_equation_and_resolves_an_eq_reference_to_it() {
+    // Given a document with two labeled equations and a reference to the second
+    let input = "\
+Math
+====
+
+.. math::
+   :label: first
+
+   a = b
+
+.. math::
+   :label: second
+
+   c = d
+
+As shown in :eq:`second`.
+";
+
+    // When the real pipeline runs: parse, analyze, render
+    let doc = parser::parse("math.rst", input);
+    let index = analyzer::analyze(&doc);
+    let output = renderer::render(&doc, &index, "math.rst");
+
+    // Then the second equation is numbered (2) and the reference links to it
+    assert!(
+        output
+            .html
+            .contains("<div class=\"math notranslate nohighlight\" id=\"equation-second\">"),
+        "{}",
+        output.html
+    );
+    assert!(
+        output.html.contains("<span class=\"eqno\">(2)"),
+        "{}",
+        output.html
+    );
+    assert!(
+        output.html.contains(
+            "<a class=\"reference internal\" href=\"math.html#equation-second\">\
+             <span class=\"eqno\">(2)</span></a>"
+        ),
+        "{}",
+        output.html
+    );
+    assert!(output.broken_links.is_empty(), "{:?}", output.broken_links);
+    assert!(output.math_errors.is_empty(), "{:?}", output.math_errors);
+}
+
+#[test]
+fn test_e2e_renders_inline_math_as_mathml() {
+    // Given a paragraph with an inline equation
+    let input = "The identity :math:`a^2 + b^2 = c^2` is Pythagoras'.\n";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then the LaTeX became MathML on the page, with its source preserved
+    assert!(
+        result.contains("<span class=\"math notranslate nohighlight\"><math>"),
+        "{result}"
+    );
+    assert!(
+        result.contains("<msup><mi>a</mi><mn>2</mn></msup>"),
+        "{result}"
+    );
+    assert!(
+        result.contains("<annotation encoding=\"application/x-tex\">a^2 + b^2 = c^2</annotation>"),
+        "{result}"
+    );
+}
+
+#[test]
+fn test_e2e_reports_an_eq_reference_to_an_unlabeled_equation_as_broken() {
+    // Given an unlabeled equation and a reference that expects a number for it
+    let input = ".. math::\n\n   a = b\n\nSee :eq:`nope`.\n";
+
+    // When
+    let doc = parser::parse("math.rst", input);
+    let index = analyzer::analyze(&doc);
+    let output = renderer::render(&doc, &index, "math.rst");
+
+    // Then the reference is reported, under the code a `.. noqa:` would name
+    assert_eq!(output.broken_links.len(), 1);
+    assert_eq!(
+        output.broken_links[0].code(),
+        ast::DiagnosticCode::LinkBrokenEquation
+    );
+    assert_eq!(output.broken_links[0].target, "nope");
+}

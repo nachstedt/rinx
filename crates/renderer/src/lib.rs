@@ -6,32 +6,40 @@
 //! one sits flat here rather than under either of them. `page` wraps a
 //! rendered body in the templated page chrome and renders the general index;
 //! `config` is the site metadata those pages read, and `broken_link` the
-//! diagnostics a render reports alongside its HTML.
+//! diagnostics a render reports alongside its HTML. `math` sits flat beside
+//! them for the same reason `resolution` does — both `blocks` and `inline`
+//! render equations — and is the only module that knows which math backend
+//! is in use.
 
 mod blocks;
 mod broken_link;
 pub mod config;
 mod inline;
+mod math;
 mod page;
 mod resolution;
 
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
+pub use math::MathError;
 pub use page::{PageMeta, css_relative_path, render_genindex, render_page};
 
 use blocks::{collect_anonymous_targets, render_nodes};
+use math::MathRenderer;
 use resolution::{DomainObjectResolver, OptionResolver};
 use rusty_sphinx_ast::Document;
 use rusty_sphinx_index::ProjectIndex;
 use rusty_sphinx_scope::Scope;
 
 /// The result of rendering a document: the body HTML, any cross-references
-/// that failed to resolve against the [`ProjectIndex`], and any domain-object
-/// references that resolved only via an object-type fallback.
+/// that failed to resolve against the [`ProjectIndex`], any domain-object
+/// references that resolved only via an object-type fallback, and any
+/// equations the math backend rejected.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RenderOutput {
     pub html: String,
     pub broken_links: Vec<BrokenLink>,
     pub object_type_mismatches: Vec<ObjectTypeMismatch>,
+    pub math_errors: Vec<MathError>,
 }
 
 /// Shared rendering state threaded through the node traversal.
@@ -50,6 +58,10 @@ pub(crate) struct RenderCtx<'a> {
     pub original_doc_path: &'a str,
     pub broken_links: &'a mut Vec<BrokenLink>,
     pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
+    pub math_errors: &'a mut Vec<MathError>,
+    /// Converts LaTeX to `MathML`. Held for the whole document so the backend's
+    /// per-converter setup happens once per page rather than once per equation.
+    pub math: &'a MathRenderer,
     /// The enclosing scope for both domains, mirroring the analyzer's
     /// `index_nodes`/`index_domain_object` scope so a domain object's anchor
     /// `id` always matches the qualified key the analyzer indexed it under.
@@ -73,9 +85,11 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
     let mut anon_index = 0;
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
+    let mut math_errors = Vec::new();
 
     let domain_resolver = DomainObjectResolver::new(index);
     let option_resolver = OptionResolver::new(index);
+    let math = MathRenderer::new();
     let mut ctx = RenderCtx {
         index,
         domain_resolver: &domain_resolver,
@@ -86,6 +100,8 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         original_doc_path: &doc.path,
         broken_links: &mut broken_links,
         object_type_mismatches: &mut object_type_mismatches,
+        math_errors: &mut math_errors,
+        math: &math,
         scope: Scope::default(),
     };
 
@@ -95,6 +111,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         html,
         broken_links,
         object_type_mismatches,
+        math_errors,
     }
 }
 

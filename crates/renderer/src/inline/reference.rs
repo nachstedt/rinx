@@ -3,6 +3,7 @@
 use std::fmt::Write as _;
 
 use super::RefText;
+use super::doc_href::relative_doc_href;
 use rusty_sphinx_ast::TargetName;
 use rusty_sphinx_index::{ProjectIndex, TargetLocation};
 
@@ -28,13 +29,11 @@ pub(super) fn render_inline_reference(
     let display_escaped = html_escape::encode_text(display);
     let target_name = TargetName::new(target);
     if let Some(TargetLocation::Internal(target_path)) = index.targets.get(&target_name) {
-        let current_dir = std::path::Path::new(doc_path)
-            .parent()
-            .unwrap_or_else(|| std::path::Path::new(""));
-        let target_html_path = std::path::Path::new(target_path).with_extension("html");
-        let relative_path =
-            pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
-        let href = format!("{}#{}", relative_path.display(), target_name.as_str());
+        let href = format!(
+            "{}#{}",
+            relative_doc_href(target_path, doc_path),
+            target_name.as_str()
+        );
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
         let _ = write!(html, "<a href=\"{href_attr}\">{display_escaped}</a>");
     } else {
