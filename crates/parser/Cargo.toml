@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 rusty_sphinx_ast = { path = "../ast" }
+csv = "1"
 regex = "1.10"
 
 [lints]

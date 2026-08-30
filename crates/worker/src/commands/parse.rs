@@ -6,13 +6,18 @@ use rusty_sphinx_parser as parser;
 use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
+use super::csv_files::{DocumentRelativeCsvFiles, parse_ctx};
 
+/// `csv_files` is injected rather than built here so this stays the pure,
+/// I/O-free half of the subcommand: a test can hand in a loader that reads
+/// nothing, while `cmd_parse` hands in the real filesystem one.
 pub(super) fn process_parse(
     path: &str,
     rst_content: &str,
     default_domain: ast::Domain,
+    csv_files: &DocumentRelativeCsvFiles,
 ) -> Result<String> {
-    let doc = parser::parse_with_domain(path, rst_content, default_domain);
+    let doc = parser::parse_with_ctx(path, rst_content, &parse_ctx(default_domain, csv_files));
     serde_json::to_string(&doc).context("Serialization error")
 }
 
@@ -49,7 +54,28 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     let default_domain = parse_default_domain_flag(args)?;
 
     let rst = fs::read_to_string(&input).with_context(|| format!("Error reading '{input}'"))?;
-    let json = process_parse(&input, &rst, default_domain)?;
+    // `:file:` paths in the document resolve against the document's own
+    // directory, which under Bazel is the sandbox location of the declared
+    // source — see `csv_files`.
+    let csv_files = DocumentRelativeCsvFiles::for_document(&input);
+    let json = process_parse(&input, &rst, default_domain, &csv_files)?;
+
+    // A `:file:` that could not be read means the whole table is missing from
+    // the page, so the build fails rather than shipping the gap — the same
+    // stance `validate_images` takes on a missing diagram. The parser itself
+    // stays resilient (it degrades the directive and carries on), which is
+    // what the live preview needs; only this subcommand is strict.
+    let failures = csv_files.failures();
+    if !failures.is_empty() {
+        for failure in &failures {
+            eprintln!("error: {input}: csv-table: {failure}");
+        }
+        return Err(anyhow!(
+            "{input}: {} csv-table :file: option(s) could not be read",
+            failures.len()
+        ));
+    }
+
     fs::write(&output, json).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
@@ -58,13 +84,20 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
 mod tests {
     use super::*;
 
+    /// A loader rooted at a directory holding no CSV files, for the tests
+    /// whose input has no `:file:` option.
+    fn no_csv_files() -> DocumentRelativeCsvFiles {
+        DocumentRelativeCsvFiles::for_document("index.rst")
+    }
+
     #[test]
     fn test_process_parse_returns_serialized_ast() {
         // Given
         let rst = "Title\n=====";
 
         // When
-        let json = process_parse("team_a/index.rst", rst, ast::Domain::Py).unwrap();
+        let json =
+            process_parse("team_a/index.rst", rst, ast::Domain::Py, &no_csv_files()).unwrap();
 
         // Then
         assert!(json.contains("Title"));
@@ -77,10 +110,71 @@ mod tests {
         let rst = ".. function:: greet(name)\n\n   Greets the given name.";
 
         // When
-        let json = process_parse("api.rst", rst, ast::Domain::C).unwrap();
+        let json = process_parse("api.rst", rst, ast::Domain::C, &no_csv_files()).unwrap();
 
         // Then
         assert!(json.contains(r#""CFunction""#));
+    }
+
+    /// Writes `rst` into a fresh directory and returns the `cmd_parse` flags
+    /// for it, so the `:file:`-resolution tests exercise the real I/O path.
+    fn parse_args_for(dir_name: &str, rst: &str) -> Vec<String> {
+        let dir = std::env::temp_dir().join(dir_name);
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("create temp dir");
+        let input = dir.join("doc.rst");
+        std::fs::write(&input, rst).expect("write rst");
+        vec![
+            "--input".to_string(),
+            input.to_str().expect("utf-8 temp path").to_string(),
+            "--output".to_string(),
+            dir.join("doc.ast")
+                .to_str()
+                .expect("utf-8 temp path")
+                .to_string(),
+        ]
+    }
+
+    #[test]
+    fn test_cmd_parse_reads_a_csv_table_file_beside_the_document() {
+        // Given
+        let args = parse_args_for(
+            "rusty_sphinx_cmd_parse_csv_ok",
+            ".. csv-table::\n   :file: fruits.csv\n",
+        );
+        let dir = std::path::Path::new(&args[1])
+            .parent()
+            .expect("input has a directory");
+        std::fs::write(dir.join("fruits.csv"), "Apple, Red\n").expect("write csv");
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then
+        assert!(result.is_ok(), "{result:?}");
+        let ast = std::fs::read_to_string(&args[3]).expect("read ast");
+        assert!(ast.contains("Apple"), "{ast}");
+    }
+
+    #[test]
+    fn test_cmd_parse_fails_when_a_csv_table_file_is_missing() {
+        // Given — no `fruits.csv` beside the document, which is what an
+        // undeclared `csv_data` file looks like inside a Bazel sandbox.
+        let args = parse_args_for(
+            "rusty_sphinx_cmd_parse_csv_missing",
+            ".. csv-table::\n   :file: fruits.csv\n",
+        );
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then
+        let error = result.expect_err("a missing :file: must fail the parse");
+        assert!(error.to_string().contains(":file:"), "{error}");
+        assert!(
+            !std::path::Path::new(&args[3]).exists(),
+            "no .ast should be written when the parse fails"
+        );
     }
 
     #[test]

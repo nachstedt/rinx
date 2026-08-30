@@ -6,10 +6,12 @@
 //! the per-document Phase 1 actions; [`index`] is the single Phase 2 merge;
 //! [`render`] and [`genindex`] are Phase 3, and [`preview`] collapses all
 //! three into one process for the editor. [`cli_args`] holds the flag parsing
-//! they share and [`diagnostics`] the warning formatting [`render`] and
-//! [`preview`] share.
+//! they share, [`diagnostics`] the warning formatting [`render`] and
+//! [`preview`] share, and [`csv_files`] the filesystem loader that resolves
+//! `.. csv-table::`'s `:file:` option for both of them.
 
 mod cli_args;
+mod csv_files;
 mod diagnostics;
 mod diagrams;
 mod extract_doctests;
