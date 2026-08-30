@@ -1,6 +1,7 @@
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::body::body_span;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive};
@@ -18,7 +19,7 @@ pub(super) fn parse_admonition(
             diagnostics.push(Diagnostic::at(
                 DiagnosticCode::DirectiveTitleArgumentMissing,
                 "Generic 'admonition' directive requires a title argument.",
-                ctx.line_span(0, body_lines.first().unwrap_or(&"")),
+                body_span(body_lines, ctx),
             ));
             Some("Admonition".to_string())
         } else {
@@ -94,7 +95,7 @@ pub(super) fn parse_version_change(
             format!("'{}' requires a version argument.", kind.as_str()),
             // The directive's own marker line, which is the line above the
             // body this parser was handed.
-            ctx.line_span(0, body_lines.first().unwrap_or(&"")),
+            body_span(body_lines, ctx),
         ));
         "unknown".to_string()
     } else {

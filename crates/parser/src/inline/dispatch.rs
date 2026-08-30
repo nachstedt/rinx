@@ -12,6 +12,7 @@ use super::roles::c::macro_::handle_macro_match;
 use super::roles::c::struct_::handle_struct_match;
 use super::roles::c::type_::handle_type_match;
 use super::roles::c::union::handle_union_match;
+use super::roles::math::{handle_eq_match, handle_math_match};
 use super::roles::py::attr::handle_attr_match;
 use super::roles::py::class::handle_class_match;
 use super::roles::py::data::handle_data_match;
@@ -85,6 +86,8 @@ pub(super) fn handle_inline_match(
             }
         }
         "option" => handle_option_match(m_str),
+        "math" => handle_math_match(m_str),
+        "eq" => handle_eq_match(m_str),
         "phrased" => {
             let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
             let text_full = &caps["text"];

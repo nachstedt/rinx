@@ -1,4 +1,4 @@
-use crate::{GenIndexEntry, NavEntry, TargetLocation};
+use crate::{EquationLocation, GenIndexEntry, NavEntry, TargetLocation};
 use rusty_sphinx_ast::{ObjectType, TargetName};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -31,6 +31,12 @@ pub struct ProjectIndex {
     /// appearing from multiple locations is expected, not an error.
     #[serde(default)]
     pub genindex_entries: Vec<GenIndexEntry>,
+    /// Maps a `.. math::` label to the document defining it and the equation
+    /// number it was given, so an `:eq:` in any document can render that
+    /// number as its link text. See [`EquationLocation`] for the numbering
+    /// rules.
+    #[serde(default)]
+    pub equations: BTreeMap<TargetName, EquationLocation>,
 }
 
 impl ProjectIndex {
@@ -65,6 +71,7 @@ impl ProjectIndex {
                 .extend(object_types);
         }
         self.genindex_entries.extend(other.genindex_entries);
+        self.equations.extend(other.equations);
         // nav_tree is built globally, not merged per-document
         let mut diagnostics = Vec::new();
         for (term, path) in other.glossary_terms {

@@ -33,6 +33,7 @@ rusty_sphinx_library(
         "list_table.rst",
         "csv_table.rst",
         "table_directive.rst",
+        "math.rst",
         "index_entries.rst",
         "noqa.rst",
     ],

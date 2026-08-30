@@ -13,8 +13,10 @@
 
 mod anonymous_reference;
 mod dispatch;
+mod doc_href;
 mod domain_object_reference;
 mod hyperlink;
+mod math;
 mod option_reference;
 mod ref_text;
 mod reference;

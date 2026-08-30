@@ -248,6 +248,53 @@
     ol.upperalpha.parens > li::before { content: "(" counter(rsl, upper-alpha) ")"; }
     ol.lowerroman.parens > li::before { content: "(" counter(rsl, lower-roman) ")"; }
     ol.upperroman.parens > li::before { content: "(" counter(rsl, upper-roman) ")"; }
+
+    /* Math. Equations are MathML the browser draws itself — no script is
+       loaded and no webfont downloaded — so a theme only has to place them and
+       pick a math font. Restated here for the same reason as the rules above;
+       `assets/default.css` has the default theme's equivalents. */
+    .math { overflow-x: auto; overflow-y: hidden; }
+    span.math { display: inline; }
+    /* A math font is what makes brackets stretch to fit a `cases` or matrix:
+       the glyph variants live in its OpenType MATH table, which a text font
+       has not got. */
+    math {
+      font-family: "Latin Modern Math", "STIX Two Math", "XITS Math",
+        "Cambria Math", "TeX Gyre Termes Math", "DejaVu Math TeX Gyre",
+        "Noto Sans Math", math;
+      font-size: 1.05em;
+    }
+
+    div.math {
+      display: flex;
+      align-items: center;
+      margin: 1.75rem 0;
+    }
+
+    /* The equation keeps the middle and the number goes to the right margin,
+       so a numbered and an unnumbered block still align with each other. */
+    div.math math { flex: 1 1 auto; text-align: center; }
+
+    div.math .eqno {
+      order: 2;
+      flex: 0 0 auto;
+      margin-left: 1rem;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+
+    div.math .eqno .headerlink { opacity: 0; margin-left: 0.35rem; text-decoration: none; }
+    div.math:hover .eqno .headerlink { opacity: 1; }
+    a .eqno { color: inherit; }
+
+    /* LaTeX the backend could not read: the source is shown as written. */
+    .math-error {
+      color: #b91c1c;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 4px;
+      padding: 0.15rem 0.4rem;
+    }
   </style>
 </head>
 <body>

@@ -452,3 +452,161 @@ fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_followin
             .any(|d| d.message.contains(".. index::") || d.message.contains("index:"))
     );
 }
+
+#[test]
+fn test_parse_reads_a_math_directive_with_a_label() {
+    // Given a labeled display equation
+    let input = ".. math::\n   :label: euler\n\n   e^{i\\pi} + 1 = 0\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Math {
+        parts,
+        label,
+        nowrap,
+        ..
+    }) = &doc.nodes[0]
+    else {
+        panic!("expected a math directive, got {:?}", doc.nodes[0]);
+    };
+    assert_eq!(parts, &vec!["e^{i\\pi} + 1 = 0".to_string()]);
+    assert_eq!(label.as_ref(), Some(&TargetName::new("euler")));
+    assert!(!nowrap);
+}
+
+#[test]
+fn test_parse_reads_an_inline_math_role_keeping_its_backslashes() {
+    // Given inline math whose LaTeX is nothing but escapes — the case where
+    // the escape-marker round trip would silently eat the content
+    let input = "The angle :math:`\\alpha \\\\ \\beta` matters.\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then the backslashes survive verbatim, as they do in an inline literal
+    let Node::Paragraph(nodes) = &doc.nodes[0] else {
+        panic!("expected a paragraph, got {:?}", doc.nodes[0]);
+    };
+    assert!(
+        nodes.iter().any(|node| matches!(
+            node,
+            InlineNode::Math { latex, .. } if latex == "\\alpha \\\\ \\beta"
+        )),
+        "{nodes:?}"
+    );
+}
+
+#[test]
+fn test_parse_reads_an_eq_role() {
+    // Given a reference to a labeled equation
+    let input = "See :eq:`euler` above.\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    let Node::Paragraph(nodes) = &doc.nodes[0] else {
+        panic!("expected a paragraph");
+    };
+    assert!(
+        nodes.iter().any(|node| matches!(
+            node,
+            InlineNode::EquationReference { label, .. } if label == "euler"
+        )),
+        "{nodes:?}"
+    );
+}
+
+#[test]
+fn test_parse_does_not_recognize_a_math_role_inside_an_inline_literal() {
+    // Given the role spelled out inside an inline literal
+    let input = "Write ``:math:`x``` to show the markup.\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then it stays literal text, not an equation
+    let Node::Paragraph(nodes) = &doc.nodes[0] else {
+        panic!("expected a paragraph");
+    };
+    assert!(
+        !nodes
+            .iter()
+            .any(|node| matches!(node, InlineNode::Math { .. })),
+        "{nodes:?}"
+    );
+}
+
+#[test]
+fn test_parse_places_a_math_directive_nested_in_an_admonition() {
+    // Given an equation inside a note, so the body was dedented before parsing
+    let input = ".. note::\n\n   .. math::\n\n      a = b\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then the span points at the nested directive's real line (3), not line 1
+    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Admonition { body, .. }) =
+        &doc.nodes[0]
+    else {
+        panic!("expected an admonition, got {:?}", doc.nodes[0]);
+    };
+    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Math { span, .. }) =
+        &body[0]
+    else {
+        panic!("expected a nested math directive, got {:?}", body[0]);
+    };
+    assert_eq!(
+        span.expect("a nested math directive should carry a span")
+            .start
+            .line,
+        5
+    );
+}
+
+#[test]
+fn test_parse_points_a_math_directive_span_past_its_option_lines() {
+    // Given a labeled equation: the body opens with `:label:` on line 5, and
+    // the equation itself is on line 7
+    let input = "T\n=\n\n.. math::\n   :label: euler\n\n   a = b\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then the span names the equation's line, not the option line above it —
+    // a LaTeX error is about the LaTeX
+    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Math { span, .. }) =
+        &doc.nodes[1]
+    else {
+        panic!("expected a math directive, got {:?}", doc.nodes[1]);
+    };
+    let span = span.expect("a math directive should carry a span");
+    assert_eq!(span.start.line, 7);
+    assert_eq!(span.start.column, 4);
+    // ... and ends at the end of `a = b`, not one indent width further
+    assert_eq!(span.end.column, 9);
+}
+
+#[test]
+fn test_parse_points_a_math_directive_span_at_the_first_of_several_equations() {
+    // Given two equations after an option line
+    let input = ".. math::\n   :label: pair\n\n   a = b\n\n   c = d\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then the span names the first equation's line
+    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Math { span, .. }) =
+        &doc.nodes[0]
+    else {
+        panic!("expected a math directive");
+    };
+    assert_eq!(
+        span.expect("a math directive should carry a span")
+            .start
+            .line,
+        4
+    );
+}

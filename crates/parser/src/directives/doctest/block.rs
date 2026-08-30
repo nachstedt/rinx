@@ -4,6 +4,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::body::body_span;
 use rusty_sphinx_ast::{
     Diagnostic, DiagnosticCode, Directive, DocTestBlock, DocTestGroupSelector, HashedContent,
     NonEmptyVector, Span,
@@ -28,7 +29,7 @@ pub(crate) fn parse_doctest_directive(
     let (options, content_start) = scan_options(kind, body_lines, diagnostics, ctx);
     // The directive's body as a whole, for the diagnostics that are about the
     // block rather than about one option line.
-    let block_span = ctx.line_span(0, body_lines.first().unwrap_or(&""));
+    let block_span = body_span(body_lines, ctx);
     let content_lines = skip_leading_blank_lines(&body_lines[content_start..]);
     let content_text = strip_common_indent(content_lines);
 

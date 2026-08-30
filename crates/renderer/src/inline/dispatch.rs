@@ -10,6 +10,7 @@ use super::domain_object_reference::{
     DomainObjectDiagnostics, DomainObjectRef, render_inline_domain_object_reference,
 };
 use super::hyperlink::render_inline_hyperlink;
+use super::math::{render_equation_reference, render_inline_math};
 use super::option_reference::render_inline_option_reference;
 use super::reference::render_inline_reference;
 use super::term_reference::render_inline_term_reference;
@@ -52,6 +53,11 @@ pub(crate) fn render_inline(
         rusty_sphinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
             render_inline_anonymous_hyperlink(html, text, target);
         }
+        // Self-contained despite carrying a span: rendering an equation needs
+        // the math backend, not the index.
+        rusty_sphinx_ast::InlineNode::Math { latex, span } => {
+            render_inline_math(html, latex, *span, ctx.math, ctx.math_errors);
+        }
         // Listed rather than caught by a `_`, so a variant added later is a
         // compile error here and in `render_cross_reference` instead of
         // silently rendering as nothing.
@@ -60,7 +66,8 @@ pub(crate) fn render_inline(
         | rusty_sphinx_ast::InlineNode::AnonymousReference { .. }
         | rusty_sphinx_ast::InlineNode::TermReference { .. }
         | rusty_sphinx_ast::InlineNode::DomainObjectReference { .. }
-        | rusty_sphinx_ast::InlineNode::OptionReference { .. } => {
+        | rusty_sphinx_ast::InlineNode::OptionReference { .. }
+        | rusty_sphinx_ast::InlineNode::EquationReference { .. } => {
             render_cross_reference(html, inline, ctx);
         }
     }
@@ -152,11 +159,22 @@ fn render_cross_reference(
                 ctx.broken_links,
             );
         }
+        rusty_sphinx_ast::InlineNode::EquationReference { label, span } => {
+            render_equation_reference(
+                html,
+                label,
+                *span,
+                ctx.index,
+                ctx.doc_path,
+                ctx.broken_links,
+            );
+        }
         rusty_sphinx_ast::InlineNode::Text(_)
         | rusty_sphinx_ast::InlineNode::AnonymousHyperlink { .. }
         | rusty_sphinx_ast::InlineNode::Emphasis(_)
         | rusty_sphinx_ast::InlineNode::Strong(_)
         | rusty_sphinx_ast::InlineNode::Literal(_)
+        | rusty_sphinx_ast::InlineNode::Math { .. }
         | rusty_sphinx_ast::InlineNode::Program(_) => {
             unreachable!("render_inline routes only cross-reference variants here")
         }

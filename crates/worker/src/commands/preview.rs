@@ -12,12 +12,28 @@ use std::io::{self, Read};
 use super::cli_args::{flag_value, flag_value_opt};
 use super::csv_files::{DocumentRelativeCsvFiles, parse_ctx};
 use super::diagnostics::{
-    format_broken_link_warning, format_object_type_mismatch_warning, report_diagnostic,
+    format_broken_link_warning, format_math_error_warning, format_object_type_mismatch_warning,
+    report_diagnostic,
 };
 use super::parse::parse_default_domain_flag;
 use super::suppression::{
-    retain_reportable, retain_reportable_links, retain_reportable_mismatches,
+    retain_reportable, retain_reportable_links, retain_reportable_math_errors,
+    retain_reportable_mismatches,
 };
+
+/// One previewed page, plus every warning it produced.
+///
+/// A struct rather than a tuple because the warning kinds are no longer two:
+/// naming them at the call site is what keeps `math_errors` from being read as
+/// `object_type_mismatches`. Mirrors [`super::render::RenderedPage`], minus
+/// the `source_path` — a preview is always rendering the document the caller
+/// named, so there is no second path to disambiguate.
+pub(super) struct PreviewedPage {
+    pub html: String,
+    pub broken_links: Vec<renderer::BrokenLink>,
+    pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
+    pub math_errors: Vec<renderer::MathError>,
+}
 
 pub(super) fn process_preview(
     rst: &str,
@@ -27,11 +43,7 @@ pub(super) fn process_preview(
     doc_path: &str,
     default_domain: ast::Domain,
     csv_files: &DocumentRelativeCsvFiles,
-) -> Result<(
-    String,
-    Vec<renderer::BrokenLink>,
-    Vec<renderer::ObjectTypeMismatch>,
-)> {
+) -> Result<PreviewedPage> {
     let doc = parser::parse_with_ctx(doc_path, rst, &parse_ctx(default_domain, csv_files));
     for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
         report_diagnostic(doc_path, diagnostic);
@@ -52,6 +64,7 @@ pub(super) fn process_preview(
     let broken_links = retain_reportable_links(&render_output.broken_links, &doc.suppressions);
     let object_type_mismatches =
         retain_reportable_mismatches(&render_output.object_type_mismatches, &doc.suppressions);
+    let math_errors = retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions);
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -85,7 +98,12 @@ pub(super) fn process_preview(
             has_genindex: !index.genindex_entries.is_empty(),
         },
     )?;
-    Ok((html, broken_links, object_type_mismatches))
+    Ok(PreviewedPage {
+        html,
+        broken_links,
+        object_type_mismatches,
+        math_errors,
+    })
 }
 
 pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
@@ -115,7 +133,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     let template_str = fs::read_to_string(&template_path)
         .with_context(|| format!("Error reading template '{template_path}'"))?;
 
-    let (html, broken_links, object_type_mismatches) = process_preview(
+    let page = process_preview(
         &rst,
         index_json.as_deref(),
         &site_config,
@@ -129,17 +147,20 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
 
     // Preview is deliberately lenient (it renders over incomplete/WIP
     // documents), so broken links are always warnings, never a failure.
-    for link in &broken_links {
+    for link in &page.broken_links {
         eprintln!("{}", format_broken_link_warning(&doc_path, link));
     }
-    for mismatch in &object_type_mismatches {
+    for mismatch in &page.object_type_mismatches {
         eprintln!(
             "{}",
             format_object_type_mismatch_warning(&doc_path, mismatch)
         );
     }
+    for error in &page.math_errors {
+        eprintln!("{}", format_math_error_warning(&doc_path, error));
+    }
 
-    println!("{html}");
+    println!("{}", page.html);
     Ok(())
 }
 
@@ -163,7 +184,7 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let (html, broken_links, _) = process_preview(
+        let page = process_preview(
             rst,
             Some(global_index),
             &config,
@@ -175,10 +196,10 @@ mod tests {
         .unwrap();
 
         // Then
-        assert!(html.contains("<h1>Section A</h1>"));
+        assert!(page.html.contains("<h1>Section A</h1>"));
         // Cross-reference to other file should be resolved
-        assert!(html.contains("href=\"other.html#section-b\""));
-        assert!(broken_links.is_empty());
+        assert!(page.html.contains("href=\"other.html#section-b\""));
+        assert!(page.broken_links.is_empty());
     }
 
     #[test]
@@ -189,7 +210,7 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let (html, broken_links, _) = process_preview(
+        let page = process_preview(
             rst,
             None,
             &config,
@@ -201,8 +222,8 @@ mod tests {
         .unwrap();
 
         // Then
-        assert!(html.contains("<h1>Section A</h1>"));
-        assert!(broken_links.is_empty());
+        assert!(page.html.contains("<h1>Section A</h1>"));
+        assert!(page.broken_links.is_empty());
     }
 
     #[test]
@@ -213,7 +234,7 @@ mod tests {
         let template = "<html>{{ body }}</html>";
 
         // When
-        let (html, broken_links, _) = process_preview(
+        let page = process_preview(
             rst,
             None,
             &config,
@@ -225,8 +246,8 @@ mod tests {
         .unwrap();
 
         // Then
-        assert!(html.contains("class=\"broken-link\""));
-        assert_eq!(broken_links.len(), 1);
-        assert_eq!(broken_links[0].target, "missing");
+        assert!(page.html.contains("class=\"broken-link\""));
+        assert_eq!(page.broken_links.len(), 1);
+        assert_eq!(page.broken_links[0].target, "missing");
     }
 }

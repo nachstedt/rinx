@@ -12,6 +12,7 @@
 
 mod document_index;
 mod domain_object_index;
+mod equation_numbering;
 mod nav_tree;
 mod path_normalization;
 mod project_index;

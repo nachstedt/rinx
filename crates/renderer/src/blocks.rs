@@ -17,6 +17,7 @@ mod dispatch;
 mod doctest;
 mod domain_object;
 mod glossary;
+mod math;
 mod nav;
 mod scope_directives;
 mod table_directive;
@@ -26,3 +27,4 @@ mod table_test_support;
 mod tables;
 
 pub(crate) use dispatch::{collect_anonymous_targets, render_nodes};
+pub(crate) use math::equation_anchor_id;

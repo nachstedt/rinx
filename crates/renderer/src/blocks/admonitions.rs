@@ -169,6 +169,7 @@ mod tests {
         let mut anon_index = 0;
         let resolver = crate::resolution::DomainObjectResolver::new(&index);
         let option_resolver = crate::resolution::OptionResolver::new(&index);
+        let math = crate::math::MathRenderer::new();
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,
@@ -179,6 +180,8 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
+            math_errors: &mut Vec::new(),
+            math: &math,
             scope: rusty_sphinx_scope::Scope::default(),
         };
 
@@ -210,6 +213,7 @@ mod tests {
         let mut anon_index = 0;
         let resolver = crate::resolution::DomainObjectResolver::new(&index);
         let option_resolver = crate::resolution::OptionResolver::new(&index);
+        let math = crate::math::MathRenderer::new();
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,
@@ -220,6 +224,8 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
+            math_errors: &mut Vec::new(),
+            math: &math,
             scope: rusty_sphinx_scope::Scope::default(),
         };
 
@@ -384,6 +390,7 @@ mod tests {
         let mut anon_index = 0;
         let resolver = crate::resolution::DomainObjectResolver::new(&index);
         let option_resolver = crate::resolution::OptionResolver::new(&index);
+        let math = crate::math::MathRenderer::new();
         let mut ctx = RenderCtx {
             index: &index,
             domain_resolver: &resolver,
@@ -394,6 +401,8 @@ mod tests {
             original_doc_path: "test.rst",
             broken_links: &mut Vec::new(),
             object_type_mismatches: &mut Vec::new(),
+            math_errors: &mut Vec::new(),
+            math: &math,
             scope: rusty_sphinx_scope::Scope::default(),
         };
 

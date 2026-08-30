@@ -110,15 +110,43 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
+    /// Inline math produced by the `:math:` role, holding LaTeX verbatim.
+    ///
+    /// A verbatim context like [`Self::Literal`]: the backslashes are the
+    /// content, so this is one of the two variants whose escape markers turn
+    /// back into backslashes rather than being dropped (see
+    /// `rusty_sphinx_parser`'s `unescape_node`).
+    ///
+    /// Carries a span despite not being a cross-reference — unlike every other
+    /// self-contained variant, its content can be rejected at render time, and
+    /// the resulting diagnostic needs a position.
+    Math {
+        latex: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
+    /// An inline cross-reference produced by the `:eq:` role, linking to a
+    /// labeled `.. math::` and displaying that equation's number.
+    ///
+    /// Carries no `display` field, unlike every other cross-reference role:
+    /// `:eq:` has no explicit-title form, because the visible text is the
+    /// equation number, which is not known until the project index exists.
+    EquationReference {
+        label: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
 }
 
 impl InlineNode {
     /// Where this node's markup was written, for the variants that can
     /// produce a diagnostic; `None` for every other variant.
     ///
-    /// Only the cross-reference roles carry a position, because only they can
-    /// fail to resolve. Giving every variant one would double the size of a
-    /// parsed document to record something nothing reads.
+    /// Only the cross-reference roles and [`Self::Math`] carry a position,
+    /// because only they can fail at render time — the roles by not resolving,
+    /// `Math` by holding LaTeX the math backend rejects. Giving every variant
+    /// one would double the size of a parsed document to record something
+    /// nothing reads.
     #[must_use]
     pub const fn span(&self) -> Option<Span> {
         match self {
@@ -127,7 +155,9 @@ impl InlineNode {
             | Self::AnonymousReference { span, .. }
             | Self::TermReference { span, .. }
             | Self::DomainObjectReference { span, .. }
-            | Self::OptionReference { span, .. } => *span,
+            | Self::OptionReference { span, .. }
+            | Self::Math { span, .. }
+            | Self::EquationReference { span, .. } => *span,
             _ => None,
         }
     }
@@ -146,7 +176,9 @@ impl InlineNode {
             | Self::AnonymousReference { span, .. }
             | Self::TermReference { span, .. }
             | Self::DomainObjectReference { span, .. }
-            | Self::OptionReference { span, .. } => *span = at,
+            | Self::OptionReference { span, .. }
+            | Self::Math { span, .. }
+            | Self::EquationReference { span, .. } => *span = at,
             _ => {}
         }
         self
@@ -176,6 +208,11 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             | InlineNode::TermReference { display, .. }
             | InlineNode::DomainObjectReference { display, .. }
             | InlineNode::OptionReference { display, .. } => display.as_str(),
+            // The LaTeX source is the only plain text an equation has: its
+            // rendered form is markup, and its `:eq:` number isn't known
+            // without the project index this function deliberately doesn't take.
+            InlineNode::Math { latex, .. } => latex.as_str(),
+            InlineNode::EquationReference { label, .. } => label.as_str(),
         })
         .collect()
 }

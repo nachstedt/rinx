@@ -73,6 +73,8 @@ diagnostic_codes! {
     LinkBrokenTerm => "link.broken-term",
     /// An `:option:` naming no `.. option::` definition.
     LinkBrokenOption => "link.broken-option",
+    /// An `:eq:` naming no labeled `.. math::`.
+    LinkBrokenEquation => "link.broken-eq",
     /// A domain-object role (`:func:`, `:py:class:`, …) that resolved to nothing.
     LinkBrokenObject => "link.broken-object",
     /// A dot-prefixed domain-object role whose suffix search matched several
@@ -156,6 +158,15 @@ diagnostic_codes! {
     DoctestUnknownFlag => "doctest.unknown-flag",
     DoctestNoCode => "doctest.no-code",
     DoctestEmptyGroup => "doctest.empty-group",
+
+    // --- `.. math::` and the math roles ------------------------------------
+    /// A `:label:`/`:name:` option with no value, so nothing could reference
+    /// the equation and it stays unnumbered.
+    MathEmptyLabel => "math.empty-label",
+    /// LaTeX the math renderer rejected, reported while rendering rather than
+    /// while parsing — the parser deliberately never inspects the LaTeX, since
+    /// only the renderer knows the math backend.
+    MathInvalidLatex => "math.invalid-latex",
 
     // --- `.. index::` ------------------------------------------------------
     IndexInvalidPair => "index.invalid-pair",

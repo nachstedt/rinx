@@ -1,6 +1,7 @@
 //! `.. list-table::` — a table whose rows are a nested bullet list.
 
 use crate::diagnostics::Diagnostics;
+use crate::directives::body::body_span;
 use rusty_sphinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ListItem, Node, Span, TableCell, TableRow, TableSource,
     TableWidths,
@@ -10,7 +11,7 @@ use super::options::{SharedTableOptions, parse_shared_table_options};
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::directives::body::join_body_lines;
-use crate::directives::table_options::{report_unknown_options, scan_option_lines};
+use crate::directives::options::{report_unknown_options, scan_option_lines};
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
@@ -54,14 +55,14 @@ pub(in crate::directives) fn parse_list_table(
         diagnostics.push(Diagnostic::at(
             DiagnosticCode::TableDataNotABulletList,
             "list-table: directive body must be a single bullet list of rows",
-            ctx.line_span(0, body_lines.first().unwrap_or(&"")),
+            body_span(body_lines, ctx),
         ));
         return unknown_list_table(argument, body_lines);
     };
 
     // Rows are lowered from already-parsed nodes, which carry no position of
     // their own, so every row-level diagnostic points at the directive body.
-    let table_span = ctx.line_span(0, body_lines.first().unwrap_or(&""));
+    let table_span = body_span(body_lines, ctx);
     let (rows, ncols) = lower_list_table_rows(row_items, diagnostics, table_span);
     build_list_table(title, options, rows, ncols, diagnostics, table_span)
 }

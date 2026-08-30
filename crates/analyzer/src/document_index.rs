@@ -1,12 +1,14 @@
 use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TableRow, TargetName};
-use rusty_sphinx_index::{GenIndexEntry, ProjectIndex, TargetLocation};
+use rusty_sphinx_index::{EquationLocation, GenIndexEntry, ProjectIndex, TargetLocation};
 use rusty_sphinx_scope::Scope;
 
 use super::domain_object_index::index_domain_object;
+use super::equation_numbering::number_equations;
 
 /// Analyzes a single `Document` and returns a local `ProjectIndex`.
 ///
-/// This extracts targets, document titles, and glossary terms. The `nav_tree` is not
+/// This extracts targets, document titles, glossary terms and equation
+/// numbers. The `nav_tree` is not
 /// populated here — it is built globally by [`build_project_index()`].
 #[must_use]
 pub fn analyze(doc: &Document) -> ProjectIndex {
@@ -21,6 +23,11 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
         }
     }
     index_nodes(&doc.nodes, &doc.path, &mut index, &mut Scope::default());
+    for (label, number) in number_equations(doc) {
+        index
+            .equations
+            .insert(label, EquationLocation::new(doc.path.clone(), number));
+    }
     index
 }
 

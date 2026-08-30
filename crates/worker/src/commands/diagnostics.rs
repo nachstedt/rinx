@@ -108,6 +108,21 @@ pub(super) fn format_object_type_mismatch_warning(
     )
 }
 
+/// Formats a single invalid-LaTeX diagnostic as a human-readable warning line.
+///
+/// Like [`format_object_type_mismatch_warning`], this never feeds into
+/// [`check_broken_links_strict`]: `--strict-links` is about references that
+/// don't resolve, and an equation that fails to convert is a different
+/// complaint. The page still renders, showing the LaTeX the author wrote.
+pub(super) fn format_math_error_warning(doc_path: &str, error: &renderer::MathError) -> String {
+    format!(
+        "warning: {} {}: invalid math: {}",
+        location(doc_path, error.span),
+        error.code(),
+        error.message
+    )
+}
+
 /// Returns an error listing every broken link when `strict` is true and
 /// `broken_links` is non-empty. Diagnostics are always reported to stderr by
 /// the caller regardless of `strict` — this only controls whether they also

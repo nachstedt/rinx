@@ -11,10 +11,10 @@
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
+use crate::directives::body::body_span;
 use crate::directives::body::join_body_lines;
-use crate::directives::table_options::{
-    OptionLine, parse_common_table_options, report_unknown_options, scan_option_lines,
-};
+use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::table_options::parse_common_table_options;
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
@@ -58,7 +58,7 @@ pub(in crate::directives) fn parse_table_directive(
     let body_ctx = ctx.nested(opt_idx, 0);
     let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, &body_ctx);
 
-    let span = ctx.line_span(0, body_lines.first().unwrap_or(&""));
+    let span = body_span(body_lines, ctx);
     let node_count = body_nodes.len();
     let [
         Node::Table {

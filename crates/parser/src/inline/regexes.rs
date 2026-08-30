@@ -13,6 +13,10 @@ pub(super) static TERM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":term:`(?P<content>[^`]+)`").unwrap());
 pub(super) static OPTION_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":option:`(?P<content>[^`]+)`").unwrap());
+pub(super) static MATH_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":math:`(?P<latex>[^`]+)`").unwrap());
+pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
 pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":(?:(?P<domain>py|c):)?func:`(?P<name>[^`]+)`").unwrap());
 pub(super) static MOD_ROLE_REGEX: LazyLock<Regex> =
@@ -58,6 +62,8 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&REF_REGEX, "ref"),
     (&PROGRAM_ROLE_REGEX, "program"),
     (&TERM_ROLE_REGEX, "term"),
+    (&MATH_ROLE_REGEX, "math"),
+    (&EQ_ROLE_REGEX, "eq"),
     (&OPTION_ROLE_REGEX, "option"),
     (&FUNC_ROLE_REGEX, "func"),
     (&MOD_ROLE_REGEX, "mod"),

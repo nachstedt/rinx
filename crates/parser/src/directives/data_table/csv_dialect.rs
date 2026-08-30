@@ -11,7 +11,7 @@ use crate::diagnostics::Diagnostics;
 use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableSource};
 
 use crate::context::ParseCtx;
-use crate::directives::table_options::OptionLine;
+use crate::directives::options::OptionLine;
 
 /// The `.. csv-table::` options that shape how the data is tokenized.
 ///

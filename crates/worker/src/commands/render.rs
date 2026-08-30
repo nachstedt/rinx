@@ -8,9 +8,12 @@ use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
-    check_broken_links_strict, format_broken_link_warning, format_object_type_mismatch_warning,
+    check_broken_links_strict, format_broken_link_warning, format_math_error_warning,
+    format_object_type_mismatch_warning,
 };
-use super::suppression::{retain_reportable_links, retain_reportable_mismatches};
+use super::suppression::{
+    retain_reportable_links, retain_reportable_math_errors, retain_reportable_mismatches,
+};
 
 /// One rendered page, plus everything the caller reports about it.
 ///
@@ -23,6 +26,7 @@ pub(super) struct RenderedPage {
     pub source_path: String,
     pub broken_links: Vec<renderer::BrokenLink>,
     pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
+    pub math_errors: Vec<renderer::MathError>,
 }
 
 pub(super) fn process_render(
@@ -76,6 +80,7 @@ pub(super) fn process_render(
             &render_output.object_type_mismatches,
             &doc.suppressions,
         ),
+        math_errors: retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions),
         source_path: doc.path,
     })
 }
@@ -121,6 +126,9 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
             "{}",
             format_object_type_mismatch_warning(&page.source_path, mismatch)
         );
+    }
+    for error in &page.math_errors {
+        eprintln!("{}", format_math_error_warning(&page.source_path, error));
     }
 
     // Emit the structured domain-object warning sidecar when requested. Written
