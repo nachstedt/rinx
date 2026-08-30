@@ -84,7 +84,7 @@ pub enum InlineNode {
     /// Unlike [`Self::DomainObjectReference`], this carries no `object_type`
     /// (always `std:cmdoption`) and no `search_order` — `:option:`'s
     /// resolution is a distinct ambient-program/global-fallback/embedded-
-    /// program search (see `rusty_sphinx_renderer::option_resolution`), not
+    /// program search (see `rusty_sphinx_renderer::resolution::option`), not
     /// the dot-prefixed most/least-qualified search [`TargetSearchOrder`]
     /// models. `target` is carried through close to verbatim: only the
     /// explicit-title split (this role's `` `display <target>` `` syntax)
@@ -127,7 +127,7 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::py_object_type::PyObjectType;
+    use crate::object_type::PyObjectType;
 
     #[test]
     fn test_inline_node_program_serialization_roundtrip() {

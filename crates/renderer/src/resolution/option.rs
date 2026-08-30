@@ -1,6 +1,6 @@
 //! Resolving a `:option:` cross-reference against the project index.
 //!
-//! Kept apart from [`crate::domain_resolution`] even though both ultimately
+//! Kept apart from [`super::domain_object`] even though both ultimately
 //! read `ProjectIndex::domain_objects`: that resolver's whole design is built
 //! around `rusty_sphinx_scope::Scope`'s per-domain tiered candidate lists
 //! (`Scope::reference_candidates`) and `ObjectType::role_alias_candidates`,

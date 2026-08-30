@@ -9,9 +9,9 @@ use rusty_sphinx_renderer::{self as renderer, config};
 use std::fs;
 use std::io::{self, Read};
 
-use crate::cli_args::{flag_value, flag_value_opt};
-use crate::cmd_parse::parse_default_domain_flag;
-use crate::diagnostics::{format_broken_link_warning, format_object_type_mismatch_warning};
+use super::cli_args::{flag_value, flag_value_opt};
+use super::diagnostics::{format_broken_link_warning, format_object_type_mismatch_warning};
+use super::parse::parse_default_domain_flag;
 
 pub(super) fn process_preview(
     rst: &str,
@@ -76,7 +76,7 @@ pub(super) fn process_preview(
     ))
 }
 
-pub(super) fn cmd_preview(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     let index_path = flag_value_opt(args, "--index");
     let doc_path = flag_value(args, "--doc-path")?;
     let config_path = flag_value(args, "--config")?;

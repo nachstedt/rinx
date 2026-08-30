@@ -38,6 +38,9 @@ entry under the heading it belongs to, as a single short sentence.
 - Give an item re-exported by a forwarder a visibility at least as wide as the re-export itself, which in practice means `pub(crate)` rather than `pub(super)`.
 - Suffix a module name with an underscore when the natural name is a reserved word (`std_`, `mod_`, `type_`, `struct_`).
 - Keep an implementation whole and split only its `#[cfg(test)]` content into topic-named sibling files when the implementation is one cohesive unit.
+- A file that owns a test-only directory keeps no inline `#[cfg(test)]` module; all of its tests live in the topic-named siblings.
+- Drop a module-name component the enclosing crate or directory already states (`scope/python.rs`, not `scope/python_scope.rs`).
+- Give fixtures shared by two sibling test modules their own `#[cfg(test)]` support module rather than copying them into both.
 
 ## Refactoring safely
 

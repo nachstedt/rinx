@@ -34,7 +34,7 @@ That is corroborated empirically: `csv.rst`, `threading.rst`, `functions.rst`,
 from `.nitignore`.
 
 Flagging these is still the *intended* rusty-sphinx behaviour — see the
-module doc of `crates/renderer/src/domain_resolution.rs`, deviation (1) — and
+module doc of `crates/renderer/src/resolution/domain_object.rs`, deviation (1) — and
 the underlying CPython markup really is inconsistent, so these belong in the
 whitelist rather than here. Every affected entry is worded to say that
 accurately, so a `` :func:`SomeClass` `` suppression in the whitelist records
@@ -45,7 +45,7 @@ A related case worth knowing about: `` :data:`errno` `` in `library/ctypes.rst`
 is not merely unresolved in real Sphinx — the type-blind exact-name match sends
 it to the **`errno` module page**, because `library/errno.rst` declares
 `.. module:: errno`. That is the concrete hazard behind
-`domain_resolution.rs`'s note that Sphinx's "only exact matches allowed for
+`resolution/domain_object.rs`'s note that Sphinx's "only exact matches allowed for
 modules" rule is deliberately not reproduced here.
 
 ---

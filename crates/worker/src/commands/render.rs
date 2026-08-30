@@ -6,8 +6,8 @@ use rusty_sphinx_renderer::{self as renderer, config};
 use rusty_sphinx_worker::domain_warnings;
 use std::fs;
 
-use crate::cli_args::{flag_value, flag_value_opt};
-use crate::diagnostics::{
+use super::cli_args::{flag_value, flag_value_opt};
+use super::diagnostics::{
     check_broken_links_strict, format_broken_link_warning, format_object_type_mismatch_warning,
 };
 
@@ -62,7 +62,7 @@ pub(super) fn process_render(
     ))
 }
 
-pub(super) fn cmd_render(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let index_path = flag_value(args, "--index")?;
     let output = flag_value(args, "--output")?;

@@ -6,9 +6,9 @@ use rusty_sphinx_ast as ast;
 use rusty_sphinx_worker::validator;
 use std::fs;
 
-use crate::cli_args::{flag_value, flag_values_opt};
+use super::cli_args::{flag_value, flag_values_opt};
 
-pub(super) fn cmd_validate_toctree(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_validate_toctree(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let output = flag_value(args, "--output")?;
     let allowed: std::collections::HashSet<String> =

@@ -5,7 +5,7 @@ use rusty_sphinx_ast as ast;
 use rusty_sphinx_parser as parser;
 use std::fs;
 
-use crate::cli_args::{flag_value, flag_value_opt};
+use super::cli_args::{flag_value, flag_value_opt};
 
 pub(super) fn process_parse(
     path: &str,
@@ -43,7 +43,7 @@ pub(super) fn parse_default_domain_flag(args: &[String]) -> Result<ast::Domain> 
     }
 }
 
-pub(super) fn cmd_parse(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let output = flag_value(args, "--output")?;
     let default_domain = parse_default_domain_flag(args)?;

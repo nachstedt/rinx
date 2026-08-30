@@ -3,7 +3,7 @@
 use rusty_sphinx_ast::{ListTableWidths, TableAlign, TableRow, TargetName};
 use std::fmt::Write as _;
 
-use super::RenderCtx;
+use crate::RenderCtx;
 
 /// The fields `render_list_table` needs, borrowed straight from
 /// [`rusty_sphinx_ast::Directive::ListTable`] — grouped into one struct
@@ -23,7 +23,7 @@ pub(super) struct ListTableParams<'a> {
 }
 
 /// Renders a `.. list-table::` directive as HTML, reusing the grid-table
-/// row/cell rendering machinery ([`super::render_table_cell`]) so both table
+/// row/cell rendering machinery ([`super::tables::render_table_cell`]) so both table
 /// forms share one code path for the actual `<td>`/`<th>` output.
 pub(super) fn render_list_table(
     html: &mut String,
@@ -144,7 +144,7 @@ fn render_list_table_row(
             "td"
         };
         let scope = (!is_header_row && is_stub_column).then_some("row");
-        crate::tables::render_table_cell(html, cell, tag, scope, ctx);
+        super::tables::render_table_cell(html, cell, tag, scope, ctx);
     }
     let _ = writeln!(html, "</tr>");
 }

@@ -6,7 +6,7 @@ use rusty_sphinx_analyzer as analyzer;
 use rusty_sphinx_ast as ast;
 use std::fs;
 
-use crate::cli_args::{flag_value, flag_values};
+use super::cli_args::{flag_value, flag_values};
 
 pub(super) fn process_index(ast_jsons: &[String]) -> Result<String> {
     let docs: Vec<ast::Document> = ast_jsons
@@ -18,7 +18,7 @@ pub(super) fn process_index(ast_jsons: &[String]) -> Result<String> {
     serde_json::to_string(&index).context("Serialization error")
 }
 
-pub(super) fn cmd_index(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_index(args: &[String]) -> Result<()> {
     let output = flag_value(args, "--output")?;
     let inputs = flag_values(args, "--inputs")?;
 

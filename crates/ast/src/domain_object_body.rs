@@ -1,93 +1,15 @@
 use serde::{Deserialize, Serialize};
 
-use crate::c_object_type::CObjectType;
 use crate::c_signature::CSignature;
 use crate::node::Node;
 use crate::non_empty_vector::NonEmptyVector;
+use crate::object_naming::{
+    extract_option_name, extract_python_object_name, split_option_line_specs,
+};
+use crate::object_type::CObjectType;
 use crate::object_type::ObjectType;
-use crate::py_object_type::PyObjectType;
-use crate::std_object_type::StdObjectType;
-use crate::target_name::TargetName;
-
-/// Extracts the referenceable name from a `py:*` domain object signature.
-///
-/// Takes the text before the first `(` (or the whole string if there is
-/// none), then its last whitespace-separated token — e.g. `"foo(bar)"` ->
-/// `"foo"`. This also strips an optional base-class list for free, e.g.
-/// `"Greeter(Base)"` -> `"Greeter"`. Python-specific: identifiers never
-/// start with a pointer sigil, so unlike the C extractor below, there is
-/// nothing to strip from the extracted token.
-#[must_use]
-pub fn extract_python_object_name(signature: &str) -> String {
-    let before_parens = signature.split('(').next().unwrap_or(signature).trim();
-    before_parens
-        .split_whitespace()
-        .next_back()
-        .unwrap_or(before_parens)
-        .to_string()
-}
-
-/// Splits one raw `.. option::`/`.. cmdoption::` argument *line* into its
-/// comma-separated specs, e.g. `"-c, --compress"` -> `["-c", "--compress"]`.
-/// A line with no comma yields a single-element result (`"-m <module>"` ->
-/// `["-m <module>"]`). Each piece is trimmed; empty pieces (a stray leading/
-/// trailing/doubled comma) are dropped rather than kept as an empty spec.
-#[must_use]
-pub fn split_option_line_specs(line: &str) -> Vec<String> {
-    line.split(',')
-        .map(str::trim)
-        .filter(|spec| !spec.is_empty())
-        .map(str::to_string)
-        .collect()
-}
-
-/// Extracts the referenceable flag name from one `.. option::` spec,
-/// mirroring real Sphinx's `option_desc_re`
-/// (`(?:/|--|-|\+)[^\s=]+`): a leading `-`, `--`, `/`, or `+` sigil followed
-/// by the run of non-whitespace, non-`=` characters after it — e.g.
-/// `"-m <module>"` -> `"-m"`, `"--check-hash-based-pycs default|always|never"`
-/// -> `"--check-hash-based-pycs"`, `"--with-wheel-pkg-dir=PATH"` ->
-/// `"--with-wheel-pkg-dir"`.
-///
-/// Falls back to the whole trimmed spec when no sigil matches at all, rather
-/// than dropping it — the same "never lose content, degrade to a heuristic
-/// instead" convention `extract_c_object_name` follows for a signature its
-/// real parser can't handle.
-#[must_use]
-pub fn extract_option_name(spec: &str) -> String {
-    let spec = spec.trim();
-    let sigil_len = if spec.starts_with("--") {
-        2
-    } else if spec.starts_with(['-', '/', '+']) {
-        1
-    } else {
-        return spec.to_string();
-    };
-    let (sigil, rest) = spec.split_at(sigil_len);
-    let flag_body_len = rest
-        .find(|c: char| c.is_whitespace() || c == '=')
-        .unwrap_or(rest.len());
-    if flag_body_len == 0 {
-        // A bare sigil with nothing after it (e.g. just `"-"`) is not a
-        // valid flag — fall back to the whole spec rather than returning an
-        // empty/meaningless name.
-        return spec.to_string();
-    }
-    format!("{sigil}{}", &rest[..flag_body_len])
-}
-
-/// Builds the qualified [`TargetName`] key shared by domain object
-/// registration (analyzer) and cross-reference resolution (renderer), so
-/// both always agree on the key for the same object.
-#[must_use]
-pub fn build_domain_object_key(object_type: ObjectType, name: &str) -> TargetName {
-    TargetName::new(&format!(
-        "{}:{}:{}",
-        object_type.domain().as_str(),
-        object_type.as_str(),
-        name
-    ))
-}
+use crate::object_type::PyObjectType;
+use crate::object_type::StdObjectType;
 
 /// The body of a domain object *definition* directive (e.g. `.. py:function::`,
 /// `.. py:module::`, `.. c:function::`) — one variant per concrete object
@@ -598,8 +520,6 @@ impl DomainObjectBody {
     }
 }
 
-#[cfg(test)]
-mod free_fn_tests;
 #[cfg(test)]
 mod identity_tests;
 #[cfg(test)]

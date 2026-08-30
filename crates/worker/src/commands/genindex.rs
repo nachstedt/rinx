@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use rusty_sphinx_renderer::{self as renderer, config};
 use std::fs;
 
-use crate::cli_args::flag_value;
+use super::cli_args::flag_value;
 
 pub(super) fn process_genindex(
     index_json: &str,
@@ -16,7 +16,7 @@ pub(super) fn process_genindex(
     renderer::render_genindex(&index, config, template_str)
 }
 
-pub(super) fn cmd_genindex(args: &[String]) -> Result<()> {
+pub(crate) fn cmd_genindex(args: &[String]) -> Result<()> {
     let index_path = flag_value(args, "--index")?;
     let output = flag_value(args, "--output")?;
     let config_path = flag_value(args, "--config")?;

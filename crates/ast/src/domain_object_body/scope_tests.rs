@@ -1,4 +1,5 @@
 use super::*;
+use crate::object_naming::build_domain_object_key;
 
 #[test]
 fn test_deduce_local_scope_lends_all_new_segments_for_classes() {

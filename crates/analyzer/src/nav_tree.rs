@@ -1,7 +1,7 @@
 use rusty_sphinx_ast::{Directive, Document, Node};
 use rusty_sphinx_index::NavEntry;
 
-use super::utils::normalize_path;
+use super::path_normalization::normalize_path;
 
 /// Extracts toctree entries from a document, resolved to absolute paths.
 pub(super) fn extract_toctree_paths(doc: &Document) -> Vec<String> {

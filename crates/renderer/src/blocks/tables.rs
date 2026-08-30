@@ -4,8 +4,8 @@
 use rusty_sphinx_ast::TableRow;
 use std::fmt::Write as _;
 
+use super::render_nodes;
 use crate::RenderCtx;
-use crate::blocks::render_nodes;
 
 /// Renders a single grid-table row, emitting each cell with the given tag
 /// (`th` for header rows, `td` for body rows) via [`render_table_cell`].
