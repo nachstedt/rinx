@@ -34,7 +34,14 @@ def _rusty_sphinx_library_impl(ctx):
                 "--output", ast_raw.path,
                 "--default-domain", ctx.attr.default_domain,
             ],
-            inputs = [src],
+            # `csv_data` files join the parse action's inputs because
+            # `.. csv-table::`'s `:file:` option reads them at parse time. This
+            # is a third, separate mechanism from `deps` (toctree structure)
+            # and from late-resolved cross-references: it declares *data* the
+            # parser reads, not another library. A file left out of `csv_data`
+            # is simply absent from the sandbox, so the parse fails loudly
+            # instead of silently reading the host filesystem.
+            inputs = [src] + ctx.files.csv_data,
             outputs = [ast_raw],
             mnemonic = "RustySphinxParse",
             progress_message = "Parsing %s" % src.short_path,
@@ -157,6 +164,10 @@ rusty_sphinx_library = rule(
             allow_files = [".rst"],
             doc = "reStructuredText source files owned by this library.",
         ),
+        "csv_data": attr.label_list(
+            allow_files = True,
+            doc = "Data files this library's documents read via `.. csv-table::`'s `:file:` option. Paths in the document resolve relative to the document itself; declaring the file here is what puts it in the parse action's sandbox.",
+        ),
         "deps": attr.label_list(
             providers = [RustySphinxInfo],
             doc = "Other rusty_sphinx_library targets that are structurally included via `.. toctree::`. Not required for standard cross-references.",
@@ -186,5 +197,8 @@ Each .rst file becomes an independently cacheable .ast file. Declare
 strict structural dependencies (i.e. targets included in a `.. toctree::`) in `deps`.
 Standard cross-references/hyperlinks do not need to be declared in `deps` as they are
 resolved late during the site rendering phase.
+
+Data files read by `.. csv-table:: :file:` go in `csv_data`, which is unrelated
+to `deps`: it declares bytes the parser reads, not another library.
 """,
 )

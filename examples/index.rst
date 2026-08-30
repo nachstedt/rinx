@@ -26,6 +26,7 @@ Welcome to the Rusty-Sphinx example.
    tables
    simple_tables
    list_table
+   csv_table
    index_entries
    doctests
    team_a/index
