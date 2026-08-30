@@ -44,6 +44,7 @@ mod tests {
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -58,6 +59,7 @@ mod tests {
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -72,6 +74,7 @@ mod tests {
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -86,6 +89,7 @@ mod tests {
                 display: "add".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -100,6 +104,7 @@ mod tests {
                 display: "foo".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -114,6 +119,7 @@ mod tests {
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -137,6 +143,7 @@ mod tests {
                 display: "spawn*".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -154,6 +161,7 @@ mod tests {
                 display: "Py_TYPE()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -171,6 +179,7 @@ mod tests {
                 display: "sys.getrecursionlimit()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -189,6 +198,7 @@ mod tests {
                 display: "Py_SIZE()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }

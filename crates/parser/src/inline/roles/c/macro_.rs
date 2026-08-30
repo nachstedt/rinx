@@ -38,6 +38,7 @@ mod tests {
                 display: "MAX".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -52,6 +53,7 @@ mod tests {
                 display: "MAX".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -71,6 +73,7 @@ mod tests {
                 display: "MAX".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -85,6 +88,7 @@ mod tests {
                 display: "MAX".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -99,6 +103,7 @@ mod tests {
                 display: "MAX".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -122,6 +127,7 @@ mod tests {
                 display: "MAX()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }

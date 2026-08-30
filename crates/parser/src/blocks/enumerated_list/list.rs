@@ -3,10 +3,13 @@
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::indent_width;
 use crate::indent::strip_indent;
-use rusty_sphinx_ast::{Enumerator, EnumeratorFormat, EnumeratorSequence, ListItem, Node};
+use rusty_sphinx_ast::{
+    Diagnostic, DiagnosticCode, Enumerator, EnumeratorFormat, EnumeratorSequence, ListItem, Node,
+};
 
 use super::diagnostics::diagnose_unrecognised_list;
 use super::format::{EnumeratorMatch, detect_enumerator, is_enumerated_list_item};
@@ -47,7 +50,7 @@ pub(crate) fn try_parse_enumerated_list(
     lines: &[&str],
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let mut items: Vec<ListItem> = Vec::new();
@@ -80,7 +83,7 @@ pub(crate) fn try_parse_enumerated_list(
         // prose is left for `parse_blocks` to re-dispatch as a paragraph.
         if !is_enumerated_list_item(lines, i, &candidate, enumerator) {
             if state.is_none() {
-                diagnose_unrecognised_list(lines, i, &candidate, enumerator, diagnostics);
+                diagnose_unrecognised_list(lines, i, &candidate, enumerator, diagnostics, ctx);
             }
             break;
         }
@@ -89,13 +92,18 @@ pub(crate) fn try_parse_enumerated_list(
             .body_indent
             .unwrap_or_else(|| following_body_indent(lines, i, candidate.item_indent));
 
+        // Where this item's body begins, recorded before `i` advances: the
+        // body is dedented by `body_indent`, so mapping a position inside it
+        // back to the document needs both offsets.
+        let item_start = i;
         let (consumed, body_lines, item_blank_finish) =
             collect_item_body(lines, i, candidate, body_indent);
         i += consumed;
         blank_finish = item_blank_finish;
 
         let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-        let nodes = parse_blocks(&body_refs, adornment_order, diagnostics, ctx);
+        let item_ctx = ctx.nested(item_start, body_indent);
+        let nodes = parse_blocks(&body_refs, adornment_order, diagnostics, &item_ctx);
         items.push(ListItem { nodes });
 
         state = Some(match state {
@@ -118,15 +126,23 @@ pub(crate) fn try_parse_enumerated_list(
     let state = state?;
 
     if state.start.ordinal() != 1 {
-        diagnostics.push(format!(
-            "Enumerated list start value not ordinal-1: \"{}\" (ordinal {})",
-            state.start.marker_text(),
-            state.start.ordinal()
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::ListEnumeratedStartNotOne,
+            format!(
+                "Enumerated list start value not ordinal-1: \"{}\" (ordinal {})",
+                state.start.marker_text(),
+                state.start.ordinal()
+            ),
+            ctx.line_span(start_i, lines[start_i]),
         ));
     }
     if !blank_finish {
-        diagnostics
-            .push("Enumerated list ends without a blank line; unexpected unindent.".to_string());
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::ListEnumeratedNoBlankLine,
+            "Enumerated list ends without a blank line; unexpected unindent.",
+            // The last line the list consumed: the unindent is what follows it.
+            ctx.line_span(i - 1, lines[i - 1]),
+        ));
     }
 
     Some((

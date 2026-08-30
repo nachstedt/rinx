@@ -165,6 +165,7 @@ mod tests {
                         display: "greetings".to_string(),
                         link: true,
                         search_order: TargetSearchOrder::LeastQualifiedFirst,
+                        span: None,
                     },
                     InlineNode::Text(" Module".to_string()),
                 ],
@@ -362,6 +363,7 @@ mod tests {
                 rusty_sphinx_ast::InlineNode::Reference {
                     display: "other-section".to_string(),
                     target: "other-section".to_string(),
+                    span: None,
                 },
             ])],
         );
@@ -389,6 +391,7 @@ mod tests {
                 rusty_sphinx_ast::InlineNode::Reference {
                     display: "other-section".to_string(),
                     target: "other-section".to_string(),
+                    span: None,
                 },
             ])],
         );
@@ -413,10 +416,12 @@ mod tests {
                 rusty_sphinx_ast::InlineNode::Reference {
                     display: "missing-ref".to_string(),
                     target: "missing-ref".to_string(),
+                    span: None,
                 },
                 rusty_sphinx_ast::InlineNode::TermReference {
                     display: "missing term".to_string(),
                     term: "missing-term".to_string(),
+                    span: None,
                 },
             ])],
         );
@@ -432,10 +437,12 @@ mod tests {
                 crate::BrokenLink {
                     kind: crate::BrokenLinkKind::Reference,
                     target: "missing-ref".to_string(),
+                    span: None,
                 },
                 crate::BrokenLink {
                     kind: crate::BrokenLinkKind::TermReference,
                     target: "missing-term".to_string(),
+                    span: None,
                 },
             ]
         );
@@ -449,6 +456,7 @@ mod tests {
                 rusty_sphinx_ast::InlineNode::Reference {
                     display: "target-in-a".to_string(),
                     target: "target-in-a".to_string(),
+                    span: None,
                 },
             ])],
         );
@@ -477,6 +485,7 @@ mod tests {
                 rusty_sphinx_ast::InlineNode::Hyperlink {
                     text: "Python".to_string(),
                     target: "Python".to_string(),
+                    span: None,
                 },
             ])],
         );
@@ -501,6 +510,7 @@ mod tests {
                 rusty_sphinx_ast::InlineNode::Hyperlink {
                     text: "Google".to_string(),
                     target: "https://google.com".to_string(),
+                    span: None,
                 },
             ])],
         );
@@ -548,7 +558,10 @@ mod tests {
                         }],
                     }],
                 },
-                Node::Paragraph(vec![InlineNode::AnonymousReference("here".to_string())]),
+                Node::Paragraph(vec![InlineNode::AnonymousReference {
+                    text: "here".to_string(),
+                    span: None,
+                }]),
             ],
         );
         let index = ProjectIndex::default();
@@ -567,9 +580,15 @@ mod tests {
             "test.rst".to_string(),
             vec![
                 Node::Paragraph(vec![
-                    InlineNode::AnonymousReference("First".to_string()),
+                    InlineNode::AnonymousReference {
+                        text: "First".to_string(),
+                        span: None,
+                    },
                     InlineNode::Text(" and ".to_string()),
-                    InlineNode::AnonymousReference("Second".to_string()),
+                    InlineNode::AnonymousReference {
+                        text: "Second".to_string(),
+                        span: None,
+                    },
                 ]),
                 Node::AnonymousTarget {
                     uri: "https://first.com".to_string(),
@@ -600,7 +619,10 @@ mod tests {
                         target: "https://embedded.com".to_string(),
                     },
                     InlineNode::Text(" then ".to_string()),
-                    InlineNode::AnonymousReference("Reference".to_string()),
+                    InlineNode::AnonymousReference {
+                        text: "Reference".to_string(),
+                        span: None,
+                    },
                 ]),
                 Node::AnonymousTarget {
                     uri: "https://target.com".to_string(),

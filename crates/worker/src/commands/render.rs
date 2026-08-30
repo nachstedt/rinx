@@ -10,6 +10,20 @@ use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
     check_broken_links_strict, format_broken_link_warning, format_object_type_mismatch_warning,
 };
+use super::suppression::{retain_reportable_links, retain_reportable_mismatches};
+
+/// One rendered page, plus everything the caller reports about it.
+///
+/// `source_path` is the `.rst` the document was parsed from, which is *not*
+/// the `doc_path` the render is keyed on: that one is the site-relative
+/// logical path (`guide/intro`), used to compute links between pages. A
+/// warning has to name a file a reader can actually open, so it uses this.
+pub(super) struct RenderedPage {
+    pub html: String,
+    pub source_path: String,
+    pub broken_links: Vec<renderer::BrokenLink>,
+    pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
+}
 
 pub(super) fn process_render(
     ast_json: &str,
@@ -17,11 +31,7 @@ pub(super) fn process_render(
     config: &config::SiteConfig,
     template_str: &str,
     doc_path: &str,
-) -> Result<(
-    String,
-    Vec<renderer::BrokenLink>,
-    Vec<renderer::ObjectTypeMismatch>,
-)> {
+) -> Result<RenderedPage> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
     let index: rusty_sphinx_index::ProjectIndex =
@@ -55,11 +65,19 @@ pub(super) fn process_render(
             has_genindex: !index.genindex_entries.is_empty(),
         },
     )?;
-    Ok((
+    Ok(RenderedPage {
         html,
-        render_output.broken_links,
-        render_output.object_type_mismatches,
-    ))
+        // Filtered here rather than by the caller so that a suppressed link is
+        // invisible to *every* consumer — the warning it would print, the
+        // `--strict-links` failure it would cause, and the sidecar it would
+        // appear in. Silencing only the message would leave the consequence.
+        broken_links: retain_reportable_links(&render_output.broken_links, &doc.suppressions),
+        object_type_mismatches: retain_reportable_mismatches(
+            &render_output.object_type_mismatches,
+            &doc.suppressions,
+        ),
+        source_path: doc.path,
+    })
 }
 
 pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
@@ -85,7 +103,7 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     let index_json =
         fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
 
-    let (html, broken_links, object_type_mismatches) = process_render(
+    let page = process_render(
         &ast_json,
         &index_json,
         &site_config,
@@ -93,13 +111,15 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
         &doc_path,
     )?;
 
-    for link in &broken_links {
-        eprintln!("{}", format_broken_link_warning(&doc_path, link));
+    // Warnings name the `.rst` the document came from, not the site-relative
+    // `doc_path` — a `file:line:column` is only useful if the file opens.
+    for link in &page.broken_links {
+        eprintln!("{}", format_broken_link_warning(&page.source_path, link));
     }
-    for mismatch in &object_type_mismatches {
+    for mismatch in &page.object_type_mismatches {
         eprintln!(
             "{}",
-            format_object_type_mismatch_warning(&doc_path, mismatch)
+            format_object_type_mismatch_warning(&page.source_path, mismatch)
         );
     }
 
@@ -110,8 +130,8 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     if let Some(warnings_path) = &warnings_output {
         let report = domain_warnings::build_domain_warning_report(
             &doc_path,
-            &broken_links,
-            &object_type_mismatches,
+            &page.broken_links,
+            &page.object_type_mismatches,
         );
         let report_json = serde_json::to_string_pretty(&report)
             .context("Failed to serialize domain warning report")?;
@@ -119,9 +139,9 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
             .with_context(|| format!("Error writing '{warnings_path}'"))?;
     }
 
-    check_broken_links_strict(strict_links, &doc_path, &broken_links)?;
+    check_broken_links_strict(strict_links, &page.source_path, &page.broken_links)?;
 
-    fs::write(&output, html).with_context(|| format!("Error writing '{output}'"))?;
+    fs::write(&output, page.html).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
 
@@ -139,13 +159,14 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let (html, broken_links, object_type_mismatches) =
-            process_render(doc, index, &config, template, "test.rst").unwrap();
+        let page = process_render(doc, index, &config, template, "test.rst").unwrap();
 
         // Then
-        assert!(html.contains("<h1>Title</h1>"));
-        assert!(broken_links.is_empty());
-        assert!(object_type_mismatches.is_empty());
+        assert!(page.html.contains("<h1>Title</h1>"));
+        assert!(page.broken_links.is_empty());
+        assert!(page.object_type_mismatches.is_empty());
+        // The warning path comes from the document, not from `doc_path`.
+        assert_eq!(page.source_path, "test.rst");
     }
 
     #[test]
@@ -157,12 +178,11 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let (_, broken_links, _) =
-            process_render(doc, index, &config, template, "test.rst").unwrap();
+        let page = process_render(doc, index, &config, template, "test.rst").unwrap();
 
         // Then
-        assert_eq!(broken_links.len(), 1);
-        assert_eq!(broken_links[0].target, "missing");
+        assert_eq!(page.broken_links.len(), 1);
+        assert_eq!(page.broken_links[0].target, "missing");
     }
 
     #[test]
@@ -178,19 +198,18 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let (_, broken_links, object_type_mismatches) =
-            process_render(doc, index, &config, template, "test.rst").unwrap();
+        let page = process_render(doc, index, &config, template, "test.rst").unwrap();
 
         // Then — resolved, not broken, but flagged as a mismatch
-        assert!(broken_links.is_empty());
-        assert_eq!(object_type_mismatches.len(), 1);
-        assert_eq!(object_type_mismatches[0].name, "Fault");
+        assert!(page.broken_links.is_empty());
+        assert_eq!(page.object_type_mismatches.len(), 1);
+        assert_eq!(page.object_type_mismatches[0].name, "Fault");
         assert_eq!(
-            object_type_mismatches[0].requested_type,
+            page.object_type_mismatches[0].requested_type,
             ast::ObjectType::Py(ast::PyObjectType::Exception)
         );
         assert_eq!(
-            object_type_mismatches[0].resolved_type,
+            page.object_type_mismatches[0].resolved_type,
             ast::ObjectType::Py(ast::PyObjectType::Class)
         );
     }

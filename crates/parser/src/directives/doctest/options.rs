@@ -4,7 +4,11 @@
 //! [`super`] for the per-kind acceptance rules and directive assembly
 //! this scanner feeds into).
 
-use rusty_sphinx_ast::{DocTestFlag, DocTestFlagName, DocTestTrim, PyVersionSpec};
+use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{
+    Diagnostic, DiagnosticCode, DocTestFlag, DocTestFlagName, DocTestTrim, PyVersionSpec, Span,
+};
 
 use super::kind::DocTestDirectiveKind;
 
@@ -67,7 +71,8 @@ pub(super) struct DocTestOptions {
 pub(super) fn scan_options(
     kind: DocTestDirectiveKind,
     body_lines: &[&str],
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> (DocTestOptions, usize) {
     let mut options = DocTestOptions {
         hide: false,
@@ -84,19 +89,28 @@ pub(super) fn scan_options(
             break;
         }
 
+        let span = ctx.line_span(index, body_lines[index]);
         match match_option(line) {
             Some((name, value)) => {
                 if kind.accepts(name) {
-                    apply_option(kind, name, value, &mut options, diagnostics);
+                    apply_option(kind, name, value, &mut options, diagnostics, span);
                 } else {
-                    diagnostics.push(format!(
-                        "{}: option {} is not supported by this directive",
-                        kind.as_name(),
-                        name.as_spelling()
+                    diagnostics.push(Diagnostic::at(
+                        DiagnosticCode::DoctestOptionNotSupported,
+                        format!(
+                            "{}: option {} is not supported by this directive",
+                            kind.as_name(),
+                            name.as_spelling()
+                        ),
+                        span,
                     ));
                 }
             }
-            None => diagnostics.push(format!("{}: unknown option '{line}'", kind.as_name())),
+            None => diagnostics.push(Diagnostic::at(
+                DiagnosticCode::DoctestUnknownOption,
+                format!("{}: unknown option '{line}'", kind.as_name()),
+                span,
+            )),
         }
         index += 1;
     }
@@ -118,18 +132,22 @@ fn apply_option(
     name: DocTestOptionName,
     value: &str,
     options: &mut DocTestOptions,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) {
     match name {
         DocTestOptionName::Hide => options.hide = true,
-        DocTestOptionName::Options => options.flags = parse_flag_list(kind, value, diagnostics),
+        DocTestOptionName::Options => {
+            options.flags = parse_flag_list(kind, value, diagnostics, span);
+        }
         DocTestOptionName::PyVersion => match PyVersionSpec::parse(value) {
             Ok(spec) => options.pyversion = Some(spec),
             // Reported, not silently dropped: ignoring a `:pyversion:` would
             // run a block that Sphinx would have skipped.
-            Err(message) => diagnostics.push(format!(
-                "{}: invalid :pyversion: value — {message}",
-                kind.as_name()
+            Err(message) => diagnostics.push(Diagnostic::at(
+                DiagnosticCode::DoctestPyVersionInvalid,
+                format!("{}: invalid :pyversion: value — {message}", kind.as_name()),
+                span,
             )),
         },
         DocTestOptionName::SkipIf => options.skipif = Some(value.to_string()),
@@ -146,7 +164,8 @@ fn apply_option(
 fn parse_flag_list(
     kind: DocTestDirectiveKind,
     value: &str,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> Vec<DocTestFlag> {
     let mut flags = Vec::new();
 
@@ -156,9 +175,13 @@ fn parse_flag_list(
             "+" => true,
             "-" => false,
             _ => {
-                diagnostics.push(format!(
-                    "{}: doctest option '{token}' must start with '+' or '-'",
-                    kind.as_name()
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::DoctestFlagMissingSign,
+                    format!(
+                        "{}: doctest option '{token}' must start with '+' or '-'",
+                        kind.as_name()
+                    ),
+                    span,
                 ));
                 continue;
             }
@@ -166,9 +189,10 @@ fn parse_flag_list(
 
         match DocTestFlagName::from_doctest_name(flag_name) {
             Some(name) => flags.push(DocTestFlag { name, enabled }),
-            None => diagnostics.push(format!(
-                "{}: unknown doctest option '{flag_name}'",
-                kind.as_name()
+            None => diagnostics.push(Diagnostic::at(
+                DiagnosticCode::DoctestUnknownFlag,
+                format!("{}: unknown doctest option '{flag_name}'", kind.as_name()),
+                span,
             )),
         }
     }
@@ -273,7 +297,11 @@ mod tests {
         // Then — reported, but the block survives.
         assert!(matches!(directive, Directive::DocTest(_)));
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("must start with '+' or '-'"));
+        assert!(
+            diagnostics[0]
+                .message
+                .contains("must start with '+' or '-'")
+        );
     }
 
     #[test]
@@ -287,7 +315,7 @@ mod tests {
         // Then
         assert!(matches!(directive, Directive::DocTest(_)));
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("unknown doctest option"));
+        assert!(diagnostics[0].message.contains("unknown doctest option"));
     }
 
     #[test]
@@ -319,7 +347,7 @@ mod tests {
         // Then
         assert!(matches!(directive, Directive::DocTest(_)));
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("invalid :pyversion:"));
+        assert!(diagnostics[0].message.contains("invalid :pyversion:"));
     }
 
     #[test]
@@ -378,7 +406,11 @@ mod tests {
         // Then — reported as unsupported-here, not as unknown, and kept.
         assert!(matches!(directive, Directive::DocTest(_)));
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("not supported by this directive"));
+        assert!(
+            diagnostics[0]
+                .message
+                .contains("not supported by this directive")
+        );
     }
 
     #[test]
@@ -392,7 +424,7 @@ mod tests {
         // Then
         assert!(matches!(directive, Directive::DocTest(_)));
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("unknown option"));
+        assert!(diagnostics[0].message.contains("unknown option"));
     }
 
     #[test]

@@ -11,7 +11,11 @@ use crate::inline::regexes::OPTION_ROLE_REGEX;
 pub(crate) fn handle_option_match(m_str: &str) -> InlineNode {
     let caps = OPTION_ROLE_REGEX.captures(m_str).unwrap();
     let (display, target) = split_display_and_target(&caps["content"]);
-    InlineNode::OptionReference { display, target }
+    InlineNode::OptionReference {
+        display,
+        target,
+        span: None,
+    }
 }
 
 #[cfg(test)]
@@ -26,6 +30,7 @@ mod tests {
             InlineNode::OptionReference {
                 display: "-m".to_string(),
                 target: "-m".to_string(),
+                span: None
             }
         );
     }
@@ -37,6 +42,7 @@ mod tests {
             InlineNode::OptionReference {
                 display: "the module flag".to_string(),
                 target: "-m".to_string(),
+                span: None
             }
         );
     }

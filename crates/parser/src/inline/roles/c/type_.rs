@@ -38,6 +38,7 @@ mod tests {
                 display: "PyMemAllocatorDomain".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -52,6 +53,7 @@ mod tests {
                 display: "PyMemAllocatorDomain".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -75,6 +77,7 @@ mod tests {
                 display: "PyMemAllocatorDomain".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }
@@ -93,6 +96,7 @@ mod tests {
                 display: "Py_tracefunc()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
+                span: None
             }
         );
     }

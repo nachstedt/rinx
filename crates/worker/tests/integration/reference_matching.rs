@@ -135,6 +135,14 @@ Call :meth:`.close` when done.
                 candidates: vec!["tarfile.close".to_string(), "zipfile.close".to_string()],
             },
             target: "close".to_string(),
+            // The role sits on the document's thirteenth line, five
+            // characters in — proving a position survives the whole pipeline,
+            // out of a paragraph, past eleven lines of nested `class`/`method`
+            // directives, and into a render-time diagnostic.
+            span: Some(ast::Span::new(
+                ast::Position::new(13, 6),
+                ast::Position::new(13, 20),
+            )),
         }]
     );
 }

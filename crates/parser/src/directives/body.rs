@@ -19,11 +19,26 @@ use crate::indent::indent_width;
 /// by a paragraph at the same indent level (common inside glossary entries,
 /// list items, and other indented containers) must not swallow that
 /// paragraph as if it were the directive's own body.
+pub(crate) struct DirectiveBody<'a> {
+    /// Source lines consumed, including the blank ones trimmed off either end.
+    pub(crate) consumed: usize,
+    /// The body proper, with leading and trailing blank lines removed.
+    pub(crate) lines: Vec<&'a str>,
+    /// How many lines below `start_index` `lines[0]` actually sits — the
+    /// leading blank lines that were trimmed.
+    ///
+    /// Recorded rather than discarded so a caller can rebase a
+    /// [`ParseCtx`](crate::ParseCtx) onto the body: without it, every
+    /// diagnostic raised inside a directive whose body starts after a blank
+    /// line would point one line too high.
+    pub(crate) first_line_offset: usize,
+}
+
 pub(crate) fn collect_directive_body<'a>(
     lines: &[&'a str],
     start_index: usize,
     min_indent: usize,
-) -> (usize, Vec<&'a str>) {
+) -> DirectiveBody<'a> {
     let mut body_lines = Vec::new();
     let mut current = start_index;
     while current < lines.len() {
@@ -48,7 +63,11 @@ pub(crate) fn collect_directive_body<'a>(
         start += 1;
     }
 
-    (consumed, body_lines[start..].to_vec())
+    DirectiveBody {
+        consumed,
+        lines: body_lines[start..].to_vec(),
+        first_line_offset: start,
+    }
 }
 
 /// Collects a domain object directive's *argument continuation lines*: the
@@ -243,7 +262,8 @@ mod tests {
         // Given
         let lines = vec![".. note::", "   body1", "   body2"];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1, 0);
+        let body_result = collect_directive_body(&lines, 1, 0);
+        let (consumed, body) = (body_result.consumed, body_result.lines);
         // Then
         assert_eq!(consumed, 2);
         assert_eq!(body, vec!["   body1", "   body2"]);
@@ -254,7 +274,8 @@ mod tests {
         // Given
         let lines = vec![".. note::", "   body1", "unindented", "   body2"];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1, 0);
+        let body_result = collect_directive_body(&lines, 1, 0);
+        let (consumed, body) = (body_result.consumed, body_result.lines);
         // Then
         assert_eq!(consumed, 1);
         assert_eq!(body, vec!["   body1"]);
@@ -265,7 +286,8 @@ mod tests {
         // Given
         let lines = vec![".. note::", "  ", "   body1", "  ", "   body2", "   ", ""];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1, 0);
+        let body_result = collect_directive_body(&lines, 1, 0);
+        let (consumed, body) = (body_result.consumed, body_result.lines);
         // Then
         assert_eq!(consumed, 6);
         assert_eq!(body, vec!["   body1", "", "   body2"]);
@@ -276,7 +298,8 @@ mod tests {
         // Given
         let lines = vec![".. note::", "unindented"];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1, 0);
+        let body_result = collect_directive_body(&lines, 1, 0);
+        let (consumed, body) = (body_result.consumed, body_result.lines);
         // Then
         assert_eq!(consumed, 0);
         assert!(body.is_empty());
@@ -287,7 +310,8 @@ mod tests {
         // Given
         let lines = vec![".. note::", "   body", "  "];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1, 0);
+        let body_result = collect_directive_body(&lines, 1, 0);
+        let (consumed, body) = (body_result.consumed, body_result.lines);
         // Then
         assert_eq!(consumed, 2);
         assert_eq!(body, vec!["   body"]);
@@ -306,7 +330,8 @@ mod tests {
             "   An informal synonym for something.",
         ];
         // When — min_indent is the directive's own 3-space indentation
-        let (consumed, body) = collect_directive_body(&lines, 1, 3);
+        let body_result = collect_directive_body(&lines, 1, 3);
+        let (consumed, body) = (body_result.consumed, body_result.lines);
         // Then — the body is empty and only the blank line is consumed;
         // critically, the sibling paragraph itself is NOT swallowed, so the
         // caller will parse it as its own paragraph node afterwards.
@@ -320,7 +345,8 @@ mod tests {
         // directive's own 3-space indent
         let lines = vec!["   .. note::", "", "      Actual body.", "   Sibling."];
         // When
-        let (consumed, body) = collect_directive_body(&lines, 1, 3);
+        let body_result = collect_directive_body(&lines, 1, 3);
+        let (consumed, body) = (body_result.consumed, body_result.lines);
         // Then — only the deeper-indented line is included
         assert_eq!(consumed, 2);
         assert_eq!(body, vec!["      Actual body."]);

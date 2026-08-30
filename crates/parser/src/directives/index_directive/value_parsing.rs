@@ -1,4 +1,5 @@
-use rusty_sphinx_ast::IndexEntry;
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, Span};
 
 /// Strips a leading `!` (the "main entry" marker) from a trimmed entry.
 ///
@@ -127,7 +128,8 @@ pub(super) fn parse_typed_entry(
     value: &str,
     main: bool,
     original: &str,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> Vec<IndexEntry> {
     match entry_type {
         "single" => {
@@ -140,28 +142,44 @@ pub(super) fn parse_typed_entry(
         }
         "pair" => parse_pair_value(value).map_or_else(
             || {
-                diagnostics.push(format!("Invalid .. index:: pair entry: {original}"));
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::IndexInvalidPair,
+                    format!("Invalid .. index:: pair entry: {original}"),
+                    span,
+                ));
                 Vec::new()
             },
             |(a, b)| expand_pair(&a, &b, main),
         ),
         "triple" => parse_triple_value(value).map_or_else(
             || {
-                diagnostics.push(format!("Invalid .. index:: triple entry: {original}"));
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::IndexInvalidTriple,
+                    format!("Invalid .. index:: triple entry: {original}"),
+                    span,
+                ));
                 Vec::new()
             },
             |(a, b, c)| expand_triple(&a, &b, &c, main),
         ),
         "see" => parse_target_value(value).map_or_else(
             || {
-                diagnostics.push(format!("Invalid .. index:: see entry: {original}"));
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::IndexInvalidSee,
+                    format!("Invalid .. index:: see entry: {original}"),
+                    span,
+                ));
                 Vec::new()
             },
             |(entry, target)| vec![IndexEntry::See { entry, target }],
         ),
         "seealso" => parse_target_value(value).map_or_else(
             || {
-                diagnostics.push(format!("Invalid .. index:: seealso entry: {original}"));
+                diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::IndexInvalidSeeAlso,
+                    format!("Invalid .. index:: seealso entry: {original}"),
+                    span,
+                ));
                 Vec::new()
             },
             |(entry, target)| vec![IndexEntry::SeeAlso { entry, target }],

@@ -1,5 +1,6 @@
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 use rusty_sphinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
@@ -13,7 +14,7 @@ pub(crate) fn parse_c_member(
     signatures: NonEmptyVector<CSignature>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);

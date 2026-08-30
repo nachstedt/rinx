@@ -1,4 +1,7 @@
-use rusty_sphinx_ast::Node;
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Node};
+
+use crate::context::ParseCtx;
 
 /// Tries to parse an RST transition (horizontal rule) starting at line `i`.
 ///
@@ -13,7 +16,8 @@ pub(super) fn try_parse_transition(
     lines: &[&str],
     i: usize,
     nodes: &[Node],
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let line = lines[i].trim();
     let mut chars = line.chars();
@@ -28,16 +32,26 @@ pub(super) fn try_parse_transition(
         return None;
     }
 
+    let span = ctx.line_span(i, lines[i]);
     if nodes.is_empty() {
-        diagnostics.push("transition (horizontal rule) may not begin the document".to_string());
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TransitionAtDocumentStart,
+            "transition (horizontal rule) may not begin the document",
+            span,
+        ));
     } else if matches!(nodes.last(), Some(Node::Transition)) {
-        diagnostics.push(
-            "transition (horizontal rule) may not immediately follow another transition"
-                .to_string(),
-        );
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TransitionAdjacent,
+            "transition (horizontal rule) may not immediately follow another transition",
+            span,
+        ));
     }
     if lines[i + 1..].iter().all(|l| l.trim().is_empty()) {
-        diagnostics.push("transition (horizontal rule) may not end the document".to_string());
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TransitionAtDocumentEnd,
+            "transition (horizontal rule) may not end the document",
+            span,
+        ));
     }
 
     Some((1, Node::Transition))
@@ -46,15 +60,22 @@ pub(super) fn try_parse_transition(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_ast::Domain;
 
     #[test]
     fn test_try_parse_transition_matches_hyphens() {
         // Given
         let lines = vec!["", "----", ""];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        let result = try_parse_transition(&lines, 1, &nodes, &mut diagnostics);
+        let result = try_parse_transition(
+            &lines,
+            1,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert_eq!(result, Some((1, Node::Transition)));
     }
@@ -64,9 +85,15 @@ mod tests {
         // Given
         let lines = vec!["", "====", ""];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        let result = try_parse_transition(&lines, 1, &nodes, &mut diagnostics);
+        let result = try_parse_transition(
+            &lines,
+            1,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert_eq!(result, Some((1, Node::Transition)));
     }
@@ -76,9 +103,15 @@ mod tests {
         // Given
         let lines = vec!["", "---", ""];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        let result = try_parse_transition(&lines, 1, &nodes, &mut diagnostics);
+        let result = try_parse_transition(
+            &lines,
+            1,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert!(result.is_none());
     }
@@ -88,9 +121,15 @@ mod tests {
         // Given
         let lines = vec!["", "--==", ""];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        let result = try_parse_transition(&lines, 1, &nodes, &mut diagnostics);
+        let result = try_parse_transition(
+            &lines,
+            1,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert!(result.is_none());
     }
@@ -100,9 +139,15 @@ mod tests {
         // Given
         let lines = vec!["Some text", "----", ""];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        let result = try_parse_transition(&lines, 1, &nodes, &mut diagnostics);
+        let result = try_parse_transition(
+            &lines,
+            1,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert!(result.is_none());
     }
@@ -112,9 +157,15 @@ mod tests {
         // Given
         let lines = vec!["", "----", "Some text"];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        let result = try_parse_transition(&lines, 1, &nodes, &mut diagnostics);
+        let result = try_parse_transition(
+            &lines,
+            1,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert!(result.is_none());
     }
@@ -124,9 +175,15 @@ mod tests {
         // Given
         let lines = vec!["----", ""];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        let result = try_parse_transition(&lines, 0, &nodes, &mut diagnostics);
+        let result = try_parse_transition(
+            &lines,
+            0,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert_eq!(result, Some((1, Node::Transition)));
     }
@@ -136,9 +193,15 @@ mod tests {
         // Given
         let lines = vec!["", "----"];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        let result = try_parse_transition(&lines, 1, &nodes, &mut diagnostics);
+        let result = try_parse_transition(
+            &lines,
+            1,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert_eq!(result, Some((1, Node::Transition)));
     }
@@ -148,11 +211,21 @@ mod tests {
         // Given — no nodes parsed yet
         let lines = vec!["----", "", "More text"];
         let nodes = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        try_parse_transition(&lines, 0, &nodes, &mut diagnostics);
+        try_parse_transition(
+            &lines,
+            0,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
-        assert!(diagnostics.iter().any(|d| d.contains("begin the document")));
+        assert!(
+            diagnostics
+                .iter()
+                .any(|d| d.message.contains("begin the document"))
+        );
     }
 
     #[test]
@@ -160,11 +233,21 @@ mod tests {
         // Given — only blank lines remain afterwards
         let lines = vec!["Some text", "", "----", "", "  "];
         let nodes = vec![Node::Paragraph(vec![])];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        try_parse_transition(&lines, 2, &nodes, &mut diagnostics);
+        try_parse_transition(
+            &lines,
+            2,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
-        assert!(diagnostics.iter().any(|d| d.contains("end the document")));
+        assert!(
+            diagnostics
+                .iter()
+                .any(|d| d.message.contains("end the document"))
+        );
     }
 
     #[test]
@@ -172,14 +255,20 @@ mod tests {
         // Given — the previously parsed node is also a transition
         let lines = vec!["", "----", "", "Some text"];
         let nodes = vec![Node::Transition];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        try_parse_transition(&lines, 1, &nodes, &mut diagnostics);
+        try_parse_transition(
+            &lines,
+            1,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert!(
             diagnostics
                 .iter()
-                .any(|d| d.contains("immediately follow another transition"))
+                .any(|d| d.message.contains("immediately follow another transition"))
         );
     }
 
@@ -188,9 +277,15 @@ mod tests {
         // Given — a transition with content both before and after
         let lines = vec!["Some text", "", "----", "", "More text"];
         let nodes = vec![Node::Paragraph(vec![])];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         // When
-        try_parse_transition(&lines, 2, &nodes, &mut diagnostics);
+        try_parse_transition(
+            &lines,
+            2,
+            &nodes,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         // Then
         assert!(diagnostics.is_empty());
     }
@@ -251,7 +346,7 @@ mod integration_tests {
         assert!(
             doc.diagnostics
                 .iter()
-                .any(|d| d.contains("begin the document"))
+                .any(|d| d.message.contains("begin the document"))
         );
     }
 }

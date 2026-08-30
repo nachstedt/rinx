@@ -7,8 +7,9 @@
 //! [`render`] and [`genindex`] are Phase 3, and [`preview`] collapses all
 //! three into one process for the editor. [`cli_args`] holds the flag parsing
 //! they share, [`diagnostics`] the warning formatting [`render`] and
-//! [`preview`] share, and [`csv_files`] the filesystem loader that resolves
-//! `.. csv-table::`'s `:file:` option for both of them.
+//! [`preview`] share, [`suppression`] the `.. noqa:` filtering applied just
+//! before that formatting, and [`csv_files`] the filesystem loader that
+//! resolves `.. csv-table::`'s `:file:` option for both of them.
 
 mod cli_args;
 mod csv_files;
@@ -20,6 +21,7 @@ mod index;
 mod parse;
 mod preview;
 mod render;
+mod suppression;
 mod validate_toctree;
 
 pub(crate) use diagrams::{cmd_extract_diagrams, cmd_validate_images};

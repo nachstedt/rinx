@@ -1,8 +1,10 @@
 //! Turning an `.. index::` directive's argument and body lines into
 //! [`rusty_sphinx_ast::IndexEntry`]s, one physical line at a time.
 
+use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::IndexEntry;
+use rusty_sphinx_ast::{IndexEntry, Span};
 
 use super::value_parsing::{is_known_entry_type, parse_typed_entry, strip_main_prefix};
 
@@ -16,7 +18,11 @@ use super::value_parsing::{is_known_entry_type, parse_typed_entry, strip_main_pr
 /// shorthand terms (`BNF`, or a continuation line like `__cause__
 /// (exception attribute)`, or `object; code, code object` where a bare term
 /// itself contains a literal `;`).
-fn parse_index_line(line: &str, diagnostics: &mut Vec<String>) -> Vec<IndexEntry> {
+fn parse_index_line(
+    line: &str,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
+) -> Vec<IndexEntry> {
     let trimmed = line.trim();
     if trimmed.is_empty() {
         return Vec::new();
@@ -28,7 +34,7 @@ fn parse_index_line(line: &str, diagnostics: &mut Vec<String>) -> Vec<IndexEntry
     if let Some((entry_type, raw_value)) = rest.split_once(':') {
         let entry_type = entry_type.trim();
         if is_known_entry_type(entry_type) {
-            return parse_typed_entry(entry_type, raw_value.trim(), main, line, diagnostics);
+            return parse_typed_entry(entry_type, raw_value.trim(), main, line, diagnostics, span);
         }
     }
 
@@ -52,13 +58,21 @@ fn parse_index_line(line: &str, diagnostics: &mut Vec<String>) -> Vec<IndexEntry
 pub(crate) fn parse_index_entries(
     argument: &str,
     body_lines: &[&str],
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> Vec<IndexEntry> {
-    let mut entries = parse_index_line(argument, diagnostics);
+    // The argument sits on the directive's marker line, which is above the
+    // body `ctx` is positioned at, so it has no span of its own here; the
+    // body's own lines do.
+    let mut entries = parse_index_line(argument, diagnostics, None);
 
     let unindented = unindent_body_lines(body_lines);
-    for line in &unindented {
-        entries.extend(parse_index_line(line, diagnostics));
+    for (index, line) in unindented.iter().enumerate() {
+        entries.extend(parse_index_line(
+            line,
+            diagnostics,
+            ctx.line_span(index, line),
+        ));
     }
 
     entries
@@ -71,10 +85,11 @@ pub(crate) fn parse_index_entries(
 pub(crate) fn parse_index_directive(
     argument: &str,
     body_lines: &[&str],
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> rusty_sphinx_ast::Directive {
     rusty_sphinx_ast::Directive::Index {
-        entries: parse_index_entries(argument, body_lines, diagnostics),
+        entries: parse_index_entries(argument, body_lines, diagnostics, ctx),
         id: String::new(),
     }
 }
@@ -82,15 +97,16 @@ pub(crate) fn parse_index_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_ast::Domain;
 
     #[test]
     fn test_parse_index_line_dispatches_typed_entry() {
         // Given — the single-line form `.. index:: single: execution`
         let line = "single: execution";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -108,10 +124,10 @@ mod tests {
     fn test_parse_index_line_dispatches_typed_pair_entry() {
         // Given
         let line = "pair: loop; statement";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(entries.len(), 2);
@@ -122,10 +138,10 @@ mod tests {
     fn test_parse_index_line_treats_untyped_line_as_bare_term() {
         // Given — the comma-shorthand form has no colon at all
         let line = "BNF";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -143,10 +159,10 @@ mod tests {
         // Given — a colon that isn't one of the five known type keywords
         // should not be mistaken for a type prefix
         let line = "Section 3: Advanced Topics";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -164,10 +180,10 @@ mod tests {
     fn test_parse_index_line_bang_before_type_keyword_marks_main() {
         // Given — real CPython usage: `! pair: statement; if`
         let line = "! pair: statement; if";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then — both expanded entries are marked main
         assert_eq!(entries.len(), 2);
@@ -182,10 +198,10 @@ mod tests {
     fn test_parse_index_line_bang_before_single_type_keyword_marks_main() {
         // Given — real CPython usage: `! single: pattern matching`
         let line = "! single: pattern matching";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -204,10 +220,10 @@ mod tests {
         // wildcards` — the "!" here is literal indexed text, not a marker,
         // since it comes after the type keyword, not before it.
         let line = "single: ! (exclamation); in glob-style wildcards";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -227,10 +243,10 @@ mod tests {
         // on `,` before recognizing the `single:` type keyword would cut this
         // value in half and produce a bogus empty-primary entry instead.
         let line = "single: , (comma); in string formatting";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -249,10 +265,10 @@ mod tests {
         // Given — a fragment of real CPython usage (Doc/c-api/code.rst:3):
         // an untyped bare term never gets subentry-split on `;`.
         let line = "object; code";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -272,10 +288,10 @@ mod tests {
         // separates two bare terms, the first of which itself contains a
         // literal `;`.
         let line = "object; code, code object";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -300,10 +316,10 @@ mod tests {
     fn test_parse_index_line_produces_one_term_per_shorthand_value() {
         // Given
         let line = "BNF, grammar, syntax";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -332,10 +348,10 @@ mod tests {
     fn test_parse_index_line_returns_empty_for_blank_line() {
         // Given
         let line = "";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert!(entries.is_empty());
@@ -346,10 +362,10 @@ mod tests {
         // Given — the common single-line `.. index:: single: execution` form,
         // with no indented body block at all
         let line = "single: execution";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -367,10 +383,10 @@ mod tests {
         // Given — a colon-looking type keyword that isn't recognized falls
         // back to a bare term rather than erroring, staying error-resilient
         let line = "bogus: foo";
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_line(line, &mut diagnostics);
+        let entries = parse_index_line(line, &mut diagnostics, None);
 
         // Then
         assert_eq!(
@@ -389,10 +405,15 @@ mod tests {
         // Given: 2 shorthand entries (BNF, grammar) + 1 single + 1 pair (expands to 2)
         let argument = "BNF, grammar";
         let body_lines = vec!["   single: execution", "   pair: loop; statement"];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(argument, &body_lines, &mut diagnostics);
+        let entries = parse_index_entries(
+            argument,
+            &body_lines,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(entries.len(), 5);
@@ -410,10 +431,15 @@ mod tests {
             "           __cause__ (exception attribute)",
             "           __context__ (exception attribute)",
         ];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(argument, &body_lines, &mut diagnostics);
+        let entries = parse_index_entries(
+            argument,
+            &body_lines,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then — pair expands to 2, plus 2 bare terms = 4
         assert_eq!(entries.len(), 4);
@@ -430,10 +456,15 @@ mod tests {
         // comma-separated list of bare terms on a single body line.
         let argument = "";
         let body_lines = vec!["   key, value, key/value pair"];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(argument, &body_lines, &mut diagnostics);
+        let entries = parse_index_entries(
+            argument,
+            &body_lines,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(entries.len(), 3);
@@ -453,10 +484,15 @@ mod tests {
             "   single: , (comma); in string formatting",
             "   single: _ (underscore); in string formatting",
         ];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(argument, &body_lines, &mut diagnostics);
+        let entries = parse_index_entries(
+            argument,
+            &body_lines,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(entries.len(), 2);
@@ -484,10 +520,15 @@ mod tests {
             "   single: : (colon); path separator (POSIX)",
             "   single: ; (semicolon)",
         ];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(argument, &body_lines, &mut diagnostics);
+        let entries = parse_index_entries(
+            argument,
+            &body_lines,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert_eq!(entries.len(), 2);
@@ -508,10 +549,15 @@ mod tests {
         // Given
         let argument = "execution";
         let body_lines: Vec<&str> = vec![];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let directive = parse_index_directive(argument, &body_lines, &mut diagnostics);
+        let directive = parse_index_directive(
+            argument,
+            &body_lines,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         if let rusty_sphinx_ast::Directive::Index { entries, id } = directive {
@@ -527,10 +573,15 @@ mod tests {
         // Given
         let argument = "";
         let body_lines: Vec<&str> = vec![];
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let entries = parse_index_entries(argument, &body_lines, &mut diagnostics);
+        let entries = parse_index_entries(
+            argument,
+            &body_lines,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
 
         // Then
         assert!(entries.is_empty());

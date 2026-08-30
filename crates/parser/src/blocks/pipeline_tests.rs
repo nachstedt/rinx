@@ -449,6 +449,6 @@ fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_followin
     assert!(
         !doc.diagnostics
             .iter()
-            .any(|d| d.contains(".. index::") || d.contains("index:"))
+            .any(|d| d.message.contains(".. index::") || d.message.contains("index:"))
     );
 }

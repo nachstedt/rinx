@@ -1,5 +1,6 @@
 //! Anonymous (`__`-suffixed) reference and hyperlink rendering.
 
+use rusty_sphinx_ast::Span;
 use std::fmt::Write as _;
 
 use crate::{BrokenLink, BrokenLinkKind};
@@ -9,6 +10,7 @@ use crate::{BrokenLink, BrokenLinkKind};
 pub(super) fn render_inline_anonymous_reference(
     html: &mut String,
     text: &str,
+    span: Option<Span>,
     anon_targets: &[String],
     anon_index: &mut usize,
     broken_links: &mut Vec<BrokenLink>,
@@ -26,6 +28,7 @@ pub(super) fn render_inline_anonymous_reference(
         broken_links.push(BrokenLink {
             kind: BrokenLinkKind::AnonymousReference,
             target: text.to_string(),
+            span,
         });
     }
 }
@@ -54,6 +57,7 @@ mod tests {
         render_inline_anonymous_reference(
             &mut html,
             "link text",
+            None,
             &anon_targets,
             &mut anon_index,
             &mut broken_links,
@@ -76,6 +80,7 @@ mod tests {
         render_inline_anonymous_reference(
             &mut html,
             "broken",
+            None,
             &anon_targets,
             &mut anon_index,
             &mut broken_links,
@@ -89,6 +94,7 @@ mod tests {
             vec![BrokenLink {
                 kind: BrokenLinkKind::AnonymousReference,
                 target: "broken".to_string(),
+                span: None,
             }]
         );
     }
@@ -108,6 +114,7 @@ mod tests {
         render_inline_anonymous_reference(
             &mut html,
             "first",
+            None,
             &anon_targets,
             &mut anon_index,
             &mut broken_links,
@@ -115,6 +122,7 @@ mod tests {
         render_inline_anonymous_reference(
             &mut html,
             "second",
+            None,
             &anon_targets,
             &mut anon_index,
             &mut broken_links,

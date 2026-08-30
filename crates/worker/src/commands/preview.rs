@@ -11,8 +11,13 @@ use std::io::{self, Read};
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::csv_files::{DocumentRelativeCsvFiles, parse_ctx};
-use super::diagnostics::{format_broken_link_warning, format_object_type_mismatch_warning};
+use super::diagnostics::{
+    format_broken_link_warning, format_object_type_mismatch_warning, report_diagnostic,
+};
 use super::parse::parse_default_domain_flag;
+use super::suppression::{
+    retain_reportable, retain_reportable_links, retain_reportable_mismatches,
+};
 
 pub(super) fn process_preview(
     rst: &str,
@@ -28,6 +33,9 @@ pub(super) fn process_preview(
     Vec<renderer::ObjectTypeMismatch>,
 )> {
     let doc = parser::parse_with_ctx(doc_path, rst, &parse_ctx(default_domain, csv_files));
+    for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
+        report_diagnostic(doc_path, diagnostic);
+    }
     let mut index = if let Some(json) = index_json {
         serde_json::from_str(json).context("Failed to deserialize global index")?
     } else {
@@ -38,6 +46,12 @@ pub(super) fn process_preview(
     let _ = index.merge(local_index);
 
     let render_output = renderer::render(&doc, &index, doc_path);
+    // Filtered here rather than by the caller so that a suppressed link is
+    // invisible to *every* consumer of this function, not just the one that
+    // remembers to ask.
+    let broken_links = retain_reportable_links(&render_output.broken_links, &doc.suppressions);
+    let object_type_mismatches =
+        retain_reportable_mismatches(&render_output.object_type_mismatches, &doc.suppressions);
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -71,11 +85,7 @@ pub(super) fn process_preview(
             has_genindex: !index.genindex_entries.is_empty(),
         },
     )?;
-    Ok((
-        html,
-        render_output.broken_links,
-        render_output.object_type_mismatches,
-    ))
+    Ok((html, broken_links, object_type_mismatches))
 }
 
 pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {

@@ -2,6 +2,7 @@
 
 use std::fmt::Write as _;
 
+use super::RefText;
 use rusty_sphinx_ast::TargetName;
 use rusty_sphinx_index::{ProjectIndex, TargetLocation};
 
@@ -14,12 +15,16 @@ use crate::{BrokenLink, BrokenLinkKind};
 /// `target` is not found.
 pub(super) fn render_inline_reference(
     html: &mut String,
-    display: &str,
-    target: &str,
+    reference: RefText<'_>,
     index: &ProjectIndex,
     doc_path: &str,
     broken_links: &mut Vec<BrokenLink>,
 ) {
+    let RefText {
+        display,
+        target,
+        span,
+    } = reference;
     let display_escaped = html_escape::encode_text(display);
     let target_name = TargetName::new(target);
     if let Some(TargetLocation::Internal(target_path)) = index.targets.get(&target_name) {
@@ -41,6 +46,7 @@ pub(super) fn render_inline_reference(
         broken_links.push(BrokenLink {
             kind: BrokenLinkKind::Reference,
             target: target.to_string(),
+            span,
         });
     }
 }
@@ -63,8 +69,11 @@ mod tests {
         // When
         render_inline_reference(
             &mut html,
-            "my-section",
-            "my-section",
+            RefText {
+                display: "my-section",
+                target: "my-section",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -85,8 +94,11 @@ mod tests {
         // When
         render_inline_reference(
             &mut html,
-            "missing",
-            "missing",
+            RefText {
+                display: "missing",
+                target: "missing",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -102,6 +114,7 @@ mod tests {
             vec![BrokenLink {
                 kind: BrokenLinkKind::Reference,
                 target: "missing".to_string(),
+                span: None,
             }]
         );
     }
@@ -120,8 +133,11 @@ mod tests {
         // When
         render_inline_reference(
             &mut html,
-            "target-a",
-            "target-a",
+            RefText {
+                display: "target-a",
+                target: "target-a",
+                span: None,
+            },
             &index,
             "team_b/index.rst",
             &mut broken_links,
@@ -149,8 +165,11 @@ mod tests {
         // When
         render_inline_reference(
             &mut html,
-            "GenericAlias",
-            "types-genericalias",
+            RefText {
+                display: "GenericAlias",
+                target: "types-genericalias",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -175,8 +194,11 @@ mod tests {
         // When
         render_inline_reference(
             &mut html,
-            "GenericAlias",
-            "types-genericalias",
+            RefText {
+                display: "GenericAlias",
+                target: "types-genericalias",
+                span: None,
+            },
             &index,
             "doc.rst",
             &mut broken_links,
@@ -192,6 +214,7 @@ mod tests {
             vec![BrokenLink {
                 kind: BrokenLinkKind::Reference,
                 target: "types-genericalias".to_string(),
+                span: None,
             }]
         );
     }

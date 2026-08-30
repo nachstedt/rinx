@@ -6,10 +6,19 @@
 //! (enumerated-list markers) and `table` (table content and layout).
 //! `object_naming` holds the signature/option naming helpers every later
 //! pipeline phase shares, and `visit` the traversal every phase walks with.
+//!
+//! `span`, `diagnostic`, `diagnostic_code` and `suppression` are the
+//! reporting vocabulary
+//! rather than document content: a [`Diagnostic`] is what a phase records
+//! instead of failing, and a [`Span`] is where in the `.rst` it points. They
+//! live here because [`Document`] carries them and every later phase both
+//! produces and forwards them.
 
 mod admonition_kind;
 mod c_signature;
 mod definition_list_item;
+mod diagnostic;
+mod diagnostic_code;
 mod directive;
 mod doctest;
 mod document;
@@ -26,6 +35,8 @@ mod non_empty_vector;
 mod object_naming;
 mod object_type;
 mod py_version_spec;
+mod span;
+mod suppression;
 mod table;
 mod target_name;
 mod target_search_order;
@@ -35,6 +46,8 @@ mod visit;
 pub use admonition_kind::AdmonitionKind;
 pub use c_signature::{CSignature, NameSource, extract_c_object_name};
 pub use definition_list_item::DefinitionListItem;
+pub use diagnostic::Diagnostic;
+pub use diagnostic_code::{DiagnosticCode, UnknownDiagnosticCode};
 pub use directive::Directive;
 pub use doctest::{
     DocTestBlock, DocTestFlag, DocTestFlagName, DocTestGroup, DocTestGroupSelector, DocTestTrim,
@@ -56,6 +69,8 @@ pub use object_naming::{
 };
 pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
+pub use span::{Position, Span};
+pub use suppression::{Suppression, SuppressionCodes};
 pub use table::{TableAlign, TableCell, TableRow, TableSource, TableWidths};
 pub use target_name::TargetName;
 pub use target_search_order::TargetSearchOrder;

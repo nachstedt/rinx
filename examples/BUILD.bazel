@@ -33,6 +33,7 @@ rusty_sphinx_library(
         "list_table.rst",
         "csv_table.rst",
         "index_entries.rst",
+        "noqa.rst",
     ],
     # `csv_table.rst` reads this via `.. csv-table:: :file:`. Declaring it here
     # is what puts it in the parse action's sandbox — see `rules/library.bzl`.

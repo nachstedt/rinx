@@ -7,5 +7,5 @@
 mod geometry;
 mod grid;
 
-pub(crate) use geometry::normalize_cell_lines;
+pub(crate) use geometry::{NormalizedCell, normalize_cell_lines};
 pub(super) use grid::try_parse_grid_table;

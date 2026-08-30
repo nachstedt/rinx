@@ -1,21 +1,25 @@
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::Directive;
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive};
 
 pub(super) fn parse_admonition(
     kind: rusty_sphinx_ast::AdmonitionKind,
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Directive {
     let title = if kind == rusty_sphinx_ast::AdmonitionKind::Admonition {
         if argument.is_empty() {
-            diagnostics
-                .push("Generic 'admonition' directive requires a title argument.".to_string());
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::DirectiveTitleArgumentMissing,
+                "Generic 'admonition' directive requires a title argument.",
+                ctx.line_span(0, body_lines.first().unwrap_or(&"")),
+            ));
             Some("Admonition".to_string())
         } else {
             Some(argument)
@@ -81,11 +85,17 @@ pub(super) fn parse_version_change(
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Directive {
     let version = if argument.is_empty() {
-        diagnostics.push(format!("'{}' requires a version argument.", kind.as_str()));
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::DirectiveVersionArgumentMissing,
+            format!("'{}' requires a version argument.", kind.as_str()),
+            // The directive's own marker line, which is the line above the
+            // body this parser was handed.
+            ctx.line_span(0, body_lines.first().unwrap_or(&"")),
+        ));
         "unknown".to_string()
     } else {
         argument
@@ -113,7 +123,7 @@ pub(super) fn parse_version_change(
 pub(super) fn parse_seealso(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Directive {
     let unindented_lines = unindent_body_lines(body_lines);
@@ -141,7 +151,7 @@ mod tests {
         let argument = String::new();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_admonition(
@@ -173,7 +183,7 @@ mod tests {
         let argument = "Custom Title".to_string();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_admonition(
@@ -201,7 +211,7 @@ mod tests {
         let argument = String::new();
         let body_lines = vec!["   :collapsible: open", "", "   Content"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_admonition(
@@ -228,7 +238,7 @@ mod tests {
         let argument = String::new();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let _ = parse_admonition(
@@ -242,7 +252,7 @@ mod tests {
 
         // Then
         assert!(!diagnostics.is_empty());
-        assert!(diagnostics[0].contains("requires a title argument"));
+        assert!(diagnostics[0].message.contains("requires a title argument"));
     }
 
     #[test]
@@ -254,7 +264,7 @@ mod tests {
         let argument = String::new();
         let body_lines = vec!["   First line normal indent.", "  éfoo"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_admonition(
@@ -353,7 +363,7 @@ mod tests {
         // Then
         assert_eq!(doc.diagnostics.len(), 1);
         assert_eq!(
-            doc.diagnostics[0],
+            doc.diagnostics[0].message,
             "'versionchanged' requires a version argument."
         );
         if let Node::Directive(Directive::VersionChange {
@@ -379,7 +389,7 @@ mod tests {
         let argument = "2.3".to_string();
         let body_lines = vec!["   First line normal indent.", "  éfoo"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_version_change(
@@ -496,7 +506,7 @@ mod tests {
         // Given
         let body_lines = vec!["   See the other page."];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_seealso(
@@ -523,7 +533,7 @@ mod tests {
         // offset the old byte-index slicing would have panicked on
         let body_lines = vec!["   First line normal indent.", "  éfoo"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_seealso(

@@ -22,6 +22,9 @@ pub(super) struct DomainObjectRef<'a> {
     pub display: &'a str,
     pub link: bool,
     pub search_order: rusty_sphinx_ast::TargetSearchOrder,
+    /// Where the role was written, carried through so a broken or ambiguous
+    /// reference can name its own line rather than just the document.
+    pub span: Option<rusty_sphinx_ast::Span>,
 }
 
 /// Mutable diagnostic sinks for [`render_inline_domain_object_reference`],
@@ -65,6 +68,7 @@ pub(super) fn render_inline_domain_object_reference(
         display,
         link,
         search_order,
+        span,
     } = obj_ref;
     let display_escaped = html_escape::encode_text(display);
     let domain_str = object_type.domain().as_str();
@@ -83,6 +87,7 @@ pub(super) fn render_inline_domain_object_reference(
         diagnostics.broken_links.push(BrokenLink {
             kind,
             target: name.to_string(),
+            span,
         });
     };
 
@@ -97,6 +102,7 @@ pub(super) fn render_inline_domain_object_reference(
                     name: qualified_name.clone(),
                     requested_type: object_type,
                     resolved_type: matched_type,
+                    span,
                 });
             }
             let anchor = rusty_sphinx_ast::build_domain_object_key(matched_type, &qualified_name);

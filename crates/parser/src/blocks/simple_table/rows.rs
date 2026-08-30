@@ -1,9 +1,10 @@
 use super::borders::{ColumnSpan, is_span_line, parse_column_spans};
 use crate::blocks::parse_blocks;
-use crate::blocks::table::normalize_cell_lines;
+use crate::blocks::table::{NormalizedCell, normalize_cell_lines};
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use rusty_sphinx_ast::{TableCell, TableRow};
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableCell, TableRow};
 
 /// The immutable table geometry plus the mutable parse state that recursive
 /// cell-content parsing needs. Mirrors [`super::table`]'s `GridCtx`.
@@ -15,15 +16,27 @@ pub(super) struct SimpleTableCtx<'a> {
     /// Document line index of the table's top border, so diagnostics can name
     /// real source lines rather than table-relative ones.
     pub(super) start_i: usize,
+    /// The indent stripped off every line to build `grid`, so a grid column
+    /// index can be turned back into a source column.
+    pub(super) indent: usize,
     pub(super) adornment_order: &'a mut Vec<Adornment>,
-    pub(super) diagnostics: &'a mut Vec<String>,
+    pub(super) diagnostics: &'a mut Diagnostics,
     pub(super) parse_ctx: &'a ParseCtx<'a>,
 }
 
 impl SimpleTableCtx<'_> {
-    /// The 1-based document line number of the table line at `offset`.
-    fn line_number(&self, offset: usize) -> usize {
-        self.start_i + offset + 1
+    /// A span covering the whole of the table line at `offset`.
+    ///
+    /// Built from `grid` rather than the source line because the two differ
+    /// only by the stripped indent, which is added back here — `grid` is what
+    /// this module has, and it is exact.
+    fn line_span(&self, offset: usize) -> Option<Span> {
+        let line = self.start_i + offset;
+        let width = self.grid.get(offset).map_or(0, Vec::len);
+        Some(Span::new(
+            self.parse_ctx.position(line, self.indent)?,
+            self.parse_ctx.position(line, self.indent + width)?,
+        ))
     }
 
     /// The `end` offset of the table's rightmost column (docutils'
@@ -63,9 +76,11 @@ fn row_columns_from_span(ctx: &mut SimpleTableCtx<'_>, offset: usize) -> Option<
         .last()
         .expect("a span line starts with `-`, so it has at least one run");
     if last.end != ctx.border_end() {
-        ctx.diagnostics.push(format!(
-            "simple table: column span incomplete on line {} — it does not reach the table's right edge",
-            ctx.line_number(offset),
+        let span = ctx.line_span(offset);
+        ctx.diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TableSimpleIncompleteColumnSpan,
+            "simple table: column span incomplete — it does not reach the table's right edge",
+            span,
         ));
         return None;
     }
@@ -90,9 +105,11 @@ fn check_column_margins(
         };
         for offset in start..end {
             if !ctx.slice(offset, column.end, next.start).trim().is_empty() {
-                ctx.diagnostics.push(format!(
-                    "simple table: text in the column margin on line {}",
-                    ctx.line_number(offset),
+                let span = ctx.line_span(offset);
+                ctx.diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::TableSimpleTextInMargin,
+                    "simple table: text in the column margin",
+                    span,
                 ));
                 return None;
             }
@@ -115,9 +132,11 @@ fn resolve_colspans(
 
     for column in columns {
         if ctx.columns.get(index).map(|c| c.start) != Some(column.start) {
-            ctx.diagnostics.push(format!(
-                "simple table: column span on line {} is not aligned with the table's columns",
-                ctx.line_number(offset),
+            let span = ctx.line_span(offset);
+            ctx.diagnostics.push(Diagnostic::at(
+                DiagnosticCode::TableSimpleUnalignedColumnSpan,
+                "simple table: column span is not aligned with the table's columns",
+                span,
             ));
             return None;
         }
@@ -125,9 +144,11 @@ fn resolve_colspans(
         loop {
             match ctx.columns.get(index) {
                 None => {
-                    ctx.diagnostics.push(format!(
-                        "simple table: column span on line {} is not aligned with the table's columns",
-                        ctx.line_number(offset),
+                    let span = ctx.line_span(offset);
+                    ctx.diagnostics.push(Diagnostic::at(
+                        DiagnosticCode::TableSimpleUnalignedColumnSpan,
+                        "simple table: column span is not aligned with the table's columns",
+                        span,
                     ));
                     return None;
                 }
@@ -154,7 +175,7 @@ fn extract_cell_lines(
     end: usize,
     column: ColumnSpan,
     unbounded: bool,
-) -> Vec<String> {
+) -> NormalizedCell {
     let lines = (start..end)
         .map(|offset| {
             let to = if unbounded {
@@ -187,14 +208,16 @@ fn build_row(
     let last_index = columns.len() - 1;
     let mut cells = Vec::with_capacity(columns.len());
     for (index, (column, colspan)) in columns.iter().zip(colspans).enumerate() {
-        let content_lines = extract_cell_lines(ctx, start, end, *column, index == last_index);
-        let content_refs: Vec<&str> = content_lines.iter().map(String::as_str).collect();
-        let content = parse_blocks(
-            &content_refs,
-            ctx.adornment_order,
-            ctx.diagnostics,
-            ctx.parse_ctx,
+        let cell = extract_cell_lines(ctx, start, end, *column, index == last_index);
+        let content_refs: Vec<&str> = cell.lines.iter().map(String::as_str).collect();
+        // Where this cell's first content character sits in the document: the
+        // row's first line past the blank lines normalization dropped, and the
+        // table's indent plus the column's own start and stripped margin.
+        let nested = ctx.parse_ctx.nested(
+            ctx.start_i + start + cell.first_line_offset,
+            ctx.indent + column.start + cell.column_offset,
         );
+        let content = parse_blocks(&content_refs, ctx.adornment_order, ctx.diagnostics, &nested);
         cells.push(TableCell {
             colspan,
             rowspan: 1,
@@ -241,9 +264,11 @@ pub(super) fn build_rows(
             // being discarded, and the fix (an escaped space in the first
             // cell) is not guessable from the rendered output.
             if !line.trim().is_empty() {
-                ctx.diagnostics.push(format!(
-                    "simple table: line {} has an empty first-column cell, so its content is dropped — use `\\ ` (an escaped space) to start a row with an empty first cell",
-                    ctx.line_number(offset),
+                let span = ctx.line_span(offset);
+                ctx.diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::TableSimpleEmptyFirstCell,
+                    "simple table: empty first-column cell, so this line's content is dropped — use `\\ ` (an escaped space) to start a row with an empty first cell",
+                    span,
                 ));
             }
             start = offset + 1;
@@ -264,16 +289,17 @@ mod tests {
     fn with_ctx<T>(
         rows: &[&str],
         body: impl FnOnce(&mut SimpleTableCtx<'_>) -> T,
-    ) -> (T, Vec<String>) {
+    ) -> (T, Diagnostics) {
         let grid: Vec<Vec<char>> = rows.iter().map(|row| row.chars().collect()).collect();
         let columns = parse_column_spans(rows[0]);
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         let result = {
             let mut ctx = SimpleTableCtx {
                 grid: &grid,
                 columns: &columns,
                 start_i: 0,
+                indent: 0,
                 adornment_order: &mut adornment_order,
                 diagnostics: &mut diagnostics,
                 parse_ctx: &ParseCtx::with_domain(Domain::Py),
@@ -293,15 +319,17 @@ mod tests {
     }
 
     #[test]
-    fn test_line_number_is_one_based_and_relative_to_the_document() {
+    fn test_line_span_is_relative_to_the_document_not_the_table() {
         // Given a table starting on the eleventh line of a document
-        let (number, _) = with_ctx(&["-----  -----", "1      2"], |ctx| {
+        let (span, _) = with_ctx(&["-----  -----", "1      2"], |ctx| {
             ctx.start_i = 10;
-            ctx.line_number(1)
+            ctx.line_span(1)
         });
 
         // Then — diagnostics name the real source line, not a table offset
-        assert_eq!(number, 12);
+        let span = span.expect("a document-rooted context always yields a span");
+        assert_eq!(span.start.line, 12);
+        assert_eq!(span.start.column, 1);
     }
 
     #[test]
@@ -335,7 +363,7 @@ mod tests {
 
         // Then
         assert!(columns.is_none());
-        assert!(diagnostics[0].contains("column span incomplete"));
+        assert!(diagnostics[0].message.contains("column span incomplete"));
     }
 
     #[test]
@@ -374,7 +402,11 @@ mod tests {
 
         // Then
         assert!(colspans.is_none());
-        assert!(diagnostics[0].contains("not aligned with the table's columns"));
+        assert!(
+            diagnostics[0]
+                .message
+                .contains("not aligned with the table's columns")
+        );
     }
 
     #[test]
@@ -387,7 +419,11 @@ mod tests {
 
         // Then
         assert!(colspans.is_none());
-        assert!(diagnostics[0].contains("not aligned with the table's columns"));
+        assert!(
+            diagnostics[0]
+                .message
+                .contains("not aligned with the table's columns")
+        );
     }
 
     #[test]
@@ -411,9 +447,17 @@ mod tests {
             check_column_margins(ctx, 1, 2, &columns)
         });
 
-        // Then
+        // Then — the offending line is named by the span, not by the message
         assert!(result.is_none());
-        assert!(diagnostics[0].contains("text in the column margin on line 2"));
+        assert!(diagnostics[0].message.contains("text in the column margin"));
+        assert_eq!(
+            diagnostics[0]
+                .span
+                .expect("a document-rooted parse always yields a span")
+                .start
+                .line,
+            2
+        );
     }
 
     #[test]
@@ -434,22 +478,22 @@ mod tests {
     #[test]
     fn test_extract_cell_lines_slices_and_normalizes_a_bounded_cell() {
         // Given a two-line cell in the first column
-        let (lines, _) = with_ctx(&["-----  -----", "1      a", "2      b"], |ctx| {
+        let (cell, _) = with_ctx(&["-----  -----", "1      a", "2      b"], |ctx| {
             extract_cell_lines(ctx, 1, 3, ColumnSpan { start: 0, end: 5 }, false)
         });
 
         // Then
-        assert_eq!(lines, vec!["1".to_string(), "2".to_string()]);
+        assert_eq!(cell.lines, vec!["1".to_string(), "2".to_string()]);
     }
 
     #[test]
     fn test_extract_cell_lines_reads_an_unbounded_cell_to_end_of_line() {
         // Given a last-column cell whose text overflows the border
-        let (lines, _) = with_ctx(&["-----  -----", "1      overflowing text"], |ctx| {
+        let (cell, _) = with_ctx(&["-----  -----", "1      overflowing text"], |ctx| {
             extract_cell_lines(ctx, 1, 2, ColumnSpan { start: 7, end: 12 }, true)
         });
 
         // Then
-        assert_eq!(lines, vec!["overflowing text".to_string()]);
+        assert_eq!(cell.lines, vec!["overflowing text".to_string()]);
     }
 }

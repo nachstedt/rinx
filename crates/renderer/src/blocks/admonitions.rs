@@ -339,6 +339,7 @@ mod tests {
                                     display: "curses.ascii".to_string(),
                                     link: true,
                                     search_order: TargetSearchOrder::LeastQualifiedFirst,
+                                    span: None,
                                 },
                             ],
                             definition: vec![Node::Paragraph(vec![InlineNode::Text(
@@ -349,6 +350,7 @@ mod tests {
                             term: vec![InlineNode::Reference {
                                 display: "curses-howto".to_string(),
                                 target: "curses-howto".to_string(),
+                                span: None,
                             }],
                             definition: vec![Node::Paragraph(vec![InlineNode::Text(
                                 "Tutorial material.".to_string(),

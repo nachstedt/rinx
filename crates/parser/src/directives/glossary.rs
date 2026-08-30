@@ -2,6 +2,7 @@
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 use rusty_sphinx_ast::Directive;
@@ -10,7 +11,7 @@ use rusty_sphinx_ast::Directive;
 pub(super) fn parse_glossary(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Directive {
     // Strip the base indentation from all lines.
@@ -51,7 +52,11 @@ pub(super) fn parse_glossary(
 
     let body_slice = &unindented[body_start..];
 
-    for line in body_slice {
+    // Where the definition being accumulated started, as an index into
+    // `body_slice`, so its nested parse can be positioned in the document.
+    let mut definition_start = 0;
+
+    for (offset, line) in body_slice.iter().enumerate() {
         let is_blank = line.trim().is_empty();
         let is_indented = line.starts_with(' ') || line.starts_with('\t');
 
@@ -67,6 +72,9 @@ pub(super) fn parse_glossary(
 
         if is_indented {
             // Part of the current definition body.
+            if !in_definition {
+                definition_start = offset;
+            }
             in_definition = true;
             definition_lines.push(line.clone());
         } else {
@@ -75,7 +83,8 @@ pub(super) fn parse_glossary(
                 // Flush the completed entry.
                 let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
                 let mut dummy_adorn = adornment_order.clone();
-                let def_nodes = parse_blocks(&def_strs, &mut dummy_adorn, diagnostics, ctx);
+                let def_ctx = ctx.nested(body_start + definition_start, 0);
+                let def_nodes = parse_blocks(&def_strs, &mut dummy_adorn, diagnostics, &def_ctx);
                 entries.push(rusty_sphinx_ast::GlossaryEntry {
                     terms: std::mem::take(&mut current_terms),
                     definition: def_nodes,
@@ -90,7 +99,8 @@ pub(super) fn parse_glossary(
     // Flush any remaining entry.
     if !current_terms.is_empty() {
         let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
-        let def_nodes = parse_blocks(&def_strs, adornment_order, diagnostics, ctx);
+        let def_ctx = ctx.nested(body_start + definition_start, 0);
+        let def_nodes = parse_blocks(&def_strs, adornment_order, diagnostics, &def_ctx);
         entries.push(rusty_sphinx_ast::GlossaryEntry {
             terms: current_terms,
             definition: def_nodes,
@@ -127,7 +137,7 @@ mod tests {
         // Given a glossary body with one term and an indented definition
         let body_lines = vec!["   term", "      Definition text."];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When parsing the glossary directive body
         let directive = parse_glossary(
@@ -152,7 +162,7 @@ mod tests {
         // Given a glossary body starting with the :sorted: option
         let body_lines = vec!["   :sorted:", "", "   term", "      Definition text."];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When parsing the glossary directive body
         let directive = parse_glossary(
@@ -175,7 +185,7 @@ mod tests {
         // Given a glossary body containing only blank lines
         let body_lines = vec!["", "   "];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When parsing the glossary directive body
         let directive = parse_glossary(
@@ -201,7 +211,7 @@ mod tests {
         // offset the old byte-index slicing would have panicked on
         let body_lines = vec!["   First line normal indent.", "  éfoo"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When parsing the glossary directive body
         let directive = parse_glossary(

@@ -1,6 +1,10 @@
 //! `.. list-table::` — a table whose rows are a nested bullet list.
 
-use rusty_sphinx_ast::{Directive, ListItem, Node, TableCell, TableRow, TableSource, TableWidths};
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{
+    Diagnostic, DiagnosticCode, Directive, ListItem, Node, Span, TableCell, TableRow, TableSource,
+    TableWidths,
+};
 
 use super::options::{
     SharedTableOptions, parse_shared_table_options, report_unknown_options, scan_option_lines,
@@ -21,7 +25,7 @@ pub(in crate::directives) fn parse_list_table(
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Directive {
     let title = if argument.is_empty() {
@@ -33,8 +37,8 @@ pub(in crate::directives) fn parse_list_table(
     let unindented_lines = unindent_body_lines(body_lines);
     let (option_lines, opt_idx) = scan_option_lines(&unindented_lines);
     let (options, unrecognized) =
-        parse_shared_table_options(&option_lines, TableSource::List, diagnostics);
-    report_unknown_options(&unrecognized, TableSource::List, diagnostics);
+        parse_shared_table_options(&option_lines, TableSource::List, diagnostics, ctx);
+    report_unknown_options(&unrecognized, TableSource::List, diagnostics, ctx);
 
     let body_content: Vec<&str> = unindented_lines[opt_idx..]
         .iter()
@@ -48,13 +52,19 @@ pub(in crate::directives) fn parse_list_table(
         },
     ] = body_nodes.as_slice()
     else {
-        diagnostics
-            .push("list-table: directive body must be a single bullet list of rows".to_string());
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::TableDataNotABulletList,
+            "list-table: directive body must be a single bullet list of rows",
+            ctx.line_span(0, body_lines.first().unwrap_or(&"")),
+        ));
         return unknown_list_table(argument, body_lines);
     };
 
-    let (rows, ncols) = lower_list_table_rows(row_items, diagnostics);
-    build_list_table(title, options, rows, ncols, diagnostics)
+    // Rows are lowered from already-parsed nodes, which carry no position of
+    // their own, so every row-level diagnostic points at the directive body.
+    let table_span = ctx.line_span(0, body_lines.first().unwrap_or(&""));
+    let (rows, ncols) = lower_list_table_rows(row_items, diagnostics, table_span);
+    build_list_table(title, options, rows, ncols, diagnostics, table_span)
 }
 
 /// Assembles the parsed pieces into the AST node, resolving `:widths:` (which
@@ -70,11 +80,12 @@ fn build_list_table(
     options: SharedTableOptions,
     rows: Vec<TableRow>,
     ncols: usize,
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> Directive {
     let widths: Option<TableWidths> = options
         .widths_raw
-        .and_then(|raw| parse_widths_option(&raw, ncols, "list-table", diagnostics));
+        .and_then(|raw| parse_widths_option(&raw, ncols, "list-table", diagnostics, span));
 
     Directive::DataTable {
         source: TableSource::List,
@@ -99,7 +110,8 @@ fn build_list_table(
 /// here unlike a grid table's character alignment).
 fn lower_list_table_rows(
     row_items: &[ListItem],
-    diagnostics: &mut Vec<String>,
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
 ) -> (Vec<TableRow>, usize) {
     let mut rows = Vec::new();
     let mut expected_ncols: Option<usize> = None;
@@ -110,8 +122,11 @@ fn lower_list_table_rows(
             },
         ] = row_item.nodes.as_slice()
         else {
-            diagnostics
-                .push("list-table: each row must itself be a bullet list of cells".to_string());
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::TableDataNotABulletList,
+                "list-table: each row must itself be a bullet list of cells",
+                span,
+            ));
             continue;
         };
         let cells: Vec<TableCell> = cell_items
@@ -124,9 +139,13 @@ fn lower_list_table_rows(
             .collect();
         match expected_ncols {
             None => expected_ncols = Some(cells.len()),
-            Some(n) if n != cells.len() => diagnostics.push(format!(
-                "list-table: row has {} cell(s), expected {n} (from the table's first row) — cell counts should match across rows",
-                cells.len()
+            Some(n) if n != cells.len() => diagnostics.push(Diagnostic::at(
+                DiagnosticCode::TableDataRowCellCount,
+                format!(
+                    "list-table: row has {} cell(s), expected {n} (from the table's first row) — cell counts should match across rows",
+                    cells.len()
+                ),
+                span,
             )),
             _ => {}
         }
@@ -149,9 +168,9 @@ mod tests {
     use super::*;
     use rusty_sphinx_ast::{Domain, InlineNode, TableAlign, TargetName};
 
-    fn parse(body_lines: &[&str]) -> (Directive, Vec<String>) {
+    fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
         let directive = parse_list_table(
             String::new(),
             body_lines,
@@ -199,7 +218,7 @@ mod tests {
         // Given
         let body_lines = vec!["   * - Cell"];
         let mut adornment_order = Vec::new();
-        let mut diagnostics = Vec::new();
+        let mut diagnostics = Diagnostics::default();
 
         // When
         let directive = parse_list_table(
@@ -320,7 +339,7 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains(":widths:"));
+        assert!(diagnostics[0].message.contains(":widths:"));
         if let Directive::DataTable { widths, .. } = directive {
             assert_eq!(widths, None);
         } else {
@@ -372,7 +391,7 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains(":align:"));
+        assert!(diagnostics[0].message.contains(":align:"));
         if let Directive::DataTable { align, .. } = directive {
             assert_eq!(align, None);
         } else {
@@ -424,7 +443,11 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("Invalid or non-standard Sphinx list-table option"));
+        assert!(
+            diagnostics[0]
+                .message
+                .contains("Invalid or non-standard Sphinx list-table option")
+        );
     }
 
     #[test]
@@ -438,9 +461,9 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(
-            diagnostics[0].contains("uneven")
-                || diagnostics[0].contains("cell counts")
-                || diagnostics[0].contains("expected")
+            diagnostics[0].message.contains("uneven")
+                || diagnostics[0].message.contains("cell counts")
+                || diagnostics[0].message.contains("expected")
         );
         if let Directive::DataTable { rows, .. } = directive {
             assert_eq!(rows.len(), 2);

@@ -54,7 +54,11 @@ pub(super) fn handle_inline_match(
         "ref" => {
             let caps = REF_REGEX.captures(m_str).unwrap();
             let (display, target) = split_display_and_target(&caps["target"]);
-            InlineNode::Reference { display, target }
+            InlineNode::Reference {
+                display,
+                target,
+                span: None,
+            }
         }
         "program" => {
             let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
@@ -74,7 +78,11 @@ pub(super) fn handle_inline_match(
         "term" => {
             let caps = TERM_ROLE_REGEX.captures(m_str).unwrap();
             let (display, term) = split_display_and_target(&caps["content"]);
-            InlineNode::TermReference { display, term }
+            InlineNode::TermReference {
+                display,
+                term,
+                span: None,
+            }
         }
         "option" => handle_option_match(m_str),
         "phrased" => {
@@ -84,11 +92,13 @@ pub(super) fn handle_inline_match(
                 InlineNode::Hyperlink {
                     text: embedded["text"].trim().to_string(),
                     target: embedded["uri"].to_string(),
+                    span: None,
                 }
             } else {
                 InlineNode::Hyperlink {
                     text: text_full.to_string(),
                     target: text_full.to_string(),
+                    span: None,
                 }
             }
         }
@@ -98,6 +108,7 @@ pub(super) fn handle_inline_match(
             InlineNode::Hyperlink {
                 text: name.to_string(),
                 target: name.to_string(),
+                span: None,
             }
         }
         "anon_phrased" => {
@@ -109,13 +120,19 @@ pub(super) fn handle_inline_match(
                     target: embedded["uri"].to_string(),
                 }
             } else {
-                InlineNode::AnonymousReference(text_full.to_string())
+                InlineNode::AnonymousReference {
+                    text: text_full.to_string(),
+                    span: None,
+                }
             }
         }
         "anon_simple" => {
             let caps = ANONYMOUS_SIMPLE_REGEX.captures(m_str).unwrap();
             let name = &caps["name"];
-            InlineNode::AnonymousReference(name.to_string())
+            InlineNode::AnonymousReference {
+                text: name.to_string(),
+                span: None,
+            }
         }
         _ => unreachable!(),
     }
@@ -142,6 +159,7 @@ mod tests {
             InlineNode::Reference {
                 display: "target".to_string(),
                 target: "target".to_string(),
+                span: None
             }
         );
     }
@@ -158,6 +176,7 @@ mod tests {
             InlineNode::Reference {
                 display: "GenericAlias".to_string(),
                 target: "types-genericalias".to_string(),
+                span: None
             }
         );
     }
@@ -174,6 +193,7 @@ mod tests {
             InlineNode::Hyperlink {
                 text: "text".to_string(),
                 target: "http://uri".to_string(),
+                span: None
             }
         );
     }
@@ -185,6 +205,7 @@ mod tests {
             InlineNode::Hyperlink {
                 text: "just text".to_string(),
                 target: "just text".to_string(),
+                span: None
             }
         );
     }
@@ -196,6 +217,7 @@ mod tests {
             InlineNode::Hyperlink {
                 text: "name".to_string(),
                 target: "name".to_string(),
+                span: None
             }
         );
     }
@@ -215,7 +237,10 @@ mod tests {
         let result = handle_inline_match("anon_phrased", "`anon text`__", None, Domain::Py);
         assert_eq!(
             result,
-            InlineNode::AnonymousReference("anon text".to_string())
+            InlineNode::AnonymousReference {
+                text: "anon text".to_string(),
+                span: None,
+            }
         );
     }
     #[test]
@@ -223,7 +248,10 @@ mod tests {
         let result = handle_inline_match("anon_simple", "anon_name__", None, Domain::Py);
         assert_eq!(
             result,
-            InlineNode::AnonymousReference("anon_name".to_string())
+            InlineNode::AnonymousReference {
+                text: "anon_name".to_string(),
+                span: None,
+            }
         );
     }
 }

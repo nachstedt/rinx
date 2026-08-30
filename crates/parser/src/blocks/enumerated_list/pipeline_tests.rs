@@ -115,7 +115,7 @@ fn test_records_a_start_value_other_than_one() {
     assert!(
         doc.diagnostics
             .iter()
-            .any(|d| d == "Enumerated list start value not ordinal-1: \"3\" (ordinal 3)"),
+            .any(|d| d.message == "Enumerated list start value not ordinal-1: \"3\" (ordinal 3)"),
         "{:?}",
         doc.diagnostics
     );
@@ -258,7 +258,7 @@ fn test_a_list_interrupted_by_prose_keeps_only_its_finished_items() {
     assert!(
         doc.diagnostics
             .iter()
-            .any(|d| d == "Enumerated list ends without a blank line; unexpected unindent."),
+            .any(|d| d.message == "Enumerated list ends without a blank line; unexpected unindent."),
         "{:?}",
         doc.diagnostics
     );
