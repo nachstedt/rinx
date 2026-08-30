@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TargetName};
+use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TableRow, TargetName};
 use rusty_sphinx_index::{GenIndexEntry, ProjectIndex, TargetLocation};
 use rusty_sphinx_scope::Scope;
 
@@ -130,26 +130,52 @@ pub(super) fn index_nodes(
                 header_rows,
                 body_rows,
             } => {
-                for row in header_rows.iter().chain(body_rows) {
-                    for cell in &row.cells {
-                        index_nodes(&cell.content, doc_path, index, scope);
-                    }
-                }
+                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scope);
             }
             Node::Directive(Directive::DataTable { rows, name, .. }) => {
-                if let Some(target_name) = name {
-                    index.targets.insert(
-                        target_name.clone(),
-                        TargetLocation::Internal(doc_path.to_string()),
-                    );
-                }
-                for row in rows {
-                    for cell in &row.cells {
-                        index_nodes(&cell.content, doc_path, index, scope);
-                    }
-                }
+                register_table_name(name.as_ref(), doc_path, index);
+                index_table_rows(rows, doc_path, index, scope);
+            }
+            Node::Directive(Directive::Table {
+                header_rows,
+                body_rows,
+                name,
+                ..
+            }) => {
+                register_table_name(name.as_ref(), doc_path, index);
+                index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scope);
             }
             _ => {}
+        }
+    }
+}
+
+/// Registers a table's optional `:name:` as an internal cross-reference
+/// target, shared by `.. list-table::`/`.. csv-table::` and `.. table::` —
+/// the two directive kinds with a `:name:` option, out of the three table
+/// kinds `index_nodes` indexes.
+fn register_table_name(name: Option<&TargetName>, doc_path: &str, index: &mut ProjectIndex) {
+    if let Some(target_name) = name {
+        index.targets.insert(
+            target_name.clone(),
+            TargetLocation::Internal(doc_path.to_string()),
+        );
+    }
+}
+
+/// Indexes every row's cells, recursing into their content. Shared by grid
+/// tables, `.. table::`, and the data-table directives, whose rows otherwise
+/// arrive in different shapes (a `Vec<TableRow>` split into header/body, or
+/// one flat `Vec<TableRow>` with a separate header-row count).
+fn index_table_rows<'a>(
+    rows: impl IntoIterator<Item = &'a TableRow>,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    scope: &mut Scope,
+) {
+    for row in rows {
+        for cell in &row.cells {
+            index_nodes(&cell.content, doc_path, index, scope);
         }
     }
 }

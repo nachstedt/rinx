@@ -91,6 +91,37 @@ pub enum Directive {
         name: Option<TargetName>,
         rows: Vec<TableRow>,
     },
+    /// `.. table::` — wraps an existing grid or simple table (given as the
+    /// directive's own content) with a title/caption and the layout options
+    /// neither ASCII-art syntax has notation of its own for.
+    ///
+    /// Reuses `TableRow`/`TableCell` like [`Self::DataTable`], but keeps the
+    /// header/body split [`crate::Node::Table`] already produces rather than
+    /// [`Self::DataTable`]'s flat `rows` + `header_rows: usize`: the wrapped
+    /// table arrives pre-split from its own grid or simple table syntax, so
+    /// there is no count left to derive. Gets its own variant rather than
+    /// reusing `DataTable`'s for the same reason `DataTable` isn't folded into
+    /// `Node::Table` — `:header-rows:`/`:stub-columns:` aren't options this
+    /// directive has, and would otherwise carry meaningless defaults forever.
+    Table {
+        /// The directive argument — the table's title/caption. `None` when
+        /// no argument was given.
+        title: Option<String>,
+        widths: Option<TableWidths>,
+        /// `:width:` — an opaque CSS length/percentage (e.g. `"100%"`),
+        /// passed through verbatim since it's only ever re-emitted as a
+        /// `style` attribute.
+        width: Option<String>,
+        align: Option<TableAlign>,
+        /// `:class:` — space-separated class names, already split.
+        classes: Vec<String>,
+        /// `:name:` — reuses [`TargetName`] (the same type explicit
+        /// hyperlink targets use) so it can be registered in
+        /// `ProjectIndex::targets` with no extra conversion.
+        name: Option<TargetName>,
+        header_rows: Vec<TableRow>,
+        body_rows: Vec<TableRow>,
+    },
     DomainObject(DomainObjectBody),
     /// One block of the `sphinx.ext.doctest` family (`doctest`, `testcode`,
     /// `testoutput`, `testsetup`, `testcleanup`).
@@ -379,6 +410,36 @@ mod tests {
                     content: vec![Node::Paragraph(vec![InlineNode::Text("Fruit".to_string())])],
                 }],
             }],
+        };
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_table_directive_serialization_roundtrip() {
+        // Given
+        use crate::table::TableCell;
+
+        let directive = Directive::Table {
+            title: Some("Fruit".to_string()),
+            widths: Some(TableWidths::Explicit(vec![30, 70])),
+            width: Some("100%".to_string()),
+            align: Some(TableAlign::Center),
+            classes: vec!["custom".to_string()],
+            name: Some(TargetName::new("fruit-table")),
+            header_rows: vec![TableRow {
+                cells: vec![TableCell {
+                    colspan: 1,
+                    rowspan: 1,
+                    content: vec![Node::Paragraph(vec![InlineNode::Text("Fruit".to_string())])],
+                }],
+            }],
+            body_rows: vec![],
         };
 
         // When

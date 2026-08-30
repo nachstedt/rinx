@@ -6,6 +6,9 @@
 use rusty_sphinx_ast::{TableAlign, TableRow, TableSource, TableWidths, TargetName};
 use std::fmt::Write as _;
 
+use super::table_shell::{
+    render_table_caption, render_table_colgroup, render_table_name_anchor, render_table_open_tag,
+};
 use crate::RenderCtx;
 
 /// The fields `render_data_table` needs, borrowed straight from
@@ -48,37 +51,17 @@ pub(super) fn render_data_table(
         rows,
     } = params;
 
-    // A `:name:` anchor is emitted exactly like an explicit hyperlink target
-    // (`Node::Target` with no `uri`, see `render_nodes`) — reusing that same
-    // mechanism rather than inventing a new target-location concept.
-    if let Some(target_name) = name {
-        let escaped = html_escape::encode_text(target_name.as_str());
-        let _ = writeln!(html, "<a id=\"{escaped}\"></a>");
-    }
+    render_table_name_anchor(html, name);
 
     // The directive's own name is the table's first class, so a stylesheet
     // can target `.list-table` and `.csv-table` separately even though the two
     // render identically otherwise.
     let mut class_list = vec![source.as_str().to_string()];
     class_list.extend(classes.iter().cloned());
-    if let Some(align) = align {
-        class_list.push(format!("align-{}", align.as_str()));
-    }
-    let class_string = class_list.join(" ");
-    let class_attr = html_escape::encode_double_quoted_attribute(&class_string);
-    let _ = write!(html, "<table class=\"{class_attr}\"");
-    if let Some(width) = width {
-        let width_escaped = html_escape::encode_double_quoted_attribute(width);
-        let _ = write!(html, " style=\"width: {width_escaped}\"");
-    }
-    let _ = writeln!(html, ">");
+    render_table_open_tag(html, &class_list, align, width);
 
-    if let Some(title) = title {
-        let title_escaped = html_escape::encode_text(title);
-        let _ = writeln!(html, "<caption>{title_escaped}</caption>");
-    }
-
-    render_data_table_colgroup(html, widths);
+    render_table_caption(html, title);
+    render_table_colgroup(html, widths);
 
     // Defensively re-clamp: `header_rows` is already clamped to `rows.len()`
     // at parse time, but nothing at the type level stops a directly
@@ -107,26 +90,6 @@ pub(super) fn render_data_table(
     }
     let _ = writeln!(html, "</tbody>");
     let _ = writeln!(html, "</table>");
-}
-
-/// Renders a `<colgroup>` for `:widths:`'s explicit-integer-list form,
-/// normalizing the values as *relative* weights (per the spec) rather than
-/// literal percentages. `Auto`/`Grid`/`None` all mean "let the renderer
-/// decide" — no `<colgroup>` at all.
-fn render_data_table_colgroup(html: &mut String, widths: Option<&TableWidths>) {
-    let Some(TableWidths::Explicit(cols)) = widths else {
-        return;
-    };
-    let total: u32 = cols.iter().sum();
-    if total == 0 {
-        return;
-    }
-    let _ = writeln!(html, "<colgroup>");
-    for col in cols {
-        let pct = f64::from(*col) * 100.0 / f64::from(total);
-        let _ = writeln!(html, "<col style=\"width: {pct:.2}%\" />");
-    }
-    let _ = writeln!(html, "</colgroup>");
 }
 
 /// Renders one data-table row, picking `th`/`td` per cell rather than
@@ -161,26 +124,8 @@ fn render_data_table_row(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node};
-    use rusty_sphinx_index::ProjectIndex;
-
-    fn render_doc(doc: &Document) -> String {
-        let index = ProjectIndex::default();
-        crate::render(doc, &index, &doc.path).html
-    }
-
-    fn table_row(cells: &[&str]) -> TableRow {
-        rusty_sphinx_ast::TableRow {
-            cells: cells
-                .iter()
-                .map(|text| rusty_sphinx_ast::TableCell {
-                    colspan: 1,
-                    rowspan: 1,
-                    content: vec![Node::Paragraph(vec![InlineNode::Text((*text).to_string())])],
-                })
-                .collect(),
-        }
-    }
+    use crate::blocks::table_test_support::{render_doc, table_row};
+    use rusty_sphinx_ast::{Directive, Document, Node};
 
     /// A minimal table carrying only `source`, for the tests that care about
     /// nothing else.
@@ -490,19 +435,6 @@ mod tests {
 
         // Then
         assert!(result.contains("<a id=\"fruit-table\"></a>"));
-    }
-    #[test]
-    fn test_render_data_table_colgroup_skipped_for_auto_and_grid_widths() {
-        // Given
-        let mut html = String::new();
-
-        // When
-        render_data_table_colgroup(&mut html, Some(&TableWidths::Auto));
-        render_data_table_colgroup(&mut html, Some(&TableWidths::Grid));
-        render_data_table_colgroup(&mut html, None);
-
-        // Then
-        assert!(html.is_empty());
     }
     #[test]
     fn test_render_table_cell_extraction_matches_grid_table_output_byte_for_byte() {

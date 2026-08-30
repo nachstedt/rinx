@@ -262,3 +262,79 @@ fn test_analyze_list_table_without_name_registers_no_target() {
     // Then
     assert!(index.targets.is_empty());
 }
+
+#[test]
+fn test_analyze_registers_table_directive_name_as_target() {
+    // Given — a `.. table::` with a `:name:` option
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Directive(Directive::Table {
+            title: None,
+            widths: None,
+            width: None,
+            align: None,
+            classes: vec![],
+            name: Some(TargetName::new("wrapped-table")),
+            header_rows: vec![],
+            body_rows: vec![],
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("wrapped-table")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_descends_into_table_directive_header_and_body_cells() {
+    // Given — a nested target in both a header cell and a body cell
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Directive(Directive::Table {
+            title: None,
+            widths: None,
+            width: None,
+            align: None,
+            classes: vec![],
+            name: None,
+            header_rows: vec![rusty_sphinx_ast::TableRow {
+                cells: vec![rusty_sphinx_ast::TableCell {
+                    colspan: 1,
+                    rowspan: 1,
+                    content: vec![Node::Target {
+                        name: TargetName::new("in-header"),
+                        uri: None,
+                    }],
+                }],
+            }],
+            body_rows: vec![rusty_sphinx_ast::TableRow {
+                cells: vec![rusty_sphinx_ast::TableCell {
+                    colspan: 1,
+                    rowspan: 1,
+                    content: vec![Node::Target {
+                        name: TargetName::new("in-body"),
+                        uri: None,
+                    }],
+                }],
+            }],
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("in-header")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+    assert_eq!(
+        index.targets.get(&TargetName::new("in-body")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}

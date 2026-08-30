@@ -16,6 +16,7 @@ use super::domains::{DirectiveSignatures, parse_domain_object};
 use super::glossary::parse_glossary;
 use super::index_directive::parse_index_directive;
 use super::scope::try_parse_scope_directive;
+use super::table::parse_table_directive;
 use super::toctree::parse_toctree;
 use rusty_sphinx_ast::{Directive, Node};
 
@@ -170,6 +171,11 @@ fn parse_body_directive(
     }
     if name == "csv-table" {
         let directive = parse_csv_table(argument, body_lines, adornment_order, diagnostics, ctx);
+        return Node::Directive(directive);
+    }
+    if name == "table" {
+        let directive =
+            parse_table_directive(argument, body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if name == "index" {

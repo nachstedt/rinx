@@ -2,7 +2,7 @@
 //! lists, and the directive dispatcher — everything [`render_nodes`] reaches
 //! while walking a document's node tree.
 
-use rusty_sphinx_ast::{Directive, Enumerator, InlineNode, ListItem, Node};
+use rusty_sphinx_ast::{Directive, Enumerator, HashedContent, InlineNode, ListItem, Node};
 use std::fmt::Write as _;
 
 use super::admonitions::{render_admonition, render_seealso, render_version_change};
@@ -12,6 +12,7 @@ use super::domain_object::render_domain_object;
 use super::glossary::{render_glossary, render_index_anchor};
 use super::nav::{find_nav_entry, render_nav_entry};
 use super::scope_directives::apply_scope_directive;
+use super::table_directive::{TableDirectiveParams, render_table_directive};
 use crate::RenderCtx;
 use crate::inline::render_inline;
 
@@ -102,10 +103,17 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String
                     collect_anonymous_targets(&item.definition, targets);
                 }
             }
+            // A bare grid/simple table and a `.. table::`-wrapped one share
+            // the same header/body row shape, so one arm covers both.
             Node::Table {
                 header_rows,
                 body_rows,
-            } => {
+            }
+            | Node::Directive(Directive::Table {
+                header_rows,
+                body_rows,
+                ..
+            }) => {
                 for row in header_rows.iter().chain(body_rows) {
                     for cell in &row.cells {
                         collect_anonymous_targets(&cell.content, targets);
@@ -224,36 +232,45 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
     }
 }
 
+/// Renders a local `.. toctree::` as a `<ul>` of the current document's own
+/// children in the nav tree — the sidebar handles the site-wide tree
+/// separately (see `super::nav`), this only covers a toctree written inline
+/// in a page's own body.
+fn render_toctree_directive(html: &mut String, maxdepth: Option<usize>, ctx: &mut RenderCtx<'_>) {
+    let _ = writeln!(html, "<ul>");
+    let current_dir = std::path::Path::new(ctx.doc_path)
+        .parent()
+        .unwrap_or_else(|| std::path::Path::new(""));
+    if let Some(current_entry) = find_nav_entry(&ctx.index.nav_tree, ctx.original_doc_path) {
+        for child in &current_entry.children {
+            render_nav_entry(html, child, ctx.index, current_dir, 1, maxdepth);
+        }
+    }
+    let _ = writeln!(html, "</ul>");
+}
+
+/// Renders a `.. plantuml::` diagram as an `<img>` pointing at the SVG a
+/// separate build phase compiled from this block's hashed content (see
+/// `extract_diagrams`/`validate_images` in the worker crate).
+fn render_plantuml_directive(html: &mut String, content: &HashedContent, ctx: &RenderCtx<'_>) {
+    let escaped_hash = html_escape::encode_text(content.hash());
+
+    let current_dir = std::path::Path::new(ctx.doc_path)
+        .parent()
+        .unwrap_or_else(|| std::path::Path::new(""));
+    let image_path = std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
+    let relative_path = pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
+    let src = relative_path.display();
+
+    let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
+    let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
+    let _ = writeln!(html, "</div>");
+}
+
 fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCtx<'_>) {
     match directive {
-        Directive::Toctree { maxdepth, .. } => {
-            let _ = writeln!(html, "<ul>");
-            let current_dir = std::path::Path::new(ctx.doc_path)
-                .parent()
-                .unwrap_or_else(|| std::path::Path::new(""));
-            if let Some(current_entry) = find_nav_entry(&ctx.index.nav_tree, ctx.original_doc_path)
-            {
-                for child in &current_entry.children {
-                    render_nav_entry(html, child, ctx.index, current_dir, 1, *maxdepth);
-                }
-            }
-            let _ = writeln!(html, "</ul>");
-        }
-        Directive::PlantUml(content) => {
-            let escaped_hash = html_escape::encode_text(content.hash());
-
-            let current_dir = std::path::Path::new(ctx.doc_path)
-                .parent()
-                .unwrap_or_else(|| std::path::Path::new(""));
-            let image_path = std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
-            let relative_path =
-                pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
-            let src = relative_path.display();
-
-            let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
-            let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
-            let _ = writeln!(html, "</div>");
-        }
+        Directive::Toctree { maxdepth, .. } => render_toctree_directive(html, *maxdepth, ctx),
+        Directive::PlantUml(content) => render_plantuml_directive(html, content, ctx),
         Directive::Admonition {
             kind,
             title,
@@ -293,6 +310,29 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
                 classes,
                 name: name.as_ref(),
                 rows,
+            },
+            ctx,
+        ),
+        Directive::Table {
+            title,
+            widths,
+            width,
+            align,
+            classes,
+            name,
+            header_rows,
+            body_rows,
+        } => render_table_directive(
+            html,
+            TableDirectiveParams {
+                title: title.as_deref(),
+                widths: widths.as_ref(),
+                width: width.as_deref(),
+                align: *align,
+                classes,
+                name: name.as_ref(),
+                header_rows,
+                body_rows,
             },
             ctx,
         ),
