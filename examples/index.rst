@@ -27,6 +27,7 @@ Welcome to the Rusty-Sphinx example.
    simple_tables
    list_table
    csv_table
+   table_directive
    index_entries
    noqa
    doctests

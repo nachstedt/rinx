@@ -68,11 +68,11 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Grid tables (`+---+` / `|` / `=` ASCII art) | ✅ | Column/row spans and hierarchical/nested headers supported |
+| Grid tables (ASCII art) | ✅ | Column/row spans and hierarchical/nested headers supported |
 | Simple tables (whitespace-column `===` style) | ✅ | Header rules, `-` column-span underlines, multi-line cells, the unbounded rightmost column, and the escaped space `\ ` for a deliberately empty first-column cell |
 | `.. list-table::` | ✅ | `:name:` resolves to the document, not a fragment precisely at the table (same limitation as every other internal `:ref:` target); shares one AST node and renderer with `csv-table` |
 | `.. csv-table::` directive | 🔶 | Inline data, `:file:`, `:header:`, `:delim:`, `:quote:`, `:escape:`, `:keepspace:` and every `list-table` option supported. `:url:` unsupported (a network fetch would make the build non-hermetic); `:encoding:` limited to UTF-8 and its ASCII subset; `:delim:`/`:quote:`/`:escape:` limited to ASCII characters; a `:file:` must be declared in the Bazel library's `csv_data` attribute, and an unreadable one fails the build |
-| `.. table::` (table title/caption/options) | ❌ | — |
+| `.. table::` (table title/caption/options) | ✅ | Wraps an existing grid or simple table; `:name:` has the same document-not-fragment limitation as `list-table`'s |
 
 ## Directives
 

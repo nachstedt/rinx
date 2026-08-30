@@ -127,6 +127,14 @@ diagnostic_codes! {
     TableDataRowCellCount => "table.data.row-cell-count",
     TableDataNotABulletList => "table.data.not-a-bullet-list",
 
+    // --- `.. table::` directive ----------------------------------------------
+    /// The directive's content is empty (after its option lines).
+    TableDirectiveNoContent => "table.directive.no-content",
+    /// The directive's content parses, but isn't a table.
+    TableDirectiveNotATable => "table.directive.not-a-table",
+    /// The directive's content is more than just the one wrapped table.
+    TableDirectiveMultipleBlocks => "table.directive.multiple-blocks",
+
     // --- `csv-table` data --------------------------------------------------
     CsvUrlUnsupported => "csv.url-unsupported",
     CsvFileAndContent => "csv.file-and-content",

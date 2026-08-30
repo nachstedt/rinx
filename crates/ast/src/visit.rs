@@ -121,6 +121,17 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
                 }
             }
         }
+        Directive::Table {
+            header_rows,
+            body_rows,
+            ..
+        } => {
+            for row in header_rows.iter().chain(body_rows) {
+                for cell in &row.cells {
+                    walk_nodes(&cell.content, visit);
+                }
+            }
+        }
         Directive::DomainObject(body) => walk_nodes(body.body(), visit),
         // Directives with no block-level children. A doctest block's body is
         // verbatim text, not nested nodes, so there is nothing to descend into.
@@ -332,6 +343,27 @@ mod tests {
 
         // Then
         assert_eq!(bodies, vec!["in-list-table"]);
+    }
+
+    #[test]
+    fn test_walk_nodes_descends_into_table_directive_header_and_body_rows() {
+        // Given
+        let nodes = vec![Node::Directive(Directive::Table {
+            title: None,
+            widths: None,
+            width: None,
+            align: None,
+            classes: Vec::new(),
+            name: None,
+            header_rows: vec![row_with(vec![diagram("in-header")])],
+            body_rows: vec![row_with(vec![diagram("in-body")])],
+        })];
+
+        // When
+        let bodies = walk_diagram_bodies(&nodes);
+
+        // Then
+        assert_eq!(bodies, vec!["in-header", "in-body"]);
     }
 
     #[test]
