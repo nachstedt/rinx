@@ -6,14 +6,12 @@ use rusty_sphinx_ast::{
 };
 
 use super::csv_dialect::{CsvDialect, parse_csv_rows};
-use super::options::{
-    OptionLine, SharedTableOptions, parse_shared_table_options, report_unknown_options,
-    scan_option_lines,
-};
-use super::widths::parse_widths_option;
+use super::options::{SharedTableOptions, parse_shared_table_options};
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::directives::body::join_body_lines;
+use crate::directives::table_options::{OptionLine, report_unknown_options, scan_option_lines};
+use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 
@@ -68,7 +66,7 @@ pub(in crate::directives) fn parse_csv_table(
     let unindented_lines = unindent_body_lines(body_lines);
     let (option_lines, body_start) = scan_option_lines(&unindented_lines);
     let (options, unrecognized) =
-        parse_shared_table_options(&option_lines, TableSource::Csv, diagnostics, ctx);
+        parse_shared_table_options(&option_lines, TableSource::Csv.as_str(), diagnostics, ctx);
 
     let mut dialect = CsvDialect::default();
     let mut source = CsvSource::default();
@@ -76,7 +74,7 @@ pub(in crate::directives) fn parse_csv_table(
         .into_iter()
         .filter(|line| !dialect.apply_option(line, diagnostics, ctx) && !source.apply_option(line))
         .collect();
-    report_unknown_options(&unclaimed, TableSource::Csv, diagnostics, ctx);
+    report_unknown_options(&unclaimed, TableSource::Csv.as_str(), diagnostics, ctx);
 
     let inline_data = join_body_lines(
         &unindented_lines[body_start..]
