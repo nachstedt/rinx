@@ -1,33 +1,30 @@
 //! The renderer module converts the AST and `ProjectIndex` into HTML.
 
+mod admonitions;
+mod blocks;
 pub mod config;
-mod directives;
 mod doctest;
+mod domain_object;
 mod domain_resolution;
 mod genindex;
+mod glossary;
 mod inline;
+mod list_table;
 mod nav;
 mod option_resolution;
 mod page;
+mod scope_directives;
+mod tables;
 
 pub use genindex::render_genindex;
 pub use page::{PageMeta, css_relative_path, render_page};
 
-use directives::{
-    ListTableParams, render_admonition, render_domain_object, render_glossary, render_index_anchor,
-    render_list_table, render_seealso, render_version_change,
-};
-use doctest::{render_bare_doctest_block, render_doctest_block};
+use blocks::{collect_anonymous_targets, render_nodes};
 use domain_resolution::DomainObjectResolver;
-use inline::render_inline;
-use nav::{find_nav_entry, render_nav_entry};
 use option_resolution::OptionResolver;
-use rusty_sphinx_ast::{
-    Directive, Document, Enumerator, InlineNode, ListItem, Node, ObjectType, TableRow,
-};
+use rusty_sphinx_ast::{Document, ObjectType};
 use rusty_sphinx_index::ProjectIndex;
 use rusty_sphinx_scope::Scope;
-use std::fmt::Write as _;
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -174,359 +171,12 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
     }
 }
 
-/// Renders the `<li>` elements shared by both list kinds.
-///
-/// The two kinds differ only in their wrapper element — docutils models both
-/// with one `list_item` node, and so does [`rusty_sphinx_ast::ListItem`].
-fn render_list_items(html: &mut String, items: &[ListItem], ctx: &mut RenderCtx) {
-    for item in items {
-        let _ = write!(html, "<li>");
-        render_nodes(html, &item.nodes, ctx);
-        let _ = writeln!(html, "</li>");
-    }
-}
-
-/// Builds the opening `<ol>` tag for an enumerated list.
-///
-/// Sphinx emits only the sequence class here — its HTML writers carry a
-/// literal `@@@ To do: prefix, suffix.` and drop the punctuation, so `(a)`,
-/// `a)` and `a.` all render identically. rusty-sphinx keeps the distinction:
-/// the format class lets the stylesheet reproduce the parentheses the author
-/// actually wrote. Do not "simplify" this back to Sphinx's output.
-///
-/// `start` is emitted only when the list does not begin at 1, matching
-/// docutils. For the parenthesised formats the browser's own marker is
-/// suppressed in CSS, so the starting point is additionally handed to the
-/// counter as an inline `counter-reset`; the `start` attribute is still
-/// present so the list numbers correctly without the stylesheet.
-fn open_enumerated_list_tag(start: Enumerator) -> String {
-    let mut tag = format!(
-        "<ol class=\"{} {}\"",
-        start.sequence().css_class(),
-        start.format().css_class()
-    );
-    if start.ordinal() != 1 {
-        let _ = write!(tag, " start=\"{}\"", start.ordinal());
-    }
-    if !start.format().is_native_marker() {
-        let _ = write!(
-            tag,
-            " style=\"counter-reset: rsl {}\"",
-            i64::from(start.ordinal()) - 1
-        );
-    }
-    tag.push('>');
-    tag
-}
-
-/// Collects the URIs of anonymous hyperlink targets, in document order.
-///
-/// The match is deliberately exhaustive: every block-level container has to be
-/// descended into, or an anonymous target written inside one silently fails to
-/// pair with its reference. Leaving a `_` arm here is what let list, table and
-/// definition-list bodies go unvisited for as long as they did.
-fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String>) {
-    for node in nodes {
-        match node {
-            Node::AnonymousTarget { uri } => targets.push(uri.clone()),
-            Node::Directive(
-                Directive::Admonition { body, .. }
-                | Directive::VersionChange { body, .. }
-                | Directive::SeeAlso { body },
-            ) => {
-                collect_anonymous_targets(body, targets);
-            }
-            Node::Directive(Directive::DomainObject(obj)) => {
-                collect_anonymous_targets(obj.body(), targets);
-            }
-            Node::Directive(Directive::Glossary { entries, .. }) => {
-                for entry in entries {
-                    collect_anonymous_targets(&entry.definition, targets);
-                }
-            }
-            Node::Directive(Directive::ListTable { rows, .. }) => {
-                for row in rows {
-                    for cell in &row.cells {
-                        collect_anonymous_targets(&cell.content, targets);
-                    }
-                }
-            }
-            Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
-                for item in items {
-                    collect_anonymous_targets(&item.nodes, targets);
-                }
-            }
-            Node::DefinitionList { items } => {
-                for item in items {
-                    collect_anonymous_targets(&item.definition, targets);
-                }
-            }
-            Node::Table {
-                header_rows,
-                body_rows,
-            } => {
-                for row in header_rows.iter().chain(body_rows) {
-                    for cell in &row.cells {
-                        collect_anonymous_targets(&cell.content, targets);
-                    }
-                }
-            }
-            // Every other directive's payload is inline or verbatim, and the
-            // remaining node kinds have no block-level children at all.
-            Node::Directive(_)
-            | Node::Heading { .. }
-            | Node::Paragraph(_)
-            | Node::Target { .. }
-            | Node::LiteralBlock { .. }
-            | Node::DoctestBlock(_)
-            | Node::Comment
-            | Node::Transition => {}
-        }
-    }
-}
-
-/// Renders a sequence of inline nodes in order, sharing the same `ctx`
-/// (index/anon-target state) across calls. Used for both heading text and
-/// paragraph content, which are both just a `Vec<InlineNode>`.
-fn render_inlines(html: &mut String, inlines: &[InlineNode], ctx: &mut RenderCtx<'_>) {
-    for inline in inlines {
-        render_inline(html, inline, ctx);
-    }
-}
-
-/// Renders a single grid-table row, emitting each cell with the given tag
-/// (`th` for header rows, `td` for body rows) via [`render_table_cell`].
-fn render_table_row(html: &mut String, row: &TableRow, cell_tag: &str, ctx: &mut RenderCtx<'_>) {
-    let _ = writeln!(html, "<tr>");
-    for cell in &row.cells {
-        render_table_cell(html, cell, cell_tag, None, ctx);
-    }
-    let _ = writeln!(html, "</tr>");
-}
-
-/// Renders a single table cell with the given tag (`th`/`td`) and an
-/// optional `scope` attribute (used by `list-table`'s `:stub-columns:` to
-/// mark a stub cell as a row header; grid tables never pass one).
-/// `colspan`/`rowspan` attributes are written only when greater than 1,
-/// matching how `LiteralBlock` only emits its optional `language` attribute
-/// when present.
-pub(crate) fn render_table_cell(
-    html: &mut String,
-    cell: &rusty_sphinx_ast::TableCell,
-    tag: &str,
-    scope: Option<&str>,
-    ctx: &mut RenderCtx<'_>,
-) {
-    let _ = write!(html, "<{tag}");
-    if cell.colspan > 1 {
-        let _ = write!(html, " colspan=\"{}\"", cell.colspan);
-    }
-    if cell.rowspan > 1 {
-        let _ = write!(html, " rowspan=\"{}\"", cell.rowspan);
-    }
-    if let Some(scope) = scope {
-        let _ = write!(html, " scope=\"{scope}\"");
-    }
-    let _ = write!(html, ">");
-    render_nodes(html, &cell.content, ctx);
-    let _ = writeln!(html, "</{tag}>");
-}
-
-pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCtx<'_>) {
-    for node in nodes {
-        match node {
-            Node::Heading { level, text } => {
-                let tag = format!("h{}", (*level).clamp(1, 6));
-                let _ = write!(html, "<{tag}>");
-                render_inlines(html, text, ctx);
-                let _ = writeln!(html, "</{tag}>");
-            }
-            Node::Paragraph(inlines) => {
-                let _ = write!(html, "<p>");
-                render_inlines(html, inlines, ctx);
-                let _ = writeln!(html, "</p>");
-            }
-            Node::Target { name, uri } => {
-                if uri.is_none() {
-                    let escaped_name = html_escape::encode_text(name.as_str());
-                    let _ = writeln!(html, "<a id=\"{escaped_name}\"></a>");
-                }
-            }
-            // Anonymous targets and comments produce no HTML output.
-            Node::AnonymousTarget { .. } | Node::Comment => {}
-            Node::Transition => {
-                let _ = writeln!(html, "<hr />");
-            }
-            Node::Directive(directive) => render_directive(html, directive, ctx),
-            Node::BulletList { items, .. } => {
-                let _ = writeln!(html, "<ul>");
-                render_list_items(html, items, ctx);
-                let _ = writeln!(html, "</ul>");
-            }
-            Node::EnumeratedList { start, items } => {
-                let _ = writeln!(html, "{}", open_enumerated_list_tag(*start));
-                render_list_items(html, items, ctx);
-                let _ = writeln!(html, "</ol>");
-            }
-            Node::DefinitionList { items } => {
-                let _ = writeln!(html, "<dl>");
-                for item in items {
-                    let _ = write!(html, "<dt>");
-                    render_inlines(html, &item.term, ctx);
-                    let _ = writeln!(html, "</dt>");
-                    let _ = write!(html, "<dd>");
-                    render_nodes(html, &item.definition, ctx);
-                    let _ = writeln!(html, "</dd>");
-                }
-                let _ = writeln!(html, "</dl>");
-            }
-            Node::Table {
-                header_rows,
-                body_rows,
-            } => {
-                let _ = writeln!(html, "<table>");
-                if !header_rows.is_empty() {
-                    let _ = writeln!(html, "<thead>");
-                    for row in header_rows {
-                        render_table_row(html, row, "th", ctx);
-                    }
-                    let _ = writeln!(html, "</thead>");
-                }
-                let _ = writeln!(html, "<tbody>");
-                for row in body_rows {
-                    render_table_row(html, row, "td", ctx);
-                }
-                let _ = writeln!(html, "</tbody>");
-                let _ = writeln!(html, "</table>");
-            }
-            Node::LiteralBlock { language, content } => {
-                let escaped = html_escape::encode_text(content);
-                if let Some(lang) = language {
-                    let lang_attr = html_escape::encode_double_quoted_attribute(lang);
-                    let _ = writeln!(
-                        html,
-                        "<pre><code class=\"language-{lang_attr}\">{escaped}</code></pre>"
-                    );
-                } else {
-                    let _ = writeln!(html, "<pre><code>{escaped}</code></pre>");
-                }
-            }
-            // A bare `>>>` block. Rendered like the `.. doctest::` directive
-            // form, which is what Sphinx does — and, unlike the literal block
-            // above, this one is also executed.
-            Node::DoctestBlock(content) => {
-                html.push_str(&render_bare_doctest_block(content));
-            }
-        }
-    }
-}
-
-fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCtx<'_>) {
-    match directive {
-        Directive::Toctree { maxdepth, .. } => {
-            let _ = writeln!(html, "<ul>");
-            let current_dir = std::path::Path::new(ctx.doc_path)
-                .parent()
-                .unwrap_or_else(|| std::path::Path::new(""));
-            if let Some(current_entry) = find_nav_entry(&ctx.index.nav_tree, ctx.original_doc_path)
-            {
-                for child in &current_entry.children {
-                    render_nav_entry(html, child, ctx.index, current_dir, 1, *maxdepth);
-                }
-            }
-            let _ = writeln!(html, "</ul>");
-        }
-        Directive::PlantUml(content) => {
-            let escaped_hash = html_escape::encode_text(content.hash());
-
-            let current_dir = std::path::Path::new(ctx.doc_path)
-                .parent()
-                .unwrap_or_else(|| std::path::Path::new(""));
-            let image_path = std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
-            let relative_path =
-                pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
-            let src = relative_path.display();
-
-            let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
-            let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
-            let _ = writeln!(html, "</div>");
-        }
-        Directive::Admonition {
-            kind,
-            title,
-            collapsible,
-            body,
-        } => render_admonition(html, *kind, title.as_deref(), *collapsible, body, ctx),
-        Directive::VersionChange {
-            kind,
-            version,
-            body,
-        } => render_version_change(html, *kind, version, body, ctx),
-        Directive::SeeAlso { body } => render_seealso(html, body, ctx),
-        Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
-        Directive::Index { id, .. } => render_index_anchor(html, id),
-        Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
-        Directive::ListTable {
-            title,
-            header_rows,
-            stub_columns,
-            widths,
-            width,
-            align,
-            classes,
-            name,
-            rows,
-        } => render_list_table(
-            html,
-            ListTableParams {
-                title: title.as_deref(),
-                header_rows: *header_rows,
-                stub_columns: *stub_columns,
-                widths: widths.as_ref(),
-                width: width.as_deref(),
-                align: *align,
-                classes,
-                name: name.as_ref(),
-                rows,
-            },
-            ctx,
-        ),
-        Directive::PyCurrentModule { module } => match module {
-            Some(name) => ctx.scope.python.set_module(name),
-            None => ctx.scope.python.clear_module(),
-        },
-        // The `c:namespace` family mutates scope and renders nothing, exactly
-        // like `py:currentmodule` above — mirrored from the analyzer's
-        // `index_nodes` so anchor `id`s never drift from the index keys.
-        Directive::CNamespace { namespace } => ctx.scope.c.set_namespace(namespace.as_deref()),
-        Directive::CNamespacePush { namespace } => ctx.scope.c.push_namespace(namespace),
-        Directive::CNamespacePop => ctx.scope.c.pop_namespace(),
-        // `.. program::` mutates scope and renders nothing, exactly like
-        // `py:currentmodule`/`c:namespace` above — mirrored from the
-        // analyzer's `index_nodes` so `StdCmdoption` anchor `id`s never drift
-        // from the index keys.
-        Directive::StdProgram { name } => match name {
-            Some(name) => ctx.scope.program.set(name),
-            None => ctx.scope.program.clear(),
-        },
-        // Presentation only — whether this block's code passes, fails, or is
-        // never run is decided by a separate, opt-in test target, and cannot
-        // influence the HTML.
-        Directive::DocTest(block) => {
-            if let Some(rendered) = render_doctest_block(block) {
-                html.push_str(&rendered);
-            }
-        }
-        Directive::Unknown { .. } => {}
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use rusty_sphinx_ast::{
-        EnumeratorFormat, EnumeratorSequence, HashedContent, InlineNode, NonEmptyVector,
-        TargetName, TargetSearchOrder,
+        Directive, Enumerator, EnumeratorFormat, EnumeratorSequence, HashedContent, InlineNode,
+        ListItem, Node, TargetName, TargetSearchOrder,
     };
 
     #[test]
@@ -541,7 +191,6 @@ mod tests {
         // Then
         assert_eq!(result, "");
     }
-
     #[test]
     fn test_render_formats_heading_and_paragraph_nodes() {
         // Given
@@ -572,7 +221,6 @@ mod tests {
             "<h1>Title</h1>\n<p>Paragraph</p>\n<h1>Another Heading</h1>\n"
         );
     }
-
     #[test]
     fn test_render_heading_resolves_domain_object_reference_as_link() {
         // Given
@@ -613,323 +261,6 @@ mod tests {
         );
         assert!(result.ends_with(" Module</h1>\n"));
     }
-
-    #[test]
-    fn test_render_resolves_bare_reference_after_current_module_directive() {
-        // Given — the `Doc/howto/enum.rst` shape: a document with no
-        // `py:module` of its own, opening with `.. currentmodule:: enum`
-        // before a bare reference to a class defined in another document
-        // under that module.
-        let doc = Document::new(
-            "howto/enum.rst".to_string(),
-            vec![
-                Node::Directive(Directive::PyCurrentModule {
-                    module: Some("enum".to_string()),
-                }),
-                Node::Paragraph(vec![InlineNode::DomainObjectReference {
-                    object_type: rusty_sphinx_ast::ObjectType::Py(
-                        rusty_sphinx_ast::PyObjectType::Class,
-                    ),
-                    name: "Enum".to_string(),
-                    display: "Enum".to_string(),
-                    link: true,
-                    search_order: TargetSearchOrder::LeastQualifiedFirst,
-                }]),
-            ],
-        );
-        let mut index = ProjectIndex::default();
-        index.insert_domain_object(
-            rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
-            "enum.Enum",
-            "library/enum.rst",
-        );
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert!(output.broken_links.is_empty());
-        assert!(
-            output
-                .html
-                .contains("href=\"../library/enum.html#py:class:enum.enum\"")
-        );
-    }
-
-    #[test]
-    fn test_render_current_module_directive_emits_no_html() {
-        // Given — real Sphinx's `currentmodule` documents nothing.
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Directive(Directive::PyCurrentModule {
-                module: Some("enum".to_string()),
-            })],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert_eq!(output.html, "");
-    }
-
-    #[test]
-    fn test_render_program_directive_emits_no_html() {
-        // Given — like `currentmodule`/`c:namespace`, `.. program::`
-        // documents nothing; it only mutates scope.
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Directive(Directive::StdProgram {
-                name: Some("dis".to_string()),
-            })],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert_eq!(output.html, "");
-    }
-
-    #[test]
-    fn test_render_cmdoption_domain_object_produces_dt_and_dd() {
-        // Given
-        let doc = Document::new(
-            "cmdline.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
-                    signatures: NonEmptyVector::single("-m <module-name>".to_string()),
-                    body: vec![Node::Paragraph(vec![InlineNode::Text(
-                        "Run a module.".to_string(),
-                    )])],
-                },
-            ))],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert!(output.html.contains("<dl class=\"std cmdoption\">"));
-        assert!(output.html.contains(
-            "<dt id=\"std:cmdoption:-m\"><code class=\"sig-name\">-m &lt;module-name&gt;</code></dt>"
-        ));
-        assert!(output.html.contains("<dd><p>Run a module.</p>\n</dd>"));
-    }
-
-    #[test]
-    fn test_render_cmdoption_comma_separated_flags_share_one_dt_with_two_anchors() {
-        // Given — real Sphinx's `.. option:: -c, --compress` shape.
-        let doc = Document::new(
-            "zipapp.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
-                    signatures: NonEmptyVector::single("-c, --compress".to_string()),
-                    body: vec![],
-                },
-            ))],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then — one shared `<dt>`, the first flag's id, and the second
-        // flag as an invisible anchor inside the same `<dt>`.
-        assert!(output.html.contains(
-            "<dt id=\"std:cmdoption:-c\"><a id=\"std:cmdoption:--compress\"></a><code class=\"sig-name\">-c, --compress</code></dt>"
-        ));
-    }
-
-    #[test]
-    fn test_render_cmdoption_qualifies_anchor_by_ambient_program() {
-        // Given
-        let doc = Document::new(
-            "dis.rst".to_string(),
-            vec![
-                Node::Directive(Directive::StdProgram {
-                    name: Some("dis".to_string()),
-                }),
-                Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
-                        signatures: NonEmptyVector::single("-O".to_string()),
-                        body: vec![],
-                    },
-                )),
-            ],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert!(output.html.contains("<dt id=\"std:cmdoption:dis.-o\">"));
-    }
-
-    #[test]
-    fn test_render_option_reference_resolves_to_link() {
-        // Given — resolution goes through the ambient-program tier, so the
-        // reference is preceded by the matching `.. program::`.
-        let doc = Document::new(
-            "dis.rst".to_string(),
-            vec![
-                Node::Directive(Directive::StdProgram {
-                    name: Some("dis".to_string()),
-                }),
-                Node::Paragraph(vec![InlineNode::OptionReference {
-                    display: "-O".to_string(),
-                    target: "-O".to_string(),
-                }]),
-            ],
-        );
-        let mut index = ProjectIndex::default();
-        index.insert_domain_object(
-            rusty_sphinx_ast::ObjectType::Std(rusty_sphinx_ast::StdObjectType::Cmdoption),
-            "dis.-o",
-            "library/dis.rst",
-        );
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert!(output.html.contains(
-            "<a class=\"reference internal\" href=\"library/dis.html#std:cmdoption:dis.-o\">"
-        ));
-        assert!(output.broken_links.is_empty());
-    }
-
-    #[test]
-    fn test_render_option_reference_not_found_produces_broken_link() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Paragraph(vec![InlineNode::OptionReference {
-                display: "-Z".to_string(),
-                target: "-Z".to_string(),
-            }])],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert!(output.html.contains("class=\"broken-link\""));
-        assert_eq!(output.broken_links.len(), 1);
-        assert_eq!(output.broken_links[0].kind, BrokenLinkKind::OptionReference);
-        assert_eq!(output.broken_links[0].target, "-Z");
-    }
-
-    #[test]
-    fn test_render_c_namespace_directives_emit_no_html() {
-        // Given — like `currentmodule`, the namespace family documents
-        // nothing; it only mutates scope.
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![
-                Node::Directive(Directive::CNamespace {
-                    namespace: Some("A.B".to_string()),
-                }),
-                Node::Directive(Directive::CNamespacePush {
-                    namespace: "C.D".to_string(),
-                }),
-                Node::Directive(Directive::CNamespacePop),
-                Node::Directive(Directive::CNamespace { namespace: None }),
-            ],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert_eq!(output.html, "");
-    }
-
-    #[test]
-    fn test_render_c_namespace_null_inside_c_type_body_unqualifies_nested_macro_anchor() {
-        // Given — the CPython `c-api/memory.rst` shape. The renderer must
-        // agree with the analyzer's index key, or the anchor `id` and the
-        // cross-reference target drift apart.
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CType {
-                    signatures: rusty_sphinx_ast::NonEmptyVector::single(
-                        "PyMemAllocatorDomain".into(),
-                    ),
-                    no_index: false,
-                    no_index_entry: false,
-                    no_contents_entry: false,
-                    body: vec![
-                        Node::Directive(Directive::CNamespace { namespace: None }),
-                        Node::Directive(Directive::DomainObject(
-                            rusty_sphinx_ast::DomainObjectBody::CMacro {
-                                signatures: rusty_sphinx_ast::NonEmptyVector::single(
-                                    "PYMEM_DOMAIN_RAW".into(),
-                                ),
-                                body: vec![],
-                            },
-                        )),
-                    ],
-                },
-            ))],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert!(output.html.contains("<dt id=\"c:macro:pymem_domain_raw\">"));
-        assert!(
-            !output
-                .html
-                .contains("c:macro:pymemallocatordomain.pymem_domain_raw")
-        );
-    }
-
-    #[test]
-    fn test_render_current_module_none_resets_scope_so_bare_reference_stays_unresolved() {
-        // Given — `.. currentmodule:: None` clears the module, so a
-        // subsequent bare reference that depended on it no longer resolves.
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![
-                Node::Directive(Directive::PyCurrentModule {
-                    module: Some("enum".to_string()),
-                }),
-                Node::Directive(Directive::PyCurrentModule { module: None }),
-                Node::Paragraph(vec![InlineNode::DomainObjectReference {
-                    object_type: rusty_sphinx_ast::ObjectType::Py(
-                        rusty_sphinx_ast::PyObjectType::Class,
-                    ),
-                    name: "Enum".to_string(),
-                    display: "Enum".to_string(),
-                    link: true,
-                    search_order: TargetSearchOrder::LeastQualifiedFirst,
-                }]),
-            ],
-        );
-        let mut index = ProjectIndex::default();
-        index.insert_domain_object(
-            rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
-            "enum.Enum",
-            "library/enum.rst",
-        );
-
-        // When
-        let output = render(&doc, &index, &doc.path);
-
-        // Then
-        assert_eq!(output.broken_links.len(), 1);
-    }
-
     #[test]
     fn test_render_escapes_html_special_characters() {
         // Given
@@ -956,85 +287,6 @@ mod tests {
             "<h1>Title &lt;script&gt;</h1>\n<p>A &amp; B &gt; C</p>\n"
         );
     }
-
-    #[test]
-    fn test_render_toctree_with_target_entries() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Directive(Directive::Toctree {
-                paths: vec!["team_a/index".to_string()],
-                maxdepth: None,
-                ignored_options: vec![],
-            })],
-        );
-        let mut index = ProjectIndex::default();
-        index
-            .document_titles
-            .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
-        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
-            title: "test".to_string(),
-            path: "test.rst".to_string(),
-            children: vec![rusty_sphinx_index::NavEntry {
-                title: "Team A Module".to_string(),
-                path: "team_a/index.rst".to_string(),
-                children: vec![],
-            }],
-        }];
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then
-        assert_eq!(
-            result,
-            "<ul>\n  <li><a href=\"team_a/index.html\">Team A Module</a></li>\n</ul>\n"
-        );
-    }
-
-    #[test]
-    fn test_render_formats_toctree_as_html_list() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Directive(Directive::Toctree {
-                paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
-                maxdepth: None,
-                ignored_options: vec![],
-            })],
-        );
-        let mut index = ProjectIndex::default();
-        index
-            .document_titles
-            .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
-        // Build a nav_tree so the renderer can look up children by doc path.
-        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
-            title: "test".to_string(),
-            path: "test.rst".to_string(),
-            children: vec![
-                rusty_sphinx_index::NavEntry {
-                    title: "Team A Module".to_string(),
-                    path: "team_a/index.rst".to_string(),
-                    children: vec![],
-                },
-                rusty_sphinx_index::NavEntry {
-                    title: "team_b/index".to_string(),
-                    path: "team_b/index.rst".to_string(),
-                    children: vec![],
-                },
-            ],
-        }];
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then
-        assert_eq!(
-            result,
-            "<ul>\n  <li><a href=\"team_a/index.html\">Team A Module</a></li>\n  <li><a href=\"team_b/index.html\">team_b/index.rst</a></li>\n</ul>\n"
-        );
-    }
-
     #[test]
     fn test_render_formats_heading_level_1_as_h1() {
         // Given
@@ -1053,7 +305,6 @@ mod tests {
         // Then
         assert_eq!(result, "<h1>Top</h1>\n");
     }
-
     #[test]
     fn test_render_formats_heading_level_2_as_h2() {
         // Given
@@ -1072,7 +323,6 @@ mod tests {
         // Then
         assert_eq!(result, "<h2>Sub</h2>\n");
     }
-
     #[test]
     fn test_render_formats_heading_level_6_as_h6() {
         // Given
@@ -1091,7 +341,6 @@ mod tests {
         // Then
         assert_eq!(result, "<h6>Deep</h6>\n");
     }
-
     #[test]
     fn test_render_clamps_heading_level_above_6_to_h6() {
         // Given — level 7 exceeds the HTML maximum of 6
@@ -1110,7 +359,6 @@ mod tests {
         // Then
         assert_eq!(result, "<h6>VeryDeep</h6>\n");
     }
-
     #[test]
     fn test_render_ignores_unknown_directive() {
         // Given a document with an unknown directive
@@ -1130,7 +378,6 @@ mod tests {
         // Then the output should be empty, as unknown directives are ignored
         assert_eq!(result, "");
     }
-
     #[test]
     fn test_render_formats_target_node_as_html_anchor() {
         // Given
@@ -1149,7 +396,6 @@ mod tests {
         // Then
         assert_eq!(result, "<a id=\"section-1\"></a>\n");
     }
-
     #[test]
     fn test_render_formats_transition_node_as_horizontal_rule() {
         // Given
@@ -1162,7 +408,6 @@ mod tests {
         // Then
         assert_eq!(result, "<hr />\n");
     }
-
     #[test]
     fn test_render_suppresses_anchor_for_external_target() {
         // Given
@@ -1181,7 +426,6 @@ mod tests {
         // Then
         assert_eq!(result, "");
     }
-
     #[test]
     fn test_render_formats_inline_reference_using_project_index() {
         // Given
@@ -1209,7 +453,6 @@ mod tests {
             "<p><a href=\"other_file.html#other-section\">other-section</a></p>\n"
         );
     }
-
     #[test]
     fn test_render_reports_no_broken_links_when_all_references_resolve() {
         // Given
@@ -1234,7 +477,6 @@ mod tests {
         // Then
         assert!(result.broken_links.is_empty());
     }
-
     #[test]
     fn test_render_collects_broken_links_across_multiple_reference_kinds() {
         // Given a document with a broken :ref: and a broken :term:
@@ -1271,7 +513,6 @@ mod tests {
             ]
         );
     }
-
     #[test]
     fn test_render_resolves_cross_directory_references_as_relative_links() {
         // Given a document in a subdirectory
@@ -1300,7 +541,6 @@ mod tests {
             "<p><a href=\"../team_a/index.html#target-in-a\">target-in-a</a></p>\n"
         );
     }
-
     #[test]
     fn test_render_formats_external_hyperlink() {
         // Given
@@ -1325,7 +565,6 @@ mod tests {
         // Then
         assert_eq!(result, "<p><a href=\"https://python.org\">Python</a></p>\n");
     }
-
     #[test]
     fn test_render_formats_direct_uri_hyperlink() {
         // Given
@@ -1346,7 +585,6 @@ mod tests {
         // Then
         assert_eq!(result, "<p><a href=\"https://google.com\">Google</a></p>\n");
     }
-
     #[test]
     fn test_render_formats_plantuml_with_relative_path() {
         // Given a document in a subdirectory
@@ -1368,330 +606,6 @@ mod tests {
         );
         assert_eq!(result, expected);
     }
-
-    #[test]
-    fn test_render_bullet_list() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::BulletList {
-                bullet: '*',
-                items: vec![
-                    rusty_sphinx_ast::ListItem {
-                        nodes: vec![Node::Paragraph(vec![InlineNode::Text(
-                            "Item 1".to_string(),
-                        )])],
-                    },
-                    rusty_sphinx_ast::ListItem {
-                        nodes: vec![Node::Paragraph(vec![InlineNode::Text(
-                            "Item 2".to_string(),
-                        )])],
-                    },
-                ],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then
-        assert_eq!(
-            result,
-            "<ul>\n<li><p>Item 1</p>\n</li>\n<li><p>Item 2</p>\n</li>\n</ul>\n"
-        );
-    }
-
-    #[test]
-    fn test_render_bullet_list_nested() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::BulletList {
-                bullet: '*',
-                items: vec![rusty_sphinx_ast::ListItem {
-                    nodes: vec![
-                        Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
-                        Node::BulletList {
-                            bullet: '-',
-                            items: vec![rusty_sphinx_ast::ListItem {
-                                nodes: vec![Node::Paragraph(vec![InlineNode::Text(
-                                    "Child".to_string(),
-                                )])],
-                            }],
-                        },
-                    ],
-                }],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then
-        assert!(result.contains(
-            "<ul>\n<li><p>Parent</p>\n<ul>\n<li><p>Child</p>\n</li>\n</ul>\n</li>\n</ul>"
-        ));
-    }
-
-    #[test]
-    fn test_render_bullet_list_multi_paragraph() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::BulletList {
-                bullet: '*',
-                items: vec![rusty_sphinx_ast::ListItem {
-                    nodes: vec![
-                        Node::Paragraph(vec![InlineNode::Text("Para 1".to_string())]),
-                        Node::Paragraph(vec![InlineNode::Text("Para 2".to_string())]),
-                    ],
-                }],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then
-        assert!(result.contains("<li><p>Para 1</p>\n<p>Para 2</p>\n</li>"));
-    }
-
-    /// Builds a two-item enumerated list starting at `ordinal`.
-    fn enumerated_list(
-        sequence: EnumeratorSequence,
-        format: EnumeratorFormat,
-        ordinal: u32,
-    ) -> Node {
-        Node::EnumeratedList {
-            start: Enumerator::new(sequence, format, ordinal).expect("valid ordinal"),
-            items: vec![
-                ListItem {
-                    nodes: vec![Node::Paragraph(vec![InlineNode::Text("One".to_string())])],
-                },
-                ListItem {
-                    nodes: vec![Node::Paragraph(vec![InlineNode::Text("Two".to_string())])],
-                },
-            ],
-        }
-    }
-
-    #[test]
-    fn test_render_enumerated_list() {
-        // Given a plain arabic list starting at one
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![enumerated_list(
-                EnumeratorSequence::Arabic,
-                EnumeratorFormat::Period,
-                1,
-            )],
-        );
-        let index = ProjectIndex::default();
-
-        // When rendering it
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then it becomes an `<ol>` carrying its sequence and format classes,
-        // with no `start` attribute and no counter styling
-        assert_eq!(
-            result,
-            "<ol class=\"arabic period\">\n<li><p>One</p>\n</li>\n<li><p>Two</p>\n</li>\n</ol>\n"
-        );
-    }
-
-    #[test]
-    fn test_render_enumerated_list_carries_each_sequence_class() {
-        // Given each enumeration sequence
-        let expected = [
-            (EnumeratorSequence::Arabic, "arabic"),
-            (EnumeratorSequence::LowerAlpha, "loweralpha"),
-            (EnumeratorSequence::UpperAlpha, "upperalpha"),
-            (EnumeratorSequence::LowerRoman, "lowerroman"),
-            (EnumeratorSequence::UpperRoman, "upperroman"),
-        ];
-        let index = ProjectIndex::default();
-
-        for (sequence, class) in expected {
-            let doc = Document::new(
-                "test.rst".to_string(),
-                vec![enumerated_list(sequence, EnumeratorFormat::Period, 1)],
-            );
-
-            // When rendering it
-            let result = render(&doc, &index, &doc.path).html;
-
-            // Then the class names the sequence, matching Sphinx's vocabulary
-            assert!(
-                result.starts_with(&format!("<ol class=\"{class} period\">")),
-                "{sequence:?}: {result}"
-            );
-        }
-    }
-
-    #[test]
-    fn test_render_enumerated_list_distinguishes_the_punctuation_formats() {
-        // Given the same list in each format
-        let expected = [
-            (EnumeratorFormat::Period, "period"),
-            (EnumeratorFormat::RightParen, "rparen"),
-            (EnumeratorFormat::Parens, "parens"),
-        ];
-        let index = ProjectIndex::default();
-
-        for (format, class) in expected {
-            let doc = Document::new(
-                "test.rst".to_string(),
-                vec![enumerated_list(EnumeratorSequence::Arabic, format, 1)],
-            );
-
-            // When rendering it
-            let result = render(&doc, &index, &doc.path).html;
-
-            // Then the format reaches the HTML. Sphinx drops it, so `(1)` and
-            // `1.` are indistinguishable in its output; keeping the class is
-            // what lets the stylesheet reproduce the author's punctuation.
-            assert!(
-                result.contains(&format!("class=\"arabic {class}\"")),
-                "{format:?}: {result}"
-            );
-        }
-    }
-
-    #[test]
-    fn test_render_enumerated_list_emits_a_start_attribute_only_when_it_is_not_one() {
-        // Given lists starting at one and at five
-        let index = ProjectIndex::default();
-        let from_one = Document::new(
-            "test.rst".to_string(),
-            vec![enumerated_list(
-                EnumeratorSequence::Arabic,
-                EnumeratorFormat::Period,
-                1,
-            )],
-        );
-        let from_five = Document::new(
-            "test.rst".to_string(),
-            vec![enumerated_list(
-                EnumeratorSequence::Arabic,
-                EnumeratorFormat::Period,
-                5,
-            )],
-        );
-
-        // When rendering both
-        let default_start = render(&from_one, &index, &from_one.path).html;
-        let shifted_start = render(&from_five, &index, &from_five.path).html;
-
-        // Then only the shifted list carries the attribute
-        assert!(!default_start.contains("start="), "{default_start}");
-        assert!(shifted_start.contains("start=\"5\""), "{shifted_start}");
-    }
-
-    #[test]
-    fn test_render_enumerated_list_seeds_the_counter_for_parenthesised_formats() {
-        // Given a parenthesised list starting at five
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![enumerated_list(
-                EnumeratorSequence::LowerAlpha,
-                EnumeratorFormat::Parens,
-                5,
-            )],
-        );
-        let index = ProjectIndex::default();
-
-        // When rendering it
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then the CSS counter is seeded one below the start, since the
-        // stylesheet suppresses the browser's own marker for this format
-        assert!(
-            result.contains("style=\"counter-reset: rsl 4\""),
-            "{result}"
-        );
-    }
-
-    #[test]
-    fn test_render_enumerated_list_does_not_seed_a_counter_for_the_period_format() {
-        // Given a period-format list starting at five
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![enumerated_list(
-                EnumeratorSequence::Arabic,
-                EnumeratorFormat::Period,
-                5,
-            )],
-        );
-        let index = ProjectIndex::default();
-
-        // When rendering it
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then no counter styling is emitted — the browser's own marker already
-        // renders this format, and `start` alone positions it
-        assert!(!result.contains("counter-reset"), "{result}");
-    }
-
-    #[test]
-    fn test_render_enumerated_list_seeds_a_negative_counter_for_a_zero_start() {
-        // Given a list starting at zero, which docutils accepts from `0.`
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![enumerated_list(
-                EnumeratorSequence::Arabic,
-                EnumeratorFormat::RightParen,
-                0,
-            )],
-        );
-        let index = ProjectIndex::default();
-
-        // When rendering it
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then the counter is seeded below zero rather than clamped, so the
-        // first item still shows `0)`
-        assert!(
-            result.contains("style=\"counter-reset: rsl -1\""),
-            "{result}"
-        );
-    }
-
-    #[test]
-    fn test_render_enumerated_list_nested() {
-        // Given an enumerated list whose first item contains another
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::EnumeratedList {
-                start: Enumerator::new(EnumeratorSequence::Arabic, EnumeratorFormat::Period, 1)
-                    .unwrap(),
-                items: vec![ListItem {
-                    nodes: vec![
-                        Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
-                        enumerated_list(
-                            EnumeratorSequence::LowerAlpha,
-                            EnumeratorFormat::Parens,
-                            1,
-                        ),
-                    ],
-                }],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When rendering it
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then the inner list nests inside the outer item
-        assert!(
-            result.contains("<li><p>Parent</p>\n<ol class=\"loweralpha parens\""),
-            "{result}"
-        );
-        assert!(result.contains("</ol>\n</li>\n</ol>\n"), "{result}");
-    }
-
     #[test]
     fn test_render_collects_an_anonymous_target_nested_in_a_list_item() {
         // Given an anonymous hyperlink target written inside a list item
@@ -1719,189 +633,6 @@ mod tests {
         // rather than stopping at the container, as it once did
         assert!(result.contains("https://example.com/"), "{result}");
     }
-
-    #[test]
-    fn test_render_definition_list() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::DefinitionList {
-                items: vec![
-                    rusty_sphinx_ast::DefinitionListItem {
-                        term: vec![InlineNode::Text("Term 1".to_string())],
-                        definition: vec![Node::Paragraph(vec![InlineNode::Text(
-                            "Def 1".to_string(),
-                        )])],
-                    },
-                    rusty_sphinx_ast::DefinitionListItem {
-                        term: vec![InlineNode::Text("Term 2".to_string())],
-                        definition: vec![Node::Paragraph(vec![InlineNode::Text(
-                            "Def 2".to_string(),
-                        )])],
-                    },
-                ],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then
-        assert_eq!(
-            result,
-            "<dl>\n<dt>Term 1</dt>\n<dd><p>Def 1</p>\n</dd>\n<dt>Term 2</dt>\n<dd><p>Def 2</p>\n</dd>\n</dl>\n"
-        );
-    }
-
-    #[test]
-    fn test_render_definition_list_escapes_and_renders_inline_markup_in_term() {
-        // Given a term containing a domain-object reference, mirroring the
-        // CPython benchmark's `seealso` definition-list content
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::DefinitionList {
-                items: vec![rusty_sphinx_ast::DefinitionListItem {
-                    term: vec![
-                        InlineNode::Text("Module ".to_string()),
-                        InlineNode::DomainObjectReference {
-                            object_type: rusty_sphinx_ast::ObjectType::Py(
-                                rusty_sphinx_ast::PyObjectType::Module,
-                            ),
-                            name: "curses.ascii".to_string(),
-                            display: "curses.ascii".to_string(),
-                            link: true,
-                            search_order: TargetSearchOrder::LeastQualifiedFirst,
-                        },
-                    ],
-                    definition: vec![Node::Paragraph(vec![InlineNode::Text(
-                        "Utilities for ASCII characters.".to_string(),
-                    )])],
-                }],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then the <dt> contains the rendered inline markup, not raw text
-        assert!(result.starts_with("<dl>\n<dt>Module "));
-        assert!(result.contains("curses.ascii"));
-        assert!(result.contains("<dd><p>Utilities for ASCII characters.</p>\n</dd>"));
-    }
-
-    #[test]
-    fn test_render_table_with_header() {
-        // Given a table with a header row and a body row, no spans
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Table {
-                header_rows: vec![rusty_sphinx_ast::TableRow {
-                    cells: vec![
-                        rusty_sphinx_ast::TableCell {
-                            colspan: 1,
-                            rowspan: 1,
-                            content: vec![Node::Paragraph(vec![InlineNode::Text("A".to_string())])],
-                        },
-                        rusty_sphinx_ast::TableCell {
-                            colspan: 1,
-                            rowspan: 1,
-                            content: vec![Node::Paragraph(vec![InlineNode::Text("B".to_string())])],
-                        },
-                    ],
-                }],
-                body_rows: vec![rusty_sphinx_ast::TableRow {
-                    cells: vec![
-                        rusty_sphinx_ast::TableCell {
-                            colspan: 1,
-                            rowspan: 1,
-                            content: vec![Node::Paragraph(vec![InlineNode::Text(
-                                "a1".to_string(),
-                            )])],
-                        },
-                        rusty_sphinx_ast::TableCell {
-                            colspan: 1,
-                            rowspan: 1,
-                            content: vec![Node::Paragraph(vec![InlineNode::Text(
-                                "b1".to_string(),
-                            )])],
-                        },
-                    ],
-                }],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then
-        assert_eq!(
-            result,
-            "<table>\n\
-             <thead>\n<tr>\n<th><p>A</p>\n</th>\n<th><p>B</p>\n</th>\n</tr>\n</thead>\n\
-             <tbody>\n<tr>\n<td><p>a1</p>\n</td>\n<td><p>b1</p>\n</td>\n</tr>\n</tbody>\n\
-             </table>\n"
-        );
-    }
-
-    #[test]
-    fn test_render_table_without_header_omits_thead() {
-        // Given a header-less table
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Table {
-                header_rows: vec![],
-                body_rows: vec![rusty_sphinx_ast::TableRow {
-                    cells: vec![rusty_sphinx_ast::TableCell {
-                        colspan: 1,
-                        rowspan: 1,
-                        content: vec![Node::Paragraph(vec![InlineNode::Text("only".to_string())])],
-                    }],
-                }],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then — no <thead> element at all
-        assert!(!result.contains("<thead>"));
-        assert_eq!(
-            result,
-            "<table>\n<tbody>\n<tr>\n<td><p>only</p>\n</td>\n</tr>\n</tbody>\n</table>\n"
-        );
-    }
-
-    #[test]
-    fn test_render_table_emits_colspan_and_rowspan_attributes() {
-        // Given a body cell spanning 2 columns and 3 rows
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::Table {
-                header_rows: vec![],
-                body_rows: vec![rusty_sphinx_ast::TableRow {
-                    cells: vec![rusty_sphinx_ast::TableCell {
-                        colspan: 2,
-                        rowspan: 3,
-                        content: vec![Node::Paragraph(vec![InlineNode::Text(
-                            "spanning".to_string(),
-                        )])],
-                    }],
-                }],
-            }],
-        );
-        let index = ProjectIndex::default();
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then — attributes present with the correct values
-        assert!(result.contains("<td colspan=\"2\" rowspan=\"3\"><p>spanning</p>\n</td>"));
-    }
-
     #[test]
     fn test_render_resolves_anonymous_links_in_order() {
         // Given
@@ -1930,7 +661,6 @@ mod tests {
         assert!(result.contains("<a href=\"https://first.com\">First</a>"));
         assert!(result.contains("<a href=\"https://second.com\">Second</a>"));
     }
-
     #[test]
     fn test_render_anonymous_hyperlink_with_embedded_uri_does_not_consume_targets() {
         // Given
@@ -1959,66 +689,6 @@ mod tests {
         assert!(result.contains("<a href=\"https://embedded.com\">Embedded</a>"));
         assert!(result.contains("<a href=\"https://target.com\">Reference</a>"));
     }
-
-    #[test]
-    fn test_render_toctree_avoids_infinite_loop_on_cyclic_nav_tree() {
-        // Given a document with a toctree that includes itself (cycle)
-        let doc = Document::new(
-            "cycle.rst".to_string(),
-            vec![Node::Directive(Directive::Toctree {
-                paths: vec!["cycle".to_string()],
-                maxdepth: None,
-                ignored_options: vec![],
-            })],
-        );
-
-        // And a ProjectIndex that represents this cycle but is truncated by the analyzer
-        // to a finite depth (e.g. depth 2)
-        let index = ProjectIndex {
-            nav_tree: vec![rusty_sphinx_index::NavEntry {
-                path: "cycle.rst".to_string(),
-                title: "Cycle".to_string(),
-                children: vec![rusty_sphinx_index::NavEntry {
-                    path: "cycle.rst".to_string(), // Cycle back to the same path
-                    title: "Cycle".to_string(),
-                    children: vec![], // Truncated here
-                }],
-            }],
-            document_titles: std::iter::once(("cycle.rst".to_string(), "Cycle".to_string()))
-                .collect(),
-            ..ProjectIndex::default()
-        };
-
-        // When
-        // This would stack overflow if the renderer searched from the root for every child
-        let html = render(&doc, &index, &doc.path).html;
-
-        // Then
-        // The output should contain nested lists reflecting the finite depth of nav_tree
-        assert!(html.contains("<ul>"));
-        assert!(html.contains("<li><a href=\"cycle.html\">Cycle</a>"));
-    }
-
-    #[test]
-    fn test_render_toctree_renders_empty_list_when_doc_not_in_nav_tree() {
-        // Given — the document has a toctree but is absent from the nav tree
-        let doc = Document::new(
-            "index.rst".to_string(),
-            vec![Node::Directive(Directive::Toctree {
-                paths: vec!["child".to_string()],
-                maxdepth: None,
-                ignored_options: vec![],
-            })],
-        );
-        let index = ProjectIndex::default(); // empty nav_tree
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then — no crash, just an empty list
-        assert_eq!(result, "<ul>\n</ul>\n");
-    }
-
     #[test]
     fn test_render_comment_produces_no_html() {
         // Given
@@ -2030,48 +700,5 @@ mod tests {
 
         // Then
         assert_eq!(result, "");
-    }
-
-    #[test]
-    fn test_render_toctree_respects_maxdepth() {
-        // Given — a two-level nav tree, maxdepth: 1 should suppress the grandchild
-        let doc = Document::new(
-            "index.rst".to_string(),
-            vec![Node::Directive(Directive::Toctree {
-                paths: vec!["child".to_string()],
-                maxdepth: Some(1),
-                ignored_options: vec![],
-            })],
-        );
-        let mut index = ProjectIndex::default();
-        index
-            .document_titles
-            .insert("child.rst".to_string(), "Child".to_string());
-        index
-            .document_titles
-            .insert("grandchild.rst".to_string(), "Grandchild".to_string());
-        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
-            title: "Root".to_string(),
-            path: "index.rst".to_string(),
-            children: vec![rusty_sphinx_index::NavEntry {
-                title: "Child".to_string(),
-                path: "child.rst".to_string(),
-                children: vec![rusty_sphinx_index::NavEntry {
-                    title: "Grandchild".to_string(),
-                    path: "grandchild.rst".to_string(),
-                    children: vec![],
-                }],
-            }],
-        }];
-
-        // When
-        let result = render(&doc, &index, &doc.path).html;
-
-        // Then — child appears but grandchild is suppressed by maxdepth: 1
-        assert!(result.contains("Child"), "child should be rendered");
-        assert!(
-            !result.contains("Grandchild"),
-            "grandchild must be suppressed by maxdepth:1"
-        );
     }
 }

@@ -252,3 +252,186 @@ mod tests {
         assert!(find_nav_entry(&tree, "missing.rst").is_none());
     }
 }
+
+#[cfg(test)]
+mod pipeline_tests {
+    use crate::render;
+    use rusty_sphinx_ast::{Directive, Document, Node};
+    use rusty_sphinx_index::ProjectIndex;
+
+    #[test]
+    fn test_render_toctree_with_target_entries() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["team_a/index".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .document_titles
+            .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
+        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
+            title: "test".to_string(),
+            path: "test.rst".to_string(),
+            children: vec![rusty_sphinx_index::NavEntry {
+                title: "Team A Module".to_string(),
+                path: "team_a/index.rst".to_string(),
+                children: vec![],
+            }],
+        }];
+
+        // When
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then
+        assert_eq!(
+            result,
+            "<ul>\n  <li><a href=\"team_a/index.html\">Team A Module</a></li>\n</ul>\n"
+        );
+    }
+    #[test]
+    fn test_render_formats_toctree_as_html_list() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .document_titles
+            .insert("team_a/index.rst".to_string(), "Team A Module".to_string());
+        // Build a nav_tree so the renderer can look up children by doc path.
+        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
+            title: "test".to_string(),
+            path: "test.rst".to_string(),
+            children: vec![
+                rusty_sphinx_index::NavEntry {
+                    title: "Team A Module".to_string(),
+                    path: "team_a/index.rst".to_string(),
+                    children: vec![],
+                },
+                rusty_sphinx_index::NavEntry {
+                    title: "team_b/index".to_string(),
+                    path: "team_b/index.rst".to_string(),
+                    children: vec![],
+                },
+            ],
+        }];
+
+        // When
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then
+        assert_eq!(
+            result,
+            "<ul>\n  <li><a href=\"team_a/index.html\">Team A Module</a></li>\n  <li><a href=\"team_b/index.html\">team_b/index.rst</a></li>\n</ul>\n"
+        );
+    }
+    #[test]
+    fn test_render_toctree_avoids_infinite_loop_on_cyclic_nav_tree() {
+        // Given a document with a toctree that includes itself (cycle)
+        let doc = Document::new(
+            "cycle.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["cycle".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+
+        // And a ProjectIndex that represents this cycle but is truncated by the analyzer
+        // to a finite depth (e.g. depth 2)
+        let index = ProjectIndex {
+            nav_tree: vec![rusty_sphinx_index::NavEntry {
+                path: "cycle.rst".to_string(),
+                title: "Cycle".to_string(),
+                children: vec![rusty_sphinx_index::NavEntry {
+                    path: "cycle.rst".to_string(), // Cycle back to the same path
+                    title: "Cycle".to_string(),
+                    children: vec![], // Truncated here
+                }],
+            }],
+            document_titles: std::iter::once(("cycle.rst".to_string(), "Cycle".to_string()))
+                .collect(),
+            ..ProjectIndex::default()
+        };
+
+        // When
+        // This would stack overflow if the renderer searched from the root for every child
+        let html = render(&doc, &index, &doc.path).html;
+
+        // Then
+        // The output should contain nested lists reflecting the finite depth of nav_tree
+        assert!(html.contains("<ul>"));
+        assert!(html.contains("<li><a href=\"cycle.html\">Cycle</a>"));
+    }
+    #[test]
+    fn test_render_toctree_renders_empty_list_when_doc_not_in_nav_tree() {
+        // Given — the document has a toctree but is absent from the nav tree
+        let doc = Document::new(
+            "index.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["child".to_string()],
+                maxdepth: None,
+                ignored_options: vec![],
+            })],
+        );
+        let index = ProjectIndex::default(); // empty nav_tree
+
+        // When
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then — no crash, just an empty list
+        assert_eq!(result, "<ul>\n</ul>\n");
+    }
+    #[test]
+    fn test_render_toctree_respects_maxdepth() {
+        // Given — a two-level nav tree, maxdepth: 1 should suppress the grandchild
+        let doc = Document::new(
+            "index.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree {
+                paths: vec!["child".to_string()],
+                maxdepth: Some(1),
+                ignored_options: vec![],
+            })],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .document_titles
+            .insert("child.rst".to_string(), "Child".to_string());
+        index
+            .document_titles
+            .insert("grandchild.rst".to_string(), "Grandchild".to_string());
+        index.nav_tree = vec![rusty_sphinx_index::NavEntry {
+            title: "Root".to_string(),
+            path: "index.rst".to_string(),
+            children: vec![rusty_sphinx_index::NavEntry {
+                title: "Child".to_string(),
+                path: "child.rst".to_string(),
+                children: vec![rusty_sphinx_index::NavEntry {
+                    title: "Grandchild".to_string(),
+                    path: "grandchild.rst".to_string(),
+                    children: vec![],
+                }],
+            }],
+        }];
+
+        // When
+        let result = render(&doc, &index, &doc.path).html;
+
+        // Then — child appears but grandchild is suppressed by maxdepth: 1
+        assert!(result.contains("Child"), "child should be rendered");
+        assert!(
+            !result.contains("Grandchild"),
+            "grandchild must be suppressed by maxdepth:1"
+        );
+    }
+}

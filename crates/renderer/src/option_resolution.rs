@@ -258,3 +258,64 @@ mod tests {
         assert_eq!(resolution, OptionResolution::NotFound);
     }
 }
+
+#[cfg(test)]
+mod pipeline_tests {
+    use crate::{BrokenLinkKind, render};
+    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node};
+    use rusty_sphinx_index::ProjectIndex;
+
+    #[test]
+    fn test_render_option_reference_resolves_to_link() {
+        // Given — resolution goes through the ambient-program tier, so the
+        // reference is preceded by the matching `.. program::`.
+        let doc = Document::new(
+            "dis.rst".to_string(),
+            vec![
+                Node::Directive(Directive::StdProgram {
+                    name: Some("dis".to_string()),
+                }),
+                Node::Paragraph(vec![InlineNode::OptionReference {
+                    display: "-O".to_string(),
+                    target: "-O".to_string(),
+                }]),
+            ],
+        );
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(
+            rusty_sphinx_ast::ObjectType::Std(rusty_sphinx_ast::StdObjectType::Cmdoption),
+            "dis.-o",
+            "library/dis.rst",
+        );
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(output.html.contains(
+            "<a class=\"reference internal\" href=\"library/dis.html#std:cmdoption:dis.-o\">"
+        ));
+        assert!(output.broken_links.is_empty());
+    }
+    #[test]
+    fn test_render_option_reference_not_found_produces_broken_link() {
+        // Given
+        let doc = Document::new(
+            "test.rst".to_string(),
+            vec![Node::Paragraph(vec![InlineNode::OptionReference {
+                display: "-Z".to_string(),
+                target: "-Z".to_string(),
+            }])],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let output = render(&doc, &index, &doc.path);
+
+        // Then
+        assert!(output.html.contains("class=\"broken-link\""));
+        assert_eq!(output.broken_links.len(), 1);
+        assert_eq!(output.broken_links[0].kind, BrokenLinkKind::OptionReference);
+        assert_eq!(output.broken_links[0].target, "-Z");
+    }
+}
