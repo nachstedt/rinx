@@ -1,4 +1,5 @@
-//! The `:widths:` option shared by both data-table directives.
+//! The `:widths:` option shared by every option-bearing table directive —
+//! `.. list-table::`, `.. csv-table::` and `.. table::` alike.
 
 use crate::diagnostics::Diagnostics;
 use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableWidths};
@@ -7,7 +8,7 @@ use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableWidths};
 /// validating an explicit integer list against the table's actual column
 /// count. Not a `FromStr` impl since that validation needs `ncols`, which
 /// isn't known until every row has been built.
-pub(super) fn parse_widths_option(
+pub(in crate::directives) fn parse_widths_option(
     raw: &str,
     ncols: usize,
     directive: &str,

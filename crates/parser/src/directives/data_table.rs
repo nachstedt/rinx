@@ -5,11 +5,11 @@
 //! the way their rows are written differs, so the tree splits along exactly
 //! that line:
 //!
-//! - [`options`] scans the leading `:option:` lines off a directive body and
-//!   consumes the seven options the two directives share; anything it does not
-//!   recognize is handed back for the caller to accept or diagnose.
-//! - [`widths`] resolves the `:widths:` option, which both use and which needs
-//!   the table's column count before it can be validated.
+//! - [`options`] layers the two options the two directives share beyond the
+//!   five every option-bearing table directive has — those five (and the
+//!   `:widths:` resolution both use) live in `crate::directives::table_options`
+//!   and `crate::directives::table_widths` instead of here, since `.. table::`
+//!   needs them too and produces no `Directive::DataTable` at all.
 //! - [`list`] parses the nested-bullet-list row syntax.
 //! - [`csv`] parses the CSV row syntax, with [`csv_dialect`] translating
 //!   `:delim:`/`:quote:`/`:escape:`/`:keepspace:` into a reader configuration.
@@ -18,7 +18,6 @@ mod csv;
 mod csv_dialect;
 mod list;
 mod options;
-mod widths;
 
 pub(super) use csv::parse_csv_table;
 pub(super) use list::parse_list_table;

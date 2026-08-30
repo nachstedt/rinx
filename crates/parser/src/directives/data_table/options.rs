@@ -1,67 +1,18 @@
-//! Scanning and interpreting the `:option:` lines of a data-table directive.
-//!
-//! Both `.. list-table::` and `.. csv-table::` open with a run of
-//! `:name: value` lines before their real body. [`scan_option_lines`] turns
-//! that run into name/value pairs without judging them, and
-//! [`parse_shared_table_options`] consumes the seven options the two
-//! directives have in common — handing back whatever is left so each
-//! directive can claim its own options and diagnose the rest.
+//! The two options `.. list-table::` and `.. csv-table::` have beyond the
+//! five every option-bearing table directive shares (see
+//! `crate::directives::table_options`): `:header-rows:` and `:stub-columns:`.
+//! [`parse_shared_table_options`] layers those on top of
+//! [`crate::directives::table_options::parse_common_table_options`], since
+//! `.. table::` has no use for either — its table already comes pre-split
+//! into header/body rows by its own grid or simple table syntax.
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableAlign, TableSource, TargetName};
+use crate::directives::table_options::{OptionLine, parse_common_table_options};
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableAlign, TargetName};
 
-/// One `:name: value` line, with the source text kept so a diagnostic can
-/// quote the line exactly as the author wrote it.
-pub(super) struct OptionLine {
-    pub name: String,
-    pub value: String,
-    pub raw: String,
-    /// This line's index within the directive body, so a diagnostic about the
-    /// option can point at the line the author wrote rather than at the
-    /// directive as a whole.
-    pub line_index: usize,
-}
-
-/// Splits the leading `:option:` lines off an already-unindented directive
-/// body, returning them plus the index of the first line that isn't an option
-/// (where the real body content starts).
-///
-/// A line whose closing colon is missing (`:oops`) is still returned, with the
-/// whole remainder as its `name`, so that it reaches the caller's
-/// unknown-option diagnostic rather than being silently swallowed as body.
-pub(super) fn scan_option_lines(unindented_lines: &[String]) -> (Vec<OptionLine>, usize) {
-    let mut options = Vec::new();
-    let mut index = 0;
-    while index < unindented_lines.len() {
-        let line = unindented_lines[index].trim();
-        if line.is_empty() {
-            index += 1;
-            continue;
-        }
-        let Some(rest) = line.strip_prefix(':') else {
-            break;
-        };
-        let (name, value) = match rest.split_once(':') {
-            Some((name, value)) => (name, value.trim()),
-            None => (rest, ""),
-        };
-        options.push(OptionLine {
-            name: name.to_string(),
-            value: value.to_string(),
-            raw: line.to_string(),
-            line_index: index,
-        });
-        index += 1;
-    }
-    (options, index)
-}
-
-/// The options `.. list-table::` and `.. csv-table::` share.
-///
-/// `widths` is kept as its raw string (not yet resolved to a
-/// [`rusty_sphinx_ast::TableWidths`]) because validating it needs the table's
-/// column count, which isn't known until the rows have been built.
+/// The seven options `.. list-table::` and `.. csv-table::` share — the five
+/// common options plus `header-rows`/`stub-columns`.
 pub(super) struct SharedTableOptions {
     pub header_rows: usize,
     pub stub_columns: usize,
@@ -72,86 +23,57 @@ pub(super) struct SharedTableOptions {
     pub name: Option<TargetName>,
 }
 
-impl SharedTableOptions {
-    fn empty() -> Self {
-        Self {
-            header_rows: 0,
-            stub_columns: 0,
-            widths_raw: None,
-            width: None,
-            align: None,
-            classes: Vec::new(),
-            name: None,
-        }
-    }
-}
-
 /// Consumes the shared options out of `option_lines`, returning them together
 /// with the lines it did not recognize, in source order.
 ///
-/// `source` only shapes the diagnostics' wording, so a `csv-table` author is
+/// `directive` only shapes the diagnostics' wording, so a `csv-table` author is
 /// never told about a `list-table` option.
 pub(super) fn parse_shared_table_options<'a>(
     option_lines: &'a [OptionLine],
-    source: TableSource,
+    directive: &str,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> (SharedTableOptions, Vec<&'a OptionLine>) {
-    let mut options = SharedTableOptions::empty();
-    let mut unrecognized = Vec::new();
-    let directive = source.as_str();
+    let mut header_rows = 0;
+    let mut stub_columns = 0;
+    let mut rest = Vec::new();
 
     for line in option_lines {
         match line.name.as_str() {
             "header-rows" => {
-                options.header_rows =
-                    parse_nonneg_int_option(&line.value, "header-rows", directive, diagnostics, ctx.line_span(line.line_index, &line.raw));
+                header_rows = parse_nonneg_int_option(
+                    &line.value,
+                    "header-rows",
+                    directive,
+                    diagnostics,
+                    ctx.line_span(line.line_index, &line.raw),
+                );
             }
             "stub-columns" => {
-                options.stub_columns =
-                    parse_nonneg_int_option(&line.value, "stub-columns", directive, diagnostics, ctx.line_span(line.line_index, &line.raw));
-            }
-            "widths" => options.widths_raw = Some(line.value.clone()),
-            "width" => options.width = Some(line.value.clone()),
-            "align" => match line.value.parse::<TableAlign>() {
-                Ok(parsed) => options.align = Some(parsed),
-                Err(()) => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::TableDataAlignInvalid,
-                    format!(
-                        "{directive}: invalid :align: value '{}', expected 'left', 'center', or 'right'",
-                        line.value
-                    ),
+                stub_columns = parse_nonneg_int_option(
+                    &line.value,
+                    "stub-columns",
+                    directive,
+                    diagnostics,
                     ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            "class" => options.classes = line.value.split_whitespace().map(str::to_string).collect(),
-            "name" => options.name = Some(TargetName::new(&line.value)),
-            _ => unrecognized.push(line),
+                );
+            }
+            _ => rest.push(line),
         }
     }
 
-    (options, unrecognized)
-}
+    let (common, unrecognized) = parse_common_table_options(&rest, directive, diagnostics, ctx);
+    let options = SharedTableOptions {
+        header_rows,
+        stub_columns,
+        widths_raw: common.widths_raw,
+        width: common.width,
+        align: common.align,
+        classes: common.classes,
+        name: common.name,
+    };
 
-/// Reports every option line neither the shared parser nor the directive's own
-/// parser claimed.
-pub(super) fn report_unknown_options(
-    unrecognized: &[&OptionLine],
-    source: TableSource,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    for line in unrecognized {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::DirectiveUnknownOption,
-            format!(
-                "Invalid or non-standard Sphinx {} option encountered: {}",
-                source.as_str(),
-                line.raw
-            ),
-            ctx.line_span(line.line_index, &line.raw),
-        ));
-    }
+    (options, unrecognized)
 }
 
 /// Parses a nonnegative-integer option value (`:header-rows:`/
@@ -179,94 +101,11 @@ pub(super) fn parse_nonneg_int_option(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::directives::table_options::scan_option_lines;
     use rusty_sphinx_ast::Domain;
 
     fn lines(raw: &[&str]) -> Vec<String> {
         raw.iter().map(|s| (*s).to_string()).collect()
-    }
-
-    #[test]
-    fn test_scan_option_lines_splits_name_and_value() {
-        // Given
-        let body = lines(&[":header-rows: 1", ":widths: 30 70", "", "* - Cell"]);
-
-        // When
-        let (options, body_start) = scan_option_lines(&body);
-
-        // Then
-        assert_eq!(options.len(), 2);
-        assert_eq!(options[0].name, "header-rows");
-        assert_eq!(options[0].value, "1");
-        assert_eq!(options[1].name, "widths");
-        assert_eq!(options[1].value, "30 70");
-        assert_eq!(body_start, 3);
-    }
-
-    #[test]
-    fn test_scan_option_lines_accepts_a_value_with_no_space_after_the_colon() {
-        // Given
-        let body = lines(&[":header-rows:1"]);
-
-        // When
-        let (options, _) = scan_option_lines(&body);
-
-        // Then
-        assert_eq!(options[0].name, "header-rows");
-        assert_eq!(options[0].value, "1");
-    }
-
-    #[test]
-    fn test_scan_option_lines_treats_a_flag_option_as_an_empty_value() {
-        // Given
-        let body = lines(&[":keepspace:"]);
-
-        // When
-        let (options, _) = scan_option_lines(&body);
-
-        // Then
-        assert_eq!(options[0].name, "keepspace");
-        assert_eq!(options[0].value, "");
-    }
-
-    #[test]
-    fn test_scan_option_lines_keeps_an_unterminated_option_line() {
-        // Given
-        let body = lines(&[":oops"]);
-
-        // When
-        let (options, body_start) = scan_option_lines(&body);
-
-        // Then
-        assert_eq!(options.len(), 1);
-        assert_eq!(options[0].name, "oops");
-        assert_eq!(options[0].raw, ":oops");
-        assert_eq!(body_start, 1);
-    }
-
-    #[test]
-    fn test_scan_option_lines_stops_at_the_first_body_line() {
-        // Given
-        let body = lines(&[":widths: auto", "Apple, Red", ":not-an-option: x"]);
-
-        // When
-        let (options, body_start) = scan_option_lines(&body);
-
-        // Then
-        assert_eq!(options.len(), 1);
-        assert_eq!(body_start, 1);
-    }
-
-    #[test]
-    fn test_scan_option_lines_returns_nothing_for_an_empty_body() {
-        // Given
-        let body: Vec<String> = Vec::new();
-
-        // When
-        let (options, body_start) = scan_option_lines(&body);
-
-        // Then
-        assert!(options.is_empty());
-        assert_eq!(body_start, 0);
     }
 
     #[test]
@@ -287,7 +126,7 @@ mod tests {
         // When
         let (options, unrecognized) = parse_shared_table_options(
             &option_lines,
-            TableSource::List,
+            "list-table",
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
@@ -314,7 +153,7 @@ mod tests {
         // When
         let (_, unrecognized) = parse_shared_table_options(
             &option_lines,
-            TableSource::Csv,
+            "csv-table",
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
@@ -335,7 +174,7 @@ mod tests {
         // When
         let (options, _) = parse_shared_table_options(
             &option_lines,
-            TableSource::Csv,
+            "csv-table",
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
@@ -362,7 +201,7 @@ mod tests {
         // When
         parse_shared_table_options(
             &option_lines,
-            TableSource::Csv,
+            "csv-table",
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
@@ -371,33 +210,6 @@ mod tests {
         assert_eq!(diagnostics.len(), 1);
         assert!(
             diagnostics[0].message.starts_with("csv-table:"),
-            "{}",
-            diagnostics[0].message
-        );
-    }
-
-    #[test]
-    fn test_report_unknown_options_quotes_the_source_line() {
-        // Given
-        let body = lines(&[":bogus: value"]);
-        let (option_lines, _) = scan_option_lines(&body);
-        let unrecognized: Vec<&OptionLine> = option_lines.iter().collect();
-        let mut diagnostics = Diagnostics::default();
-
-        // When
-        report_unknown_options(
-            &unrecognized,
-            TableSource::List,
-            &mut diagnostics,
-            &ParseCtx::with_domain(Domain::Py),
-        );
-
-        // Then
-        assert_eq!(diagnostics.len(), 1);
-        assert!(
-            diagnostics[0].message.contains(
-                "Invalid or non-standard Sphinx list-table option encountered: :bogus: value"
-            ),
             "{}",
             diagnostics[0].message
         );
