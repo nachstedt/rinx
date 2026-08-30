@@ -56,7 +56,7 @@ pub use object_naming::{
 };
 pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
-pub use table::{ListTableWidths, TableAlign, TableCell, TableRow};
+pub use table::{TableAlign, TableCell, TableRow, TableSource, TableWidths};
 pub use target_name::TargetName;
 pub use target_search_order::TargetSearchOrder;
 pub use version_change_kind::VersionChangeKind;

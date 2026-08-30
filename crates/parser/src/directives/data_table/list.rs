@@ -1,37 +1,28 @@
+//! `.. list-table::` — a table whose rows are a nested bullet list.
+
+use rusty_sphinx_ast::{Directive, ListItem, Node, TableCell, TableRow, TableSource, TableWidths};
+
+use super::options::{
+    SharedTableOptions, parse_shared_table_options, report_unknown_options, scan_option_lines,
+};
+use super::widths::parse_widths_option;
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::directives::body::join_body_lines;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{
-    Directive, Domain, ListItem, ListTableWidths, Node, TableAlign, TableCell, TableRow, TargetName,
-};
-
-/// The recognized `.. list-table::` options, scanned off the leading
-/// `:option:` lines of its body by [`parse_list_table_options`]. `widths` is
-/// kept as its raw string (not yet resolved to a [`ListTableWidths`])
-/// because validating it needs the table's column count, which isn't known
-/// until the rows have been lowered.
-struct ListTableOptions {
-    header_rows: usize,
-    stub_columns: usize,
-    widths_raw: Option<String>,
-    width: Option<String>,
-    align: Option<TableAlign>,
-    classes: Vec<String>,
-    name: Option<TargetName>,
-}
 
 /// Parses a `.. list-table::` directive: a table specified as a nested
 /// bullet list (outer list = rows, each row's own bullet list = cells)
 /// rather than character-art. `body_lines` is the raw, still-indented body
 /// collected by `collect_directive_body`, exactly as every other
 /// content-bearing directive parser receives it.
-pub(super) fn parse_list_table(
+pub(in crate::directives) fn parse_list_table(
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Directive {
     let title = if argument.is_empty() {
         None
@@ -40,13 +31,16 @@ pub(super) fn parse_list_table(
     };
 
     let unindented_lines = unindent_body_lines(body_lines);
-    let (options, opt_idx) = parse_list_table_options(&unindented_lines, diagnostics);
+    let (option_lines, opt_idx) = scan_option_lines(&unindented_lines);
+    let (options, unrecognized) =
+        parse_shared_table_options(&option_lines, TableSource::List, diagnostics);
+    report_unknown_options(&unrecognized, TableSource::List, diagnostics);
 
     let body_content: Vec<&str> = unindented_lines[opt_idx..]
         .iter()
         .map(String::as_str)
         .collect();
-    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     let [
         Node::BulletList {
@@ -60,11 +54,30 @@ pub(super) fn parse_list_table(
     };
 
     let (rows, ncols) = lower_list_table_rows(row_items, diagnostics);
-    let widths = options
-        .widths_raw
-        .and_then(|raw| parse_widths_option(&raw, ncols, diagnostics));
+    build_list_table(title, options, rows, ncols, diagnostics)
+}
 
-    Directive::ListTable {
+/// Assembles the parsed pieces into the AST node, resolving `:widths:` (which
+/// needs `ncols`) and clamping the two count options to the table's actual
+/// dimensions.
+///
+/// list-table clamps where csv-table rejects: a bullet list has no
+/// independent statement of its own size to contradict, so an oversized
+/// `:header-rows:` is a harmless over-count rather than the dimension
+/// mismatch docutils diagnoses for CSV data.
+fn build_list_table(
+    title: Option<String>,
+    options: SharedTableOptions,
+    rows: Vec<TableRow>,
+    ncols: usize,
+    diagnostics: &mut Vec<String>,
+) -> Directive {
+    let widths: Option<TableWidths> = options
+        .widths_raw
+        .and_then(|raw| parse_widths_option(&raw, ncols, "list-table", diagnostics));
+
+    Directive::DataTable {
+        source: TableSource::List,
         title,
         header_rows: options.header_rows.min(rows.len()),
         stub_columns: options.stub_columns.min(ncols),
@@ -75,65 +88,6 @@ pub(super) fn parse_list_table(
         name: options.name,
         rows,
     }
-}
-
-/// Scans the leading `:option:` lines off an already-unindented directive
-/// body, returning the recognized options plus the index of the first line
-/// that isn't an option (where the real body content starts).
-fn parse_list_table_options(
-    unindented_lines: &[String],
-    diagnostics: &mut Vec<String>,
-) -> (ListTableOptions, usize) {
-    let mut options = ListTableOptions {
-        header_rows: 0,
-        stub_columns: 0,
-        widths_raw: None,
-        width: None,
-        align: None,
-        classes: Vec::new(),
-        name: None,
-    };
-
-    let mut opt_idx = 0;
-    while opt_idx < unindented_lines.len() {
-        let line = unindented_lines[opt_idx].trim();
-        if line.is_empty() {
-            opt_idx += 1;
-            continue;
-        }
-        if !line.starts_with(':') {
-            break;
-        }
-        if let Some(rest) = line.strip_prefix(":header-rows:") {
-            options.header_rows = parse_nonneg_int_option(rest.trim(), "header-rows", diagnostics);
-        } else if let Some(rest) = line.strip_prefix(":stub-columns:") {
-            options.stub_columns =
-                parse_nonneg_int_option(rest.trim(), "stub-columns", diagnostics);
-        } else if let Some(rest) = line.strip_prefix(":widths:") {
-            options.widths_raw = Some(rest.trim().to_string());
-        } else if let Some(rest) = line.strip_prefix(":width:") {
-            options.width = Some(rest.trim().to_string());
-        } else if let Some(rest) = line.strip_prefix(":align:") {
-            match rest.trim().parse::<TableAlign>() {
-                Ok(parsed) => options.align = Some(parsed),
-                Err(()) => diagnostics.push(format!(
-                    "list-table: invalid :align: value '{}', expected 'left', 'center', or 'right'",
-                    rest.trim()
-                )),
-            }
-        } else if let Some(rest) = line.strip_prefix(":class:") {
-            options.classes = rest.split_whitespace().map(str::to_string).collect();
-        } else if let Some(rest) = line.strip_prefix(":name:") {
-            options.name = Some(TargetName::new(rest.trim()));
-        } else {
-            diagnostics.push(format!(
-                "Invalid or non-standard Sphinx list-table option encountered: {line}"
-            ));
-        }
-        opt_idx += 1;
-    }
-
-    (options, opt_idx)
 }
 
 /// Lowers the outer bullet list's row items into `TableRow`s, each row's own
@@ -190,63 +144,10 @@ fn unknown_list_table(argument: String, body_lines: &[&str]) -> Directive {
     }
 }
 
-/// Parses a nonnegative-integer option value (`:header-rows:`/
-/// `:stub-columns:`), pushing a diagnostic and defaulting to 0 on a
-/// malformed value rather than failing the whole directive.
-fn parse_nonneg_int_option(raw: &str, option_name: &str, diagnostics: &mut Vec<String>) -> usize {
-    if let Ok(value) = raw.parse::<usize>() {
-        value
-    } else {
-        diagnostics.push(format!(
-            "list-table: :{option_name}: value '{raw}' is not a nonnegative integer"
-        ));
-        0
-    }
-}
-
-/// Resolves a `:widths:` option's raw string into a [`ListTableWidths`],
-/// validating an explicit integer list against the table's actual column
-/// count. Not a `FromStr` impl since that validation needs `ncols`, which
-/// isn't known until every row has been lowered.
-fn parse_widths_option(
-    raw: &str,
-    ncols: usize,
-    diagnostics: &mut Vec<String>,
-) -> Option<ListTableWidths> {
-    match raw {
-        "auto" => Some(ListTableWidths::Auto),
-        "grid" => Some(ListTableWidths::Grid),
-        _ => {
-            let values: Result<Vec<u32>, _> = raw
-                .split([',', ' '])
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::parse)
-                .collect();
-            match values {
-                Ok(values) if values.len() == ncols => Some(ListTableWidths::Explicit(values)),
-                Ok(values) => {
-                    diagnostics.push(format!(
-                        "list-table: :widths: gives {} value(s), but the table has {ncols} column(s)",
-                        values.len()
-                    ));
-                    None
-                }
-                Err(_) => {
-                    diagnostics.push(format!(
-                        "list-table: :widths: value '{raw}' is not 'auto', 'grid', or a list of integers"
-                    ));
-                    None
-                }
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::InlineNode;
+    use rusty_sphinx_ast::{Domain, InlineNode, TableAlign, TargetName};
 
     fn parse(body_lines: &[&str]) -> (Directive, Vec<String>) {
         let mut adornment_order = Vec::new();
@@ -256,7 +157,7 @@ mod tests {
             body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
         (directive, diagnostics)
     }
@@ -276,16 +177,20 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable {
-            header_rows, rows, ..
+        if let Directive::DataTable {
+            source,
+            header_rows,
+            rows,
+            ..
         } = directive
         {
+            assert_eq!(source, TableSource::List);
             assert_eq!(header_rows, 0);
             assert_eq!(rows.len(), 2);
             assert_eq!(rows[0].cells.len(), 2);
             assert_eq!(rows[1].cells.len(), 2);
         } else {
-            panic!("Expected ListTable directive, got {directive:?}");
+            panic!("Expected DataTable directive, got {directive:?}");
         }
     }
 
@@ -302,14 +207,14 @@ mod tests {
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
-            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
-        if let Directive::ListTable { title, .. } = directive {
+        if let Directive::DataTable { title, .. } = directive {
             assert_eq!(title, Some("My Title".to_string()));
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -330,10 +235,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { header_rows, .. } = directive {
+        if let Directive::DataTable { header_rows, .. } = directive {
             assert_eq!(header_rows, 1);
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -347,10 +252,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { stub_columns, .. } = directive {
+        if let Directive::DataTable { stub_columns, .. } = directive {
             assert_eq!(stub_columns, 1);
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -364,10 +269,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { widths, .. } = directive {
-            assert_eq!(widths, Some(ListTableWidths::Auto));
+        if let Directive::DataTable { widths, .. } = directive {
+            assert_eq!(widths, Some(TableWidths::Auto));
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -381,10 +286,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { widths, .. } = directive {
-            assert_eq!(widths, Some(ListTableWidths::Grid));
+        if let Directive::DataTable { widths, .. } = directive {
+            assert_eq!(widths, Some(TableWidths::Grid));
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -398,10 +303,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { widths, .. } = directive {
-            assert_eq!(widths, Some(ListTableWidths::Explicit(vec![30, 70])));
+        if let Directive::DataTable { widths, .. } = directive {
+            assert_eq!(widths, Some(TableWidths::Explicit(vec![30, 70])));
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -416,10 +321,10 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(diagnostics[0].contains(":widths:"));
-        if let Directive::ListTable { widths, .. } = directive {
+        if let Directive::DataTable { widths, .. } = directive {
             assert_eq!(widths, None);
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -433,10 +338,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { width, .. } = directive {
+        if let Directive::DataTable { width, .. } = directive {
             assert_eq!(width, Some("50%".to_string()));
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -450,10 +355,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { align, .. } = directive {
+        if let Directive::DataTable { align, .. } = directive {
             assert_eq!(align, Some(TableAlign::Right));
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -468,10 +373,10 @@ mod tests {
         // Then
         assert_eq!(diagnostics.len(), 1);
         assert!(diagnostics[0].contains(":align:"));
-        if let Directive::ListTable { align, .. } = directive {
+        if let Directive::DataTable { align, .. } = directive {
             assert_eq!(align, None);
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -485,10 +390,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { classes, .. } = directive {
+        if let Directive::DataTable { classes, .. } = directive {
             assert_eq!(classes, vec!["foo".to_string(), "bar".to_string()]);
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -502,10 +407,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { name, .. } = directive {
+        if let Directive::DataTable { name, .. } = directive {
             assert_eq!(name, Some(TargetName::new("My Table")));
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -537,12 +442,12 @@ mod tests {
                 || diagnostics[0].contains("cell counts")
                 || diagnostics[0].contains("expected")
         );
-        if let Directive::ListTable { rows, .. } = directive {
+        if let Directive::DataTable { rows, .. } = directive {
             assert_eq!(rows.len(), 2);
             assert_eq!(rows[0].cells.len(), 2);
             assert_eq!(rows[1].cells.len(), 3);
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -556,13 +461,13 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable {
+        if let Directive::DataTable {
             header_rows, rows, ..
         } = directive
         {
             assert_eq!(header_rows, rows.len());
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -576,10 +481,10 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { stub_columns, .. } = directive {
+        if let Directive::DataTable { stub_columns, .. } = directive {
             assert_eq!(stub_columns, 2);
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 
@@ -611,42 +516,15 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty());
-        if let Directive::ListTable { rows, .. } = directive {
+        if let Directive::DataTable { rows, .. } = directive {
             assert_eq!(rows.len(), 1);
             assert!(matches!(
                 rows[0].cells[0].content.as_slice(),
                 [Node::Directive(Directive::DomainObject(_))]
             ));
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
-    }
-
-    #[test]
-    fn test_parse_nonneg_int_option_rejects_non_numeric_value() {
-        // Given
-        let mut diagnostics = Vec::new();
-
-        // When
-        let value = parse_nonneg_int_option("abc", "header-rows", &mut diagnostics);
-
-        // Then
-        assert_eq!(value, 0);
-        assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("header-rows"));
-    }
-
-    #[test]
-    fn test_parse_widths_option_rejects_unparseable_value() {
-        // Given
-        let mut diagnostics = Vec::new();
-
-        // When
-        let result = parse_widths_option("banana", 2, &mut diagnostics);
-
-        // Then
-        assert_eq!(result, None);
-        assert_eq!(diagnostics.len(), 1);
     }
 
     #[test]
@@ -688,8 +566,11 @@ mod tests {
         assert_eq!(doc.nodes.len(), 1);
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::ListTable { title, header_rows, rows, .. })
-                if title.as_deref() == Some("Fruit") && *header_rows == 1 && rows.len() == 2
+            Node::Directive(Directive::DataTable { source, title, header_rows, rows, .. })
+                if *source == TableSource::List
+                    && title.as_deref() == Some("Fruit")
+                    && *header_rows == 1
+                    && rows.len() == 2
         ));
     }
 
@@ -702,7 +583,7 @@ mod tests {
         let (directive, _) = parse(&body_lines);
 
         // Then
-        if let Directive::ListTable { rows, .. } = directive {
+        if let Directive::DataTable { rows, .. } = directive {
             assert_eq!(
                 rows[0].cells[0].content,
                 vec![Node::Paragraph(vec![InlineNode::Text(
@@ -710,7 +591,7 @@ mod tests {
                 )])]
             );
         } else {
-            panic!("Expected ListTable directive");
+            panic!("Expected DataTable directive");
         }
     }
 }

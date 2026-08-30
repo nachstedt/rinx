@@ -53,6 +53,9 @@ entry under the heading it belongs to, as a single short sentence.
 - When adding a construct whose delimiter characters can collide with an existing construct's, fix the ambiguity at the root by tightening the existing detector to match the spec, rather than relying on parser dispatch order.
 - When constructs depend on exact character alignment (e.g. grid tables), validate the alignment strictly and reject on mismatch instead of silently padding lines to paper over it.
 - When a prefix/sigil is markup rather than part of a name, strip it during parsing and record its meaning as typed intent on the AST node, rather than leaving it in the string for a later phase to re-interpret.
+- Two directives that differ only in how their source spells out the same data should share one AST node, with a small enum recording which one wrote it.
+- Keep parse-time configuration in one context object threaded through the parsers, rather than adding a parameter per setting.
+- A pure phase should take an injected trait object for anything it cannot do itself (like reading a file) rather than acquiring the capability directly.
 
 ## Porting from a reference implementation
 

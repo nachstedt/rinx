@@ -1,9 +1,10 @@
 use super::dispatch::parse_module_option_line;
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::directives::domains::object_type::DirectiveObjectType;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{Domain, DomainObjectBody, NonEmptyVector};
+use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// The `py:method`-alias directive-name flags that [`parse_py_method`]
 /// forces on regardless of the body's own option lines — one field per
@@ -69,7 +70,7 @@ pub(crate) fn parse_py_method(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
     forced: ForcedMethodFlags,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
@@ -80,7 +81,7 @@ pub(crate) fn parse_py_method(
         .iter()
         .map(String::as_str)
         .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     DomainObjectBody::PyMethod {
         module,

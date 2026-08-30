@@ -1,8 +1,9 @@
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
 use crate::inline::parse_inline_text;
-use rusty_sphinx_ast::{DefinitionListItem, Domain, Node};
+use rusty_sphinx_ast::{DefinitionListItem, Node};
 
 /// Detects whether `lines[i]` is the term of a definition-list entry: a
 /// non-blank line immediately followed (no blank line in between) by a
@@ -34,7 +35,7 @@ pub(super) fn try_parse_definition_list(
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let mut items = Vec::new();
     let mut i = start_i;
@@ -57,7 +58,7 @@ pub(super) fn try_parse_definition_list(
             Some(_) => break,
         }
 
-        let term = parse_inline_text(line.trim(), default_domain);
+        let term = parse_inline_text(line.trim(), ctx.default_domain);
         i += 1;
 
         let mut body_lines = Vec::new();
@@ -84,7 +85,7 @@ pub(super) fn try_parse_definition_list(
         }
 
         let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-        let definition = parse_blocks(&body_refs, adornment_order, diagnostics, default_domain);
+        let definition = parse_blocks(&body_refs, adornment_order, diagnostics, ctx);
 
         items.push(DefinitionListItem { term, definition });
     }

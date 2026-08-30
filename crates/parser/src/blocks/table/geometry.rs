@@ -1,6 +1,7 @@
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
-use rusty_sphinx_ast::{Domain, TableCell};
+use rusty_sphinx_ast::TableCell;
 
 pub(super) fn is_border_line(line: &str, allow_equals: bool) -> bool {
     let chars: Vec<char> = line.chars().collect();
@@ -97,7 +98,7 @@ pub(super) struct GridCtx<'a> {
     pub(super) col_bounds: &'a [usize],
     pub(super) adornment_order: &'a mut Vec<Adornment>,
     pub(super) diagnostics: &'a mut Vec<String>,
-    pub(super) default_domain: Domain,
+    pub(super) parse_ctx: &'a ParseCtx<'a>,
 }
 
 /// Extracts a resolved cell's text, spanning grid columns `[col_start,
@@ -214,7 +215,7 @@ pub(super) fn build_row_cells(
             &content_refs,
             ctx.adornment_order,
             ctx.diagnostics,
-            ctx.default_domain,
+            ctx.parse_ctx,
         );
         cells.push(TableCell {
             colspan,

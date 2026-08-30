@@ -136,7 +136,7 @@ pub(super) fn index_nodes(
                     }
                 }
             }
-            Node::Directive(Directive::ListTable { rows, name, .. }) => {
+            Node::Directive(Directive::DataTable { rows, name, .. }) => {
                 if let Some(target_name) = name {
                     index.targets.insert(
                         target_name.clone(),

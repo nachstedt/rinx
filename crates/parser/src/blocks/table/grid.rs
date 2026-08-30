@@ -1,9 +1,10 @@
 //! Grid-table parsing: resolving the `+---+---+` / `|` character art into
 //! rows and cells, using [`super::geometry`] for the column/divider maths.
 
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
-use rusty_sphinx_ast::{Domain, Node, TableRow};
+use rusty_sphinx_ast::{Node, TableRow};
 use std::collections::BTreeMap;
 
 use super::geometry::{
@@ -167,7 +168,7 @@ pub(crate) fn try_parse_grid_table(
     start_i: usize,
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> Option<(usize, Node)> {
     let first_line = lines[start_i].trim_end();
     let indent = indent_width(first_line);
@@ -201,7 +202,7 @@ pub(crate) fn try_parse_grid_table(
         col_bounds: &col_bounds,
         adornment_order,
         diagnostics,
-        default_domain,
+        parse_ctx: ctx,
     };
 
     let mut header_rows = Vec::new();

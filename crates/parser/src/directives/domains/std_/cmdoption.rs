@@ -1,6 +1,7 @@
 use super::super::body::parse_body;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
-use rusty_sphinx_ast::{Domain, DomainObjectBody, NonEmptyVector};
+use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. option::`/`.. cmdoption::` body. Unlike every other domain
 /// object type, `StdCmdoption` has no directive-specific option lines to strip
@@ -24,7 +25,7 @@ pub(crate) fn parse_cmdoption(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     for line in signatures.as_slice() {
         for spec in rusty_sphinx_ast::split_option_line_specs(line) {
@@ -38,7 +39,7 @@ pub(crate) fn parse_cmdoption(
 
     DomainObjectBody::StdCmdoption {
         signatures,
-        body: parse_body(body_lines, adornment_order, diagnostics, default_domain),
+        body: parse_body(body_lines, adornment_order, diagnostics, ctx),
     }
 }
 
@@ -152,7 +153,7 @@ mod tests {
     #[test]
     fn test_parse_cmdoption_recognized_regardless_of_default_domain() {
         // Given — `std`-domain, so unlike `py`/`c` object types it must not
-        // be gated by `default_domain`.
+        // be gated by `ctx`.
         let input = ".. option:: -h";
 
         // When

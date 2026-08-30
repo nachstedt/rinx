@@ -6,7 +6,8 @@
 use super::super::document_index::analyze;
 use super::*;
 use rusty_sphinx_ast::{
-    Directive, Document, Domain, InlineNode, Node, NonEmptyVector, ObjectType, TargetName,
+    Directive, Document, Domain, InlineNode, Node, NonEmptyVector, ObjectType, TableSource,
+    TargetName,
 };
 
 /// Looks up a domain object by the pre-refactor flat `"domain:objtype:name"`
@@ -475,7 +476,8 @@ fn test_analyze_registers_domain_object_nested_in_list_table_cell() {
     // mirroring the known_bugs.md `reference/datamodel.rst` scenario
     let doc = Document::new(
         "datamodel.rst".to_string(),
-        vec![Node::Directive(Directive::ListTable {
+        vec![Node::Directive(Directive::DataTable {
+            source: TableSource::List,
             title: None,
             header_rows: 0,
             stub_columns: 0,

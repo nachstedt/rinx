@@ -1,7 +1,8 @@
 use crate::blocks::parse_blocks;
+use crate::context::ParseCtx;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{CSignature, Domain, DomainObjectBody, NonEmptyVector};
+use rusty_sphinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. c:type::` body — same common flags and shape as
 /// [`super::struct_::parse_c_struct`]/[`super::union::parse_c_union`]; real
@@ -16,7 +17,7 @@ pub(crate) fn parse_c_type(
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Vec<String>,
-    default_domain: Domain,
+    ctx: &ParseCtx<'_>,
 ) -> DomainObjectBody {
     let unindented_lines = unindent_body_lines(body_lines);
     let (no_index, no_index_entry, no_contents_entry, options_consumed) =
@@ -26,7 +27,7 @@ pub(crate) fn parse_c_type(
         .iter()
         .map(String::as_str)
         .collect();
-    let body = parse_blocks(&body_content, adornment_order, diagnostics, default_domain);
+    let body = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
 
     DomainObjectBody::CType {
         signatures,
