@@ -27,6 +27,7 @@ rusty_sphinx_library(
         "current_module.rst",
         "transitions.rst",
         "typography.rst",
+        "escapes.rst",
         "tables.rst",
         "simple_tables.rst",
         "list_table.rst",

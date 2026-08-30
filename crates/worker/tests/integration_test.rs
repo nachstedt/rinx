@@ -784,6 +784,48 @@ Call :meth:`.close` when done.
 }
 
 #[test]
+fn test_e2e_escaped_space_empties_a_simple_table_first_cell() {
+    // Given the escaped space RST prescribes for a deliberately empty
+    // first-column cell — a blank one cannot open a row
+    let input = "\
+=====  ======
+A      B
+=====  ======
+1      first
+\\      second
+=====  ======
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the cell renders empty rather than showing a backslash
+    assert!(
+        result.contains("<td><p></p>\n</td>\n<td><p>second</p>"),
+        "expected an empty first cell, got:\n{result}"
+    );
+    assert!(!result.contains('\\'), "a backslash leaked into:\n{result}");
+}
+
+#[test]
+fn test_e2e_backslash_escapes_are_removed_from_rendered_text() {
+    // Given escapes in prose, an escaped space joining markup to its
+    // neighbours, and a literal that must keep its backslash verbatim
+    let input = "\
+Keep \\*stars\\* as is, join foo\\ *bar*\\ baz, and a ``some\\path`` literal.
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    assert_eq!(
+        result,
+        "<p>Keep *stars* as is, join foo<em>bar</em>baz, and a <code>some\\path</code> literal.</p>\n"
+    );
+}
+
+#[test]
 fn test_e2e_simple_table_renders_header_body_and_column_span() {
     // Given a simple table with a header rule and a `-` span underline
     let input = "\

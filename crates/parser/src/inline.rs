@@ -1,3 +1,5 @@
+use crate::escapes::{EscapedText, is_escaped_at, unescape, unescape_keeping_backslashes};
+use crate::punctuation::{can_follow_end_string, can_precede_start_string};
 use crate::typography::apply_smart_typography;
 use regex::Regex;
 use rusty_sphinx_ast::{Domain, InlineNode, ObjectType, TargetSearchOrder};
@@ -78,7 +80,13 @@ static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
 ///
 /// `default_domain` resolves any bare (unprefixed) domain role, e.g. `:func:`,
 /// to a concrete [`Domain`] — mirroring how bare directives are resolved.
-pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) -> Vec<InlineNode> {
+pub(super) fn parse_inline_text(raw_text: &str, default_domain: Domain) -> Vec<InlineNode> {
+    // Rewrite escapes to markers once, up front, and match markup over that
+    // form for the rest of the function. The rewrite preserves byte lengths,
+    // so every offset below means the same thing it did before.
+    let escaped = EscapedText::new(raw_text);
+    let paragraph_text = escaped.as_str();
+
     let mut inlines = Vec::new();
     let mut last_match_end = 0;
 
@@ -101,19 +109,86 @@ pub(super) fn parse_inline_text(paragraph_text: &str, default_domain: Domain) ->
 
         if let Some((start, end, kind, node_opt)) = earliest {
             if start > 0 {
-                inlines.push(InlineNode::Text(apply_smart_typography(
+                inlines.push(unescape_node(InlineNode::Text(apply_smart_typography(
                     &remaining[..start],
-                )));
+                ))));
             }
             let m_str = &remaining[start..end];
-            inlines.push(handle_inline_match(kind, m_str, node_opt, default_domain));
+            inlines.push(unescape_node(handle_inline_match(
+                kind,
+                m_str,
+                node_opt,
+                default_domain,
+            )));
             last_match_end += end;
         } else {
-            inlines.push(InlineNode::Text(apply_smart_typography(remaining)));
+            inlines.push(unescape_node(InlineNode::Text(apply_smart_typography(
+                remaining,
+            ))));
             break;
         }
     }
     inlines
+}
+
+/// Strips escape markers from every text field of a node on its way out of
+/// [`parse_inline_text`].
+///
+/// Every node is funnelled through here rather than unescaped at each of the
+/// two dozen places one gets built, because that turns the "no marker ever
+/// reaches the AST" guarantee into something the compiler checks: the match is
+/// exhaustive, so a variant added later cannot quietly start leaking markers
+/// into the rendered HTML.
+///
+/// Smart typography has already run by this point, and deliberately so — it
+/// sees the escaped form, which is why `\-\-` stays two hyphens instead of
+/// becoming an en dash, matching docutils' smartquotes transform.
+///
+/// [`InlineNode::Literal`] is the one verbatim context, so its markers turn
+/// back into backslashes; every other field takes the display form, in which
+/// an escaped space disappears entirely.
+fn unescape_node(node: InlineNode) -> InlineNode {
+    match node {
+        InlineNode::Literal(content) => InlineNode::Literal(unescape_keeping_backslashes(&content)),
+        InlineNode::Text(text) => InlineNode::Text(unescape(&text)),
+        InlineNode::Emphasis(text) => InlineNode::Emphasis(unescape(&text)),
+        InlineNode::Strong(text) => InlineNode::Strong(unescape(&text)),
+        InlineNode::Program(name) => InlineNode::Program(unescape(&name)),
+        InlineNode::AnonymousReference(text) => InlineNode::AnonymousReference(unescape(&text)),
+        InlineNode::Reference { display, target } => InlineNode::Reference {
+            display: unescape(&display),
+            target: unescape(&target),
+        },
+        InlineNode::Hyperlink { text, target } => InlineNode::Hyperlink {
+            text: unescape(&text),
+            target: unescape(&target),
+        },
+        InlineNode::AnonymousHyperlink { text, target } => InlineNode::AnonymousHyperlink {
+            text: unescape(&text),
+            target: unescape(&target),
+        },
+        InlineNode::TermReference { display, term } => InlineNode::TermReference {
+            display: unescape(&display),
+            term: unescape(&term),
+        },
+        InlineNode::OptionReference { display, target } => InlineNode::OptionReference {
+            display: unescape(&display),
+            target: unescape(&target),
+        },
+        InlineNode::DomainObjectReference {
+            object_type,
+            name,
+            display,
+            link,
+            search_order,
+        } => InlineNode::DomainObjectReference {
+            object_type,
+            name: unescape(&name),
+            display: unescape(&display),
+            link,
+            search_order,
+        },
+    }
 }
 
 /// The name/display/link-behavior of a domain-object role target, after
@@ -173,6 +248,15 @@ impl DomainObjectTarget {
 /// here; see [`strip_trailing_call_parens`]. A `!`-suppressed target is
 /// excluded along with everything else, since it is never looked up.
 fn parse_domain_object_target(raw: &str, domain: Domain) -> DomainObjectTarget {
+    // A role sees its content already un-escaped: docutils un-escapes the
+    // captured text before handing it to the role, so `foo\(\)` reaches the
+    // domain as `foo()` and strips its parens like any other call-shaped
+    // target, and a `\~` genuinely does act as the shorten sigil. Matching on
+    // the escaped form and un-escaping here (rather than earlier) is what
+    // keeps an escaped backtick from ending the role's content too soon.
+    let unescaped = unescape(raw);
+    let raw = unescaped.as_str();
+
     if let Some(name) = raw.strip_prefix('!') {
         return DomainObjectTarget {
             name: name.to_string(),
@@ -198,37 +282,17 @@ fn parse_domain_object_target(raw: &str, domain: Domain) -> DomainObjectTarget {
         TargetSearchOrder::MostQualifiedFirst
     };
     let display = match &explicit_title {
-        Some(title) => unescape_rst_backslashes(title),
-        None if shorten_display => {
-            unescape_rst_backslashes(name.rsplit('.').next().unwrap_or(name))
-        }
-        None => unescape_rst_backslashes(name),
+        Some(title) => title.clone(),
+        None if shorten_display => name.rsplit('.').next().unwrap_or(name).to_string(),
+        None => name.to_string(),
     };
-    let unescaped_name = unescape_rst_backslashes(name);
 
     DomainObjectTarget {
-        name: strip_trailing_call_parens(&unescaped_name, domain).to_string(),
+        name: strip_trailing_call_parens(name, domain).to_string(),
         display,
         link: true,
         search_order,
     }
-}
-
-/// Un-escapes RST backslash escapes (`\X` → `X`) in role content, e.g.
-/// `spawn\*` → `spawn*`.
-fn unescape_rst_backslashes(text: &str) -> String {
-    let mut result = String::with_capacity(text.len());
-    let mut chars = text.chars();
-    while let Some(c) = chars.next() {
-        if c == '\\' {
-            if let Some(next) = chars.next() {
-                result.push(next);
-            }
-        } else {
-            result.push(c);
-        }
-    }
-    result
 }
 
 /// Strips the trailing `()` an author writes so a cross-reference reads as a
@@ -621,31 +685,22 @@ fn find_valid_close_positions(
             continue;
         }
 
-        // Check character after end marker
+        // Check character after end marker.
         let after_end = abs_pos + marker_len;
         if after_end < full_text.len() {
             let next_char = full_text[after_end..].chars().next().unwrap();
-            if !next_char.is_whitespace() && !"-.,:;!?\\/ '\" >)]}".contains(next_char) {
+            if !can_follow_end_string(next_char) {
                 search_pos = abs_pos + 1;
                 continue;
             }
         }
 
-        // Check for escaping of end marker (skip if is_literal)
-        if !is_literal && abs_pos > 0 && full_text.as_bytes()[abs_pos - 1] == b'\\' {
-            let mut bs_count = 0;
-            let mut j = abs_pos - 1;
-            while full_text.as_bytes()[j] == b'\\' {
-                bs_count += 1;
-                if j == 0 {
-                    break;
-                }
-                j -= 1;
-            }
-            if bs_count % 2 != 0 {
-                search_pos = abs_pos + 1;
-                continue;
-            }
+        // An escaped end marker closes nothing. Literals are exempt, mirroring
+        // docutils using `non_whitespace_before` for them where emphasis and
+        // strong use `non_whitespace_escape_before`.
+        if !is_literal && is_escaped_at(full_text, abs_pos) {
+            search_pos = abs_pos + 1;
+            continue;
         }
 
         positions.push(abs_pos);
@@ -669,21 +724,9 @@ pub(super) fn find_inline_markup(
     for (i, _) in text.char_indices() {
         let abs_i = start_offset + i;
 
-        // Check for escaping
-        if abs_i > 0 && full_text.as_bytes()[abs_i - 1] == b'\\' {
-            // Count backslashes to see if it's escaped or the backslash itself is escaped
-            let mut bs_count = 0;
-            let mut j = abs_i - 1;
-            while full_text.as_bytes()[j] == b'\\' {
-                bs_count += 1;
-                if j == 0 {
-                    break;
-                }
-                j -= 1;
-            }
-            if bs_count % 2 != 0 {
-                continue;
-            }
+        // An escaped character never opens markup.
+        if is_escaped_at(full_text, abs_i) {
+            continue;
         }
 
         // Try Inline Literal first (``)
@@ -744,7 +787,7 @@ pub(super) fn try_match_inline(
     // Start context check
     if start_pos > 0 {
         let prev_char = full_text[..start_pos].chars().next_back().unwrap();
-        if !prev_char.is_whitespace() && !"-:/'\"<([{".contains(prev_char) {
+        if !can_precede_start_string(prev_char) {
             return None;
         }
     }
@@ -774,6 +817,13 @@ pub(super) fn try_match_inline(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Escapes `raw` the way [`parse_inline_text`] does before any of the
+    /// helpers below see it, so a unit test exercises the form those helpers
+    /// are actually handed rather than a raw backslash they never meet.
+    fn escaped(raw: &str) -> String {
+        EscapedText::new(raw).as_str().to_string()
+    }
     use rusty_sphinx_ast::TargetSearchOrder;
 
     #[test]
@@ -896,7 +946,8 @@ mod tests {
     fn test_parse_domain_object_target_explicit_title_unescapes_display() {
         // Given / When — the confirmed known_bugs.md example:
         // `:func:`spawn\* <spawnl>`` displays "spawn*", resolves "spawnl".
-        let target = parse_domain_object_target("spawn\\* <spawnl>", Domain::Py);
+        // The role content arrives escaped, as it does from `parse_inline_text`.
+        let target = parse_domain_object_target(&escaped(r"spawn\* <spawnl>"), Domain::Py);
 
         // Then
         assert_eq!(target.name, "spawnl");
@@ -1082,7 +1133,7 @@ mod tests {
         // Given / When — docutils un-escapes interpreted text before the role
         // ever sees it, so `foo\(\)` reaches Sphinx as `foo()` and strips
         // like any other call-shaped target.
-        let target = parse_domain_object_target("foo\\(\\)", Domain::Py);
+        let target = parse_domain_object_target(&escaped(r"foo\(\)"), Domain::Py);
 
         // Then
         assert_eq!(target.name, "foo");
@@ -1743,8 +1794,14 @@ mod tests {
 
     #[test]
     fn test_handle_inline_match_func_variant_explicit_title() {
-        // Given / When — the confirmed known_bugs.md example.
-        let result = handle_inline_match("func", ":func:`spawn\\* <spawnl>`", None, Domain::Py);
+        // Given / When — the confirmed known_bugs.md example, with the role
+        // markup escaped as `parse_inline_text` would hand it over.
+        let result = handle_inline_match(
+            "func",
+            &escaped(r":func:`spawn\* <spawnl>`"),
+            None,
+            Domain::Py,
+        );
 
         // Then
         assert_eq!(
@@ -2226,7 +2283,7 @@ mod tests {
     fn test_find_valid_close_positions_rejects_escaped_marker_unless_literal() {
         // Given: an escaped "*" shouldn't count as a valid closer for
         // emphasis, but escaping is irrelevant for inline literals
-        let input = r"word\* more";
+        let input = &escaped(r"word\* more");
         // When
         let emphasis_positions = find_valid_close_positions(input, 0, "*", false);
         let literal_positions = find_valid_close_positions(input, 0, "*", true);
@@ -2531,7 +2588,85 @@ mod integration_tests {
     }
 
     #[test]
+    fn test_parse_escaped_space_joins_markup_to_neighbouring_text() {
+        // Given the RST idiom for attaching markup to adjacent text: the
+        // escaped spaces are separators for the parser and vanish from output
+        let doc = parse("test.rst", r"Join foo\ *bar*\ baz tightly.");
+
+        // Then
+        let Node::Paragraph(inlines) = &doc.nodes[0] else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        };
+        assert_eq!(inlines[0], InlineNode::Text("Join foo".to_string()));
+        assert_eq!(inlines[1], InlineNode::Emphasis("bar".to_string()));
+        assert_eq!(inlines[2], InlineNode::Text("baz tightly.".to_string()));
+    }
+
+    #[test]
+    fn test_parse_escaped_dashes_are_not_turned_into_a_typographic_dash() {
+        // Given an escaped and an unescaped pair. Smart typography runs on the
+        // escaped form, so only the unescaped pair converts — matching
+        // docutils' smartquotes transform.
+        let doc = parse("test.rst", r"escaped \-\- and real -- here");
+
+        // Then
+        let Node::Paragraph(inlines) = &doc.nodes[0] else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        };
+        assert_eq!(
+            inlines[0],
+            InlineNode::Text("escaped -- and real \u{2013} here".to_string())
+        );
+    }
+
+    #[test]
+    fn test_parse_role_content_is_unescaped_through_the_full_pipeline() {
+        // Given a role whose content carries an escape. The unit tests for
+        // `parse_domain_object_target` hand it pre-escaped text directly, so
+        // this covers the one thing they cannot: that the escaping actually
+        // reaches them from `parse_inline_text`.
+        let doc = parse("test.rst", r":func:`spawn\* <spawnl>`");
+
+        // Then
+        let Node::Paragraph(inlines) = &doc.nodes[0] else {
+            panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
+        };
+        let InlineNode::DomainObjectReference { name, display, .. } = &inlines[0] else {
+            panic!("Expected DomainObjectReference, got {:?}", inlines[0]);
+        };
+        assert_eq!(name, "spawnl");
+        assert_eq!(display, "spawn*");
+    }
+
+    #[test]
+    fn test_no_escape_marker_survives_into_the_parsed_document() {
+        // Given an escape inside every construct that carries text out of the
+        // inline parser
+        let input = concat!(
+            r"Text \*with\* escapes, ``a\literal``, *em\*phasis*, **str\*ong**,",
+            "\n",
+            r":func:`spawn\* <spawnl>`, :ref:`see\* <somewhere>`,",
+            "\n",
+            r":term:`a\*term`, :option:`--flag\*`, `a link\* <https://example.com>`_",
+        );
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then — a marker reaching the AST would be rendered into the HTML as
+        // a stray NUL, so assert on the whole tree rather than field by field.
+        // This is the guarantee `unescape_node`'s exhaustive match exists for.
+        let rendered = format!("{:?}", doc.nodes);
+        assert!(
+            !rendered.contains('\u{0}'),
+            "an escape marker leaked into the AST: {rendered}"
+        );
+    }
+
+    #[test]
     fn test_parse_paragraph_with_escaped_markup() {
+        // The backslashes suppress the emphasis *and* are removed from the
+        // output, as docutils does — they are markup, not content.
         let input = r"Keep \*stars\* as is and **strong** text.";
         let doc = parse("test.rst", input);
         assert_eq!(doc.nodes.len(), 1);
@@ -2539,7 +2674,7 @@ mod integration_tests {
             assert_eq!(inlines.len(), 3);
             assert_eq!(
                 inlines[0],
-                InlineNode::Text(r"Keep \*stars\* as is and ".to_string())
+                InlineNode::Text("Keep *stars* as is and ".to_string())
             );
             assert_eq!(inlines[1], InlineNode::Strong("strong".to_string()));
             assert_eq!(inlines[2], InlineNode::Text(" text.".to_string()));
