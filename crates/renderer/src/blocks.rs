@@ -18,7 +18,6 @@ mod doctest;
 mod domain_object;
 mod glossary;
 mod math;
-mod nav;
 mod scope_directives;
 mod table_directive;
 mod table_shell;

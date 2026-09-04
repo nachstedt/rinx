@@ -94,9 +94,11 @@ pub(super) fn process_preview(
             css_path: &css_path,
             page_title: &page_title,
             doc_path,
-            nav_tree: &index.nav_tree,
+            source_path: &doc.path,
             has_genindex: !index.genindex_entries.is_empty(),
-        },
+            ..renderer::PageMeta::default()
+        }
+        .with_navigation(&index),
     )?;
     Ok(PreviewedPage {
         html,
@@ -196,7 +198,7 @@ mod tests {
         .unwrap();
 
         // Then
-        assert!(page.html.contains("<h1>Section A</h1>"));
+        assert!(page.html.contains("<h1 id=\"section-a\">Section A</h1>"));
         // Cross-reference to other file should be resolved
         assert!(page.html.contains("href=\"other.html#section-b\""));
         assert!(page.broken_links.is_empty());
@@ -222,7 +224,7 @@ mod tests {
         .unwrap();
 
         // Then
-        assert!(page.html.contains("<h1>Section A</h1>"));
+        assert!(page.html.contains("<h1 id=\"section-a\">Section A</h1>"));
         assert!(page.broken_links.is_empty());
     }
 

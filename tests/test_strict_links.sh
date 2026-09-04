@@ -5,7 +5,8 @@
 
 set -euo pipefail
 
-BAZEL=${BAZEL:-/usr/local/bin/bazel}
+# Resolve from PATH rather than hardcoding an install location.
+BAZEL=${BAZEL:-$(command -v bazel)}
 
 echo "=== Testing baseline build succeeds ==="
 if $BAZEL build //examples:site > /dev/null 2>&1; then

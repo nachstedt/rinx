@@ -38,7 +38,13 @@ pub(in crate::directives) fn parse_list_table(
     let (option_lines, opt_idx) = scan_option_lines(&unindented_lines);
     let (options, unrecognized) =
         parse_shared_table_options(&option_lines, TableSource::List.as_str(), diagnostics, ctx);
-    report_unknown_options(&unrecognized, TableSource::List.as_str(), diagnostics, ctx);
+    report_unknown_options(
+        &unrecognized,
+        TableSource::List.as_str(),
+        DiagnosticCode::DirectiveUnknownOption,
+        diagnostics,
+        ctx,
+    );
 
     let body_content: Vec<&str> = unindented_lines[opt_idx..]
         .iter()

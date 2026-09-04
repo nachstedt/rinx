@@ -433,7 +433,7 @@ def analyze_results(build_succeeded=False):
         return
         
     unknown_directives = {}
-    ignored_toctree_options = {}
+    toctree_options_used = {}
     parser_diagnostics = {}
     
     def traverse(node):
@@ -446,12 +446,29 @@ def analyze_results(build_succeeded=False):
                         name = directive["Unknown"].get("name", "unnamed")
                         unknown_directives[name] = unknown_directives.get(name, 0) + 1
                     elif "Toctree" in directive:
-                        # Extract ignored options from Toctree
-                        options = directive["Toctree"].get("ignored_options", [])
-                        for opt in options:
-                            # Normalize option name for aggregation (e.g., :caption: text -> :caption:)
-                            opt_name = opt.split(":")[1] if ":" in opt else opt
-                            ignored_toctree_options[opt_name] = ignored_toctree_options.get(opt_name, 0) + 1
+                        # Which `.. toctree::` options the corpus actually
+                        # exercises. This used to count options the parser
+                        # *ignored*, back when it recorded them in an
+                        # `ignored_options` list and honoured none of them.
+                        # Every option is honoured now and that field is gone,
+                        # so counting usage is what keeps the number honest —
+                        # a zero here would otherwise look like success while
+                        # only meaning the field had been removed. An option
+                        # the parser does not know is not counted here at all;
+                        # it surfaces as a `directive.toctree-unknown-option`
+                        # entry under parser diagnostics.
+                        options = directive["Toctree"].get("options", {})
+                        for name in ("maxdepth", "numbered", "caption", "name"):
+                            if options.get(name) is not None:
+                                toctree_options_used[name] = (
+                                    toctree_options_used.get(name, 0) + 1
+                                )
+                        for flag in options.get("flags", []):
+                            # `TitlesOnly` -> `titlesonly`, as an author writes it.
+                            key = flag.lower()
+                            toctree_options_used[key] = (
+                                toctree_options_used.get(key, 0) + 1
+                            )
             
             # Check for document diagnostics
             if "diagnostics" in node and isinstance(node["diagnostics"], list):
@@ -490,8 +507,8 @@ def analyze_results(build_succeeded=False):
         write_frequency_summary(out, "Unsupported Directives Summary", unknown_directives)
         write_frequency_summary(
             out,
-            "Ignored Toctree Options Summary",
-            ignored_toctree_options,
+            "Toctree Options Exercised Summary",
+            toctree_options_used,
             key_prefix=":",
             key_suffix=":",
         )
@@ -503,7 +520,7 @@ def analyze_results(build_succeeded=False):
     print_benchmark_summary(
         result_path,
         unknown_directives,
-        ignored_toctree_options,
+        toctree_options_used,
         parser_diagnostics,
         domain,
     )
@@ -530,7 +547,7 @@ def print_benchmark_summary(result_path, unknown, toctree_opts, diagnostics, dom
 
     print("\n=== Benchmark Summary ===")
     line("Unsupported directives:", len(unknown), sum(unknown.values()))
-    line("Ignored toctree options:", len(toctree_opts))
+    line("Toctree options exercised:", len(toctree_opts), sum(toctree_opts.values()))
     line("Parser diagnostics:", len(diagnostics))
     line(
         "Unresolved domain refs:",

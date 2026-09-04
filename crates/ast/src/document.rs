@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 use crate::diagnostic::Diagnostic;
 use crate::node::Node;
@@ -21,6 +22,17 @@ pub struct Document {
     /// time, long after the comment that excuses it was parsed.
     #[serde(default)]
     pub suppressions: Vec<Suppression>,
+    /// The document-level field list written before the title, if any —
+    /// Sphinx's file-wide metadata.
+    ///
+    /// Deliberately *not* general field-list support: only a contiguous run of
+    /// `:name: value` lines at the very top of a document is read, values stay
+    /// raw strings, and nothing renders it. That is where Sphinx requires
+    /// `:orphan:`, which is the one field that currently means anything, so
+    /// this is the minimum needed rather than a half-built version of a
+    /// construct that deserves its own implementation.
+    #[serde(default)]
+    pub metadata: BTreeMap<String, String>,
 }
 
 impl Document {
@@ -31,6 +43,7 @@ impl Document {
             nodes,
             diagnostics: Vec::new(),
             suppressions: Vec::new(),
+            metadata: BTreeMap::new(),
         }
     }
 }

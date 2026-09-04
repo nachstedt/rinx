@@ -182,6 +182,8 @@ mod tests {
             object_type_mismatches: &mut Vec::new(),
             math_errors: &mut Vec::new(),
             math: &math,
+            section_ids: &std::collections::BTreeMap::new(),
+            at_top_level: true,
             scope: rusty_sphinx_scope::Scope::default(),
         };
 
@@ -226,6 +228,8 @@ mod tests {
             object_type_mismatches: &mut Vec::new(),
             math_errors: &mut Vec::new(),
             math: &math,
+            section_ids: &std::collections::BTreeMap::new(),
+            at_top_level: true,
             scope: rusty_sphinx_scope::Scope::default(),
         };
 
@@ -403,6 +407,8 @@ mod tests {
             object_type_mismatches: &mut Vec::new(),
             math_errors: &mut Vec::new(),
             math: &math,
+            section_ids: &std::collections::BTreeMap::new(),
+            at_top_level: true,
             scope: rusty_sphinx_scope::Scope::default(),
         };
 

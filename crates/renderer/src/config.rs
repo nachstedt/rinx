@@ -21,10 +21,29 @@ pub struct SiteConfig {
     /// The project version displayed in the sidebar header.
     #[serde(default)]
     pub version: String,
+
+    /// The document every other one hangs off — Sphinx's `root_doc`, written
+    /// without its `.rst` extension (`"index"`, `"docs/index"`).
+    ///
+    /// Without it, roots are *inferred* as "every document no toctree
+    /// references", which quietly makes an orphaned document a second
+    /// top-level entry in the sidebar and leaves page order ambiguous. Naming
+    /// the root removes both.
+    ///
+    /// This is a logical document name, not a file path, so it does not
+    /// violate the no-paths rule above: nothing here has to survive a sandbox
+    /// relocating a file. Falls back to the inferred roots when it names no
+    /// document that exists.
+    #[serde(default = "default_root_doc")]
+    pub root_doc: String,
 }
 
 fn default_project() -> String {
     "Documentation".to_string()
+}
+
+fn default_root_doc() -> String {
+    "index".to_string()
 }
 
 impl Default for SiteConfig {
@@ -32,6 +51,7 @@ impl Default for SiteConfig {
         Self {
             project: default_project(),
             version: String::new(),
+            root_doc: default_root_doc(),
         }
     }
 }
@@ -45,6 +65,34 @@ mod tests {
         let config = SiteConfig::default();
         assert_eq!(config.project, "Documentation");
         assert_eq!(config.version, "");
+        assert_eq!(config.root_doc, "index");
+    }
+
+    #[test]
+    fn test_deserialize_reads_an_explicit_root_doc() {
+        // Given
+        let toml_str = r#"
+project = "My Project"
+root_doc = "contents"
+"#;
+
+        // When
+        let config: SiteConfig = toml::from_str(toml_str).unwrap();
+
+        // Then
+        assert_eq!(config.root_doc, "contents");
+    }
+
+    #[test]
+    fn test_deserialize_defaults_root_doc_when_omitted() {
+        // Given — every existing site config predates the option.
+        let toml_str = r#"project = "My Project""#;
+
+        // When
+        let config: SiteConfig = toml::from_str(toml_str).unwrap();
+
+        // Then
+        assert_eq!(config.root_doc, "index");
     }
 
     #[test]
@@ -74,6 +122,7 @@ version = "1.0"
         // Then
         assert_eq!(config.project, "Documentation");
         assert_eq!(config.version, "");
+        assert_eq!(config.root_doc, "index");
     }
 
     #[test]

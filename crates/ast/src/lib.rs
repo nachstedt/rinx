@@ -35,11 +35,13 @@ mod non_empty_vector;
 mod object_naming;
 mod object_type;
 mod py_version_spec;
+mod section_id;
 mod span;
 mod suppression;
 mod table;
 mod target_name;
 mod target_search_order;
+mod toctree;
 mod version_change_kind;
 mod visit;
 
@@ -69,10 +71,12 @@ pub use object_naming::{
 };
 pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
+pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
 pub use span::{Position, Span};
 pub use suppression::{Suppression, SuppressionCodes};
 pub use table::{TableAlign, TableCell, TableRow, TableSource, TableWidths};
 pub use target_name::TargetName;
 pub use target_search_order::TargetSearchOrder;
+pub use toctree::{NumberedDepth, TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
 pub use version_change_kind::VersionChangeKind;
 pub use visit::walk_nodes;

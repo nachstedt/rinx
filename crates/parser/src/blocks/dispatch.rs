@@ -64,11 +64,18 @@ pub fn parse_with_domain(path: &str, input: &str, default_domain: Domain) -> Doc
 /// to be non-empty by preceding checks.
 #[must_use]
 pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
-    let lines: Vec<&str> = input.lines().collect();
+    let all_lines: Vec<&str> = input.lines().collect();
+    // The document's leading field list is metadata, not content: consuming it
+    // here keeps it out of the block parser, where it would otherwise render as
+    // a stray paragraph.
+    let (metadata, metadata_lines) = super::docinfo::split_document_metadata(&all_lines);
+    let lines = &all_lines[metadata_lines..];
+    let ctx = &ctx.nested(metadata_lines, 0);
+
     let mut adornment_order: Vec<Adornment> = Vec::new();
     let mut diagnostics = Diagnostics::default();
 
-    let mut nodes = parse_blocks(&lines, &mut adornment_order, &mut diagnostics, ctx);
+    let mut nodes = parse_blocks(lines, &mut adornment_order, &mut diagnostics, ctx);
 
     let mut index_id_counter = 0;
     super::index_ids::assign_index_ids(&mut nodes, &mut index_id_counter);
@@ -77,6 +84,7 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     let mut doc = Document::new(path.to_string(), nodes);
     doc.diagnostics = entries;
     doc.suppressions = suppressions;
+    doc.metadata = metadata;
     doc
 }
 pub(crate) fn parse_blocks(

@@ -33,6 +33,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bstr"
+version = "1.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bb31b46c14244e20ee9984b11bf5c992b91fb6939fea616e3512c8baecdbe5f"
+dependencies = [
+ "memchr",
+ "serde_core",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -113,6 +123,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
 
 [[package]]
+name = "globset"
+version = "0.4.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e47d37d2ae4464254884b60ab7071be2b876a9c35b696bd018ddcc76847309cd"
+dependencies = [
+ "aho-corasick",
+ "bstr",
+ "log",
+ "regex-automata",
+ "regex-syntax",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -169,6 +192,12 @@ name = "libc"
 version = "0.2.185"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52ff2c0fe9bc6cb6b14a0592c2ff4fa9ceb83eea9db979b0487cd054946a2b8f"
+
+[[package]]
+name = "log"
+version = "0.4.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "math-core"
@@ -345,6 +374,7 @@ dependencies = [
  "rusty_sphinx_ast",
  "rusty_sphinx_index",
  "rusty_sphinx_scope",
+ "rusty_sphinx_toctree",
  "serde_json",
 ]
 
@@ -356,6 +386,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "unicode-normalization",
 ]
 
 [[package]]
@@ -392,6 +423,7 @@ dependencies = [
  "rusty_sphinx_ast",
  "rusty_sphinx_index",
  "rusty_sphinx_scope",
+ "rusty_sphinx_toctree",
  "serde",
  "toml",
 ]
@@ -400,6 +432,14 @@ dependencies = [
 name = "rusty_sphinx_scope"
 version = "0.1.0"
 dependencies = [
+ "rusty_sphinx_ast",
+]
+
+[[package]]
+name = "rusty_sphinx_toctree"
+version = "0.1.0"
+dependencies = [
+ "globset",
  "rusty_sphinx_ast",
 ]
 
@@ -413,6 +453,7 @@ dependencies = [
  "rusty_sphinx_index",
  "rusty_sphinx_parser",
  "rusty_sphinx_renderer",
+ "rusty_sphinx_toctree",
  "serde",
  "serde_json",
  "toml",
@@ -544,6 +585,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tinyvec"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb4ebadaa0af04fab11ae01eb5f9fdb5f9c5b875506e210e71c07873528baa7f"
+dependencies = [
+ "tinyvec_macros",
+]
+
+[[package]]
+name = "tinyvec_macros"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+
+[[package]]
 name = "toml"
 version = "0.8.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -595,6 +651,15 @@ name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+
+[[package]]
+name = "unicode-normalization"
+version = "0.1.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8"
+dependencies = [
+ "tinyvec",
+]
 
 [[package]]
 name = "winnow"

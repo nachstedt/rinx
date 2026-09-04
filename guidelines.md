@@ -20,6 +20,8 @@ entry under the heading it belongs to, as a single short sentence.
 - When a family of related kinds needs different options per kind, give each kind its own explicit variant/type with only its own fields, rather than one shared struct/variant carrying the union of every kind's options (most of them meaningless on most instances).
 - When several values play the same role, model them as one uniform collection rather than splitting the first out into its own field; if one of them is special, express that as a named accessor on the collection, not as a structural asymmetry.
 - Give two constructs one shared type when they are structurally identical and carry no kind-specific data; split them into separate types only when they differ in the fields they need.
+- Model a family of valueless flag options as one set of an enum rather than as several `bool` fields, so asking for one cannot be confused with asking for its neighbour.
+- Prefer a type that makes a meaningless value unrepresentable (`NonZeroUsize` for a depth) and resolve the ambiguity once, where the source text is read.
 
 ## Module and file organization
 
@@ -32,6 +34,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Place a module under whichever dispatcher actually calls it, which means grepping for its real callers rather than assuming from its name.
 - Suspect any file named after a construct that also holds general-purpose helpers, and split the helpers out under a name describing what they do.
 - Keep a helper flat at the crate's `src/` root only when it is genuinely reached from several sibling trees; nesting it under one construct's directory would misstate the dependency.
+- Give shared logic its own crate when the phases needing it are forbidden to depend on each other, rather than reintroducing a dependency an earlier split was made to remove.
 - Do not separate a type from the only code that constructs and reads it; modules that merely thread a value through their signatures are not users of it.
 - Treat two functions with identical bodies under different names as one function, and delete the duplicate rather than relocating both.
 - Prefer a plain private function in a parent module over a `pub(super)` one when only that module's own descendants call it.
@@ -58,6 +61,8 @@ entry under the heading it belongs to, as a single short sentence.
 - A pure phase should take an injected trait object for anything it cannot do itself (like reading a file) rather than acquiring the capability directly.
 - Convert an embedded notation (LaTeX, CSV) with an established library during the build rather than shipping a client-side script, so the output stays self-contained and malformed input becomes a build diagnostic instead of a silent failure in the reader's browser.
 - Store an embedded notation in the AST exactly as written and convert it only while rendering, so the choice of backend never reaches a serialized `.ast` file.
+- Leave a pattern unexpanded in the AST and the index when several later phases must expand it against different sets, so no phase has to reimplement the matcher against its own narrower set.
+- Prefer storing a graph plus each node's own data over a pre-flattened tree, since a flattened tree cannot be merged per document and loses the per-directive options that produced it.
 
 ## Porting from a reference implementation
 
@@ -67,7 +72,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When the reference implementation's output discards information the source expressed, render that information faithfully instead of reproducing the loss, and say so in a comment so nobody "fixes" it back.
 - Where a third-party library cannot reproduce the reference implementation's behaviour exactly, pick the narrower behaviour, diagnose what you refuse, and comment why so nobody widens it by accident.
 - When the reference implementation defines a rule over full Unicode character classes, port those classes rather than an ASCII approximation that happens to satisfy the current tests.
-- Transcribe a reference implementation's pre-generated tables rather than re-deriving them, so the two cannot drift apart as either side's inputs change.
+- Transcribe a reference implementation's pre-generated tables rather than re-deriving them, so the two cannot drift apart as either side's inputs change; fetch the actual source rather than reconstructing a table from memory.
 
 ## Diagnostics
 
@@ -75,6 +80,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep the resilient parser and the strict build separate: the parser degrades bad input and records what went wrong, and the build step decides whether that is fatal.
 - When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
 - When porting a reference implementation, port its full diagnostic set, and additionally invent diagnostics of your own wherever it silently degrades valid-looking input into something else.
+- When two phases must derive the same identifier, give them one function to call rather than two implementations to keep in step, and key it on something that cannot collide (a position) rather than on content that can.
 - Before keeping an invented diagnostic, measure its false-positive rate over the benchmark corpus; a heuristic that stays silent across real documents is safe to keep unnarrowed.
 - Every diagnostic carries a source position and a stable code; the position goes in a span and the code in an enum, never formatted into the message text.
 - Report a position as a range rather than a point, even while only its start is printed, because the end is free wherever the start is and retrofitting it later re-touches every reporting site.
@@ -94,6 +100,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Tests should always follow the Given-When-Then pattern.
 - Always create unit tests for new functions introduced during refactoring.
 - Validate real-world/benchmark inputs against a parser before considering a feature done — a hand-built test suite can miss patterns (like a border line with a partial `+` set) that only show up in authentic external documents.
+- When deleting tests whose subject moved to another phase, check the destination already covers those cases and add an integration test for the seam, rather than letting the coverage go with the code.
 - Do not widen a public API to serve a test; keep test-only helpers and fixtures inside the `#[cfg(test)]` module that needs them.
 - When a table of related cases is maintained by hand, test its structural invariants (reflexivity, symmetry) across all entries rather than only asserting the individual rows, so a half-finished edit fails.
 

@@ -2,7 +2,9 @@
 //! lists, and the directive dispatcher — everything [`render_nodes`] reaches
 //! while walking a document's node tree.
 
-use rusty_sphinx_ast::{Directive, Enumerator, HashedContent, InlineNode, ListItem, Node};
+use rusty_sphinx_ast::{
+    Directive, Enumerator, HashedContent, InlineNode, ListItem, Node, Toctree, ToctreeFlag,
+};
 use std::fmt::Write as _;
 
 use super::admonitions::{render_admonition, render_seealso, render_version_change};
@@ -11,11 +13,11 @@ use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
 use super::glossary::{render_glossary, render_index_anchor};
 use super::math::render_math;
-use super::nav::{find_nav_entry, render_nav_entry};
 use super::scope_directives::apply_scope_directive;
 use super::table_directive::{TableDirectiveParams, render_table_directive};
 use crate::RenderCtx;
 use crate::inline::render_inline;
+use crate::nav::{expand_toctree_entries, write_nav_list};
 
 /// Renders the `<li>` elements shared by both list kinds.
 ///
@@ -145,13 +147,26 @@ fn render_inlines(html: &mut String, inlines: &[InlineNode], ctx: &mut RenderCtx
 }
 
 pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCtx<'_>) {
-    for node in nodes {
+    // Only the document's own top level holds sections, so only there does a
+    // heading carry an `id`. Clearing the flag for the duration of this list's
+    // nested bodies — and restoring it after — keeps a heading inside an
+    // admonition or a list item from claiming a section anchor that belongs to
+    // the top-level heading at the same index.
+    let at_top_level = std::mem::replace(&mut ctx.at_top_level, false);
+    // A document's first heading is its *title*, which the outline unwraps —
+    // so its number is the document's own rather than a section's.
+    let title_index = nodes
+        .iter()
+        .position(|node| matches!(node, Node::Heading { .. }))
+        .unwrap_or(usize::MAX);
+    for (index, node) in nodes.iter().enumerate() {
         match node {
             Node::Heading { level, text } => {
-                let tag = format!("h{}", (*level).clamp(1, 6));
-                let _ = write!(html, "<{tag}>");
-                render_inlines(html, text, ctx);
-                let _ = writeln!(html, "</{tag}>");
+                let id = at_top_level
+                    .then(|| ctx.section_ids.get(&index))
+                    .flatten()
+                    .cloned();
+                render_heading(html, *level, text, id.as_ref(), index == title_index, ctx);
             }
             Node::Paragraph(inlines) => {
                 let _ = write!(html, "<p>");
@@ -231,23 +246,88 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
             }
         }
     }
+    ctx.at_top_level = at_top_level;
 }
 
-/// Renders a local `.. toctree::` as a `<ul>` of the current document's own
-/// children in the nav tree — the sidebar handles the site-wide tree
-/// separately (see `super::nav`), this only covers a toctree written inline
-/// in a page's own body.
-fn render_toctree_directive(html: &mut String, maxdepth: Option<usize>, ctx: &mut RenderCtx<'_>) {
-    let _ = writeln!(html, "<ul>");
-    let current_dir = std::path::Path::new(ctx.doc_path)
-        .parent()
-        .unwrap_or_else(|| std::path::Path::new(""));
-    if let Some(current_entry) = find_nav_entry(&ctx.index.nav_tree, ctx.original_doc_path) {
-        for child in &current_entry.children {
-            render_nav_entry(html, child, ctx.index, current_dir, 1, maxdepth);
+/// Renders one heading, with its section anchor and `:numbered:` number.
+fn render_heading(
+    html: &mut String,
+    level: u8,
+    text: &[InlineNode],
+    id: Option<&rusty_sphinx_ast::SectionId>,
+    is_title: bool,
+    ctx: &mut RenderCtx<'_>,
+) {
+    let tag = format!("h{}", level.clamp(1, 6));
+    match id {
+        Some(id) => {
+            let escaped = html_escape::encode_double_quoted_attribute(id.as_str());
+            let _ = write!(html, "<{tag} id=\"{escaped}\">");
+        }
+        None => {
+            let _ = write!(html, "<{tag}>");
         }
     }
-    let _ = writeln!(html, "</ul>");
+    // `:numbered:` shows the same number here as in the navigation, read from
+    // the one map the analyzer wrote — computing it a second time is how a
+    // toctree saying "2.1." could come to link at a heading rendered "3.4.".
+    if let Some(id) = id
+        && let Some(number) = heading_secnumber(ctx, id, is_title)
+    {
+        let _ = write!(
+            html,
+            "<span class=\"section-number\">{} </span>",
+            crate::nav::format_secnumber(&number)
+        );
+    }
+    render_inlines(html, text, ctx);
+    let _ = writeln!(html, "</{tag}>");
+}
+
+/// The `:numbered:` number shown on one heading.
+///
+/// A section's number is looked up by its id. The document's *title* heading
+/// has no section number — the outline treats it as the document itself — so
+/// it takes the document's own number instead.
+fn heading_secnumber(
+    ctx: &RenderCtx<'_>,
+    id: &rusty_sphinx_ast::SectionId,
+    is_title: bool,
+) -> Option<Vec<usize>> {
+    let numbers = ctx.index.section_numbers.get(ctx.original_doc_path)?;
+    numbers
+        .section(id)
+        .or_else(|| is_title.then(|| numbers.document()).flatten())
+        .map(<[usize]>::to_vec)
+}
+
+/// Renders a `.. toctree::` in a page's body.
+///
+/// The entries come from *this directive*, not from a flattened tree looked up
+/// by document — which is what makes two toctrees in one document, with
+/// different options, finally render differently. The sidebar walks the same
+/// graph separately, through `page::layout`.
+fn render_toctree_directive(html: &mut String, toctree: &Toctree, ctx: &mut RenderCtx<'_>) {
+    // `:name:` makes the toctree a `:ref:` target, so its anchor is emitted
+    // even for a `:hidden:` toctree — which otherwise renders nothing, and
+    // would leave every reference to it dangling.
+    if let Some(name) = &toctree.options.name {
+        let escaped = html_escape::encode_double_quoted_attribute(name.as_str());
+        let _ = writeln!(html, "<a id=\"{escaped}\"></a>");
+    }
+
+    if toctree.options.has(ToctreeFlag::Hidden) {
+        return;
+    }
+
+    let entries = expand_toctree_entries(
+        toctree,
+        ctx.original_doc_path,
+        ctx.index,
+        ctx.doc_path,
+        ctx.original_doc_path,
+    );
+    write_nav_list(html, &entries, toctree.options.caption.as_deref());
 }
 
 /// Renders a `.. plantuml::` diagram as an `<img>` pointing at the SVG a
@@ -270,7 +350,7 @@ fn render_plantuml_directive(html: &mut String, content: &HashedContent, ctx: &R
 
 fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCtx<'_>) {
     match directive {
-        Directive::Toctree { maxdepth, .. } => render_toctree_directive(html, *maxdepth, ctx),
+        Directive::Toctree(toctree) => render_toctree_directive(html, toctree, ctx),
         Directive::PlantUml(content) => render_plantuml_directive(html, content, ctx),
         Directive::Admonition {
             kind,

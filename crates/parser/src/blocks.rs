@@ -8,6 +8,7 @@ mod bullet_list;
 mod comment;
 mod definition_list;
 mod dispatch;
+mod docinfo;
 mod doctest_block;
 mod enumerated_list;
 mod index_ids;

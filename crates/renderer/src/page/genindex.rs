@@ -223,13 +223,18 @@ pub fn render_genindex(
         &body,
         template_str,
         config,
+        // The general index is not a document, so it has no place in the
+        // reading order and gets no prev/next links; it still shows the same
+        // sidebar as every other page.
         &crate::PageMeta {
             css_path: &css_path,
             page_title: "Index",
             doc_path: "genindex.html",
-            nav_tree: &index.nav_tree,
+            source_path: "genindex.html",
             has_genindex,
-        },
+            ..crate::PageMeta::default()
+        }
+        .with_navigation(index),
     )
 }
 

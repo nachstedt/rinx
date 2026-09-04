@@ -13,10 +13,16 @@
 mod document_index;
 mod domain_object_index;
 mod equation_numbering;
-mod nav_tree;
-mod path_normalization;
+mod nav_diagnostics;
+mod outline;
+mod page_order;
 mod project_index;
+mod section_numbering;
 
 pub use document_index::analyze;
-pub use path_normalization::normalize_path;
-pub use project_index::build_project_index;
+// `normalize_path` lives in `rusty_sphinx_toctree` alongside the entry
+// resolution that is its only real caller; re-exported here so the worker's
+// existing import keeps working.
+pub use nav_diagnostics::DocumentDiagnostics;
+pub use project_index::{ProjectIndexBuild, build_project_index, build_project_index_reporting};
+pub use rusty_sphinx_toctree::normalize_path;

@@ -44,7 +44,13 @@ pub(in crate::directives) fn parse_table_directive(
     let option_line_refs: Vec<&OptionLine> = option_lines.iter().collect();
     let (options, unrecognized) =
         parse_common_table_options(&option_line_refs, DIRECTIVE, diagnostics, ctx);
-    report_unknown_options(&unrecognized, DIRECTIVE, diagnostics, ctx);
+    report_unknown_options(
+        &unrecognized,
+        DIRECTIVE,
+        DiagnosticCode::DirectiveUnknownOption,
+        diagnostics,
+        ctx,
+    );
 
     let body_content: Vec<&str> = unindented_lines[opt_idx..]
         .iter()

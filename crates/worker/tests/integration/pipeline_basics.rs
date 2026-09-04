@@ -42,7 +42,7 @@ fn test_renderer_step() {
     let index = analyzer::analyze(&doc);
     let html = renderer::render(&doc, &index, &doc.path).html;
 
-    let expected = "<h1>Section</h1>\n<p>A line of text.</p>\n";
+    let expected = "<h1 id=\"section\">Section</h1>\n<p>A line of text.</p>\n";
     assert_eq!(html, expected);
 }
 
@@ -64,9 +64,9 @@ And another paragraph.
     // Overview uses '-' (first seen) -> h1
     // Another Heading uses '~' (second seen) -> h2
     let expected_html = "\
-<h1>Overview</h1>
+<h1 id=\"overview\">Overview</h1>
 <p>This is a simple paragraph.\nIt spans multiple lines.</p>
-<h2>Another Heading</h2>
+<h2 id=\"another-heading\">Another Heading</h2>
 <p>And another paragraph.</p>
 ";
 
@@ -99,13 +99,13 @@ Text 4.
 ";
 
     let expected_html = "\
-<h1>Level 1</h1>
+<h1 id=\"level-1\">Level 1</h1>
 <p>Text 1.</p>
-<h2>Level 2</h2>
+<h2 id=\"level-2\">Level 2</h2>
 <p>Text 2.</p>
-<h3>Level 3</h3>
+<h3 id=\"level-3\">Level 3</h3>
 <p>Text 3.</p>
-<h1>Another Level 1</h1>
+<h1 id=\"another-level-1\">Another Level 1</h1>
 <p>Text 4.</p>
 ";
 

@@ -75,7 +75,13 @@ pub(in crate::directives) fn parse_csv_table(
         .into_iter()
         .filter(|line| !dialect.apply_option(line, diagnostics, ctx) && !source.apply_option(line))
         .collect();
-    report_unknown_options(&unclaimed, TableSource::Csv.as_str(), diagnostics, ctx);
+    report_unknown_options(
+        &unclaimed,
+        TableSource::Csv.as_str(),
+        DiagnosticCode::DirectiveUnknownOption,
+        diagnostics,
+        ctx,
+    );
 
     let inline_data = join_body_lines(
         &unindented_lines[body_start..]

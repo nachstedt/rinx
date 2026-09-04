@@ -18,8 +18,8 @@
         {% if nav_tree %}
         <ul class="nav-tree">
         {% for entry in nav_tree recursive %}
-          <li>
-            <a href="{{ entry.href }}">{{ entry.title }}</a>
+          <li{% if entry.is_current %} class="current"{% elif entry.is_ancestor %} class="ancestor"{% endif %}>
+            <a href="{{ entry.href }}">{% if entry.secnumber %}<span class="section-number">{{ entry.secnumber | join(".") }}. </span>{% endif %}{{ entry.title }}</a>
             {% if entry.children %}
             <ul>
               {{ loop(entry.children) }}
@@ -34,7 +34,19 @@
       </nav>
     </aside>
     <main class="document">
+      {% if prev or next %}
+      <nav class="page-relations">
+        {% if prev %}<a class="prev" href="{{ prev.href }}">&larr; {{ prev.title }}</a>{% endif %}
+        {% if next %}<a class="next" href="{{ next.href }}">{{ next.title }} &rarr;</a>{% endif %}
+      </nav>
+      {% endif %}
       {{ body }}
+      {% if prev or next %}
+      <nav class="page-relations">
+        {% if prev %}<a class="prev" href="{{ prev.href }}">&larr; {{ prev.title }}</a>{% endif %}
+        {% if next %}<a class="next" href="{{ next.href }}">{{ next.title }} &rarr;</a>{% endif %}
+      </nav>
+      {% endif %}
     </main>
   </div>
 </body>

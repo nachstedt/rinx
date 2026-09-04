@@ -32,6 +32,7 @@ Welcome to the Rusty-Sphinx example.
    index_entries
    noqa
    doctests
+   toctree/index
    team_a/index
    team_b/index
 

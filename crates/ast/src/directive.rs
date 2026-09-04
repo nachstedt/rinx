@@ -13,15 +13,12 @@ use crate::table::TableRow;
 use crate::table::TableSource;
 use crate::table::TableWidths;
 use crate::target_name::TargetName;
+use crate::toctree::Toctree;
 use crate::version_change_kind::VersionChangeKind;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Directive {
-    Toctree {
-        paths: Vec<String>,
-        maxdepth: Option<usize>,
-        ignored_options: Vec<String>,
-    },
+    Toctree(Toctree),
     PlantUml(HashedContent),
     Admonition {
         kind: AdmonitionKind,

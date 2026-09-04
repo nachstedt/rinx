@@ -233,6 +233,21 @@ mod tests {
     use rusty_sphinx_ast::Domain;
     use rusty_sphinx_ast::HashedContent;
 
+    /// A plain toctree document entry spanning the whole of source line
+    /// `line`, which is the shape `parse_toctree` produces for an unindented
+    /// entry written under a top-level directive.
+    fn toc_document_entry(docname: &str, line: u32) -> rusty_sphinx_ast::TocEntry {
+        let column_end = u32::try_from(docname.chars().count()).unwrap_or(0) + 4;
+        rusty_sphinx_ast::TocEntry::Document {
+            title: None,
+            docname: docname.to_string(),
+            span: Some(rusty_sphinx_ast::Span::new(
+                rusty_sphinx_ast::Position::new(line, 4),
+                rusty_sphinx_ast::Position::new(line, column_end),
+            )),
+        }
+    }
+
     /// Dispatches `name`/`argument`/`body` through [`parse_body_directive`]
     /// with throwaway state, returning the node and any diagnostics.
     fn dispatch(name: &str, argument: &str, body: &[&str]) -> (Node, Diagnostics) {
@@ -404,11 +419,13 @@ mod tests {
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(
             doc.nodes[0],
-            Node::Directive(Directive::Toctree {
-                paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
-                maxdepth: None,
-                ignored_options: vec![],
-            })
+            Node::Directive(Directive::Toctree(rusty_sphinx_ast::Toctree {
+                entries: vec![
+                    toc_document_entry("team_a/index", 3),
+                    toc_document_entry("team_b/index", 4),
+                ],
+                options: rusty_sphinx_ast::ToctreeOptions::default(),
+            }))
         );
         assert_eq!(
             doc.nodes[1],
@@ -431,11 +448,16 @@ mod tests {
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(
             doc.nodes[0],
-            Node::Directive(Directive::Toctree {
-                paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
-                maxdepth: Some(2),
-                ignored_options: vec![],
-            })
+            Node::Directive(Directive::Toctree(rusty_sphinx_ast::Toctree {
+                entries: vec![
+                    toc_document_entry("team_a/index", 4),
+                    toc_document_entry("team_b/index", 5),
+                ],
+                options: rusty_sphinx_ast::ToctreeOptions {
+                    maxdepth: std::num::NonZeroUsize::new(2),
+                    ..rusty_sphinx_ast::ToctreeOptions::default()
+                },
+            }))
         );
         assert_eq!(
             doc.nodes[1],

@@ -1,8 +1,13 @@
 //! Turning one matched role or link into its [`InlineNode`]: the `kind`
-//! dispatch, and the explicit-title (`Display text <target>`) split every
-//! role that supports one shares.
+//! dispatch.
+//!
+//! The explicit-title (`Display text <target>`) split every role that supports
+//! one shares used to live here; it moved to [`crate::explicit_title`] once
+//! `.. toctree::` needed the same syntax on its entry lines.
 
 use rusty_sphinx_ast::{Domain, InlineNode};
+
+use crate::explicit_title::split_display_and_target;
 
 use super::regexes::{
     ANONYMOUS_PHRASED_REGEX, ANONYMOUS_SIMPLE_REGEX, EMBEDDED_URI_REGEX, PHRASED_LINK_REGEX,
@@ -21,28 +26,6 @@ use super::roles::py::func::handle_func_match;
 use super::roles::py::meth::handle_meth_match;
 use super::roles::py::mod_::handle_mod_match;
 use super::roles::std_::option::handle_option_match;
-
-/// Splits a role's backtick content on Sphinx's optional explicit-title
-/// syntax (`Display text <target>`), shared by every role that supports it
-/// (`:term:`, `:ref:`, and the domain-object roles via
-/// [`parse_domain_object_target`]). Returns `None` when there is no explicit
-/// title.
-pub(super) fn split_explicit_title(content: &str) -> Option<(String, String)> {
-    let angle_start = content.rfind('<')?;
-    let angle_end = content[angle_start..].find('>')?;
-    let display = content[..angle_start].trim().to_string();
-    let target = content[angle_start + 1..angle_start + angle_end]
-        .trim()
-        .to_string();
-    Some((display, target))
-}
-
-/// Splits a role's backtick content on Sphinx's optional explicit-title
-/// syntax, shared by `:term:`/`:ref:`. Returns `(display, target)`, both
-/// equal to `content` when there is no explicit title.
-pub(super) fn split_display_and_target(content: &str) -> (String, String) {
-    split_explicit_title(content).unwrap_or_else(|| (content.to_string(), content.to_string()))
-}
 
 pub(super) fn handle_inline_match(
     kind: &str,
