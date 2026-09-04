@@ -37,21 +37,26 @@ A version must exist on **both** sides to be usable: as a `v<version>` tag in th
 
 Note that `scripts/domain_warnings_whitelist.json` is tied to the pinned corpus: entries for documents that do not exist at that tag are pruned automatically. Changing `PYTHON_VERSION` will therefore churn the whitelist.
 2. **Bazel Project Generation**: A `BUILD.bazel` file is generated on the fly inside the `Doc/` directory of the clone, utilizing a `glob(["**/*.rst"])` statement to automatically capture all reStructuredText files into a single `rusty_sphinx_library` target. It also generates a `rusty_sphinx_site` target to assemble the HTML.
-3. **Execution**: The script runs `bazel build //Doc:site`. This triggers `rusty-sphinx` to parse, validate, and render every `.rst` file into HTML in parallel. The build currently succeeds outright against CPython's docs — toctree validation passes and HTML is produced for every page.
-4. **Analysis**: Once the build completes, the script traverses the generated Abstract Syntax Tree (`.ast`) JSON files located in `bazel-bin/`. It tallies up `Directive::Unknown` nodes (directives the parser doesn't recognize), `Toctree.ignored_options` (recognized toctree options the parser doesn't yet act on, e.g. `:caption:`), and per-document parser diagnostics, and prints each as a frequency map.
+3. **Warm-up build**: A second, one-document site (`bench_warmup/`, generated beside `Doc/`) is built first. Its only purpose is to compile the `rusty-sphinx` binary and resolve the Rust, Java and Python toolchains *before* the clock starts on the documentation build — see "Rendering Time" below for why this is a separate build rather than a `bazel build @rusty_sphinx//:rusty_sphinx_worker`.
+4. **Execution**: The script then runs `bazel build //Doc:site`. This triggers `rusty-sphinx` to parse, validate, and render every `.rst` file into HTML in parallel. The build currently succeeds outright against CPython's docs — toctree validation passes and HTML is produced for every page.
+5. **Analysis**: Once the build completes, the script traverses the generated Abstract Syntax Tree (`.ast`) JSON files located in `bazel-bin/`. It tallies up `Directive::Unknown` nodes (directives the parser doesn't recognize), `Toctree.ignored_options` (recognized toctree options the parser doesn't yet act on, e.g. `:caption:`), and per-document parser diagnostics, and prints each as a frequency map.
 
 ## Interpreting Results
 
 The full analysis is far too long for a terminal, so the script writes it to **`benchmark_result.txt`** in the workspace root and prints only a compact **Benchmark Summary** (distinct/occurrence counts per category) to the screen, ending with a pointer to that file. Everything described below — the frequency tables and the domain-object listings — lives in `benchmark_result.txt`; the terminal shows just the counts. (`benchmark_result.txt` is git-ignored.)
 
 ### 1. Rendering Time
-You will see a line like:
+You will see two timings, one per `bazel build`:
 ```
-Bazel build succeeded in X.XX seconds.
+Dependency build finished in Y.YY seconds.
+Documentation build succeeded in X.XX seconds.
+(Excludes Y.YY seconds spent building rusty-sphinx itself.)
 ```
-This is the raw time taken by Bazel to execute the `rusty-sphinx` pipeline across the entire CPython documentation suite. Since Bazel runs these in parallel, this highlights the concurrency benefits of our architecture.
+`X.XX` is the number the benchmark is about: the raw time taken by Bazel to execute the `rusty-sphinx` pipeline across the entire CPython documentation suite. Since Bazel runs these in parallel, this highlights the concurrency benefits of our architecture. `Y.YY` is the cost of compiling `rusty-sphinx` and fetching its toolchains, which says nothing about documentation throughput and varies wildly with how warm the Bazel cache happened to be (it dominates everything after a `--clean`).
 
-The script runs the inner `bazel build //Doc:site` with its output captured (so it can time and parse it), which means that build log is *not* streamed to your terminal. It is instead written to `bazel_build.log` in the generated workspace (`$TMPDIR/rusty_sphinx_benchmark_cpython/bazel_build.log`), on both success and failure — inspect it there to see exactly what the inner build printed. The Bazel timing profile is written alongside it as `profile.json.gz` (drop it into https://ui.perfetto.dev/ or `chrome://tracing`).
+Keeping the two apart is why the warm-up site exists. Building `@rusty_sphinx//:rusty_sphinx_worker` directly would not do: build tools are compiled in Bazel's *exec* configuration, so that would warm a differently-configured binary and leave the real one to be compiled inside the timed step. Building a trivial site warms exactly the configurations the corpus build reuses, at the cost of one tiny document.
+
+Each build's output is captured (so the script can time and parse it), which means neither log is streamed to your terminal. They are written to `bazel_deps_build.log` and `bazel_build.log` in the generated workspace (`$TMPDIR/rusty_sphinx_benchmark_cpython/`), on both success and failure — inspect them there to see exactly what the inner builds printed. The Bazel timing profile is written alongside it as `profile.json.gz` (drop it into https://ui.perfetto.dev/ or `chrome://tracing`).
 
 ### 2. Unsupported Directives Summary
 A sorted list of Sphinx directives that `rusty-sphinx` encountered but doesn't yet recognize (surfaced as `Directive::Unknown` nodes in the AST).

@@ -40,6 +40,10 @@ BUILD_CONFIG_FLAGS = ["-c", "opt", "--host_compilation_mode=opt"]
 # workspace root (main() chdirs there via BUILD_WORKSPACE_DIRECTORY).
 WHITELIST_PATH = Path("scripts/domain_warnings_whitelist.json")
 
+# Package holding the throwaway one-document site whose build is what compiles
+# the rusty-sphinx binary, so its cost lands outside the timed corpus build.
+WARMUP_PACKAGE = "bench_warmup"
+
 def clone_repo(python_version: str):
     """Shallow-clones the CPython release tag matching `python_version`.
 
@@ -142,6 +146,53 @@ rusty_sphinx_site(
 """
     (doc_dir / "BUILD.bazel").write_text(build_bazel)
 
+    generate_warmup_package(workspace_root)
+
+
+def generate_warmup_package(workspace_root: str):
+    """Writes a one-document site used to build rusty-sphinx before timing.
+
+    The measurement we want is the documentation build alone, but a fresh
+    workspace has to compile the `rusty-sphinx` binary (and resolve the Rust,
+    Java and Python toolchains) first, and that dwarfs it. Those tools are
+    built in Bazel's *exec* configuration, so `bazel build
+    @rusty_sphinx//:rusty_sphinx_worker` would warm a differently-configured
+    binary and leave the real one to be compiled inside the timed step.
+
+    Building a trivial site instead warms exactly the configurations the
+    CPython build will use, for the cost of parsing and rendering one tiny
+    document. It lives in its own top-level package so it stays outside
+    `Doc`'s `glob(["**/*.rst"])`.
+    """
+    warmup_dir = TARGET_DIR / WARMUP_PACKAGE
+    warmup_dir.mkdir(exist_ok=True)
+
+    (warmup_dir / "index.rst").write_text("""Warmup
+======
+
+A single paragraph, built only to compile the rusty-sphinx binary.
+""")
+    (warmup_dir / "rusty_sphinx.toml").write_text('project = "Warmup"\n')
+    default_template_path = Path(workspace_root) / "templates" / "default.html"
+    (warmup_dir / "custom_template.html").write_text(default_template_path.read_text())
+
+    (warmup_dir / "BUILD.bazel").write_text("""load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
+
+rusty_sphinx_library(
+    name = "warmup_docs",
+    srcs = ["index.rst"],
+)
+
+rusty_sphinx_site(
+    name = "site",
+    config = "rusty_sphinx.toml",
+    template = "custom_template.html",
+    css = "//assets:default.css",
+    deps = [":warmup_docs"],
+)
+""")
+
+
 def discard_stale_corpus_outputs():
     """Removes generated outputs for a corpus that is no longer checked out.
 
@@ -177,7 +228,50 @@ def discard_stale_corpus_outputs():
         shutil.rmtree(stale, ignore_errors=True)
 
 
+def timed_bazel_build(target, log_name, extra_flags=()):
+    """Runs one `bazel build` in the generated workspace and times it.
+
+    Returns (succeeded, duration_seconds). The build's output is captured (so
+    the caller can keep the terminal readable) and written to `log_name` in the
+    workspace on success and failure alike.
+    """
+    command = [
+        "bazel",
+        "build",
+        *BUILD_CONFIG_FLAGS,
+        "--spawn_strategy=local",
+        *extra_flags,
+        target,
+    ]
+
+    start_time = time.time()
+    result = subprocess.run(command, cwd=str(TARGET_DIR), capture_output=True, text=True)
+    duration = time.time() - start_time
+
+    # Persist the inner build's captured output — it's swallowed by
+    # capture_output above, so without this it's invisible on a successful
+    # build. Written on success and failure alike, so it's always inspectable.
+    log_path = TARGET_DIR / log_name
+    log_path.write_text(result.stdout + result.stderr)
+
+    if result.returncode != 0:
+        print(f"Bazel build of {target} failed! Output: {log_path}")
+        print(result.stderr)
+
+    return result.returncode == 0, duration
+
+
 def run_benchmark(clean: bool = False):
+    """Builds rusty-sphinx first, then times the CPython documentation build.
+
+    The two are separate `bazel build` invocations on purpose. What the
+    benchmark is about is how long it takes to turn 500-odd `.rst` files into
+    HTML, and a single build would fold compiling the Rust binary and
+    downloading toolchains into that number — dominating it after `--clean`,
+    and making the figure depend on how warm the Bazel cache happened to be.
+    Building the warmup site first pays that cost outside the measurement, in
+    exactly the configurations the corpus build then reuses.
+    """
     if clean:
         # Run bazel clean to avoid caching from previous runs
         print("Cleaning Bazel cache...")
@@ -185,33 +279,28 @@ def run_benchmark(clean: bool = False):
     else:
         discard_stale_corpus_outputs()
 
-    print("Running Bazel build...")
-
-    start_time = time.time()
-    
-    # Run bazel build inside the decoupled workspace
-    result = subprocess.run(
-        ["bazel", "build", *BUILD_CONFIG_FLAGS, "--spawn_strategy=local", "--profile=profile.json.gz", "//Doc:site"],
-        cwd=str(TARGET_DIR),
-        capture_output=True,
-        text=True
+    print("Building rusty-sphinx and its toolchains (not timed as doc build)...")
+    deps_built, deps_duration = timed_bazel_build(
+        f"//{WARMUP_PACKAGE}:site", "bazel_deps_build.log"
     )
-    
-    end_time = time.time()
-    duration = end_time - start_time
+    print(f"Dependency build finished in {deps_duration:.2f} seconds.")
+    if not deps_built:
+        return False
 
-    # Persist the inner build's captured output — it's swallowed by
-    # capture_output above, so without this it's invisible on a successful
-    # build. Written on success and failure alike, so it's always inspectable.
+    print("\nRunning Bazel build of the CPython documentation...")
+    build_succeeded, duration = timed_bazel_build(
+        "//Doc:site",
+        "bazel_build.log",
+        extra_flags=["--profile=profile.json.gz"],
+    )
+
+    if build_succeeded:
+        print(f"Documentation build succeeded in {duration:.2f} seconds.")
+        print(
+            f"(Excludes {deps_duration:.2f} seconds spent building rusty-sphinx itself.)"
+        )
+
     build_log = TARGET_DIR / "bazel_build.log"
-    build_log.write_text(result.stdout + result.stderr)
-
-    if result.returncode != 0:
-        print("Bazel build failed!")
-        print(result.stderr)
-    else:
-        print(f"Bazel build succeeded in {duration:.2f} seconds.")
-
     print(f"\nBazel build output was captured to: {build_log}")
 
     # Inform the user where the HTML is
@@ -223,7 +312,7 @@ def run_benchmark(clean: bool = False):
     print(f"Bazel profile is located at: {profile_out}")
     print("You can view it by dropping the file into https://ui.perfetto.dev/ or chrome://tracing")
 
-    return result.returncode == 0
+    return build_succeeded
 
 # ── Domain-object warning whitelist helpers (pure, unit-tested) ───────────────
 

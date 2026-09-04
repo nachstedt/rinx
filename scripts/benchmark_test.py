@@ -1,5 +1,7 @@
 import io
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -319,3 +321,106 @@ class ReportDomainWarningsTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GenerateWarmupPackageTest(unittest.TestCase):
+    def test_writes_a_single_document_site_outside_the_doc_glob(self):
+        # Given a workspace root supplying the default template, and a target
+        # directory standing in for the generated benchmark workspace
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workspace = root / "workspace"
+            (workspace / "templates").mkdir(parents=True)
+            (workspace / "templates" / "default.html").write_text("<html>{{ body }}</html>")
+            target = root / "corpus"
+            target.mkdir()
+            original_target = benchmark.TARGET_DIR
+            benchmark.TARGET_DIR = target
+
+            # When
+            try:
+                benchmark.generate_warmup_package(str(workspace))
+            finally:
+                benchmark.TARGET_DIR = original_target
+
+            # Then — the package sits beside Doc/, so Doc's **/*.rst glob
+            # cannot pick its document up
+            warmup = target / benchmark.WARMUP_PACKAGE
+            self.assertNotIn("Doc", warmup.relative_to(target).parts)
+
+            # And it is a buildable one-document site
+            self.assertEqual(list(warmup.glob("*.rst")), [warmup / "index.rst"])
+            build = (warmup / "BUILD.bazel").read_text()
+            self.assertIn('srcs = ["index.rst"]', build)
+            self.assertIn("rusty_sphinx_site(", build)
+            self.assertIn('deps = [":warmup_docs"]', build)
+
+            # And it carries its own config and a copy of the template
+            self.assertIn("project =", (warmup / "rusty_sphinx.toml").read_text())
+            self.assertEqual(
+                (warmup / "custom_template.html").read_text(), "<html>{{ body }}</html>"
+            )
+
+
+class TimedBazelBuildTest(unittest.TestCase):
+    def _run(self, tmp, returncode, extra_flags=()):
+        calls = []
+
+        def fake_run(command, cwd, capture_output, text):
+            calls.append((command, cwd))
+            return subprocess.CompletedProcess(command, returncode, "out\n", "err\n")
+
+        original_run = benchmark.subprocess.run
+        original_target = benchmark.TARGET_DIR
+        benchmark.subprocess.run = fake_run
+        benchmark.TARGET_DIR = tmp
+        try:
+            result = benchmark.timed_bazel_build(
+                "//Doc:site", "build.log", extra_flags=extra_flags
+            )
+        finally:
+            benchmark.subprocess.run = original_run
+            benchmark.TARGET_DIR = original_target
+        return result, calls
+
+    def test_builds_the_target_in_the_generated_workspace_and_times_it(self):
+        # Given a build that succeeds
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+
+            # When
+            (succeeded, duration), calls = self._run(
+                root, 0, extra_flags=["--profile=profile.json.gz"]
+            )
+
+            # Then
+            self.assertTrue(succeeded)
+            self.assertGreaterEqual(duration, 0.0)
+
+            # And the invocation carried the shared config flags, the extra
+            # flags and the target, run from the generated workspace
+            command, cwd = calls[0]
+            self.assertEqual(cwd, str(root))
+            self.assertEqual(command[:2], ["bazel", "build"])
+            for flag in benchmark.BUILD_CONFIG_FLAGS:
+                self.assertIn(flag, command)
+            self.assertIn("--profile=profile.json.gz", command)
+            self.assertEqual(command[-1], "//Doc:site")
+
+    def test_captured_output_is_written_to_the_log_even_when_the_build_fails(self):
+        # Given a build that fails
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out = io.StringIO()
+            original_stdout = sys.stdout
+            sys.stdout = out
+
+            # When
+            try:
+                (succeeded, _duration), _calls = self._run(root, 1)
+            finally:
+                sys.stdout = original_stdout
+
+            # Then the failure is reported, and both streams are on disk
+            self.assertFalse(succeeded)
+            self.assertEqual((root / "build.log").read_text(), "out\nerr\n")
