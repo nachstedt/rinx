@@ -19,6 +19,7 @@ rusty_sphinx_library(
         "version_changes.rst",
         "seealso.rst",
         "literal_blocks.rst",
+        "code_blocks.rst",
         "glossary.rst",
         "definition_lists.rst",
         "enumerated_lists.rst",

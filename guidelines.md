@@ -22,6 +22,9 @@ entry under the heading it belongs to, as a single short sentence.
 - Give two constructs one shared type when they are structurally identical and carry no kind-specific data; split them into separate types only when they differ in the fields they need.
 - Model a family of valueless flag options as one set of an enum rather than as several `bool` fields, so asking for one cannot be confused with asking for its neighbour.
 - Prefer a type that makes a meaningless value unrepresentable (`NonZeroUsize` for a depth) and resolve the ambiguity once, where the source text is read.
+- When a value is transformed once and then must never be re-transformed, give the result its own type that cannot express the untransformed state, so forgetting the step is a compile error.
+- Keep the open-ended case of an enum as a validated newtype rather than enumerating a third party's whole vocabulary, which would import their knowledge into your own root crate and freeze it into serialized data.
+- Reserve special values of a field as their own variants, so a name that happens to collide with one cannot be mistaken for it.
 
 ## Module and file organization
 
@@ -60,6 +63,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep parse-time configuration in one context object threaded through the parsers, rather than adding a parameter per setting.
 - A pure phase should take an injected trait object for anything it cannot do itself (like reading a file) rather than acquiring the capability directly.
 - Convert an embedded notation (LaTeX, CSV) with an established library during the build rather than shipping a client-side script, so the output stays self-contained and malformed input becomes a build diagnostic instead of a silent failure in the reader's browser.
+- Let the build system's constraints decide a third-party library, not the library's feature list: a dependency needing a foreign toolchain costs more in a sandboxed, multi-platform build than any feature it adds.
+- Generate a derived artefact (a stylesheet, a table) from the same source the code uses, and check it in with a test that regenerates and compares, rather than maintaining a parallel copy by hand.
 - Store an embedded notation in the AST exactly as written and convert it only while rendering, so the choice of backend never reaches a serialized `.ast` file.
 - Leave a pattern unexpanded in the AST and the index when several later phases must expand it against different sets, so no phase has to reimplement the matcher against its own narrower set.
 - Prefer storing a graph plus each node's own data over a pre-flattened tree, since a flattened tree cannot be merged per document and loses the per-directive options that produced it.
@@ -78,6 +83,7 @@ entry under the heading it belongs to, as a single short sentence.
 
 - Documentation builds should fail loudly if content invariants (like missing diagram images) are violated.
 - Keep the resilient parser and the strict build separate: the parser degrades bad input and records what went wrong, and the build step decides whether that is fatal.
+- Do not diagnose a failure the author could not have caused or acted on: a value this codebase chose for them degrades silently, while one they wrote is reported.
 - When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
 - When porting a reference implementation, port its full diagnostic set, and additionally invent diagnostics of your own wherever it silently degrades valid-looking input into something else.
 - When two phases must derive the same identifier, give them one function to call rather than two implementations to keep in step, and key it on something that cannot collide (a position) rather than on content that can.
@@ -101,7 +107,9 @@ entry under the heading it belongs to, as a single short sentence.
 - Always create unit tests for new functions introduced during refactoring.
 - Validate real-world/benchmark inputs against a parser before considering a feature done — a hand-built test suite can miss patterns (like a border line with a partial `+` set) that only show up in authentic external documents.
 - When deleting tests whose subject moved to another phase, check the destination already covers those cases and add an integration test for the seam, rather than letting the coverage go with the code.
-- Do not widen a public API to serve a test; keep test-only helpers and fixtures inside the `#[cfg(test)]` module that needs them.
+- Do not widen a public API to serve a test; keep test-only helpers and fixtures inside the `#[cfg(test)]` module that needs them, asserting through an existing observable effect instead.
+- Check a test's premise against what the parser can actually produce before treating its failure as a bug in the code.
+- Assert on the specific marker a feature emits rather than on a substring that a shared wrapper also contains, or the test stops distinguishing the two.
 - When a table of related cases is maintained by hand, test its structural invariants (reflexivity, symmetry) across all entries rather than only asserting the individual rows, so a half-finished edit fails.
 
 ## Configuration and CLI

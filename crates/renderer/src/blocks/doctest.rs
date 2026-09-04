@@ -5,8 +5,10 @@
 //! or passed. That is what lets page rendering stay a pure, cacheable step while
 //! test execution lives in a separate, opt-in Bazel target.
 
-use rusty_sphinx_ast::{DocTestBlock, DocTestTrim, HashedContent};
-use std::fmt::Write as _;
+use rusty_sphinx_ast::{DocTestBlock, DocTestTrim, HashedContent, LanguageName, ResolvedLanguage};
+
+use crate::RenderCtx;
+use crate::blocks::code_block::{CodeLayout, render_code};
 
 /// The project-wide default for `trim_doctest_flags`, matching Sphinx's own
 /// default. A block that specifies neither `:trim-doctest-flags:` nor
@@ -17,23 +19,38 @@ const TRIM_DOCTEST_FLAGS_DEFAULT: bool = true;
 ///
 /// `testsetup`/`testcleanup` never render, and any block carrying `:hide:`
 /// renders nothing — in both cases the code still runs, it just isn't shown.
-#[must_use]
-pub(crate) fn render_doctest_block(block: &DocTestBlock) -> Option<String> {
+pub(crate) fn render_doctest_block(block: &DocTestBlock, ctx: &mut RenderCtx) -> Option<String> {
     if !block.is_rendered() {
         return None;
     }
 
     let language = match block {
-        // `pycon` is the console-session lexer: `>>>` prompts plus their output.
-        DocTestBlock::Interactive { .. } => Some("pycon"),
-        DocTestBlock::Code { .. } => Some("python"),
+        // `pycon` is Pygments' console-session lexer: `>>>` prompts plus
+        // their output. The bundled Sublime grammars have no equivalent, so
+        // an interactive block renders unhighlighted today — asking for the
+        // name anyway states the intent, and starts working by itself should
+        // the grammar set ever gain one. See `spec_gaps.md`.
+        DocTestBlock::Interactive { .. } => named_language("pycon"),
+        DocTestBlock::Code { .. } => named_language("python"),
         // Expected output is not source in any language, so it stays
         // unhighlighted rather than being mislabelled as Python.
-        DocTestBlock::Output { .. } => None,
+        DocTestBlock::Output { .. } => ResolvedLanguage::None,
         DocTestBlock::Setup { .. } | DocTestBlock::Cleanup { .. } => return None,
     };
 
-    Some(render_code_block(&display_text(block), language))
+    let mut html = String::new();
+    render_code_block(&mut html, &display_text(block), &language, ctx);
+    Some(html)
+}
+
+/// A language this crate names itself, for the blocks whose language is
+/// decided by their kind rather than by an author.
+///
+/// The names are ours and are known-good, so a failure to build one would be a
+/// bug here rather than bad input — hence the fallback to "no highlighting"
+/// instead of a diagnostic pointing at a document that did nothing wrong.
+fn named_language(name: &str) -> ResolvedLanguage {
+    LanguageName::new(name).map_or(ResolvedLanguage::None, ResolvedLanguage::Named)
 }
 
 /// Renders a docutils *doctest block* — the directive-less `>>>` form.
@@ -43,30 +60,38 @@ pub(crate) fn render_doctest_block(block: &DocTestBlock) -> Option<String> {
 /// session. The display derivation is therefore shared rather than restated,
 /// and the trim tri-state is `Unset` because a bare block carries no options of
 /// its own and so always follows the project default.
-#[must_use]
-pub(crate) fn render_bare_doctest_block(content: &HashedContent) -> String {
+pub(crate) fn render_bare_doctest_block(content: &HashedContent, ctx: &mut RenderCtx) -> String {
     let display =
         maybe_strip_flag_comments(&strip_blankline_markers(content.body()), DocTestTrim::Unset);
-    render_code_block(&display, Some("pycon"))
+    let mut html = String::new();
+    render_code_block(&mut html, &display, &named_language("pycon"), ctx);
+    html
 }
 
-/// Emits the `<pre><code>` markup for already-derived display text.
+/// Emits the markup for already-derived display text.
 ///
-/// Matches the shape `Node::LiteralBlock` renders with, so a code block looks
-/// the same however it was written.
-fn render_code_block(display: &str, language: Option<&str>) -> String {
-    let escaped = html_escape::encode_text(display);
-
-    let mut html = String::new();
-    if let Some(lang) = language {
-        let _ = writeln!(
-            html,
-            "<pre><code class=\"language-{lang}\">{escaped}</code></pre>"
-        );
-    } else {
-        let _ = writeln!(html, "<pre><code>{escaped}</code></pre>");
-    }
-    html
+/// Goes through the same [`render_code`] every other code block uses, so a
+/// doctest block looks the same as one written any other way — the promise
+/// this module has always made, now including its highlighting.
+fn render_code_block(
+    html: &mut String,
+    display: &str,
+    language: &ResolvedLanguage,
+    ctx: &mut RenderCtx,
+) {
+    // A doctest block has no options and no span of its own: its language is
+    // decided by its kind, so there is nothing an author could have got wrong
+    // and nowhere to point if the backend failed. `force` is therefore always
+    // set, suppressing a diagnostic no document could act on.
+    render_code(
+        html,
+        display,
+        language,
+        &CodeLayout::plain(),
+        true,
+        None,
+        ctx,
+    );
 }
 
 /// Derives the text shown on the page from the block's verbatim body.
@@ -152,6 +177,7 @@ fn find_flag_comment(line: &str) -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::blocks::render_test_support::with_ctx;
     use rusty_sphinx_ast::{DocTestGroupSelector, HashedContent, NonEmptyVector};
 
     /// A single-selector group list for the default group.
@@ -200,13 +226,16 @@ mod tests {
         let block = interactive(">>> 1 + 1\n2", false, DocTestTrim::Unset);
 
         // When
-        let html = render_doctest_block(&block).expect("should render");
+        let html = with_ctx(|ctx| render_doctest_block(&block, ctx)).expect("should render");
 
-        // Then
-        assert_eq!(
-            html,
-            "<pre><code class=\"language-pycon\">&gt;&gt;&gt; 1 + 1\n2</code></pre>\n"
+        // Then — the same shell every other code block uses. No token
+        // classes: the bundled grammars have no console-session lexer, and a
+        // block whose language this crate chose degrades silently.
+        assert!(
+            html.contains("<div class=\"highlight hl-code\"><pre>"),
+            "{html}"
         );
+        assert!(html.contains("&gt;&gt;&gt; 1 + 1\n2"), "{html}");
     }
 
     #[test]
@@ -215,12 +244,17 @@ mod tests {
         let block = code("print(1)", false);
 
         // When
-        let html = render_doctest_block(&block).expect("should render");
+        let html = with_ctx(|ctx| render_doctest_block(&block, ctx)).expect("should render");
 
         // Then
-        assert_eq!(
-            html,
-            "<pre><code class=\"language-python\">print(1)</code></pre>\n"
+        assert!(
+            html.contains("<div class=\"highlight hl-code\"><pre>"),
+            "{html}"
+        );
+        assert!(html.contains("print"), "{html}");
+        assert!(
+            html.contains("<span class=\"hl-"),
+            "expected highlighting in:\n{html}"
         );
     }
 
@@ -230,10 +264,18 @@ mod tests {
         let block = output("1");
 
         // When
-        let html = render_doctest_block(&block).expect("should render");
+        let html = with_ctx(|ctx| render_doctest_block(&block, ctx)).expect("should render");
 
-        // Then
-        assert_eq!(html, "<pre><code>1</code></pre>\n");
+        // Then — no language, so the text is escaped but never classed
+        assert!(
+            html.contains("<div class=\"highlight hl-code\"><pre>"),
+            "{html}"
+        );
+        assert!(html.contains('1'), "{html}");
+        assert!(
+            !html.contains("<span class=\"hl-"),
+            "output must stay unhighlighted:\n{html}"
+        );
     }
 
     #[test]
@@ -246,7 +288,7 @@ mod tests {
         };
 
         // When
-        let html = render_doctest_block(&block);
+        let html = with_ctx(|ctx| render_doctest_block(&block, ctx));
 
         // Then
         assert_eq!(html, None);
@@ -262,7 +304,7 @@ mod tests {
         };
 
         // When
-        let html = render_doctest_block(&block);
+        let html = with_ctx(|ctx| render_doctest_block(&block, ctx));
 
         // Then
         assert_eq!(html, None);
@@ -274,7 +316,7 @@ mod tests {
         let block = interactive(">>> 1", true, DocTestTrim::Unset);
 
         // When
-        let html = render_doctest_block(&block);
+        let html = with_ctx(|ctx| render_doctest_block(&block, ctx));
 
         // Then
         assert_eq!(html, None);
@@ -286,7 +328,7 @@ mod tests {
         let block = code("print(1)", true);
 
         // When
-        let html = render_doctest_block(&block);
+        let html = with_ctx(|ctx| render_doctest_block(&block, ctx));
 
         // Then
         assert_eq!(html, None);
@@ -298,7 +340,7 @@ mod tests {
         let block = code("print('<b>')", false);
 
         // When
-        let html = render_doctest_block(&block).expect("should render");
+        let html = with_ctx(|ctx| render_doctest_block(&block, ctx)).expect("should render");
 
         // Then
         assert!(html.contains("&lt;b&gt;"));
@@ -311,13 +353,13 @@ mod tests {
         let content = HashedContent::new(">>> 1 + 1\n2".to_string());
 
         // When
-        let html = render_bare_doctest_block(&content);
+        let bare = with_ctx(|ctx| render_bare_doctest_block(&content, ctx));
 
         // Then — identical markup to the directive form, as in Sphinx.
-        assert_eq!(
-            html,
-            "<pre><code class=\"language-pycon\">&gt;&gt;&gt; 1 + 1\n2</code></pre>\n"
-        );
+        let block = interactive(">>> 1 + 1\n2", false, DocTestTrim::Unset);
+        let directive_form =
+            with_ctx(|ctx| render_doctest_block(&block, ctx)).expect("should render");
+        assert_eq!(bare, directive_form);
     }
 
     #[test]
@@ -326,7 +368,7 @@ mod tests {
         let content = HashedContent::new(">>> f()  # doctest: +SKIP".to_string());
 
         // When
-        let html = render_bare_doctest_block(&content);
+        let html = with_ctx(|ctx| render_bare_doctest_block(&content, ctx));
 
         // Then
         assert!(!html.contains("doctest:"));
@@ -338,7 +380,7 @@ mod tests {
         let content = HashedContent::new(">>> f()\nline\n<BLANKLINE>".to_string());
 
         // When
-        let html = render_bare_doctest_block(&content);
+        let html = with_ctx(|ctx| render_bare_doctest_block(&content, ctx));
 
         // Then
         assert!(!html.contains("BLANKLINE"));
@@ -350,7 +392,7 @@ mod tests {
         let content = HashedContent::new(">>> print('<b>')".to_string());
 
         // When
-        let html = render_bare_doctest_block(&content);
+        let html = with_ctx(|ctx| render_bare_doctest_block(&content, ctx));
 
         // Then
         assert!(html.contains("&lt;b&gt;"));

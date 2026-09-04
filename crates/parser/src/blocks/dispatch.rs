@@ -8,7 +8,7 @@ use crate::directives::try_parse_directive;
 use crate::headings::{Adornment, detect_adornment, try_parse_heading};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 use rusty_sphinx_ast::{
-    Diagnostic, DiagnosticCode, Document, Domain, Node, Suppression, SuppressionCodes,
+    CodeLanguage, Diagnostic, DiagnosticCode, Document, Domain, Node, Suppression, SuppressionCodes,
 };
 
 use super::bullet_list::try_parse_bullet_list;
@@ -277,7 +277,7 @@ fn parse_paragraph(lines: &[&str], i: usize, ctx: &ParseCtx<'_>) -> (usize, Vec<
         let (lit_consumed, content) = collect_literal_block_body(lines, lit_start);
         let total_consumed = current_pos_line - i + lit_consumed;
         let literal_node = Node::LiteralBlock {
-            language: None,
+            language: CodeLanguage::Inherit,
             content,
         };
         if only_colon {

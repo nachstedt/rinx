@@ -405,3 +405,128 @@ fn test_e2e_reports_an_eq_reference_to_an_unlabeled_equation_as_broken() {
     );
     assert_eq!(output.broken_links[0].target, "nope");
 }
+
+#[test]
+fn test_e2e_code_block_options_reach_the_rendered_page() {
+    // Given a code block using the options that each need a different phase:
+    // `:caption:` and `:name:` are parsed, the language drives highlighting at
+    // render time, and `:linenos:`/`:emphasize-lines:` shape the line markup
+    let input = "\
+.. code-block:: python
+   :linenos:
+   :emphasize-lines: 2
+   :caption: An example
+   :name: my-block
+
+   def greet(name):
+       return name
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the caption, the anchor, the numbers and the emphasis band
+    assert!(
+        result.contains("<div class=\"highlight-python notranslate\" id=\"my-block\">"),
+        "expected a named, language-classed wrapper in:\n{result}"
+    );
+    assert!(
+        result.contains("<span class=\"caption-text\">An example</span>"),
+        "expected the caption in:\n{result}"
+    );
+    assert!(
+        result.contains("<span class=\"linenos\">1</span>"),
+        "expected line numbers in:\n{result}"
+    );
+    assert!(
+        result.contains("<span class=\"hll\">"),
+        "expected an emphasized line in:\n{result}"
+    );
+    // And the code itself is highlighted rather than merely escaped
+    assert!(
+        result.contains("hl-keyword"),
+        "expected token classes in:\n{result}"
+    );
+    // And no option line leaked into the code, which is what this feature
+    // exists to fix
+    assert!(
+        !result.contains(":linenos:"),
+        "an option line was rendered as code in:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_highlight_directive_sets_the_language_for_following_blocks() {
+    // Given a `.. highlight::` followed by blocks that name no language —
+    // both a directive and a `::` literal block, which Sphinx also highlights
+    let input = "\
+.. highlight:: rust
+
+.. code-block::
+
+   let x = 1;
+
+Some prose::
+
+    let y = 2;
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — both inherited Rust
+    assert!(
+        result.contains("highlight-rust"),
+        "the directive should inherit Rust in:\n{result}"
+    );
+    assert_eq!(
+        result.matches("hl-source hl-rust").count(),
+        2,
+        "both blocks should be highlighted as Rust in:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_code_block_name_resolves_as_a_reference_target() {
+    // Given a named code block and a `:ref:` pointing at it
+    let input = "\
+See :ref:`my-code`.
+
+.. code-block:: python
+   :name: my-code
+
+   x = 1
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the analyzer registered the name, so the link resolves
+    assert!(
+        result.contains("href=\"test.html#my-code\""),
+        "expected a resolved reference in:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_unknown_code_block_language_still_shows_the_source() {
+    // Given a language no grammar covers
+    let input = "\
+.. code-block:: nonesuch-language
+
+   keep me visible
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the block degrades to plain text rather than vanishing
+    assert!(
+        result.contains("keep me visible"),
+        "the source must survive a highlighting failure in:\n{result}"
+    );
+    assert!(
+        !result.contains("<span class=\"hl-"),
+        "nothing should be highlighted in:\n{result}"
+    );
+}

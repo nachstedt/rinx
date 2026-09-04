@@ -226,23 +226,28 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                 let _ = writeln!(html, "</tbody>");
                 let _ = writeln!(html, "</table>");
             }
+            // A `::` block carries no options and names no language of its
+            // own, but it is still highlighted — with whatever language the
+            // enclosing `.. highlight::` set, exactly as Sphinx does.
             Node::LiteralBlock { language, content } => {
-                let escaped = html_escape::encode_text(content);
-                if let Some(lang) = language {
-                    let lang_attr = html_escape::encode_double_quoted_attribute(lang);
-                    let _ = writeln!(
-                        html,
-                        "<pre><code class=\"language-{lang_attr}\">{escaped}</code></pre>"
-                    );
-                } else {
-                    let _ = writeln!(html, "<pre><code>{escaped}</code></pre>");
-                }
+                let resolved = language.resolve(&ctx.highlight_language);
+                let force = ctx.highlight_force;
+                super::code_block::render_code(
+                    html,
+                    content,
+                    &resolved,
+                    &super::code_block::CodeLayout::plain(),
+                    force,
+                    None,
+                    ctx,
+                );
             }
             // A bare `>>>` block. Rendered like the `.. doctest::` directive
             // form, which is what Sphinx does — and, unlike the literal block
             // above, this one is also executed.
             Node::DoctestBlock(content) => {
-                html.push_str(&render_bare_doctest_block(content));
+                let rendered = render_bare_doctest_block(content, ctx);
+                html.push_str(&rendered);
             }
         }
     }
@@ -351,6 +356,22 @@ fn render_plantuml_directive(html: &mut String, content: &HashedContent, ctx: &R
 fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCtx<'_>) {
     match directive {
         Directive::Toctree(toctree) => render_toctree_directive(html, toctree, ctx),
+        Directive::CodeBlock(block) => {
+            super::code_block::render_code_block_directive(html, block, ctx);
+        }
+        // Produces no output of its own: it exists to change the language
+        // every following block inherits, so rendering it *is* the state
+        // update. Document order is what makes this correct, which is why it
+        // happens in the node walk rather than in a pre-pass.
+        Directive::Highlight {
+            language,
+            linenothreshold,
+            force,
+        } => {
+            ctx.highlight_language = language.clone();
+            ctx.linenothreshold = *linenothreshold;
+            ctx.highlight_force = *force;
+        }
         Directive::PlantUml(content) => render_plantuml_directive(html, content, ctx),
         Directive::Admonition {
             kind,
@@ -436,7 +457,7 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         // never run is decided by a separate, opt-in test target, and cannot
         // influence the HTML.
         Directive::DocTest(block) => {
-            if let Some(rendered) = render_doctest_block(block) {
+            if let Some(rendered) = render_doctest_block(block, ctx) {
                 html.push_str(&rendered);
             }
         }

@@ -123,6 +123,24 @@ pub(super) fn format_math_error_warning(doc_path: &str, error: &renderer::MathEr
     )
 }
 
+/// Formats a single highlighting-failure diagnostic as a warning line.
+///
+/// Like [`format_math_error_warning`], this never feeds into
+/// [`check_broken_links_strict`]: a block that could not be highlighted is not
+/// a reference that failed to resolve. The page still renders, showing the
+/// author's code as plain text.
+pub(super) fn format_highlight_error_warning(
+    doc_path: &str,
+    error: &renderer::HighlightError,
+) -> String {
+    format!(
+        "warning: {} {}: {}",
+        location(doc_path, error.span),
+        error.code(),
+        error.message
+    )
+}
+
 /// Returns an error listing every broken link when `strict` is true and
 /// `broken_links` is non-empty. Diagnostics are always reported to stderr by
 /// the caller regardless of `strict` — this only controls whether they also

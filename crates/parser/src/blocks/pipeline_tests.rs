@@ -5,7 +5,7 @@
 
 use crate::parse;
 use rusty_sphinx_ast::TargetName;
-use rusty_sphinx_ast::{InlineNode, Node};
+use rusty_sphinx_ast::{CodeLanguage, InlineNode, Node};
 
 #[test]
 fn test_parse_returns_empty_document_for_empty_input() {
@@ -333,7 +333,7 @@ fn test_parse_double_colon_paragraph_emits_literal_block() {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
     if let Node::LiteralBlock { language, content } = &doc.nodes[1] {
-        assert!(language.is_none());
+        assert_eq!(language, &CodeLanguage::Inherit);
         assert_eq!(content, "def hello():\n    pass");
     } else {
         panic!("Expected LiteralBlock, got {:?}", doc.nodes[1]);
@@ -349,7 +349,7 @@ fn test_parse_standalone_double_colon_suppresses_paragraph() {
     // Then: only the LiteralBlock is emitted (no paragraph)
     assert_eq!(doc.nodes.len(), 1);
     if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
-        assert!(language.is_none());
+        assert_eq!(language, &CodeLanguage::Inherit);
         assert_eq!(content, "verbatim content");
     } else {
         panic!("Expected LiteralBlock, got {:?}", doc.nodes[0]);

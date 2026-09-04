@@ -8,11 +8,12 @@ use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
-    check_broken_links_strict, format_broken_link_warning, format_math_error_warning,
-    format_object_type_mismatch_warning,
+    check_broken_links_strict, format_broken_link_warning, format_highlight_error_warning,
+    format_math_error_warning, format_object_type_mismatch_warning,
 };
 use super::suppression::{
-    retain_reportable_links, retain_reportable_math_errors, retain_reportable_mismatches,
+    retain_reportable_highlight_errors, retain_reportable_links, retain_reportable_math_errors,
+    retain_reportable_mismatches,
 };
 
 /// One rendered page, plus everything the caller reports about it.
@@ -27,6 +28,7 @@ pub(super) struct RenderedPage {
     pub broken_links: Vec<renderer::BrokenLink>,
     pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
     pub math_errors: Vec<renderer::MathError>,
+    pub highlight_errors: Vec<renderer::HighlightError>,
 }
 
 pub(super) fn process_render(
@@ -41,7 +43,7 @@ pub(super) fn process_render(
     let index: rusty_sphinx_index::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
 
-    let render_output = renderer::render(&doc, &index, doc_path);
+    let render_output = renderer::render_with_config(&doc, &index, doc_path, config);
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -83,6 +85,10 @@ pub(super) fn process_render(
             &doc.suppressions,
         ),
         math_errors: retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions),
+        highlight_errors: retain_reportable_highlight_errors(
+            &render_output.highlight_errors,
+            &doc.suppressions,
+        ),
         source_path: doc.path,
     })
 }
@@ -131,6 +137,12 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     }
     for error in &page.math_errors {
         eprintln!("{}", format_math_error_warning(&page.source_path, error));
+    }
+    for error in &page.highlight_errors {
+        eprintln!(
+            "{}",
+            format_highlight_error_warning(&page.source_path, error)
+        );
     }
 
     // Emit the structured domain-object warning sidecar when requested. Written

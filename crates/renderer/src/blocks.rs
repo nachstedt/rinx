@@ -12,12 +12,15 @@
 //! and `table_directive`'s tests share.
 
 mod admonitions;
+mod code_block;
 mod data_table;
 mod dispatch;
 mod doctest;
 mod domain_object;
 mod glossary;
 mod math;
+#[cfg(test)]
+mod render_test_support;
 mod scope_directives;
 mod table_directive;
 mod table_shell;

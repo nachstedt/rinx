@@ -23,6 +23,7 @@ mod admonitions;
 // `collect_directive_body`, since an RST comment is the same `.. `
 // explicit-markup construct and its body ends by exactly the same rule.
 pub(crate) mod body;
+mod code_block;
 mod data_table;
 mod dispatch;
 mod doctest;

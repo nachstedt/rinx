@@ -14,6 +14,7 @@
 mod blocks;
 mod broken_link;
 pub mod config;
+mod highlight;
 mod inline;
 mod math;
 mod nav;
@@ -21,14 +22,16 @@ mod page;
 mod resolution;
 
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
+pub use highlight::{HighlightError, HighlightErrorKind};
 pub use math::MathError;
 pub use nav::{PageLink, ResolvedNavEntry};
 pub use page::{PageMeta, css_relative_path, render_genindex, render_page};
 
 use blocks::{collect_anonymous_targets, render_nodes};
+use highlight::Highlighter;
 use math::MathRenderer;
 use resolution::{DomainObjectResolver, OptionResolver};
-use rusty_sphinx_ast::Document;
+use rusty_sphinx_ast::{Document, ResolvedLanguage};
 use rusty_sphinx_index::ProjectIndex;
 use rusty_sphinx_scope::Scope;
 
@@ -42,6 +45,7 @@ pub struct RenderOutput {
     pub broken_links: Vec<BrokenLink>,
     pub object_type_mismatches: Vec<ObjectTypeMismatch>,
     pub math_errors: Vec<MathError>,
+    pub highlight_errors: Vec<HighlightError>,
 }
 
 /// Shared rendering state threaded through the node traversal.
@@ -64,6 +68,24 @@ pub(crate) struct RenderCtx<'a> {
     /// Converts LaTeX to `MathML`. Held for the whole document so the backend's
     /// per-converter setup happens once per page rather than once per equation.
     pub math: &'a MathRenderer,
+    pub highlight_errors: &'a mut Vec<HighlightError>,
+    /// Turns source text into classed HTML. Held for the whole document so
+    /// the grammar set is resolved once per page, not once per code block.
+    pub highlighter: &'a Highlighter,
+    /// The language a code block with no argument of its own inherits.
+    ///
+    /// Document-order state: it starts at the site's configured
+    /// `highlight_language` and every `.. highlight::` replaces it for the
+    /// blocks that follow. Never restored on leaving a nested body — Sphinx
+    /// scopes this to the enclosing container, and the narrower whole-document
+    /// rule is a deliberate simplification recorded in `spec_gaps.md`.
+    pub highlight_language: ResolvedLanguage,
+    /// `:linenothreshold:` from the `.. highlight::` in force: a block at
+    /// least this many lines long gets line numbers without asking for them.
+    pub linenothreshold: Option<std::num::NonZeroU32>,
+    /// `:force:` from the `.. highlight::` in force, which suppresses the
+    /// highlighting diagnostics for every block inheriting it.
+    pub highlight_force: bool,
     /// The `id` of each top-level heading, keyed by its index in the
     /// document's node list, from [`rusty_sphinx_ast::allocate_section_ids`].
     /// The analyzer builds its document outline from that same function, so a
@@ -89,6 +111,23 @@ pub(crate) struct RenderCtx<'a> {
 /// Renders a Document into HTML, reporting any cross-references that failed to resolve.
 #[must_use]
 pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOutput {
+    render_with_config(doc, index, doc_path, &config::SiteConfig::default())
+}
+
+/// Renders a document under a fully specified [`config::SiteConfig`] — the
+/// entry point for callers that have one, which is every caller that reads a
+/// `rusty_sphinx.toml`.
+///
+/// [`render`] is a thin wrapper defaulting the config, kept because most of
+/// this crate's own tests have no site configuration to speak of and only the
+/// site-wide `highlight_language` reads from it at all.
+#[must_use]
+pub fn render_with_config(
+    doc: &Document,
+    index: &ProjectIndex,
+    doc_path: &str,
+    config: &config::SiteConfig,
+) -> RenderOutput {
     let mut html = String::new();
 
     // Collect anonymous targets for local resolution recursively
@@ -98,10 +137,12 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
     let mut math_errors = Vec::new();
+    let mut highlight_errors = Vec::new();
 
     let domain_resolver = DomainObjectResolver::new(index);
     let option_resolver = OptionResolver::new(index);
     let math = MathRenderer::new();
+    let highlighter = Highlighter::new();
     let section_ids = rusty_sphinx_ast::allocate_section_ids(&doc.nodes);
     let mut ctx = RenderCtx {
         index,
@@ -115,6 +156,11 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         object_type_mismatches: &mut object_type_mismatches,
         math_errors: &mut math_errors,
         math: &math,
+        highlight_errors: &mut highlight_errors,
+        highlighter: &highlighter,
+        highlight_language: config.highlight_language.clone(),
+        linenothreshold: None,
+        highlight_force: false,
         section_ids: &section_ids,
         at_top_level: true,
         scope: Scope::default(),
@@ -127,6 +173,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         broken_links,
         object_type_mismatches,
         math_errors,
+        highlight_errors,
     }
 }
 

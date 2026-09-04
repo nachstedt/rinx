@@ -143,21 +143,13 @@ pub(super) fn index_nodes(
             Node::Directive(Directive::DomainObject(obj)) => {
                 index_domain_object(obj, doc_path, index, scope);
             }
-            Node::Directive(Directive::PyCurrentModule { module }) => match module {
-                Some(name) => scope.python.set_module(name),
-                None => scope.python.clear_module(),
-            },
-            Node::Directive(Directive::CNamespace { namespace }) => {
-                scope.c.set_namespace(namespace.as_deref());
-            }
-            Node::Directive(Directive::CNamespacePush { namespace }) => {
-                scope.c.push_namespace(namespace);
-            }
-            Node::Directive(Directive::CNamespacePop) => scope.c.pop_namespace(),
-            Node::Directive(Directive::StdProgram { name }) => match name {
-                Some(name) => scope.program.set(name),
-                None => scope.program.clear(),
-            },
+            Node::Directive(
+                directive @ (Directive::PyCurrentModule { .. }
+                | Directive::CNamespace { .. }
+                | Directive::CNamespacePush { .. }
+                | Directive::CNamespacePop
+                | Directive::StdProgram { .. }),
+            ) => apply_scope_directive(directive, scope),
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
@@ -182,7 +174,7 @@ pub(super) fn index_nodes(
                 index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scope);
             }
             Node::Directive(Directive::DataTable { rows, name, .. }) => {
-                register_table_name(name.as_ref(), doc_path, index);
+                register_directive_name(name.as_ref(), doc_path, index);
                 index_table_rows(rows, doc_path, index, scope);
             }
             Node::Directive(Directive::Table {
@@ -191,19 +183,50 @@ pub(super) fn index_nodes(
                 name,
                 ..
             }) => {
-                register_table_name(name.as_ref(), doc_path, index);
+                register_directive_name(name.as_ref(), doc_path, index);
                 index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scope);
+            }
+            Node::Directive(Directive::CodeBlock(block)) => {
+                register_directive_name(block.name.as_ref(), doc_path, index);
             }
             _ => {}
         }
     }
 }
 
-/// Registers a table's optional `:name:` as an internal cross-reference
-/// target, shared by `.. list-table::`/`.. csv-table::` and `.. table::` —
-/// the two directive kinds with a `:name:` option, out of the three table
-/// kinds `index_nodes` indexes.
-fn register_table_name(name: Option<&TargetName>, doc_path: &str, index: &mut ProjectIndex) {
+/// Applies the directives that only move the traversal scope, indexing
+/// nothing themselves.
+///
+/// Split out of [`index_nodes`] because they form one responsibility — the
+/// same one the renderer keeps in its own `scope_directives` module — and
+/// because their five arms are the bulk of what made that match unreadable.
+/// Any other directive is a no-op here rather than a panic: the caller's match
+/// decides which ones arrive, and duplicating that list would be a second
+/// place to keep in step.
+fn apply_scope_directive(directive: &Directive, scope: &mut Scope) {
+    match directive {
+        Directive::PyCurrentModule { module } => match module {
+            Some(name) => scope.python.set_module(name),
+            None => scope.python.clear_module(),
+        },
+        Directive::CNamespace { namespace } => scope.c.set_namespace(namespace.as_deref()),
+        Directive::CNamespacePush { namespace } => scope.c.push_namespace(namespace),
+        Directive::CNamespacePop => scope.c.pop_namespace(),
+        Directive::StdProgram { name } => match name {
+            Some(name) => scope.program.set(name),
+            None => scope.program.clear(),
+        },
+        _ => {}
+    }
+}
+
+/// Registers a directive's optional `:name:` as an internal cross-reference
+/// target.
+///
+/// Shared by every directive with a `:name:` option — the two data-table
+/// directives, `.. table::`, and the two code-block directives — since none of
+/// them needs anything table- or code-specific to do it.
+fn register_directive_name(name: Option<&TargetName>, doc_path: &str, index: &mut ProjectIndex) {
     if let Some(target_name) = name {
         index.targets.insert(
             target_name.clone(),

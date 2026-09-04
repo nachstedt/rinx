@@ -14,6 +14,7 @@ Welcome to the Rusty-Sphinx example.
    version_changes
    seealso
    literal_blocks
+   code_blocks
    glossary
    definition_lists
    enumerated_lists

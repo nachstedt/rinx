@@ -12,13 +12,13 @@ use std::io::{self, Read};
 use super::cli_args::{flag_value, flag_value_opt};
 use super::csv_files::{DocumentRelativeCsvFiles, parse_ctx};
 use super::diagnostics::{
-    format_broken_link_warning, format_math_error_warning, format_object_type_mismatch_warning,
-    report_diagnostic,
+    format_broken_link_warning, format_highlight_error_warning, format_math_error_warning,
+    format_object_type_mismatch_warning, report_diagnostic,
 };
 use super::parse::parse_default_domain_flag;
 use super::suppression::{
-    retain_reportable, retain_reportable_links, retain_reportable_math_errors,
-    retain_reportable_mismatches,
+    retain_reportable, retain_reportable_highlight_errors, retain_reportable_links,
+    retain_reportable_math_errors, retain_reportable_mismatches,
 };
 
 /// One previewed page, plus every warning it produced.
@@ -33,6 +33,7 @@ pub(super) struct PreviewedPage {
     pub broken_links: Vec<renderer::BrokenLink>,
     pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
     pub math_errors: Vec<renderer::MathError>,
+    pub highlight_errors: Vec<renderer::HighlightError>,
 }
 
 pub(super) fn process_preview(
@@ -57,7 +58,7 @@ pub(super) fn process_preview(
     let local_index = analyzer::analyze(&doc);
     let _ = index.merge(local_index);
 
-    let render_output = renderer::render(&doc, &index, doc_path);
+    let render_output = renderer::render_with_config(&doc, &index, doc_path, config);
     // Filtered here rather than by the caller so that a suppressed link is
     // invisible to *every* consumer of this function, not just the one that
     // remembers to ask.
@@ -65,6 +66,8 @@ pub(super) fn process_preview(
     let object_type_mismatches =
         retain_reportable_mismatches(&render_output.object_type_mismatches, &doc.suppressions);
     let math_errors = retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions);
+    let highlight_errors =
+        retain_reportable_highlight_errors(&render_output.highlight_errors, &doc.suppressions);
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -105,6 +108,7 @@ pub(super) fn process_preview(
         broken_links,
         object_type_mismatches,
         math_errors,
+        highlight_errors,
     })
 }
 
@@ -160,6 +164,9 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     }
     for error in &page.math_errors {
         eprintln!("{}", format_math_error_warning(&doc_path, error));
+    }
+    for error in &page.highlight_errors {
+        eprintln!("{}", format_highlight_error_warning(&doc_path, error));
     }
 
     println!("{}", page.html);

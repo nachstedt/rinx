@@ -6,6 +6,7 @@
 //! flags so that build systems like Bazel can resolve them correctly
 //! in sandboxed environments.
 
+use rusty_sphinx_ast::ResolvedLanguage;
 use serde::Deserialize;
 
 /// Site-level configuration loaded from a TOML file.
@@ -36,6 +37,32 @@ pub struct SiteConfig {
     /// document that exists.
     #[serde(default = "default_root_doc")]
     pub root_doc: String,
+
+    /// The language a code block with no argument of its own inherits, before
+    /// any `.. highlight::` in the document overrides it — Sphinx's
+    /// `highlight_language`.
+    ///
+    /// Deserialized through [`ResolvedLanguage`]'s own parser, so `"none"` and
+    /// `"default"` keep their reserved meanings and a value naming nothing at
+    /// all is rejected on load rather than silently disabling highlighting
+    /// across the whole site.
+    ///
+    /// A language, not a path, so this respects the no-paths rule above.
+    #[serde(default, deserialize_with = "deserialize_highlight_language")]
+    pub highlight_language: ResolvedLanguage,
+}
+
+/// Reads `highlight_language` from a TOML string through the same smart
+/// constructor the parser uses, so the config and a `.. highlight::` cannot
+/// disagree about what a value means.
+fn deserialize_highlight_language<'de, D>(deserializer: D) -> Result<ResolvedLanguage, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::Error as _;
+    let raw = String::deserialize(deserializer)?;
+    ResolvedLanguage::parse(&raw)
+        .map_err(|error| D::Error::custom(format!("invalid highlight_language '{raw}': {error}")))
 }
 
 fn default_project() -> String {
@@ -52,6 +79,7 @@ impl Default for SiteConfig {
             project: default_project(),
             version: String::new(),
             root_doc: default_root_doc(),
+            highlight_language: ResolvedLanguage::default(),
         }
     }
 }
@@ -168,5 +196,57 @@ version = "1.0"
 
         // Then
         assert_eq!(config.project, "CPython Benchmark");
+    }
+
+    #[test]
+    fn test_config_defaults_highlight_language_to_sphinxs_own_default() {
+        // Given — a config that says nothing about highlighting
+        let toml_str = r#"project = "Docs""#;
+
+        // When
+        let config: SiteConfig = toml::from_str(toml_str).unwrap();
+
+        // Then
+        assert_eq!(config.highlight_language, ResolvedLanguage::Default);
+    }
+
+    #[test]
+    fn test_config_reads_a_named_highlight_language() {
+        // Given
+        let toml_str = "project = \"Docs\"\nhighlight_language = \"Rust\"\n";
+
+        // When
+        let config: SiteConfig = toml::from_str(toml_str).unwrap();
+
+        // Then — normalized through the same constructor the parser uses
+        assert_eq!(
+            config.highlight_language,
+            ResolvedLanguage::parse("rust").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_config_reads_none_as_a_highlight_language() {
+        // Given — turning highlighting off site-wide
+        let toml_str = "project = \"Docs\"\nhighlight_language = \"none\"\n";
+
+        // When
+        let config: SiteConfig = toml::from_str(toml_str).unwrap();
+
+        // Then
+        assert_eq!(config.highlight_language, ResolvedLanguage::None);
+    }
+
+    #[test]
+    fn test_config_rejects_an_empty_highlight_language() {
+        // Given — a value naming nothing at all, which would silently
+        // disable highlighting across the whole site
+        let toml_str = "project = \"Docs\"\nhighlight_language = \"  \"\n";
+
+        // When
+        let result: Result<SiteConfig, _> = toml::from_str(toml_str);
+
+        // Then — caught on load, where it can be reported
+        assert!(result.is_err());
     }
 }

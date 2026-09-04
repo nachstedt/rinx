@@ -44,60 +44,6 @@ mod tests {
     }
 
     #[test]
-    fn test_render_literal_block_without_language() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::LiteralBlock {
-                language: None,
-                content: "def hello():\n    pass".to_string(),
-            }],
-        );
-
-        // When
-        let result = render_doc(&doc);
-
-        // Then
-        assert_eq!(result, "<pre><code>def hello():\n    pass</code></pre>\n");
-    }
-    #[test]
-    fn test_render_literal_block_with_language() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::LiteralBlock {
-                language: Some("python".to_string()),
-                content: "x = 1".to_string(),
-            }],
-        );
-
-        // When
-        let result = render_doc(&doc);
-
-        // Then
-        assert_eq!(
-            result,
-            "<pre><code class=\"language-python\">x = 1</code></pre>\n"
-        );
-    }
-    #[test]
-    fn test_render_literal_block_escapes_html() {
-        // Given
-        let doc = Document::new(
-            "test.rst".to_string(),
-            vec![Node::LiteralBlock {
-                language: None,
-                content: "a < b && b > c".to_string(),
-            }],
-        );
-
-        // When
-        let result = render_doc(&doc);
-
-        // Then
-        assert!(result.contains("a &lt; b &amp;&amp; b &gt; c"));
-    }
-    #[test]
     fn test_render_index_directive_produces_invisible_anchor() {
         // Given
         let doc = Document::new(

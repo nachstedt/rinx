@@ -338,3 +338,50 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
         Some(&TargetLocation::Internal("test.rst".to_string()))
     );
 }
+
+/// A code block carrying `name`, with every other option left at its default.
+fn code_block_named(name: Option<&str>) -> Node {
+    Node::Directive(Directive::CodeBlock(rusty_sphinx_ast::CodeBlock {
+        source: rusty_sphinx_ast::CodeBlockSource::CodeBlock,
+        language: rusty_sphinx_ast::CodeLanguage::parse("python"),
+        content: "x = 1".to_string(),
+        caption: None,
+        name: name.map(TargetName::new),
+        classes: vec![],
+        linenos: false,
+        lineno_start: None,
+        emphasize_lines: vec![],
+        force: false,
+        span: None,
+    }))
+}
+
+#[test]
+fn test_analyze_registers_code_block_name_as_target() {
+    // Given — a `.. code-block::` with a `:name:` option
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![code_block_named(Some("my-code"))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — a `:ref:` can reach it, exactly as it can reach a named table
+    assert_eq!(
+        index.targets.get(&TargetName::new("my-code")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_code_block_without_name_registers_no_target() {
+    // Given — a `.. code-block::` with no `:name:` option
+    let doc = Document::new("test.rst".to_string(), vec![code_block_named(None)]);
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.targets.is_empty());
+}

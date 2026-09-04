@@ -5,10 +5,11 @@
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::{indent_width, strip_common_indent};
+use crate::indent::indent_width;
 
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::body::{collect_argument_continuation_lines, collect_directive_body, join_body_lines};
+use super::code_block::{parse_code_block, parse_highlight};
 use super::data_table::{parse_csv_table, parse_list_table};
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
@@ -19,7 +20,7 @@ use super::math::parse_math_directive;
 use super::scope::try_parse_scope_directive;
 use super::table::parse_table_directive;
 use super::toctree::parse_toctree;
-use rusty_sphinx_ast::{Directive, Node};
+use rusty_sphinx_ast::{CodeBlockSource, Directive, Node};
 
 /// The indentation every directive-body parser strips before parsing, so a
 /// `ParseCtx` can be shifted by the same amount.
@@ -132,9 +133,13 @@ fn parse_body_directive(
         )));
         return Node::Directive(directive);
     }
-    if name == "code-block" {
-        let node = parse_code_block(argument, body_lines);
-        return node;
+    if let Some(source) = code_block_source(&name) {
+        let directive = parse_code_block(source, &argument, body_lines, diagnostics, ctx);
+        return Node::Directive(directive);
+    }
+    if name == "highlight" {
+        let directive = parse_highlight(&argument, body_lines, diagnostics, ctx);
+        return Node::Directive(directive);
     }
     if let Ok(kind) = name.parse::<rusty_sphinx_ast::VersionChangeKind>() {
         let directive = parse_version_change(
@@ -212,24 +217,23 @@ const fn object_type_supports_multiple_signatures(object_type: DirectiveObjectTy
     !matches!(object_type, DirectiveObjectType::PyModule)
 }
 
-/// Parses a `.. code-block::` directive's argument (the language, if any)
-/// and body into a [`Node::LiteralBlock`], stripping the common leading
-/// indentation from `body_lines` (collected by [`collect_directive_body`])
-/// to preserve relative indentation within the block (RST spec behaviour).
-fn parse_code_block(argument: String, body_lines: &[&str]) -> Node {
-    let language = if argument.is_empty() {
-        None
-    } else {
-        Some(argument)
-    };
-    let content = strip_common_indent(body_lines);
-    Node::LiteralBlock { language, content }
+/// Which code-block directive `name` spells, if either.
+///
+/// `.. code::` is docutils' name for the same construct; both lower to one
+/// [`Directive::CodeBlock`] carrying a [`CodeBlockSource`].
+fn code_block_source(name: &str) -> Option<CodeBlockSource> {
+    match name {
+        "code-block" => Some(CodeBlockSource::CodeBlock),
+        "code" => Some(CodeBlockSource::Code),
+        _ => None,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::parse;
+    use rusty_sphinx_ast::CodeLanguage;
     use rusty_sphinx_ast::Domain;
     use rusty_sphinx_ast::HashedContent;
 
@@ -292,15 +296,23 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_body_directive_returns_a_literal_block_for_code_block() {
-        // Given — the one dispatch arm that yields a non-directive node.
+    fn test_parse_body_directive_routes_both_code_block_spellings() {
+        // Given — Sphinx's name and docutils' name for one construct
         let body = ["   print(1)"];
 
         // When
-        let (node, _) = dispatch("code-block", "python", &body);
+        let (sphinx_spelling, _) = dispatch("code-block", "python", &body);
+        let (docutils_spelling, _) = dispatch("code", "python", &body);
 
-        // Then
-        assert!(matches!(node, Node::LiteralBlock { .. }));
+        // Then — both reach the same variant, tagged with who wrote them
+        let Node::Directive(Directive::CodeBlock(sphinx)) = sphinx_spelling else {
+            panic!("Expected CodeBlock, got {sphinx_spelling:?}");
+        };
+        let Node::Directive(Directive::CodeBlock(docutils)) = docutils_spelling else {
+            panic!("Expected CodeBlock, got {docutils_spelling:?}");
+        };
+        assert_eq!(sphinx.source, CodeBlockSource::CodeBlock);
+        assert_eq!(docutils.source, CodeBlockSource::Code);
     }
 
     #[test]
@@ -477,13 +489,11 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        assert_eq!(
-            doc.nodes[0],
-            Node::LiteralBlock {
-                language: Some("rust".to_string()),
-                content: "let x = 1;\n\nlet y = 2;".to_string(),
-            }
-        );
+        let Node::Directive(Directive::CodeBlock(block)) = &doc.nodes[0] else {
+            panic!("Expected CodeBlock, got {:?}", doc.nodes[0]);
+        };
+        assert_eq!(block.language, CodeLanguage::parse("rust"));
+        assert_eq!(block.content, "let x = 1;\n\nlet y = 2;");
     }
 
     #[test]
@@ -537,12 +547,11 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
-            assert_eq!(language.as_deref(), Some("python"));
-            assert_eq!(content, "x = 1");
-        } else {
-            panic!("Expected LiteralBlock, got {:?}", doc.nodes[0]);
-        }
+        let Node::Directive(Directive::CodeBlock(block)) = &doc.nodes[0] else {
+            panic!("Expected CodeBlock, got {:?}", doc.nodes[0]);
+        };
+        assert_eq!(block.language, CodeLanguage::parse("python"));
+        assert_eq!(block.content, "x = 1");
     }
 
     #[test]
@@ -556,13 +565,12 @@ mod tests {
         // When
         let doc = parse("test.rst", input);
 
-        // Then
+        // Then — an argumentless block inherits rather than naming nothing
         assert_eq!(doc.nodes.len(), 1);
-        if let Node::LiteralBlock { language, content } = &doc.nodes[0] {
-            assert!(language.is_none());
-            assert_eq!(content, "x = 1");
-        } else {
-            panic!("Expected LiteralBlock, got {:?}", doc.nodes[0]);
-        }
+        let Node::Directive(Directive::CodeBlock(block)) = &doc.nodes[0] else {
+            panic!("Expected CodeBlock, got {:?}", doc.nodes[0]);
+        };
+        assert_eq!(block.language, CodeLanguage::Inherit);
+        assert_eq!(block.content, "x = 1");
     }
 }
