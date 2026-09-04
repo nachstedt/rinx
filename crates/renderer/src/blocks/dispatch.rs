@@ -13,6 +13,7 @@ use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
 use super::glossary::{render_glossary, render_index_anchor};
 use super::math::render_math;
+use super::option_list::render_option_list;
 use super::scope_directives::apply_scope_directive;
 use super::table_directive::{TableDirectiveParams, render_table_directive};
 use crate::RenderCtx;
@@ -106,6 +107,11 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String
                     collect_anonymous_targets(&item.definition, targets);
                 }
             }
+            Node::OptionList { items } => {
+                for item in items {
+                    collect_anonymous_targets(&item.description, targets);
+                }
+            }
             // A bare grid/simple table and a `.. table::`-wrapped one share
             // the same header/body row shape, so one arm covers both.
             Node::Table {
@@ -194,6 +200,9 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                 let _ = writeln!(html, "{}", open_enumerated_list_tag(*start));
                 render_list_items(html, items, ctx);
                 let _ = writeln!(html, "</ol>");
+            }
+            Node::OptionList { items } => {
+                render_option_list(html, items, ctx);
             }
             Node::DefinitionList { items } => {
                 let _ = writeln!(html, "<dl>");

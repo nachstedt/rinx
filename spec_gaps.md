@@ -60,7 +60,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | Enumerated lists (`1.`, `a.`, `i.`, …) | ✅ | All five sequences (arabic, lower/upper alpha, lower/upper roman), all three formats (`1.`, `1)`, `(1)`), the `#` auto-enumerator, and non-1 start values. Deliberate divergence from Sphinx: the prefix/suffix are *rendered* (via a format class plus CSS counters) rather than dropped, so `(a)` and `a.` are distinguishable in the HTML |
 | Definition lists | 🔶 | Term classifiers (`term : classifier`) not supported; glossary's "multiple terms share one definition" quirk uses a separate implementation |
 | Field lists (`:field: value`) | 🔶 | Only the document-leading field list is read, as file-wide metadata, and only `:orphan:` is interpreted (it silences `toctree.orphan-document`). Values are kept as raw strings and nothing is rendered; field lists elsewhere in a document are unsupported |
-| Option lists | ❌ | — |
+| Option lists | ✅ | Grammar matches docutils' `option_marker` transition exactly: short (`-x`)/long (`--xxx`)/old-GNU (`+x`)/DOS-VMS (`/x`) markers, comma-separated synonyms, and all three argument delimiters (space, `=`, and the adjacent short form `-xVALUE`), including a bracketed `<...>` placeholder that may itself contain spaces. Rendered as modern docutils/Sphinx's `<dl class="option-list">` HTML5 markup, not the legacy `html4css1` writer's `<table class="option-list">` |
 | Literal blocks (``::`` paragraph ending or standalone ``::``) | ✅ | Highlighted with whatever language `.. highlight::` last set, as in Sphinx; the site-wide default comes from `highlight_language` in `rusty_sphinx.toml` |
 | Block quotes (indented paragraphs without a directive) | ❌ | — |
 | Line blocks (`| line`) | ❌ | — |

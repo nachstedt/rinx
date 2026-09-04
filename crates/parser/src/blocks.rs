@@ -13,6 +13,7 @@ mod doctest_block;
 mod enumerated_list;
 mod index_ids;
 mod literal_block;
+mod option_list;
 mod simple_table;
 mod table;
 mod target;

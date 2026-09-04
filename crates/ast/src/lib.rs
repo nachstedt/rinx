@@ -36,6 +36,7 @@ mod node;
 mod non_empty_vector;
 mod object_naming;
 mod object_type;
+mod option_list_item;
 mod py_version_spec;
 mod section_id;
 mod span;
@@ -74,6 +75,7 @@ pub use object_naming::{
     split_option_line_specs,
 };
 pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
+pub use option_list_item::{OptionArgument, OptionArgumentDelimiter, OptionListItem, OptionSpec};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
 pub use span::{Position, Span};

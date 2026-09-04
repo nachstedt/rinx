@@ -76,6 +76,11 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
                     walk_nodes(&item.definition, visit);
                 }
             }
+            Node::OptionList { items } => {
+                for item in items {
+                    walk_nodes(&item.description, visit);
+                }
+            }
             Node::Table {
                 header_rows,
                 body_rows,
@@ -310,6 +315,27 @@ mod tests {
 
         // Then
         assert_eq!(bodies, vec!["nested-in-definition"]);
+    }
+
+    #[test]
+    fn test_walk_nodes_descends_into_option_list_descriptions() {
+        // Given
+        use crate::option_list_item::{OptionListItem, OptionSpec};
+        let nodes = vec![Node::OptionList {
+            items: vec![OptionListItem {
+                options: vec![OptionSpec {
+                    flag: "-h".to_string(),
+                    argument: None,
+                }],
+                description: vec![diagram("nested-in-option-description")],
+            }],
+        }];
+
+        // When
+        let bodies = walk_diagram_bodies(&nodes);
+
+        // Then
+        assert_eq!(bodies, vec!["nested-in-option-description"]);
     }
 
     #[test]
