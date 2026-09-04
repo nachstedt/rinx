@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::code_language::CodeLanguage;
 use crate::definition_list_item::DefinitionListItem;
 use crate::directive::Directive;
 use crate::enumerator::Enumerator;
@@ -50,10 +51,15 @@ pub enum Node {
         header_rows: Vec<TableRow>,
         body_rows: Vec<TableRow>,
     },
+    /// A literal block introduced by a `::` paragraph ending or a standalone
+    /// `::`. The option-bearing directive forms live in
+    /// [`Directive::CodeBlock`](crate::Directive::CodeBlock) instead.
     LiteralBlock {
-        /// The language hint (e.g. `"python"`), if specified via `.. code-block:: lang`.
-        /// `None` for plain `::` paragraph-introduced blocks.
-        language: Option<String>,
+        /// Always [`CodeLanguage::Inherit`] as parsed — a `::` block has no
+        /// syntax for naming a language. It is still highlighted, taking its
+        /// language from the enclosing `.. highlight::` exactly as Sphinx
+        /// does, which is why this is a language and not a `bool`.
+        language: CodeLanguage,
         /// Verbatim content with common leading indentation stripped.
         content: String,
     },

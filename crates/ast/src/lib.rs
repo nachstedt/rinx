@@ -16,6 +16,8 @@
 
 mod admonition_kind;
 mod c_signature;
+mod code_block;
+mod code_language;
 mod definition_list_item;
 mod diagnostic;
 mod diagnostic_code;
@@ -47,6 +49,8 @@ mod visit;
 
 pub use admonition_kind::AdmonitionKind;
 pub use c_signature::{CSignature, NameSource, extract_c_object_name};
+pub use code_block::{CodeBlock, CodeBlockSource};
+pub use code_language::{CodeLanguage, EmptyLanguageName, LanguageName, ResolvedLanguage};
 pub use definition_list_item::DefinitionListItem;
 pub use diagnostic::Diagnostic;
 pub use diagnostic_code::{DiagnosticCode, UnknownDiagnosticCode};

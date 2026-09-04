@@ -168,6 +168,25 @@ diagnostic_codes! {
     /// only the renderer knows the math backend.
     MathInvalidLatex => "math.invalid-latex",
 
+    // --- `.. code-block::` / `.. code::` / `.. highlight::` ----------------
+    /// A language argument, or a `.. highlight::`, naming nothing at all.
+    CodeBlockEmptyLanguage => "code-block.empty-language",
+    /// A `:name:` option with no value, so nothing could `:ref:` the block.
+    CodeBlockEmptyName => "code-block.empty-name",
+    /// A `:lineno-start:`, `:dedent:`, `:number-lines:` or `:linenothreshold:`
+    /// whose value is not a positive integer.
+    CodeBlockInvalidInteger => "code-block.invalid-integer",
+    /// An `:emphasize-lines:` that could not be read, or that names a line the
+    /// block does not have.
+    CodeBlockEmphasizeLinesInvalid => "code-block.emphasize-lines-invalid",
+    /// A language with no grammar behind it, so the block was left
+    /// unhighlighted. Reported while rendering rather than while parsing:
+    /// only the renderer knows the set of languages the backend supports.
+    CodeBlockUnknownLanguage => "code-block.unknown-language",
+    /// A grammar that failed part-way through highlighting, so the block was
+    /// left unhighlighted. Also render-time, and for the same reason.
+    CodeBlockHighlightFailed => "code-block.highlight-failed",
+
     // --- `.. toctree::` ----------------------------------------------------
     /// A `:maxdepth:` whose value is not a positive integer. Sphinx would
     /// treat the directive as having no depth limit at all, which silently

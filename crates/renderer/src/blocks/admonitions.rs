@@ -102,6 +102,7 @@ pub(super) fn render_seealso(html: &mut String, body: &[Node], ctx: &mut RenderC
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::blocks::render_test_support::with_ctx;
     use rusty_sphinx_ast::{Directive, Document, InlineNode, TargetSearchOrder};
     use rusty_sphinx_index::ProjectIndex;
 
@@ -164,38 +165,11 @@ mod tests {
         let title: Option<String> = None;
         let collapsible: Option<bool> = None;
         let body = vec![Node::Paragraph(vec![InlineNode::Text("Body".to_string())])];
-        let index = ProjectIndex::default();
-        let anon_targets = vec![];
-        let mut anon_index = 0;
-        let resolver = crate::resolution::DomainObjectResolver::new(&index);
-        let option_resolver = crate::resolution::OptionResolver::new(&index);
-        let math = crate::math::MathRenderer::new();
-        let mut ctx = RenderCtx {
-            index: &index,
-            domain_resolver: &resolver,
-            option_resolver: &option_resolver,
-            doc_path: "test.rst",
-            anon_targets: &anon_targets,
-            anon_index: &mut anon_index,
-            original_doc_path: "test.rst",
-            broken_links: &mut Vec::new(),
-            object_type_mismatches: &mut Vec::new(),
-            math_errors: &mut Vec::new(),
-            math: &math,
-            section_ids: &std::collections::BTreeMap::new(),
-            at_top_level: true,
-            scope: rusty_sphinx_scope::Scope::default(),
-        };
 
         // When
-        render_admonition(
-            &mut html,
-            kind,
-            title.as_deref(),
-            collapsible,
-            &body,
-            &mut ctx,
-        );
+        with_ctx(|ctx| {
+            render_admonition(&mut html, kind, title.as_deref(), collapsible, &body, ctx);
+        });
 
         // Then
         assert!(html.contains("<div class=\"admonition note\""));
@@ -210,38 +184,11 @@ mod tests {
         let title = Some("Custom Title".to_string());
         let collapsible = Some(true);
         let body = vec![];
-        let index = ProjectIndex::default();
-        let anon_targets = vec![];
-        let mut anon_index = 0;
-        let resolver = crate::resolution::DomainObjectResolver::new(&index);
-        let option_resolver = crate::resolution::OptionResolver::new(&index);
-        let math = crate::math::MathRenderer::new();
-        let mut ctx = RenderCtx {
-            index: &index,
-            domain_resolver: &resolver,
-            option_resolver: &option_resolver,
-            doc_path: "test.rst",
-            anon_targets: &anon_targets,
-            anon_index: &mut anon_index,
-            original_doc_path: "test.rst",
-            broken_links: &mut Vec::new(),
-            object_type_mismatches: &mut Vec::new(),
-            math_errors: &mut Vec::new(),
-            math: &math,
-            section_ids: &std::collections::BTreeMap::new(),
-            at_top_level: true,
-            scope: rusty_sphinx_scope::Scope::default(),
-        };
 
         // When
-        render_admonition(
-            &mut html,
-            kind,
-            title.as_deref(),
-            collapsible,
-            &body,
-            &mut ctx,
-        );
+        with_ctx(|ctx| {
+            render_admonition(&mut html, kind, title.as_deref(), collapsible, &body, ctx);
+        });
 
         // Then
         assert!(html.contains("<details class=\"admonition warning\" open>"));
@@ -389,31 +336,9 @@ mod tests {
         let body = vec![Node::Paragraph(vec![InlineNode::Text(
             "See related.".to_string(),
         )])];
-        let index = ProjectIndex::default();
-        let anon_targets = vec![];
-        let mut anon_index = 0;
-        let resolver = crate::resolution::DomainObjectResolver::new(&index);
-        let option_resolver = crate::resolution::OptionResolver::new(&index);
-        let math = crate::math::MathRenderer::new();
-        let mut ctx = RenderCtx {
-            index: &index,
-            domain_resolver: &resolver,
-            option_resolver: &option_resolver,
-            doc_path: "test.rst",
-            anon_targets: &anon_targets,
-            anon_index: &mut anon_index,
-            original_doc_path: "test.rst",
-            broken_links: &mut Vec::new(),
-            object_type_mismatches: &mut Vec::new(),
-            math_errors: &mut Vec::new(),
-            math: &math,
-            section_ids: &std::collections::BTreeMap::new(),
-            at_top_level: true,
-            scope: rusty_sphinx_scope::Scope::default(),
-        };
 
         // When
-        render_seealso(&mut html, &body, &mut ctx);
+        with_ctx(|ctx| render_seealso(&mut html, &body, ctx));
 
         // Then
         assert!(html.contains("<div class=\"admonition seealso\""));

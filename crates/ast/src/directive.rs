@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::admonition_kind::AdmonitionKind;
+use crate::code_block::CodeBlock;
+use crate::code_language::ResolvedLanguage;
 use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
 use crate::glossary_entry::GlossaryEntry;
@@ -149,6 +151,26 @@ pub enum Directive {
         /// `docs/decisions/003-diagnostics.md`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
+    },
+    /// A `.. code-block::` or `.. code::` — a code block with presentation
+    /// options. A newtype variant, like [`Self::DomainObject`], because the
+    /// two directives form their own closed family with their own option set.
+    CodeBlock(CodeBlock),
+    /// A `.. highlight::`, which sets the language every following code block
+    /// inherits, until the next one.
+    ///
+    /// Produces no output of its own; it exists purely to change the state the
+    /// renderer walks with. Carries a [`ResolvedLanguage`] rather than a
+    /// [`crate::CodeLanguage`] because a `.. highlight::` always names a
+    /// language — "inherit" would be a meaningless value on it.
+    Highlight {
+        language: ResolvedLanguage,
+        /// `:linenothreshold:` — blocks with at least this many lines get line
+        /// numbers without asking. `None` when the option was omitted, which
+        /// is Sphinx's "never".
+        linenothreshold: Option<std::num::NonZeroU32>,
+        /// `:force:` — applies to every block inheriting this language.
+        force: bool,
     },
     DomainObject(DomainObjectBody),
     /// One block of the `sphinx.ext.doctest` family (`doctest`, `testcode`,

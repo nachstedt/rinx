@@ -4,8 +4,11 @@
 Literal Blocks
 ##############
 
-Literal blocks render content verbatim inside a ``<pre><code>`` element.
-There are two ways to introduce them in reStructuredText.
+Literal blocks render content verbatim inside a ``<pre>`` element. There are
+two ways to introduce them in reStructuredText.
+
+Like Sphinx, a ``::`` block is still syntax-highlighted: it names no language
+of its own, so it takes whichever one ``.. highlight::`` last set.
 
 Plain ``::`` Introduction
 -------------------------
@@ -30,9 +33,10 @@ without rendering any paragraph at all:
 ``.. code-block::`` Directive
 ------------------------------
 
-The ``.. code-block::`` directive allows you to specify a programming language,
-which is rendered as a ``class="language-<lang>"`` attribute on the ``<code>``
-element. This attribute can be used by syntax-highlighting libraries.
+The ``.. code-block::`` directive takes a language and every presentation
+option Sphinx defines. Highlighting happens during the build, into HTML
+carrying one CSS class per token — see :ref:`code-blocks` for the full set of
+options.
 
 Python example:
 
