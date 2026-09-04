@@ -16,11 +16,13 @@ mod broken_link;
 pub mod config;
 mod inline;
 mod math;
+mod nav;
 mod page;
 mod resolution;
 
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 pub use math::MathError;
+pub use nav::{PageLink, ResolvedNavEntry};
 pub use page::{PageMeta, css_relative_path, render_genindex, render_page};
 
 use blocks::{collect_anonymous_targets, render_nodes};
@@ -62,6 +64,16 @@ pub(crate) struct RenderCtx<'a> {
     /// Converts LaTeX to `MathML`. Held for the whole document so the backend's
     /// per-converter setup happens once per page rather than once per equation.
     pub math: &'a MathRenderer,
+    /// The `id` of each top-level heading, keyed by its index in the
+    /// document's node list, from [`rusty_sphinx_ast::allocate_section_ids`].
+    /// The analyzer builds its document outline from that same function, so a
+    /// section link in the navigation and the anchor it lands on cannot drift.
+    pub section_ids: &'a std::collections::BTreeMap<usize, rusty_sphinx_ast::SectionId>,
+    /// Whether the node list being rendered is the document's own top level.
+    /// Only there is a heading a *section* with an id; a heading nested in a
+    /// directive body is not one. `render_nodes` clears this for the duration
+    /// of any nested list and restores it afterwards.
+    pub at_top_level: bool,
     /// The enclosing scope for both domains, mirroring the analyzer's
     /// `index_nodes`/`index_domain_object` scope so a domain object's anchor
     /// `id` always matches the qualified key the analyzer indexed it under.
@@ -90,6 +102,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
     let domain_resolver = DomainObjectResolver::new(index);
     let option_resolver = OptionResolver::new(index);
     let math = MathRenderer::new();
+    let section_ids = rusty_sphinx_ast::allocate_section_ids(&doc.nodes);
     let mut ctx = RenderCtx {
         index,
         domain_resolver: &domain_resolver,
@@ -102,6 +115,8 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
         object_type_mismatches: &mut object_type_mismatches,
         math_errors: &mut math_errors,
         math: &math,
+        section_ids: &section_ids,
+        at_top_level: true,
         scope: Scope::default(),
     };
 
@@ -122,6 +137,68 @@ mod tests {
         Directive, Enumerator, EnumeratorFormat, EnumeratorSequence, HashedContent, InlineNode,
         ListItem, Node, TargetName, TargetSearchOrder,
     };
+
+    #[test]
+    fn test_render_prefixes_a_heading_with_its_section_number() {
+        // Given — the analyzer numbered this document's section.
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![
+                Node::Heading {
+                    level: 1,
+                    text: vec![InlineNode::Text("Guide".to_string())],
+                },
+                Node::Heading {
+                    level: 2,
+                    text: vec![InlineNode::Text("Install".to_string())],
+                },
+            ],
+        );
+        let mut numbers = rusty_sphinx_index::DocumentNumbers::default();
+        numbers.set_document(vec![2]);
+        numbers.set_section(
+            &rusty_sphinx_ast::SectionId::from_title("Install"),
+            vec![2, 1],
+        );
+        let mut index = ProjectIndex::default();
+        index
+            .section_numbers
+            .insert("guide.rst".to_string(), numbers);
+
+        // When
+        let result = render(&doc, &index, "guide").html;
+
+        // Then — the title takes the document's number, the section its own.
+        assert!(
+            result.contains("<h1 id=\"guide\"><span class=\"section-number\">2. </span>Guide</h1>"),
+            "{result}"
+        );
+        assert!(
+            result.contains(
+                "<h2 id=\"install\"><span class=\"section-number\">2.1. </span>Install</h2>"
+            ),
+            "{result}"
+        );
+    }
+
+    #[test]
+    fn test_render_leaves_an_unnumbered_heading_unprefixed() {
+        // Given — no `:numbered:` toctree reaches this document.
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Heading {
+                level: 1,
+                text: vec![InlineNode::Text("Guide".to_string())],
+            }],
+        );
+        let index = ProjectIndex::default();
+
+        // When
+        let result = render(&doc, &index, "guide").html;
+
+        // Then
+        assert_eq!(result, "<h1 id=\"guide\">Guide</h1>\n");
+    }
 
     #[test]
     fn test_render_returns_empty_string_for_empty_document() {
@@ -162,7 +239,7 @@ mod tests {
         // Then
         assert_eq!(
             result,
-            "<h1>Title</h1>\n<p>Paragraph</p>\n<h1>Another Heading</h1>\n"
+            "<h1 id=\"title\">Title</h1>\n<p>Paragraph</p>\n<h1 id=\"another-heading\">Another Heading</h1>\n"
         );
     }
     #[test]
@@ -199,7 +276,7 @@ mod tests {
         let result = render(&doc, &index, &doc.path).html;
 
         // Then
-        assert!(result.starts_with("<h1>The "));
+        assert!(result.starts_with("<h1 id=\"the-greetings-module\">The "));
         assert!(
             result
                 .contains("<a class=\"reference internal\" href=\"api.html#py:module:greetings\">")
@@ -229,7 +306,7 @@ mod tests {
         // Then
         assert_eq!(
             result,
-            "<h1>Title &lt;script&gt;</h1>\n<p>A &amp; B &gt; C</p>\n"
+            "<h1 id=\"title-script\">Title &lt;script&gt;</h1>\n<p>A &amp; B &gt; C</p>\n"
         );
     }
     #[test]
@@ -248,7 +325,7 @@ mod tests {
         let result = render(&doc, &index, &doc.path).html;
 
         // Then
-        assert_eq!(result, "<h1>Top</h1>\n");
+        assert_eq!(result, "<h1 id=\"top\">Top</h1>\n");
     }
     #[test]
     fn test_render_formats_heading_level_2_as_h2() {
@@ -266,7 +343,7 @@ mod tests {
         let result = render(&doc, &index, &doc.path).html;
 
         // Then
-        assert_eq!(result, "<h2>Sub</h2>\n");
+        assert_eq!(result, "<h2 id=\"sub\">Sub</h2>\n");
     }
     #[test]
     fn test_render_formats_heading_level_6_as_h6() {
@@ -284,7 +361,7 @@ mod tests {
         let result = render(&doc, &index, &doc.path).html;
 
         // Then
-        assert_eq!(result, "<h6>Deep</h6>\n");
+        assert_eq!(result, "<h6 id=\"deep\">Deep</h6>\n");
     }
     #[test]
     fn test_render_clamps_heading_level_above_6_to_h6() {
@@ -302,7 +379,7 @@ mod tests {
         let result = render(&doc, &index, &doc.path).html;
 
         // Then
-        assert_eq!(result, "<h6>VeryDeep</h6>\n");
+        assert_eq!(result, "<h6 id=\"verydeep\">VeryDeep</h6>\n");
     }
     #[test]
     fn test_render_ignores_unknown_directive() {

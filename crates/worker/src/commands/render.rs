@@ -65,9 +65,11 @@ pub(super) fn process_render(
             css_path: &css_path,
             page_title: &page_title,
             doc_path,
-            nav_tree: &index.nav_tree,
+            source_path: &doc.path,
             has_genindex: !index.genindex_entries.is_empty(),
-        },
+            ..renderer::PageMeta::default()
+        }
+        .with_navigation(&index),
     )?;
     Ok(RenderedPage {
         html,
@@ -170,7 +172,7 @@ mod tests {
         let page = process_render(doc, index, &config, template, "test.rst").unwrap();
 
         // Then
-        assert!(page.html.contains("<h1>Title</h1>"));
+        assert!(page.html.contains("<h1 id=\"title\">Title</h1>"));
         assert!(page.broken_links.is_empty());
         assert!(page.object_type_mismatches.is_empty());
         // The warning path comes from the document, not from `doc_path`.

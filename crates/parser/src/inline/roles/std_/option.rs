@@ -1,6 +1,6 @@
 use rusty_sphinx_ast::InlineNode;
 
-use crate::inline::dispatch::split_display_and_target;
+use crate::explicit_title::split_display_and_target;
 use crate::inline::regexes::OPTION_ROLE_REGEX;
 
 /// Builds the `InlineNode` for a matched `:option:` role. Unlike the

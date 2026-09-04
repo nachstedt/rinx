@@ -67,15 +67,23 @@ pub(in crate::directives) fn scan_option_lines(
 
 /// Reports every option line neither a shared parser nor the directive's own
 /// parser claimed.
+///
+/// `code` is the caller's, rather than always [`DiagnosticCode::DirectiveUnknownOption`],
+/// because `.. toctree::` reported its unknown options under
+/// `directive.toctree-unknown-option` long before this helper existed. A code
+/// is a stable, author-facing name a `.. noqa:` can spell, so keeping that one
+/// is not a style preference — renaming it would silently break every document
+/// already suppressing it.
 pub(in crate::directives) fn report_unknown_options(
     unrecognized: &[&OptionLine],
     directive: &str,
+    code: DiagnosticCode,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) {
     for line in unrecognized {
         diagnostics.push(Diagnostic::at(
-            DiagnosticCode::DirectiveUnknownOption,
+            code,
             format!(
                 "Invalid or non-standard Sphinx {directive} option encountered: {}",
                 line.raw
@@ -190,6 +198,7 @@ mod tests {
         report_unknown_options(
             &unrecognized,
             "list-table",
+            DiagnosticCode::DirectiveUnknownOption,
             &mut diagnostics,
             &ParseCtx::with_domain(Domain::Py),
         );
@@ -202,6 +211,31 @@ mod tests {
             ),
             "{}",
             diagnostics[0].message
+        );
+    }
+
+    #[test]
+    fn test_report_unknown_options_uses_the_code_the_caller_passed() {
+        // Given — a caller that does not use the generic directive code.
+        let body = lines(&[":bogus:"]);
+        let (option_lines, _) = scan_option_lines(&body);
+        let unrecognized: Vec<&OptionLine> = option_lines.iter().collect();
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_unknown_options(
+            &unrecognized,
+            "toctree",
+            DiagnosticCode::DirectiveToctreeUnknownOption,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(
+            diagnostics[0].code,
+            DiagnosticCode::DirectiveToctreeUnknownOption
         );
     }
 }

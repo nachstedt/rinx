@@ -1,8 +1,9 @@
 //! Page-level rendering: CSS path computation and template rendering.
 
-use super::nav_hrefs::resolve_nav_hrefs;
 use crate::config::SiteConfig;
+use crate::nav::{PageLink, ResolvedNavEntry, page_neighbors};
 use anyhow::{Context, Result};
+use rusty_sphinx_index::ProjectIndex;
 
 /// Computes the relative path from a document at `doc_path` to a file
 /// at the site output root (e.g., `default.css`).
@@ -31,13 +32,36 @@ pub struct PageMeta<'a> {
     /// The `.rst` path of the page being rendered (used to compute relative
     /// links to other pages, e.g. via [`css_relative_path`]).
     pub doc_path: &'a str,
-    /// Hierarchical sidebar navigation.
-    pub nav_tree: &'a [rusty_sphinx_index::NavEntry],
+    /// The `.rst` path this page was parsed from, which is the key the
+    /// navigation graph and the reading order are stored under.
+    pub source_path: &'a str,
+    /// The sidebar's navigation entries, already expanded and resolved.
+    pub nav_tree: Vec<ResolvedNavEntry>,
     /// Whether a `genindex_href` link (computed via [`css_relative_path`],
     /// since `genindex.html` always lives at the site root like
     /// `default.css`) is made available to the template — sites with no
     /// index entries get no dead link.
     pub has_genindex: bool,
+    /// The previous and next pages in reading order, for the template's
+    /// page-relation links. Both `None` for a page no toctree reaches.
+    pub previous: Option<PageLink>,
+    pub next: Option<PageLink>,
+}
+
+impl PageMeta<'_> {
+    /// Fills in everything that can be derived from the project index: the
+    /// sidebar's entries and the page's neighbours.
+    ///
+    /// The sidebar expands the *root documents'* toctrees, which is what makes
+    /// it the same tree on every page while still marking the current one.
+    #[must_use]
+    pub fn with_navigation(mut self, index: &ProjectIndex) -> Self {
+        self.nav_tree = crate::nav::sidebar_entries(index, self.doc_path, self.source_path);
+        let (previous, next) = page_neighbors(index, self.source_path, self.doc_path);
+        self.previous = previous;
+        self.next = next;
+        self
+    }
 }
 
 /// Renders a page body into a full HTML document using a `MiniJinja` template.
@@ -56,7 +80,6 @@ pub fn render_page(
     config: &SiteConfig,
     meta: &PageMeta<'_>,
 ) -> Result<String> {
-    let resolved_nav = resolve_nav_hrefs(meta.nav_tree, meta.doc_path);
     let genindex_href = meta.has_genindex.then(|| {
         minijinja::Value::from_safe_string(css_relative_path(meta.doc_path, "genindex.html"))
     });
@@ -73,8 +96,10 @@ pub fn render_page(
         version => &config.version,
         css_path => minijinja::Value::from_safe_string(meta.css_path.to_string()),
         page_title => meta.page_title,
-        nav_tree => resolved_nav,
+        nav_tree => &meta.nav_tree,
         genindex_href => genindex_href,
+        prev => &meta.previous,
+        next => &meta.next,
     };
     tmpl.render(ctx).context("Failed to render template")
 }
@@ -274,9 +299,13 @@ mod tests {
         // Given a nav entry whose title contains raw HTML
         let template = "{% for entry in nav_tree %}{{ entry.title }}{% endfor %}{{ body }}";
         let config = SiteConfig::default();
-        let entries = vec![rusty_sphinx_index::NavEntry {
+        let entries = vec![crate::nav::ResolvedNavEntry::Page {
             title: "Evil <script>alert(1)</script>".to_string(),
-            path: "evil.rst".to_string(),
+            href: minijinja::Value::from_safe_string("evil.html".to_string()),
+            anchor: None,
+            secnumber: None,
+            is_current: false,
+            is_ancestor: false,
             children: vec![],
         }];
 
@@ -287,7 +316,7 @@ mod tests {
             &config,
             &PageMeta {
                 css_path: "default.css",
-                nav_tree: &entries,
+                nav_tree: entries,
                 ..PageMeta::default()
             },
         )
@@ -327,9 +356,13 @@ mod tests {
         // Given a nested nav entry whose computed href contains slashes
         let template = "{% for entry in nav_tree %}{{ entry.href }}{% endfor %}{{ body }}";
         let config = SiteConfig::default();
-        let entries = vec![rusty_sphinx_index::NavEntry {
+        let entries = vec![crate::nav::ResolvedNavEntry::Page {
             title: "Nested".to_string(),
-            path: "sub/nested.rst".to_string(),
+            href: minijinja::Value::from_safe_string("sub/nested.html".to_string()),
+            anchor: None,
+            secnumber: None,
+            is_current: false,
+            is_ancestor: false,
             children: vec![],
         }];
 
@@ -340,7 +373,7 @@ mod tests {
             &config,
             &PageMeta {
                 css_path: "default.css",
-                nav_tree: &entries,
+                nav_tree: entries,
                 ..PageMeta::default()
             },
         )

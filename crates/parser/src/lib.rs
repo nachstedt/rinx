@@ -4,6 +4,7 @@ pub(crate) mod blocks;
 pub(crate) mod context;
 pub(crate) mod diagnostics;
 pub(crate) mod directives;
+pub(crate) mod explicit_title;
 pub(crate) mod headings;
 pub(crate) mod indent;
 pub(crate) mod inline;

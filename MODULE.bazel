@@ -36,6 +36,17 @@ crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.from_cargo(
     name = "crates",
     cargo_lockfile = "//:Cargo.lock",
+    # The crate_universe resolver's own lockfile, distinct from Cargo.lock
+    # above. It is required — not merely an optimization — whenever
+    # rusty-sphinx is consumed as a *non-root* module: rules_rust refuses to
+    # repin across a module boundary, since the producer's lockfile normally
+    # sits in a read-only bzlmod cache. `scripts/benchmark.py` builds the
+    # CPython corpus in exactly that shape, via `local_path_override`, so
+    # without this the benchmark cannot analyze at all.
+    #
+    # Regenerate with:
+    #   CARGO_BAZEL_REPIN=1 bazel mod deps
+    lockfile = "//:Cargo.bazel.lock",
     manifests = ["//:Cargo.toml"],
     supported_platform_triples = [
         "aarch64-apple-darwin",

@@ -8,7 +8,6 @@
 
 mod genindex;
 mod layout;
-mod nav_hrefs;
 
 pub use genindex::render_genindex;
 pub use layout::{PageMeta, css_relative_path, render_page};

@@ -29,6 +29,9 @@ mod tests {
         let html = process_rst("test.rst", rst);
 
         // Then
-        assert_eq!(html, "<h1>Introduction</h1>\n<p>This is a paragraph.</p>\n");
+        assert_eq!(
+            html,
+            "<h1 id=\"introduction\">Introduction</h1>\n<p>This is a paragraph.</p>\n"
+        );
     }
 }

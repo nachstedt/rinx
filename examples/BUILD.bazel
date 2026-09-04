@@ -44,6 +44,7 @@ rusty_sphinx_library(
         # `index.rst`'s toctree pulls in `doctests`, so the library owning it
         # has to be a declared dep.
         ":doctest_docs",
+        "//examples/toctree:docs",
         "//examples/team_a:docs",
         "//examples/team_b:docs",
     ],

@@ -4,11 +4,12 @@ use rusty_sphinx_scope::Scope;
 
 use super::domain_object_index::index_domain_object;
 use super::equation_numbering::number_equations;
+use super::outline::build_document_outline;
 
 /// Analyzes a single `Document` and returns a local `ProjectIndex`.
 ///
-/// This extracts targets, document titles, glossary terms and equation
-/// numbers. The `nav_tree` is not
+/// This extracts targets, document titles, the document's section outline,
+/// glossary terms and equation numbers. The `nav_tree` is not
 /// populated here — it is built globally by [`build_project_index()`].
 #[must_use]
 pub fn analyze(doc: &Document) -> ProjectIndex {
@@ -22,6 +23,35 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
             found_title = true;
         }
     }
+    let analysis = build_document_outline(&doc.nodes);
+    if !analysis.outline.is_empty() {
+        index
+            .document_outlines
+            .insert(doc.path.clone(), analysis.outline);
+    }
+
+    // Each toctree is paired with the section it was written inside, which the
+    // outline pass computed in the same walk — the renderer needs both to put
+    // a toctree's entries where the author wrote the directive.
+    let toctrees: Vec<rusty_sphinx_index::DocumentToctree> = doc
+        .nodes
+        .iter()
+        .filter_map(|node| match node {
+            Node::Directive(Directive::Toctree(toctree)) => Some(toctree.clone()),
+            _ => None,
+        })
+        .zip(
+            analysis
+                .toctree_sections
+                .into_iter()
+                .chain(std::iter::repeat(None)),
+        )
+        .map(|(toctree, section)| rusty_sphinx_index::DocumentToctree { toctree, section })
+        .collect();
+    if !toctrees.is_empty() {
+        index.toctrees.insert(doc.path.clone(), toctrees);
+    }
+
     index_nodes(&doc.nodes, &doc.path, &mut index, &mut Scope::default());
     for (label, number) in number_equations(doc) {
         index
@@ -67,6 +97,18 @@ pub(super) fn index_nodes(
                     |url| TargetLocation::External(url.clone()),
                 );
                 index.targets.insert(name.clone(), location);
+            }
+            Node::Directive(Directive::Toctree(toctree)) => {
+                // `:name:` makes the toctree itself a `:ref:` target. Recorded
+                // here with every other per-document target so it merges the
+                // same way — and registered even for a `:hidden:` toctree,
+                // which still renders its anchor precisely so the reference
+                // does not dangle.
+                if let Some(name) = &toctree.options.name {
+                    index
+                        .targets
+                        .insert(name.clone(), TargetLocation::Internal(doc_path.to_string()));
+                }
             }
             Node::Directive(Directive::Glossary { entries, .. }) => {
                 for entry in entries {

@@ -2,59 +2,319 @@ use rusty_sphinx_ast::Document;
 use rusty_sphinx_index::ProjectIndex;
 
 use super::document_index::analyze;
-use super::nav_tree::{build_nav_subtree, extract_toctree_paths};
+use super::page_order::collect_page_order;
+use super::section_numbering::assign_section_numbers;
+use rusty_sphinx_toctree::expand_toctree;
 
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
-/// Analyzes a collection of `Document`s and builds a complete `ProjectIndex`
-/// including the hierarchical navigation tree.
+/// Analyzes a collection of `Document`s and builds a complete `ProjectIndex`.
 ///
-/// The nav tree is rooted at documents that are not referenced as children
-/// by any other document's toctree — these are the top-level root documents.
+/// Written as a sequence of named phases rather than one body because the
+/// phases have a real order dependency the names should make visible: roots
+/// cannot be chosen until every document's toctrees are known, and section
+/// numbering and page order cannot start until the roots are chosen.
+///
+/// `root_doc` is the configured root document, without its `.rst` extension
+/// (`rusty_sphinx.toml`'s `root_doc`). It falls back to the inferred roots
+/// when it names no document that exists, so a project that never configured
+/// one keeps building.
 #[must_use]
-pub fn build_project_index(docs: &[Document]) -> ProjectIndex {
-    // Step 1: Build per-document index (targets, titles)
+pub fn build_project_index(docs: &[Document], root_doc: &str) -> ProjectIndex {
+    build_project_index_reporting(docs, root_doc).index
+}
+
+/// A built index, plus the problems only a project-wide view could see.
+///
+/// Mirrors the renderer's `RenderOutput`: the payload, and what the caller
+/// should report about it. The diagnostics are *unfiltered* — suppression is
+/// the reporter's job, never the detector's.
+pub struct ProjectIndexBuild {
+    pub index: ProjectIndex,
+    pub diagnostics: Vec<super::DocumentDiagnostics>,
+}
+
+/// [`build_project_index`], also returning the diagnostics it found.
+#[must_use]
+pub fn build_project_index_reporting(docs: &[Document], root_doc: &str) -> ProjectIndexBuild {
+    let universe: BTreeSet<String> = docs.iter().map(|doc| doc.path.clone()).collect();
+
+    let mut index = merge_document_analyses(docs);
+    index.root_documents = find_root_documents(docs, &index, root_doc);
+    index.section_numbers = assign_section_numbers(&index, &universe);
+    index.page_order = collect_page_order(&index, &universe);
+
+    let diagnostics = super::nav_diagnostics::collect_nav_diagnostics(docs, &index);
+    ProjectIndexBuild { index, diagnostics }
+}
+
+/// Merges every document's own analysis — targets, titles, outlines, toctrees,
+/// glossary terms, equations — into one index.
+fn merge_document_analyses(docs: &[Document]) -> ProjectIndex {
     let mut index = ProjectIndex::default();
     for doc in docs {
         let _ = index.merge(analyze(doc));
     }
+    index
+}
 
-    // Step 2: Collect toctree relationships (parent path → child paths)
-    let mut toctrees: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for doc in docs {
-        let children = extract_toctree_paths(doc);
-        if !children.is_empty() {
-            toctrees.insert(doc.path.clone(), children);
+/// Chooses the documents navigation starts from.
+///
+/// The configured `root_doc` wins when it names a document that exists, which
+/// is the only way to say which of several unreferenced documents is *the*
+/// root. Otherwise roots are inferred as every document no toctree references
+/// — the historical behaviour, which also means an orphaned document shows up
+/// as its own top-level entry rather than disappearing.
+fn find_root_documents(docs: &[Document], index: &ProjectIndex, root_doc: &str) -> Vec<String> {
+    let configured = if std::path::Path::new(root_doc)
+        .extension()
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("rst"))
+    {
+        root_doc.to_string()
+    } else {
+        format!("{root_doc}.rst")
+    };
+    if docs.iter().any(|doc| doc.path == configured) {
+        return vec![configured];
+    }
+
+    let universe: BTreeSet<String> = docs.iter().map(|doc| doc.path.clone()).collect();
+    let mut referenced: BTreeSet<String> = BTreeSet::new();
+    for (owner, toctrees) in &index.toctrees {
+        for toctree in toctrees {
+            let (targets, _) = expand_toctree(&toctree.toctree, owner, &universe);
+            for target in targets {
+                // A `self` entry names its own document, which must not make
+                // that document a non-root.
+                if let rusty_sphinx_toctree::TocTarget::Document { docname, .. } = target
+                    && docname != *owner
+                {
+                    referenced.insert(docname);
+                }
+            }
         }
     }
 
-    // Step 3: Find root documents (those not referenced as a child by anyone)
-    let all_children: std::collections::HashSet<&str> = toctrees
-        .values()
-        .flat_map(|children| children.iter().map(String::as_str))
-        .collect();
-
-    let mut roots: Vec<&str> = docs
-        .iter()
-        .map(|d| d.path.as_str())
-        .filter(|p| !all_children.contains(p))
-        .collect();
-    roots.sort_unstable();
-
-    // Step 4: Build nav tree recursively from roots
-    let mut visited = std::collections::HashSet::new();
-    index.nav_tree = roots
-        .iter()
-        .map(|root| build_nav_subtree(root, &toctrees, &index.document_titles, &mut visited))
-        .collect();
-
-    index
+    universe
+        .into_iter()
+        .filter(|path| !referenced.contains(path))
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Directive, InlineNode, Node};
+
+    #[test]
+    fn test_find_root_documents_prefers_the_configured_root() {
+        // Given — two documents neither of which references the other, so
+        // inference alone cannot say which is the root.
+        let docs = vec![
+            Document::new("index.rst".to_string(), vec![]),
+            Document::new("stray.rst".to_string(), vec![]),
+        ];
+        let index = merge_document_analyses(&docs);
+
+        // When
+        let roots = find_root_documents(&docs, &index, "index");
+
+        // Then
+        assert_eq!(roots, vec!["index.rst"]);
+    }
+
+    #[test]
+    fn test_find_root_documents_accepts_a_configured_root_with_an_extension() {
+        // Given
+        let docs = vec![Document::new("index.rst".to_string(), vec![])];
+        let index = merge_document_analyses(&docs);
+
+        // When
+        let roots = find_root_documents(&docs, &index, "index.rst");
+
+        // Then
+        assert_eq!(roots, vec!["index.rst"]);
+    }
+
+    #[test]
+    fn test_find_root_documents_falls_back_to_inference_for_an_unknown_root() {
+        // Given — a project whose configured root does not exist keeps
+        // building rather than losing its navigation entirely.
+        let docs = vec![
+            Document::new(
+                "start.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree(toctree_of(&["child"])))],
+            ),
+            Document::new("child.rst".to_string(), vec![]),
+        ];
+        let index = merge_document_analyses(&docs);
+
+        // When
+        let roots = find_root_documents(&docs, &index, "nonexistent");
+
+        // Then — `child` is referenced, so only `start` is inferred a root.
+        assert_eq!(roots, vec!["start.rst"]);
+    }
+
+    #[test]
+    fn test_find_root_documents_does_not_treat_a_self_entry_as_a_reference() {
+        // Given — a root listing itself with `self` is still a root.
+        let mut toctree = toctree_of(&["child"]);
+        toctree.entries.push(rusty_sphinx_ast::TocEntry::SelfRef {
+            title: None,
+            span: None,
+        });
+        let docs = vec![
+            Document::new(
+                "start.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree(toctree))],
+            ),
+            Document::new("child.rst".to_string(), vec![]),
+        ];
+        let index = merge_document_analyses(&docs);
+
+        // When
+        let roots = find_root_documents(&docs, &index, "nonexistent");
+
+        // Then
+        assert_eq!(roots, vec!["start.rst"]);
+    }
+
+    #[test]
+    fn test_merge_document_analyses_records_each_document_toctrees() {
+        // Given
+        let docs = vec![Document::new(
+            "index.rst".to_string(),
+            vec![Node::Directive(Directive::Toctree(toctree_of(&["child"])))],
+        )];
+
+        // When
+        let index = merge_document_analyses(&docs);
+
+        // Then — the graph is stored unexpanded, per toctree.
+        assert_eq!(index.toctrees["index.rst"].len(), 1);
+        assert_eq!(index.toctrees["index.rst"][0].toctree.entries.len(), 1);
+    }
+
+    #[test]
+    fn test_build_project_index_registers_a_toctree_name_as_a_target() {
+        // Given — `:name:` makes the toctree itself referenceable.
+        let mut toctree = toctree_of(&["child"]);
+        toctree.options.name = Some(rusty_sphinx_ast::TargetName::new("main-toc"));
+        let docs = vec![
+            Document::new(
+                "index.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree(toctree))],
+            ),
+            Document::new("child.rst".to_string(), vec![]),
+        ];
+
+        // When
+        let index = build_project_index(&docs, "index");
+
+        // Then
+        assert_eq!(
+            index
+                .targets
+                .get(&rusty_sphinx_ast::TargetName::new("main-toc")),
+            Some(&rusty_sphinx_index::TargetLocation::Internal(
+                "index.rst".to_string()
+            ))
+        );
+    }
+
+    /// A toctree of plain document entries, the shape every test here needs.
+    /// Entry spans are irrelevant to these tests, so they are left unset
+    /// rather than invented.
+    fn toctree_of(docnames: &[&str]) -> rusty_sphinx_ast::Toctree {
+        rusty_sphinx_ast::Toctree {
+            entries: docnames
+                .iter()
+                .map(|docname| rusty_sphinx_ast::TocEntry::Document {
+                    title: None,
+                    docname: (*docname).to_string(),
+                    span: None,
+                })
+                .collect(),
+            options: rusty_sphinx_ast::ToctreeOptions::default(),
+        }
+    }
+    use rusty_sphinx_ast::{Directive, Node};
+
+    // The nesting, cycle-breaking and shared-branch cases this module used to
+    // assert on a pre-flattened `nav_tree` now belong to the two phases that
+    // actually walk the graph: `page_order` (reading order) and the renderer's
+    // `nav::expand` (display). Both test them directly. What stays here is the
+    // integration: that `build_project_index` wires the phases together.
+
+    #[test]
+    fn test_build_project_index_records_the_graph_and_reading_order() {
+        // Given — index → guide → setup.
+        let docs = vec![
+            Document::new(
+                "index.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree(toctree_of(&["guide"])))],
+            ),
+            Document::new(
+                "guide.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree(toctree_of(&["setup"])))],
+            ),
+            Document::new("setup.rst".to_string(), vec![]),
+        ];
+
+        // When
+        let index = build_project_index(&docs, "index");
+
+        // Then
+        assert_eq!(index.root_documents, vec!["index.rst"]);
+        assert_eq!(
+            index.page_order,
+            vec!["index.rst", "guide.rst", "setup.rst"]
+        );
+        assert!(index.toctrees.contains_key("index.rst"));
+        assert!(index.toctrees.contains_key("guide.rst"));
+    }
+
+    #[test]
+    fn test_build_project_index_numbers_a_numbered_toctree() {
+        // Given
+        let mut toctree = toctree_of(&["guide"]);
+        toctree.options.numbered = Some(rusty_sphinx_ast::NumberedDepth::Unlimited);
+        let docs = vec![
+            Document::new(
+                "index.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree(toctree))],
+            ),
+            Document::new("guide.rst".to_string(), vec![]),
+        ];
+
+        // When
+        let index = build_project_index(&docs, "index");
+
+        // Then
+        assert_eq!(
+            index.section_numbers["guide.rst"].document(),
+            Some([1].as_slice())
+        );
+    }
+
+    #[test]
+    fn test_build_project_index_leaves_an_orphan_out_of_the_reading_order() {
+        // Given — `orphan` is in the project but no toctree names it.
+        let docs = vec![
+            Document::new(
+                "index.rst".to_string(),
+                vec![Node::Directive(Directive::Toctree(toctree_of(&["guide"])))],
+            ),
+            Document::new("guide.rst".to_string(), vec![]),
+            Document::new("orphan.rst".to_string(), vec![]),
+        ];
+
+        // When
+        let index = build_project_index(&docs, "index");
+
+        // Then — it gets no prev/next rather than an arbitrary position.
+        assert_eq!(index.page_order, vec!["index.rst", "guide.rst"]);
+    }
 
     #[test]
     fn test_build_project_index_returns_default_for_multiple_documents() {
@@ -65,299 +325,9 @@ mod tests {
         ];
 
         // When
-        let index = build_project_index(&docs);
+        let index = build_project_index(&docs, "index");
 
         // Then
         let _ = format!("{index:?}");
-    }
-    #[test]
-    fn test_build_project_index_creates_flat_nav_for_single_document() {
-        // Given — a single document with no toctree
-        let docs = vec![Document::new(
-            "index.rst".to_string(),
-            vec![Node::Heading {
-                level: 1,
-                text: vec![InlineNode::Text("Root".to_string())],
-            }],
-        )];
-
-        // When
-        let index = build_project_index(&docs);
-
-        // Then — one root entry, no children
-        assert_eq!(index.nav_tree.len(), 1);
-        assert_eq!(index.nav_tree[0].title, "Root");
-        assert_eq!(index.nav_tree[0].path, "index.rst");
-        assert!(index.nav_tree[0].children.is_empty());
-    }
-    #[test]
-    fn test_build_project_index_creates_nested_nav_from_toctree() {
-        // Given — root references two children via toctree
-        let docs = vec![
-            Document::new(
-                "index.rst".to_string(),
-                vec![
-                    Node::Heading {
-                        level: 1,
-                        text: vec![InlineNode::Text("Home".to_string())],
-                    },
-                    Node::Directive(Directive::Toctree {
-                        paths: vec!["team_a/index".to_string(), "team_b/index".to_string()],
-                        maxdepth: None,
-                        ignored_options: vec![],
-                    }),
-                ],
-            ),
-            Document::new(
-                "team_a/index.rst".to_string(),
-                vec![Node::Heading {
-                    level: 1,
-                    text: vec![InlineNode::Text("Team A".to_string())],
-                }],
-            ),
-            Document::new(
-                "team_b/index.rst".to_string(),
-                vec![Node::Heading {
-                    level: 1,
-                    text: vec![InlineNode::Text("Team B".to_string())],
-                }],
-            ),
-        ];
-
-        // When
-        let index = build_project_index(&docs);
-
-        // Then — one root with two children
-        assert_eq!(index.nav_tree.len(), 1);
-        let root = &index.nav_tree[0];
-        assert_eq!(root.title, "Home");
-        assert_eq!(root.children.len(), 2);
-        assert_eq!(root.children[0].title, "Team A");
-        assert_eq!(root.children[0].path, "team_a/index.rst");
-        assert!(root.children[0].children.is_empty());
-        assert_eq!(root.children[1].title, "Team B");
-        assert_eq!(root.children[1].path, "team_b/index.rst");
-    }
-    #[test]
-    fn test_build_project_index_uses_path_for_untitled_documents() {
-        // Given — child has no H1 heading
-        let docs = vec![
-            Document::new(
-                "index.rst".to_string(),
-                vec![
-                    Node::Heading {
-                        level: 1,
-                        text: vec![InlineNode::Text("Home".to_string())],
-                    },
-                    Node::Directive(Directive::Toctree {
-                        paths: vec!["about".to_string()],
-                        maxdepth: None,
-                        ignored_options: vec![],
-                    }),
-                ],
-            ),
-            Document::new(
-                "about.rst".to_string(),
-                vec![Node::Paragraph(vec![InlineNode::Text(
-                    "No heading here.".to_string(),
-                )])],
-            ),
-        ];
-
-        // When
-        let index = build_project_index(&docs);
-
-        // Then — child title falls back to path
-        assert_eq!(index.nav_tree[0].children[0].title, "about");
-    }
-    #[test]
-    fn test_build_project_index_builds_multi_level_hierarchy() {
-        // Given — root → child → grandchild
-        let docs = vec![
-            Document::new(
-                "index.rst".to_string(),
-                vec![
-                    Node::Heading {
-                        level: 1,
-                        text: vec![InlineNode::Text("Root".to_string())],
-                    },
-                    Node::Directive(Directive::Toctree {
-                        paths: vec!["section/index".to_string()],
-                        maxdepth: None,
-                        ignored_options: vec![],
-                    }),
-                ],
-            ),
-            Document::new(
-                "section/index.rst".to_string(),
-                vec![
-                    Node::Heading {
-                        level: 1,
-                        text: vec![InlineNode::Text("Section".to_string())],
-                    },
-                    Node::Directive(Directive::Toctree {
-                        paths: vec!["sub/page".to_string()],
-                        maxdepth: None,
-                        ignored_options: vec![],
-                    }),
-                ],
-            ),
-            Document::new(
-                "section/sub/page.rst".to_string(),
-                vec![Node::Heading {
-                    level: 1,
-                    text: vec![InlineNode::Text("Deep Page".to_string())],
-                }],
-            ),
-        ];
-
-        // When
-        let index = build_project_index(&docs);
-
-        // Then — three levels deep
-        assert_eq!(index.nav_tree.len(), 1);
-        let root = &index.nav_tree[0];
-        assert_eq!(root.children.len(), 1);
-        let section = &root.children[0];
-        assert_eq!(section.title, "Section");
-        assert_eq!(section.children.len(), 1);
-        assert_eq!(section.children[0].title, "Deep Page");
-        assert!(section.children[0].children.is_empty());
-    }
-    #[test]
-    fn test_build_project_index_serializes_nav_tree() {
-        // Given — build an index with nav_tree
-        let docs = vec![
-            Document::new(
-                "index.rst".to_string(),
-                vec![
-                    Node::Heading {
-                        level: 1,
-                        text: vec![InlineNode::Text("Home".to_string())],
-                    },
-                    Node::Directive(Directive::Toctree {
-                        paths: vec!["child".to_string()],
-                        maxdepth: None,
-                        ignored_options: vec![],
-                    }),
-                ],
-            ),
-            Document::new(
-                "child.rst".to_string(),
-                vec![Node::Heading {
-                    level: 1,
-                    text: vec![InlineNode::Text("Child".to_string())],
-                }],
-            ),
-        ];
-        let index = build_project_index(&docs);
-
-        // When — serialize and deserialize
-        let json = serde_json::to_string(&index).unwrap();
-        let deserialized: ProjectIndex = serde_json::from_str(&json).unwrap();
-
-        // Then — round-trips correctly
-        assert_eq!(deserialized.nav_tree.len(), 1);
-        assert_eq!(deserialized.nav_tree[0].children.len(), 1);
-        assert_eq!(deserialized.nav_tree[0].children[0].title, "Child");
-    }
-    #[test]
-    fn test_build_project_index_breaks_direct_cycle_in_toctree() {
-        // Given — root references A, A references B, B references A (B→A creates a cycle)
-        let docs = vec![
-            Document::new(
-                "root.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree {
-                    paths: vec!["a".to_string()],
-                    maxdepth: None,
-                    ignored_options: vec![],
-                })],
-            ),
-            Document::new(
-                "a.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree {
-                    paths: vec!["b".to_string()],
-                    maxdepth: None,
-                    ignored_options: vec![],
-                })],
-            ),
-            Document::new(
-                "b.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree {
-                    paths: vec!["a".to_string()], // cycle back to a
-                    maxdepth: None,
-                    ignored_options: vec![],
-                })],
-            ),
-        ];
-
-        // When
-        let index = build_project_index(&docs);
-
-        // Then — root → a → b → a(leaf). The second occurrence of a.rst must be childless.
-        assert_eq!(index.nav_tree.len(), 1);
-        let root = &index.nav_tree[0];
-        assert_eq!(root.path, "root.rst");
-        assert_eq!(root.children.len(), 1);
-        let a = &root.children[0];
-        assert_eq!(a.path, "a.rst");
-        assert_eq!(a.children.len(), 1);
-        let b = &a.children[0];
-        assert_eq!(b.path, "b.rst");
-        // b references a, but a is already an ancestor — cycle must be broken
-        assert_eq!(b.children.len(), 1);
-        assert_eq!(b.children[0].path, "a.rst");
-        assert!(
-            b.children[0].children.is_empty(),
-            "cycle must be broken: a.rst must appear as a leaf"
-        );
-    }
-    #[test]
-    fn test_build_project_index_allows_shared_node_in_multiple_branches() {
-        // Given — root → left, root → right, both left and right reference shared.
-        // shared appears in two branches but creates no cycle.
-        let docs = vec![
-            Document::new(
-                "index.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree {
-                    paths: vec!["left".to_string(), "right".to_string()],
-                    maxdepth: None,
-                    ignored_options: vec![],
-                })],
-            ),
-            Document::new(
-                "left.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree {
-                    paths: vec!["shared".to_string()],
-                    maxdepth: None,
-                    ignored_options: vec![],
-                })],
-            ),
-            Document::new(
-                "right.rst".to_string(),
-                vec![Node::Directive(Directive::Toctree {
-                    paths: vec!["shared".to_string()],
-                    maxdepth: None,
-                    ignored_options: vec![],
-                })],
-            ),
-            Document::new("shared.rst".to_string(), vec![]),
-        ];
-
-        // When
-        let index = build_project_index(&docs);
-
-        // Then — shared.rst appears as a child of both left and right
-        let root = &index.nav_tree[0];
-        assert_eq!(root.children.len(), 2);
-        let left = &root.children[0];
-        let right = &root.children[1];
-        assert_eq!(left.children.len(), 1);
-        assert_eq!(left.children[0].path, "shared.rst");
-        assert_eq!(right.children.len(), 1);
-        assert_eq!(
-            right.children[0].path, "shared.rst",
-            "shared.rst must appear in both branches, not be truncated as a false cycle"
-        );
     }
 }

@@ -118,7 +118,13 @@ pub(in crate::directives) fn parse_math_directive(
     let unindented_lines = unindent_body_lines(body_lines);
     let (option_lines, body_start) = scan_option_lines(&unindented_lines);
     let (options, unrecognized) = parse_math_options(&option_lines, diagnostics, ctx);
-    report_unknown_options(&unrecognized, DIRECTIVE, diagnostics, ctx);
+    report_unknown_options(
+        &unrecognized,
+        DIRECTIVE,
+        DiagnosticCode::DirectiveUnknownOption,
+        diagnostics,
+        ctx,
+    );
 
     let mut content: Vec<String> = Vec::new();
     if !argument.trim().is_empty() {

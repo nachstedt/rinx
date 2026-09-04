@@ -1,4 +1,7 @@
-use crate::{EquationLocation, GenIndexEntry, NavEntry, TargetLocation};
+use crate::{
+    DocumentNumbers, DocumentOutline, DocumentToctree, EquationLocation, GenIndexEntry,
+    TargetLocation,
+};
 use rusty_sphinx_ast::{ObjectType, TargetName};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -10,9 +13,41 @@ pub struct ProjectIndex {
     pub targets: BTreeMap<TargetName, TargetLocation>,
     /// Maps document paths to their top-level title.
     pub document_titles: BTreeMap<String, String>,
-    /// Hierarchical navigation tree derived from toctree directives.
+    /// Each document's `.. toctree::` directives, in document order, with
+    /// their entries still unexpanded — a `:glob:` is stored as a pattern.
+    ///
+    /// This is the navigation *graph*, stored instead of a pre-flattened tree
+    /// so that each toctree's own options travel with its own entries. It is
+    /// per-document, so it merges, which is what keeps the live-preview path
+    /// from rendering navigation out of a stale global index.
     #[serde(default)]
-    pub nav_tree: Vec<NavEntry>,
+    pub toctrees: BTreeMap<String, Vec<DocumentToctree>>,
+    /// The documents nothing else references, in sorted order — the roots
+    /// navigation, page order and section numbering all start from.
+    ///
+    /// Project-wide rather than per-document, so like `page_order` it is
+    /// recomputed by `build_project_index` and not merged.
+    #[serde(default)]
+    pub root_documents: Vec<String>,
+    /// Every document in reading order — a depth-first walk of the toctree
+    /// graph from the roots, first visit winning. Prev/next links are a
+    /// position in this rather than two stored strings per document, so they
+    /// cannot disagree with the order they came from.
+    ///
+    /// Project-wide, so it is recomputed rather than merged. A document no
+    /// toctree reaches is absent, which is what gives an orphan no neighbours.
+    #[serde(default)]
+    pub page_order: Vec<String>,
+    /// The `:numbered:` section numbers, keyed by document path. Project-wide
+    /// — a number depends on the whole toctree graph, not on one document — so
+    /// it is recomputed rather than merged.
+    #[serde(default)]
+    pub section_numbers: BTreeMap<String, DocumentNumbers>,
+    /// Each document's heading hierarchy, so a toctree in *another* document
+    /// can list this one's sections. Per-document data, so unlike `page_order`
+    /// it merges — see [`DocumentOutline`].
+    #[serde(default)]
+    pub document_outlines: BTreeMap<String, DocumentOutline>,
     /// Maps normalized glossary term names to the document path containing their definition.
     #[serde(default)]
     pub glossary_terms: BTreeMap<TargetName, String>,
@@ -64,6 +99,8 @@ impl ProjectIndex {
     pub fn merge(&mut self, other: Self) -> Vec<String> {
         self.targets.extend(other.targets);
         self.document_titles.extend(other.document_titles);
+        self.document_outlines.extend(other.document_outlines);
+        self.toctrees.extend(other.toctrees);
         for (name, object_types) in other.domain_objects {
             self.domain_objects
                 .entry(name)
@@ -72,7 +109,8 @@ impl ProjectIndex {
         }
         self.genindex_entries.extend(other.genindex_entries);
         self.equations.extend(other.equations);
-        // nav_tree is built globally, not merged per-document
+        // root_documents, page_order and section_numbers are built globally from
+        // the whole graph, so they are recomputed rather than merged
         let mut diagnostics = Vec::new();
         for (term, path) in other.glossary_terms {
             if let Some(existing) = self.glossary_terms.get(&term) {
@@ -143,6 +181,49 @@ mod tests {
 
         // When / Then
         assert_eq!(lookup_domain_object(&index, "py:function:Fault"), None);
+    }
+
+    #[test]
+    fn test_merge_carries_toctrees_and_outlines_from_the_other_index() {
+        // Given — the live-preview shape: a stale global index merged with a
+        // freshly analyzed local one. Both fields must survive, or the preview
+        // renders navigation the edited document no longer describes.
+        let mut stale = ProjectIndex::default();
+        stale.toctrees.insert(
+            "index.rst".to_string(),
+            vec![crate::DocumentToctree {
+                toctree: rusty_sphinx_ast::Toctree::default(),
+                section: None,
+            }],
+        );
+
+        let mut fresh = ProjectIndex::default();
+        fresh.toctrees.insert(
+            "guide.rst".to_string(),
+            vec![crate::DocumentToctree {
+                toctree: rusty_sphinx_ast::Toctree::default(),
+                section: None,
+            }],
+        );
+        fresh.document_outlines.insert(
+            "guide.rst".to_string(),
+            crate::DocumentOutline {
+                sections: vec![crate::OutlineSection {
+                    title: "Setup".to_string(),
+                    id: rusty_sphinx_ast::SectionId::from_title("Setup"),
+                    children: Vec::new(),
+                }],
+            },
+        );
+
+        // When
+        let diagnostics = stale.merge(fresh);
+
+        // Then
+        assert!(diagnostics.is_empty());
+        assert!(stale.toctrees.contains_key("index.rst"));
+        assert!(stale.toctrees.contains_key("guide.rst"));
+        assert_eq!(stale.document_outlines["guide.rst"].sections.len(), 1);
     }
 
     #[test]
@@ -309,11 +390,15 @@ mod tests {
         index
             .document_titles
             .insert("api.rst".to_string(), "API".to_string());
-        index.nav_tree.push(NavEntry {
-            title: "API".to_string(),
-            path: "api.rst".to_string(),
-            children: Vec::new(),
-        });
+        index.root_documents.push("api.rst".to_string());
+        index.page_order.push("api.rst".to_string());
+        index.toctrees.insert(
+            "api.rst".to_string(),
+            vec![DocumentToctree {
+                toctree: rusty_sphinx_ast::Toctree::default(),
+                section: None,
+            }],
+        );
         index
             .glossary_terms
             .insert(TargetName::new("environment"), "glossary.rst".to_string());
@@ -338,14 +423,17 @@ mod tests {
     fn test_project_index_deserializes_when_optional_fields_are_missing() {
         // Given — a JSON blob only carrying the two non-`#[serde(default)]`
         // fields, matching an older on-disk `.index` format written before
-        // `nav_tree`/`glossary_terms`/`domain_objects`/`genindex_entries` existed.
+        // the toctree graph, glossary terms, domain objects and genindex
+        // entries existed.
         let json = r#"{"targets": {}, "document_titles": {}}"#;
 
         // When
         let index: ProjectIndex = serde_json::from_str(json).unwrap();
 
         // Then — missing fields default to empty rather than failing to parse
-        assert!(index.nav_tree.is_empty());
+        assert!(index.toctrees.is_empty());
+        assert!(index.root_documents.is_empty());
+        assert!(index.page_order.is_empty());
         assert!(index.glossary_terms.is_empty());
         assert!(index.domain_objects.is_empty());
         assert!(index.genindex_entries.is_empty());

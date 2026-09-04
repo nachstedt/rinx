@@ -17,7 +17,7 @@ Legend: ✅ implemented · 🔶 partial · ❌ not implemented
 |---------|--------|-------|
 | Underline-only headings | ✅ | — |
 | Overlined headings (`===` above **and** below the text) | ✅ | Treated as a distinct adornment style from a same-character underline, so it can be assigned its own heading level |
-| Per-document level reset vs. project-wide level tracking | 🔶 | Levels reset per file; Sphinx accumulates heading hierarchy across files linked via `toctree` |
+| Per-document level reset vs. project-wide level tracking | 🔶 | Heading *levels* still reset per file. Section *numbering* now does accumulate across files linked via `toctree`, so `:numbered:` matches Sphinx even though the underlying level assignment is per-document |
 | Inline markup/roles inside heading text (e.g. `` :mod:`x` ``, `**bold**`) | ✅ | — |
 
 ## Inline Markup
@@ -59,7 +59,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | Bullet lists (`-`, `*`, `+`) | ✅ | — |
 | Enumerated lists (`1.`, `a.`, `i.`, …) | ✅ | All five sequences (arabic, lower/upper alpha, lower/upper roman), all three formats (`1.`, `1)`, `(1)`), the `#` auto-enumerator, and non-1 start values. Deliberate divergence from Sphinx: the prefix/suffix are *rendered* (via a format class plus CSS counters) rather than dropped, so `(a)` and `a.` are distinguishable in the HTML |
 | Definition lists | 🔶 | Term classifiers (`term : classifier`) not supported; glossary's "multiple terms share one definition" quirk uses a separate implementation |
-| Field lists (`:field: value`) | ❌ | — |
+| Field lists (`:field: value`) | 🔶 | Only the document-leading field list is read, as file-wide metadata, and only `:orphan:` is interpreted (it silences `toctree.orphan-document`). Values are kept as raw strings and nothing is rendered; field lists elsewhere in a document are unsupported |
 | Option lists | ❌ | — |
 | Literal blocks (``::`` paragraph ending or standalone ``::``) | ✅ | — |
 | Block quotes (indented paragraphs without a directive) | ❌ | — |
@@ -79,7 +79,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| `.. toctree::` | 🔶 | `:numbered:`, `:caption:`, `:hidden:`, `:titlesonly:`, `:glob:`, `:reversed:`, `:includehidden:` are recognized but silently ignored — no effect on rendering |
+| `.. toctree::` | ✅ | All nine options (`:maxdepth:`, `:numbered:`, `:caption:`, `:name:`, `:titlesonly:`, `:glob:`, `:reversed:`, `:hidden:`, `:includehidden:`) and all four entry forms (plain, `Title <target>`, `self`, external URL) supported, including in-document section entries, project-wide section numbering rendered into page headings, and prev/next page relations. Deliberate narrowing: a `:glob:` pattern treats `{a,b}` as literal, matching Sphinx rather than the underlying glob library |
 | `.. code-block::` | 🔶 | Only the language argument is honored; Sphinx options like `:linenos:`, `:emphasize-lines:`, `:caption:`, `:dedent:` are not recognized — an option line would render literally as code text |
 | `.. index::` (`single`/`pair`/`triple`/comma-shorthand entries, `!main` marker) | ✅ | — |
 | `.. index::` `see`/`seealso` entry types | 🔶 | Parsed but not yet surfaced in the rendered general index |

@@ -168,6 +168,27 @@ diagnostic_codes! {
     /// only the renderer knows the math backend.
     MathInvalidLatex => "math.invalid-latex",
 
+    // --- `.. toctree::` ----------------------------------------------------
+    /// A `:maxdepth:` whose value is not a positive integer. Sphinx would
+    /// treat the directive as having no depth limit at all, which silently
+    /// renders a far larger tree than the author asked for.
+    ToctreeMaxdepthInvalid => "toctree.maxdepth-invalid",
+    /// A `:numbered:` whose value is present but is not a positive integer.
+    ToctreeNumberedInvalid => "toctree.numbered-invalid",
+    /// A `:name:` option with no value, so nothing could `:ref:` the toctree.
+    ToctreeEmptyName => "toctree.empty-name",
+    /// An entry naming a document the project does not contain. Detected while
+    /// building the project index, since only there is the document list known.
+    ToctreeMissingDocument => "toctree.missing-document",
+    /// A `:glob:` pattern that matched no document.
+    ToctreeGlobNoMatch => "toctree.glob-no-match",
+    /// A document reached by two different toctrees, so it appears twice in the
+    /// navigation and only the first position orders it.
+    ToctreeDuplicateEntry => "toctree.duplicate-entry",
+    /// A document no toctree reaches, so a reader can only arrive at it by
+    /// following a cross-reference. Suppress with a leading `:orphan:` field.
+    ToctreeOrphanDocument => "toctree.orphan-document",
+
     // --- `.. index::` ------------------------------------------------------
     IndexInvalidPair => "index.invalid-pair",
     IndexInvalidTriple => "index.invalid-triple",

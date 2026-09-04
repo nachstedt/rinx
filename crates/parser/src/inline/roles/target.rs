@@ -1,4 +1,4 @@
-use crate::inline::dispatch::split_explicit_title;
+use crate::explicit_title::split_explicit_title;
 use crate::inline::escapes::unescape;
 use rusty_sphinx_ast::{Domain, InlineNode, ObjectType, TargetSearchOrder};
 

@@ -1,0 +1,15 @@
+"""Documents exercising every `.. toctree::` option and entry form.
+
+Its own library, and its own package, so the `:glob:` example has a directory
+of sibling documents to expand against without matching the rest of the
+example site.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    deps = [],
+    visibility = ["//visibility:public"],
+)

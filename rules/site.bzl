@@ -17,25 +17,30 @@ def _rusty_sphinx_site_impl(ctx):
     )
     ast_list = all_ast_files.to_list()
 
+    template_file = ctx.file.template
+    config_file = ctx.file.config
+    css_file = ctx.file.css
+
     index_out = ctx.actions.declare_file(ctx.label.name + ".project.index")
     index_args = ctx.actions.args()
     index_args.add("index")
     index_args.add("--output", index_out.path)
+
+    # The index action reads the config for `root_doc`, which decides where
+    # navigation, page order and section numbering start. `--inputs` is
+    # variadic, so every other flag has to precede it.
+    index_args.add("--config", config_file.path)
     index_args.add("--inputs")
     index_args.add_all(ast_list)
 
     ctx.actions.run(
         executable = worker,
         arguments = [index_args],
-        inputs = ast_list,
+        inputs = ast_list + [config_file],
         outputs = [index_out],
         mnemonic = "RustySphinxIndex",
         progress_message = "Indexing %s docs" % len(ast_list),
     )
-
-    template_file = ctx.file.template
-    config_file = ctx.file.config
-    css_file = ctx.file.css
 
     # ── Phase 2.5: genindex ──────────────────────────────────────────────────
     # Always generated (matches Sphinx's on-by-default genindex.html), so the
