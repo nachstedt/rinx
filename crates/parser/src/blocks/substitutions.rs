@@ -386,6 +386,7 @@ fn resolve_directive(
         | Directive::Highlight { .. }
         | Directive::Math { .. }
         | Directive::Toctree { .. }
+        | Directive::Contents { .. }
         | Directive::PlantUml(_)
         | Directive::Index { .. }
         | Directive::PyCurrentModule { .. }

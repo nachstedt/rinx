@@ -9,6 +9,7 @@ use std::fmt::Write as _;
 
 use super::admonitions::{render_admonition, render_seealso, render_version_change};
 use super::block_quote::render_block_quote;
+use super::contents::{ContentsPlacement, render_contents_directive};
 use super::data_table::{DataTableParams, render_data_table};
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
@@ -200,7 +201,14 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
             Node::Transition => {
                 let _ = writeln!(html, "<hr />");
             }
-            Node::Directive(directive) => render_directive(html, directive, ctx),
+            Node::Directive(directive) => {
+                let placement = ContentsPlacement {
+                    nodes,
+                    index,
+                    at_top_level,
+                };
+                render_directive(html, directive, placement, ctx);
+            }
             Node::BulletList { items, .. } => {
                 let _ = writeln!(html, "<ul>");
                 render_list_items(html, items, ctx);
@@ -284,6 +292,16 @@ fn render_heading(
             let _ = write!(html, "<{tag}>");
         }
     }
+    // A `.. contents::` covering this heading with `:backlinks:` other than
+    // `none` wraps it in a link back to the table of contents — cloned out of
+    // the map up front, since the map lives on `ctx` and every call below
+    // needs `ctx` mutably too. `contents.rs`'s doc comment explains why this
+    // is only ever populated *before* the heading renders.
+    let backlink_href = id.and_then(|id| ctx.contents_backlinks.get(id)).cloned();
+    if let Some(href) = &backlink_href {
+        let escaped_href = html_escape::encode_double_quoted_attribute(href);
+        let _ = write!(html, "<a class=\"toc-backref\" href=\"{escaped_href}\">");
+    }
     // `:numbered:` shows the same number here as in the navigation, read from
     // the one map the analyzer wrote — computing it a second time is how a
     // toctree saying "2.1." could come to link at a heading rendered "3.4.".
@@ -297,6 +315,9 @@ fn render_heading(
         );
     }
     render_inlines(html, text, ctx);
+    if backlink_href.is_some() {
+        html.push_str("</a>");
+    }
     let _ = writeln!(html, "</{tag}>");
 }
 
@@ -364,9 +385,17 @@ fn render_plantuml_directive(html: &mut String, content: &HashedContent, ctx: &R
     let _ = writeln!(html, "</div>");
 }
 
-fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCtx<'_>) {
+fn render_directive(
+    html: &mut String,
+    directive: &Directive,
+    placement: ContentsPlacement<'_>,
+    ctx: &mut RenderCtx<'_>,
+) {
     match directive {
         Directive::Toctree(toctree) => render_toctree_directive(html, toctree, ctx),
+        Directive::Contents(contents) => {
+            render_contents_directive(html, contents, placement, ctx);
+        }
         Directive::CodeBlock(block) => {
             super::code_block::render_code_block_directive(html, block, ctx);
         }

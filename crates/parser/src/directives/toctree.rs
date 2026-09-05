@@ -10,7 +10,7 @@ use crate::diagnostics::Diagnostics;
 use crate::explicit_title::split_explicit_title;
 use crate::indent::unindent_body_lines;
 
-use super::options::{OptionLine, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, parse_positive_depth, report_unknown_options, scan_option_lines};
 
 const DIRECTIVE: &str = "toctree";
 
@@ -48,7 +48,16 @@ fn parse_toctree_options<'a>(
 
     for line in option_lines {
         match line.name.as_str() {
-            "maxdepth" => options.maxdepth = parse_depth(line, diagnostics, ctx),
+            "maxdepth" => {
+                options.maxdepth = parse_positive_depth(
+                    line,
+                    DIRECTIVE,
+                    "maxdepth",
+                    DiagnosticCode::ToctreeMaxdepthInvalid,
+                    diagnostics,
+                    ctx,
+                );
+            }
             "numbered" => options.numbered = parse_numbered(line, diagnostics, ctx),
             "caption" => options.caption = Some(line.value.clone()),
             "name" => {
@@ -70,30 +79,6 @@ fn parse_toctree_options<'a>(
     }
 
     (options, unrecognized)
-}
-
-/// Reads a `:maxdepth:` value. A negative number means unlimited, as does a
-/// zero; anything else non-numeric is diagnosed.
-fn parse_depth(
-    line: &OptionLine,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<NonZeroUsize> {
-    match line.value.trim().parse::<isize>() {
-        Ok(value) if value <= 0 => None,
-        Ok(value) => NonZeroUsize::new(usize::try_from(value).unwrap_or(0)),
-        Err(_) => {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::ToctreeMaxdepthInvalid,
-                format!(
-                    "A {DIRECTIVE} :maxdepth: option needs a whole number: {}",
-                    line.raw
-                ),
-                ctx.line_span(line.line_index, &line.raw),
-            ));
-            None
-        }
-    }
 }
 
 /// Reads a `:numbered:` value: absent means unlimited, a positive number

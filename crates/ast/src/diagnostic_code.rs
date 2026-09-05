@@ -127,6 +127,7 @@ diagnostic_codes! {
 
     // --- Directives, generally ---------------------------------------------
     DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
+    DirectiveContentsUnknownOption => "directive.contents-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
     DirectiveTitleArgumentMissing => "directive.title-argument-missing",
@@ -294,6 +295,17 @@ diagnostic_codes! {
     /// A document no toctree reaches, so a reader can only arrive at it by
     /// following a cross-reference. Suppress with a leading `:orphan:` field.
     ToctreeOrphanDocument => "toctree.orphan-document",
+
+    // --- `.. contents::` -----------------------------------------------------
+    /// A `:depth:` whose value is not a positive integer. Sphinx would treat
+    /// the directive as having no depth limit at all, which silently lists a
+    /// far deeper tree than the author asked for.
+    ContentsDepthInvalid => "contents.depth-invalid",
+    /// A `:backlinks:` value other than `entry`, `top` or `none`.
+    ContentsBacklinksInvalid => "contents.backlinks-invalid",
+    /// A `:name:` option with no value, so nothing could `:ref:` the table of
+    /// contents.
+    ContentsEmptyName => "contents.empty-name",
 
     // --- `.. index::` ------------------------------------------------------
     IndexInvalidPair => "index.invalid-pair",

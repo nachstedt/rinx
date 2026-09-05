@@ -187,7 +187,10 @@ pub(super) fn index_nodes(
                 index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scope);
             }
             Node::Directive(
-                directive @ (Directive::CodeBlock(_) | Directive::Image(_) | Directive::Figure(_)),
+                directive @ (Directive::CodeBlock(_)
+                | Directive::Image(_)
+                | Directive::Figure(_)
+                | Directive::Contents(_)),
             ) => index_name_bearing_directive(directive, doc_path, index, scope),
             _ => {}
         }
@@ -253,6 +256,9 @@ fn index_name_bearing_directive(
         Directive::Figure(figure) => {
             register_directive_name(figure.image.name.as_ref(), doc_path, index);
             index_nodes(&figure.legend, doc_path, index, scope);
+        }
+        Directive::Contents(contents) => {
+            register_directive_name(contents.options.name.as_ref(), doc_path, index);
         }
         _ => {}
     }

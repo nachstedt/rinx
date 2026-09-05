@@ -13,6 +13,8 @@
 //! any of the table options, so the generic half stops being named after one
 //! caller's construct.
 
+use std::num::NonZeroUsize;
+
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use rusty_sphinx_ast::{Diagnostic, DiagnosticCode};
@@ -126,6 +128,39 @@ pub(in crate::directives) fn report_unknown_options(
             ),
             ctx.line_span(line.line_index, &line.raw),
         ));
+    }
+}
+
+/// Reads an option whose value is a depth limit: a positive integer limits
+/// the depth, and Sphinx's documented "unlimited" spelling — zero or a
+/// negative number — clears it rather than being treated as a real limit.
+///
+/// Shared by `.. toctree::`'s `:maxdepth:` and `.. contents::`'s `:depth:`,
+/// which agree on this exact ambiguity; `directive` and `option` name the
+/// caller's own directive and option spelling for the diagnostic message, and
+/// `code` lets each caller keep its own stable, `.. noqa:`-suppressible code.
+pub(in crate::directives) fn parse_positive_depth(
+    line: &OptionLine,
+    directive: &str,
+    option: &str,
+    code: DiagnosticCode,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<NonZeroUsize> {
+    match line.value.trim().parse::<isize>() {
+        Ok(value) if value <= 0 => None,
+        Ok(value) => NonZeroUsize::new(usize::try_from(value).unwrap_or(0)),
+        Err(_) => {
+            diagnostics.push(Diagnostic::at(
+                code,
+                format!(
+                    "A {directive} :{option}: option needs a whole number: {}",
+                    line.raw
+                ),
+                ctx.line_span(line.line_index, &line.raw),
+            ));
+            None
+        }
     }
 }
 
@@ -357,5 +392,103 @@ mod tests {
             diagnostics[0].code,
             DiagnosticCode::DirectiveToctreeUnknownOption
         );
+    }
+
+    fn option_line(name: &str, value: &str) -> OptionLine {
+        OptionLine {
+            name: name.to_string(),
+            value: value.to_string(),
+            raw: format!(":{name}: {value}"),
+            line_index: 0,
+        }
+    }
+
+    #[test]
+    fn test_parse_positive_depth_reads_a_positive_value() {
+        // Given
+        let line = option_line("depth", "2");
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let depth = parse_positive_depth(
+            &line,
+            "contents",
+            "depth",
+            DiagnosticCode::ContentsDepthInvalid,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(depth, NonZeroUsize::new(2));
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_parse_positive_depth_treats_zero_as_unlimited() {
+        // Given
+        let line = option_line("depth", "0");
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let depth = parse_positive_depth(
+            &line,
+            "contents",
+            "depth",
+            DiagnosticCode::ContentsDepthInvalid,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(depth, None);
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_parse_positive_depth_treats_a_negative_value_as_unlimited() {
+        // Given — Sphinx's documented spelling of "no limit".
+        let line = option_line("maxdepth", "-1");
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let depth = parse_positive_depth(
+            &line,
+            "toctree",
+            "maxdepth",
+            DiagnosticCode::ToctreeMaxdepthInvalid,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(depth, None);
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_parse_positive_depth_diagnoses_a_non_numeric_value_under_the_callers_code() {
+        // Given
+        let line = option_line("depth", "deep");
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let depth = parse_positive_depth(
+            &line,
+            "contents",
+            "depth",
+            DiagnosticCode::ContentsDepthInvalid,
+            &mut diagnostics,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(depth, None);
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(
+            diagnostics.entries()[0].code,
+            DiagnosticCode::ContentsDepthInvalid
+        );
+        assert!(diagnostics.entries()[0].message.contains(":depth:"));
     }
 }

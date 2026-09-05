@@ -625,3 +625,135 @@ fn test_e2e_undefined_substitution_reference_keeps_the_written_text() {
         "expected the literal reference text, got:\n{result}"
     );
 }
+
+#[test]
+fn test_e2e_contents_directive_lists_sections_with_working_links() {
+    // Given a document with a `.. contents::` and two real sections — real
+    // RST text through the full parse -> analyze -> render pipeline, so the
+    // entry hrefs and the heading anchors they point at both come from the
+    // same slug algorithm rather than from hand-written test doubles.
+    let input = "\
+Guide
+=====
+
+.. contents::
+
+Getting Started
+----------------
+
+Text.
+
+Advanced Topics
+----------------
+
+More text.
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the table of contents lists both sections, and each entry's
+    // href actually lands on the heading it names.
+    assert!(
+        result.contains("<div class=\"contents topic\" id=\"contents\">"),
+        "expected a contents block, got:\n{result}"
+    );
+    assert!(
+        result.contains("<a id=\"toc-entry-1\" href=\"#getting-started\">Getting Started</a>"),
+        "expected a Getting Started entry, got:\n{result}"
+    );
+    assert!(
+        result.contains("<h2 id=\"getting-started\">"),
+        "expected the heading it links to, got:\n{result}"
+    );
+    assert!(
+        result.contains("<a id=\"toc-entry-2\" href=\"#advanced-topics\">Advanced Topics</a>"),
+        "expected an Advanced Topics entry, got:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_contents_local_lists_only_the_enclosing_sections_subsections() {
+    // Given — the `:local:` contents sits under "Advanced", so it should
+    // list only its own subsections, not the sibling "Basics".
+    let input = "\
+Guide
+=====
+
+Basics
+------
+
+Text.
+
+Advanced
+--------
+
+.. contents::
+   :local:
+
+Details
+~~~~~~~
+
+Text.
+
+Tips
+~~~~
+
+Text.
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    assert!(
+        result.contains("<a id=\"toc-entry-1\" href=\"#details\">Details</a>"),
+        "expected a Details entry, got:\n{result}"
+    );
+    assert!(
+        result.contains("<a id=\"toc-entry-2\" href=\"#tips\">Tips</a>"),
+        "expected a Tips entry, got:\n{result}"
+    );
+    assert!(
+        !result.contains("href=\"#basics\""),
+        "Basics is a sibling, not a subsection, and should not be listed:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_contents_backlinks_and_name_round_trip() {
+    // Given — an explicit `:name:` (so a `:ref:` could reach it) and the
+    // default `:backlinks: entry`, which should link the heading back to its
+    // own table-of-contents entry.
+    let input = "\
+Guide
+=====
+
+.. contents::
+   :name: toc
+
+Overview
+--------
+
+Text.
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the block uses the explicit name as its own anchor...
+    assert!(
+        result.contains("<div class=\"contents topic\" id=\"toc\">"),
+        "expected the explicit name as the block's anchor, got:\n{result}"
+    );
+    // ...the entry carries a backlink target id...
+    assert!(
+        result.contains("<a id=\"toc-entry-1\" href=\"#overview\">Overview</a>"),
+        "expected the entry to carry a backlink id, got:\n{result}"
+    );
+    // ...and the heading links back to exactly that id.
+    assert!(
+        result.contains("<a class=\"toc-backref\" href=\"#toc-entry-1\">Overview</a>"),
+        "expected the heading to link back to its own entry, got:\n{result}"
+    );
+}
