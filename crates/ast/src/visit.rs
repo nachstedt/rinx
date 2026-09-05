@@ -91,6 +91,7 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
                     }
                 }
             }
+            Node::BlockQuote { content, .. } => walk_nodes(content, visit),
             // Leaf nodes: no block-level children to descend into. A doctest
             // block's body is verbatim text, not nested nodes.
             Node::Heading { .. }
@@ -336,6 +337,21 @@ mod tests {
 
         // Then
         assert_eq!(bodies, vec!["nested-in-option-description"]);
+    }
+
+    #[test]
+    fn test_walk_nodes_descends_into_block_quote_content() {
+        // Given
+        let nodes = vec![Node::BlockQuote {
+            content: vec![diagram("nested-in-block-quote")],
+            attribution: None,
+        }];
+
+        // When
+        let bodies = walk_diagram_bodies(&nodes);
+
+        // Then
+        assert_eq!(bodies, vec!["nested-in-block-quote"]);
     }
 
     #[test]

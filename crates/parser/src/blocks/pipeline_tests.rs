@@ -236,10 +236,19 @@ fn test_parse_creates_a_doctest_block_after_a_single_colon() {
     // Then
     assert_eq!(doc.nodes.len(), 2);
     match &doc.nodes[1] {
-        Node::DoctestBlock(content) => {
-            assert_eq!(content.body(), ">>> import re\n>>> re.search('a', 'ba')");
+        Node::BlockQuote {
+            content,
+            attribution: None,
+        } => {
+            assert_eq!(content.len(), 1);
+            match &content[0] {
+                Node::DoctestBlock(inner) => {
+                    assert_eq!(inner.body(), ">>> import re\n>>> re.search('a', 'ba')");
+                }
+                other => panic!("expected a doctest block, got {other:?}"),
+            }
         }
-        other => panic!("expected a doctest block, got {other:?}"),
+        other => panic!("expected a block quote, got {other:?}"),
     }
 }
 

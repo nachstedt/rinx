@@ -3,7 +3,7 @@
 //!
 //! [`dispatch`] owns the traversal and the entry points the crate root calls;
 //! every other module here is something it delegates to — [`admonitions`],
-//! [`data_table`], [`table_directive`] (`.. table::`, sharing
+//! [`block_quote`], [`data_table`], [`table_directive`] (`.. table::`, sharing
 //! [`table_shell`]'s presentation-shell helpers with `data_table`),
 //! [`doctest`], [`glossary`], [`option_list`], [`scope_directives`],
 //! [`tables`], the toctree sidebar markup in [`nav`], and the domain-object
@@ -12,6 +12,7 @@
 //! `data_table`'s and `table_directive`'s tests share.
 
 mod admonitions;
+mod block_quote;
 mod code_block;
 mod data_table;
 mod dispatch;

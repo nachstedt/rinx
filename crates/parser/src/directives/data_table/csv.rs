@@ -653,9 +653,10 @@ mod tests {
         // Given — `:keepspace:` takes no value; what it changes is the field
         // text handed to the block parser, which is asserted directly in
         // `csv_dialect`'s tests. Here it only has to be recognized rather
-        // than reported as an unknown option (the RST re-parse of a cell
-        // strips leading indentation again, so the difference is not visible
-        // in the resulting nodes).
+        // than reported as an unknown option. The preserved leading spaces
+        // are then genuinely significant to the cell's own RST re-parse —
+        // they read as indentation, so the second cell becomes a block quote
+        // around its text, exactly as real Sphinx would render it.
         let body_lines = vec!["   :keepspace:", "", "   Apple,   Red"];
 
         // When
@@ -663,7 +664,16 @@ mod tests {
 
         // Then
         assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        assert_eq!(cell_texts(&directive), vec![vec!["Apple", "Red"]]);
+        let Directive::DataTable { rows, .. } = &directive else {
+            panic!("Expected DataTable directive, got {directive:?}");
+        };
+        assert_eq!(
+            rows[0].cells[1].content,
+            vec![Node::BlockQuote {
+                content: vec![Node::Paragraph(vec![InlineNode::Text("Red".to_string())])],
+                attribution: None,
+            }]
+        );
     }
 
     #[test]

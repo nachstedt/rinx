@@ -11,6 +11,7 @@ use rusty_sphinx_ast::{
     CodeLanguage, Diagnostic, DiagnosticCode, Document, Domain, Node, Suppression, SuppressionCodes,
 };
 
+use super::block_quote::try_parse_block_quote;
 use super::bullet_list::try_parse_bullet_list;
 use super::comment::{parse_noqa_comment, try_parse_comment};
 use super::definition_list::try_parse_definition_list;
@@ -165,6 +166,13 @@ fn try_parse_construct(
 ) -> Option<(usize, Vec<Node>)> {
     let single = |(consumed, node): (usize, Node)| (consumed, vec![node]);
 
+    // Indentation is checked first, ahead of every marker below, matching
+    // docutils' own precedence: an indented directive, list or table nests
+    // inside a block quote rather than being matched in place. Every other
+    // branch here only ever sees a zero-indent line as a result.
+    if let Some(found) = try_parse_block_quote(lines, i, adornment_order, diagnostics, ctx) {
+        return Some(found);
+    }
     if let Some(found) = try_parse_directive(lines, i, adornment_order, diagnostics, ctx) {
         return Some(single(found));
     }

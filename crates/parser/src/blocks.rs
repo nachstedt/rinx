@@ -4,6 +4,7 @@
 //! [`dispatch`] owns the loop and the `parse` entry points; each construct
 //! module is tried in turn and either claims some lines or declines.
 
+mod block_quote;
 mod bullet_list;
 mod comment;
 mod definition_list;
