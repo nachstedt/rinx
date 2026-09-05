@@ -19,6 +19,7 @@ Welcome to the Rusty-Sphinx example.
    definition_lists
    enumerated_lists
    option_lists
+   block_quotes
    comments
    domains
    current_module

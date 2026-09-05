@@ -8,6 +8,7 @@ use rusty_sphinx_ast::{
 use std::fmt::Write as _;
 
 use super::admonitions::{render_admonition, render_seealso, render_version_change};
+use super::block_quote::render_block_quote;
 use super::data_table::{DataTableParams, render_data_table};
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
@@ -128,6 +129,9 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String
                         collect_anonymous_targets(&cell.content, targets);
                     }
                 }
+            }
+            Node::BlockQuote { content, .. } => {
+                collect_anonymous_targets(content, targets);
             }
             // Every other directive's payload is inline or verbatim, and the
             // remaining node kinds have no block-level children at all.
@@ -257,6 +261,12 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
             Node::DoctestBlock(content) => {
                 let rendered = render_bare_doctest_block(content, ctx);
                 html.push_str(&rendered);
+            }
+            Node::BlockQuote {
+                content,
+                attribution,
+            } => {
+                render_block_quote(html, content, attribution.as_deref(), ctx);
             }
         }
     }

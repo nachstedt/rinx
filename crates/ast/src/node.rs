@@ -87,6 +87,15 @@ pub enum Node {
     /// A transition (horizontal rule): 4+ repeated punctuation characters on their own
     /// line, blank-line-delimited. Renders as `<hr />`.
     Transition,
+    /// A block quote: a text block indented relative to its surrounding
+    /// context with no preceding directive/list marker — indentation is the
+    /// sole markup indicator. May end with an attribution (`-- Author`),
+    /// parsed as inline markup rather than plain text so it can itself carry
+    /// emphasis or a cross-reference.
+    BlockQuote {
+        content: Vec<Node>,
+        attribution: Option<Vec<InlineNode>>,
+    },
 }
 
 #[cfg(test)]
@@ -114,6 +123,24 @@ mod tests {
                     content: vec![Node::Paragraph(vec![InlineNode::Text("Body".to_string())])],
                 }],
             }],
+        };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: Node = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_block_quote_node_serialization_roundtrip() {
+        // Given
+        let node = Node::BlockQuote {
+            content: vec![Node::Paragraph(vec![InlineNode::Text(
+                "Quoted.".to_string(),
+            )])],
+            attribution: Some(vec![InlineNode::Text("Sherlock Holmes".to_string())]),
         };
 
         // When

@@ -115,6 +115,11 @@ diagnostic_codes! {
     ListEnumeratedNotRecognised => "list.enumerated-not-recognised",
     ListEnumeratedNoBlankLine => "list.enumerated-no-blank-line",
 
+    // --- Block quotes --------------------------------------------------------
+    /// A block quote ended because a less-indented line followed it directly,
+    /// with no blank line in between.
+    BlockQuoteUnindentNoBlankLine => "block-quote.unindent-no-blank-line",
+
     // --- Directives, generally ---------------------------------------------
     DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",

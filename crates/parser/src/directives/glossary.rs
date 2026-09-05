@@ -4,8 +4,38 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::Directive;
+use crate::indent::{indent_width, unindent_body_lines};
+use rusty_sphinx_ast::{Directive, Node};
+
+/// Dedents one accumulated definition body and parses it, rebasing `ctx` by
+/// both the lines skipped to reach it and its own indentation.
+///
+/// The lines in `definition_lines` still carry their original leading
+/// whitespace — the loop above only checks *that* a line is indented, not by
+/// how much — so parsing them as-is would hand `parse_blocks` a body that
+/// still looks indented relative to its own baseline, which a block quote
+/// would now (correctly) wrap around the whole definition. Stripping that
+/// indentation here, the same way every other multi-line body in this crate
+/// dedents before recursing, keeps a definition's ordinary indentation from
+/// reading as a quote.
+fn parse_definition_body(
+    definition_lines: &[String],
+    body_start: usize,
+    definition_start: usize,
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Vec<Node> {
+    let def_refs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
+    let definition_indent = def_refs
+        .iter()
+        .find(|line| !line.trim().is_empty())
+        .map_or(0, |line| indent_width(line));
+    let dedented = unindent_body_lines(&def_refs);
+    let dedented_refs: Vec<&str> = dedented.iter().map(String::as_str).collect();
+    let def_ctx = ctx.nested(body_start + definition_start, definition_indent);
+    parse_blocks(&dedented_refs, adornment_order, diagnostics, &def_ctx)
+}
 
 /// Parses a `.. glossary::` directive body into a `Directive::Glossary` node.
 pub(super) fn parse_glossary(
@@ -81,10 +111,15 @@ pub(super) fn parse_glossary(
             // Non-indented: this is a term.
             if in_definition {
                 // Flush the completed entry.
-                let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
                 let mut dummy_adorn = adornment_order.clone();
-                let def_ctx = ctx.nested(body_start + definition_start, 0);
-                let def_nodes = parse_blocks(&def_strs, &mut dummy_adorn, diagnostics, &def_ctx);
+                let def_nodes = parse_definition_body(
+                    &definition_lines,
+                    body_start,
+                    definition_start,
+                    &mut dummy_adorn,
+                    diagnostics,
+                    ctx,
+                );
                 entries.push(rusty_sphinx_ast::GlossaryEntry {
                     terms: std::mem::take(&mut current_terms),
                     definition: def_nodes,
@@ -98,9 +133,14 @@ pub(super) fn parse_glossary(
 
     // Flush any remaining entry.
     if !current_terms.is_empty() {
-        let def_strs: Vec<&str> = definition_lines.iter().map(String::as_str).collect();
-        let def_ctx = ctx.nested(body_start + definition_start, 0);
-        let def_nodes = parse_blocks(&def_strs, adornment_order, diagnostics, &def_ctx);
+        let def_nodes = parse_definition_body(
+            &definition_lines,
+            body_start,
+            definition_start,
+            adornment_order,
+            diagnostics,
+            ctx,
+        );
         entries.push(rusty_sphinx_ast::GlossaryEntry {
             terms: current_terms,
             definition: def_nodes,

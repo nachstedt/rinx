@@ -577,6 +577,29 @@ details.admonition[open] summary {
   margin-bottom: 1rem;
 }
 
+/* ── Block quotes ──────────────────────────────────────────────────── */
+
+blockquote {
+  margin: 1.5rem 0;
+  padding: 0.5rem 1.5rem;
+  border-left: 5px solid var(--border);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+blockquote > :first-child { margin-top: 0; }
+blockquote > :last-child { margin-bottom: 0; }
+
+blockquote blockquote {
+  margin: 1rem 0;
+}
+
+blockquote p.attribution {
+  margin-top: 0.75rem;
+  text-align: right;
+  font-style: normal;
+}
+
 /* ── PlantUML Diagrams ─────────────────────────────────────────────── */
 
 .plantuml-diagram {
