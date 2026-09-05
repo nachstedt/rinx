@@ -275,6 +275,28 @@
     .line-block { margin: 1.5rem 0; }
     .line-block .line-block { margin: 0 0 0 1.5rem; }
 
+    /* Images and figures. `<figure>` and `<figcaption>` do get *some* browser
+       defaults, but nothing that keeps a picture inside the page or that acts
+       on the `align-*` classes both image directives emit — those are ours,
+       not the browser's, so a theme that omits them silently ignores every
+       `:align:` an author wrote. Restated here for the same reason as the
+       rules above; `assets/default.css` has the default theme's equivalents. */
+    img { max-width: 100%; height: auto; }
+    figure { margin: 2rem 0; }
+    figure img { display: block; }
+    figcaption { margin-top: 0.75rem; font-size: 0.9rem; color: #5a6b7b; }
+    figcaption > p:first-child { margin-top: 0; font-weight: 600; color: #2c3e50; }
+    figcaption .legend { margin-top: 0.75rem; font-weight: 400; }
+    /* `clear` on each float is what keeps two aligned images from sitting side
+       by side, and a centred one from riding up alongside a float — see
+       `assets/default.css` for the longer note. Transcribed from Sphinx's own
+       `basic.css`. */
+    img.align-left, figure.align-left { clear: left; float: left; margin-right: 1em; }
+    img.align-right, figure.align-right { clear: right; float: right; margin-left: 1em; }
+    img.align-center, figure.align-center { display: block; margin-left: auto; margin-right: auto; }
+    figure.align-center { text-align: center; }
+    h1, h2, h3 { clear: both; }
+
     /* Syntax highlighting. Code blocks are highlighted during the build into
        classed spans, so a theme only supplies the palette — no script is
        loaded and no network needed at view time. Restated here for the same

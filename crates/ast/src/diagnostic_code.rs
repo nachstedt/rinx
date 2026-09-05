@@ -197,6 +197,40 @@ diagnostic_codes! {
     /// left unhighlighted. Also render-time, and for the same reason.
     CodeBlockHighlightFailed => "code-block.highlight-failed",
 
+    // --- `.. image::` / `.. figure::` --------------------------------------
+    /// The directive has no argument, so there is nothing to show.
+    ImageMissingUri => "image.missing-uri",
+    /// A `:height:`, `:width:` or `:figwidth:` that is not a well-formed
+    /// measurement, or that uses a unit CSS does not have.
+    ImageInvalidLength => "image.invalid-length",
+    /// A `:scale:` that is not a non-negative integer percentage.
+    ImageInvalidScale => "image.invalid-scale",
+    /// An `:align:` naming none of `left`/`center`/`right` — including the
+    /// three vertical alignments, which docutils accepts only on an image
+    /// inside a substitution definition.
+    ImageInvalidAlign => "image.invalid-align",
+    /// A `:loading:` naming none of `embed`/`link`/`lazy`.
+    ImageInvalidLoading => "image.invalid-loading",
+    /// A `:target:` or `:name:` written with no value, so it could neither
+    /// link anywhere nor be linked to.
+    ImageEmptyOptionValue => "image.empty-option-value",
+    /// Content below an `.. image::`, which takes none. A `.. figure::` is
+    /// the directive that has a body.
+    ImageContentNotAllowed => "image.content-not-allowed",
+    /// A `:scale:` with no `:width:` or `:height:` to apply it to. docutils
+    /// would read the image file's own dimensions here; this build never opens
+    /// the file while rendering, so the option is dropped rather than
+    /// silently mis-sizing the image (see `docs/decisions/007-image-assets.md`).
+    ImageScaleNoDimensions => "image.scale-no-dimensions",
+    /// A `:loading: embed` on an external URL. Embedding one would mean
+    /// fetching it during the build, which would stop the build being
+    /// hermetic, so the image is linked instead.
+    ImageEmbedExternal => "image.embed-external",
+    /// A `:loading: embed` whose bytes never reached the renderer — in a Bazel
+    /// build, an image missing from the library's `images` attribute. Reported
+    /// while rendering, since only there is the asset sidecar known.
+    ImageEmbedUnavailable => "image.embed-unavailable",
+
     // --- `.. toctree::` ----------------------------------------------------
     /// A `:maxdepth:` whose value is not a positive integer. Sphinx would
     /// treat the directive as having no depth limit at all, which silently

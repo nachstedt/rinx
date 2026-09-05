@@ -1,15 +1,16 @@
 //! A [`RenderCtx`] for the renderer tests that call a node renderer directly
 //! rather than going through [`crate::render`].
 //!
-//! Its own module because three sibling test modules need it — the code-block,
-//! doctest and admonition renderers — and a context is a dozen owned values
-//! threaded together by reference, which is a lot to restate three times.
+//! Its own module because several sibling test modules need it — the
+//! code-block, doctest, admonition, image and figure renderers — and a context
+//! is a dozen owned values threaded together by reference, which is a lot to
+//! restate in each of them.
 #![cfg(test)]
 
-use rusty_sphinx_ast::ResolvedLanguage;
+use rusty_sphinx_ast::{Directive, Node, ResolvedLanguage};
 use rusty_sphinx_index::ProjectIndex;
 
-use crate::RenderCtx;
+use crate::{EmbeddedAssets, RenderCtx};
 
 /// Runs `body` with a default rendering context over an empty project index.
 ///
@@ -29,27 +30,42 @@ pub(super) fn with_highlight_language<R>(
     body: impl FnOnce(&mut RenderCtx<'_>) -> R,
 ) -> R {
     let index = ProjectIndex::default();
+    with_ctx_for(&index, "test.rst", language, &EmbeddedAssets::new(), body)
+}
+
+/// As [`with_ctx`], over a caller-supplied index, page path and asset table —
+/// what a test needs when the thing under test is a cross-reference, a
+/// page-relative href, or an embedded image.
+pub(super) fn with_ctx_for<R>(
+    index: &ProjectIndex,
+    doc_path: &str,
+    language: ResolvedLanguage,
+    embedded_assets: &EmbeddedAssets,
+    body: impl FnOnce(&mut RenderCtx<'_>) -> R,
+) -> R {
     let anon_targets = Vec::new();
     let mut anon_index = 0;
-    let domain_resolver = crate::resolution::DomainObjectResolver::new(&index);
-    let option_resolver = crate::resolution::OptionResolver::new(&index);
+    let domain_resolver = crate::resolution::DomainObjectResolver::new(index);
+    let option_resolver = crate::resolution::OptionResolver::new(index);
     let math = crate::math::MathRenderer::new();
     let highlighter = crate::highlight::Highlighter::new();
     let section_ids = std::collections::BTreeMap::new();
 
     let mut ctx = RenderCtx {
-        index: &index,
+        index,
         domain_resolver: &domain_resolver,
         option_resolver: &option_resolver,
-        doc_path: "test.rst",
+        doc_path,
         anon_targets: &anon_targets,
         anon_index: &mut anon_index,
-        original_doc_path: "test.rst",
+        original_doc_path: doc_path,
         broken_links: &mut Vec::new(),
         object_type_mismatches: &mut Vec::new(),
         math_errors: &mut Vec::new(),
         math: &math,
         highlight_errors: &mut Vec::new(),
+        image_errors: &mut Vec::new(),
+        embedded_assets,
         highlighter: &highlighter,
         highlight_language: language,
         linenothreshold: None,
@@ -60,4 +76,39 @@ pub(super) fn with_highlight_language<R>(
     };
 
     body(&mut ctx)
+}
+
+/// Renders one directive on a page at `doc_path`, resolving references
+/// against `index`.
+///
+/// Goes through the node dispatcher rather than calling a renderer directly,
+/// so a test also proves its directive is actually wired into the dispatch.
+pub(super) fn render_directive_html(
+    directive: &Directive,
+    index: &ProjectIndex,
+    doc_path: &str,
+) -> String {
+    render_directive_with_assets(directive, index, doc_path, &EmbeddedAssets::new())
+}
+
+/// As [`render_directive_html`], with the embedded-asset table a
+/// `:loading: embed` image is resolved against.
+pub(super) fn render_directive_with_assets(
+    directive: &Directive,
+    index: &ProjectIndex,
+    doc_path: &str,
+    embedded_assets: &EmbeddedAssets,
+) -> String {
+    let nodes = vec![Node::Directive(directive.clone())];
+    with_ctx_for(
+        index,
+        doc_path,
+        ResolvedLanguage::default(),
+        embedded_assets,
+        |ctx| {
+            let mut html = String::new();
+            crate::blocks::render_nodes(&mut html, &nodes, ctx);
+            html
+        },
+    )
 }

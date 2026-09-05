@@ -24,6 +24,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a4385e2e34eb35d6b3efe798b9eb88096925d87726c0798709bf56d9ed84af3"
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "bincode"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -508,6 +514,7 @@ dependencies = [
  "rusty_sphinx_scope",
  "rusty_sphinx_toctree",
  "serde",
+ "serde_json",
  "syntect",
  "toml",
  "two-face",
@@ -533,6 +540,7 @@ name = "rusty_sphinx_worker"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64",
  "rusty_sphinx_analyzer",
  "rusty_sphinx_ast",
  "rusty_sphinx_index",

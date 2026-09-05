@@ -1,5 +1,5 @@
 {
-  "checksum": "9b593f56b8850e3e2a31457a3607c28d20ba5390173bf55ac7e4ca24f3ac2c8f",
+  "checksum": "32debc88f46a227974e37d123bef44e82b1e0fc526b6081cdb01e1549da79372",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -137,6 +137,40 @@
         }
       ],
       "version": "1.0.103"
+    },
+    "base64 0.22.1": {
+      "common_attrs": {
+        "crate_features": [
+          "alloc",
+          "default",
+          "std"
+        ],
+        "edition": "2018"
+      },
+      "library_target_name": "base64",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "base64",
+      "package_url": "https://github.com/marshallpierce/rust-base64",
+      "repository": {
+        "Http": {
+          "sha256": "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6",
+          "url": "https://static.crates.io/crates/base64/0.22.1/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "base64",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.22.1"
     },
     "bincode 1.3.3": {
       "common_attrs": {
@@ -2308,6 +2342,10 @@
         ],
         "deps_dev": [
           {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          },
+          {
             "id": "toml 0.8.23",
             "target": "toml"
           }
@@ -2373,6 +2411,10 @@
           {
             "id": "anyhow 1.0.103",
             "target": "anyhow"
+          },
+          {
+            "id": "base64 0.22.1",
+            "target": "base64"
           },
           {
             "id": "serde 1.0.228",
@@ -3955,6 +3997,7 @@
   },
   "direct_deps": [
     "anyhow 1.0.103",
+    "base64 0.22.1",
     "csv 1.4.0",
     "globset 0.4.19",
     "html-escape 0.2.14",

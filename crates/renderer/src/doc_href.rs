@@ -5,6 +5,10 @@
 //! page's links are resolved against its own location — so `:ref:` and `:eq:`
 //! share one implementation rather than each computing the same `pathdiff`
 //! from their own copy of it.
+//!
+//! Flat at the crate root rather than under `inline/`, because `blocks/` needs
+//! it too: an image's `:target:` may name an internal target, and its link has
+//! to be computed exactly the way a `:ref:`'s is.
 
 /// The relative href from `doc_path`'s directory to `target_doc`'s rendered
 /// HTML page.
@@ -15,7 +19,7 @@
 ///
 /// Falls back to the target's own path when no relative route exists, which
 /// keeps the link pointing somewhere plausible rather than dropping it.
-pub(super) fn relative_doc_href(target_doc: &str, doc_path: &str) -> String {
+pub(crate) fn relative_doc_href(target_doc: &str, doc_path: &str) -> String {
     let current_dir = std::path::Path::new(doc_path)
         .parent()
         .unwrap_or_else(|| std::path::Path::new(""));

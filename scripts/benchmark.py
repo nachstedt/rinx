@@ -134,6 +134,21 @@ python.toolchain(
 rusty_sphinx_library(
     name = "cpython_docs",
     srcs = glob(["**/*.rst"]),
+    # CPython's documents show real pictures, and an image has to be declared
+    # to reach the site — the same rule `csv_data` follows for the files a
+    # `.. csv-table::` reads. Globbed rather than listed because this file is
+    # generated: the corpus decides what is there, not us.
+    images = glob(
+        [
+            "**/*.png",
+            "**/*.jpg",
+            "**/*.jpeg",
+            "**/*.gif",
+            "**/*.svg",
+            "**/*.webp",
+        ],
+        allow_empty = True,
+    ),
 )
 
 rusty_sphinx_site(

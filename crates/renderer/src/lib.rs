@@ -14,7 +14,10 @@
 mod blocks;
 mod broken_link;
 pub mod config;
+mod doc_href;
+mod embedded_assets;
 mod highlight;
+mod image_error;
 mod inline;
 mod math;
 mod nav;
@@ -22,7 +25,9 @@ mod page;
 mod resolution;
 
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
+pub use embedded_assets::EmbeddedAssets;
 pub use highlight::{HighlightError, HighlightErrorKind};
+pub use image_error::ImageError;
 pub use math::MathError;
 pub use nav::{PageLink, ResolvedNavEntry};
 pub use page::{PageMeta, css_relative_path, render_genindex, render_page};
@@ -46,6 +51,10 @@ pub struct RenderOutput {
     pub object_type_mismatches: Vec<ObjectTypeMismatch>,
     pub math_errors: Vec<MathError>,
     pub highlight_errors: Vec<HighlightError>,
+    /// Images whose `:loading: embed` could not be honoured because the bytes
+    /// never reached this render. Every other image problem is decidable from
+    /// the source alone and is reported by the parser.
+    pub image_errors: Vec<ImageError>,
 }
 
 /// Shared rendering state threaded through the node traversal.
@@ -69,6 +78,12 @@ pub(crate) struct RenderCtx<'a> {
     /// per-converter setup happens once per page rather than once per equation.
     pub math: &'a MathRenderer,
     pub highlight_errors: &'a mut Vec<HighlightError>,
+    pub image_errors: &'a mut Vec<ImageError>,
+    /// The `data:` URIs for this document's `:loading: embed` images, supplied
+    /// by the build. Empty whenever nothing was embedded — and for every
+    /// caller that renders without an asset sidecar, which then reports each
+    /// embed request as unavailable rather than silently linking.
+    pub embedded_assets: &'a EmbeddedAssets,
     /// Turns source text into classed HTML. Held for the whole document so
     /// the grammar set is resolved once per page, not once per code block.
     pub highlighter: &'a Highlighter,
@@ -128,6 +143,24 @@ pub fn render_with_config(
     doc_path: &str,
     config: &config::SiteConfig,
 ) -> RenderOutput {
+    render_with_assets(doc, index, doc_path, config, &EmbeddedAssets::new())
+}
+
+/// Renders a document with the `data:` URIs for its `:loading: embed` images
+/// — the full form every other entry point defaults a piece of.
+///
+/// A separate entry point rather than a fifth parameter on
+/// [`render_with_config`], because embedding is the one input that arrives
+/// from a *build step* rather than from the document or its site config: only
+/// the worker, holding the `embed_assets` sidecar, ever has one to pass.
+#[must_use]
+pub fn render_with_assets(
+    doc: &Document,
+    index: &ProjectIndex,
+    doc_path: &str,
+    config: &config::SiteConfig,
+    embedded_assets: &EmbeddedAssets,
+) -> RenderOutput {
     let mut html = String::new();
 
     // Collect anonymous targets for local resolution recursively
@@ -138,6 +171,7 @@ pub fn render_with_config(
     let mut object_type_mismatches = Vec::new();
     let mut math_errors = Vec::new();
     let mut highlight_errors = Vec::new();
+    let mut image_errors = Vec::new();
 
     let domain_resolver = DomainObjectResolver::new(index);
     let option_resolver = OptionResolver::new(index);
@@ -157,6 +191,8 @@ pub fn render_with_config(
         math_errors: &mut math_errors,
         math: &math,
         highlight_errors: &mut highlight_errors,
+        image_errors: &mut image_errors,
+        embedded_assets,
         highlighter: &highlighter,
         highlight_language: config.highlight_language.clone(),
         linenothreshold: None,
@@ -174,6 +210,7 @@ pub fn render_with_config(
         object_type_mismatches,
         math_errors,
         highlight_errors,
+        image_errors,
     }
 }
 

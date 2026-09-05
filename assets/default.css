@@ -610,6 +610,94 @@ blockquote p.attribution {
   margin: 0 0 0 1.5rem;
 }
 
+/* ── Images and figures ─────────────────────────────────────────────── */
+
+/* An image must never overflow the page, whatever its intrinsic size — but a
+   :width: the author wrote is honoured as an inline style, which wins. */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+figure {
+  margin: 2rem 0;
+}
+
+figure img {
+  display: block;
+}
+
+figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+figcaption > p:first-child {
+  margin-top: 0;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Everything after a figure's caption. Set back to body colour and weight so
+   a legend reads as prose rather than as a continuation of the caption. */
+figcaption .legend {
+  margin-top: 0.75rem;
+  font-weight: 400;
+}
+
+figcaption .legend > :first-child { margin-top: 0; }
+figcaption .legend > :last-child { margin-bottom: 0; }
+
+/* The three alignments both image directives share, transcribed from Sphinx's
+   own `basic.css` rather than re-derived: `align-left`/`align-right` float so
+   text flows beside them, and `align-center` is a block centred in the flow.
+
+   The `clear` on each float is the part that is easy to leave out and hard to
+   diagnose. Without it a float only avoids *content*, not earlier floats on
+   its own side, so two aligned images in a row sit side by side instead of one
+   below the other — and a centred image between them, being an ordinary block,
+   rides up alongside the float rather than starting below it. The rendered
+   order then bears no relation to the source order.
+
+   Deliberately element-qualified, where Sphinx also has bare `.align-*` rules.
+   Those would reach the `align-*` classes the table directives emit and centre
+   a centred table's text as a side effect, which is a change to tables rather
+   than to images. `figure.align-center` is spelled out because there the
+   caption *should* follow the picture it belongs to. */
+img.align-left,
+figure.align-left {
+  clear: left;
+  float: left;
+  margin-right: 1em;
+}
+
+img.align-right,
+figure.align-right {
+  clear: right;
+  float: right;
+  margin-left: 1em;
+}
+
+img.align-center,
+figure.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+figure.align-center {
+  text-align: center;
+}
+
+/* A heading must not ride up beside a floated image: each section here starts
+   below whatever the previous one floated. */
+.document h1,
+.document h2,
+.document h3 {
+  clear: both;
+}
+
 /* ── PlantUML Diagrams ─────────────────────────────────────────────── */
 
 .plantuml-diagram {

@@ -36,14 +36,49 @@ pub(in crate::directives) struct OptionLine {
 /// A line whose closing colon is missing (`:oops`) is still returned, with the
 /// whole remainder as its `name`, so that it reaches the caller's
 /// unknown-option diagnostic rather than being silently swallowed as body.
+///
+/// An option's value may run over several lines: docutils parses a directive's
+/// option block as a *field list*, and a field body continues on any following
+/// line indented past the field marker. Since these lines arrive already
+/// unindented, an option starts at column 0 and a continuation is simply a
+/// line that is indented at all. Continuations are joined with a single space,
+/// which is what a field body's text does when it is normalized — `CPython`'s
+/// `pathlib.rst` wraps one `:alt:` across five lines, and without this the
+/// last four would be read as directive content.
 pub(in crate::directives) fn scan_option_lines(
     unindented_lines: &[String],
 ) -> (Vec<OptionLine>, usize) {
-    let mut options = Vec::new();
+    let mut options: Vec<OptionLine> = Vec::new();
     let mut index = 0;
+    // Whether the line just consumed belonged to an option, with no blank line
+    // since. A continuation must follow its own option *immediately*: a blank
+    // line ends the field body, so indented text after one is the directive's
+    // content, which is exactly how a `.. code-block:: :dedent:` writes an
+    // indented first line.
+    let mut in_option = false;
     while index < unindented_lines.len() {
-        let line = unindented_lines[index].trim();
+        let raw_line = &unindented_lines[index];
+        let line = raw_line.trim();
         if line.is_empty() {
+            in_option = false;
+            index += 1;
+            continue;
+        }
+        // An indented line continues the option above it; with no option
+        // directly above it, it is body content and the option block is over.
+        if raw_line.starts_with(char::is_whitespace) {
+            if !in_option {
+                break;
+            }
+            let Some(previous) = options.last_mut() else {
+                break;
+            };
+            if !previous.value.is_empty() {
+                previous.value.push(' ');
+            }
+            previous.value.push_str(line);
+            previous.raw.push(' ');
+            previous.raw.push_str(line);
             index += 1;
             continue;
         }
@@ -60,6 +95,7 @@ pub(in crate::directives) fn scan_option_lines(
             raw: line.to_string(),
             line_index: index,
         });
+        in_option = true;
         index += 1;
     }
     (options, index)
@@ -171,6 +207,90 @@ mod tests {
         // Then
         assert_eq!(options.len(), 1);
         assert_eq!(body_start, 1);
+    }
+
+    #[test]
+    fn test_scan_option_lines_joins_a_wrapped_value() {
+        // Given — CPython's `pathlib.rst` writes an `:alt:` this way
+        let body = lines(&[
+            ":alt: Inheritance diagram showing",
+            "      the pathlib classes",
+        ]);
+
+        // When
+        let (options, body_start) = scan_option_lines(&body);
+
+        // Then
+        assert_eq!(options.len(), 1);
+        assert_eq!(
+            options[0].value,
+            "Inheritance diagram showing the pathlib classes"
+        );
+        assert_eq!(body_start, 2);
+    }
+
+    #[test]
+    fn test_scan_option_lines_joins_a_value_wrapped_over_several_lines() {
+        // Given
+        let body = lines(&[":alt: one", "      two", "      three"]);
+
+        // When
+        let (options, _) = scan_option_lines(&body);
+
+        // Then
+        assert_eq!(options[0].value, "one two three");
+    }
+
+    #[test]
+    fn test_scan_option_lines_continues_a_value_that_started_empty() {
+        // Given — the whole value written on the wrapped line
+        let body = lines(&[":alt:", "      the only text"]);
+
+        // When
+        let (options, _) = scan_option_lines(&body);
+
+        // Then — no leading space from joining onto nothing
+        assert_eq!(options[0].value, "the only text");
+    }
+
+    #[test]
+    fn test_scan_option_lines_ends_the_option_block_at_a_blank_line() {
+        // Given — a blank line ends the field body, so the indented line below
+        // it is directive content (a `.. code-block:: :dedent:` writes this)
+        let body = lines(&[":dedent: 2", "", "     x = 1"]);
+
+        // When
+        let (options, body_start) = scan_option_lines(&body);
+
+        // Then
+        assert_eq!(options.len(), 1);
+        assert_eq!(options[0].value, "2");
+        assert_eq!(body_start, 2);
+    }
+
+    #[test]
+    fn test_scan_option_lines_stops_at_an_indented_line_with_no_option_above_it() {
+        // Given
+        let body = lines(&["   indented body content"]);
+
+        // When
+        let (options, body_start) = scan_option_lines(&body);
+
+        // Then
+        assert!(options.is_empty());
+        assert_eq!(body_start, 0);
+    }
+
+    #[test]
+    fn test_scan_option_lines_quotes_the_whole_wrapped_line_in_raw() {
+        // Given — `raw` is what an unknown-option diagnostic echoes back
+        let body = lines(&[":bogus: one", "      two"]);
+
+        // When
+        let (options, _) = scan_option_lines(&body);
+
+        // Then
+        assert_eq!(options[0].raw, ":bogus: one two");
     }
 
     #[test]

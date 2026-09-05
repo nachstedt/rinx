@@ -152,6 +152,26 @@ pub(crate) fn render_code(
 
 /// Whether a `.. highlight::`'s `:linenothreshold:` makes this block long
 /// enough to number without being asked.
+/// Applies a `.. highlight::`, which renders nothing and exists only to change
+/// what the code blocks below it inherit.
+///
+/// Lives here rather than in the dispatcher for the same reason
+/// [`super::scope_directives::apply_scope_directive`] does: a directive whose
+/// whole effect is a context mutation belongs with the construct that reads
+/// that context, not in the match that happens to reach it. Document order is
+/// what makes it correct, which is why it runs during the node walk rather
+/// than in a pre-pass.
+pub(super) fn apply_highlight_directive(
+    language: &ResolvedLanguage,
+    linenothreshold: Option<NonZeroU32>,
+    force: bool,
+    ctx: &mut RenderCtx<'_>,
+) {
+    ctx.highlight_language = language.clone();
+    ctx.linenothreshold = linenothreshold;
+    ctx.highlight_force = force;
+}
+
 fn exceeds_threshold(block: &CodeBlock, threshold: Option<NonZeroU32>) -> bool {
     let Some(threshold) = threshold else {
         return false;

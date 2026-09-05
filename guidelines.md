@@ -25,6 +25,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When a value is transformed once and then must never be re-transformed, give the result its own type that cannot express the untransformed state, so forgetting the step is a compile error.
 - Keep the open-ended case of an enum as a validated newtype rather than enumerating a third party's whole vocabulary, which would import their knowledge into your own root crate and freeze it into serialized data.
 - Reserve special values of a field as their own variants, so a name that happens to collide with one cannot be mistaken for it.
+- Box a large enum variant's payload into its own struct, since an enum costs its largest variant everywhere it is stored.
 
 ## Module and file organization
 
@@ -76,6 +77,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When porting logic from a reference implementation, reproduce its observable outcome rather than its literal operation, since your own normalizing types can silently turn its miss into a hit.
 - When the reference implementation's output discards information the source expressed, render that information faithfully instead of reproducing the loss, and say so in a comment so nobody "fixes" it back.
 - Where a third-party library cannot reproduce the reference implementation's behaviour exactly, pick the narrower behaviour, diagnose what you refuse, and comment why so nobody widens it by accident.
+- Prefer a declarative property that states what the reference implementation computes by measuring, since the target platform can measure later and better than the build can.
 - When the reference implementation defines a rule over full Unicode character classes, port those classes rather than an ASCII approximation that happens to satisfy the current tests.
 - Transcribe a reference implementation's pre-generated tables rather than re-deriving them, so the two cannot drift apart as either side's inputs change; fetch the actual source rather than reconstructing a table from memory.
 
@@ -127,6 +129,10 @@ entry under the heading it belongs to, as a single short sentence.
 - A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
 - Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
 - In spec_gaps.md, mark a row 🔶 partial rather than ✅ whenever its own Notes say a specific argument/option/variant of that feature is unsupported, even though the feature's core case works.
+
+## Scope of a guideline
+
+- A guideline that bars a technique bars it as a workaround, not as the feature the user explicitly asked for.
 
 ## Workflow and commits
 

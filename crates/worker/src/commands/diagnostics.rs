@@ -141,6 +141,19 @@ pub(super) fn format_highlight_error_warning(
     )
 }
 
+/// Formats a single image diagnostic as a human-readable warning line.
+///
+/// The URI is not repeated here: an image's message already names the file it
+/// could not embed, since that is the only thing the author can act on.
+pub(super) fn format_image_error_warning(doc_path: &str, error: &renderer::ImageError) -> String {
+    format!(
+        "warning: {} {}: {}",
+        location(doc_path, error.span),
+        error.code(),
+        error.message
+    )
+}
+
 /// Returns an error listing every broken link when `strict` is true and
 /// `broken_links` is non-empty. Diagnostics are always reported to stderr by
 /// the caller regardless of `strict` — this only controls whether they also

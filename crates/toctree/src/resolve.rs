@@ -17,7 +17,7 @@ use rusty_sphinx_ast::{Span, TocEntry, Toctree, ToctreeFlag};
 use std::collections::BTreeSet;
 
 use super::glob::matching_docnames;
-use crate::path_normalization::normalize_path;
+use rusty_sphinx_ast::normalize_path;
 
 /// What one toctree entry turned out to name.
 #[derive(Debug, Clone, PartialEq, Eq)]

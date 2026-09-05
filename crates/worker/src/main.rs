@@ -12,6 +12,7 @@
 //! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links] [--warnings-output <file.warnings.json>]
 //! rusty-sphinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>
 //! rusty-sphinx extract_doctests --input <file.ast> --output <file.doctests.json>
+//! rusty-sphinx embed_assets --input <file.ast> --output <file.embeds.json>
 //! rusty-sphinx validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>
 //! ```
 //!
@@ -29,8 +30,8 @@ use std::env;
 use std::fs;
 
 use commands::{
-    cmd_extract_diagrams, cmd_extract_doctests, cmd_genindex, cmd_index, cmd_parse, cmd_preview,
-    cmd_render, cmd_validate_images, cmd_validate_toctree,
+    cmd_embed_assets, cmd_extract_diagrams, cmd_extract_doctests, cmd_genindex, cmd_index,
+    cmd_parse, cmd_preview, cmd_render, cmd_validate_images, cmd_validate_toctree,
 };
 
 fn cmd_legacy(path: &str) -> Result<()> {
@@ -46,6 +47,7 @@ fn run(args: &[String]) -> Result<()> {
         Some("validate_toctree") => cmd_validate_toctree(&args[2..]),
         Some("extract_diagrams") => cmd_extract_diagrams(&args[2..]),
         Some("extract_doctests") => cmd_extract_doctests(&args[2..]),
+        Some("embed_assets") => cmd_embed_assets(&args[2..]),
         Some("validate_images") => cmd_validate_images(&args[2..]),
         Some("index") => cmd_index(&args[2..]),
         Some("render") => cmd_render(&args[2..]),
@@ -60,9 +62,10 @@ fn run(args: &[String]) -> Result<()> {
                    {program} parse  --input <file.rst> --output <file.ast> [--default-domain <py|c>]\n\
                    {program} extract_diagrams --input <file.ast> --outdir <puml_dir>\n\
                    {program} extract_doctests --input <file.ast> --output <file.doctests.json>\n\
+                   {program} embed_assets --input <file.ast> --output <file.embeds.json>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
-                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--strict-links] [--warnings-output <file.warnings.json>]\n\
+                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--embeds <file.embeds.json>] [--strict-links] [--warnings-output <file.warnings.json>]\n\
                    {program} genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>\n\
                    {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
                    {program} validate_images --inputs <a.ast> [<b.ast> ...] --image-dir <dir>"

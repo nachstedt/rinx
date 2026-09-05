@@ -142,11 +142,17 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
             }
         }
         Directive::DomainObject(body) => walk_nodes(body.body(), visit),
+        // A figure's legend is ordinary body content and may hold anything,
+        // including another image. Its caption is inline markup only, so there
+        // is nothing there to descend into.
+        Directive::Figure(figure) => walk_nodes(&figure.legend, visit),
         // Directives with no block-level children. A doctest block's body is
         // verbatim text, not nested nodes, a math block's is verbatim LaTeX,
         // and a code block's is verbatim source, so there is nothing to
-        // descend into. A `.. highlight::` has no body at all.
-        Directive::DocTest(_)
+        // descend into. A `.. highlight::` has no body at all, and an
+        // `.. image::` is a leaf by definition.
+        Directive::Image(_)
+        | Directive::DocTest(_)
         | Directive::CodeBlock(_)
         | Directive::Highlight { .. }
         | Directive::Math { .. }
