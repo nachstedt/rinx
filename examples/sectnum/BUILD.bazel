@@ -1,0 +1,17 @@
+"""Documents exercising every `.. sectnum::` option.
+
+Its own library and package, mirroring `//examples/contents`'s shape and for
+the same reason: unlike `.. contents::`, a `.. sectnum::` numbers its whole
+document wherever it's written, so one page can't demonstrate more than one
+option combination at a time the way `//examples/contents`'s single page
+does — each option here gets its own small page instead.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    deps = [],
+    visibility = ["//visibility:public"],
+)

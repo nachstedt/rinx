@@ -19,10 +19,28 @@
 //! - A nested `:numbered:` inside an already-numbered subtree is ignored: the
 //!   outer numbering already covers it, and restarting would produce two
 //!   sections numbered `1`.
+//!
+//! # `.. sectnum::` / `.. section-numbering::`
+//!
+//! Plain docutils' own numbering directive feeds the same [`DocumentNumbers`]
+//! this module builds for `:numbered:` toctrees, so the two must agree on
+//! precedence for a document that both could cover:
+//!
+//! - A document already numbered by an ancestor `:numbered:` toctree ignores
+//!   its own `.. sectnum::` entirely — the same rule as a nested `:numbered:`
+//!   toctree above, just extended to this second source of numbers.
+//! - Otherwise `.. sectnum::` numbers that one document's own top-level
+//!   outline sections (and, recursively, their children) independently of
+//!   every other document — plain docutils has no toctree, so `:start:`,
+//!   `:depth:`, `:prefix:` and `:suffix:` never cross a document boundary.
+//! - Unlike a `:numbered:` toctree, `.. sectnum::` never gives the document
+//!   itself a number: plain docutils has no notion of "this whole document is
+//!   2", only of numbered sections within it, so a sectnum-numbered
+//!   document's title heading stays unnumbered.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rusty_sphinx_ast::NumberedDepth;
+use rusty_sphinx_ast::{NumberedDepth, SectnumOptions};
 use rusty_sphinx_index::{DocumentNumbers, OutlineSection, ProjectIndex};
 
 use rusty_sphinx_toctree::{TocTarget, expand_toctree};
@@ -50,7 +68,48 @@ pub(super) fn assign_section_numbers(
             &mut seeking,
         );
     }
+
+    // A document's own `.. sectnum::` numbers it independently, unless an
+    // ancestor `:numbered:` toctree already claimed it above.
+    for (docname, options) in &index.sectnum {
+        if numbered.contains(docname) {
+            continue;
+        }
+        number_sectnum_document(docname, options, index, &mut numbers);
+    }
+
     numbers
+}
+
+/// Numbers `docname`'s own top-level outline sections (and their children)
+/// per its `.. sectnum::` options, independently of every other document.
+///
+/// Reuses [`number_section`] verbatim for the recursion — `:start:` is simply
+/// the counter [`number_section`] is first called with, and `:depth:` maps
+/// onto the same [`NumberedDepth`] `:numbered:` already uses to stop appending
+/// past a limit.
+fn number_sectnum_document(
+    docname: &str,
+    options: &SectnumOptions,
+    index: &ProjectIndex,
+    numbers: &mut BTreeMap<String, DocumentNumbers>,
+) {
+    numbers
+        .entry(docname.to_string())
+        .or_default()
+        .set_format(options.prefix.clone(), options.suffix.clone());
+
+    let Some(outline) = index.document_outlines.get(docname) else {
+        return;
+    };
+    let depth = options
+        .depth
+        .map_or(NumberedDepth::Unlimited, NumberedDepth::Levels);
+    let start = options.start.map_or(1, |value| value.get() as usize);
+
+    for (offset, section) in outline.sections.iter().enumerate() {
+        number_section(docname, section, &[], start + offset, depth, numbers);
+    }
 }
 
 /// Descends through `docname` looking for a toctree that starts numbering.
@@ -262,6 +321,11 @@ mod tests {
             self
         }
 
+        fn with_sectnum(mut self, docname: &str, options: SectnumOptions) -> Self {
+            self.index.sectnum.insert(format!("{docname}.rst"), options);
+            self
+        }
+
         fn numbers(&self) -> BTreeMap<String, DocumentNumbers> {
             assign_section_numbers(&self.index, &self.universe)
         }
@@ -422,5 +486,173 @@ mod tests {
 
         // Then
         assert_eq!(numbers["a.rst"].document(), Some([1].as_slice()));
+    }
+
+    #[test]
+    fn test_sectnum_numbers_a_standalone_documents_sections() {
+        // Given — no toctree at all, just a document with `.. sectnum::`.
+        let fixture = Fixture::new(&["a"], &["a"])
+            .with_sections(
+                "a",
+                vec![section("Install", vec![]), section("Use", vec![])],
+            )
+            .with_sectnum("a", SectnumOptions::default());
+
+        // When
+        let numbers = fixture.numbers();
+
+        // Then — sections are numbered, but the document itself is not: plain
+        // docutils has no notion of a document's own number.
+        assert_eq!(numbers["a.rst"].document(), None);
+        assert_eq!(
+            numbers["a.rst"].section(&SectionId::from_title("Install")),
+            Some([1].as_slice())
+        );
+        assert_eq!(
+            numbers["a.rst"].section(&SectionId::from_title("Use")),
+            Some([2].as_slice())
+        );
+    }
+
+    #[test]
+    fn test_sectnum_numbers_subsections_recursively() {
+        // Given
+        let fixture = Fixture::new(&["a"], &["a"])
+            .with_sections(
+                "a",
+                vec![section("Install", vec![section("From Source", vec![])])],
+            )
+            .with_sectnum("a", SectnumOptions::default());
+
+        // When
+        let numbers = fixture.numbers();
+
+        // Then
+        assert_eq!(
+            numbers["a.rst"].section(&SectionId::from_title("From Source")),
+            Some([1, 1].as_slice())
+        );
+    }
+
+    #[test]
+    fn test_sectnum_start_offsets_the_first_top_level_number() {
+        // Given — `:start: 5`.
+        let options = SectnumOptions {
+            start: std::num::NonZeroU32::new(5),
+            ..SectnumOptions::default()
+        };
+        let fixture = Fixture::new(&["a"], &["a"])
+            .with_sections(
+                "a",
+                vec![section("Install", vec![]), section("Use", vec![])],
+            )
+            .with_sectnum("a", options);
+
+        // When
+        let numbers = fixture.numbers();
+
+        // Then
+        assert_eq!(
+            numbers["a.rst"].section(&SectionId::from_title("Install")),
+            Some([5].as_slice())
+        );
+        assert_eq!(
+            numbers["a.rst"].section(&SectionId::from_title("Use")),
+            Some([6].as_slice())
+        );
+    }
+
+    #[test]
+    fn test_sectnum_depth_stops_appending_past_its_limit() {
+        // Given — `:depth: 1`.
+        let options = SectnumOptions {
+            depth: NonZeroUsize::new(1),
+            ..SectnumOptions::default()
+        };
+        let fixture = Fixture::new(&["a"], &["a"])
+            .with_sections(
+                "a",
+                vec![section("Install", vec![section("From Source", vec![])])],
+            )
+            .with_sectnum("a", options);
+
+        // When
+        let numbers = fixture.numbers();
+
+        // Then
+        assert_eq!(
+            numbers["a.rst"].section(&SectionId::from_title("Install")),
+            Some([1].as_slice())
+        );
+        assert_eq!(
+            numbers["a.rst"].section(&SectionId::from_title("From Source")),
+            None
+        );
+    }
+
+    #[test]
+    fn test_sectnum_zero_depth_is_unlimited() {
+        // Given — `:depth: 0` mirrors `.. contents::`'s own convention.
+        let options = SectnumOptions {
+            depth: None,
+            ..SectnumOptions::default()
+        };
+        let fixture = Fixture::new(&["a"], &["a"])
+            .with_sections(
+                "a",
+                vec![section("Install", vec![section("From Source", vec![])])],
+            )
+            .with_sectnum("a", options);
+
+        // When
+        let numbers = fixture.numbers();
+
+        // Then
+        assert_eq!(
+            numbers["a.rst"].section(&SectionId::from_title("From Source")),
+            Some([1, 1].as_slice())
+        );
+    }
+
+    #[test]
+    fn test_sectnum_records_prefix_and_suffix() {
+        // Given
+        let options = SectnumOptions {
+            prefix: "Appendix ".to_string(),
+            suffix: ".".to_string(),
+            ..SectnumOptions::default()
+        };
+        let fixture = Fixture::new(&["a"], &["a"]).with_sectnum("a", options);
+
+        // When
+        let numbers = fixture.numbers();
+
+        // Then
+        assert_eq!(numbers["a.rst"].prefix(), "Appendix ");
+        assert_eq!(numbers["a.rst"].suffix(), ".");
+    }
+
+    #[test]
+    fn test_an_ancestor_numbered_toctree_wins_over_a_documents_own_sectnum() {
+        // Given — `a` is reached by a `:numbered:` toctree *and* writes its
+        // own `.. sectnum::`.
+        let fixture = Fixture::new(&["index"], &["index", "a"])
+            .with_toctree("index", toctree(&["a"], Some(NumberedDepth::Unlimited)))
+            .with_sections("a", vec![section("Install", vec![])])
+            .with_sectnum(
+                "a",
+                SectnumOptions {
+                    prefix: "Ignored ".to_string(),
+                    ..SectnumOptions::default()
+                },
+            );
+
+        // When
+        let numbers = fixture.numbers();
+
+        // Then — the toctree's numbering wins: `a` gets a document number
+        // (which plain `.. sectnum::` alone never assigns) and no prefix.
+        assert_eq!(numbers["a.rst"].document(), Some([1].as_slice()));
+        assert_eq!(numbers["a.rst"].prefix(), "");
     }
 }

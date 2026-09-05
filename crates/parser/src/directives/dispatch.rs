@@ -21,6 +21,7 @@ use super::include::parse_include;
 use super::index_directive::parse_index_directive;
 use super::math::parse_math_directive;
 use super::scope::try_parse_scope_directive;
+use super::sectnum::{is_sectnum, parse_sectnum};
 use super::substitution::{parse_substitution_definition, split_substitution_marker};
 use super::table::parse_table_directive;
 use super::toctree::parse_toctree;
@@ -189,6 +190,27 @@ fn try_parse_contents_family(
     Some(Node::Directive(directive))
 }
 
+/// Recognizes and parses `.. sectnum::`/`.. section-numbering::`. Split out
+/// for the same reason [`try_parse_contents_family`] is: one more `if` in
+/// [`parse_body_directive`] would have pushed it past its line limit.
+fn try_parse_sectnum(
+    name: &str,
+    argument: &str,
+    body_lines: &[&str],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<Node> {
+    if !is_sectnum(name) {
+        return None;
+    }
+    Some(Node::Directive(parse_sectnum(
+        argument,
+        body_lines,
+        diagnostics,
+        ctx,
+    )))
+}
+
 fn parse_body_directive(
     name: String,
     argument: String,
@@ -209,6 +231,9 @@ fn parse_body_directive(
         return node;
     }
     if let Some(node) = try_parse_contents_family(&name, &argument, body_lines, diagnostics, ctx) {
+        return node;
+    }
+    if let Some(node) = try_parse_sectnum(&name, &argument, body_lines, diagnostics, ctx) {
         return node;
     }
     if name == "plantuml" {

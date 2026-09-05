@@ -515,3 +515,71 @@ fn test_analyze_contents_without_name_registers_no_target() {
     // Then
     assert!(index.targets.is_empty());
 }
+
+#[test]
+fn test_analyze_records_a_sectnum_directives_options() {
+    // Given
+    let options = rusty_sphinx_ast::SectnumOptions {
+        prefix: "Appendix ".to_string(),
+        ..rusty_sphinx_ast::SectnumOptions::default()
+    };
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Directive(Directive::Sectnum(options.clone()))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(index.sectnum.get("test.rst"), Some(&options));
+}
+
+#[test]
+fn test_analyze_finds_a_sectnum_directive_nested_in_an_admonition_body() {
+    // Given — docutils treats `.. sectnum::` as document-wide regardless of
+    // where it's written.
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Directive(Directive::Admonition {
+            kind: rusty_sphinx_ast::AdmonitionKind::Note,
+            title: None,
+            collapsible: None,
+            body: vec![Node::Directive(Directive::Sectnum(
+                rusty_sphinx_ast::SectnumOptions::default(),
+            ))],
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.sectnum.contains_key("test.rst"));
+}
+
+#[test]
+fn test_analyze_keeps_the_last_sectnum_directive_when_a_document_writes_two() {
+    // Given
+    let first = rusty_sphinx_ast::SectnumOptions {
+        prefix: "First ".to_string(),
+        ..rusty_sphinx_ast::SectnumOptions::default()
+    };
+    let last = rusty_sphinx_ast::SectnumOptions {
+        prefix: "Last ".to_string(),
+        ..rusty_sphinx_ast::SectnumOptions::default()
+    };
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![
+            Node::Directive(Directive::Sectnum(first)),
+            Node::Directive(Directive::Sectnum(last.clone())),
+        ],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(index.sectnum.get("test.rst"), Some(&last));
+}

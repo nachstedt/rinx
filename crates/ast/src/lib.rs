@@ -51,6 +51,7 @@ mod option_list_item;
 mod path_normalization;
 mod py_version_spec;
 mod section_id;
+mod sectnum;
 mod span;
 mod substitution;
 mod suppression;
@@ -98,6 +99,7 @@ pub use option_list_item::{OptionArgument, OptionArgumentDelimiter, OptionListIt
 pub use path_normalization::{normalize_path, resolve_from_document};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
+pub use sectnum::SectnumOptions;
 pub use span::{FileId, Position, Span};
 pub use substitution::{SubstitutionDefinition, SubstitutionKind, TrimSides};
 pub use suppression::{Suppression, SuppressionCodes};

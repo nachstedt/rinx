@@ -128,6 +128,7 @@ diagnostic_codes! {
     // --- Directives, generally ---------------------------------------------
     DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
     DirectiveContentsUnknownOption => "directive.contents-unknown-option",
+    DirectiveSectnumUnknownOption => "directive.sectnum-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
     DirectiveTitleArgumentMissing => "directive.title-argument-missing",
@@ -306,6 +307,25 @@ diagnostic_codes! {
     /// A `:name:` option with no value, so nothing could `:ref:` the table of
     /// contents.
     ContentsEmptyName => "contents.empty-name",
+
+    // --- `.. sectnum::` / `.. section-numbering::` --------------------------
+    /// A `:depth:` whose value is not a positive integer. Treated as no depth
+    /// limit, matching `.. contents::`'s own `:depth:`.
+    SectnumDepthInvalid => "sectnum.depth-invalid",
+    /// A `:start:` whose value is not a positive integer (`0` included — there
+    /// is no sensible number to display at that value). The default of `1`
+    /// is kept instead.
+    SectnumStartInvalid => "sectnum.start-invalid",
+    /// A `:prefix:` option with no value; docutils requires this option to
+    /// carry one.
+    SectnumEmptyPrefix => "sectnum.empty-prefix",
+    /// A `:suffix:` option with no value; docutils requires this option to
+    /// carry one.
+    SectnumEmptySuffix => "sectnum.empty-suffix",
+    /// An argument given to a directive docutils declares zero argument
+    /// slots for. Real docutils reports this as a directive error rather
+    /// than silently dropping it, so this build does too.
+    SectnumUnexpectedArgument => "sectnum.unexpected-argument",
 
     // --- `.. index::` ------------------------------------------------------
     IndexInvalidPair => "index.invalid-pair",

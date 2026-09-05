@@ -42,6 +42,7 @@ Welcome to the Rusty-Sphinx example.
    doctests
    toctree/index
    contents/index
+   sectnum/index
    team_a/index
    team_b/index
 

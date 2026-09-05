@@ -2,7 +2,7 @@ use crate::{
     DocumentNumbers, DocumentOutline, DocumentToctree, EquationLocation, GenIndexEntry,
     TargetLocation,
 };
-use rusty_sphinx_ast::{ObjectType, TargetName};
+use rusty_sphinx_ast::{ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -72,6 +72,15 @@ pub struct ProjectIndex {
     /// rules.
     #[serde(default)]
     pub equations: BTreeMap<TargetName, EquationLocation>,
+    /// Each document's own `.. sectnum::`/`.. section-numbering::` options,
+    /// keyed by document path — the last one found in that document if it
+    /// wrote more than one. Per-document data, so unlike `section_numbers`
+    /// (which this feeds, alongside `:numbered:` toctrees) it merges. See
+    /// `rusty_sphinx_analyzer::section_numbering` for how the two combine —
+    /// an ancestor `:numbered:` toctree always wins over a document's own
+    /// `.. sectnum::`.
+    #[serde(default)]
+    pub sectnum: BTreeMap<String, SectnumOptions>,
 }
 
 impl ProjectIndex {
@@ -109,6 +118,7 @@ impl ProjectIndex {
         }
         self.genindex_entries.extend(other.genindex_entries);
         self.equations.extend(other.equations);
+        self.sectnum.extend(other.sectnum);
         // root_documents, page_order and section_numbers are built globally from
         // the whole graph, so they are recomputed rather than merged
         let mut diagnostics = Vec::new();
@@ -224,6 +234,22 @@ mod tests {
         assert!(stale.toctrees.contains_key("index.rst"));
         assert!(stale.toctrees.contains_key("guide.rst"));
         assert_eq!(stale.document_outlines["guide.rst"].sections.len(), 1);
+    }
+
+    #[test]
+    fn test_merge_carries_sectnum_options_from_the_other_index() {
+        // Given
+        let mut stale = ProjectIndex::default();
+        let mut fresh = ProjectIndex::default();
+        fresh
+            .sectnum
+            .insert("guide.rst".to_string(), SectnumOptions::default());
+
+        // When
+        stale.merge(fresh);
+
+        // Then
+        assert!(stale.sectnum.contains_key("guide.rst"));
     }
 
     #[test]
@@ -410,6 +436,13 @@ mod tests {
             doc_path: "api.rst".to_string(),
             anchor: "py:function:greet".to_string(),
         });
+        index.sectnum.insert(
+            "api.rst".to_string(),
+            SectnumOptions {
+                prefix: "Appendix ".to_string(),
+                ..SectnumOptions::default()
+            },
+        );
 
         // When — serialize and deserialize
         let json = serde_json::to_string(&index).unwrap();
@@ -437,5 +470,6 @@ mod tests {
         assert!(index.glossary_terms.is_empty());
         assert!(index.domain_objects.is_empty());
         assert!(index.genindex_entries.is_empty());
+        assert!(index.sectnum.is_empty());
     }
 }
