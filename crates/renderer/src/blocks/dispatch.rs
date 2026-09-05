@@ -466,7 +466,12 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
                 html.push_str(&rendered);
             }
         }
-        Directive::Unknown { .. } => {}
+        // `SubstitutionDefinition` produces no output where it is written,
+        // like `.. highlight::` above: every reference to it elsewhere in the
+        // document was already spliced in with its resolved content by the
+        // parser's `resolve_substitutions` pass, so nothing is left to render
+        // here — the same reason an unrecognized directive renders nothing.
+        Directive::Unknown { .. } | Directive::SubstitutionDefinition(_) => {}
     }
 }
 

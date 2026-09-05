@@ -1,33 +1,57 @@
 //! Where an image sits relative to the text around it.
 //!
-//! docutils names six alignments but never accepts all six at once: the three
-//! vertical ones (`top`/`middle`/`bottom`) are valid *only* on an image inside
-//! a substitution definition, where the image is inline and there is a text
-//! baseline to align to, and the three horizontal ones only outside one. A
-//! `.. figure::` is always a block, so it takes the horizontal three alone.
+//! docutils names six alignments: three horizontal (`left`/`center`/`right`),
+//! valid on a block-level `.. image::`/`.. figure::`, and three vertical
+//! (`top`/`middle`/`bottom`), valid only on an image inside a substitution
+//! definition, where the image is inline and there is a text baseline to
+//! align to. A `.. figure::` is always a block, so it takes the horizontal
+//! three alone.
 //!
-//! rusty-sphinx has no substitution definitions, so every image it can parse
-//! is a block-level one and the vertical three are unreachable. They are
-//! therefore not variants of [`ImageAlign`] — a value that could never be
-//! valid should not be representable — but [`is_vertical_name`] still
-//! recognizes them, so an author who writes one is told *why* it was refused
-//! rather than being handed the generic "not a valid value" list.
-
+//! All six are variants of one enum because [`Self::css_class`] treats them
+//! identically — docutils' own HTML writer emits `align-<value>` for any of
+//! the six and leaves the stylesheet to interpret `align-top` as a
+//! `vertical-align`, not a float. What differs by context is which names
+//! [`Self::parse`] (block context: horizontal only) versus [`Self::parse_any`]
+//! (substitution context: all six) will accept — see [`is_vertical_name`] for
+//! how a caller in the block context tells an author *why* a vertical name
+//! was refused rather than just listing the three it does accept.
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// The horizontal alignment an `.. image::` or `.. figure::` may carry.
+/// The alignment an `.. image::`/`.. figure::` (horizontal) or a
+/// substitution-definition image (all six) may carry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ImageAlign {
     Left,
     Center,
     Right,
+    /// Valid only inside a substitution definition.
+    Top,
+    /// Valid only inside a substitution definition.
+    Middle,
+    /// Valid only inside a substitution definition.
+    Bottom,
 }
 
 impl ImageAlign {
-    /// Every alignment, in docutils' own declaration order.
-    pub const ALL: &'static [Self] = &[Self::Left, Self::Center, Self::Right];
+    /// The three alignments a block-level `.. image::`/`.. figure::` accepts,
+    /// in docutils' own declaration order.
+    pub const HORIZONTAL: &'static [Self] = &[Self::Left, Self::Center, Self::Right];
+
+    /// The three alignments valid only inside a substitution definition, in
+    /// docutils' own declaration order.
+    pub const VERTICAL: &'static [Self] = &[Self::Top, Self::Middle, Self::Bottom];
+
+    /// Every alignment docutils names, horizontal first.
+    pub const ALL: &'static [Self] = &[
+        Self::Left,
+        Self::Center,
+        Self::Right,
+        Self::Top,
+        Self::Middle,
+        Self::Bottom,
+    ];
 
     /// The name this alignment is written as, which is also the suffix of the
     /// `align-*` CSS class docutils' HTML writer emits for it.
@@ -37,17 +61,40 @@ impl ImageAlign {
             Self::Left => "left",
             Self::Center => "center",
             Self::Right => "right",
+            Self::Top => "top",
+            Self::Middle => "middle",
+            Self::Bottom => "bottom",
         }
     }
 
-    /// Reads an `:align:` value, ignoring case and surrounding whitespace.
+    /// Whether this is one of the three vertical alignments.
+    #[must_use]
+    pub const fn is_vertical(self) -> bool {
+        matches!(self, Self::Top | Self::Middle | Self::Bottom)
+    }
+
+    /// Reads an `:align:` value for a block-level image, ignoring case and
+    /// surrounding whitespace.
     ///
     /// Returns `None` for anything else — including the three vertical names,
     /// which [`is_vertical_name`] separates out for the caller's diagnostic.
+    /// Use [`Self::parse_any`] for an image inside a substitution definition,
+    /// where the vertical three are valid too.
     #[must_use]
     pub fn parse(raw: &str) -> Option<Self> {
+        Self::parse_from(raw, Self::HORIZONTAL)
+    }
+
+    /// Reads an `:align:` value for an image inside a substitution
+    /// definition, where all six alignments are valid.
+    #[must_use]
+    pub fn parse_any(raw: &str) -> Option<Self> {
+        Self::parse_from(raw, Self::ALL)
+    }
+
+    fn parse_from(raw: &str, candidates: &[Self]) -> Option<Self> {
         let normalized = raw.trim().to_lowercase();
-        Self::ALL
+        candidates
             .iter()
             .copied()
             .find(|align| align.as_str() == normalized)
@@ -68,10 +115,9 @@ impl fmt::Display for ImageAlign {
 
 /// Whether `raw` names one of docutils' three *vertical* alignments.
 ///
-/// Not an [`ImageAlign`] variant, because rusty-sphinx parses no substitution
-/// definitions and so has no context where one would be valid. Recognizing the
-/// name anyway is what lets the parser explain the refusal instead of listing
-/// the horizontal three and leaving the author to guess why theirs is missing.
+/// Used by the block-level `:align:` parser to explain *why* a vertical name
+/// was refused — it is a real docutils rule, not a typo — rather than just
+/// listing the three horizontal ones and leaving the author to guess.
 #[must_use]
 pub fn is_vertical_name(raw: &str) -> bool {
     matches!(
@@ -86,7 +132,7 @@ mod tests {
 
     #[test]
     fn test_parse_reads_every_horizontal_alignment() {
-        for align in ImageAlign::ALL {
+        for align in ImageAlign::HORIZONTAL {
             // Given
             let raw = align.as_str();
 
@@ -135,6 +181,55 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_any_reads_every_horizontal_alignment() {
+        for align in ImageAlign::HORIZONTAL {
+            // Given / When
+            let parsed = ImageAlign::parse_any(align.as_str());
+
+            // Then
+            assert_eq!(parsed, Some(*align));
+        }
+    }
+
+    #[test]
+    fn test_parse_any_reads_every_vertical_alignment() {
+        for align in ImageAlign::VERTICAL {
+            // Given — only valid inside a substitution definition
+            let raw = align.as_str();
+
+            // When
+            let parsed = ImageAlign::parse_any(raw);
+
+            // Then
+            assert_eq!(parsed, Some(*align));
+        }
+    }
+
+    #[test]
+    fn test_parse_any_ignores_case_and_whitespace() {
+        // Given
+        let raw = "  Top  ";
+
+        // When
+        let parsed = ImageAlign::parse_any(raw);
+
+        // Then
+        assert_eq!(parsed, Some(ImageAlign::Top));
+    }
+
+    #[test]
+    fn test_parse_any_rejects_an_unknown_name() {
+        // Given
+        let raw = "sideways";
+
+        // When
+        let parsed = ImageAlign::parse_any(raw);
+
+        // Then
+        assert_eq!(parsed, None);
+    }
+
+    #[test]
     fn test_css_class_is_the_docutils_align_class() {
         // Given
         let align = ImageAlign::Right;
@@ -144,6 +239,32 @@ mod tests {
 
         // Then
         assert_eq!(class, "align-right");
+    }
+
+    #[test]
+    fn test_css_class_works_for_a_vertical_alignment_too() {
+        // Given
+        let align = ImageAlign::Top;
+
+        // When
+        let class = align.css_class();
+
+        // Then
+        assert_eq!(class, "align-top");
+    }
+
+    #[test]
+    fn test_is_vertical_recognizes_all_three() {
+        for align in ImageAlign::VERTICAL {
+            // Given / When / Then
+            assert!(align.is_vertical(), "{align} should be vertical");
+        }
+    }
+
+    #[test]
+    fn test_is_vertical_rejects_a_horizontal_alignment() {
+        // Given / When / Then
+        assert!(!ImageAlign::Left.is_vertical());
     }
 
     #[test]
@@ -179,6 +300,19 @@ mod tests {
     fn test_serialization_round_trips() {
         // Given
         let align = ImageAlign::Center;
+
+        // When
+        let json = serde_json::to_string(&align).expect("should serialize");
+        let restored: ImageAlign = serde_json::from_str(&json).expect("should deserialize");
+
+        // Then
+        assert_eq!(restored, align);
+    }
+
+    #[test]
+    fn test_vertical_alignment_serialization_round_trips() {
+        // Given
+        let align = ImageAlign::Bottom;
 
         // When
         let json = serde_json::to_string(&align).expect("should serialize");

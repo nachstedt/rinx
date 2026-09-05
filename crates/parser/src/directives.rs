@@ -35,6 +35,7 @@ mod index_directive;
 mod math;
 mod options;
 mod scope;
+mod substitution;
 mod table;
 mod table_options;
 mod table_widths;

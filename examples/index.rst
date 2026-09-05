@@ -35,6 +35,7 @@ Welcome to the Rusty-Sphinx example.
    math
    images
    figures
+   substitutions
    includes
    index_entries
    noqa

@@ -20,6 +20,7 @@ use super::include::parse_include;
 use super::index_directive::parse_index_directive;
 use super::math::parse_math_directive;
 use super::scope::try_parse_scope_directive;
+use super::substitution::{parse_substitution_definition, split_substitution_marker};
 use super::table::parse_table_directive;
 use super::toctree::parse_toctree;
 use rusty_sphinx_ast::{CodeBlockSource, Directive, Node};
@@ -142,6 +143,31 @@ pub(crate) fn try_parse_directive(
 ///
 /// Falls back to [`Directive::Unknown`], which is what the benchmark counts as
 /// an unsupported directive.
+/// Recognizes and parses a substitution definition's marker, `.. |name|
+/// inner::`, which is not a directive name at all — tried before every other
+/// name below, which would otherwise match nothing and fall all the way to
+/// [`Directive::Unknown`].
+fn try_parse_substitution_definition(
+    name: &str,
+    argument: &str,
+    directive_span: Option<rusty_sphinx_ast::Span>,
+    body_lines: &[&str],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<Node> {
+    let (sub_name, inner) = split_substitution_marker(name)?;
+    let directive = parse_substitution_definition(
+        sub_name,
+        inner,
+        argument,
+        directive_span,
+        body_lines,
+        diagnostics,
+        ctx,
+    )?;
+    Some(Node::Directive(directive))
+}
+
 fn parse_body_directive(
     name: String,
     argument: String,
@@ -151,6 +177,16 @@ fn parse_body_directive(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Node {
+    if let Some(node) = try_parse_substitution_definition(
+        &name,
+        &argument,
+        directive_span,
+        body_lines,
+        diagnostics,
+        ctx,
+    ) {
+        return node;
+    }
     if name == "toctree" {
         let directive = parse_toctree(body_lines, diagnostics, ctx);
         return Node::Directive(directive);
@@ -202,20 +238,15 @@ fn parse_body_directive(
         let directive = parse_csv_table(argument, body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
-    if name == "image" {
-        let directive =
-            parse_image_directive(&argument, directive_span, body_lines, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if name == "figure" {
-        let directive = parse_figure_directive(
-            &argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        );
+    if let Some(directive) = parse_image_family(
+        &name,
+        &argument,
+        directive_span,
+        body_lines,
+        adornment_order,
+        diagnostics,
+        ctx,
+    ) {
         return Node::Directive(directive);
     }
     if name == "math" {
@@ -254,6 +285,40 @@ fn parse_body_directive(
 /// even when it looks like a further name.
 const fn object_type_supports_multiple_signatures(object_type: DirectiveObjectType) -> bool {
     !matches!(object_type, DirectiveObjectType::PyModule)
+}
+
+/// Parses `.. image::` or `.. figure::`, or `None` when `name` is neither.
+///
+/// Grouped the same way [`parse_code_family`] groups its four, purely to keep
+/// [`parse_body_directive`]'s own dispatch chain from growing past a readable
+/// length as directive families accumulate.
+fn parse_image_family(
+    name: &str,
+    argument: &str,
+    directive_span: Option<rusty_sphinx_ast::Span>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<Directive> {
+    match name {
+        "image" => Some(parse_image_directive(
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        )),
+        "figure" => Some(parse_figure_directive(
+            argument,
+            directive_span,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        )),
+        _ => None,
+    }
 }
 
 /// Parses the four directives [`super::code_block`] owns, or `None` when

@@ -619,3 +619,42 @@ fn test_parse_points_a_math_directive_span_at_the_first_of_several_equations() {
         4
     );
 }
+
+#[test]
+fn test_parse_recognizes_a_substitution_definition_and_reference_end_to_end() {
+    // Given — the definition follows its (only) use, the common real-world
+    // shape, and what the benchmark corpus mis-tallied as an unsupported
+    // `|release| replace` directive before this feature existed.
+    let input = "Version |release| is current.\n\n.. |release| replace:: 3.13.0\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then — the reference is spliced with the definition's resolved
+    // content, and the definition itself produces no separate visible node.
+    assert_eq!(doc.nodes.len(), 2);
+    assert_eq!(
+        doc.nodes[0],
+        Node::Paragraph(vec![
+            InlineNode::Text("Version ".to_string()),
+            InlineNode::Text("3.13.0".to_string()),
+            InlineNode::Text(" is current.".to_string()),
+        ])
+    );
+    assert!(doc.diagnostics.is_empty());
+}
+
+#[test]
+fn test_parse_reports_an_undefined_substitution_reference() {
+    // Given
+    let input = "No |such-thing| here.\n";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    assert_eq!(
+        doc.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(),
+        vec![rusty_sphinx_ast::DiagnosticCode::SubstitutionUndefined]
+    );
+}

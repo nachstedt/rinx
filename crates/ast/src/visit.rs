@@ -150,7 +150,10 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         // verbatim text, not nested nodes, a math block's is verbatim LaTeX,
         // and a code block's is verbatim source, so there is nothing to
         // descend into. A `.. highlight::` has no body at all, and an
-        // `.. image::` is a leaf by definition.
+        // `.. image::` is a leaf by definition. A substitution definition's
+        // `replace` content is `InlineNode` only, like a line block's — this
+        // walker doesn't descend into inline content at all (see the module
+        // doc comment).
         Directive::Image(_)
         | Directive::DocTest(_)
         | Directive::CodeBlock(_)
@@ -164,6 +167,7 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         | Directive::CNamespacePush { .. }
         | Directive::CNamespacePop
         | Directive::StdProgram { .. }
+        | Directive::SubstitutionDefinition(_)
         | Directive::Unknown { .. } => {}
     }
 }

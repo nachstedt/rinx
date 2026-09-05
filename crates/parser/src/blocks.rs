@@ -17,6 +17,7 @@ mod line_block;
 mod literal_block;
 mod option_list;
 mod simple_table;
+mod substitutions;
 mod table;
 mod target;
 mod transition;

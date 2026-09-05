@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::image::ImageOptions;
 use crate::object_type::ObjectType;
 use crate::span::Span;
 use crate::target_search_order::TargetSearchOrder;
@@ -136,6 +137,28 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
+    /// A `|name|` substitution reference, before the whole-document
+    /// resolution pass (`rusty_sphinx_parser`'s `resolve_substitutions`)
+    /// replaces it with its definition's resolved content.
+    ///
+    /// An intermediate node rather than something a later phase ever sees:
+    /// resolution is intra-document and runs at the end of `parse()`, so a
+    /// well-formed `Document` never carries one of these by the time it is
+    /// returned. An unresolvable name still degrades to this being replaced
+    /// with a literal `Text("|name|")` (plus a diagnostic) rather than
+    /// staying — see [`crate::DiagnosticCode::SubstitutionUndefined`].
+    SubstitutionReference {
+        name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
+    /// What a `.. |name| image::` substitution reference resolves to: an
+    /// image inline in running text rather than a block of its own.
+    ///
+    /// Boxed for the same reason [`crate::Directive::Image`] is — an
+    /// [`ImageOptions`] is large, and an enum costs its largest variant on
+    /// every node.
+    InlineImage(Box<ImageOptions>),
 }
 
 impl InlineNode {
@@ -157,7 +180,8 @@ impl InlineNode {
             | Self::DomainObjectReference { span, .. }
             | Self::OptionReference { span, .. }
             | Self::Math { span, .. }
-            | Self::EquationReference { span, .. } => *span,
+            | Self::EquationReference { span, .. }
+            | Self::SubstitutionReference { span, .. } => *span,
             _ => None,
         }
     }
@@ -178,7 +202,8 @@ impl InlineNode {
             | Self::DomainObjectReference { span, .. }
             | Self::OptionReference { span, .. }
             | Self::Math { span, .. }
-            | Self::EquationReference { span, .. } => *span = at,
+            | Self::EquationReference { span, .. }
+            | Self::SubstitutionReference { span, .. } => *span = at,
             _ => {}
         }
         self
@@ -213,6 +238,15 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             // without the project index this function deliberately doesn't take.
             InlineNode::Math { latex, .. } => latex.as_str(),
             InlineNode::EquationReference { label, .. } => label.as_str(),
+            // Never reaches a caller of this function in a well-formed
+            // document — resolved away by the end of parsing — but degrades
+            // to the written name rather than vanishing if one somehow does.
+            InlineNode::SubstitutionReference { name, .. } => name.as_str(),
+            // An image has no text of its own beyond its `:alt:`, which
+            // docutils falls back to the URI for; this function takes no
+            // resolver and cannot know the URI's resolved form, so an unset
+            // `:alt:` contributes nothing rather than a wrong guess.
+            InlineNode::InlineImage(options) => options.alt.as_deref().unwrap_or(""),
         })
         .collect()
 }

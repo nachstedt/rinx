@@ -530,3 +530,98 @@ fn test_e2e_unknown_code_block_language_still_shows_the_source() {
         "nothing should be highlighted in:\n{result}"
     );
 }
+
+#[test]
+fn test_e2e_replace_substitution_renders_its_resolved_content() {
+    // Given — the definition follows its use, as it typically does in real
+    // documents (CPython's own docs define `|release|` once, near the bottom
+    // of a shared prelude).
+    let input = "\
+Version |release| is current.
+
+.. |release| replace:: 3.13.0
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the reference is spliced with the definition's text, and the
+    // definition itself contributes no visible output of its own.
+    assert_eq!(result, "<p>Version 3.13.0 is current.</p>\n");
+}
+
+#[test]
+fn test_e2e_replace_substitution_carries_inline_markup() {
+    // Given — docutils documents `replace` as a workaround for the still
+    // missing support for nested inline markup.
+    let input = "\
+.. |Python| replace:: *Python*
+
+I recommend you try |Python|.
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    assert!(
+        result.contains("I recommend you try <em>Python</em>."),
+        "expected the substitution's emphasis to survive, got:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_unicode_substitution_renders_the_decoded_character() {
+    // Given
+    let input = "\
+.. |copy| unicode:: 0xA9 .. copyright sign
+
+Copyright |copy| 2024.
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    assert!(
+        result.contains("Copyright \u{a9} 2024."),
+        "expected the decoded copyright sign, got:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_image_substitution_renders_an_inline_img_element() {
+    // Given — docutils' own canonical example of an image substitution
+    let input = "\
+|biohazard| ahead.
+
+.. |biohazard| image:: biohazard.png
+   :alt: a biohazard symbol
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — an `<img>` sits inline in the paragraph, not a block of its own
+    assert!(
+        result.contains(
+            "<p><img src=\"_images/biohazard.png\" alt=\"a biohazard symbol\" /> ahead.</p>"
+        ),
+        "expected an inline image, got:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_undefined_substitution_reference_keeps_the_written_text() {
+    // Given
+    let input = "See |no-such-thing| for details.\n";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — degrades visibly rather than vanishing silently
+    assert!(
+        result.contains("See |no-such-thing| for details."),
+        "expected the literal reference text, got:\n{result}"
+    );
+}

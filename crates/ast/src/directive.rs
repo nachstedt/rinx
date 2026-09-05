@@ -11,6 +11,7 @@ use crate::image::{Figure, ImageOptions};
 use crate::index_entry::IndexEntry;
 use crate::node::Node;
 use crate::span::Span;
+use crate::substitution::SubstitutionDefinition;
 use crate::table::TableAlign;
 use crate::table::TableRow;
 use crate::table::TableSource;
@@ -240,6 +241,15 @@ pub enum Directive {
         argument: String,
         body: String,
     },
+    /// A `.. |name| replace::`/`unicode::`/`image::` substitution definition.
+    ///
+    /// Produces no output where it stands, like [`Self::Highlight`]: every
+    /// [`crate::InlineNode::SubstitutionReference`] naming it elsewhere in the
+    /// document is spliced with its resolved content by a whole-document pass
+    /// that runs once parsing finishes, since references may be written
+    /// before their definition. See [`SubstitutionDefinition`] for why only
+    /// three of docutils' five substitution-only directives are modelled.
+    SubstitutionDefinition(SubstitutionDefinition),
 }
 
 #[cfg(test)]

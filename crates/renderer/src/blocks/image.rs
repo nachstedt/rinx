@@ -80,7 +80,11 @@ fn dimension_style(options: &ImageOptions) -> Option<String> {
 ///
 /// `extra_classes` is how a standalone `.. image::` gets its `align-*` class;
 /// a figure passes none, because there the alignment belongs on the `<figure>`.
-pub(super) fn render_image_element(
+///
+/// `pub(crate)` rather than `pub(super)`: `crate::inline::image` reuses it
+/// verbatim for an `InlineImage` node, since a substitution-defined image's
+/// `<img>` element is built exactly the same way as a standalone one's.
+pub(crate) fn render_image_element(
     html: &mut String,
     options: &ImageOptions,
     extra_classes: &[String],
@@ -153,8 +157,9 @@ fn target_href(target: &ImageTarget, options: &ImageOptions, ctx: &mut RenderCtx
 /// Wraps `body` in the link an image's `:target:` asks for, if it has one.
 ///
 /// Shared with the figure renderer, where docutils links the image inside the
-/// `<figure>` rather than the figure itself.
-pub(super) fn render_linked_image(
+/// `<figure>` rather than the figure itself, and with `crate::inline::image`
+/// for the same reason [`render_image_element`] is `pub(crate)`.
+pub(crate) fn render_linked_image(
     html: &mut String,
     options: &ImageOptions,
     extra_classes: &[String],

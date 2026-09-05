@@ -82,6 +82,10 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
 
     let mut index_id_counter = 0;
     super::index_ids::assign_index_ids(&mut nodes, &mut index_id_counter);
+    // Runs after the whole document is parsed, and after index ids are
+    // assigned, because a substitution reference may be written before its
+    // definition — nothing before this point could have resolved it yet.
+    super::substitutions::resolve_substitutions(&mut nodes, &mut diagnostics);
 
     let (entries, suppressions, source_files) = diagnostics.into_parts();
     let mut doc = Document::new(path.to_string(), nodes);

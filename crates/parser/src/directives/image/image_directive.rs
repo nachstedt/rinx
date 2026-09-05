@@ -14,7 +14,7 @@ use crate::directives::body::{body_span, join_body_lines};
 use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
 use crate::indent::unindent_body_lines;
 
-use super::options::parse_common_image_options;
+use super::options::{ImageContext, parse_common_image_options};
 
 pub(in crate::directives) const DIRECTIVE: &str = "image";
 
@@ -34,7 +34,8 @@ pub(in crate::directives) fn parse_image_directive(
     let unindented_lines = unindent_body_lines(body_lines);
     let (option_lines, body_start) = scan_option_lines(&unindented_lines);
     let refs: Vec<&OptionLine> = option_lines.iter().collect();
-    let (common, unrecognized) = parse_common_image_options(&refs, DIRECTIVE, diagnostics, ctx);
+    let (common, unrecognized) =
+        parse_common_image_options(&refs, DIRECTIVE, ImageContext::Standalone, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,
         DIRECTIVE,

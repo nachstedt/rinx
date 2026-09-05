@@ -19,6 +19,22 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::options::OptionLine;
 
+/// Which of the two places an image's options may be written in — the two
+/// differ in which `:align:` values are valid and whether `:name:` is
+/// allowed at all.
+///
+/// A block-level `.. image::`/`.. figure::` accepts only the three horizontal
+/// alignments and does allow `:name:`; an image inside a substitution
+/// definition (`.. |name| image:: ...`) additionally accepts the three
+/// vertical alignments — docutils' own rule, since only there is there a text
+/// baseline to align to — but refuses `:name:`, since a substitution may be
+/// referenced more than once while a name must be unique.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(in crate::directives) enum ImageContext {
+    Standalone,
+    Substitution,
+}
+
 /// The nine options both image directives accept, before a URI is attached.
 ///
 /// Separate from [`ImageOptions`] itself only because the URI comes from the
@@ -105,6 +121,7 @@ fn report_empty_value(
 pub(in crate::directives) fn parse_common_image_options<'a>(
     option_lines: &[&'a OptionLine],
     directive: &str,
+    context: ImageContext,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> (CommonImageOptions, Vec<&'a OptionLine>) {
@@ -136,10 +153,16 @@ pub(in crate::directives) fn parse_common_image_options<'a>(
                     ctx.line_span(line.line_index, &line.raw),
                 )),
             },
-            "align" => match ImageAlign::parse(&line.value) {
-                Some(align) => options.align = Some(align),
-                None => report_invalid_align(line, directive, diagnostics, ctx),
-            },
+            "align" => {
+                let parsed = match context {
+                    ImageContext::Standalone => ImageAlign::parse(&line.value),
+                    ImageContext::Substitution => ImageAlign::parse_any(&line.value),
+                };
+                match parsed {
+                    Some(align) => options.align = Some(align),
+                    None => report_invalid_align(line, directive, context, diagnostics, ctx),
+                }
+            }
             "target" => {
                 if line.value.is_empty() {
                     report_empty_value(line, directive, diagnostics, ctx);
@@ -149,6 +172,9 @@ pub(in crate::directives) fn parse_common_image_options<'a>(
             }
             "class" => {
                 options.classes = line.value.split_whitespace().map(str::to_string).collect();
+            }
+            "name" if context == ImageContext::Substitution => {
+                report_name_not_allowed(line, directive, diagnostics, ctx);
             }
             "name" => {
                 if line.value.is_empty() {
@@ -196,24 +222,31 @@ pub(in crate::directives) fn report_invalid_length(
     ));
 }
 
-/// Reports an `:align:` value that is not one of the three horizontal ones.
+/// Reports an `:align:` value that is not valid in `context`.
 ///
-/// A vertical name gets its own sentence: docutils *does* accept those, but
-/// only on an image inside a substitution definition, so an author who writes
-/// one has hit a real docutils rule rather than a typo, and listing the three
-/// horizontal values alone would not explain why.
+/// In the standalone context, a vertical name gets its own sentence: docutils
+/// *does* accept those, but only on an image inside a substitution
+/// definition, so an author who writes one outside of one has hit a real
+/// docutils rule rather than a typo, and listing the three horizontal values
+/// alone would not explain why. Inside a substitution definition all six are
+/// valid, so an unrecognized value there is simply unrecognized.
 fn report_invalid_align(
     line: &OptionLine,
     directive: &str,
+    context: ImageContext,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) {
-    let valid = ImageAlign::ALL
+    let candidates = match context {
+        ImageContext::Standalone => ImageAlign::HORIZONTAL,
+        ImageContext::Substitution => ImageAlign::ALL,
+    };
+    let valid = candidates
         .iter()
         .map(|align| align.as_str())
         .collect::<Vec<_>>()
         .join(", ");
-    let message = if is_vertical_name(&line.value) {
+    let message = if context == ImageContext::Standalone && is_vertical_name(&line.value) {
         format!(
             "{directive}: :align: '{}' aligns an image to the surrounding text baseline, \
              which is only meaningful inside a substitution definition; expected one of {valid}",
@@ -228,6 +261,25 @@ fn report_invalid_align(
     diagnostics.push(Diagnostic::at(
         DiagnosticCode::ImageInvalidAlign,
         message,
+        ctx.line_span(line.line_index, &line.raw),
+    ));
+}
+
+/// Reports a `:name:` written on an image inside a substitution definition,
+/// where docutils refuses it: a substitution may be referenced more than
+/// once, but a name must be unique, so the two cannot be reconciled.
+fn report_name_not_allowed(
+    line: &OptionLine,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::SubstitutionImageNameNotAllowed,
+        format!(
+            "{directive}: :name: cannot be used on an image inside a substitution definition, \
+             since a substitution may be referenced more than once but a name must be unique"
+        ),
         ctx.line_span(line.line_index, &line.raw),
     ));
 }
@@ -247,8 +299,13 @@ mod tests {
         let refs: Vec<&OptionLine> = option_lines.iter().collect();
         let mut diagnostics = Diagnostics::default();
         let ctx = ParseCtx::with_domain(Domain::Py);
-        let (options, unrecognized) =
-            parse_common_image_options(&refs, DIRECTIVE, &mut diagnostics, &ctx);
+        let (options, unrecognized) = parse_common_image_options(
+            &refs,
+            DIRECTIVE,
+            ImageContext::Standalone,
+            &mut diagnostics,
+            &ctx,
+        );
         let leftovers = unrecognized
             .iter()
             .map(|line| line.name.clone())
@@ -381,7 +438,7 @@ mod tests {
 
     #[test]
     fn test_parses_every_horizontal_alignment() {
-        for align in ImageAlign::ALL {
+        for align in ImageAlign::HORIZONTAL {
             // Given
             let body = format!(":align: {}", align.as_str());
 
@@ -578,6 +635,89 @@ mod tests {
         assert_eq!(
             options.width.map(|width| width.to_string()),
             Some("20px".to_string())
+        );
+    }
+
+    /// Scans `body` into option lines and runs the shared parser over them in
+    /// the substitution-definition context.
+    fn parse_in_substitution(body: &[&str]) -> (CommonImageOptions, Vec<String>, Diagnostics) {
+        let lines: Vec<String> = body.iter().map(|line| (*line).to_string()).collect();
+        let (option_lines, _) = scan_option_lines(&lines);
+        let refs: Vec<&OptionLine> = option_lines.iter().collect();
+        let mut diagnostics = Diagnostics::default();
+        let ctx = ParseCtx::with_domain(Domain::Py);
+        let (options, unrecognized) = parse_common_image_options(
+            &refs,
+            DIRECTIVE,
+            ImageContext::Substitution,
+            &mut diagnostics,
+            &ctx,
+        );
+        let leftovers = unrecognized
+            .iter()
+            .map(|line| line.name.clone())
+            .collect::<Vec<_>>();
+        (options, leftovers, diagnostics)
+    }
+
+    #[test]
+    fn test_substitution_context_accepts_every_vertical_alignment() {
+        for align in ImageAlign::VERTICAL {
+            // Given
+            let body = format!(":align: {}", align.as_str());
+
+            // When
+            let (options, _, diagnostics) = parse_in_substitution(&[&body]);
+
+            // Then
+            assert_eq!(options.align, Some(*align));
+            assert!(diagnostics.entries().is_empty());
+        }
+    }
+
+    #[test]
+    fn test_substitution_context_still_accepts_horizontal_alignment() {
+        // Given
+        let body = [":align: center"];
+
+        // When
+        let (options, _, diagnostics) = parse_in_substitution(&body);
+
+        // Then
+        assert_eq!(options.align, Some(ImageAlign::Center));
+        assert!(diagnostics.entries().is_empty());
+    }
+
+    #[test]
+    fn test_substitution_context_rejects_an_unknown_alignment_listing_all_six() {
+        // Given
+        let body = [":align: sideways"];
+
+        // When
+        let (_, _, diagnostics) = parse_in_substitution(&body);
+
+        // Then
+        assert_eq!(codes(&diagnostics), vec![DiagnosticCode::ImageInvalidAlign]);
+        assert!(
+            diagnostics.entries()[0].message.contains("top"),
+            "expected all six alignments listed, got: {}",
+            diagnostics.entries()[0].message
+        );
+    }
+
+    #[test]
+    fn test_substitution_context_rejects_a_name_option() {
+        // Given
+        let body = [":name: My Logo"];
+
+        // When
+        let (options, _, diagnostics) = parse_in_substitution(&body);
+
+        // Then
+        assert_eq!(options.name, None);
+        assert_eq!(
+            codes(&diagnostics),
+            vec![DiagnosticCode::SubstitutionImageNameNotAllowed]
         );
     }
 

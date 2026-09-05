@@ -74,6 +74,13 @@ pub(super) fn collect_image_paths(doc: &ast::Document) -> Vec<std::path::PathBuf
     ast::walk_nodes(&doc.nodes, &mut |node| match node {
         ast::Node::Directive(ast::Directive::Image(options)) => record(options),
         ast::Node::Directive(ast::Directive::Figure(figure)) => record(&figure.image),
+        // A `.. |name| image::` substitution definition names a real image
+        // too, subject to the same `images` attribute requirement.
+        ast::Node::Directive(ast::Directive::SubstitutionDefinition(definition)) => {
+            if let ast::SubstitutionKind::Image(options) = &definition.kind {
+                record(options);
+            }
+        }
         _ => {}
     });
     paths
@@ -175,6 +182,30 @@ mod tests {
 
         // Then
         assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_collect_image_paths_finds_a_substitution_image() {
+        // Given — a `.. |name| image::` definition names a real image too,
+        // subject to the same `images` attribute requirement.
+        let doc = ast::Document::new(
+            "index.rst".to_string(),
+            vec![ast::Node::Directive(
+                ast::Directive::SubstitutionDefinition(ast::SubstitutionDefinition {
+                    name: "biohazard".to_string(),
+                    kind: ast::SubstitutionKind::Image(Box::new(ast::ImageOptions::new(
+                        ast::ImageUri::new("biohazard.png"),
+                    ))),
+                    span: None,
+                }),
+            )],
+        );
+
+        // When
+        let paths = collect_image_paths(&doc);
+
+        // Then
+        assert_eq!(paths, vec![std::path::PathBuf::from("biohazard.png")]);
     }
 
     #[test]

@@ -308,6 +308,24 @@ diagnostic_codes! {
     /// An `.. option::` spec that does not look like any recognised form.
     OptionMalformedSpec => "option.malformed-spec",
 
+    // --- Substitution definitions (`.. |name| replace::` and friends) ------
+    /// A `|name|` reference matching no substitution definition, in this
+    /// document or case-insensitively.
+    SubstitutionUndefined => "substitution.undefined",
+    /// The same substitution name defined more than once. The first
+    /// definition wins; the rest are reported and ignored.
+    SubstitutionDuplicateDefinition => "substitution.duplicate-definition",
+    /// A `replace` substitution whose content refers back to itself, directly
+    /// or through a chain of other substitutions.
+    SubstitutionCircularReference => "substitution.circular-reference",
+    /// A `unicode` substitution's codepoint token was neither a decimal
+    /// number, a recognized hexadecimal form, nor an XML character entity.
+    SubstitutionInvalidUnicodeCode => "substitution.invalid-unicode-code",
+    /// A `:name:` on an image inside a substitution definition. docutils
+    /// refuses this: a substitution may be referenced more than once, but a
+    /// name must be unique.
+    SubstitutionImageNameNotAllowed => "substitution.image-name-not-allowed",
+
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never
     /// suppressible: a suppression that silences the report of its own typo
