@@ -5,11 +5,11 @@
 //! every other module here is something it delegates to — [`admonitions`],
 //! [`data_table`], [`table_directive`] (`.. table::`, sharing
 //! [`table_shell`]'s presentation-shell helpers with `data_table`),
-//! [`doctest`], [`glossary`], [`scope_directives`], [`tables`], the toctree
-//! sidebar markup in [`nav`], and the domain-object directives in
-//! [`domain_object`]. Inline markup inside these constructs goes to
-//! [`crate::inline`]. [`table_test_support`] holds fixtures `data_table`'s
-//! and `table_directive`'s tests share.
+//! [`doctest`], [`glossary`], [`option_list`], [`scope_directives`],
+//! [`tables`], the toctree sidebar markup in [`nav`], and the domain-object
+//! directives in [`domain_object`]. Inline markup inside these constructs
+//! goes to [`crate::inline`]. [`table_test_support`] holds fixtures
+//! `data_table`'s and `table_directive`'s tests share.
 
 mod admonitions;
 mod code_block;
@@ -19,6 +19,7 @@ mod doctest;
 mod domain_object;
 mod glossary;
 mod math;
+mod option_list;
 #[cfg(test)]
 mod render_test_support;
 mod scope_directives;

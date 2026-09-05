@@ -17,6 +17,7 @@ use super::definition_list::try_parse_definition_list;
 use super::doctest_block::try_parse_doctest_block;
 use super::enumerated_list::try_parse_enumerated_list;
 use super::literal_block::collect_literal_block_body;
+use super::option_list::try_parse_option_list;
 use super::simple_table::try_parse_simple_table;
 use super::table::try_parse_grid_table;
 use super::target::try_parse_target;
@@ -190,6 +191,14 @@ fn try_parse_construct(
     // item also is. docutils resolves this the same way, trying its
     // `enumerator` transition before falling through to text.
     if let Some(found) = try_parse_enumerated_list(lines, i, adornment_order, diagnostics, ctx) {
+        return Some(single(found));
+    }
+    // Before the definition list, for the same reason as the enumerated list
+    // above: an option marker with no same-line description (`--long`
+    // followed by an indented line) has the exact "line, then more-indented
+    // line" shape `detect_definition_term` matches. docutils' own transition
+    // order is bullet -> enumerated -> option -> definition.
+    if let Some(found) = try_parse_option_list(lines, i, adornment_order, diagnostics, ctx) {
         return Some(single(found));
     }
     if let Some(found) = try_parse_definition_list(lines, i, adornment_order, diagnostics, ctx) {

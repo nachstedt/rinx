@@ -7,6 +7,7 @@ use crate::enumerator::Enumerator;
 use crate::hashed_content::HashedContent;
 use crate::inline_node::InlineNode;
 use crate::list_item::ListItem;
+use crate::option_list_item::OptionListItem;
 use crate::table::TableRow;
 use crate::target_name::TargetName;
 
@@ -44,6 +45,12 @@ pub enum Node {
     },
     DefinitionList {
         items: Vec<DefinitionListItem>,
+    },
+    /// An option list (`-h, --help  Show this help.`), documenting a
+    /// program's command-line options. See [`OptionListItem`] for the
+    /// option-marker grammar.
+    OptionList {
+        items: Vec<OptionListItem>,
     },
     /// A grid table (`+---+---+` / `|` / `=` ASCII-art syntax). `header_rows`
     /// is empty when the table has no `=`-separated header.
