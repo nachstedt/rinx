@@ -474,3 +474,44 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
         Some(&TargetLocation::Internal("test.rst".to_string()))
     );
 }
+
+fn contents_named(name: Option<&str>) -> Node {
+    let options = rusty_sphinx_ast::ContentsOptions {
+        name: name.map(TargetName::new),
+        ..rusty_sphinx_ast::ContentsOptions::default()
+    };
+    Node::Directive(Directive::Contents(rusty_sphinx_ast::Contents {
+        title: None,
+        options,
+    }))
+}
+
+#[test]
+fn test_analyze_registers_contents_name_as_target() {
+    // Given — a `.. contents::` with a `:name:` option
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![contents_named(Some("main-toc"))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — a `:ref:` can reach it, exactly as it can reach a named toctree
+    assert_eq!(
+        index.targets.get(&TargetName::new("main-toc")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_contents_without_name_registers_no_target() {
+    // Given
+    let doc = Document::new("test.rst".to_string(), vec![contents_named(None)]);
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.targets.is_empty());
+}

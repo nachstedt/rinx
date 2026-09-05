@@ -6,8 +6,10 @@
 //! [`block_quote`], [`data_table`], [`table_directive`] (`.. table::`, sharing
 //! [`table_shell`]'s presentation-shell helpers with `data_table`),
 //! [`doctest`], [`glossary`], [`image`], [`figure`], [`line_block`],
-//! [`option_list`], [`scope_directives`], [`tables`], the toctree sidebar
-//! markup in [`nav`], and the domain-object directives in [`domain_object`].
+//! [`option_list`], [`scope_directives`], [`tables`], [`contents`] (the
+//! local, single-document table of contents `.. contents::` renders — not to
+//! be confused with the cross-document toctree sidebar markup in `crate::nav`),
+//! and the domain-object directives in [`domain_object`].
 //! Inline markup inside these constructs goes to [`crate::inline`].
 //! [`table_test_support`] holds fixtures `data_table`'s and
 //! `table_directive`'s tests share, and [`asset_href`] the `_images/` path
@@ -18,6 +20,7 @@ mod admonitions;
 mod asset_href;
 mod block_quote;
 mod code_block;
+mod contents;
 mod data_table;
 mod dispatch;
 mod doctest;

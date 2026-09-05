@@ -41,6 +41,7 @@ Welcome to the Rusty-Sphinx example.
    noqa
    doctests
    toctree/index
+   contents/index
    team_a/index
    team_b/index
 

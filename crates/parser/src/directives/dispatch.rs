@@ -10,6 +10,7 @@ use crate::indent::indent_width;
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::body::{collect_argument_continuation_lines, collect_directive_body, join_body_lines};
 use super::code_block::{parse_code_block, parse_highlight, parse_literal_include};
+use super::contents::parse_contents;
 use super::data_table::{parse_csv_table, parse_list_table};
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
@@ -168,6 +169,26 @@ fn try_parse_substitution_definition(
     Some(Node::Directive(directive))
 }
 
+/// Recognizes and parses the two directives that each build a table of
+/// contents from a document set: project-wide `.. toctree::` and this
+/// document's own `.. contents::`. Grouped for the same reason
+/// [`try_parse_substitution_definition`] is split out — one more `if name ==`
+/// pair would have pushed [`parse_body_directive`] past its line limit.
+fn try_parse_contents_family(
+    name: &str,
+    argument: &str,
+    body_lines: &[&str],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<Node> {
+    let directive = match name {
+        "toctree" => parse_toctree(body_lines, diagnostics, ctx),
+        "contents" => parse_contents(argument, body_lines, diagnostics, ctx),
+        _ => return None,
+    };
+    Some(Node::Directive(directive))
+}
+
 fn parse_body_directive(
     name: String,
     argument: String,
@@ -187,9 +208,8 @@ fn parse_body_directive(
     ) {
         return node;
     }
-    if name == "toctree" {
-        let directive = parse_toctree(body_lines, diagnostics, ctx);
-        return Node::Directive(directive);
+    if let Some(node) = try_parse_contents_family(&name, &argument, body_lines, diagnostics, ctx) {
+        return node;
     }
     if name == "plantuml" {
         let directive = Directive::PlantUml(rusty_sphinx_ast::HashedContent::new(join_body_lines(

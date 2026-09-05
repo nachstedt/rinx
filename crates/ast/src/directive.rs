@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::admonition_kind::AdmonitionKind;
 use crate::code_block::CodeBlock;
 use crate::code_language::ResolvedLanguage;
+use crate::contents::Contents;
 use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
 use crate::glossary_entry::GlossaryEntry;
@@ -23,6 +24,7 @@ use crate::version_change_kind::VersionChangeKind;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Directive {
     Toctree(Toctree),
+    Contents(Contents),
     PlantUml(HashedContent),
     Admonition {
         kind: AdmonitionKind,

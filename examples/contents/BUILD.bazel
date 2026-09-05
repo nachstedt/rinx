@@ -1,0 +1,15 @@
+"""Documents exercising every `.. contents::` option.
+
+Its own library and package, mirroring `//examples/toctree`'s shape for the
+same reason: one page can show every option without competing with the rest
+of the example site's own sections.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    deps = [],
+    visibility = ["//visibility:public"],
+)

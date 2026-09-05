@@ -195,6 +195,17 @@ impl SectionIdAllocator {
         Self::default()
     }
 
+    /// Marks `id` as already handed out, without allocating anything.
+    ///
+    /// For a second allocator covering the same document from a different
+    /// title universe — a `.. contents::` block's own self-anchor, allocated
+    /// separately from [`allocate_section_ids`]'s heading pass — so its ids
+    /// still cannot collide with a heading's, without threading one allocator
+    /// through two unrelated call sites.
+    pub fn seed(&mut self, id: &SectionId) {
+        self.used.insert(id.0.clone());
+    }
+
     /// The id for the next heading, whose text is `title`.
     ///
     /// A heading whose text yields no usable slug gets `section-1`,
@@ -471,6 +482,34 @@ mod tests {
         assert_eq!(second.as_str(), "overview");
         assert_ne!(third.as_str(), "overview-1");
         assert_eq!(third.as_str(), "overview-2");
+    }
+
+    #[test]
+    fn test_seed_keeps_a_later_allocation_from_reusing_it() {
+        // Given — a heading id allocated by a different `SectionIdAllocator`.
+        let heading_id = SectionId::from_title("Overview");
+        let mut allocator = SectionIdAllocator::new();
+
+        // When
+        allocator.seed(&heading_id);
+        let allocated = allocator.allocate("Overview");
+
+        // Then
+        assert_eq!(allocated.as_str(), "overview-1");
+    }
+
+    #[test]
+    fn test_seed_does_not_affect_an_unrelated_title() {
+        // Given
+        let heading_id = SectionId::from_title("Overview");
+        let mut allocator = SectionIdAllocator::new();
+
+        // When
+        allocator.seed(&heading_id);
+        let allocated = allocator.allocate("Reference");
+
+        // Then
+        assert_eq!(allocated.as_str(), "reference");
     }
 
     #[test]

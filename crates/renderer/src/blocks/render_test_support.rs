@@ -72,6 +72,8 @@ pub(super) fn with_ctx_for<R>(
         highlight_force: false,
         section_ids: &section_ids,
         at_top_level: true,
+        contents_backlinks: &mut std::collections::HashMap::new(),
+        contents_id_allocator: &mut rusty_sphinx_ast::SectionIdAllocator::new(),
         scope: rusty_sphinx_scope::Scope::default(),
     };
 

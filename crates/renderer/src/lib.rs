@@ -111,6 +111,26 @@ pub(crate) struct RenderCtx<'a> {
     /// directive body is not one. `render_nodes` clears this for the duration
     /// of any nested list and restores it afterwards.
     pub at_top_level: bool,
+    /// Where a heading should link back to, for a `.. contents::` covering it
+    /// with `:backlinks:` other than `none`, keyed by the heading's own id.
+    ///
+    /// Populated while rendering a `.. contents::` directive (see
+    /// `blocks::contents`) and consulted by `render_heading`, which normally
+    /// runs *after* it since a table of contents is almost always written
+    /// before the sections it lists — a `.. contents::` placed after its own
+    /// sections will not backlink them, a deliberate document-order
+    /// limitation of this single left-to-right rendering pass.
+    pub contents_backlinks: &'a mut std::collections::HashMap<rusty_sphinx_ast::SectionId, String>,
+    /// Hands out a self-anchor id to a `.. contents::` with no explicit
+    /// `:name:`.
+    ///
+    /// Seeded from every id in `section_ids` before rendering starts, so an
+    /// auto-generated contents anchor can never collide with a heading's —
+    /// and kept as one allocator for the whole document, rather than a fresh
+    /// one per directive, so two un-named `.. contents::` blocks (both
+    /// defaulting to the title "Contents") are disambiguated against each
+    /// other too, exactly as docutils' single shared id registry would.
+    pub contents_id_allocator: &'a mut rusty_sphinx_ast::SectionIdAllocator,
     /// The enclosing scope for both domains, mirroring the analyzer's
     /// `index_nodes`/`index_domain_object` scope so a domain object's anchor
     /// `id` always matches the qualified key the analyzer indexed it under.
@@ -172,12 +192,17 @@ pub fn render_with_assets(
     let mut math_errors = Vec::new();
     let mut highlight_errors = Vec::new();
     let mut image_errors = Vec::new();
+    let mut contents_backlinks = std::collections::HashMap::new();
 
     let domain_resolver = DomainObjectResolver::new(index);
     let option_resolver = OptionResolver::new(index);
     let math = MathRenderer::new();
     let highlighter = Highlighter::new();
     let section_ids = rusty_sphinx_ast::allocate_section_ids(&doc.nodes);
+    let mut contents_id_allocator = rusty_sphinx_ast::SectionIdAllocator::new();
+    for id in section_ids.values() {
+        contents_id_allocator.seed(id);
+    }
     let mut ctx = RenderCtx {
         index,
         domain_resolver: &domain_resolver,
@@ -199,6 +224,8 @@ pub fn render_with_assets(
         highlight_force: false,
         section_ids: &section_ids,
         at_top_level: true,
+        contents_backlinks: &mut contents_backlinks,
+        contents_id_allocator: &mut contents_id_allocator,
         scope: Scope::default(),
     };
 

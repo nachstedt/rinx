@@ -160,6 +160,7 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         | Directive::Highlight { .. }
         | Directive::Math { .. }
         | Directive::Toctree { .. }
+        | Directive::Contents { .. }
         | Directive::PlantUml(_)
         | Directive::Index { .. }
         | Directive::PyCurrentModule { .. }
