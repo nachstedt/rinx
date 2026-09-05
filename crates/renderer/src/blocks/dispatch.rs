@@ -12,7 +12,9 @@ use super::block_quote::render_block_quote;
 use super::data_table::{DataTableParams, render_data_table};
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
+use super::figure::render_figure_directive;
 use super::glossary::{render_glossary, render_index_anchor};
+use super::image::render_image_directive;
 use super::line_block::render_line_block;
 use super::math::render_math;
 use super::option_list::render_option_list;
@@ -350,12 +352,12 @@ fn render_toctree_directive(html: &mut String, toctree: &Toctree, ctx: &mut Rend
 fn render_plantuml_directive(html: &mut String, content: &HashedContent, ctx: &RenderCtx<'_>) {
     let escaped_hash = html_escape::encode_text(content.hash());
 
-    let current_dir = std::path::Path::new(ctx.doc_path)
-        .parent()
-        .unwrap_or_else(|| std::path::Path::new(""));
-    let image_path = std::path::Path::new("_images").join(format!("{escaped_hash}.svg"));
-    let relative_path = pathdiff::diff_paths(&image_path, current_dir).unwrap_or(image_path);
-    let src = relative_path.display();
+    // The same `_images/` arithmetic an authored `.. image::` uses. The two
+    // had private copies of it once, and only this one was right.
+    let src = super::asset_href::relative_asset_href(
+        std::path::Path::new(&format!("{escaped_hash}.svg")),
+        ctx.doc_path,
+    );
 
     let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
     let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
@@ -368,20 +370,14 @@ fn render_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCt
         Directive::CodeBlock(block) => {
             super::code_block::render_code_block_directive(html, block, ctx);
         }
-        // Produces no output of its own: it exists to change the language
-        // every following block inherits, so rendering it *is* the state
-        // update. Document order is what makes this correct, which is why it
-        // happens in the node walk rather than in a pre-pass.
         Directive::Highlight {
             language,
             linenothreshold,
             force,
-        } => {
-            ctx.highlight_language = language.clone();
-            ctx.linenothreshold = *linenothreshold;
-            ctx.highlight_force = *force;
-        }
+        } => super::code_block::apply_highlight_directive(language, *linenothreshold, *force, ctx),
         Directive::PlantUml(content) => render_plantuml_directive(html, content, ctx),
+        Directive::Image(options) => render_image_directive(html, options, ctx),
+        Directive::Figure(figure) => render_figure_directive(html, figure, ctx),
         Directive::Admonition {
             kind,
             title,

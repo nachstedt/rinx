@@ -385,3 +385,92 @@ fn test_analyze_code_block_without_name_registers_no_target() {
     // Then
     assert!(index.targets.is_empty());
 }
+
+/// An `.. image::` carrying `name`, with every other option left at its
+/// default.
+fn image_named(name: Option<&str>) -> Node {
+    let mut options =
+        rusty_sphinx_ast::ImageOptions::new(rusty_sphinx_ast::ImageUri::new("logo.png"));
+    options.name = name.map(TargetName::new);
+    Node::Directive(Directive::Image(Box::new(options)))
+}
+
+/// A `.. figure::` carrying `name` on its image and `legend` as its body.
+fn figure_named(name: Option<&str>, legend: Vec<Node>) -> Node {
+    let mut options =
+        rusty_sphinx_ast::ImageOptions::new(rusty_sphinx_ast::ImageUri::new("logo.png"));
+    options.name = name.map(TargetName::new);
+    let mut figure = rusty_sphinx_ast::Figure::new(options);
+    figure.legend = legend;
+    Node::Directive(Directive::Figure(Box::new(figure)))
+}
+
+#[test]
+fn test_analyze_registers_image_name_as_target() {
+    // Given — an `.. image::` with a `:name:` option
+    let doc = Document::new("test.rst".to_string(), vec![image_named(Some("the-logo"))]);
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — a `:ref:` can reach it, exactly as it can reach a named table
+    assert_eq!(
+        index.targets.get(&TargetName::new("the-logo")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_image_without_name_registers_no_target() {
+    // Given
+    let doc = Document::new("test.rst".to_string(), vec![image_named(None)]);
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.targets.is_empty());
+}
+
+#[test]
+fn test_analyze_registers_figure_name_as_target() {
+    // Given — a `.. figure::` with a `:name:` option
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![figure_named(Some("the-figure"), vec![])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("the-figure")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_indexes_targets_inside_a_figure_legend() {
+    // Given — a legend is ordinary body content, so a target written in one
+    // must be reachable like any other
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![figure_named(
+            None,
+            vec![Node::Target {
+                name: TargetName::new("in-legend"),
+                uri: None,
+            }],
+        )],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("in-legend")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}

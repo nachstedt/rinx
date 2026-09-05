@@ -1,9 +1,11 @@
 //! Abstract Syntax Tree representations for the Rusty-Sphinx Document.
 //!
-//! One module per node type or supporting value type, with four families
+//! One module per node type or supporting value type, with five families
 //! grouped into their own trees: `object_type` (the `domain:objtype` tags),
 //! `doctest` (the `sphinx.ext.doctest` node family), `enumerator`
-//! (enumerated-list markers) and `table` (table content and layout).
+//! (enumerated-list markers), `table` (table content and layout) and `image`
+//! (the URI, measurement and alignment vocabulary the two image directives
+//! share).
 //! `object_naming` holds the signature/option naming helpers every later
 //! pipeline phase shares, and `visit` the traversal every phase walks with.
 //!
@@ -13,6 +15,12 @@
 //! instead of failing, and a [`Span`] is where in the `.rst` it points. They
 //! live here because [`Document`] carries them and every later phase both
 //! produces and forwards them.
+//!
+//! `path_normalization` is the odd one out: a plain `.`/`..` resolver with no
+//! document vocabulary in it at all. It lives here because both
+//! [`ImageUri::resolve`] and `rusty_sphinx_toctree` need it and the toctree
+//! crate already depends on this one, so this is the only place the two can
+//! share one implementation.
 
 mod admonition_kind;
 mod c_signature;
@@ -29,6 +37,7 @@ mod domain_object_body;
 mod enumerator;
 mod glossary_entry;
 mod hashed_content;
+mod image;
 mod index_entry;
 mod inline_node;
 mod line_block;
@@ -38,6 +47,7 @@ mod non_empty_vector;
 mod object_naming;
 mod object_type;
 mod option_list_item;
+mod path_normalization;
 mod py_version_spec;
 mod section_id;
 mod span;
@@ -66,6 +76,10 @@ pub use domain_object_body::DomainObjectBody;
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use hashed_content::HashedContent;
+pub use image::{
+    Figure, FigureWidth, ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri,
+    InvalidLength, Length, LengthOrPercentage, LengthUnit, Percentage, is_vertical_name,
+};
 pub use index_entry::IndexEntry;
 pub use inline_node::{InlineNode, inline_plain_text};
 pub use line_block::LineBlockItem;
@@ -78,6 +92,7 @@ pub use object_naming::{
 };
 pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
 pub use option_list_item::{OptionArgument, OptionArgumentDelimiter, OptionListItem, OptionSpec};
+pub use path_normalization::normalize_path;
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
 pub use span::{Position, Span};

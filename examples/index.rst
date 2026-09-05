@@ -33,6 +33,8 @@ Welcome to the Rusty-Sphinx example.
    csv_table
    table_directive
    math
+   images
+   figures
    index_entries
    noqa
    doctests

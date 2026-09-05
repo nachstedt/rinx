@@ -11,8 +11,8 @@ use math_core::MathDisplay;
 use rusty_sphinx_ast::Span;
 use rusty_sphinx_index::ProjectIndex;
 
-use super::doc_href::relative_doc_href;
 use crate::blocks::equation_anchor_id;
+use crate::doc_href::relative_doc_href;
 use crate::math::{MathError, MathRenderer};
 use crate::{BrokenLink, BrokenLinkKind};
 

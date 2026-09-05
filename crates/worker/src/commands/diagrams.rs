@@ -1,6 +1,13 @@
 //! The `extract_diagrams` and `validate_images` subcommands, kept together
 //! since they share [`collect_plantuml_contents`] — the set of diagrams that
 //! gets *compiled* and the set that gets *validated* must never drift apart.
+//!
+//! `validate_images` checks a second population too: the pictures an author
+//! wrote a `.. image::` or `.. figure::` for. Both kinds are served from the
+//! site's single `_images/` directory and both fail the same way when they are
+//! absent — a page that looks finished and renders a broken picture — so one
+//! action checks both rather than two actions disagreeing about which files
+//! had to exist.
 
 use anyhow::{Context, Result, anyhow};
 use rusty_sphinx_ast as ast;
@@ -48,6 +55,30 @@ pub(crate) fn cmd_extract_diagrams(args: &[String]) -> Result<()> {
     Ok(())
 }
 
+/// Collects the project files every `.. image::`/`.. figure::` in `doc`
+/// refers to, as paths under the site's `_images/` directory.
+///
+/// External URLs are skipped: nothing bundles them, so their absence from the
+/// site is not a build failure. Resolution goes through
+/// [`ast::ImageUri::resolve`], the same function the bundler and the renderer
+/// use, so a `..` in a path cannot make the three disagree.
+pub(super) fn collect_image_paths(doc: &ast::Document) -> Vec<std::path::PathBuf> {
+    let mut paths = Vec::new();
+    let mut record = |options: &ast::ImageOptions| {
+        if let Some(resolved) = options.uri.resolve(&doc.path)
+            && !paths.contains(&resolved)
+        {
+            paths.push(resolved);
+        }
+    };
+    ast::walk_nodes(&doc.nodes, &mut |node| match node {
+        ast::Node::Directive(ast::Directive::Image(options)) => record(options),
+        ast::Node::Directive(ast::Directive::Figure(figure)) => record(&figure.image),
+        _ => {}
+    });
+    paths
+}
+
 pub(super) fn process_validate_images(ast_jsons: &[String], image_dir: &str) -> Result<()> {
     let mut missing_images = Vec::new();
 
@@ -60,6 +91,16 @@ pub(super) fn process_validate_images(ast_jsons: &[String], image_dir: &str) -> 
             if !svg_path.exists() {
                 missing_images.push(format!(
                     "Image {svg_name} missing for document {}",
+                    doc.path
+                ));
+            }
+        }
+        for path in collect_image_paths(&doc) {
+            if !std::path::Path::new(image_dir).join(&path).exists() {
+                missing_images.push(format!(
+                    "Image {} missing for document {} — if this is a Bazel build, add the file \
+                     to the library's images attribute",
+                    path.display(),
                     doc.path
                 ));
             }
@@ -98,6 +139,89 @@ pub(crate) fn cmd_validate_images(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A document at `doc_path` holding one `.. image::` of `uri`.
+    fn document_with_image(doc_path: &str, uri: &str) -> ast::Document {
+        ast::Document::new(
+            doc_path.to_string(),
+            vec![ast::Node::Directive(ast::Directive::Image(Box::new(
+                ast::ImageOptions::new(ast::ImageUri::new(uri)),
+            )))],
+        )
+    }
+
+    #[test]
+    fn test_collect_image_paths_resolves_against_the_document() {
+        // Given
+        let doc = document_with_image("guide/intro.rst", "images/logo.png");
+
+        // When
+        let paths = collect_image_paths(&doc);
+
+        // Then
+        assert_eq!(
+            paths,
+            vec![std::path::PathBuf::from("guide/images/logo.png")]
+        );
+    }
+
+    #[test]
+    fn test_collect_image_paths_skips_an_external_url() {
+        // Given — nothing bundles it, so its absence is not a build failure
+        let doc = document_with_image("index.rst", "https://example.com/logo.png");
+
+        // When
+        let paths = collect_image_paths(&doc);
+
+        // Then
+        assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_collect_image_paths_finds_a_figures_image() {
+        // Given
+        let figure = ast::Figure::new(ast::ImageOptions::new(ast::ImageUri::new("logo.png")));
+        let doc = ast::Document::new(
+            "index.rst".to_string(),
+            vec![ast::Node::Directive(ast::Directive::Figure(Box::new(
+                figure,
+            )))],
+        );
+
+        // When
+        let paths = collect_image_paths(&doc);
+
+        // Then
+        assert_eq!(paths, vec![std::path::PathBuf::from("logo.png")]);
+    }
+
+    #[test]
+    fn test_process_validate_images_reports_a_missing_authored_image() {
+        // Given — what an undeclared image looks like: absent from the bundle
+        let doc = document_with_image("index.rst", "logo.png");
+        let ast_json = serde_json::to_string(&doc).unwrap();
+
+        // When
+        let result = process_validate_images(&[ast_json], "/nonexistent-image-bundle");
+
+        // Then
+        let message = result.expect_err("should fail").to_string();
+        assert!(message.contains("logo.png"), "got: {message}");
+        assert!(message.contains("images attribute"), "got: {message}");
+    }
+
+    #[test]
+    fn test_process_validate_images_accepts_an_external_url() {
+        // Given
+        let doc = document_with_image("index.rst", "https://example.com/logo.png");
+        let ast_json = serde_json::to_string(&doc).unwrap();
+
+        // When
+        let result = process_validate_images(&[ast_json], "/nonexistent-image-bundle");
+
+        // Then
+        assert!(result.is_ok());
+    }
 
     #[test]
     fn test_process_extract_diagrams_creates_files() {

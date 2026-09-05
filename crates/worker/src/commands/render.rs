@@ -9,11 +9,11 @@ use std::fs;
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
     check_broken_links_strict, format_broken_link_warning, format_highlight_error_warning,
-    format_math_error_warning, format_object_type_mismatch_warning,
+    format_image_error_warning, format_math_error_warning, format_object_type_mismatch_warning,
 };
 use super::suppression::{
-    retain_reportable_highlight_errors, retain_reportable_links, retain_reportable_math_errors,
-    retain_reportable_mismatches,
+    retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
+    retain_reportable_math_errors, retain_reportable_mismatches,
 };
 
 /// One rendered page, plus everything the caller reports about it.
@@ -29,6 +29,7 @@ pub(super) struct RenderedPage {
     pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
     pub math_errors: Vec<renderer::MathError>,
     pub highlight_errors: Vec<renderer::HighlightError>,
+    pub image_errors: Vec<renderer::ImageError>,
 }
 
 pub(super) fn process_render(
@@ -37,13 +38,15 @@ pub(super) fn process_render(
     config: &config::SiteConfig,
     template_str: &str,
     doc_path: &str,
+    embedded_assets: &renderer::EmbeddedAssets,
 ) -> Result<RenderedPage> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
     let index: rusty_sphinx_index::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
 
-    let render_output = renderer::render_with_config(&doc, &index, doc_path, config);
+    let render_output =
+        renderer::render_with_assets(&doc, &index, doc_path, config, embedded_assets);
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -89,6 +92,10 @@ pub(super) fn process_render(
             &render_output.highlight_errors,
             &doc.suppressions,
         ),
+        image_errors: retain_reportable_image_errors(
+            &render_output.image_errors,
+            &doc.suppressions,
+        ),
         source_path: doc.path,
     })
 }
@@ -102,6 +109,7 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     let doc_path = flag_value(args, "--doc-path")?;
     let strict_links = args.iter().any(|a| a == "--strict-links");
     let warnings_output = flag_value_opt(args, "--warnings-output");
+    let embeds_path = flag_value_opt(args, "--embeds");
 
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Error reading config '{config_path}'"))?;
@@ -116,12 +124,25 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     let index_json =
         fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
 
+    // Absent whenever the document embeds nothing, which is the common case:
+    // an empty table renders every image as an ordinary link.
+    let embedded_assets = match &embeds_path {
+        Some(path) => {
+            let json = fs::read_to_string(path)
+                .with_context(|| format!("Error reading embedded assets '{path}'"))?;
+            serde_json::from_str(&json)
+                .with_context(|| format!("Error parsing embedded assets '{path}'"))?
+        }
+        None => renderer::EmbeddedAssets::new(),
+    };
+
     let page = process_render(
         &ast_json,
         &index_json,
         &site_config,
         &template_str,
         &doc_path,
+        &embedded_assets,
     )?;
 
     // Warnings name the `.rst` the document came from, not the site-relative
@@ -143,6 +164,9 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
             "{}",
             format_highlight_error_warning(&page.source_path, error)
         );
+    }
+    for error in &page.image_errors {
+        eprintln!("{}", format_image_error_warning(&page.source_path, error));
     }
 
     // Emit the structured domain-object warning sidecar when requested. Written
@@ -181,7 +205,15 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let page = process_render(doc, index, &config, template, "test.rst").unwrap();
+        let page = process_render(
+            doc,
+            index,
+            &config,
+            template,
+            "test.rst",
+            &renderer::EmbeddedAssets::new(),
+        )
+        .unwrap();
 
         // Then
         assert!(page.html.contains("<h1 id=\"title\">Title</h1>"));
@@ -200,7 +232,15 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let page = process_render(doc, index, &config, template, "test.rst").unwrap();
+        let page = process_render(
+            doc,
+            index,
+            &config,
+            template,
+            "test.rst",
+            &renderer::EmbeddedAssets::new(),
+        )
+        .unwrap();
 
         // Then
         assert_eq!(page.broken_links.len(), 1);
@@ -220,7 +260,15 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let page = process_render(doc, index, &config, template, "test.rst").unwrap();
+        let page = process_render(
+            doc,
+            index,
+            &config,
+            template,
+            "test.rst",
+            &renderer::EmbeddedAssets::new(),
+        )
+        .unwrap();
 
         // Then — resolved, not broken, but flagged as a mismatch
         assert!(page.broken_links.is_empty());

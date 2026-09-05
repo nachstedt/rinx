@@ -15,6 +15,7 @@ use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
 use super::domains::{DirectiveSignatures, parse_domain_object};
 use super::glossary::parse_glossary;
+use super::image::{parse_figure_directive, parse_image_directive};
 use super::index_directive::parse_index_directive;
 use super::math::parse_math_directive;
 use super::scope::try_parse_scope_directive;
@@ -96,11 +97,19 @@ pub(crate) fn try_parse_directive(
     // its own body's first line *and* column, so none of them has to know
     // where in the document the directive was written. The column shift
     // matters because the parsers unindent the body before parsing it.
+    //
+    // The directive's *own* line is therefore no longer reachable from that
+    // context, so it is captured here and passed alongside: a directive whose
+    // content can still fail after parsing (an image whose bytes never reach
+    // the renderer) needs a position to report against, and a bare
+    // `.. image:: logo.png` has no body line to borrow one from.
+    let directive_span = ctx.line_span(i, line);
     let body_ctx = ctx.nested(i + 1 + body.first_line_offset, body_indent(&body.lines));
     let (consumed_lines, body_lines) = (body.consumed, body.lines);
     let node = parse_body_directive(
         name,
         argument,
+        directive_span,
         &body_lines,
         adornment_order,
         diagnostics,
@@ -118,6 +127,7 @@ pub(crate) fn try_parse_directive(
 fn parse_body_directive(
     name: String,
     argument: String,
+    directive_span: Option<rusty_sphinx_ast::Span>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -177,6 +187,22 @@ fn parse_body_directive(
     }
     if name == "csv-table" {
         let directive = parse_csv_table(argument, body_lines, adornment_order, diagnostics, ctx);
+        return Node::Directive(directive);
+    }
+    if name == "image" {
+        let directive =
+            parse_image_directive(&argument, directive_span, body_lines, diagnostics, ctx);
+        return Node::Directive(directive);
+    }
+    if name == "figure" {
+        let directive = parse_figure_directive(
+            &argument,
+            directive_span,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        );
         return Node::Directive(directive);
     }
     if name == "math" {
@@ -260,6 +286,7 @@ mod tests {
         let node = parse_body_directive(
             name.to_string(),
             argument.to_string(),
+            None,
             body,
             &mut adornment_order,
             &mut diagnostics,

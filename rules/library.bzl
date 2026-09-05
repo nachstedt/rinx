@@ -13,6 +13,7 @@ def _rusty_sphinx_library_impl(ctx):
     ast_files = []
     svg_dirs = []
     doctest_plans = []
+    embed_sidecars = []
 
     local_doc_names = [src.short_path.removesuffix(".rst") for src in ctx.files.srcs]
     
@@ -94,6 +95,38 @@ def _rusty_sphinx_library_impl(ctx):
         )
         doctest_plans.append(doctest_plan)
 
+        # Phase 1.75: Embed the images this document asked to inline.
+        #
+        # Every declared image joins this action's inputs, because Bazel cannot
+        # know at analysis time which of them a document actually embeds — that
+        # is written inside the .rst. Choosing the coarser granularity here is
+        # what keeps the *render* action fine-grained: it takes only this
+        # sidecar, so an image edit re-runs this cheap AST walk for every
+        # document but leaves the bytes identical for every document that does
+        # not embed the changed file, and those pages do not re-render.
+        #
+        # That is the same cache firewall the doctest plans have, and the
+        # reason this is a separate action rather than work done during the
+        # render. See docs/decisions/007-image-assets.md.
+        embeds_out = ctx.actions.declare_file(
+            src.basename.removesuffix(".rst") + ".embeds.json",
+            sibling = src,
+        )
+        args_embeds = ctx.actions.args()
+        args_embeds.add("embed_assets")
+        args_embeds.add("--input", ast_out.path)
+        args_embeds.add("--output", embeds_out.path)
+
+        ctx.actions.run(
+            executable = worker,
+            arguments = [args_embeds],
+            inputs = [ast_out] + ctx.files.images,
+            outputs = [embeds_out],
+            mnemonic = "RustySphinxEmbedAssets",
+            progress_message = "Embedding assets for %s" % src.short_path,
+        )
+        embed_sidecars.append(embeds_out)
+
         # Phase 1.8: Extract PlantUML diagrams
         puml_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_puml", sibling = src)
         args_puml = ctx.actions.args()
@@ -142,6 +175,8 @@ fi
     # Collect .ast files from deps (other rusty_sphinx_library targets).
     transitive_asts = [dep[RustySphinxInfo].ast_files for dep in ctx.attr.deps]
     transitive_svg_dirs = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps]
+    transitive_images = [dep[RustySphinxInfo].image_files for dep in ctx.attr.deps]
+    transitive_embeds = [dep[RustySphinxInfo].embed_sidecars for dep in ctx.attr.deps]
 
     # `doctest_plans` carries this library's own plans, and is what
     # `rusty_sphinx_doctest_tests` consumes. It is deliberately not in
@@ -154,6 +189,8 @@ fi
             ast_files = depset(ast_files, transitive = transitive_asts),
             direct_doc_names = local_doc_names,
             svg_dirs = depset(svg_dirs, transitive = transitive_svg_dirs),
+            image_files = depset(ctx.files.images, transitive = transitive_images),
+            embed_sidecars = depset(embed_sidecars, transitive = transitive_embeds),
         ),
     ]
 
@@ -167,6 +204,10 @@ rusty_sphinx_library = rule(
         "csv_data": attr.label_list(
             allow_files = True,
             doc = "Data files this library's documents read via `.. csv-table::`'s `:file:` option. Paths in the document resolve relative to the document itself; declaring the file here is what puts it in the parse action's sandbox.",
+        ),
+        "images": attr.label_list(
+            allow_files = True,
+            doc = "Image files this library's documents show via `.. image::`/`.. figure::`. Paths in the document resolve relative to the document itself, or to the source root with a leading `/`. Declaring the file here is what gets it bundled into the site's `_images/` directory and, for a `:loading: embed` image, into the build action that inlines it; an undeclared image fails the site's image validation.",
         ),
         "deps": attr.label_list(
             providers = [RustySphinxInfo],
@@ -199,6 +240,9 @@ Standard cross-references/hyperlinks do not need to be declared in `deps` as the
 resolved late during the site rendering phase.
 
 Data files read by `.. csv-table:: :file:` go in `csv_data`, which is unrelated
-to `deps`: it declares bytes the parser reads, not another library.
+to `deps`: it declares bytes the parser reads, not another library. Pictures
+shown by `.. image::`/`.. figure::` go in `images`, which is unrelated to both:
+those bytes are read by neither the parser nor another library — they are
+copied into the site and, when a document asks to embed one, inlined into it.
 """,
 )

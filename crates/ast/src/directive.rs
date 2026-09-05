@@ -7,6 +7,7 @@ use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
 use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
+use crate::image::{Figure, ImageOptions};
 use crate::index_entry::IndexEntry;
 use crate::node::Node;
 use crate::span::Span;
@@ -152,6 +153,22 @@ pub enum Directive {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
+    /// `.. image::` — a picture on its own, with no caption.
+    ///
+    /// A newtype variant because [`ImageOptions`] is exactly this directive's
+    /// option set, shared verbatim with [`Self::Figure`]. Boxed because that
+    /// option set is large and an enum costs its largest variant everywhere:
+    /// unboxed, these two directives would grow every [`Node`] in every
+    /// document by half again.
+    Image(Box<ImageOptions>),
+    /// `.. figure::` — an image plus the two things that make it a figure: a
+    /// caption naming it, and a legend explaining it.
+    ///
+    /// Not folded into [`Self::Image`] with everything optional, even though a
+    /// captionless figure renders much like an image: `:figwidth:` and
+    /// `:figclass:` are meaningless on an `.. image::`, and docutils wraps the
+    /// two in different elements regardless of what is filled in.
+    Figure(Box<Figure>),
     /// A `.. code-block::` or `.. code::` — a code block with presentation
     /// options. A newtype variant, like [`Self::DomainObject`], because the
     /// two directives form their own closed family with their own option set.

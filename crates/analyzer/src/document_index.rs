@@ -186,9 +186,9 @@ pub(super) fn index_nodes(
                 register_directive_name(name.as_ref(), doc_path, index);
                 index_table_rows(header_rows.iter().chain(body_rows), doc_path, index, scope);
             }
-            Node::Directive(Directive::CodeBlock(block)) => {
-                register_directive_name(block.name.as_ref(), doc_path, index);
-            }
+            Node::Directive(
+                directive @ (Directive::CodeBlock(_) | Directive::Image(_) | Directive::Figure(_)),
+            ) => index_name_bearing_directive(directive, doc_path, index, scope),
             _ => {}
         }
     }
@@ -226,6 +226,38 @@ fn apply_scope_directive(directive: &Directive, scope: &mut Scope) {
 /// Shared by every directive with a `:name:` option — the two data-table
 /// directives, `.. table::`, and the two code-block directives — since none of
 /// them needs anything table- or code-specific to do it.
+/// Indexes the directives whose whole contribution is the `:name:` a `:ref:`
+/// can reach them by.
+///
+/// Split out of [`index_nodes`] for the same reason
+/// [`rusty_sphinx_ast::walk_nodes`] splits its directive arm out: three
+/// near-identical arms make the node match harder to read than the one thing
+/// they have in common. A figure additionally carries a body — its legend is
+/// ordinary content, so anything referenceable written there has to be indexed
+/// like any other body's. Any other directive is a no-op rather than a panic:
+/// the caller's match decides which ones arrive, and duplicating that list
+/// would be a second place to keep in step.
+fn index_name_bearing_directive(
+    directive: &Directive,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    scope: &mut Scope,
+) {
+    match directive {
+        Directive::CodeBlock(block) => {
+            register_directive_name(block.name.as_ref(), doc_path, index);
+        }
+        Directive::Image(options) => {
+            register_directive_name(options.name.as_ref(), doc_path, index);
+        }
+        Directive::Figure(figure) => {
+            register_directive_name(figure.image.name.as_ref(), doc_path, index);
+            index_nodes(&figure.legend, doc_path, index, scope);
+        }
+        _ => {}
+    }
+}
+
 fn register_directive_name(name: Option<&TargetName>, doc_path: &str, index: &mut ProjectIndex) {
     if let Some(target_name) = name {
         index.targets.insert(

@@ -38,12 +38,19 @@ rusty_sphinx_library(
         "csv_table.rst",
         "table_directive.rst",
         "math.rst",
+        "images.rst",
+        "figures.rst",
         "index_entries.rst",
         "noqa.rst",
     ],
     # `csv_table.rst` reads this via `.. csv-table:: :file:`. Declaring it here
     # is what puts it in the parse action's sandbox — see `rules/library.bzl`.
     csv_data = ["data/fruits.csv"],
+    # `images.rst` and `figures.rst` show this via `.. image::`/`.. figure::`.
+    # Declaring it here is what copies it into the site's `_images/` directory
+    # and what lets a `:loading: embed` image read its bytes — see
+    # `rules/library.bzl`.
+    images = ["data/logo.svg"],
     deps = [
         # `index.rst`'s toctree pulls in `doctests`, so the library owning it
         # has to be a declared dep.

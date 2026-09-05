@@ -64,6 +64,16 @@ def _rusty_sphinx_site_impl(ctx):
     )
 
     # ── Phase 3: render ───────────────────────────────────────────────────────
+    # Each page takes only its own document's embedded-asset sidecar, never the
+    # site's images — that is what keeps an image edit from re-rendering every
+    # page (see rules/library.bzl's embed action).
+    embeds_by_doc = {
+        sidecar.short_path.removesuffix(".embeds.json"): sidecar
+        for sidecar in depset(
+            transitive = [dep[RustySphinxInfo].embed_sidecars for dep in ctx.attr.deps],
+        ).to_list()
+    }
+
     html_files = []
     warnings_files = []
     for ast_file in ast_list:
@@ -94,10 +104,16 @@ def _rusty_sphinx_site_impl(ctx):
         if ctx.attr.strict_links:
             render_args.append("--strict-links")
 
+        render_inputs = [ast_file, index_out, template_file, config_file]
+        embeds_file = embeds_by_doc.get(doc_path)
+        if embeds_file:
+            render_args.extend(["--embeds", embeds_file.path])
+            render_inputs.append(embeds_file)
+
         ctx.actions.run(
             executable = worker,
             arguments = render_args,
-            inputs = [ast_file, index_out, template_file, config_file],
+            inputs = render_inputs,
             outputs = [html_out, warnings_out],
             mnemonic = "RustySphinxRender",
             progress_message = "Rendering %s" % ast_file.short_path,
@@ -109,23 +125,57 @@ def _rusty_sphinx_site_impl(ctx):
     all_svg_dirs = depset(
         transitive = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps],
     ).to_list()
-    
+
+    # Pictures the authors wrote, as opposed to the diagrams above that this
+    # build generated. Both are served from the one `_images/` directory, and
+    # an authored image keeps its source-root-relative path inside it
+    # (`team_a/logo.svg`, not `logo.svg`). Sphinx instead flattens every image
+    # to its basename and renames collisions with a global counter, which is
+    # order-dependent across libraries and hostile to per-action caching;
+    # keeping the path makes collisions impossible without any global pass.
+    # See docs/decisions/007-image-assets.md.
+    all_image_files = depset(
+        transitive = [dep[RustySphinxInfo].image_files for dep in ctx.attr.deps],
+    ).to_list()
+
     final_outputs = html_files + [genindex_out]
 
-    if all_svg_dirs:
+    if all_svg_dirs or all_image_files:
         images_out = ctx.actions.declare_directory(ctx.label.name + "_site_out/_images")
-        
+
         args = ctx.actions.args()
         args.add(images_out.path)
+        args.add(str(len(all_svg_dirs)))
         for svg_dir in all_svg_dirs:
             args.add(svg_dir.path)
-            
-        # Bazel passes $1 as the first arg. We don't use $0.
-        # So $1 is images_out, and $2, $3... are svg_dirs.
+        for image in all_image_files:
+            # Both halves: where to read it from now, and where it must land
+            # inside `_images/`.
+            args.add(image.path)
+            args.add(image.short_path)
+
+        # $1 is images_out and $2 the number of diagram directories that
+        # follow; the rest are (source, site-relative destination) pairs.
         ctx.actions.run_shell(
-            command = "OUT=\"$1\"; shift; mkdir -p \"$OUT\"; for dir in \"$@\"; do cp -R \"$dir\"/* \"$OUT\"/ 2>/dev/null || true; done",
+            command = """
+set -euo pipefail
+OUT="$1"; shift
+DIR_COUNT="$1"; shift
+mkdir -p "$OUT"
+while [ "$DIR_COUNT" -gt 0 ]; do
+  cp -R "$1"/* "$OUT"/ 2>/dev/null || true
+  shift
+  DIR_COUNT=$((DIR_COUNT - 1))
+done
+while [ "$#" -gt 0 ]; do
+  DEST="$OUT/$2"
+  mkdir -p "$(dirname "$DEST")"
+  cp "$1" "$DEST"
+  shift 2
+done
+""",
             arguments = [args],
-            inputs = all_svg_dirs,
+            inputs = all_svg_dirs + all_image_files,
             outputs = [images_out],
             mnemonic = "RustySphinxBundleImages",
             progress_message = "Bundling Site Images",
@@ -133,8 +183,11 @@ def _rusty_sphinx_site_impl(ctx):
         final_outputs.append(images_out)
 
         # ── Phase 4.5: Validate Images ────────────────────────────────────────
-        # This action ensures that all PlantUML diagrams referenced in ASTs
-        # have corresponding SVG files in the bundle.
+        # Checks that every picture the documents refer to actually reached the
+        # bundle: a PlantUML diagram that failed to compile, and an authored
+        # image left out of its library's `images` attribute alike. Both would
+        # otherwise ship as a page that looks finished and renders a broken
+        # picture.
         validation_sentinel = ctx.actions.declare_file(ctx.label.name + ".images.validated")
         val_args = ctx.actions.args()
         val_args.add("validate_images")
