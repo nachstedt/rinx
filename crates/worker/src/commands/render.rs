@@ -8,8 +8,9 @@ use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
-    check_broken_links_strict, format_broken_link_warning, format_highlight_error_warning,
-    format_image_error_warning, format_math_error_warning, format_object_type_mismatch_warning,
+    WarningOrigin, check_broken_links_strict, format_broken_link_warning,
+    format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
+    format_object_type_mismatch_warning,
 };
 use super::suppression::{
     retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
@@ -25,6 +26,10 @@ use super::suppression::{
 pub(super) struct RenderedPage {
     pub html: String,
     pub source_path: String,
+    /// The files this document included, so a warning about a span inside one
+    /// of them names the fragment rather than this document — see
+    /// [`WarningOrigin`](super::diagnostics::WarningOrigin).
+    pub source_files: Vec<String>,
     pub broken_links: Vec<renderer::BrokenLink>,
     pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
     pub math_errors: Vec<renderer::MathError>,
@@ -97,6 +102,7 @@ pub(super) fn process_render(
             &doc.suppressions,
         ),
         source_path: doc.path,
+        source_files: doc.source_files,
     })
 }
 
@@ -147,26 +153,21 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
 
     // Warnings name the `.rst` the document came from, not the site-relative
     // `doc_path` — a `file:line:column` is only useful if the file opens.
+    let origin = WarningOrigin::new(&page.source_path, &page.source_files);
     for link in &page.broken_links {
-        eprintln!("{}", format_broken_link_warning(&page.source_path, link));
+        eprintln!("{}", format_broken_link_warning(&origin, link));
     }
     for mismatch in &page.object_type_mismatches {
-        eprintln!(
-            "{}",
-            format_object_type_mismatch_warning(&page.source_path, mismatch)
-        );
+        eprintln!("{}", format_object_type_mismatch_warning(&origin, mismatch));
     }
     for error in &page.math_errors {
-        eprintln!("{}", format_math_error_warning(&page.source_path, error));
+        eprintln!("{}", format_math_error_warning(&origin, error));
     }
     for error in &page.highlight_errors {
-        eprintln!(
-            "{}",
-            format_highlight_error_warning(&page.source_path, error)
-        );
+        eprintln!("{}", format_highlight_error_warning(&origin, error));
     }
     for error in &page.image_errors {
-        eprintln!("{}", format_image_error_warning(&page.source_path, error));
+        eprintln!("{}", format_image_error_warning(&origin, error));
     }
 
     // Emit the structured domain-object warning sidecar when requested. Written
@@ -185,7 +186,7 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
             .with_context(|| format!("Error writing '{warnings_path}'"))?;
     }
 
-    check_broken_links_strict(strict_links, &page.source_path, &page.broken_links)?;
+    check_broken_links_strict(strict_links, &origin, &page.broken_links)?;
 
     fs::write(&output, page.html).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())

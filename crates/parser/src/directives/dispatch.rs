@@ -9,13 +9,14 @@ use crate::indent::indent_width;
 
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::body::{collect_argument_continuation_lines, collect_directive_body, join_body_lines};
-use super::code_block::{parse_code_block, parse_highlight};
+use super::code_block::{parse_code_block, parse_highlight, parse_literal_include};
 use super::data_table::{parse_csv_table, parse_list_table};
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
 use super::domains::{DirectiveSignatures, parse_domain_object};
 use super::glossary::parse_glossary;
 use super::image::{parse_figure_directive, parse_image_directive};
+use super::include::parse_include;
 use super::index_directive::parse_index_directive;
 use super::math::parse_math_directive;
 use super::scope::try_parse_scope_directive;
@@ -43,7 +44,7 @@ pub(crate) fn try_parse_directive(
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Option<(usize, Node)> {
+) -> Option<(usize, Vec<Node>)> {
     let line = lines[i].trim_end();
     if !(line.trim().starts_with(".. ") && line.contains("::")) {
         return None;
@@ -88,7 +89,7 @@ pub(crate) fn try_parse_directive(
         );
         return Some((
             1 + continuations_consumed + body.consumed,
-            Node::Directive(Directive::DomainObject(domain_object)),
+            vec![Node::Directive(Directive::DomainObject(domain_object))],
         ));
     }
 
@@ -106,6 +107,23 @@ pub(crate) fn try_parse_directive(
     let directive_span = ctx.line_span(i, line);
     let body_ctx = ctx.nested(i + 1 + body.first_line_offset, body_indent(&body.lines));
     let (consumed_lines, body_lines) = (body.consumed, body.lines);
+
+    // `.. include::` is the one directive that contributes *several* nodes:
+    // it splices a file's blocks in where it stands, so the fragment's
+    // sections and targets belong to this document rather than nesting inside
+    // a container of their own. Every other directive answers with exactly
+    // one node, wrapped here.
+    if name == "include" {
+        let nodes = parse_include(
+            &argument,
+            &body_lines,
+            adornment_order,
+            diagnostics,
+            &body_ctx,
+        );
+        return Some((1 + consumed_lines, nodes));
+    }
+
     let node = parse_body_directive(
         name,
         argument,
@@ -115,7 +133,7 @@ pub(crate) fn try_parse_directive(
         diagnostics,
         &body_ctx,
     );
-    Some((1 + consumed_lines, node))
+    Some((1 + consumed_lines, vec![node]))
 }
 
 /// Dispatches every directive whose body is collected the ordinary way — that
@@ -143,12 +161,7 @@ fn parse_body_directive(
         )));
         return Node::Directive(directive);
     }
-    if let Some(source) = code_block_source(&name) {
-        let directive = parse_code_block(source, &argument, body_lines, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if name == "highlight" {
-        let directive = parse_highlight(&argument, body_lines, diagnostics, ctx);
+    if let Some(directive) = parse_code_family(&name, &argument, body_lines, diagnostics, ctx) {
         return Node::Directive(directive);
     }
     if let Ok(kind) = name.parse::<rusty_sphinx_ast::VersionChangeKind>() {
@@ -243,7 +256,44 @@ const fn object_type_supports_multiple_signatures(object_type: DirectiveObjectTy
     !matches!(object_type, DirectiveObjectType::PyModule)
 }
 
-/// Which code-block directive `name` spells, if either.
+/// Parses the four directives [`super::code_block`] owns, or `None` when
+/// `name` is not one of them.
+///
+/// Grouped into one branch of the dispatcher because they share a module and a
+/// vocabulary, and because three of them produce the very same
+/// [`Directive::CodeBlock`]: `.. code-block::`, docutils' `.. code::`, and
+/// `.. literalinclude::`, which differ only in how their source spells the
+/// block. `.. highlight::` rides along as the directive the first three
+/// inherit their language from.
+fn parse_code_family(
+    name: &str,
+    argument: &str,
+    body_lines: &[&str],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<Directive> {
+    if let Some(source) = code_block_source(name) {
+        return Some(parse_code_block(
+            source,
+            argument,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
+    match name {
+        "literalinclude" => Some(parse_literal_include(
+            argument,
+            body_lines,
+            diagnostics,
+            ctx,
+        )),
+        "highlight" => Some(parse_highlight(argument, body_lines, diagnostics, ctx)),
+        _ => None,
+    }
+}
+
+/// Which of the two inline code-block directives `name` spells, if either.
 ///
 /// `.. code::` is docutils' name for the same construct; both lower to one
 /// [`Directive::CodeBlock`] carrying a [`CodeBlockSource`].

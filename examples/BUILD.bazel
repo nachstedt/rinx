@@ -42,10 +42,22 @@ rusty_sphinx_library(
         "figures.rst",
         "index_entries.rst",
         "noqa.rst",
+        "includes.rst",
     ],
-    # `csv_table.rst` reads this via `.. csv-table:: :file:`. Declaring it here
-    # is what puts it in the parse action's sandbox — see `rules/library.bzl`.
-    csv_data = ["data/fruits.csv"],
+    # Files the *parser* reads. `csv_table.rst` reads the CSV via
+    # `.. csv-table:: :file:`; `includes.rst` splices the other three in via
+    # `.. include::` and `.. literalinclude::`. Declaring them here is what
+    # puts them in the parse action's sandbox — see `rules/library.bzl`.
+    #
+    # `shared/parameters.rst` is deliberately absent from `srcs` above: it is
+    # spliced into `includes.rst`, and listing it as a source would publish it
+    # as a page of its own as well.
+    parse_data = [
+        "data/fruits.csv",
+        "shared/parameters.rst",
+        "shared/greeter.py",
+        "shared/greeter_before.py",
+    ],
     # `images.rst` and `figures.rst` show this via `.. image::`/`.. figure::`.
     # Declaring it here is what copies it into the site's `_images/` directory
     # and what lets a `:loading: embed` image read its bytes — see

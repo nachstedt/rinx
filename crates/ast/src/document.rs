@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 
 use crate::diagnostic::Diagnostic;
 use crate::node::Node;
+use crate::span::{FileId, Span};
 use crate::suppression::Suppression;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -33,6 +34,18 @@ pub struct Document {
     /// construct that deserves its own implementation.
     #[serde(default)]
     pub metadata: BTreeMap<String, String>,
+    /// The files whose text was spliced into this document by `.. include::`
+    /// or `.. literalinclude::`, indexed by [`FileId`].
+    ///
+    /// [`Self::path`] is deliberately *not* entry zero: a [`Span`] with no
+    /// file already means this document, so reserving an id for it would give
+    /// the same place two spellings. Empty for the overwhelming majority of
+    /// documents, which include nothing.
+    ///
+    /// Paths are relative to the source root, as [`Self::path`] is, so a
+    /// warning can print one without further resolution.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_files: Vec<String>,
 }
 
 impl Document {
@@ -44,7 +57,43 @@ impl Document {
             diagnostics: Vec::new(),
             suppressions: Vec::new(),
             metadata: BTreeMap::new(),
+            source_files: Vec::new(),
         }
+    }
+
+    /// The path a [`Span`]'s [`file`](Span::file) names, or this document's own
+    /// path when the span carries none.
+    ///
+    /// The one place an id becomes something a human can read, so every
+    /// warning that mentions a position goes through it. An id with no entry
+    /// yields `None` rather than a panic: an `.ast` is a file on disk that a
+    /// build may have written with a different version of this crate, and a
+    /// mangled one should degrade a warning's precision, not abort the render.
+    #[must_use]
+    pub fn span_path(&self, span: Option<Span>) -> Option<&str> {
+        match span.and_then(|span| span.file) {
+            None => Some(&self.path),
+            Some(file) => self.source_files.get(file.index()).map(String::as_str),
+        }
+    }
+
+    /// Records `path` as an included file and returns its id, reusing the id
+    /// of a path already recorded.
+    ///
+    /// Deduplicating matters: a document that includes the same fragment in
+    /// twenty places must not carry twenty copies of its path, and two spans
+    /// in the same fragment must compare equal on their file.
+    pub fn intern_source_file(&mut self, path: impl Into<String>) -> FileId {
+        let path = path.into();
+        let index = self
+            .source_files
+            .iter()
+            .position(|known| known == &path)
+            .unwrap_or_else(|| {
+                self.source_files.push(path);
+                self.source_files.len() - 1
+            });
+        FileId::new(u32::try_from(index).unwrap_or(u32::MAX))
     }
 }
 
@@ -69,5 +118,115 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 2);
+    }
+
+    #[test]
+    fn test_a_new_document_includes_nothing() {
+        // Given / When
+        let document = Document::new("guide.rst".to_string(), Vec::new());
+
+        // Then
+        assert!(document.source_files.is_empty());
+    }
+
+    #[test]
+    fn test_intern_source_file_assigns_ids_in_order() {
+        // Given
+        let mut document = Document::new("guide.rst".to_string(), Vec::new());
+
+        // When
+        let first = document.intern_source_file("shared/params.rst");
+        let second = document.intern_source_file("shared/returns.rst");
+
+        // Then
+        assert_eq!(first, FileId::new(0));
+        assert_eq!(second, FileId::new(1));
+        assert_eq!(
+            document.source_files,
+            vec![
+                "shared/params.rst".to_string(),
+                "shared/returns.rst".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn test_intern_source_file_reuses_the_id_of_a_known_path() {
+        // Given a fragment already included once
+        let mut document = Document::new("guide.rst".to_string(), Vec::new());
+        let first = document.intern_source_file("shared/params.rst");
+
+        // When the same fragment is included again
+        let again = document.intern_source_file("shared/params.rst");
+
+        // Then — one entry, one id, so spans in it compare equal
+        assert_eq!(again, first);
+        assert_eq!(document.source_files.len(), 1);
+    }
+
+    #[test]
+    fn test_span_path_of_a_span_without_a_file_is_the_document() {
+        // Given
+        let document = Document::new("guide.rst".to_string(), Vec::new());
+        let span = Span::whole_line(3, "abc");
+
+        // When / Then
+        assert_eq!(document.span_path(Some(span)), Some("guide.rst"));
+    }
+
+    #[test]
+    fn test_span_path_of_no_span_at_all_is_the_document() {
+        // Given a positionless diagnostic's span
+        let document = Document::new("guide.rst".to_string(), Vec::new());
+
+        // When / Then — the document is still the right thing to name
+        assert_eq!(document.span_path(None), Some("guide.rst"));
+    }
+
+    #[test]
+    fn test_span_path_of_an_included_span_is_that_file() {
+        // Given
+        let mut document = Document::new("guide.rst".to_string(), Vec::new());
+        let file = document.intern_source_file("shared/params.rst");
+        let span = Span::whole_line(3, "abc").with_file(Some(file));
+
+        // When / Then
+        assert_eq!(document.span_path(Some(span)), Some("shared/params.rst"));
+    }
+
+    #[test]
+    fn test_span_path_of_an_unknown_file_id_is_none() {
+        // Given an `.ast` whose span names a file its table does not have
+        let document = Document::new("guide.rst".to_string(), Vec::new());
+        let span = Span::whole_line(3, "abc").with_file(Some(FileId::new(9)));
+
+        // When / Then — a mangled file degrades precision, it does not panic
+        assert_eq!(document.span_path(Some(span)), None);
+    }
+
+    #[test]
+    fn test_serialization_omits_an_empty_source_file_table() {
+        // Given a document that includes nothing
+        let document = Document::new("guide.rst".to_string(), Vec::new());
+
+        // When
+        let json = serde_json::to_string(&document).expect("Failed to serialize");
+
+        // Then — the common case must not grow the `.ast` wire form
+        assert!(!json.contains("source_files"), "{json}");
+    }
+
+    #[test]
+    fn test_serialization_roundtrip_with_included_files() {
+        // Given
+        let mut document = Document::new("guide.rst".to_string(), Vec::new());
+        document.intern_source_file("shared/params.rst");
+
+        // When
+        let json = serde_json::to_string(&document).expect("Failed to serialize");
+        let deserialized: Document = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(document, deserialized);
     }
 }

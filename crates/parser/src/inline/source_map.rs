@@ -107,10 +107,7 @@ impl SourceMap {
 
     /// The span from byte offset `start` to `end` in the joined text.
     pub(crate) fn span(&self, start: usize, end: usize, ctx: &ParseCtx<'_>) -> Option<Span> {
-        Some(Span::new(
-            self.position(start, ctx)?,
-            self.position(end, ctx)?,
-        ))
+        Some(ctx.span(self.position(start, ctx)?, self.position(end, ctx)?))
     }
 }
 

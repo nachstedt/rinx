@@ -5,7 +5,7 @@
 # the file bundled into the site and embedded into the pages that ask for it,
 # rather than the build merely finding it in the source tree.
 #
-# Unlike `csv_data`, an image is not a parse-action input: parsing a document
+# Unlike `parse_data`, an image is not a parse-action input: parsing a document
 # succeeds whether or not the picture exists. The failure comes from the site's
 # `validate_images` action, and — for a `:loading: embed` image — from the
 # per-document `embed_assets` action that cannot read what was never declared.

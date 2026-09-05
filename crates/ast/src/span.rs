@@ -38,6 +38,33 @@ impl Position {
     }
 }
 
+/// Which file a [`Span`]'s line numbers count in, when that is not the
+/// document being processed.
+///
+/// An interned index into [`Document::source_files`](crate::Document), not a
+/// path, for one reason above all: [`Span`] is [`Copy`] and is passed by value
+/// through every reporting signature in the workspace. A `String` on it would
+/// end that, and an `Arc<str>` would still end it. A `u32` costs four bytes,
+/// keeps the wire form small when a document includes the same fragment
+/// hundreds of times, and leaves the resolution — id to path — in the one
+/// place that owns the table.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub struct FileId(u32);
+
+impl FileId {
+    /// The id for the file at `index` in a document's source-file table.
+    #[must_use]
+    pub const fn new(index: u32) -> Self {
+        Self(index)
+    }
+
+    /// This id as an index into that table.
+    #[must_use]
+    pub const fn index(self) -> usize {
+        self.0 as usize
+    }
+}
+
 /// The extent of the source text a diagnostic is about: `start` inclusive,
 /// `end` exclusive, in the manner of a Rust range.
 ///
@@ -48,13 +75,29 @@ impl Position {
 /// the inline scan already knows where every construct stops, and a
 /// block-level parser has the offending line's text in hand.
 ///
-/// A span never crosses documents, so it carries no path — the reporting
-/// layer supplies that, since it is the phase that knows which file is being
-/// processed.
+/// A span never crosses *documents*, but since `.. include::` it may name a
+/// file other than the document being processed — see [`Self::file`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Span {
     pub start: Position,
     pub end: Position,
+    /// The file [`Self::start`] and [`Self::end`] count lines in, when that is
+    /// not the document itself.
+    ///
+    /// `None` — the overwhelming majority — means the document being
+    /// processed, whose path every reporting layer already knows. It is
+    /// `Some` only for content spliced in by `.. include::` or
+    /// `.. literalinclude::`, whose line 1 is its own line 1 and not the
+    /// document's.
+    ///
+    /// This lives on the span rather than on [`Diagnostic`](crate::Diagnostic)
+    /// because a span outlives the diagnostic that quotes it: an
+    /// `InlineNode`'s span sits in the `.ast` and is read again at *render*
+    /// time, when a broken `:ref:` inside an included fragment must still be
+    /// reported against the fragment. A file recorded only on parse-time
+    /// diagnostics could not answer that.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file: Option<FileId>,
 }
 
 impl Span {
@@ -62,7 +105,24 @@ impl Span {
     /// markup case, where the scan yields a start and an end offset.
     #[must_use]
     pub const fn new(start: Position, end: Position) -> Self {
-        Self { start, end }
+        Self {
+            start,
+            end,
+            file: None,
+        }
+    }
+
+    /// The same extent, measured in `file` rather than in the document — see
+    /// [`Self::file`].
+    ///
+    /// A builder rather than a parameter on every constructor because the file
+    /// is not known where a span is *built*: the parsers that produce spans
+    /// were handed a slice of lines and cannot tell where those lines came
+    /// from. `ParseCtx` applies this once, at the single point that does know.
+    #[must_use]
+    pub const fn with_file(mut self, file: Option<FileId>) -> Self {
+        self.file = file;
+        self
     }
 
     /// The whole of one line, for a block-level diagnostic that can name the
@@ -183,6 +243,120 @@ mod tests {
         // Then
         assert_eq!(span.start, start);
         assert_eq!(span.end, end);
+    }
+
+    #[test]
+    fn test_file_id_round_trips_through_its_index() {
+        // Given / When
+        let id = FileId::new(3);
+
+        // Then
+        assert_eq!(id.index(), 3);
+    }
+
+    #[test]
+    fn test_file_ids_of_different_files_differ() {
+        // Given / When / Then — the table's indices are the identity
+        assert_ne!(FileId::new(0), FileId::new(1));
+    }
+
+    #[test]
+    fn test_a_span_belongs_to_the_document_by_default() {
+        // Given / When — every constructor
+        let explicit = Span::new(Position::new(1, 1), Position::new(1, 2));
+        let whole_line = Span::whole_line(3, "abc");
+        let multi_line = Span::lines(3, 4, "abc");
+
+        // Then — no file means "the document being processed"
+        assert_eq!(explicit.file, None);
+        assert_eq!(whole_line.file, None);
+        assert_eq!(multi_line.file, None);
+    }
+
+    #[test]
+    fn test_with_file_attributes_the_span_to_that_file() {
+        // Given a span built while parsing an included fragment
+        let span = Span::whole_line(3, "abc");
+
+        // When
+        let attributed = span.with_file(Some(FileId::new(2)));
+
+        // Then
+        assert_eq!(attributed.file, Some(FileId::new(2)));
+    }
+
+    #[test]
+    fn test_with_file_leaves_the_extent_alone() {
+        // Given
+        let span = Span::whole_line(3, "abc");
+
+        // When
+        let attributed = span.with_file(Some(FileId::new(2)));
+
+        // Then — only the attribution moves
+        assert_eq!(attributed.start, span.start);
+        assert_eq!(attributed.end, span.end);
+    }
+
+    #[test]
+    fn test_with_file_of_none_leaves_the_span_on_the_document() {
+        // Given — the shape `ParseCtx` uses, which holds an `Option` already
+        let span = Span::whole_line(3, "abc");
+
+        // When
+        let attributed = span.with_file(None);
+
+        // Then
+        assert_eq!(attributed.file, None);
+    }
+
+    #[test]
+    fn test_spans_in_different_files_are_not_equal() {
+        // Given the same extent in two different files
+        let in_document = Span::whole_line(3, "abc");
+        let in_fragment = in_document.with_file(Some(FileId::new(0)));
+
+        // When / Then — line 3 of a fragment is not line 3 of its includer,
+        // and equality must not pretend otherwise.
+        assert_ne!(in_document, in_fragment);
+    }
+
+    #[test]
+    fn test_serialization_omits_an_absent_file() {
+        // Given a span in the document itself
+        let span = Span::whole_line(3, "abc");
+
+        // When
+        let json = serde_json::to_string(&span).expect("Failed to serialize");
+
+        // Then — the common case must not grow the `.ast` wire form, which
+        // carries one span per inline node.
+        assert!(!json.contains("file"), "{json}");
+    }
+
+    #[test]
+    fn test_serialization_roundtrip_with_a_file() {
+        // Given
+        let span = Span::whole_line(3, "abc").with_file(Some(FileId::new(7)));
+
+        // When
+        let json = serde_json::to_string(&span).expect("Failed to serialize");
+        let deserialized: Span = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(span, deserialized);
+    }
+
+    #[test]
+    fn test_deserialization_defaults_a_missing_file_to_none() {
+        // Given JSON written before this field existed
+        let json = r#"{"start":{"line":1,"column":1},"end":{"line":1,"column":4}}"#;
+
+        // When
+        let span: Span = serde_json::from_str(json).expect("Failed to deserialize");
+
+        // Then — an `.ast` from an older build still loads
+        assert_eq!(span.file, None);
     }
 
     #[test]

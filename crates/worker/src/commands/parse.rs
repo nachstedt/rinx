@@ -6,23 +6,24 @@ use rusty_sphinx_parser as parser;
 use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
-use super::csv_files::{DocumentRelativeCsvFiles, parse_ctx};
-use super::diagnostics::report_diagnostic;
+use super::diagnostics::{WarningOrigin, report_diagnostic};
+use super::parse_files::{DocumentRelativeFiles, parse_ctx};
 use super::suppression::retain_reportable;
 
-/// `csv_files` is injected rather than built here so this stays the pure,
+/// `parse_files` is injected rather than built here so this stays the pure,
 /// I/O-free half of the subcommand: a test can hand in a loader that reads
 /// nothing, while `cmd_parse` hands in the real filesystem one.
 pub(super) fn process_parse(
     path: &str,
     rst_content: &str,
     default_domain: ast::Domain,
-    csv_files: &DocumentRelativeCsvFiles,
+    parse_files: &DocumentRelativeFiles,
 ) -> Result<String> {
-    let doc = parser::parse_with_ctx(path, rst_content, &parse_ctx(default_domain, csv_files));
+    let doc = parser::parse_with_ctx(path, rst_content, &parse_ctx(default_domain, parse_files));
     // The document's own `.. noqa:` comments decide what is worth showing.
+    let origin = WarningOrigin::new(path, &doc.source_files);
     for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
-        report_diagnostic(path, diagnostic);
+        report_diagnostic(&origin, diagnostic);
     }
     serde_json::to_string(&doc).context("Serialization error")
 }
@@ -60,24 +61,24 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     let default_domain = parse_default_domain_flag(args)?;
 
     let rst = fs::read_to_string(&input).with_context(|| format!("Error reading '{input}'"))?;
-    // `:file:` paths in the document resolve against the document's own
-    // directory, which under Bazel is the sandbox location of the declared
-    // source — see `csv_files`.
-    let csv_files = DocumentRelativeCsvFiles::for_document(&input);
-    let json = process_parse(&input, &rst, default_domain, &csv_files)?;
+    // Paths a directive names resolve against the document's own directory,
+    // which under Bazel is the sandbox location of the declared source — see
+    // `parse_files`.
+    let parse_files = DocumentRelativeFiles::for_document(&input);
+    let json = process_parse(&input, &rst, default_domain, &parse_files)?;
 
-    // A `:file:` that could not be read means the whole table is missing from
-    // the page, so the build fails rather than shipping the gap — the same
-    // stance `validate_images` takes on a missing diagram. The parser itself
-    // stays resilient (it degrades the directive and carries on), which is
-    // what the live preview needs; only this subcommand is strict.
-    let failures = csv_files.failures();
+    // A file that could not be read means a whole table or section is missing
+    // from the page, so the build fails rather than shipping the gap — the
+    // same stance `validate_images` takes on a missing diagram. The parser
+    // itself stays resilient (it degrades the directive and carries on), which
+    // is what the live preview needs; only this subcommand is strict.
+    let failures = parse_files.failures();
     if !failures.is_empty() {
         for failure in &failures {
-            eprintln!("error: {input}: csv-table: {failure}");
+            eprintln!("error: {input}: {failure}");
         }
         return Err(anyhow!(
-            "{input}: {} csv-table :file: option(s) could not be read",
+            "{input}: {} file(s) named by a directive could not be read",
             failures.len()
         ));
     }
@@ -92,8 +93,8 @@ mod tests {
 
     /// A loader rooted at a directory holding no CSV files, for the tests
     /// whose input has no `:file:` option.
-    fn no_csv_files() -> DocumentRelativeCsvFiles {
-        DocumentRelativeCsvFiles::for_document("index.rst")
+    fn no_parse_files() -> DocumentRelativeFiles {
+        DocumentRelativeFiles::for_document("index.rst")
     }
 
     #[test]
@@ -103,7 +104,7 @@ mod tests {
 
         // When
         let json =
-            process_parse("team_a/index.rst", rst, ast::Domain::Py, &no_csv_files()).unwrap();
+            process_parse("team_a/index.rst", rst, ast::Domain::Py, &no_parse_files()).unwrap();
 
         // Then
         assert!(json.contains("Title"));
@@ -116,7 +117,7 @@ mod tests {
         let rst = ".. function:: greet(name)\n\n   Greets the given name.";
 
         // When
-        let json = process_parse("api.rst", rst, ast::Domain::C, &no_csv_files()).unwrap();
+        let json = process_parse("api.rst", rst, ast::Domain::C, &no_parse_files()).unwrap();
 
         // Then
         assert!(json.contains(r#""CFunction""#));
@@ -176,7 +177,7 @@ mod tests {
 
         // Then
         let error = result.expect_err("a missing :file: must fail the parse");
-        assert!(error.to_string().contains(":file:"), "{error}");
+        assert!(error.to_string().contains("could not be read"), "{error}");
         assert!(
             !std::path::Path::new(&args[3]).exists(),
             "no .ast should be written when the parse fails"

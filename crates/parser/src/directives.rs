@@ -30,6 +30,7 @@ mod doctest;
 mod domains;
 mod glossary;
 mod image;
+mod include;
 mod index_directive;
 mod math;
 mod options;

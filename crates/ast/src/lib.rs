@@ -92,10 +92,10 @@ pub use object_naming::{
 };
 pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
 pub use option_list_item::{OptionArgument, OptionArgumentDelimiter, OptionListItem, OptionSpec};
-pub use path_normalization::normalize_path;
+pub use path_normalization::{normalize_path, resolve_from_document};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
-pub use span::{Position, Span};
+pub use span::{FileId, Position, Span};
 pub use suppression::{Suppression, SuppressionCodes};
 pub use table::{TableAlign, TableCell, TableRow, TableSource, TableWidths};
 pub use target_name::TargetName;

@@ -10,13 +10,14 @@ use std::fs;
 use std::io::{self, Read};
 
 use super::cli_args::{flag_value, flag_value_opt};
-use super::csv_files::{DocumentRelativeCsvFiles, parse_ctx};
 use super::diagnostics::{
-    format_broken_link_warning, format_highlight_error_warning, format_image_error_warning,
-    format_math_error_warning, format_object_type_mismatch_warning, report_diagnostic,
+    WarningOrigin, format_broken_link_warning, format_highlight_error_warning,
+    format_image_error_warning, format_math_error_warning, format_object_type_mismatch_warning,
+    report_diagnostic,
 };
 use super::embed_assets::embed_available_assets;
 use super::parse::parse_default_domain_flag;
+use super::parse_files::{DocumentRelativeFiles, parse_ctx};
 use super::suppression::{
     retain_reportable, retain_reportable_highlight_errors, retain_reportable_image_errors,
     retain_reportable_links, retain_reportable_math_errors, retain_reportable_mismatches,
@@ -36,6 +37,10 @@ pub(super) struct PreviewedPage {
     pub math_errors: Vec<renderer::MathError>,
     pub highlight_errors: Vec<renderer::HighlightError>,
     pub image_errors: Vec<renderer::ImageError>,
+    /// The files this document included, so the caller's warnings can resolve
+    /// a span that belongs to one of them — see
+    /// [`WarningOrigin`](super::diagnostics::WarningOrigin).
+    pub source_files: Vec<String>,
 }
 
 pub(super) fn process_preview(
@@ -45,11 +50,12 @@ pub(super) fn process_preview(
     template_str: &str,
     doc_path: &str,
     default_domain: ast::Domain,
-    csv_files: &DocumentRelativeCsvFiles,
+    parse_files: &DocumentRelativeFiles,
 ) -> Result<PreviewedPage> {
-    let doc = parser::parse_with_ctx(doc_path, rst, &parse_ctx(default_domain, csv_files));
+    let doc = parser::parse_with_ctx(doc_path, rst, &parse_ctx(default_domain, parse_files));
+    let origin = WarningOrigin::new(doc_path, &doc.source_files);
     for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
-        report_diagnostic(doc_path, diagnostic);
+        report_diagnostic(&origin, diagnostic);
     }
     let mut index = if let Some(json) = index_json {
         serde_json::from_str(json).context("Failed to deserialize global index")?
@@ -118,6 +124,7 @@ pub(super) fn process_preview(
         math_errors,
         highlight_errors,
         image_errors,
+        source_files: doc.source_files,
     })
 }
 
@@ -157,28 +164,26 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
         default_domain,
         // The editor previews a real file on disk, so `:file:` resolves
         // against its directory exactly as it does in the `parse` subcommand.
-        &DocumentRelativeCsvFiles::for_document(&doc_path),
+        &DocumentRelativeFiles::for_document(&doc_path),
     )?;
 
     // Preview is deliberately lenient (it renders over incomplete/WIP
     // documents), so broken links are always warnings, never a failure.
+    let origin = WarningOrigin::new(&doc_path, &page.source_files);
     for link in &page.broken_links {
-        eprintln!("{}", format_broken_link_warning(&doc_path, link));
+        eprintln!("{}", format_broken_link_warning(&origin, link));
     }
     for mismatch in &page.object_type_mismatches {
-        eprintln!(
-            "{}",
-            format_object_type_mismatch_warning(&doc_path, mismatch)
-        );
+        eprintln!("{}", format_object_type_mismatch_warning(&origin, mismatch));
     }
     for error in &page.math_errors {
-        eprintln!("{}", format_math_error_warning(&doc_path, error));
+        eprintln!("{}", format_math_error_warning(&origin, error));
     }
     for error in &page.highlight_errors {
-        eprintln!("{}", format_highlight_error_warning(&doc_path, error));
+        eprintln!("{}", format_highlight_error_warning(&origin, error));
     }
     for error in &page.image_errors {
-        eprintln!("{}", format_image_error_warning(&doc_path, error));
+        eprintln!("{}", format_image_error_warning(&origin, error));
     }
 
     println!("{}", page.html);
@@ -191,8 +196,8 @@ mod tests {
 
     /// A loader rooted at a directory holding no CSV files, for the tests
     /// whose input has no `:file:` option.
-    fn no_csv_files() -> DocumentRelativeCsvFiles {
-        DocumentRelativeCsvFiles::for_document("test.rst")
+    fn no_parse_files() -> DocumentRelativeFiles {
+        DocumentRelativeFiles::for_document("test.rst")
     }
 
     #[test]
@@ -212,7 +217,7 @@ mod tests {
             template,
             "test.rst",
             ast::Domain::Py,
-            &no_csv_files(),
+            &no_parse_files(),
         )
         .unwrap();
 
@@ -238,7 +243,7 @@ mod tests {
             template,
             "test.rst",
             ast::Domain::Py,
-            &no_csv_files(),
+            &no_parse_files(),
         )
         .unwrap();
 
@@ -262,7 +267,7 @@ mod tests {
             template,
             "test.rst",
             ast::Domain::Py,
-            &no_csv_files(),
+            &no_parse_files(),
         )
         .unwrap();
 
