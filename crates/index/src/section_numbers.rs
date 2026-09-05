@@ -18,6 +18,13 @@ pub struct DocumentNumbers {
     /// Section id → number components. The empty-id entry is the document's
     /// own number; use [`Self::document`] rather than spelling it out.
     numbers: BTreeMap<String, Vec<usize>>,
+    /// `.. sectnum::`'s `:prefix:`/`:suffix:`, wrapped around every number
+    /// this document's numbers format to. Always empty for numbers assigned
+    /// by a `:numbered:` toctree instead, which has no such options.
+    #[serde(default)]
+    prefix: String,
+    #[serde(default)]
+    suffix: String,
 }
 
 /// The reserved key under which a document's own number is stored.
@@ -50,6 +57,27 @@ impl DocumentNumbers {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.numbers.is_empty()
+    }
+
+    /// Records `.. sectnum::`'s `:prefix:`/`:suffix:`, so every number
+    /// rendered for this document wraps them in.
+    pub fn set_format(&mut self, prefix: String, suffix: String) {
+        self.prefix = prefix;
+        self.suffix = suffix;
+    }
+
+    /// The `:prefix:` to prepend to every rendered number. Empty for numbers
+    /// assigned by a `:numbered:` toctree.
+    #[must_use]
+    pub fn prefix(&self) -> &str {
+        &self.prefix
+    }
+
+    /// The `:suffix:` to append to every rendered number. Empty for numbers
+    /// assigned by a `:numbered:` toctree.
+    #[must_use]
+    pub fn suffix(&self) -> &str {
+        &self.suffix
     }
 }
 
@@ -108,5 +136,58 @@ mod tests {
 
         // Then
         assert_eq!(restored, numbers);
+    }
+
+    #[test]
+    fn test_prefix_and_suffix_default_to_empty() {
+        // Given
+        let numbers = DocumentNumbers::default();
+
+        // When / Then
+        assert_eq!(numbers.prefix(), "");
+        assert_eq!(numbers.suffix(), "");
+    }
+
+    #[test]
+    fn test_set_format_records_prefix_and_suffix() {
+        // Given
+        let mut numbers = DocumentNumbers::default();
+
+        // When
+        numbers.set_format("Appendix ".to_string(), ".".to_string());
+
+        // Then
+        assert_eq!(numbers.prefix(), "Appendix ");
+        assert_eq!(numbers.suffix(), ".");
+    }
+
+    #[test]
+    fn test_format_round_trips_through_json_alongside_numbers() {
+        // Given
+        let mut numbers = DocumentNumbers::default();
+        numbers.set_document(vec![1]);
+        numbers.set_format("Sec ".to_string(), ")".to_string());
+
+        // When
+        let json = serde_json::to_string(&numbers).expect("serializes");
+        let restored: DocumentNumbers = serde_json::from_str(&json).expect("deserializes");
+
+        // Then
+        assert_eq!(restored, numbers);
+    }
+
+    #[test]
+    fn test_deserializes_when_format_fields_are_missing() {
+        // Given — a `.project.index` written before `:prefix:`/`:suffix:`
+        // existed.
+        let json = r#"{"numbers": {"": [1]}}"#;
+
+        // When
+        let numbers: DocumentNumbers = serde_json::from_str(json).expect("deserializes");
+
+        // Then
+        assert_eq!(numbers.document(), Some([1].as_slice()));
+        assert_eq!(numbers.prefix(), "");
+        assert_eq!(numbers.suffix(), "");
     }
 }

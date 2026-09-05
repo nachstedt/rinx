@@ -25,6 +25,8 @@ Numbering
 
 ``:numbered:`` numbers everything it reaches, across document boundaries, and
 the numbers appear both here and as prefixes on the target pages' headings.
+The third chapter also writes its own ``.. sectnum::``, which this toctree's
+numbering overrides entirely — see that page for why.
 
 .. toctree::
    :caption: Numbered chapters
@@ -32,6 +34,7 @@ the numbers appear both here and as prefixes on the target pages' headings.
 
    numbered_one
    numbered_two
+   sectnum_ignored
 
 Depth limits
 ============

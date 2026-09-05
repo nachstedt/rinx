@@ -11,6 +11,7 @@ use crate::hashed_content::HashedContent;
 use crate::image::{Figure, ImageOptions};
 use crate::index_entry::IndexEntry;
 use crate::node::Node;
+use crate::sectnum::SectnumOptions;
 use crate::span::Span;
 use crate::substitution::SubstitutionDefinition;
 use crate::table::TableAlign;
@@ -25,6 +26,14 @@ use crate::version_change_kind::VersionChangeKind;
 pub enum Directive {
     Toctree(Toctree),
     Contents(Contents),
+    /// `.. sectnum::` / `.. section-numbering::` — numbers every section in
+    /// the document it's written in, wherever it's written, unless an
+    /// ancestor `:numbered:` toctree already numbers that document (see
+    /// `rusty_sphinx_analyzer::section_numbering`, which resolves that
+    /// precedence). Produces no output of its own, like [`Self::Highlight`]:
+    /// its effect is entirely in the numbers looked up while rendering
+    /// headings.
+    Sectnum(SectnumOptions),
     PlantUml(HashedContent),
     Admonition {
         kind: AdmonitionKind,
@@ -458,6 +467,24 @@ mod tests {
     fn test_c_namespace_pop_directive_serialization_roundtrip() {
         // Given
         let directive = Directive::CNamespacePop;
+
+        // When
+        let json = serde_json::to_string(&directive).expect("Failed to serialize");
+        let deserialized: Directive = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(directive, deserialized);
+    }
+
+    #[test]
+    fn test_sectnum_directive_serialization_roundtrip() {
+        // Given
+        let directive = Directive::Sectnum(SectnumOptions {
+            depth: std::num::NonZeroUsize::new(2),
+            start: std::num::NonZeroU32::new(3),
+            prefix: "Sec ".to_string(),
+            suffix: ".".to_string(),
+        });
 
         // When
         let json = serde_json::to_string(&directive).expect("Failed to serialize");

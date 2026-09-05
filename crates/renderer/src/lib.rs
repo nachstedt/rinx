@@ -293,6 +293,37 @@ mod tests {
     }
 
     #[test]
+    fn test_render_wraps_a_sectnum_numbered_heading_in_its_prefix_and_suffix() {
+        // Given — a `.. sectnum::`-numbered document (no document number, only
+        // its section, with `:prefix:`/`:suffix:` set).
+        let doc = Document::new(
+            "guide.rst".to_string(),
+            vec![Node::Heading {
+                level: 2,
+                text: vec![InlineNode::Text("Install".to_string())],
+            }],
+        );
+        let mut numbers = rusty_sphinx_index::DocumentNumbers::default();
+        numbers.set_section(&rusty_sphinx_ast::SectionId::from_title("Install"), vec![1]);
+        numbers.set_format("Appendix ".to_string(), ".".to_string());
+        let mut index = ProjectIndex::default();
+        index
+            .section_numbers
+            .insert("guide.rst".to_string(), numbers);
+
+        // When
+        let result = render(&doc, &index, "guide").html;
+
+        // Then
+        assert!(
+            result.contains(
+                "<h2 id=\"install\"><span class=\"section-number\">Appendix 1.. </span>Install</h2>"
+            ),
+            "{result}"
+        );
+    }
+
+    #[test]
     fn test_render_leaves_an_unnumbered_heading_unprefixed() {
         // Given — no `:numbered:` toctree reaches this document.
         let doc = Document::new(

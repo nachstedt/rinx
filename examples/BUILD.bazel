@@ -70,6 +70,7 @@ rusty_sphinx_library(
         ":doctest_docs",
         "//examples/toctree:docs",
         "//examples/contents:docs",
+        "//examples/sectnum:docs",
         "//examples/team_a:docs",
         "//examples/team_b:docs",
     ],

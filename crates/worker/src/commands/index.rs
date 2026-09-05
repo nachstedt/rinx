@@ -196,7 +196,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"genindex_entries":[],"equations":{}}"#
+            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"genindex_entries":[],"equations":{},"sectnum":{}}"#
         );
     }
 }

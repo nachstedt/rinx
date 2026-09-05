@@ -387,6 +387,7 @@ fn resolve_directive(
         | Directive::Math { .. }
         | Directive::Toctree { .. }
         | Directive::Contents { .. }
+        | Directive::Sectnum(_)
         | Directive::PlantUml(_)
         | Directive::Index { .. }
         | Directive::PyCurrentModule { .. }

@@ -308,11 +308,7 @@ fn render_heading(
     if let Some(id) = id
         && let Some(number) = heading_secnumber(ctx, id, is_title)
     {
-        let _ = write!(
-            html,
-            "<span class=\"section-number\">{} </span>",
-            crate::nav::format_secnumber(&number)
-        );
+        let _ = write!(html, "<span class=\"section-number\">{number} </span>");
     }
     render_inlines(html, text, ctx);
     if backlink_href.is_some() {
@@ -321,21 +317,31 @@ fn render_heading(
     let _ = writeln!(html, "</{tag}>");
 }
 
-/// The `:numbered:` number shown on one heading.
+/// The number shown on one heading, already formatted with its document's
+/// `:prefix:`/`:suffix:` — always empty for a `:numbered:` toctree, but set
+/// when the document's own `.. sectnum::` assigned this number instead (see
+/// `rusty_sphinx_analyzer::section_numbering`).
 ///
 /// A section's number is looked up by its id. The document's *title* heading
 /// has no section number — the outline treats it as the document itself — so
-/// it takes the document's own number instead.
+/// it takes the document's own number instead. A `.. sectnum::`-numbered
+/// document never sets that document number, so its title stays unnumbered,
+/// matching plain docutils.
 fn heading_secnumber(
     ctx: &RenderCtx<'_>,
     id: &rusty_sphinx_ast::SectionId,
     is_title: bool,
-) -> Option<Vec<usize>> {
+) -> Option<String> {
     let numbers = ctx.index.section_numbers.get(ctx.original_doc_path)?;
-    numbers
+    let raw = numbers
         .section(id)
-        .or_else(|| is_title.then(|| numbers.document()).flatten())
-        .map(<[usize]>::to_vec)
+        .or_else(|| is_title.then(|| numbers.document()).flatten())?;
+    Some(format!(
+        "{}{}{}",
+        numbers.prefix(),
+        crate::nav::format_secnumber(raw),
+        numbers.suffix()
+    ))
 }
 
 /// Renders a `.. toctree::` in a page's body.
@@ -479,6 +485,28 @@ fn render_directive(
             },
             ctx,
         ),
+        directive @ (Directive::PyCurrentModule { .. }
+        | Directive::CNamespace { .. }
+        | Directive::CNamespacePush { .. }
+        | Directive::CNamespacePop
+        | Directive::StdProgram { .. }
+        | Directive::DocTest(_)
+        | Directive::Sectnum(_)
+        | Directive::Unknown { .. }
+        | Directive::SubstitutionDefinition(_)) => {
+            render_side_effect_directive(html, directive, ctx);
+        }
+    }
+}
+
+/// The directives with no content-shaped output of their own: they either
+/// only mutate rendering state, execute outside the render pass entirely, or
+/// were already fully handled elsewhere. Split out of [`render_directive`]
+/// once this last group of arms pushed it past its line limit — every variant
+/// it's called with is named explicitly in the arm above, so the `unreachable!`
+/// below only fires if that arm's list and this match ever drift apart.
+fn render_side_effect_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCtx<'_>) {
+    match directive {
         // Scope-mutating directives render no HTML of their own — mirrored
         // from the analyzer's `index_nodes` so anchor `id`s never drift from
         // the index keys it built.
@@ -495,12 +523,14 @@ fn render_directive(
                 html.push_str(&rendered);
             }
         }
-        // `SubstitutionDefinition` produces no output where it is written,
-        // like `.. highlight::` above: every reference to it elsewhere in the
-        // document was already spliced in with its resolved content by the
-        // parser's `resolve_substitutions` pass, so nothing is left to render
-        // here — the same reason an unrecognized directive renders nothing.
-        Directive::Unknown { .. } | Directive::SubstitutionDefinition(_) => {}
+        // `SubstitutionDefinition` was already spliced in by the parser's
+        // `resolve_substitutions` pass, `Sectnum`'s numbers are precomputed,
+        // and an unrecognized directive has nothing sensible to render — all
+        // three produce no output here.
+        Directive::Sectnum(_)
+        | Directive::Unknown { .. }
+        | Directive::SubstitutionDefinition(_) => {}
+        _ => unreachable!("render_directive routes every other variant to its own arm"),
     }
 }
 

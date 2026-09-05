@@ -192,6 +192,7 @@ pub(super) fn index_nodes(
                 | Directive::Figure(_)
                 | Directive::Contents(_)),
             ) => index_name_bearing_directive(directive, doc_path, index, scope),
+            Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
             _ => {}
         }
     }
@@ -262,6 +263,30 @@ fn index_name_bearing_directive(
         }
         _ => {}
     }
+}
+
+/// Records a document's `.. sectnum::` options.
+///
+/// A `.. sectnum::` numbers its whole document regardless of where it's
+/// written, so this is called from anywhere `index_nodes` finds one, not just
+/// the document's top level — matching docutils, which treats it as a
+/// document-wide switch, not a positional marker. When a document writes more
+/// than one, the last visited (document order) wins, simply from
+/// `BTreeMap::insert` overwriting the earlier one.
+/// Records a document's `.. sectnum::` options.
+///
+/// A `.. sectnum::` numbers its whole document regardless of where it's
+/// written, so this is called from anywhere `index_nodes` finds one, not just
+/// the document's top level — matching docutils, which treats it as a
+/// document-wide switch, not a positional marker. When a document writes more
+/// than one, the last visited (document order) wins, simply from
+/// `BTreeMap::insert` overwriting the earlier one.
+fn index_sectnum(
+    options: &rusty_sphinx_ast::SectnumOptions,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+) {
+    index.sectnum.insert(doc_path.to_string(), options.clone());
 }
 
 fn register_directive_name(name: Option<&TargetName>, doc_path: &str, index: &mut ProjectIndex) {
