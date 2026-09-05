@@ -31,6 +31,15 @@ pub enum CodeBlockSource {
     CodeBlock,
     /// `.. code::` — docutils' spelling.
     Code,
+    /// `.. literalinclude::` — Sphinx's directive for a block whose text is
+    /// read from a file rather than written in the document.
+    ///
+    /// A third variant rather than a separate node because by the time one
+    /// reaches the renderer it *is* a code block: the file has been read, the
+    /// lines selected, the tabs expanded and the dedent applied, all while
+    /// parsing. What is left is the same content and the same nine
+    /// presentation options the other two produce.
+    LiteralInclude,
 }
 
 impl CodeBlockSource {
@@ -41,6 +50,7 @@ impl CodeBlockSource {
         match self {
             Self::CodeBlock => "code-block",
             Self::Code => "code",
+            Self::LiteralInclude => "literalinclude",
         }
     }
 }

@@ -8,7 +8,7 @@ use rusty_sphinx_renderer::config;
 use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt, flag_values};
-use super::diagnostics::format_diagnostic;
+use super::diagnostics::{WarningOrigin, format_diagnostic};
 use super::suppression::retain_reportable;
 
 /// The serialized index, plus the warnings the caller should print.
@@ -37,6 +37,12 @@ pub(super) fn process_index(ast_jsons: &[String], root_doc: &str) -> Result<Inde
         .iter()
         .map(|doc| (doc.path.as_str(), doc.suppressions.as_slice()))
         .collect();
+    // …and so does its table of included files, without which a span from an
+    // `.. include::` could not be resolved back to the fragment it names.
+    let source_files: std::collections::BTreeMap<&str, &[String]> = docs
+        .iter()
+        .map(|doc| (doc.path.as_str(), doc.source_files.as_slice()))
+        .collect();
 
     let mut warnings = Vec::new();
     for reported in &build.diagnostics {
@@ -45,8 +51,16 @@ pub(super) fn process_index(ast_jsons: &[String], root_doc: &str) -> Result<Inde
             .get(reported.source_path.as_str())
             .copied()
             .unwrap_or(empty);
+        let empty_files: &[String] = &[];
+        let origin = WarningOrigin::new(
+            &reported.source_path,
+            source_files
+                .get(reported.source_path.as_str())
+                .copied()
+                .unwrap_or(empty_files),
+        );
         for diagnostic in retain_reportable(&reported.diagnostics, doc_suppressions) {
-            warnings.push(format_diagnostic(&reported.source_path, diagnostic));
+            warnings.push(format_diagnostic(&origin, diagnostic));
         }
     }
 

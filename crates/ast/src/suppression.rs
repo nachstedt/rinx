@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::diagnostic_code::DiagnosticCode;
-use crate::span::Span;
+use crate::span::{FileId, Span};
 
 /// Which diagnostics a `.. noqa:` comment silences.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -41,6 +41,16 @@ pub struct Suppression {
     /// Last line of the suppressed block, 1-based and inclusive.
     pub end_line: u32,
     pub codes: SuppressionCodes,
+    /// The file whose lines [`Self::start_line`] and [`Self::end_line`] count,
+    /// when that is not the document itself — i.e. a `.. noqa:` written inside
+    /// a file spliced in by `.. include::`.
+    ///
+    /// Mirrors [`Span::file`](crate::Span::file), and must, because the two
+    /// are compared: without it a `.. noqa:` on line 3 of a document would
+    /// silence a diagnostic from line 3 of a fragment it includes, which is a
+    /// different place entirely.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file: Option<FileId>,
 }
 
 impl Suppression {
@@ -51,6 +61,12 @@ impl Suppression {
     /// that block covers it, and one before a block it merely spills into does
     /// not.
     ///
+    /// The span's file must equal this suppression's — `None`, for the
+    /// document being parsed, on both sides. A comment therefore only silences
+    /// diagnostics from the file it was written in: line numbers from two
+    /// different files are not comparable, so matching them would silence
+    /// something the author never looked at.
+    ///
     /// A diagnostic with no span is never suppressed — there is nothing to
     /// match against, and silencing it on the strength of its code alone would
     /// reach across the whole document.
@@ -59,7 +75,8 @@ impl Suppression {
         let Some(span) = span else {
             return false;
         };
-        self.codes.covers(code)
+        self.file == span.file
+            && self.codes.covers(code)
             && span.start.line >= self.start_line
             && span.start.line <= self.end_line
     }
@@ -79,7 +96,21 @@ mod tests {
             start_line: 10,
             end_line: 12,
             codes: SuppressionCodes::Only(vec![DiagnosticCode::LinkBrokenRef]),
+            file: None,
         }
+    }
+
+    /// The same suppression, written inside an included fragment instead.
+    fn only_broken_ref_in(file: FileId) -> Suppression {
+        Suppression {
+            file: Some(file),
+            ..only_broken_ref()
+        }
+    }
+
+    /// A one-line span in an included fragment rather than in the document.
+    fn span_on_in(line: u32, file: FileId) -> Span {
+        span_on(line).with_file(Some(file))
     }
 
     #[test]
@@ -139,6 +170,7 @@ mod tests {
             start_line: 1,
             end_line: 1000,
             codes: SuppressionCodes::All,
+            file: None,
         };
 
         // When / Then — with nothing to match against, it still does not fire
@@ -152,6 +184,100 @@ mod tests {
 
         // When / Then — it is attributed to where it begins
         assert!(only_broken_ref().suppresses(DiagnosticCode::LinkBrokenRef, span));
+    }
+
+    #[test]
+    fn test_a_documents_noqa_does_not_reach_into_an_included_file() {
+        // Given a `.. noqa:` written in the document itself
+        let suppression = only_broken_ref();
+
+        // When the same line number comes up in an included fragment
+        let matches = suppression.suppresses(
+            DiagnosticCode::LinkBrokenRef,
+            Some(span_on_in(11, FileId::new(0))),
+        );
+
+        // Then — line 11 of the fragment is not line 11 of the document
+        assert!(!matches);
+    }
+
+    #[test]
+    fn test_an_included_files_noqa_does_not_reach_the_document() {
+        // Given a `.. noqa:` written inside an included fragment
+        let suppression = only_broken_ref_in(FileId::new(0));
+
+        // When the same line number comes up in the including document
+        let matches = suppression.suppresses(DiagnosticCode::LinkBrokenRef, Some(span_on(11)));
+
+        // Then — the fragment's author cannot silence its includer
+        assert!(!matches);
+    }
+
+    #[test]
+    fn test_an_included_files_noqa_silences_its_own_file() {
+        // Given
+        let suppression = only_broken_ref_in(FileId::new(0));
+
+        // When
+        let matches = suppression.suppresses(
+            DiagnosticCode::LinkBrokenRef,
+            Some(span_on_in(11, FileId::new(0))),
+        );
+
+        // Then
+        assert!(matches);
+    }
+
+    #[test]
+    fn test_a_noqa_does_not_reach_a_different_included_file() {
+        // Given two fragments included by the same document
+        let suppression = only_broken_ref_in(FileId::new(0));
+
+        // When
+        let matches = suppression.suppresses(
+            DiagnosticCode::LinkBrokenRef,
+            Some(span_on_in(11, FileId::new(1))),
+        );
+
+        // Then
+        assert!(!matches);
+    }
+
+    #[test]
+    fn test_serialization_omits_an_absent_file() {
+        // Given a suppression written in the document itself
+        let suppression = only_broken_ref();
+
+        // When
+        let json = serde_json::to_string(&suppression).expect("Failed to serialize");
+
+        // Then — the common case must not grow the `.ast` wire form
+        assert!(!json.contains("file"), "{json}");
+    }
+
+    #[test]
+    fn test_deserialization_defaults_a_missing_file_to_none() {
+        // Given JSON written before this field existed
+        let json = r#"{"start_line":10,"end_line":12,"codes":{"Only":["link.broken-ref"]}}"#;
+
+        // When
+        let suppression: Suppression = serde_json::from_str(json).expect("Failed to deserialize");
+
+        // Then — an `.ast` from an older build still loads
+        assert_eq!(suppression.file, None);
+    }
+
+    #[test]
+    fn test_serialization_roundtrip_with_a_file() {
+        // Given
+        let suppression = only_broken_ref_in(FileId::new(3));
+
+        // When
+        let json = serde_json::to_string(&suppression).expect("Failed to serialize");
+        let deserialized: Suppression = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(suppression, deserialized);
     }
 
     #[test]

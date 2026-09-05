@@ -19,11 +19,11 @@ This is a third, separate mechanism from the two that already exist, and the
 separation is the point:
 
 - `deps` declares *other libraries* pulled in via `.. toctree::`.
-- `csv_data` declares *bytes the parser reads*, at parse time.
+- `parse_data` declares *bytes the parser reads*, at parse time.
 - `images` declares *bytes the site serves*, and that no phase reads at all
   unless a document asks to embed one.
 
-Unlike `csv_data`, images are not parse-action inputs: nothing about parsing a
+Unlike `parse_data`, images are not parse-action inputs: nothing about parsing a
 document depends on the picture existing. An undeclared image therefore cannot
 fail at parse time, which is why the site's validation step is what catches it.
 

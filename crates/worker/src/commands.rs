@@ -9,11 +9,10 @@
 //! three into one process for the editor. [`cli_args`] holds the flag parsing
 //! they share, [`diagnostics`] the warning formatting [`render`] and
 //! [`preview`] share, [`suppression`] the `.. noqa:` filtering applied just
-//! before that formatting, and [`csv_files`] the filesystem loader that
+//! before that formatting, and [`parse_files`] the filesystem loader that
 //! resolves `.. csv-table::`'s `:file:` option for both of them.
 
 mod cli_args;
-mod csv_files;
 mod diagnostics;
 mod diagrams;
 mod embed_assets;
@@ -21,6 +20,7 @@ mod extract_doctests;
 mod genindex;
 mod index;
 mod parse;
+mod parse_files;
 mod preview;
 mod render;
 mod suppression;

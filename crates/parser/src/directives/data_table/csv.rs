@@ -175,8 +175,8 @@ fn resolve_csv_data(
         (None, true) => Some(inline_data.to_string()),
         (Some(path), false) => {
             check_encoding(source.encoding.as_deref(), diagnostics, span)?;
-            match ctx.csv_files.load(path) {
-                Ok(data) => Some(data),
+            match ctx.files.load(path, ctx.current_file()) {
+                Ok(loaded) => Some(loaded.text),
                 Err(message) => {
                     diagnostics.push(Diagnostic::at(
                         DiagnosticCode::CsvFileUnreadable,
@@ -391,7 +391,7 @@ fn unknown_csv_table(argument: String, body_lines: &[&str]) -> Directive {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::context::CsvFileLoader;
+    use crate::context::{LoadedFile, ParseFileLoader};
     use rusty_sphinx_ast::{Domain, InlineNode, TableAlign, TableWidths, TargetName};
     use std::collections::HashMap;
 
@@ -407,11 +407,14 @@ mod tests {
         }
     }
 
-    impl CsvFileLoader for FakeCsvFiles {
-        fn load(&self, path: &str) -> Result<String, String> {
+    impl ParseFileLoader for FakeCsvFiles {
+        fn load(&self, path: &str, _relative_to: Option<&str>) -> Result<LoadedFile, String> {
             self.0
                 .get(path)
-                .cloned()
+                .map(|text| LoadedFile {
+                    id: path.to_string(),
+                    text: text.clone(),
+                })
                 .ok_or_else(|| format!("cannot read '{path}': no such file"))
         }
     }
@@ -763,11 +766,11 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(
-            diagnostics[0].message.contains(":file:"),
-            "{}",
-            diagnostics[0].message
-        );
+        // The loader is shared with `.. include::` and so cannot name the
+        // option; the directive that asked wraps its own name around it.
+        let message = &diagnostics[0].message;
+        assert!(message.starts_with("csv-table: "), "{message}");
+        assert!(message.contains("data/fruits.csv"), "{message}");
         assert!(matches!(directive, Directive::Unknown { .. }));
     }
 

@@ -132,6 +132,7 @@ mod tests {
             start_line,
             end_line,
             codes: SuppressionCodes::Only(vec![DiagnosticCode::LinkBrokenRef]),
+            file: None,
         }
     }
 
@@ -223,6 +224,7 @@ mod tests {
             start_line: 1,
             end_line: 1000,
             codes: SuppressionCodes::All,
+            file: None,
         }];
 
         // When
@@ -269,6 +271,7 @@ mod tests {
             start_line: 5,
             end_line: 7,
             codes: SuppressionCodes::Only(vec![DiagnosticCode::LinkTypeMismatch]),
+            file: None,
         }];
 
         // When / Then

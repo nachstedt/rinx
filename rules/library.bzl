@@ -35,14 +35,20 @@ def _rusty_sphinx_library_impl(ctx):
                 "--output", ast_raw.path,
                 "--default-domain", ctx.attr.default_domain,
             ],
-            # `csv_data` files join the parse action's inputs because
-            # `.. csv-table::`'s `:file:` option reads them at parse time. This
-            # is a third, separate mechanism from `deps` (toctree structure)
-            # and from late-resolved cross-references: it declares *data* the
-            # parser reads, not another library. A file left out of `csv_data`
-            # is simply absent from the sandbox, so the parse fails loudly
-            # instead of silently reading the host filesystem.
-            inputs = [src] + ctx.files.csv_data,
+            # `parse_data` files join the parse action's inputs because the
+            # parser genuinely reads them: `.. csv-table::`'s `:file:`, and the
+            # sources `.. include::`/`.. literalinclude::` splice into the
+            # document. This is a separate mechanism from `deps` (toctree
+            # structure) and from late-resolved cross-references: it declares
+            # *bytes the parser reads*, not another library. A file left out is
+            # simply absent from the sandbox, so the parse fails loudly instead
+            # of silently reading the host filesystem.
+            #
+            # Note there is no cache firewall here, unlike `images`: an
+            # included file's text becomes part of the .ast, so editing it
+            # re-parses and re-renders every document that includes it. That is
+            # correct — the page really did change.
+            inputs = [src] + ctx.files.parse_data,
             outputs = [ast_raw],
             mnemonic = "RustySphinxParse",
             progress_message = "Parsing %s" % src.short_path,
@@ -201,9 +207,9 @@ rusty_sphinx_library = rule(
             allow_files = [".rst"],
             doc = "reStructuredText source files owned by this library.",
         ),
-        "csv_data": attr.label_list(
+        "parse_data": attr.label_list(
             allow_files = True,
-            doc = "Data files this library's documents read via `.. csv-table::`'s `:file:` option. Paths in the document resolve relative to the document itself; declaring the file here is what puts it in the parse action's sandbox.",
+            doc = "Files this library's documents read *at parse time*: the data behind `.. csv-table::`'s `:file:` option, and the sources spliced in by `.. include::` and `.. literalinclude::`. Paths in the document resolve relative to the file the directive was written in (the document, or an including fragment), or to the source root with a leading `/`; declaring the file here is what puts it in the parse action's sandbox. An `.rst` included this way must NOT also appear in `srcs` — that would additionally publish it as a page of its own.",
         ),
         "images": attr.label_list(
             allow_files = True,
@@ -239,8 +245,12 @@ strict structural dependencies (i.e. targets included in a `.. toctree::`) in `d
 Standard cross-references/hyperlinks do not need to be declared in `deps` as they are
 resolved late during the site rendering phase.
 
-Data files read by `.. csv-table:: :file:` go in `csv_data`, which is unrelated
-to `deps`: it declares bytes the parser reads, not another library. Pictures
+Files read while parsing go in `parse_data` — the data behind
+`.. csv-table:: :file:`, and the sources `.. include::`/`.. literalinclude::`
+splice in. That is unrelated to `deps`: it declares bytes the parser reads, not
+another library. A `.. toctree::` written *inside* an included fragment still
+needs its documents in `deps`, because toctree validation runs on the merged
+AST. Pictures
 shown by `.. image::`/`.. figure::` go in `images`, which is unrelated to both:
 those bytes are read by neither the parser nor another library — they are
 copied into the site and, when a document asks to embed one, inlined into it.

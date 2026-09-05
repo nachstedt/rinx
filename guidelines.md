@@ -101,6 +101,11 @@ entry under the heading it belongs to, as a single short sentence.
 - A suppression must lift the consequence as well as the message — the strict-build failure and the machine-readable sidecar too — or it only hides the problem.
 - Diagnose a suppression that names an unknown code, since one that silently matches nothing is the same silent degradation the diagnostics exist to catch.
 - Generate an enum's string mapping and its parse-back from one table when both directions must be exact inverses.
+- Build a feature's diagnostics with the feature, not after it: deferring them ships the silent degradation the diagnostics exist to catch, and retrofitting one usually turns out to need a data-model change the feature could have made for free.
+- Attach a position's *file* to the position itself, not to the diagnostic quoting it, when a later phase reads that position out of a serialized artifact — a file recorded only on parse-time diagnostics cannot serve the render-time ones.
+- Intern a repeated identifier to a small integer rather than storing the string, when the type carrying it is `Copy` and appears once per node; the indirection buys back both the trait and the wire size.
+- Route every construction of a position-bearing value through one function once any of them needs extra context, so a site that skipped it cannot compile rather than silently reporting against the wrong file.
+- Scope a suppression to the file it was written in; line numbers from two different files are not comparable, and matching them silences something the author never looked at.
 
 ## Testing
 
@@ -126,6 +131,8 @@ entry under the heading it belongs to, as a single short sentence.
 - When adding new `.rst` files to the example project, always declare them in `srcs` in the corresponding `BUILD.bazel` file.
 - Derive a target's inputs from the target it depends on rather than repeating them in the build file; where the build system cannot express that, choose the coarser granularity over a duplicated naming convention.
 - Give data a build target reads its own attribute, separate from the attribute that declares dependencies on other targets.
+- Name that attribute after *when* the build reads the files rather than after the one directive that first needed them, so the next reader of the same phase joins it instead of adding a third overlapping attribute.
+- Before 1.0, rename an attribute outright rather than keeping the old spelling as an alias: one honest name is worth more than the churn of updating every call site.
 - A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
 - Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
 - In spec_gaps.md, mark a row 🔶 partial rather than ✅ whenever its own Notes say a specific argument/option/variant of that feature is unsupported, even though the feature's core case works.

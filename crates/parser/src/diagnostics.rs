@@ -1,7 +1,7 @@
-//! What a parse records on the side: the problems it found, and the
-//! `.. noqa:` comments excusing some of them.
+//! What a parse records on the side: the problems it found, the `.. noqa:`
+//! comments excusing some of them, and the files it spliced text in from.
 
-use rusty_sphinx_ast::{Diagnostic, Suppression};
+use rusty_sphinx_ast::{Diagnostic, FileId, Suppression};
 
 /// The collector every block-level parser is handed.
 ///
@@ -11,10 +11,17 @@ use rusty_sphinx_ast::{Diagnostic, Suppression};
 /// the parser's signatures unchanged: [`Self::push`] is deliberately named
 /// and shaped like `Vec::push`, so the several dozen call sites that report a
 /// diagnostic read exactly as they did when this was a plain `Vec`.
+///
+/// The included-file table joined them for the same reason: it is produced by
+/// the same pass, it is meaningless on its own, and it is what the other two
+/// are read *against* — a [`Span`](rusty_sphinx_ast::Span) from an
+/// `.. include::` names its file by an index into it, and a `.. noqa:` in that
+/// file matches only diagnostics carrying the same index.
 #[derive(Debug, Default)]
 pub(crate) struct Diagnostics {
     entries: Vec<Diagnostic>,
     suppressions: Vec<Suppression>,
+    source_files: Vec<String>,
 }
 
 impl Diagnostics {
@@ -28,9 +35,28 @@ impl Diagnostics {
         self.suppressions.push(suppression);
     }
 
+    /// Records `path` as a file whose text was spliced into the document, and
+    /// returns the id spans in it carry.
+    ///
+    /// Deduplicating, so a fragment included in twenty places costs one entry
+    /// and every span in it compares equal on its file — see
+    /// [`rusty_sphinx_ast::Document::intern_source_file`], whose contract this
+    /// mirrors for the parse that builds one.
+    pub(crate) fn intern_source_file(&mut self, path: &str) -> FileId {
+        let index = self
+            .source_files
+            .iter()
+            .position(|known| known == path)
+            .unwrap_or_else(|| {
+                self.source_files.push(path.to_string());
+                self.source_files.len() - 1
+            });
+        FileId::new(u32::try_from(index).unwrap_or(u32::MAX))
+    }
+
     /// Everything recorded, for the caller that builds the `Document`.
-    pub(crate) fn into_parts(self) -> (Vec<Diagnostic>, Vec<Suppression>) {
-        (self.entries, self.suppressions)
+    pub(crate) fn into_parts(self) -> (Vec<Diagnostic>, Vec<Suppression>, Vec<String>) {
+        (self.entries, self.suppressions, self.source_files)
     }
 
     /// The diagnostics recorded so far.
@@ -43,6 +69,12 @@ impl Diagnostics {
     #[cfg(test)]
     pub(crate) fn iter(&self) -> std::slice::Iter<'_, Diagnostic> {
         self.entries.iter()
+    }
+
+    /// The included files recorded so far.
+    #[cfg(test)]
+    pub(crate) fn source_files(&self) -> &[String] {
+        &self.source_files
     }
 
     /// The suppressions recorded so far.
@@ -114,6 +146,7 @@ mod tests {
             start_line: 1,
             end_line: 2,
             codes: SuppressionCodes::All,
+            file: None,
         });
 
         // Then — the two collections are independent
@@ -134,14 +167,16 @@ mod tests {
             start_line: 1,
             end_line: 2,
             codes: SuppressionCodes::All,
+            file: None,
         });
 
         // When
-        let (entries, suppressions) = diagnostics.into_parts();
+        let (entries, suppressions, source_files) = diagnostics.into_parts();
 
         // Then
         assert_eq!(entries.len(), 1);
         assert_eq!(suppressions.len(), 1);
+        assert!(source_files.is_empty());
     }
 
     #[test]
@@ -157,5 +192,42 @@ mod tests {
         // When / Then — document order is what a reader expects of a report
         assert_eq!(diagnostics.entries()[0].message, "first");
         assert_eq!(diagnostics.entries()[1].message, "second");
+    }
+
+    #[test]
+    fn test_intern_source_file_assigns_ids_in_order() {
+        // Given
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let first = diagnostics.intern_source_file("shared/params.rst");
+        let second = diagnostics.intern_source_file("shared/returns.rst");
+
+        // Then
+        assert_eq!(first, rusty_sphinx_ast::FileId::new(0));
+        assert_eq!(second, rusty_sphinx_ast::FileId::new(1));
+    }
+
+    #[test]
+    fn test_intern_source_file_reuses_the_id_of_a_known_path() {
+        // Given a fragment already included once
+        let mut diagnostics = Diagnostics::default();
+        let first = diagnostics.intern_source_file("shared/params.rst");
+
+        // When it is included again
+        let again = diagnostics.intern_source_file("shared/params.rst");
+
+        // Then — one entry, so spans in it compare equal on their file
+        assert_eq!(again, first);
+        assert_eq!(diagnostics.source_files().len(), 1);
+    }
+
+    #[test]
+    fn test_a_new_collector_has_included_nothing() {
+        // Given / When
+        let diagnostics = Diagnostics::default();
+
+        // Then
+        assert!(diagnostics.source_files().is_empty());
     }
 }

@@ -83,11 +83,12 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     let mut index_id_counter = 0;
     super::index_ids::assign_index_ids(&mut nodes, &mut index_id_counter);
 
-    let (entries, suppressions) = diagnostics.into_parts();
+    let (entries, suppressions, source_files) = diagnostics.into_parts();
     let mut doc = Document::new(path.to_string(), nodes);
     doc.diagnostics = entries;
     doc.suppressions = suppressions;
     doc.metadata = metadata;
+    doc.source_files = source_files;
     doc
 }
 pub(crate) fn parse_blocks(
@@ -175,7 +176,7 @@ fn try_parse_construct(
         return Some(found);
     }
     if let Some(found) = try_parse_directive(lines, i, adornment_order, diagnostics, ctx) {
-        return Some(single(found));
+        return Some(found);
     }
     if let Some(found) = try_parse_target(lines, i) {
         return Some(single(found));
@@ -252,6 +253,10 @@ fn attach_pending_noqa(
             start_line: span.start.line,
             end_line: span.end.line,
             codes,
+            // The comment and the block it covers are always in the same
+            // file — an `.. include::` splices whole blocks, never half of
+            // one — so the block's own attribution is the comment's.
+            file: span.file,
         });
     }
 }

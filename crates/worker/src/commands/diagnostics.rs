@@ -13,25 +13,84 @@
 //! this output. A diagnostic with no span (see
 //! [`rusty_sphinx_ast::Diagnostic::span`]) simply omits that part rather than
 //! pointing at a line it cannot vouch for.
+//!
+//! A span from a file spliced in by `.. include::` names *that* file, with the
+//! document it was included from in parentheses:
+//!
+//! ```text
+//! warning: shared/params.rst:7:3 (included from guide/api.rst): table.grid.no-columns: ...
+//! ```
+//!
+//! One line either way, because these are read with `grep` as often as with
+//! eyes. Naming the fragment first is the important half: it is the file the
+//! author has to open and the line they have to edit, and printing the
+//! document's path against the fragment's line number — which is what happened
+//! before spans carried a file — points confidently at the wrong place.
 
 use anyhow::{Result, anyhow};
 use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span};
 use rusty_sphinx_renderer::{self as renderer};
 
-/// Renders `path` plus a span's start as the `file:line:column:` prefix every
-/// warning opens with, or just `path:` when there is no span.
-fn location(doc_path: &str, span: Option<Span>) -> String {
-    span.map_or_else(
-        || format!("{doc_path}:"),
-        |span| format!("{doc_path}:{}:{}:", span.start.line, span.start.column),
-    )
+/// The document a batch of warnings is about, plus the files it included —
+/// between them, everything needed to turn a [`Span`] into a path a reader can
+/// open.
+///
+/// Bundled into one type rather than passed as two arguments because every
+/// formatter in this module needs both, and because the pair has an invariant
+/// worth naming: `source_files` must be the table the spans were interned
+/// against, which in practice means it and `doc_path` come from the same
+/// [`Document`](rusty_sphinx_ast::Document).
+pub(super) struct WarningOrigin<'a> {
+    doc_path: &'a str,
+    source_files: &'a [String],
+}
+
+impl<'a> WarningOrigin<'a> {
+    /// The origin for a document that included `source_files`.
+    pub(super) const fn new(doc_path: &'a str, source_files: &'a [String]) -> Self {
+        Self {
+            doc_path,
+            source_files,
+        }
+    }
+
+    /// The origin for a document known to include nothing.
+    ///
+    /// Kept distinct from [`Self::new`] with an empty slice so a caller says
+    /// which it means: an empty table is also what a *mangled* `.ast` has, and
+    /// the two should not be spelled the same way at a call site.
+    pub(super) const fn document_only(doc_path: &'a str) -> Self {
+        Self::new(doc_path, &[])
+    }
+
+    /// The `file:line:column:` prefix every warning opens with — or just
+    /// `path:` when there is no span, and with `(included from …)` when the
+    /// span belongs to a file this document included.
+    fn location(&self, span: Option<Span>) -> String {
+        let Some(span) = span else {
+            return format!("{}:", self.doc_path);
+        };
+        let position = format!("{}:{}", span.start.line, span.start.column);
+        match span
+            .file
+            .and_then(|file| self.source_files.get(file.index()))
+        {
+            // A span whose file id has no entry falls back to naming the
+            // document with no position: an `.ast` written by another version
+            // of the parser should cost a warning its precision, never make it
+            // lie about a line.
+            None if span.file.is_some() => format!("{}:", self.doc_path),
+            None => format!("{}:{position}:", self.doc_path),
+            Some(included) => format!("{included}:{position} (included from {}):", self.doc_path),
+        }
+    }
 }
 
 /// Formats a parse-time diagnostic as a human-readable warning line.
-pub(super) fn format_diagnostic(doc_path: &str, diagnostic: &Diagnostic) -> String {
+pub(super) fn format_diagnostic(origin: &WarningOrigin<'_>, diagnostic: &Diagnostic) -> String {
     format!(
         "warning: {} {}: {}",
-        location(doc_path, diagnostic.span),
+        origin.location(diagnostic.span),
         diagnostic.code,
         diagnostic.message
     )
@@ -45,8 +104,8 @@ pub(super) fn format_diagnostic(doc_path: &str, diagnostic: &Diagnostic) -> Stri
 /// build step's business, and a parser that printed as it went could not
 /// honour a `.. noqa:` comment appearing anywhere in the document. Which
 /// diagnostics reach here is [`super::suppression`]'s decision.
-pub(super) fn report_diagnostic(doc_path: &str, diagnostic: &Diagnostic) {
-    eprintln!("{}", format_diagnostic(doc_path, diagnostic));
+pub(super) fn report_diagnostic(origin: &WarningOrigin<'_>, diagnostic: &Diagnostic) {
+    eprintln!("{}", format_diagnostic(origin, diagnostic));
 }
 
 /// Formats a single broken-link diagnostic as a human-readable warning line.
@@ -57,7 +116,10 @@ pub(super) fn report_diagnostic(doc_path: &str, diagnostic: &Diagnostic) {
 /// ambiguous reference additionally lists the qualified names it matched:
 /// unlike a plain miss, the fix is to pick one of them, so they are the
 /// actionable part of the message.
-pub(super) fn format_broken_link_warning(doc_path: &str, link: &renderer::BrokenLink) -> String {
+pub(super) fn format_broken_link_warning(
+    origin: &WarningOrigin<'_>,
+    link: &renderer::BrokenLink,
+) -> String {
     let requested = match &link.kind {
         renderer::BrokenLinkKind::DomainObjectReference(object_type) => {
             format!(" (referenced as {})", object_type.domain_qualified_str())
@@ -74,7 +136,7 @@ pub(super) fn format_broken_link_warning(doc_path: &str, link: &renderer::Broken
     };
     format!(
         "warning: {} {}: broken {} '{}'{requested}",
-        location(doc_path, link.span),
+        origin.location(link.span),
         link.code(),
         link.kind.as_str(),
         link.target
@@ -95,12 +157,12 @@ pub(super) fn format_broken_link_warning(doc_path: &str, link: &renderer::Broken
 /// role (e.g. `:exc:`) and the definition's actual object type (e.g. `class`)
 /// are inconsistent.
 pub(super) fn format_object_type_mismatch_warning(
-    doc_path: &str,
+    origin: &WarningOrigin<'_>,
     mismatch: &renderer::ObjectTypeMismatch,
 ) -> String {
     format!(
         "warning: {} {}: domain object '{}' referenced as '{}' but defined as '{}'",
-        location(doc_path, mismatch.span),
+        origin.location(mismatch.span),
         DiagnosticCode::LinkTypeMismatch,
         mismatch.name,
         mismatch.requested_type.domain_qualified_str(),
@@ -114,10 +176,13 @@ pub(super) fn format_object_type_mismatch_warning(
 /// [`check_broken_links_strict`]: `--strict-links` is about references that
 /// don't resolve, and an equation that fails to convert is a different
 /// complaint. The page still renders, showing the LaTeX the author wrote.
-pub(super) fn format_math_error_warning(doc_path: &str, error: &renderer::MathError) -> String {
+pub(super) fn format_math_error_warning(
+    origin: &WarningOrigin<'_>,
+    error: &renderer::MathError,
+) -> String {
     format!(
         "warning: {} {}: invalid math: {}",
-        location(doc_path, error.span),
+        origin.location(error.span),
         error.code(),
         error.message
     )
@@ -130,12 +195,12 @@ pub(super) fn format_math_error_warning(doc_path: &str, error: &renderer::MathEr
 /// a reference that failed to resolve. The page still renders, showing the
 /// author's code as plain text.
 pub(super) fn format_highlight_error_warning(
-    doc_path: &str,
+    origin: &WarningOrigin<'_>,
     error: &renderer::HighlightError,
 ) -> String {
     format!(
         "warning: {} {}: {}",
-        location(doc_path, error.span),
+        origin.location(error.span),
         error.code(),
         error.message
     )
@@ -145,10 +210,13 @@ pub(super) fn format_highlight_error_warning(
 ///
 /// The URI is not repeated here: an image's message already names the file it
 /// could not embed, since that is the only thing the author can act on.
-pub(super) fn format_image_error_warning(doc_path: &str, error: &renderer::ImageError) -> String {
+pub(super) fn format_image_error_warning(
+    origin: &WarningOrigin<'_>,
+    error: &renderer::ImageError,
+) -> String {
     format!(
         "warning: {} {}: {}",
-        location(doc_path, error.span),
+        origin.location(error.span),
         error.code(),
         error.message
     )
@@ -160,7 +228,7 @@ pub(super) fn format_image_error_warning(doc_path: &str, error: &renderer::Image
 /// fail the render.
 pub(super) fn check_broken_links_strict(
     strict: bool,
-    doc_path: &str,
+    origin: &WarningOrigin<'_>,
     broken_links: &[renderer::BrokenLink],
 ) -> Result<()> {
     if !strict || broken_links.is_empty() {
@@ -168,7 +236,7 @@ pub(super) fn check_broken_links_strict(
     }
     let messages: Vec<String> = broken_links
         .iter()
-        .map(|link| format_broken_link_warning(doc_path, link))
+        .map(|link| format_broken_link_warning(origin, link))
         .collect();
     Err(anyhow!(
         "Broken link validation failed:\n{}",
@@ -196,7 +264,8 @@ mod tests {
         };
 
         // When
-        let message = format_broken_link_warning("guide/intro.rst", &link);
+        let message =
+            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
 
         // Then — the span's *start* is shown, not the range
         assert_eq!(
@@ -215,7 +284,8 @@ mod tests {
         };
 
         // When
-        let message = format_broken_link_warning("guide/intro.rst", &link);
+        let message =
+            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
 
         // Then — the document is still named; no line is invented for it
         assert_eq!(
@@ -234,7 +304,10 @@ mod tests {
         );
 
         // When
-        let message = format_diagnostic("guide/tables.rst", &diagnostic);
+        let message = format_diagnostic(
+            &WarningOrigin::document_only("guide/tables.rst"),
+            &diagnostic,
+        );
 
         // Then
         assert_eq!(
@@ -250,12 +323,121 @@ mod tests {
             Diagnostic::without_span(DiagnosticCode::CsvMalformedData, "csv-table: malformed row");
 
         // When
-        let message = format_diagnostic("guide/tables.rst", &diagnostic);
+        let message = format_diagnostic(
+            &WarningOrigin::document_only("guide/tables.rst"),
+            &diagnostic,
+        );
 
         // Then
         assert_eq!(
             message,
             "warning: guide/tables.rst: csv.malformed-data: csv-table: malformed row"
+        );
+    }
+
+    #[test]
+    fn test_format_diagnostic_names_the_included_file_and_its_includer() {
+        // Given a problem found inside a fragment the document included
+        let files = ["shared/params.rst".to_string()];
+        let origin = WarningOrigin::new("guide/api.rst", &files);
+        let diagnostic = Diagnostic::new(
+            DiagnosticCode::TableGridNoColumns,
+            "grid table: top border defines no columns",
+            Span::new(Position::new(7, 3), Position::new(7, 20))
+                .with_file(Some(rusty_sphinx_ast::FileId::new(0))),
+        );
+
+        // When
+        let message = format_diagnostic(&origin, &diagnostic);
+
+        // Then — the fragment is named first: it is the file to open, and its
+        // line 7 is the line to edit.
+        assert_eq!(
+            message,
+            "warning: shared/params.rst:7:3 (included from guide/api.rst): \
+             table.grid.no-columns: grid table: top border defines no columns"
+        );
+    }
+
+    #[test]
+    fn test_format_broken_link_warning_names_the_included_file() {
+        // Given a `:ref:` inside an included fragment that resolves nowhere —
+        // found at *render* time, long after the fragment was spliced in
+        let files = ["shared/params.rst".to_string()];
+        let origin = WarningOrigin::new("guide/api.rst", &files);
+        let link = renderer::BrokenLink {
+            kind: renderer::BrokenLinkKind::Reference,
+            target: "missing-section".to_string(),
+            span: Some(a_span().with_file(Some(rusty_sphinx_ast::FileId::new(0)))),
+        };
+
+        // When
+        let message = format_broken_link_warning(&origin, &link);
+
+        // Then
+        assert_eq!(
+            message,
+            "warning: shared/params.rst:42:18 (included from guide/api.rst): \
+             link.broken-ref: broken ref 'missing-section'"
+        );
+    }
+
+    #[test]
+    fn test_a_span_in_the_document_is_unaffected_by_a_source_file_table() {
+        // Given a document that includes a fragment
+        let files = ["shared/params.rst".to_string()];
+        let origin = WarningOrigin::new("guide/api.rst", &files);
+        let diagnostic = Diagnostic::new(DiagnosticCode::CsvNoData, "no data", a_span());
+
+        // When the problem is in the document's own text
+        let message = format_diagnostic(&origin, &diagnostic);
+
+        // Then — no parenthetical, exactly as before includes existed
+        assert_eq!(
+            message,
+            "warning: guide/api.rst:42:18: csv.no-data: no data"
+        );
+    }
+
+    #[test]
+    fn test_an_unresolvable_file_id_drops_the_position_rather_than_lying() {
+        // Given an `.ast` whose span names a file its table does not have
+        let origin = WarningOrigin::document_only("guide/api.rst");
+        let diagnostic = Diagnostic::new(
+            DiagnosticCode::CsvNoData,
+            "no data",
+            a_span().with_file(Some(rusty_sphinx_ast::FileId::new(4))),
+        );
+
+        // When
+        let message = format_diagnostic(&origin, &diagnostic);
+
+        // Then — line 42 belongs to a file we cannot name, so naming the
+        // document at line 42 would point confidently at the wrong text
+        assert_eq!(message, "warning: guide/api.rst: csv.no-data: no data");
+    }
+
+    #[test]
+    fn test_the_second_included_file_resolves_by_its_own_id() {
+        // Given a document including two fragments
+        let files = [
+            "shared/params.rst".to_string(),
+            "shared/returns.rst".to_string(),
+        ];
+        let origin = WarningOrigin::new("guide/api.rst", &files);
+        let diagnostic = Diagnostic::new(
+            DiagnosticCode::CsvNoData,
+            "no data",
+            a_span().with_file(Some(rusty_sphinx_ast::FileId::new(1))),
+        );
+
+        // When
+        let message = format_diagnostic(&origin, &diagnostic);
+
+        // Then — ids index the table, so the second entry is the second file
+        assert!(
+            message.starts_with("warning: shared/returns.rst:42:18"),
+            "{message}"
         );
     }
 
@@ -297,7 +479,11 @@ mod tests {
         }];
 
         // When
-        let result = check_broken_links_strict(false, "doc.rst", &broken_links);
+        let result = check_broken_links_strict(
+            false,
+            &WarningOrigin::document_only("doc.rst"),
+            &broken_links,
+        );
 
         // Then
         assert!(result.is_ok());
@@ -309,7 +495,11 @@ mod tests {
         let broken_links: Vec<renderer::BrokenLink> = vec![];
 
         // When
-        let result = check_broken_links_strict(true, "doc.rst", &broken_links);
+        let result = check_broken_links_strict(
+            true,
+            &WarningOrigin::document_only("doc.rst"),
+            &broken_links,
+        );
 
         // Then
         assert!(result.is_ok());
@@ -325,7 +515,11 @@ mod tests {
         }];
 
         // When
-        let result = check_broken_links_strict(true, "doc.rst", &broken_links);
+        let result = check_broken_links_strict(
+            true,
+            &WarningOrigin::document_only("doc.rst"),
+            &broken_links,
+        );
 
         // Then
         assert!(result.is_err());
@@ -347,7 +541,10 @@ mod tests {
         };
 
         // When
-        let message = format_object_type_mismatch_warning("xmlrpc.client.rst", &mismatch);
+        let message = format_object_type_mismatch_warning(
+            &WarningOrigin::document_only("xmlrpc.client.rst"),
+            &mismatch,
+        );
 
         // Then
         assert_eq!(

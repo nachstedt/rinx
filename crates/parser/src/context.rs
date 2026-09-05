@@ -1,10 +1,12 @@
 //! Parse-time configuration threaded through every block-level parser.
 //!
-//! Two things every nested parse needs to know: the domain a *bare* directive
-//! or role resolves to, and how to obtain the contents of a file a directive
-//! names (today only `.. csv-table::`'s `:file:` option). They travel together
-//! in a [`ParseCtx`] rather than as separate parameters, so adding the next
-//! piece of parse-time configuration doesn't touch two dozen signatures again.
+//! Three things every nested parse needs to know: the domain a *bare* directive
+//! or role resolves to, how to obtain the contents of a file a directive names
+//! (`.. csv-table::`'s `:file:`, and the sources `.. include::` and
+//! `.. literalinclude::` splice in), and where the lines it is walking sit in
+//! the source. They travel together in a [`ParseCtx`] rather than as separate
+//! parameters, so adding the next piece of parse-time configuration doesn't
+//! touch two dozen signatures again.
 //!
 //! The loader is an injected trait object rather than a direct
 //! `std::fs::read_to_string` call because this crate performs no I/O of its
@@ -13,34 +15,53 @@
 //! depend on the filesystem. `rusty_sphinx_worker` supplies the real
 //! filesystem-backed loader.
 
-use rusty_sphinx_ast::{Domain, Position, Span};
+use rusty_sphinx_ast::{Domain, FileId, Position, Span};
 
-/// Supplies the contents of a file named by a directive option.
+/// A file read at parse time, and the identity the parser knows it by.
+///
+/// `id` is the loader's resolved, canonical name for the file — a path
+/// relative to the source root — as opposed to `path` as the author wrote it,
+/// which may be relative to whichever file the directive appeared in. Two
+/// things need that canonical form: a nested `.. include::` resolves against
+/// the file it is *written in*, and cycle detection compares files for
+/// identity. Neither can work off the written text, since `../a/x.rst` and
+/// `x.rst` may well be the same file.
+pub struct LoadedFile {
+    /// The resolved, source-root-relative path.
+    pub id: String,
+    /// The file's decoded contents.
+    pub text: String,
+}
+
+/// Supplies the contents of a file named by a directive option or argument.
 ///
 /// `path` is exactly the text the author wrote (e.g. `data/fruits.csv`);
-/// resolving it against a base directory is the implementation's job. The
-/// error string is surfaced verbatim as a parse diagnostic, so it should read
-/// as an explanation to the document's author.
-pub trait CsvFileLoader {
+/// resolving it is the implementation's job. `relative_to` is the [`id`] of
+/// the file the directive was written in, or `None` for the document being
+/// parsed — a nested include resolves against its own directory, as docutils
+/// does. The error string is surfaced verbatim as a parse diagnostic, so it
+/// should read as an explanation to the document's author.
+///
+/// [`id`]: LoadedFile::id
+pub trait ParseFileLoader {
     /// # Errors
     ///
     /// Returns a human-readable explanation when the file cannot be read.
-    fn load(&self, path: &str) -> Result<String, String>;
+    fn load(&self, path: &str, relative_to: Option<&str>) -> Result<LoadedFile, String>;
 }
 
 /// The default loader: refuses every request.
 ///
 /// Used wherever no filesystem context exists — [`crate::parse`], the legacy
-/// `process_rst()` path, and every unit test — so that a `:file:` option in
+/// `process_rst()` path, and every unit test — so that a file-reading option in
 /// those contexts produces an honest diagnostic instead of silently reading
 /// something relative to the process's working directory.
-pub struct RejectCsvFiles;
+pub struct RejectParseFiles;
 
-impl CsvFileLoader for RejectCsvFiles {
-    fn load(&self, path: &str) -> Result<String, String> {
+impl ParseFileLoader for RejectParseFiles {
+    fn load(&self, path: &str, _relative_to: Option<&str>) -> Result<LoadedFile, String> {
         Err(format!(
-            "cannot read '{path}': this parse was given no directory to resolve \
-             :file: against"
+            "cannot read '{path}': this parse was given no directory to resolve it against"
         ))
     }
 }
@@ -64,11 +85,28 @@ struct Origin {
 pub struct ParseCtx<'a> {
     /// The domain a bare (unprefixed) directive or role resolves to.
     pub default_domain: Domain,
-    /// How to read a file named by a `:file:` option.
-    pub csv_files: &'a dyn CsvFileLoader,
+    /// How to read a file named by a directive.
+    pub files: &'a dyn ParseFileLoader,
     /// Where the current line slice came from, or `None` when it came from
     /// nowhere in the source — see [`Self::synthetic`].
     origin: Option<Origin>,
+    /// The file the current lines were read from, or `None` for the document
+    /// itself. Stamped onto every [`Span`] this context builds, which is what
+    /// lets a diagnostic about included content name the file it is really in
+    /// — see [`Span::file`].
+    file: Option<FileId>,
+    /// That same file as the loader's id, for resolving a nested include
+    /// against the file it is written in.
+    ///
+    /// Kept beside [`Self::file`] rather than derived from it because the two
+    /// answer different questions: an id addresses the *filesystem*, and a
+    /// [`FileId`] addresses the document's own table. Only the loader can turn
+    /// one into the other.
+    current_file: Option<&'a str>,
+    /// The ids of the files currently being included, outermost first — the
+    /// chain an `.. include::` would extend. A file already in it would close
+    /// a cycle, so this is what makes that detectable at all.
+    include_stack: &'a [String],
 }
 
 impl<'a> ParseCtx<'a> {
@@ -76,21 +114,20 @@ impl<'a> ParseCtx<'a> {
     /// filesystem access.
     #[must_use]
     pub fn with_domain(default_domain: Domain) -> Self {
-        Self {
-            default_domain,
-            csv_files: &RejectCsvFiles,
-            origin: Some(Origin { line: 1, column: 1 }),
-        }
+        Self::new(default_domain, &RejectParseFiles)
     }
 
     /// A context that resolves bare constructs in `default_domain` and reads
-    /// `:file:` options through `csv_files`.
+    /// files through `files`.
     #[must_use]
-    pub fn new(default_domain: Domain, csv_files: &'a dyn CsvFileLoader) -> Self {
+    pub fn new(default_domain: Domain, files: &'a dyn ParseFileLoader) -> Self {
         Self {
             default_domain,
-            csv_files,
+            files,
             origin: Some(Origin { line: 1, column: 1 }),
+            file: None,
+            current_file: None,
+            include_stack: &[],
         }
     }
 
@@ -103,12 +140,11 @@ impl<'a> ParseCtx<'a> {
     #[must_use]
     pub(crate) fn nested(&self, line_offset: usize, column_offset: usize) -> Self {
         Self {
-            default_domain: self.default_domain,
-            csv_files: self.csv_files,
             origin: self.origin.map(|origin| Origin {
                 line: origin.line + u32::try_from(line_offset).unwrap_or(0),
                 column: origin.column + u32::try_from(column_offset).unwrap_or(0),
             }),
+            ..*self
         }
     }
 
@@ -121,10 +157,46 @@ impl<'a> ParseCtx<'a> {
     #[must_use]
     pub(crate) fn synthetic(&self) -> Self {
         Self {
-            default_domain: self.default_domain,
-            csv_files: self.csv_files,
             origin: None,
+            ..*self
         }
+    }
+
+    /// The context for parsing the text of an included file: positions start
+    /// again at line 1 column 1, and every span built under it is attributed
+    /// to `file`.
+    ///
+    /// `stack` must be this context's [`include_stack`](Self::include_stack)
+    /// extended with `id`; the caller owns it, which is why the returned
+    /// context borrows for a possibly shorter lifetime than `'a`.
+    #[must_use]
+    pub(crate) fn included<'b>(
+        &'b self,
+        file: FileId,
+        id: &'b str,
+        stack: &'b [String],
+    ) -> ParseCtx<'b> {
+        ParseCtx {
+            default_domain: self.default_domain,
+            files: self.files,
+            origin: Some(Origin { line: 1, column: 1 }),
+            file: Some(file),
+            current_file: Some(id),
+            include_stack: stack,
+        }
+    }
+
+    /// The loader id of the file being parsed, or `None` for the document —
+    /// what a directive passes as the loader's `relative_to`.
+    #[must_use]
+    pub(crate) const fn current_file(&self) -> Option<&'a str> {
+        self.current_file
+    }
+
+    /// The chain of files currently being included, outermost first.
+    #[must_use]
+    pub(crate) const fn include_stack(&self) -> &'a [String] {
+        self.include_stack
     }
 
     /// The source position of `local_column` on `local_line`, both 0-based
@@ -139,6 +211,19 @@ impl<'a> ParseCtx<'a> {
         })
     }
 
+    /// A span from `start` to `end`, attributed to the file this context is
+    /// parsing.
+    ///
+    /// The single point at which a [`Span`] learns which file it is measured
+    /// in, so every span-building helper in the crate — here, the simple-table
+    /// context's, and the inline source map's — must go through it rather than
+    /// calling [`Span::new`]. A span that skipped it would carry an included
+    /// fragment's line numbers under the document's name.
+    #[must_use]
+    pub(crate) const fn span(&self, start: Position, end: Position) -> Span {
+        Span::new(start, end).with_file(self.file)
+    }
+
     /// A span covering the whole of `local_line`, whose content is `text`.
     /// The common shape for a block-level diagnostic: it can name the
     /// offending line, but no column within it means anything.
@@ -146,7 +231,7 @@ impl<'a> ParseCtx<'a> {
     pub(crate) fn line_span(&self, local_line: usize, text: &str) -> Option<Span> {
         let start = self.position(local_line, 0)?;
         let end = self.position(local_line, text.chars().count())?;
-        Some(Span::new(start, end))
+        Some(self.span(start, end))
     }
 
     /// A span covering `first` through `last` inclusive (0-based indices),
@@ -156,7 +241,7 @@ impl<'a> ParseCtx<'a> {
     pub(crate) fn lines_span(&self, first: usize, last: usize, last_text: &str) -> Option<Span> {
         let start = self.position(first, 0)?;
         let end = self.position(last, last_text.chars().count())?;
-        Some(Span::new(start, end))
+        Some(self.span(start, end))
     }
 }
 
@@ -174,17 +259,18 @@ mod tests {
     }
 
     #[test]
-    fn test_reject_csv_files_names_the_path_it_refused() {
+    fn test_reject_parse_files_names_the_path_it_refused() {
         // Given
-        let loader = RejectCsvFiles;
+        let loader = RejectParseFiles;
 
         // When
-        let result = loader.load("data/fruits.csv");
+        let result = loader.load("data/fruits.csv", None);
 
         // Then
-        let message = result.expect_err("RejectCsvFiles must refuse every path");
+        let message = result
+            .err()
+            .expect("RejectParseFiles must refuse every path");
         assert!(message.contains("data/fruits.csv"), "{message}");
-        assert!(message.contains(":file:"), "{message}");
     }
 
     #[test]
@@ -193,7 +279,7 @@ mod tests {
         let ctx = ParseCtx::with_domain(Domain::Py);
 
         // When
-        let result = ctx.csv_files.load("anything.csv");
+        let result = ctx.files.load("anything.csv", None);
 
         // Then
         assert!(result.is_err());

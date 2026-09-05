@@ -231,6 +231,49 @@ diagnostic_codes! {
     /// while rendering, since only there is the asset sidecar known.
     ImageEmbedUnavailable => "image.embed-unavailable",
 
+    // --- `.. include::` ----------------------------------------------------
+    /// The directive has no argument, so it names no file to splice in.
+    IncludeMissingPath => "include.missing-path",
+    /// The named file could not be read — in a Bazel build, usually one
+    /// missing from the library's `parse_data` attribute.
+    IncludeFileUnreadable => "include.file-unreadable",
+    /// A file that includes itself, directly or through a chain of other
+    /// files. The chain is named in the message, since the offending edit may
+    /// be in any link of it.
+    IncludeCycle => "include.cycle",
+    /// Includes nested more deeply than the parser will follow. Distinct from
+    /// [`Self::IncludeCycle`]: a very deep but finite chain is not a mistake in
+    /// the same way, and the fix is different.
+    IncludeDepthExceeded => "include.depth-exceeded",
+    /// A `:start-after:`, `:end-before:`, `:start-at:` or `:end-at:` whose
+    /// text appears nowhere in the file, so the selection could not be made.
+    IncludeTextNotFound => "include.text-not-found",
+    /// A `:start-line:`/`:end-line:`/`:lines:` naming a range the file does
+    /// not have, or one that ends before it begins.
+    IncludeInvalidLineRange => "include.invalid-line-range",
+    /// Selection options that between them select nothing, so the directive
+    /// would silently contribute an empty block.
+    IncludeEmptySelection => "include.empty-selection",
+    /// An `:encoding:` other than UTF-8 or a subset of it.
+    IncludeEncodingUnsupported => "include.encoding-unsupported",
+    /// A `:tab-width:` that is not an integer.
+    IncludeInvalidTabWidth => "include.invalid-tab-width",
+    /// An option this directive does not have.
+    IncludeUnknownOption => "include.unknown-option",
+
+    // --- `.. literalinclude::` ---------------------------------------------
+    /// The `:diff:` file could not be read. Separate from
+    /// [`Self::IncludeFileUnreadable`] so a document can suppress one without
+    /// the other — they are different files and different mistakes.
+    LiteralIncludeDiffUnreadable => "literalinclude.diff-unreadable",
+    /// A `:lineno-match:` on a selection that is not one contiguous run of
+    /// lines, so there is no single number the first line could carry.
+    LiteralIncludeLinenoMatchUnusable => "literalinclude.lineno-match-unusable",
+    /// A `:pyobject:`, which would need a Python parser to find the named
+    /// class or function. Refused rather than ignored, so the page never
+    /// silently shows the whole file where one function was meant.
+    LiteralIncludePyObjectUnsupported => "literalinclude.pyobject-unsupported",
+
     // --- `.. toctree::` ----------------------------------------------------
     /// A `:maxdepth:` whose value is not a positive integer. Sphinx would
     /// treat the directive as having no depth limit at all, which silently

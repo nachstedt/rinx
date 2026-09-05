@@ -10,4 +10,4 @@ pub(crate) mod indent;
 pub(crate) mod inline;
 
 pub use blocks::{parse, parse_with_ctx, parse_with_domain};
-pub use context::{CsvFileLoader, ParseCtx, RejectCsvFiles};
+pub use context::{LoadedFile, ParseCtx, ParseFileLoader, RejectParseFiles};

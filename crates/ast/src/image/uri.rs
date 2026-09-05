@@ -14,11 +14,11 @@
 //! single function all three phases resolve with instead, so none of them can
 //! disagree about where `../shared/logo.png` points.
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use crate::path_normalization::normalize_path;
+use crate::path_normalization::resolve_from_document;
 use crate::target_name::TargetName;
 
 /// Whether `raw` names a resource outside this project.
@@ -86,13 +86,7 @@ impl ImageUri {
         let Self::Document(written) = self else {
             return None;
         };
-        if let Some(from_root) = written.strip_prefix('/') {
-            return Some(normalize_path(Path::new(from_root)));
-        }
-        let directory = Path::new(doc_path)
-            .parent()
-            .unwrap_or_else(|| Path::new(""));
-        Some(normalize_path(&directory.join(written)))
+        Some(resolve_from_document(written, doc_path))
     }
 }
 
