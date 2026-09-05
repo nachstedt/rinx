@@ -6,6 +6,7 @@ use crate::directive::Directive;
 use crate::enumerator::Enumerator;
 use crate::hashed_content::HashedContent;
 use crate::inline_node::InlineNode;
+use crate::line_block::LineBlockItem;
 use crate::list_item::ListItem;
 use crate::option_list_item::OptionListItem;
 use crate::table::TableRow;
@@ -96,6 +97,14 @@ pub enum Node {
         content: Vec<Node>,
         attribution: Option<Vec<InlineNode>>,
     },
+    /// A line block (`| text`): a sequence of lines rendered without
+    /// paragraph reflow, for poetry and addresses. Nesting is expressed
+    /// purely through the indentation of the text after each `|` — an item
+    /// indented further than its siblings becomes a [`LineBlockItem::Nested`]
+    /// run rather than a sibling [`LineBlockItem::Line`], grouped once here
+    /// at parse time (docutils' `nest_line_block_segment`) rather than on
+    /// every render.
+    LineBlock(Vec<LineBlockItem>),
 }
 
 #[cfg(test)]
@@ -142,6 +151,25 @@ mod tests {
             )])],
             attribution: Some(vec![InlineNode::Text("Sherlock Holmes".to_string())]),
         };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: Node = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_line_block_node_serialization_roundtrip() {
+        // Given
+        let node = Node::LineBlock(vec![
+            LineBlockItem::Line(vec![InlineNode::Text("First line.".to_string())]),
+            LineBlockItem::Nested(vec![LineBlockItem::Line(vec![InlineNode::Text(
+                "Nested line.".to_string(),
+            )])]),
+            LineBlockItem::Line(vec![]),
+        ]);
 
         // When
         let json = serde_json::to_string(&node).expect("Failed to serialize");

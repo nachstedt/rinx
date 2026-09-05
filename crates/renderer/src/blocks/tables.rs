@@ -7,6 +7,32 @@ use std::fmt::Write as _;
 use super::render_nodes;
 use crate::RenderCtx;
 
+/// Renders a bare grid or simple table — [`rusty_sphinx_ast::Node::Table`],
+/// as opposed to the `.. table::`-wrapped or `list-table`/`csv-table` forms,
+/// which have their own presentation shells and call [`render_table_row`]
+/// directly instead.
+pub(crate) fn render_table(
+    html: &mut String,
+    header_rows: &[TableRow],
+    body_rows: &[TableRow],
+    ctx: &mut RenderCtx<'_>,
+) {
+    let _ = writeln!(html, "<table>");
+    if !header_rows.is_empty() {
+        let _ = writeln!(html, "<thead>");
+        for row in header_rows {
+            render_table_row(html, row, "th", ctx);
+        }
+        let _ = writeln!(html, "</thead>");
+    }
+    let _ = writeln!(html, "<tbody>");
+    for row in body_rows {
+        render_table_row(html, row, "td", ctx);
+    }
+    let _ = writeln!(html, "</tbody>");
+    let _ = writeln!(html, "</table>");
+}
+
 /// Renders a single grid-table row, emitting each cell with the given tag
 /// (`th` for header rows, `td` for body rows) via [`render_table_cell`].
 pub(crate) fn render_table_row(

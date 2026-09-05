@@ -93,7 +93,9 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
             }
             Node::BlockQuote { content, .. } => walk_nodes(content, visit),
             // Leaf nodes: no block-level children to descend into. A doctest
-            // block's body is verbatim text, not nested nodes.
+            // block's body is verbatim text, not nested nodes. A line block's
+            // content is `InlineNode` only — its nesting is expressed through
+            // `LineBlockItem`, not `Node`.
             Node::Heading { .. }
             | Node::Paragraph(_)
             | Node::Target { .. }
@@ -101,7 +103,8 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
             | Node::LiteralBlock { .. }
             | Node::DoctestBlock(_)
             | Node::Comment
-            | Node::Transition => {}
+            | Node::Transition
+            | Node::LineBlock(_) => {}
         }
     }
 }

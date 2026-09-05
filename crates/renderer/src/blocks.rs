@@ -5,7 +5,7 @@
 //! every other module here is something it delegates to — [`admonitions`],
 //! [`block_quote`], [`data_table`], [`table_directive`] (`.. table::`, sharing
 //! [`table_shell`]'s presentation-shell helpers with `data_table`),
-//! [`doctest`], [`glossary`], [`option_list`], [`scope_directives`],
+//! [`doctest`], [`glossary`], [`line_block`], [`option_list`], [`scope_directives`],
 //! [`tables`], the toctree sidebar markup in [`nav`], and the domain-object
 //! directives in [`domain_object`]. Inline markup inside these constructs
 //! goes to [`crate::inline`]. [`table_test_support`] holds fixtures
@@ -19,6 +19,7 @@ mod dispatch;
 mod doctest;
 mod domain_object;
 mod glossary;
+mod line_block;
 mod math;
 mod option_list;
 #[cfg(test)]

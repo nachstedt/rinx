@@ -63,7 +63,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | Option lists | ✅ | Grammar matches docutils' `option_marker` transition exactly: short (`-x`)/long (`--xxx`)/old-GNU (`+x`)/DOS-VMS (`/x`) markers, comma-separated synonyms, and all three argument delimiters (space, `=`, and the adjacent short form `-xVALUE`), including a bracketed `<...>` placeholder that may itself contain spaces. Rendered as modern docutils/Sphinx's `<dl class="option-list">` HTML5 markup, not the legacy `html4css1` writer's `<table class="option-list">` |
 | Literal blocks (``::`` paragraph ending or standalone ``::``) | ✅ | Highlighted with whatever language `.. highlight::` last set, as in Sphinx; the site-wide default comes from `highlight_language` in `rusty_sphinx.toml` |
 | Block quotes (indented paragraphs without a directive) | ✅ | Indentation is checked ahead of every marker-based construct (matching docutils' own precedence), so an indented list, table or directive nests inside a block quote rather than being matched in place. Attributions (`-- Author`, `--- Author`, or a true em-dash, flush left, optionally spanning several consistently-indented lines) are recognized and parsed as inline markup. Deliberate narrowing: an indented comment (`.. `) is still recognized in place rather than nesting inside a block quote, since comment parsing happens structurally before construct dispatch (for the `.. noqa:` suppression-scoping rule). `.. epigraph::` / `.. highlights::` / `.. pull-quote::`, tracked separately below, remain unimplemented |
-| Line blocks | ❌ | — |
+| Line blocks | ✅ | Nesting-by-indentation and multi-physical-line wrapped continuations both follow docutils' own algorithm (`nest_line_block_segment`) |
 
 ## Tables
 
