@@ -61,6 +61,21 @@ jobs:
     - name: Run strict links test
       run: ./tests/test_strict_links.sh
 
+    - name: Run parse data test
+      run: ./tests/test_parse_data.sh
+
+    - name: Run image data test
+      run: ./tests/test_image_data.sh
+
+    - name: Run doctest isolation test
+      run: ./tests/test_doctest_isolation.sh
+
+    - name: Run doctest failure test
+      run: ./tests/test_doctest_failure.sh
+
+    - name: Run doctest cache firewall test
+      run: ./tests/test_doctest_cache_firewall.sh
+
   vscode_extension:
     runs-on: ubuntu-latest
     steps:
