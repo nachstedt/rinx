@@ -75,6 +75,8 @@ pub(super) fn find_inline_markup(
     let literal_close_positions = find_valid_close_positions(full_text, start_offset, "``", true);
     let strong_close_positions = find_valid_close_positions(full_text, start_offset, "**", false);
     let emphasis_close_positions = find_valid_close_positions(full_text, start_offset, "*", false);
+    let substitution_close_positions =
+        find_valid_close_positions(full_text, start_offset, "|", false);
 
     for (i, _) in text.char_indices() {
         let abs_i = start_offset + i;
@@ -122,6 +124,26 @@ pub(super) fn find_inline_markup(
                 i,
                 i + (end_pos - abs_i),
                 InlineNode::Emphasis(apply_smart_typography(&content)),
+            );
+            if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
+                best_match = Some(m);
+                break; // Found the earliest match
+            }
+        }
+
+        // Try a substitution reference (|name|) — the same start-string/
+        // end-string context rules as every other marker here, since
+        // docutils recognizes `|...|` as inline markup like any other. The
+        // captured name is kept verbatim rather than run through
+        // `apply_smart_typography`: it is a lookup key, not prose.
+        if text[i..].starts_with('|')
+            && let Some((end_pos, name)) =
+                try_match_inline(full_text, abs_i, 1, &substitution_close_positions)
+        {
+            let m = (
+                i,
+                i + (end_pos - abs_i),
+                InlineNode::SubstitutionReference { name, span: None },
             );
             if best_match.is_none() || m.0 < best_match.as_ref().unwrap().0 {
                 best_match = Some(m);

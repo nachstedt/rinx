@@ -43,6 +43,7 @@ rusty_sphinx_library(
         "index_entries.rst",
         "noqa.rst",
         "includes.rst",
+        "substitutions.rst",
     ],
     # Files the *parser* reads. `csv_table.rst` reads the CSV via
     # `.. csv-table:: :file:`; `includes.rst` splices the other three in via

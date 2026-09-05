@@ -38,4 +38,7 @@ mod table_test_support;
 mod tables;
 
 pub(crate) use dispatch::{collect_anonymous_targets, render_nodes};
+// Reused by `crate::inline::image` for an `InlineImage` node, whose `<img>`
+// element is built exactly the same way as a standalone `.. image::`'s.
+pub(crate) use image::render_linked_image;
 pub(crate) use math::equation_anchor_id;

@@ -107,6 +107,15 @@ fn collect_embed_paths(doc: &ast::Document) -> Vec<PathBuf> {
     ast::walk_nodes(&doc.nodes, &mut |node| match node {
         ast::Node::Directive(ast::Directive::Image(options)) => record(options),
         ast::Node::Directive(ast::Directive::Figure(figure)) => record(&figure.image),
+        // A `.. |name| image::` substitution definition is a real image too —
+        // every reference to it is spliced with these same `options` by the
+        // parser's `resolve_substitutions` pass, so it needs the same asset
+        // handling a standalone `.. image::` gets.
+        ast::Node::Directive(ast::Directive::SubstitutionDefinition(definition)) => {
+            if let ast::SubstitutionKind::Image(options) = &definition.kind {
+                record(options);
+            }
+        }
         _ => {}
     });
     paths
@@ -317,6 +326,30 @@ mod tests {
         let doc = ast::Document::new(
             "index.rst".to_string(),
             vec![Node::Directive(Directive::Figure(Box::new(figure)))],
+        );
+
+        // When
+        let paths = collect_embed_paths(&doc);
+
+        // Then
+        assert_eq!(paths, vec![PathBuf::from("logo.svg")]);
+    }
+
+    #[test]
+    fn test_collect_embed_paths_finds_a_substitution_image() {
+        // Given — a `.. |name| image::` definition is a real image too,
+        // subject to the same asset handling a standalone `.. image::` gets.
+        let doc = ast::Document::new(
+            "index.rst".to_string(),
+            vec![Node::Directive(Directive::SubstitutionDefinition(
+                rusty_sphinx_ast::SubstitutionDefinition {
+                    name: "logo".to_string(),
+                    kind: rusty_sphinx_ast::SubstitutionKind::Image(Box::new(embedding(
+                        "logo.svg",
+                    ))),
+                    span: None,
+                },
+            ))],
         );
 
         // When

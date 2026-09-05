@@ -21,7 +21,7 @@ use crate::indent::unindent_body_lines;
 use rusty_sphinx_ast::Diagnostic;
 
 use super::image_directive::report_option_conflicts;
-use super::options::{parse_common_image_options, report_invalid_length};
+use super::options::{ImageContext, parse_common_image_options, report_invalid_length};
 
 const DIRECTIVE: &str = "figure";
 
@@ -149,7 +149,8 @@ pub(in crate::directives) fn parse_figure_directive(
     let unindented_lines = unindent_body_lines(body_lines);
     let (option_lines, body_start) = scan_option_lines(&unindented_lines);
     let refs: Vec<&OptionLine> = option_lines.iter().collect();
-    let (common, after_image) = parse_common_image_options(&refs, DIRECTIVE, diagnostics, ctx);
+    let (common, after_image) =
+        parse_common_image_options(&refs, DIRECTIVE, ImageContext::Standalone, diagnostics, ctx);
     let (figure_options, unrecognized) = parse_figure_options(&after_image, diagnostics, ctx);
     report_unknown_options(
         &unrecognized,

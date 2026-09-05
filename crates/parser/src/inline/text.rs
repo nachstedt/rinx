@@ -170,5 +170,15 @@ fn unescape_node(node: InlineNode) -> InlineNode {
             label: unescape(&label),
             span,
         },
+        // The substitution name is an identifier, not prose, so it takes the
+        // display form like every other cross-reference target.
+        InlineNode::SubstitutionReference { name, span } => InlineNode::SubstitutionReference {
+            name: unescape(&name),
+            span,
+        },
+        // Never produced by the inline scan itself — only by the
+        // whole-document substitution resolver splicing an already-built
+        // node in after this function has already run on it once.
+        InlineNode::InlineImage(options) => InlineNode::InlineImage(options),
     }
 }

@@ -208,7 +208,7 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | Sections and document tree (nested sections) | 🔶 | Heading levels are detected; no explicit section nesting in the AST |
 | Transitions (`----`) | ✅ | No section-boundary validation, since sections aren't nested in the AST yet |
 | Comments (`.. comment text`) | ✅ | — |
-| Substitution definitions (`.. |name| replace::`) | ❌ | Includes the `.. unicode::` and `.. date::` substitution-definition helper directives |
+| Substitution definitions (`.. |name| replace::`/`unicode::`/`image::`) | 🔶 | `replace` (content inline-parsed as a paragraph, so it may itself carry markup or nested substitution references), `unicode` (decimal/hex/`U+`/`\u`/`\x`/XML-entity codepoints, plus `:trim:`/`:ltrim:`/`:rtrim:`) and `image` (reusing every `.. image::` option, additionally accepting the three vertical `:align:` values and refusing `:name:`) are fully supported, resolved by a whole-document pass that runs once parsing finishes so a reference may precede its definition. Matching is case-sensitive first, falling back to a case-insensitive one when exactly one candidate matches; a duplicate definition, an undefined reference and a circular `replace` chain are all diagnosed and degrade rather than failing the build. `.. date::` is deliberately unsupported: resolving it would bake the wall-clock time into a `.ast` file, which is a Bazel action cached on its inputs alone, breaking the hermeticity the rest of the build is built around. `.. raw::` is unsupported because the standalone `.. raw::` directive it would share a content model with is itself unimplemented (see the row below) |
 | Footnotes and citations | ❌ | — |
 
 ## Diagnostics
