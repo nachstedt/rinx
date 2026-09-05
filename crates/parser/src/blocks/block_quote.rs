@@ -397,6 +397,24 @@ mod tests {
     }
 
     #[test]
+    fn test_try_parse_block_quote_nests_a_line_block() {
+        // Given — an indented line block has no block-quote marker of its
+        // own either, so it nests inside a block quote the same way an
+        // indented bullet list does above.
+        let lines = ["    | One line.", "    | Another line."];
+
+        // When
+        let (_, nodes, _) = parse(&lines);
+
+        // Then
+        let Node::BlockQuote { content, .. } = &nodes[0] else {
+            panic!("expected a block quote");
+        };
+        assert_eq!(content.len(), 1);
+        assert!(matches!(content[0], Node::LineBlock(_)));
+    }
+
+    #[test]
     fn test_try_parse_block_quote_splits_off_a_single_line_attribution() {
         // Given
         let lines = ["    Quoted text.", "", "    -- Sherlock Holmes"];

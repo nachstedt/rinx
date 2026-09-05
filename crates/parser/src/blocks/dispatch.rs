@@ -17,6 +17,7 @@ use super::comment::{parse_noqa_comment, try_parse_comment};
 use super::definition_list::try_parse_definition_list;
 use super::doctest_block::try_parse_doctest_block;
 use super::enumerated_list::try_parse_enumerated_list;
+use super::line_block::try_parse_line_block;
 use super::literal_block::collect_literal_block_body;
 use super::option_list::try_parse_option_list;
 use super::simple_table::try_parse_simple_table;
@@ -183,6 +184,13 @@ fn try_parse_construct(
         return Some(single(found));
     }
     if let Some(found) = try_parse_heading(lines, i, adornment_order, ctx) {
+        return Some(single(found));
+    }
+    // docutils' own relative order: `line_block` is tried immediately before
+    // `grid_table_top`. A `|`-marker line can't collide with anything tried
+    // earlier in this chain (directive/target/transition/heading markers are
+    // all visually distinct), so it slots in here unmodified.
+    if let Some(found) = try_parse_line_block(lines, i, diagnostics, ctx) {
         return Some(single(found));
     }
     if let Some(found) = try_parse_grid_table(lines, i, adornment_order, diagnostics, ctx) {

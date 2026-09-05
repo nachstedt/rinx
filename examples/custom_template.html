@@ -249,6 +249,32 @@
     ol.lowerroman.parens > li::before { content: "(" counter(rsl, lower-roman) ")"; }
     ol.upperroman.parens > li::before { content: "(" counter(rsl, upper-roman) ")"; }
 
+    /* Block quotes get no distinguishing style from a template that ships no
+       rules of its own beyond the browser's own default `<blockquote>`
+       indent — which happened to hide this theme never having restated it.
+       `assets/default.css` has the default theme's equivalent. */
+    blockquote {
+      margin: 1.5rem 0;
+      padding: 0.5rem 1.5rem;
+      border-left: 5px solid #bdc3c7;
+      color: #5a6b7b;
+      font-style: italic;
+    }
+    blockquote p.attribution {
+      margin-top: 0.75rem;
+      text-align: right;
+      font-style: normal;
+    }
+
+    /* Line blocks render as plain `<div>`s — docutils' own HTML5 markup —
+       which, unlike `<blockquote>` above, get no indentation at all from the
+       browser's own default stylesheet. Without this rule a nested line is
+       indistinguishable from its siblings, exactly the enumerated-list
+       problem the rules above solve. `assets/default.css` has the default
+       theme's equivalent. */
+    .line-block { margin: 1.5rem 0; }
+    .line-block .line-block { margin: 0 0 0 1.5rem; }
+
     /* Syntax highlighting. Code blocks are highlighted during the build into
        classed spans, so a theme only supplies the palette — no script is
        loaded and no network needed at view time. Restated here for the same

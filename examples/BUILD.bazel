@@ -25,6 +25,7 @@ rusty_sphinx_library(
         "enumerated_lists.rst",
         "option_lists.rst",
         "block_quotes.rst",
+        "line_blocks.rst",
         "comments.rst",
         "domains.rst",
         "current_module.rst",

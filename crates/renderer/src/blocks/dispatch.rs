@@ -13,6 +13,7 @@ use super::data_table::{DataTableParams, render_data_table};
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
 use super::glossary::{render_glossary, render_index_anchor};
+use super::line_block::render_line_block;
 use super::math::render_math;
 use super::option_list::render_option_list;
 use super::scope_directives::apply_scope_directive;
@@ -134,7 +135,9 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String
                 collect_anonymous_targets(content, targets);
             }
             // Every other directive's payload is inline or verbatim, and the
-            // remaining node kinds have no block-level children at all.
+            // remaining node kinds have no block-level children at all. A
+            // line block's content is `InlineNode` only, so it joins this
+            // group too.
             Node::Directive(_)
             | Node::Heading { .. }
             | Node::Paragraph(_)
@@ -142,7 +145,8 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String
             | Node::LiteralBlock { .. }
             | Node::DoctestBlock(_)
             | Node::Comment
-            | Node::Transition => {}
+            | Node::Transition
+            | Node::LineBlock(_) => {}
         }
     }
 }
@@ -223,22 +227,7 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
             Node::Table {
                 header_rows,
                 body_rows,
-            } => {
-                let _ = writeln!(html, "<table>");
-                if !header_rows.is_empty() {
-                    let _ = writeln!(html, "<thead>");
-                    for row in header_rows {
-                        super::tables::render_table_row(html, row, "th", ctx);
-                    }
-                    let _ = writeln!(html, "</thead>");
-                }
-                let _ = writeln!(html, "<tbody>");
-                for row in body_rows {
-                    super::tables::render_table_row(html, row, "td", ctx);
-                }
-                let _ = writeln!(html, "</tbody>");
-                let _ = writeln!(html, "</table>");
-            }
+            } => super::tables::render_table(html, header_rows, body_rows, ctx),
             // A `::` block carries no options and names no language of its
             // own, but it is still highlighted — with whatever language the
             // enclosing `.. highlight::` set, exactly as Sphinx does.
@@ -262,6 +251,7 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                 let rendered = render_bare_doctest_block(content, ctx);
                 html.push_str(&rendered);
             }
+            Node::LineBlock(items) => render_line_block(html, items, ctx),
             Node::BlockQuote {
                 content,
                 attribution,

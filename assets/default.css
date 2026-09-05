@@ -600,6 +600,16 @@ blockquote p.attribution {
   font-style: normal;
 }
 
+/* ── Line blocks ────────────────────────────────────────────────────── */
+
+.line-block {
+  margin: 1em 0;
+}
+
+.line-block .line-block {
+  margin: 0 0 0 1.5rem;
+}
+
 /* ── PlantUML Diagrams ─────────────────────────────────────────────── */
 
 .plantuml-diagram {

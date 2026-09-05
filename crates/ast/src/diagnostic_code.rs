@@ -120,6 +120,11 @@ diagnostic_codes! {
     /// with no blank line in between.
     BlockQuoteUnindentNoBlankLine => "block-quote.unindent-no-blank-line",
 
+    // --- Line blocks ---------------------------------------------------------
+    /// A line block ended because a non-`|` line followed it directly, with
+    /// no blank line in between.
+    LineBlockEndsWithoutBlankLine => "line-block.ends-without-blank-line",
+
     // --- Directives, generally ---------------------------------------------
     DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
