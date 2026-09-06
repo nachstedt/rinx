@@ -26,6 +26,7 @@ mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
     use rusty_sphinx_ast::TargetSearchOrder;
+    use rusty_sphinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_macro_match_resolves_via_explicit_c_domain() {
@@ -94,7 +95,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_macro_variant_bare_uses_default_domain() {
-        let result = handle_inline_match("macro", ":macro:`MAX`", None, Domain::C);
+        let result = handle_inline_match(
+            "macro",
+            ":macro:`MAX`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -109,7 +116,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_macro_variant_falls_back_to_text_when_unresolvable() {
-        let result = handle_inline_match("macro", ":macro:`MAX`", None, Domain::Py);
+        let result = handle_inline_match(
+            "macro",
+            ":macro:`MAX`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(result, InlineNode::Text(":macro:`MAX`".to_string()));
     }
     #[test]

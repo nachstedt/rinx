@@ -29,6 +29,8 @@ mod data_table;
 mod dispatch;
 mod doctest;
 mod domains;
+mod entity;
+mod entity_section;
 mod glossary;
 mod image;
 mod include;
@@ -43,4 +45,5 @@ mod table_options;
 mod table_widths;
 mod toctree;
 
+pub use dispatch::is_builtin_directive_name;
 pub(super) use dispatch::try_parse_directive;

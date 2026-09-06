@@ -46,6 +46,19 @@ pub struct Document {
     /// warning can print one without further resolution.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub source_files: Vec<String>,
+    /// The hash of the entity schema this document was parsed against.
+    ///
+    /// Recorded because the schema reaches the *parse* action, so a library
+    /// can be parsed against one schema while the site indexing it uses
+    /// another — a build misconfiguration that would otherwise surface as a
+    /// cascade of baffling unknown-directive diagnostics rather than as the
+    /// one real problem. The index phase compares this against its own and
+    /// reports `entity.schema-mismatch`.
+    ///
+    /// `None` for a document parsed with no schema at all, which is every
+    /// document in a project that does not use entities.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entity_schema_hash: Option<String>,
 }
 
 impl Document {
@@ -58,6 +71,7 @@ impl Document {
             suppressions: Vec::new(),
             metadata: BTreeMap::new(),
             source_files: Vec::new(),
+            entity_schema_hash: None,
         }
     }
 

@@ -19,6 +19,17 @@ def _rusty_sphinx_site_impl(ctx):
 
     template_file = ctx.file.template
     config_file = ctx.file.config
+
+    # The same schema the libraries were parsed against. The index action needs
+    # the relations to derive back-links, and each render action needs the
+    # labels and the relation vocabulary its presentation reads.
+    entity_schema = ctx.file.entity_schema
+    schema_inputs = [entity_schema] if entity_schema else []
+
+    # Per-type presentation. The *name* a schema refers to is the file's
+    # basename; the path stays on the command line, because a sandboxed build
+    # relocates files and a path baked into config would break (ADR-001).
+    entity_templates = ctx.files.entity_templates
     css_file = ctx.file.css
 
     index_out = ctx.actions.declare_file(ctx.label.name + ".project.index")
@@ -30,13 +41,15 @@ def _rusty_sphinx_site_impl(ctx):
     # navigation, page order and section numbering start. `--inputs` is
     # variadic, so every other flag has to precede it.
     index_args.add("--config", config_file.path)
+    if entity_schema:
+        index_args.add("--entity-schema", entity_schema.path)
     index_args.add("--inputs")
     index_args.add_all(ast_list)
 
     ctx.actions.run(
         executable = worker,
         arguments = [index_args],
-        inputs = ast_list + [config_file],
+        inputs = ast_list + [config_file] + schema_inputs,
         outputs = [index_out],
         mnemonic = "RustySphinxIndex",
         progress_message = "Indexing %s docs" % len(ast_list),
@@ -98,17 +111,26 @@ def _rusty_sphinx_site_impl(ctx):
             "--doc-path", doc_path,
             "--output", html_out.path,
             "--config", config_file.path,
+        ] + ([
+            "--entity-schema", entity_schema.path,
+        ] if entity_schema else []) + [
             "--template", template_file.path,
             "--warnings-output", warnings_out.path,
         ]
         if ctx.attr.strict_links:
             render_args.append("--strict-links")
 
-        render_inputs = [ast_file, index_out, template_file, config_file]
+        render_inputs = [ast_file, index_out, template_file, config_file] + schema_inputs + entity_templates
         embeds_file = embeds_by_doc.get(doc_path)
         if embeds_file:
             render_args.extend(["--embeds", embeds_file.path])
             render_inputs.append(embeds_file)
+
+        # Last on the command line: this flag is variadic, so anything after it
+        # would be swallowed as another template path.
+        if entity_templates:
+            render_args.append("--entity-templates")
+            render_args.extend([t.path for t in entity_templates])
 
         ctx.actions.run(
             executable = worker,
@@ -234,6 +256,14 @@ rusty_sphinx_site = rule(
             allow_single_file = [".html"],
             default = Label("//:templates/default.html"),
             doc = "The HTML template file used for page rendering. Passed as --template to the render action.",
+        ),
+        "entity_templates": attr.label_list(
+            allow_files = [".html"],
+            doc = "Per-type entity presentation templates, rendered with MiniJinja. A schema's `template = \"name.html\"` refers to a file by its basename; listing it here is what puts it in the render action's sandbox. Omit for the built-in rendering, which every type gets without configuring anything. A template a type names but that is absent here fails the build rather than silently falling back.",
+        ),
+        "entity_schema": attr.label(
+            allow_single_file = [".toml"],
+            doc = "The project's entity meta-model. Must be the same file every `rusty_sphinx_library` in `deps` names, since the documents were parsed against it; a mismatch is reported as `entity.schema-mismatch` while the index is built. Read here by the index action, which derives back-links from the declared relations, and by each render action, which reads the labels and presentation.",
         ),
         "config": attr.label(
             allow_single_file = [".toml"],

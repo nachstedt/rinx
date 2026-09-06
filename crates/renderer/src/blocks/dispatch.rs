@@ -391,6 +391,44 @@ fn render_plantuml_directive(html: &mut String, content: &HashedContent, ctx: &R
     let _ = writeln!(html, "</div>");
 }
 
+/// Renders a `.. list-table::`/`.. csv-table::`.
+///
+/// Split out of [`render_directive`] because destructuring its ten options
+/// inline made that match too long to read; nothing else distinguishes it.
+fn render_data_table_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCtx<'_>) {
+    let Directive::DataTable {
+        source,
+        title,
+        header_rows,
+        stub_columns,
+        widths,
+        width,
+        align,
+        classes,
+        name,
+        rows,
+    } = directive
+    else {
+        return;
+    };
+    render_data_table(
+        html,
+        DataTableParams {
+            source: *source,
+            title: title.as_deref(),
+            header_rows: *header_rows,
+            stub_columns: *stub_columns,
+            widths: widths.as_ref(),
+            width: width.as_deref(),
+            align: *align,
+            classes,
+            name: name.as_ref(),
+            rows,
+        },
+        ctx,
+    );
+}
+
 fn render_directive(
     html: &mut String,
     directive: &Directive,
@@ -425,9 +463,12 @@ fn render_directive(
             body,
         } => render_version_change(html, *kind, version, body, ctx),
         Directive::SeeAlso { body } => render_seealso(html, body, ctx),
+        // Misplaced (see the variant's own doc); its body still renders.
+        Directive::EntitySection { body, .. } => render_nodes(html, body, ctx),
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),
         Directive::Index { id, .. } => render_index_anchor(html, id),
         Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
+        Directive::Entity(entity) => super::entity::render_entity(html, entity, ctx),
         Directive::Math {
             parts,
             label,
@@ -435,33 +476,7 @@ fn render_directive(
             classes,
             span,
         } => render_math(html, parts, label.as_ref(), *nowrap, classes, *span, ctx),
-        Directive::DataTable {
-            source,
-            title,
-            header_rows,
-            stub_columns,
-            widths,
-            width,
-            align,
-            classes,
-            name,
-            rows,
-        } => render_data_table(
-            html,
-            DataTableParams {
-                source: *source,
-                title: title.as_deref(),
-                header_rows: *header_rows,
-                stub_columns: *stub_columns,
-                widths: widths.as_ref(),
-                width: width.as_deref(),
-                align: *align,
-                classes,
-                name: name.as_ref(),
-                rows,
-            },
-            ctx,
-        ),
+        Directive::DataTable { .. } => render_data_table_directive(html, directive, ctx),
         Directive::Table {
             title,
             widths,

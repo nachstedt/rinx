@@ -26,6 +26,7 @@ mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
     use rusty_sphinx_ast::TargetSearchOrder;
+    use rusty_sphinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_mod_match_resolves_when_domain_defines_mod_role() {
@@ -49,7 +50,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_mod_variant_bare_uses_default_domain() {
-        let result = handle_inline_match("mod", ":mod:`greetings`", None, Domain::Py);
+        let result = handle_inline_match(
+            "mod",
+            ":mod:`greetings`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -64,7 +71,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_mod_variant_explicit_py_domain() {
-        let result = handle_inline_match("mod", ":py:mod:`greetings`", None, Domain::C);
+        let result = handle_inline_match(
+            "mod",
+            ":py:mod:`greetings`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -79,7 +92,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_mod_variant_bang_prefix_suppresses_link() {
-        let result = handle_inline_match("mod", ":mod:`!curses`", None, Domain::Py);
+        let result = handle_inline_match(
+            "mod",
+            ":mod:`!curses`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -94,7 +113,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_mod_variant_tilde_prefix_shortens_display() {
-        let result = handle_inline_match("mod", ":mod:`~pkg.submodule`", None, Domain::Py);
+        let result = handle_inline_match(
+            "mod",
+            ":mod:`~pkg.submodule`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -111,7 +136,13 @@ mod tests {
     fn test_handle_inline_match_mod_variant_falls_back_to_text_when_unresolvable() {
         // Given — the `mod` role is Python-only, so a bare `:mod:` role in a
         // library whose default domain is `c` doesn't resolve to any object type.
-        let result = handle_inline_match("mod", ":mod:`greetings`", None, Domain::C);
+        let result = handle_inline_match(
+            "mod",
+            ":mod:`greetings`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(result, InlineNode::Text(":mod:`greetings`".to_string()));
     }
 }

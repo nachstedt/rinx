@@ -50,6 +50,23 @@ pub struct SiteConfig {
     /// A language, not a path, so this respects the no-paths rule above.
     #[serde(default, deserialize_with = "deserialize_highlight_language")]
     pub highlight_language: ResolvedLanguage,
+
+    /// Whether the built-in entity rendering folds an entity's detail behind a
+    /// disclosure, leaving the header and the leading prose visible.
+    ///
+    /// On by default: a page of entities is usually read by scanning, and the
+    /// attributes, sections and links of every one of them at once is not what
+    /// a reader wants first. Set `false` for the flat rendering.
+    ///
+    /// It lives here, in the *render*-time config, rather than in the entity
+    /// schema, which is a parse-time input — a flag there would re-parse every
+    /// document in the library to change how a box looks. A type that wants
+    /// something else entirely names a `template` instead.
+    ///
+    /// A behaviour switch, not a path, so this respects the no-paths rule
+    /// above.
+    #[serde(default = "default_collapse_entities")]
+    pub collapse_entities: bool,
 }
 
 /// Reads `highlight_language` from a TOML string through the same smart
@@ -63,6 +80,10 @@ where
     let raw = String::deserialize(deserializer)?;
     ResolvedLanguage::parse(&raw)
         .map_err(|error| D::Error::custom(format!("invalid highlight_language '{raw}': {error}")))
+}
+
+fn default_collapse_entities() -> bool {
+    true
 }
 
 fn default_project() -> String {
@@ -80,6 +101,7 @@ impl Default for SiteConfig {
             version: String::new(),
             root_doc: default_root_doc(),
             highlight_language: ResolvedLanguage::default(),
+            collapse_entities: default_collapse_entities(),
         }
     }
 }
@@ -248,5 +270,28 @@ version = "1.0"
 
         // Then — caught on load, where it can be reported
         assert!(result.is_err());
+    }
+}
+
+#[cfg(test)]
+mod collapse_entities_tests {
+    use super::*;
+
+    #[test]
+    fn test_entities_collapse_unless_the_config_turns_it_off() {
+        // Given — a config that says nothing about it
+        let config: SiteConfig = toml::from_str("project = \"Docs\"").unwrap();
+
+        // When / Then
+        assert!(config.collapse_entities);
+    }
+
+    #[test]
+    fn test_the_flat_rendering_can_be_asked_for() {
+        // Given / When
+        let config: SiteConfig = toml::from_str("collapse_entities = false").unwrap();
+
+        // Then
+        assert!(!config.collapse_entities);
     }
 }

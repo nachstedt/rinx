@@ -14,6 +14,7 @@
 mod anonymous_reference;
 mod dispatch;
 mod domain_object_reference;
+pub(crate) mod entity_reference;
 mod hyperlink;
 mod math;
 mod option_reference;

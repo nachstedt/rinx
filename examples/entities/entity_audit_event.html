@@ -1,0 +1,19 @@
+{#
+  Per-type presentation for `audit-event`, which reads as prose rather than as
+  a titled box — the reason per-type templates exist at all.
+
+  Every section body arrives as already-rendered HTML: MiniJinja cannot render
+  RST, so the node tree never reaches a template.
+#}
+<div class="audit-event" id="{{ anchor }}">
+  <p>
+    Raises an auditing event
+    <code class="audit-event-name">{{ attributes.name }}</code>
+    {%- if attributes.args %} with arguments
+    <code class="audit-event-args">{{ attributes.args }}</code>{% endif %}.
+    {%- if attributes.version %}
+    <span class="audit-event-version">Added in version {{ attributes.version }}.</span>
+    {%- endif %}
+  </p>
+  {{ content }}
+</div>

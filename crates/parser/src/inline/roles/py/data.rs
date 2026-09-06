@@ -34,6 +34,7 @@ mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
     use rusty_sphinx_ast::TargetSearchOrder;
+    use rusty_sphinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_data_match_resolves_data_role() {
@@ -118,7 +119,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_data_variant_bare_uses_default_domain() {
-        let result = handle_inline_match("data", ":data:`DEFAULT_TIMEOUT`", None, Domain::Py);
+        let result = handle_inline_match(
+            "data",
+            ":data:`DEFAULT_TIMEOUT`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -133,7 +140,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_data_variant_const_spelling_explicit_py_domain() {
-        let result = handle_inline_match("data", ":py:const:`DEFAULT_TIMEOUT`", None, Domain::C);
+        let result = handle_inline_match(
+            "data",
+            ":py:const:`DEFAULT_TIMEOUT`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -148,7 +161,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_data_variant_bang_prefix_suppresses_link() {
-        let result = handle_inline_match("data", ":data:`!SECRET_KEY`", None, Domain::Py);
+        let result = handle_inline_match(
+            "data",
+            ":data:`!SECRET_KEY`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -163,7 +182,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_data_variant_tilde_prefix_shortens_display() {
-        let result = handle_inline_match("data", ":data:`~pkg.CONST`", None, Domain::Py);
+        let result = handle_inline_match(
+            "data",
+            ":data:`~pkg.CONST`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -180,7 +205,13 @@ mod tests {
     fn test_handle_inline_match_data_variant_falls_back_to_text_when_unresolvable() {
         // Given — `data`/`const` roles are Python-only, so a bare `:const:`
         // role in a library whose default domain is `c` doesn't resolve.
-        let result = handle_inline_match("data", ":const:`DEFAULT_TIMEOUT`", None, Domain::C);
+        let result = handle_inline_match(
+            "data",
+            ":const:`DEFAULT_TIMEOUT`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::Text(":const:`DEFAULT_TIMEOUT`".to_string())
@@ -191,7 +222,13 @@ mod tests {
         // Given — the confirmed known_bugs.md regression: `:c:data:` must
         // resolve with `domain = Some("c")`, not fall through to a truncated
         // bare `:data:` match with `domain = None`.
-        let result = handle_inline_match("data", ":c:data:`Py_mod_exec`", None, Domain::Py);
+        let result = handle_inline_match(
+            "data",
+            ":c:data:`Py_mod_exec`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -206,7 +243,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_data_variant_var_spelling_explicit_c_domain() {
-        let result = handle_inline_match("data", ":c:var:`errno`", None, Domain::Py);
+        let result = handle_inline_match(
+            "data",
+            ":c:var:`errno`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -221,7 +264,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_data_variant_bare_role_uses_default_c_domain() {
-        let result = handle_inline_match("data", ":data:`Py_tp_bases`", None, Domain::C);
+        let result = handle_inline_match(
+            "data",
+            ":data:`Py_tp_bases`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -238,7 +287,13 @@ mod tests {
     fn test_handle_inline_match_data_variant_bare_var_falls_back_to_text_under_py_domain() {
         // Given — `var` is C-only, so a bare `:var:` role in a library whose
         // default domain is `py` doesn't resolve.
-        let result = handle_inline_match("data", ":var:`errno`", None, Domain::Py);
+        let result = handle_inline_match(
+            "data",
+            ":var:`errno`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(result, InlineNode::Text(":var:`errno`".to_string()));
     }
 }

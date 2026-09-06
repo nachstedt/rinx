@@ -111,6 +111,22 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
+    /// A reference to a project-declared entity, from a role the schema
+    /// names — ``:req:`REQ_001` ``, ``:need:`REQ_001` ``, or the built-in
+    /// ``:entity:`REQ_001` ``.
+    ///
+    /// The `role` is kept rather than resolved to a set of acceptable types,
+    /// because the types it accepts are a *schema* fact and this node has to
+    /// survive into a `.ast` file that outlives the process which parsed it.
+    /// Resolution, and the type check the role exists for, happen where the
+    /// merged project index is available.
+    EntityReference {
+        role: String,
+        target: String,
+        display: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
     /// Inline math produced by the `:math:` role, holding LaTeX verbatim.
     ///
     /// A verbatim context like [`Self::Literal`]: the backslashes are the
@@ -179,6 +195,7 @@ impl InlineNode {
             | Self::TermReference { span, .. }
             | Self::DomainObjectReference { span, .. }
             | Self::OptionReference { span, .. }
+            | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
             | Self::SubstitutionReference { span, .. } => *span,
@@ -201,6 +218,7 @@ impl InlineNode {
             | Self::TermReference { span, .. }
             | Self::DomainObjectReference { span, .. }
             | Self::OptionReference { span, .. }
+            | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
             | Self::SubstitutionReference { span, .. } => *span = at,
@@ -232,7 +250,8 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             InlineNode::Reference { display, .. }
             | InlineNode::TermReference { display, .. }
             | InlineNode::DomainObjectReference { display, .. }
-            | InlineNode::OptionReference { display, .. } => display.as_str(),
+            | InlineNode::OptionReference { display, .. }
+            | InlineNode::EntityReference { display, .. } => display.as_str(),
             // The LaTeX source is the only plain text an equation has: its
             // rendered form is markup, and its `:eq:` number isn't known
             // without the project index this function deliberately doesn't take.

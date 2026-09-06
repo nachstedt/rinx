@@ -10,6 +10,7 @@ rust_library(
         normal = True,
     ) + [
         "//crates/ast:rusty_sphinx_ast",
+        "//crates/entity:rusty_sphinx_entity",
         "//crates/toctree:rusty_sphinx_toctree",
         "//crates/index:rusty_sphinx_index",
         "//crates/scope:rusty_sphinx_scope",

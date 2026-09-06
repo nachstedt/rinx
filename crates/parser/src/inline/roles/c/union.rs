@@ -26,6 +26,7 @@ mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
     use rusty_sphinx_ast::TargetSearchOrder;
+    use rusty_sphinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_union_match_resolves_via_explicit_c_domain() {
@@ -64,7 +65,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_union_variant_dispatches_through_handle_inline_match() {
-        let result = handle_inline_match("union", ":c:union:`Number`", None, Domain::Py);
+        let result = handle_inline_match(
+            "union",
+            ":c:union:`Number`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {

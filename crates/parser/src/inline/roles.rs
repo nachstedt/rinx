@@ -9,6 +9,7 @@
 //! belong to no domain and resolve nothing per-domain, so they sit flat here.
 
 pub(super) mod c;
+pub(super) mod entity;
 pub(super) mod math;
 pub(super) mod py;
 pub(super) mod std_;

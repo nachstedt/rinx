@@ -9,6 +9,7 @@ use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt, flag_values};
 use super::diagnostics::{WarningOrigin, format_diagnostic};
+use super::entity_schema::load_entity_schema;
 use super::suppression::retain_reportable;
 
 /// The serialized index, plus the warnings the caller should print.
@@ -22,13 +23,17 @@ pub(super) struct IndexedProject {
 
 /// `root_doc` is the configured root document (without its `.rst` extension);
 /// it decides where navigation, page order and section numbering start.
-pub(super) fn process_index(ast_jsons: &[String], root_doc: &str) -> Result<IndexedProject> {
+pub(super) fn process_index(
+    ast_jsons: &[String],
+    root_doc: &str,
+    schema: &rusty_sphinx_entity::EntitySchema,
+) -> Result<IndexedProject> {
     let docs: Vec<ast::Document> = ast_jsons
         .iter()
         .map(|json| serde_json::from_str(json).context("Failed to deserialize AST"))
         .collect::<Result<_>>()?;
 
-    let build = analyzer::build_project_index_reporting(&docs, root_doc);
+    let build = analyzer::build_project_index_reporting(&docs, root_doc, schema);
 
     // Each document's suppressions travel with its own AST, so a `.. noqa:`
     // written in the document holding the toctree silences the warning about
@@ -90,7 +95,8 @@ pub(crate) fn cmd_index(args: &[String]) -> Result<()> {
         .map(|p| fs::read_to_string(p).with_context(|| format!("Error reading '{p}'")))
         .collect::<Result<_>>()?;
 
-    let indexed = process_index(&files, &site_config.root_doc)?;
+    let schema = load_entity_schema(args)?;
+    let indexed = process_index(&files, &site_config.root_doc, &schema)?;
     for warning in &indexed.warnings {
         eprintln!("{warning}");
     }
@@ -101,6 +107,7 @@ pub(crate) fn cmd_index(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_entity::EntitySchema;
 
     /// One document's AST as the `index` subcommand receives it.
     fn ast_json(path: &str, nodes_json: &str) -> String {
@@ -120,7 +127,7 @@ mod tests {
         let docs = vec![ast_json("index.rst", &toctree_json("missing"))];
 
         // When
-        let indexed = process_index(&docs, "index").unwrap();
+        let indexed = process_index(&docs, "index", &EntitySchema::empty()).unwrap();
 
         // Then
         assert_eq!(indexed.warnings.len(), 1, "{:?}", indexed.warnings);
@@ -143,7 +150,7 @@ mod tests {
         )];
 
         // When
-        let indexed = process_index(&docs, "index").unwrap();
+        let indexed = process_index(&docs, "index", &EntitySchema::empty()).unwrap();
 
         // Then
         assert!(indexed.warnings.is_empty(), "{:?}", indexed.warnings);
@@ -159,7 +166,7 @@ mod tests {
         ];
 
         // When
-        let indexed = process_index(&docs, "index").unwrap();
+        let indexed = process_index(&docs, "index", &EntitySchema::empty()).unwrap();
 
         // Then
         assert_eq!(indexed.warnings.len(), 1, "{:?}", indexed.warnings);
@@ -176,7 +183,7 @@ mod tests {
         ];
 
         // When
-        let indexed = process_index(&docs, "index").unwrap();
+        let indexed = process_index(&docs, "index", &EntitySchema::empty()).unwrap();
 
         // Then
         assert!(indexed.warnings.is_empty(), "{:?}", indexed.warnings);
@@ -191,12 +198,14 @@ mod tests {
         ];
 
         // When
-        let index = process_index(&docs, "index").unwrap().json;
+        let index = process_index(&docs, "index", &EntitySchema::empty())
+            .unwrap()
+            .json;
 
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"genindex_entries":[],"equations":{},"sectnum":{}}"#
+            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"genindex_entries":[],"equations":{},"sectnum":{},"entities":{},"entity_backlinks":{}}"#
         );
     }
 }

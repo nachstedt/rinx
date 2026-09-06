@@ -117,6 +117,9 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
     match directive {
         Directive::Admonition { body, .. }
         | Directive::VersionChange { body, .. }
+        // A section that reached this walker was written outside any entity, so
+        // it never got folded into one. Its body is still ordinary content.
+        | Directive::EntitySection { body, .. }
         | Directive::SeeAlso { body } => walk_nodes(body, visit),
         Directive::Glossary { entries, .. } => {
             for entry in entries {
@@ -142,6 +145,15 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
             }
         }
         Directive::DomainObject(body) => walk_nodes(body.body(), visit),
+        // Every section's prose is ordinary body content — a target, a nested
+        // directive or even another entity inside a `.. verification-criteria::`
+        // must be reached, or it would be invisible to indexing.
+        Directive::Entity(entity) => {
+            for section in &entity.sections {
+                walk_nodes(&section.body, visit);
+            }
+        }
+
         // A figure's legend is ordinary body content and may hold anything,
         // including another image. Its caption is inline markup only, so there
         // is nothing there to descend into.

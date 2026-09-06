@@ -24,6 +24,7 @@ mod nav;
 mod page;
 mod resolution;
 
+pub use blocks::EntityTemplates;
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 pub use embedded_assets::EmbeddedAssets;
 pub use highlight::{HighlightError, HighlightErrorKind};
@@ -55,6 +56,10 @@ pub struct RenderOutput {
     /// never reached this render. Every other image problem is decidable from
     /// the source alone and is reported by the parser.
     pub image_errors: Vec<ImageError>,
+    /// Entity templates a type named but the site could not use. A build
+    /// misconfiguration rather than a document fault, so it is reported
+    /// separately from the broken links and never fails `--strict-links`.
+    pub entity_template_errors: Vec<String>,
 }
 
 /// Shared rendering state threaded through the node traversal.
@@ -67,6 +72,19 @@ pub(crate) struct RenderCtx<'a> {
     /// from `domain_resolver` since the search it performs has no scope
     /// tiers or object-type aliasing (see `resolution::option`'s doc comment).
     pub option_resolver: &'a OptionResolver<'a>,
+    /// Resolves entity roles against `index`, under the project's schema.
+    pub entity_resolver: &'a crate::resolution::EntityResolver<'a>,
+    /// The project's entity meta-model, for the labels and the relation
+    /// vocabulary the default rendering reads.
+    pub schema: &'a rusty_sphinx_entity::EntitySchema,
+    /// Per-type entity templates the site supplied, keyed by the name a type
+    /// refers to. Empty for a site that supplies none, which is when every
+    /// entity uses the built-in rendering.
+    pub entity_templates: &'a blocks::EntityTemplates,
+    /// Templates that were named but could not be used. A build
+    /// misconfiguration rather than a document fault, so it is collected here
+    /// and reported by the caller, not turned into a broken link.
+    pub entity_template_errors: &'a mut Vec<String>,
     pub doc_path: &'a str,
     pub anon_targets: &'a [String],
     pub anon_index: &'a mut usize,
@@ -95,6 +113,9 @@ pub(crate) struct RenderCtx<'a> {
     /// scopes this to the enclosing container, and the narrower whole-document
     /// rule is a deliberate simplification recorded in `spec_gaps.md`.
     pub highlight_language: ResolvedLanguage,
+    /// Whether the built-in entity rendering folds its detail behind a
+    /// disclosure. From the site config; see [`config::SiteConfig`].
+    pub collapse_entities: bool,
     /// `:linenothreshold:` from the `.. highlight::` in force: a block at
     /// least this many lines long gets line numbers without asking for them.
     pub linenothreshold: Option<std::num::NonZeroU32>,
@@ -163,7 +184,15 @@ pub fn render_with_config(
     doc_path: &str,
     config: &config::SiteConfig,
 ) -> RenderOutput {
-    render_with_assets(doc, index, doc_path, config, &EmbeddedAssets::new())
+    render_with_assets(
+        doc,
+        index,
+        doc_path,
+        config,
+        &EmbeddedAssets::new(),
+        rusty_sphinx_entity::EntitySchema::empty_ref(),
+        &blocks::EntityTemplates::new(),
+    )
 }
 
 /// Renders a document with the `data:` URIs for its `:loading: embed` images
@@ -180,6 +209,8 @@ pub fn render_with_assets(
     doc_path: &str,
     config: &config::SiteConfig,
     embedded_assets: &EmbeddedAssets,
+    schema: &rusty_sphinx_entity::EntitySchema,
+    entity_templates: &blocks::EntityTemplates,
 ) -> RenderOutput {
     let mut html = String::new();
 
@@ -196,6 +227,8 @@ pub fn render_with_assets(
 
     let domain_resolver = DomainObjectResolver::new(index);
     let option_resolver = OptionResolver::new(index);
+    let entity_resolver = crate::resolution::EntityResolver::new(index, schema);
+    let mut entity_template_errors = Vec::new();
     let math = MathRenderer::new();
     let highlighter = Highlighter::new();
     let section_ids = rusty_sphinx_ast::allocate_section_ids(&doc.nodes);
@@ -207,6 +240,10 @@ pub fn render_with_assets(
         index,
         domain_resolver: &domain_resolver,
         option_resolver: &option_resolver,
+        entity_resolver: &entity_resolver,
+        schema,
+        entity_templates,
+        entity_template_errors: &mut entity_template_errors,
         doc_path,
         anon_targets: &anon_targets,
         anon_index: &mut anon_index,
@@ -220,6 +257,7 @@ pub fn render_with_assets(
         embedded_assets,
         highlighter: &highlighter,
         highlight_language: config.highlight_language.clone(),
+        collapse_entities: config.collapse_entities,
         linenothreshold: None,
         highlight_force: false,
         section_ids: &section_ids,
@@ -238,6 +276,7 @@ pub fn render_with_assets(
         math_errors,
         highlight_errors,
         image_errors,
+        entity_template_errors,
     }
 }
 

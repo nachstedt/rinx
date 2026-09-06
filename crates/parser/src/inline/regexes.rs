@@ -80,4 +80,19 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&PHRASED_LINK_REGEX, "phrased"),
     (&ANONYMOUS_SIMPLE_REGEX, "anon_simple"),
     (&SIMPLE_LINK_REGEX, "simple"),
+    // Last on purpose. This one matches *any* role spelling, so it would
+    // otherwise shadow every specific role above it: the matcher keeps the
+    // first entry among equally-placed matches, which makes table order the
+    // precedence rule. Whether the name it captured is really an entity role is
+    // decided against the schema in `handle_inline_match`, not here — a regex
+    // cannot know a project's vocabulary.
+    (&ENTITY_ROLE_REGEX, "entity_role"),
 ];
+
+/// Any ``:name:`target` `` role, for the entity roles a schema declares.
+///
+/// Deliberately one static pattern rather than a regex compiled per project:
+/// the role names are configurable, but their *syntax* is not, so matching the
+/// shape here and checking the name afterwards keeps this table static.
+pub(super) static ENTITY_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?P<role>[a-zA-Z][a-zA-Z0-9_-]*):`(?P<target>[^`]+)`").unwrap());

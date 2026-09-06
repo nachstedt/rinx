@@ -6,6 +6,7 @@ use crate::code_language::ResolvedLanguage;
 use crate::contents::Contents;
 use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
+use crate::entity::EntityBody;
 use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
 use crate::image::{Figure, ImageOptions};
@@ -34,6 +35,30 @@ pub enum Directive {
     /// its effect is entirely in the numbers looked up while rendering
     /// headings.
     Sectnum(SectnumOptions),
+    /// An instance of a project-declared entity type — `.. req::`,
+    /// `.. audit-event::`, whatever the schema names.
+    ///
+    /// Boxed because [`EntityBody`] is by far the largest payload here, and an
+    /// enum costs its largest variant everywhere one is stored.
+    ///
+    /// The type is carried as a name rather than as a variant, which is the
+    /// one place this model deliberately departs from how the built-in py/c/std
+    /// domain objects are built: a type declared in a config file cannot be a
+    /// Rust enum. Everything in the body was already validated against the
+    /// schema while parsing, so no later phase re-checks it.
+    Entity(Box<EntityBody>),
+    /// A named prose section *inside* an entity — `.. verification-criteria::`.
+    ///
+    /// Transient: the entity directive's parser collects these out of its
+    /// parsed body and folds them into [`EntityBody::sections`], so a
+    /// well-formed document never keeps one. One that survives to a later
+    /// phase was written outside any entity, and is diagnosed rather than
+    /// rendered.
+    EntitySection {
+        name: String,
+        body: Vec<Node>,
+        span: Option<Span>,
+    },
     PlantUml(HashedContent),
     Admonition {
         kind: AdmonitionKind,

@@ -1,7 +1,11 @@
 use rusty_sphinx_ast::Document;
+use rusty_sphinx_entity::EntitySchema;
 use rusty_sphinx_index::ProjectIndex;
 
 use super::document_index::analyze;
+use super::entity_index::{
+    collect_entity_diagnostics, collect_schema_mismatches, derive_entity_backlinks,
+};
 use super::page_order::collect_page_order;
 use super::section_numbering::assign_section_numbers;
 use rusty_sphinx_toctree::expand_toctree;
@@ -20,8 +24,12 @@ use std::collections::BTreeSet;
 /// when it names no document that exists, so a project that never configured
 /// one keeps building.
 #[must_use]
-pub fn build_project_index(docs: &[Document], root_doc: &str) -> ProjectIndex {
-    build_project_index_reporting(docs, root_doc).index
+pub fn build_project_index(
+    docs: &[Document],
+    root_doc: &str,
+    schema: &EntitySchema,
+) -> ProjectIndex {
+    build_project_index_reporting(docs, root_doc, schema).index
 }
 
 /// A built index, plus the problems only a project-wide view could see.
@@ -36,26 +44,65 @@ pub struct ProjectIndexBuild {
 
 /// [`build_project_index`], also returning the diagnostics it found.
 #[must_use]
-pub fn build_project_index_reporting(docs: &[Document], root_doc: &str) -> ProjectIndexBuild {
+pub fn build_project_index_reporting(
+    docs: &[Document],
+    root_doc: &str,
+    schema: &EntitySchema,
+) -> ProjectIndexBuild {
     let universe: BTreeSet<String> = docs.iter().map(|doc| doc.path.clone()).collect();
 
-    let mut index = merge_document_analyses(docs);
+    let (mut index, merge_diagnostics) = merge_document_analyses(docs);
     index.root_documents = find_root_documents(docs, &index, root_doc);
     index.section_numbers = assign_section_numbers(&index, &universe);
     index.page_order = collect_page_order(&index, &universe);
+    // Entity back-links come last among the index phases: they are a function
+    // of the merged graph, exactly as page order is a function of the merged
+    // toctrees.
+    index.entity_backlinks = derive_entity_backlinks(&index, schema);
 
-    let diagnostics = super::nav_diagnostics::collect_nav_diagnostics(docs, &index);
+    let schema_hashes: Vec<(&str, Option<&str>)> = docs
+        .iter()
+        .map(|doc| (doc.path.as_str(), doc.entity_schema_hash.as_deref()))
+        .collect();
+
+    let mut diagnostics = super::nav_diagnostics::collect_nav_diagnostics(docs, &index);
+    diagnostics.extend(merge_diagnostics);
+    diagnostics.extend(collect_schema_mismatches(&schema_hashes, schema));
+    diagnostics.extend(collect_entity_diagnostics(&index, schema));
     ProjectIndexBuild { index, diagnostics }
 }
 
 /// Merges every document's own analysis — targets, titles, outlines, toctrees,
 /// glossary terms, equations — into one index.
-fn merge_document_analyses(docs: &[Document]) -> ProjectIndex {
+fn merge_document_analyses(docs: &[Document]) -> (ProjectIndex, Vec<super::DocumentDiagnostics>) {
     let mut index = ProjectIndex::default();
+    let mut diagnostics = Vec::new();
     for doc in docs {
-        let _ = index.merge(analyze(doc));
+        let conflicts = index.merge(analyze(doc));
+        // A duplicate id is only visible to whichever merge sees the second
+        // definition, so it is collected here rather than rediscovered later.
+        // Attributed to the document merged in, whose definition won and which
+        // is therefore the one an author will want to look at.
+        //
+        // `duplicate_glossary_terms` is deliberately still dropped: there is no
+        // diagnostic code for it yet, and inventing one here would start
+        // emitting a warning on projects that never asked for this feature.
+        if !conflicts.duplicate_entity_ids.is_empty() {
+            diagnostics.push(super::DocumentDiagnostics {
+                source_path: doc.path.clone(),
+                diagnostics: conflicts
+                    .duplicate_entity_ids
+                    .iter()
+                    .map(|clash| rusty_sphinx_ast::Diagnostic {
+                        code: rusty_sphinx_ast::DiagnosticCode::EntityDuplicateId,
+                        message: clash.message(),
+                        span: None,
+                    })
+                    .collect(),
+            });
+        }
     }
-    index
+    (index, diagnostics)
 }
 
 /// Chooses the documents navigation starts from.
@@ -113,7 +160,7 @@ mod tests {
             Document::new("index.rst".to_string(), vec![]),
             Document::new("stray.rst".to_string(), vec![]),
         ];
-        let index = merge_document_analyses(&docs);
+        let (index, _) = merge_document_analyses(&docs);
 
         // When
         let roots = find_root_documents(&docs, &index, "index");
@@ -126,7 +173,7 @@ mod tests {
     fn test_find_root_documents_accepts_a_configured_root_with_an_extension() {
         // Given
         let docs = vec![Document::new("index.rst".to_string(), vec![])];
-        let index = merge_document_analyses(&docs);
+        let (index, _) = merge_document_analyses(&docs);
 
         // When
         let roots = find_root_documents(&docs, &index, "index.rst");
@@ -146,7 +193,7 @@ mod tests {
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
-        let index = merge_document_analyses(&docs);
+        let (index, _) = merge_document_analyses(&docs);
 
         // When
         let roots = find_root_documents(&docs, &index, "nonexistent");
@@ -170,7 +217,7 @@ mod tests {
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
-        let index = merge_document_analyses(&docs);
+        let (index, _) = merge_document_analyses(&docs);
 
         // When
         let roots = find_root_documents(&docs, &index, "nonexistent");
@@ -188,7 +235,7 @@ mod tests {
         )];
 
         // When
-        let index = merge_document_analyses(&docs);
+        let (index, _) = merge_document_analyses(&docs);
 
         // Then — the graph is stored unexpanded, per toctree.
         assert_eq!(index.toctrees["index.rst"].len(), 1);
@@ -209,7 +256,7 @@ mod tests {
         ];
 
         // When
-        let index = build_project_index(&docs, "index");
+        let index = build_project_index(&docs, "index", &EntitySchema::empty());
 
         // Then
         assert_eq!(
@@ -262,7 +309,7 @@ mod tests {
         ];
 
         // When
-        let index = build_project_index(&docs, "index");
+        let index = build_project_index(&docs, "index", &EntitySchema::empty());
 
         // Then
         assert_eq!(index.root_documents, vec!["index.rst"]);
@@ -288,7 +335,7 @@ mod tests {
         ];
 
         // When
-        let index = build_project_index(&docs, "index");
+        let index = build_project_index(&docs, "index", &EntitySchema::empty());
 
         // Then
         assert_eq!(
@@ -310,7 +357,7 @@ mod tests {
         ];
 
         // When
-        let index = build_project_index(&docs, "index");
+        let index = build_project_index(&docs, "index", &EntitySchema::empty());
 
         // Then — it gets no prev/next rather than an arbitrary position.
         assert_eq!(index.page_order, vec!["index.rst", "guide.rst"]);
@@ -325,7 +372,7 @@ mod tests {
         ];
 
         // When
-        let index = build_project_index(&docs, "index");
+        let index = build_project_index(&docs, "index", &EntitySchema::empty());
 
         // Then
         let _ = format!("{index:?}");

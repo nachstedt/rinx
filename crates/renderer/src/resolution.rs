@@ -8,7 +8,9 @@
 //! rather than inside either tree.
 
 mod domain_object;
+mod entity;
 mod option;
 
 pub(crate) use domain_object::{DomainObjectResolution, DomainObjectResolver};
+pub(crate) use entity::{EntityResolution, EntityResolver};
 pub(crate) use option::{OptionResolution, OptionResolver};

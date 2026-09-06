@@ -35,6 +35,7 @@ mod doctest;
 mod document;
 mod domain;
 mod domain_object_body;
+mod entity;
 mod enumerator;
 mod glossary_entry;
 mod hashed_content;
@@ -77,6 +78,7 @@ pub use doctest::{
 pub use document::Document;
 pub use domain::Domain;
 pub use domain_object_body::DomainObjectBody;
+pub use entity::{AttributeValue, EntityBody, EntityId, EntityIdError, EntitySection, SectionKind};
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use hashed_content::HashedContent;

@@ -26,6 +26,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep the open-ended case of an enum as a validated newtype rather than enumerating a third party's whole vocabulary, which would import their knowledge into your own root crate and freeze it into serialized data.
 - Reserve special values of a field as their own variants, so a name that happens to collide with one cannot be mistaken for it.
 - Box a large enum variant's payload into its own struct, since an enum costs its largest variant everywhere it is stored.
+- When a construct's vocabulary is declared by the user, validate it once at the boundary and let every later phase read data already checked, rather than carrying a dynamically-typed value that each use re-inspects.
+- Separate a *value* from a *document* at the type level: something parsed into a node tree and something stored as a typed scalar diverge in every later phase, so one field kind with a "parsed" flag would carry the union of both meanings everywhere.
 
 ## Module and file organization
 
@@ -39,6 +41,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Suspect any file named after a construct that also holds general-purpose helpers, and split the helpers out under a name describing what they do.
 - Keep a helper flat at the crate's `src/` root only when it is genuinely reached from several sibling trees; nesting it under one construct's directory would misstate the dependency.
 - Give shared logic its own crate when the phases needing it are forbidden to depend on each other, rather than reintroducing a dependency an earlier split was made to remove.
+- Split a meta-model from the instances it describes along the dependency arrow: what is written in a source file and survives into a build artefact belongs to the artefact's own crate.
+- Ask another crate for a fact it owns through an injected trait rather than keeping a second copy of it, since the copy drifts exactly when the check matters most.
 - Do not separate a type from the only code that constructs and reads it; modules that merely thread a value through their signatures are not users of it.
 - Treat two functions with identical bodies under different names as one function, and delete the duplicate rather than relocating both.
 - Prefer a plain private function in a parent module over a `pub(super)` one when only that module's own descendants call it.
@@ -69,6 +73,9 @@ entry under the heading it belongs to, as a single short sentence.
 - Store an embedded notation in the AST exactly as written and convert it only while rendering, so the choice of backend never reaches a serialized `.ast` file.
 - Leave a pattern unexpanded in the AST and the index when several later phases must expand it against different sets, so no phase has to reimplement the matcher against its own narrower set.
 - Prefer storing a graph plus each node's own data over a pre-flattened tree, since a flattened tree cannot be merged per document and loses the per-directive options that produced it.
+- Declare a relationship on the side that writes it, so the declared source can never drift from actual use, and derive the reverse direction rather than asking for it twice.
+- Give a generated identifier a deterministic source (position, not content) so a cached build artefact stays byte-identical, and say plainly which edits perturb it.
+- Store only what a later reader needs in a shared index: prose belongs in the document, not in an artefact every phase loads.
 
 ## Porting from a reference implementation
 
@@ -106,6 +113,9 @@ entry under the heading it belongs to, as a single short sentence.
 - Intern a repeated identifier to a small integer rather than storing the string, when the type carrying it is `Copy` and appears once per node; the indirection buys back both the trait and the wire size.
 - Route every construction of a position-bearing value through one function once any of them needs extra context, so a site that skipped it cannot compile rather than silently reporting against the wrong file.
 - Scope a suppression to the file it was written in; line numbers from two different files are not comparable, and matching them silences something the author never looked at.
+- Distinguish a fault in the *build's configuration* from a fault in a document: the first is reported outside the suppression mechanism, since no document's comment should be able to silence it.
+- When a pattern matches far more than the construct it is looking for, let an unrecognised match degrade to plain text rather than to a diagnostic — reporting on text the author never meant as markup is worse than staying quiet.
+- Check a configuration invariant in both directions: the mistake of declaring something in one place and forgetting it in another is likelier than declaring it wrongly twice.
 
 ## Testing
 
@@ -118,10 +128,13 @@ entry under the heading it belongs to, as a single short sentence.
 - Check a test's premise against what the parser can actually produce before treating its failure as a bug in the code.
 - Assert on the specific marker a feature emits rather than on a substring that a shared wrapper also contains, or the test stops distinguishing the two.
 - When a table of related cases is maintained by hand, test its structural invariants (reflexivity, symmetry) across all entries rather than only asserting the individual rows, so a half-finished edit fails.
+- Test a hand-maintained list against the enum it mirrors where one exists, and settle for a representative sample where none does, rather than writing a probe so general it fights every construct's own input requirements.
+- Assert on the markers a renderer emits, not on the exact whitespace between them, or the test breaks on formatting that no reader would notice.
 
 ## Configuration and CLI
 
 - Prefer a single configuration file over accumulating individual CLI flags; adding future fields requires no interface changes.
+- Keep a resource's *name* in configuration and its *path* on the command line, so a sandboxed build can relocate the file without invalidating the config that refers to it.
 - Configuration files should contain metadata and settings, not file paths; sandboxed build systems relocate files, breaking embedded paths.
 - Relative file paths work correctly for offline viewing; do not use inlining as a workaround for path computation.
 
@@ -150,3 +163,10 @@ entry under the heading it belongs to, as a single short sentence.
 - Always follow that subject with a body summarizing at a high level what the commit does and the notable decisions behind it; a bare subject line is never enough.
 - After every code modification session, verify `bazel build //examples:site` succeeds.
 - Treat clippy warnings as refactoring opportunities; do not suppress them with `#[allow(...)]` attributes.
+- Style a new rendered construct in both `assets/default.css` and the inline `<style>` of `examples/custom_template.html`; the example site uses the latter, so editing only the former leaves the example unstyled.
+- Verify a rendering change by screenshotting the built page in headless Chrome, not by reading the emitted HTML — markup that looks correct can still render as run-together text.
+- Settle a CSS or browser-behaviour question by testing it in a headless browser, not from memory; `<details>`, in particular, hides every child but its `<summary>` and no rule exempts one.
+- Keep presentation out of the entity meta-model: `entities.toml` is a parse-time input, so a flag there re-parses every document to change how something looks; put the switch in the render-time site config instead.
+- When a template must reproduce what built-in rendering does, give it the declared labels and the document order rather than letting it hardcode a second copy of either.
+- Render a declared vocabulary's parts in the order the schema declares them, not in document order or a map's key order; instances of one type should be comparable at a glance.
+- When adding a rule for a class on an element a generic selector already styles (`.document code`, `table th`), match that selector's specificity or the new rule silently loses.

@@ -493,6 +493,8 @@ mod tests {
             "index.rst",
             &crate::config::SiteConfig::default(),
             assets,
+            rusty_sphinx_entity::EntitySchema::empty_ref(),
+            &crate::blocks::EntityTemplates::new(),
         )
     }
 
@@ -586,6 +588,8 @@ mod tests {
             "guide/intro.rst",
             &crate::config::SiteConfig::default(),
             &assets,
+            rusty_sphinx_entity::EntitySchema::empty_ref(),
+            &crate::blocks::EntityTemplates::new(),
         );
 
         // Then

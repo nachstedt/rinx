@@ -11,6 +11,7 @@ rust_library(
     ) + [
         "//crates/analyzer:rusty_sphinx_analyzer",
         "//crates/ast:rusty_sphinx_ast",
+        "//crates/entity:rusty_sphinx_entity",
         "//crates/toctree:rusty_sphinx_toctree",
         "//crates/parser:rusty_sphinx_parser",
         "//crates/renderer:rusty_sphinx_renderer",
@@ -28,6 +29,7 @@ rust_binary(
         ":rusty_sphinx_worker_lib",
         "//crates/analyzer:rusty_sphinx_analyzer",
         "//crates/ast:rusty_sphinx_ast",
+        "//crates/entity:rusty_sphinx_entity",
         "//crates/toctree:rusty_sphinx_toctree",
         "//crates/index:rusty_sphinx_index",
         "//crates/parser:rusty_sphinx_parser",

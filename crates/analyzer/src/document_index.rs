@@ -61,6 +61,56 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     index
 }
 
+/// Records a `.. index::` directive's terms for the general index page.
+fn index_genindex_entries(
+    entries: &[IndexEntry],
+    id: &str,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+) {
+    for entry in entries {
+        if let IndexEntry::Term {
+            primary,
+            subentry,
+            main,
+        } = entry
+        {
+            index.genindex_entries.push(GenIndexEntry {
+                primary: primary.clone(),
+                subentry: subentry.clone(),
+                main: *main,
+                doc_path: doc_path.to_string(),
+                anchor: id.to_string(),
+            });
+        }
+        // IndexEntry::See/SeeAlso redirect rather than link to content and are
+        // not surfaced in genindex_entries yet (see spec_gaps.md).
+    }
+}
+
+/// Records one entity, its link target, and everything inside its sections.
+fn index_entity_and_its_sections(
+    entity: &rusty_sphinx_ast::EntityBody,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    scope: &mut Scope,
+) {
+    super::entity_index::index_entity(entity, doc_path, index);
+    // An entity is also an ordinary link target, so `:ref:` reaches one without
+    // any role being declared — which is what makes a schema's roles optional
+    // sugar rather than an obligation.
+    index.targets.insert(
+        TargetName::new(entity.id.as_str()),
+        TargetLocation::Internal(doc_path.to_string()),
+    );
+    // Every section is body content and may hold definitions of its own — a
+    // target, a nested entity, a glossary. Recursing keeps this walk mirroring
+    // `render_nodes`, as the module doc requires.
+    for section in &entity.sections {
+        index_nodes(&section.body, doc_path, index, scope);
+    }
+}
+
 /// Recursively registers targets, glossary terms, and domain objects found
 /// anywhere in `nodes`, including inside table cells, list items, and
 /// directive bodies — not just at the document's top level. This mirrors
@@ -110,6 +160,9 @@ pub(super) fn index_nodes(
                         .insert(name.clone(), TargetLocation::Internal(doc_path.to_string()));
                 }
             }
+            Node::Directive(Directive::Entity(entity)) => {
+                index_entity_and_its_sections(entity, doc_path, index, scope);
+            }
             Node::Directive(Directive::Glossary { entries, .. }) => {
                 for entry in entries {
                     for term in &entry.terms {
@@ -120,25 +173,7 @@ pub(super) fn index_nodes(
                 }
             }
             Node::Directive(Directive::Index { entries, id }) => {
-                for entry in entries {
-                    if let IndexEntry::Term {
-                        primary,
-                        subentry,
-                        main,
-                    } = entry
-                    {
-                        index.genindex_entries.push(GenIndexEntry {
-                            primary: primary.clone(),
-                            subentry: subentry.clone(),
-                            main: *main,
-                            doc_path: doc_path.to_string(),
-                            anchor: id.clone(),
-                        });
-                    }
-                    // IndexEntry::See/SeeAlso redirect rather than link to
-                    // content and are not surfaced in genindex_entries yet
-                    // (see spec_gaps.md).
-                }
+                index_genindex_entries(entries, id, doc_path, index);
             }
             Node::Directive(Directive::DomainObject(obj)) => {
                 index_domain_object(obj, doc_path, index, scope);
@@ -153,6 +188,7 @@ pub(super) fn index_nodes(
             Node::Directive(
                 Directive::Admonition { body, .. }
                 | Directive::VersionChange { body, .. }
+                | Directive::EntitySection { body, .. }
                 | Directive::SeeAlso { body },
             ) => {
                 index_nodes(body, doc_path, index, scope);

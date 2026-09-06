@@ -86,6 +86,7 @@ pub(crate) fn render_inline(
         | rusty_sphinx_ast::InlineNode::TermReference { .. }
         | rusty_sphinx_ast::InlineNode::DomainObjectReference { .. }
         | rusty_sphinx_ast::InlineNode::OptionReference { .. }
+        | rusty_sphinx_ast::InlineNode::EntityReference { .. }
         | rusty_sphinx_ast::InlineNode::EquationReference { .. } => {
             render_cross_reference(html, inline, ctx);
         }
@@ -169,6 +170,7 @@ fn render_cross_reference(
         // accumulate — see [`render_indexed_cross_reference`].
         rusty_sphinx_ast::InlineNode::TermReference { .. }
         | rusty_sphinx_ast::InlineNode::OptionReference { .. }
+        | rusty_sphinx_ast::InlineNode::EntityReference { .. }
         | rusty_sphinx_ast::InlineNode::EquationReference { .. } => {
             render_indexed_cross_reference(html, inline, ctx);
         }
@@ -227,6 +229,25 @@ fn render_indexed_cross_reference(
                 },
                 ctx.option_resolver,
                 ctx.scope.program.current(),
+                ctx.doc_path,
+                ctx.broken_links,
+            );
+        }
+        rusty_sphinx_ast::InlineNode::EntityReference {
+            role,
+            target,
+            display,
+            span,
+        } => {
+            super::entity_reference::render_inline_entity_reference(
+                html,
+                role,
+                RefText {
+                    display,
+                    target,
+                    span: *span,
+                },
+                ctx.entity_resolver,
                 ctx.doc_path,
                 ctx.broken_links,
             );

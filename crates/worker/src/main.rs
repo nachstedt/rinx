@@ -30,8 +30,9 @@ use std::env;
 use std::fs;
 
 use commands::{
-    cmd_embed_assets, cmd_extract_diagrams, cmd_extract_doctests, cmd_genindex, cmd_index,
-    cmd_parse, cmd_preview, cmd_render, cmd_validate_images, cmd_validate_toctree,
+    cmd_embed_assets, cmd_entity_json_schema, cmd_extract_diagrams, cmd_extract_doctests,
+    cmd_genindex, cmd_index, cmd_parse, cmd_preview, cmd_render, cmd_validate_images,
+    cmd_validate_toctree,
 };
 
 fn cmd_legacy(path: &str) -> Result<()> {
@@ -53,6 +54,12 @@ fn run(args: &[String]) -> Result<()> {
         Some("render") => cmd_render(&args[2..]),
         Some("genindex") => cmd_genindex(&args[2..]),
         Some("preview") => cmd_preview(&args[2..]),
+        // Developer tooling, not a pipeline phase: regenerates the checked-in
+        // JSON Schema that editors validate an `entities.toml` against.
+        Some("entity_json_schema") => {
+            cmd_entity_json_schema();
+            Ok(())
+        }
         Some(path) if !path.starts_with('-') => cmd_legacy(path),
         _ => {
             let program = args.first().map_or("rusty-sphinx", String::as_str);

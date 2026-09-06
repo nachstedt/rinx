@@ -65,8 +65,14 @@ pub(crate) fn parse_inline_text_mapped(
             let m_str = &remaining[start..end];
             let span = map.span(last_match_end + start, last_match_end + end, ctx);
             inlines.push(
-                unescape_node(handle_inline_match(kind, m_str, node_opt, default_domain))
-                    .with_span(span),
+                unescape_node(handle_inline_match(
+                    kind,
+                    m_str,
+                    node_opt,
+                    default_domain,
+                    ctx.schema,
+                ))
+                .with_span(span),
             );
             last_match_end += end;
         } else {
@@ -113,6 +119,17 @@ fn unescape_node(node: InlineNode) -> InlineNode {
         } => InlineNode::Reference {
             display: unescape(&display),
             target: unescape(&target),
+            span,
+        },
+        InlineNode::EntityReference {
+            role,
+            target,
+            display,
+            span,
+        } => InlineNode::EntityReference {
+            role,
+            target: unescape(&target),
+            display: unescape(&display),
             span,
         },
         InlineNode::Hyperlink { text, target, span } => InlineNode::Hyperlink {

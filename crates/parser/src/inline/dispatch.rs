@@ -32,8 +32,10 @@ pub(super) fn handle_inline_match(
     m_str: &str,
     node_opt: Option<InlineNode>,
     default_domain: Domain,
+    schema: &rusty_sphinx_entity::EntitySchema,
 ) -> InlineNode {
     match kind {
+        "entity_role" => super::roles::entity::handle_entity_role_match(m_str, schema),
         "inline" => node_opt.expect("inline node should be present"),
         "ref" => {
             let caps = REF_REGEX.captures(m_str).unwrap();
@@ -127,19 +129,32 @@ pub(super) fn handle_inline_match(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_inline_match_inline_variant() {
         // Given
         let node = InlineNode::Emphasis("text".to_string());
         // When
-        let result = handle_inline_match("inline", "", Some(node.clone()), Domain::Py);
+        let result = handle_inline_match(
+            "inline",
+            "",
+            Some(node.clone()),
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         // Then
         assert_eq!(result, node);
     }
     #[test]
     fn test_handle_inline_match_ref_variant() {
-        let result = handle_inline_match("ref", ":ref:`target`", None, Domain::Py);
+        let result = handle_inline_match(
+            "ref",
+            ":ref:`target`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::Reference {
@@ -156,6 +171,7 @@ mod tests {
             ":ref:`GenericAlias <types-genericalias>`",
             None,
             Domain::Py,
+            &EntitySchema::empty(),
         );
         assert_eq!(
             result,
@@ -168,12 +184,24 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_program_variant() {
-        let result = handle_inline_match("program", ":program:`curl`", None, Domain::Py);
+        let result = handle_inline_match(
+            "program",
+            ":program:`curl`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(result, InlineNode::Program("curl".to_string()));
     }
     #[test]
     fn test_handle_inline_match_phrased_with_embedded_uri() {
-        let result = handle_inline_match("phrased", "`text <http://uri>`_", None, Domain::Py);
+        let result = handle_inline_match(
+            "phrased",
+            "`text <http://uri>`_",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::Hyperlink {
@@ -185,7 +213,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_phrased_without_uri() {
-        let result = handle_inline_match("phrased", "`just text`_", None, Domain::Py);
+        let result = handle_inline_match(
+            "phrased",
+            "`just text`_",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::Hyperlink {
@@ -197,7 +231,8 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_simple_variant() {
-        let result = handle_inline_match("simple", "name_", None, Domain::Py);
+        let result =
+            handle_inline_match("simple", "name_", None, Domain::Py, &EntitySchema::empty());
         assert_eq!(
             result,
             InlineNode::Hyperlink {
@@ -209,7 +244,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_anon_phrased_with_embedded_uri() {
-        let result = handle_inline_match("anon_phrased", "`text <http://uri>`__", None, Domain::Py);
+        let result = handle_inline_match(
+            "anon_phrased",
+            "`text <http://uri>`__",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::AnonymousHyperlink {
@@ -220,7 +261,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_anon_phrased_without_uri() {
-        let result = handle_inline_match("anon_phrased", "`anon text`__", None, Domain::Py);
+        let result = handle_inline_match(
+            "anon_phrased",
+            "`anon text`__",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::AnonymousReference {
@@ -231,7 +278,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_anon_simple_variant() {
-        let result = handle_inline_match("anon_simple", "anon_name__", None, Domain::Py);
+        let result = handle_inline_match(
+            "anon_simple",
+            "anon_name__",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::AnonymousReference {

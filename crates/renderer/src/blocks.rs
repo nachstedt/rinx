@@ -25,6 +25,7 @@ mod data_table;
 mod dispatch;
 mod doctest;
 mod domain_object;
+mod entity;
 mod figure;
 mod glossary;
 mod image;
@@ -43,5 +44,7 @@ mod tables;
 pub(crate) use dispatch::{collect_anonymous_targets, render_nodes};
 // Reused by `crate::inline::image` for an `InlineImage` node, whose `<img>`
 // element is built exactly the same way as a standalone `.. image::`'s.
+pub use entity::EntityTemplates;
+pub(crate) use entity::entity_anchor;
 pub(crate) use image::render_linked_image;
 pub(crate) use math::equation_anchor_id;

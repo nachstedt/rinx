@@ -47,6 +47,10 @@ pub(super) fn with_ctx_for<R>(
     let mut anon_index = 0;
     let domain_resolver = crate::resolution::DomainObjectResolver::new(index);
     let option_resolver = crate::resolution::OptionResolver::new(index);
+    // These tests render body constructs, none of which is an entity, so the
+    // empty schema is the honest input rather than a stub.
+    let schema = rusty_sphinx_entity::EntitySchema::empty_ref();
+    let entity_resolver = crate::resolution::EntityResolver::new(index, schema);
     let math = crate::math::MathRenderer::new();
     let highlighter = crate::highlight::Highlighter::new();
     let section_ids = std::collections::BTreeMap::new();
@@ -55,6 +59,10 @@ pub(super) fn with_ctx_for<R>(
         index,
         domain_resolver: &domain_resolver,
         option_resolver: &option_resolver,
+        entity_resolver: &entity_resolver,
+        schema,
+        entity_templates: &crate::blocks::EntityTemplates::new(),
+        entity_template_errors: &mut Vec::new(),
         doc_path,
         anon_targets: &anon_targets,
         anon_index: &mut anon_index,
@@ -68,6 +76,7 @@ pub(super) fn with_ctx_for<R>(
         embedded_assets,
         highlighter: &highlighter,
         highlight_language: language,
+        collapse_entities: true,
         linenothreshold: None,
         highlight_force: false,
         section_ids: &section_ids,
