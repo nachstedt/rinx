@@ -26,6 +26,7 @@ bazel build //examples/team_a:docs    # build one team's library in isolation
 bash tests/test_strict_deps.sh        # verifies Bazel fails the build when a toctree dep is missing from BUILD.bazel
 bash tests/test_strict_links.sh       # verifies broken links only warn by default, and fail the build when strict_links = True
 bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.md)
+bazel run //scripts:benchmark_entities  # benchmark the entity model against useblocks' sphinx-needs demo (see docs/benchmark.md)
 
 CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency
 ```

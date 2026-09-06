@@ -1,6 +1,17 @@
 # Benchmarking Rusty-Sphinx
 
-This document explains how to benchmark the `rusty-sphinx` documentation generator against a large real-world Sphinx project.
+This document explains how to benchmark the `rusty-sphinx` documentation generator against real-world Sphinx projects.
+
+There are two benchmarks, measuring different things:
+
+| Command | Corpus | Measures |
+| --- | --- | --- |
+| `bazel run //scripts:benchmark` | CPython documentation | Throughput, and general RST/Sphinx coverage |
+| `bazel run //scripts:benchmark_entities` | useblocks' sphinx-needs demo | Entity-model coverage against a real sphinx-needs project |
+
+The corpus-agnostic half of both lives in `scripts/benchmark_common.py`: cloning a pinned tag, generating the warm-up site, timing a `bazel build`, and diffing the resulting warnings against a hand-authored whitelist. Everything below the "Benchmarking the entity model" heading is specific to the second one.
+
+# The CPython benchmark
 
 We use the **CPython Documentation** as our primary benchmark target because of its size, complexity, and widespread use of various Sphinx extensions and syntax.
 
@@ -111,3 +122,73 @@ It then prints a count of occurrences suppressed by the whitelist, and a **Stale
 **Auto-pruning:** stale entries are removed from the whitelist file automatically, but only when the warning data is trustworthy — the Bazel build succeeded **and** at least one sidecar was found. Otherwise pruning is skipped (and says why), so a broken or empty build can never silently delete your accepted entries along with their comments. This is why the build no longer runs under `--keep_going`: a failed render must fail the whole build rather than under-report a document's warnings and get its whitelist entries pruned as "stale".
 
 The benchmark always exits 0 — it reports and prunes, but never gates the build on new warnings.
+
+
+# Benchmarking the entity model
+
+`bazel run //scripts:benchmark_entities` builds a real sphinx-needs project — **useblocks' own [sphinx-needs demo](https://github.com/useblocks/sphinx-needs-demo)**, pinned at tag `v0.1.5` — against rusty-sphinx's entity model, and reports everything the pipeline did not understand.
+
+It is deliberately *not* a throughput measurement. 39 documents will not stress the pipeline the way CPython's 500-odd do. What it produces is a triage list: every line is either a bug in the conversion or a genuine gap in the entity model.
+
+## Why this corpus
+
+The entity feature exists mostly to replace sphinx-needs, and until this benchmark existed it was exercised only by `examples/entities/` — a schema we wrote ourselves against documents we wrote ourselves, which cannot tell us what a real sphinx-needs project writes.
+
+Three public corpora were considered:
+
+| Corpus | Size | Where its vocabulary is declared |
+| --- | --- | --- |
+| **useblocks/sphinx-needs-demo** | 39 `.rst`, 180 KB; 20 need types, 14 link types, ~30 custom fields | `docs/ubproject.toml` + `docs/schemas.json` |
+| eclipse-score/score | 292 `.rst`, 1.6 MB | `metamodel.yaml` in the separate `eclipse-score/docs-as-code` repository — 55 need types, 28 link types |
+| eclipse-score/process_description | 304 `.rst`, 1.4 MB | the same metamodel |
+
+The Eclipse S-CORE pair is the larger and more demanding target — Apache-2.0, tagged, already Bazel-native, with real `:derived_from:`/`:satisfied_by:`/`:safety: ASIL_B` traceability — and is the obvious scale-up once the demo builds clean. It is not the starting point because its vocabulary lives in a third repository in a YAML dialect of its own, whereas the demo's is a declarative TOML written by the people who define sphinx-needs' semantics, which converts mechanically.
+
+## The schema conversion (`scripts/needs_schema.py`)
+
+A sphinx-needs project using ubCode keeps its configuration in `ubproject.toml` (announced to Sphinx by `needs_from_toml`). That file is data, so the vocabulary it declares converts into an `entities.toml`:
+
+| sphinx-needs | rusty-sphinx |
+| --- | --- |
+| `[[needs.types]]` `directive`/`title`/`prefix` | `[[entity_type]]` `name`/`label`/`id = { prefix }`, with `argument = { fields = ["title"] }` |
+| `[needs.fields.<n>]`, plus sphinx-needs' own built-in options | `[[entity_type.attribute]]` on **every** type — sphinx-needs scopes fields to no type |
+| `[needs.fields.<n>.schema]` `type`/`enum` | the attribute's `type` (`string`, `int`, `bool`, `enum`, `list<string>`, `list<enum>`) and `values` |
+| `[needs.links.<n>]` | `[[entity_type.relation]]`, with sphinx-needs' derived `<n>_back` as the `incoming` option and its `outgoing`/`incoming` strings as the two labels. `to` is left off: a sphinx-needs link accepts any type |
+| each `directive` | a `[[role]]` of that name, plus one `need` role over every type |
+
+The generated file lands in the clone (`<workspace>/entities.toml`), never in this repository — it is derived data, rewritten on every run.
+
+**`schemas.json` is read for one thing only**: an option that a rule makes *unconditionally* required on one need type is narrowed onto that type. Everything else — id patterns, `allOf` conditional selects, `network` constraints across linked entities — is reported instead. Honouring the `required` half of a conditional rule would be worse than not honouring it at all.
+
+Everything the conversion cannot carry over is collected into a report rather than dropped, and printed under **"Sphinx-Needs Constructs Without An Entity-Model Equivalent"**. That section is as much the point of the benchmark as the diagnostics are: each entry is a question about the entity meta-model.
+
+## What the generated workspace looks like
+
+Two things differ from the CPython benchmark's generated project, both forced by the corpus rather than chosen:
+
+- **The corpus is the root package.** rusty-sphinx resolves a source-root-relative path (`/_images/logo.png`, and the `--doc-path` every phase keys off) against the Bazel workspace root, so a corpus whose Sphinx `srcdir` is a subdirectory would have every absolute image path miss by that prefix. The clone's `docs/` therefore *becomes* the workspace root, and the corpus lives in `//:demo_docs`. The generated `assets` and warm-up packages need no glob exclusions — a Bazel glob never crosses a package boundary.
+- **Sources spliced in from outside the source root are copied in.** The parser resolves `..` by popping, so a `.. literalinclude:: ../pharaoh.toml` written in a root-level document is looked for at `pharaoh.toml`. The script copies the real file to that path in the generated workspace and declares it in `parse_data`. The alternative would be editing the corpus' own directives, which would make the benchmark measure a document set nobody wrote.
+
+`entity_schema` is declared on the library *and* on the site: it is a parse-time input (it is what makes `.. req::` a directive) and an index/render-time one, and a mismatch between the two is `entity.schema-mismatch`.
+
+## Reading the report
+
+The full listing goes to **`benchmark_entities_result.txt`** in the workspace root (git-ignored); the terminal shows counts only.
+
+1. **Entities Parsed By Type** — the positive signal. A declared type with zero instances means either the corpus never used it, or its directives sit somewhere the parser never reached (nested inside a directive we do not recognize, for instance).
+2. **Unsupported Directives Summary** — dominated by sphinx-needs' *query and report* half (`needtable`, `needflow`, `needpie`, `needextend`, `needimport`), which the entity model does not attempt. Counting them is how we find out what a migrating project would lose.
+3. **Sphinx-Needs Constructs Without An Entity-Model Equivalent** — the converter's report, grouped by category.
+4. **One section per diagnostic code** (`entity.unknown-target`, `entity.role-type-mismatch`, `entity.invalid-attribute-value`, …), most frequent first, diffed against `scripts/entity_warnings_whitelist.json`.
+
+The sections are built from the codes actually seen rather than hard-coded, so a diagnostic code added on the Rust side appears without this script being touched.
+
+### Where the warnings come from
+
+Unlike the CPython benchmark, which reads the machine-readable `*.warnings.json` sidecars, this one parses the diagnostics out of the captured `bazel_build.log`. The sidecar carries domain-object warnings only, and the render-time entity diagnostics — a `:req:` pointing at an id no document declares — exist nowhere else.
+
+Two consequences worth knowing:
+
+- The log is only complete because **every corpus action re-runs on every run**: the workspace is re-cloned and `discard_stale_corpus_outputs` drops the previous outputs, so no warning is lost to a cached action. It keeps `external/` (where the compiled rusty-sphinx binary lives) and the generated packages, so the toolchain stays warm.
+- A warning's identity is `(document, code, message)` — **the line and column are dropped**. A diagnostic found while *indexing* (a derived back-link pointing at an unknown id) belongs to a document but to no line of it, and a position in the key would also make the whitelist churn whenever text above a warning moves.
+
+The whitelist works exactly like `scripts/domain_warnings_whitelist.json`: hand-authored, matched on that triple, with a free-text `comment` explaining why an entry is accepted, and stale entries auto-pruned only when the build succeeded and there was output to read. The benchmark always exits 0.

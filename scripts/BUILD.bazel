@@ -7,22 +7,69 @@ exports_files(["doctest_runner.py"])
 
 py_library(
     name = "benchmark_lib",
-    srcs = ["benchmark.py"],
+    srcs = [
+        "benchmark.py",
+        "benchmark_common.py",
+        "benchmark_entities.py",
+        "needs_schema.py",
+    ],
     # Add this package dir to sys.path so `import benchmark` resolves as a
-    # top-level module (both for the binary and the test).
+    # top-level module (both for the binaries and the tests).
     imports = ["."],
     # deps = ["@pypi//some_package"], # add pip dependencies here when needed
 )
 
+# The CPython benchmark: general RST coverage. See docs/benchmark.md.
 py_binary(
     name = "benchmark",
-    srcs = ["benchmark.py"],
+    srcs = [
+        "benchmark.py",
+        "benchmark_common.py",
+    ],
+    # `import benchmark_common` has to resolve as a top-level module, the same
+    # way it does for benchmark_lib's tests.
+    imports = ["."],
+)
+
+# The sphinx-needs benchmark: entity-model coverage. Shares the plumbing in
+# benchmark_common.py, and converts the corpus' own configuration through
+# needs_schema.py.
+py_binary(
+    name = "benchmark_entities",
+    srcs = [
+        "benchmark_common.py",
+        "benchmark_entities.py",
+        "needs_schema.py",
+    ],
+    imports = ["."],
+    main = "benchmark_entities.py",
 )
 
 py_test(
     name = "benchmark_test",
     size = "small",
     srcs = ["benchmark_test.py"],
+    deps = [":benchmark_lib"],
+)
+
+py_test(
+    name = "benchmark_common_test",
+    size = "small",
+    srcs = ["benchmark_common_test.py"],
+    deps = [":benchmark_lib"],
+)
+
+py_test(
+    name = "benchmark_entities_test",
+    size = "small",
+    srcs = ["benchmark_entities_test.py"],
+    deps = [":benchmark_lib"],
+)
+
+py_test(
+    name = "needs_schema_test",
+    size = "small",
+    srcs = ["needs_schema_test.py"],
     deps = [":benchmark_lib"],
 )
 
