@@ -6,6 +6,7 @@
 
 # Benchmark run output
 /benchmark_result.txt
+/benchmark_entities_result.txt
 
 # IDEs and Editors
 .vscode/
