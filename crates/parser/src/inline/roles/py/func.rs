@@ -23,6 +23,7 @@ mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
     use rusty_sphinx_ast::TargetSearchOrder;
+    use rusty_sphinx_entity::EntitySchema;
 
     /// Escapes `raw` the way `parse_inline_text` does before any of the
     /// helpers below see it, so a unit test exercises the form those helpers
@@ -50,7 +51,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_func_variant_bare_uses_default_domain() {
-        let result = handle_inline_match("func", ":func:`foo`", None, Domain::C);
+        let result = handle_inline_match(
+            "func",
+            ":func:`foo`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -65,7 +72,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_func_variant_explicit_py_domain() {
-        let result = handle_inline_match("func", ":py:func:`foo`", None, Domain::C);
+        let result = handle_inline_match(
+            "func",
+            ":py:func:`foo`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -80,7 +93,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_func_variant_explicit_c_domain() {
-        let result = handle_inline_match("func", ":c:func:`add`", None, Domain::Py);
+        let result = handle_inline_match(
+            "func",
+            ":c:func:`add`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -95,7 +114,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_func_variant_bang_prefix_suppresses_link() {
-        let result = handle_inline_match("func", ":func:`!foo`", None, Domain::Py);
+        let result = handle_inline_match(
+            "func",
+            ":func:`!foo`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -110,7 +135,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_func_variant_tilde_prefix_shortens_display() {
-        let result = handle_inline_match("func", ":func:`~pkg.mod.foo`", None, Domain::Py);
+        let result = handle_inline_match(
+            "func",
+            ":func:`~pkg.mod.foo`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -132,6 +163,7 @@ mod tests {
             &escaped(r":func:`spawn\* <spawnl>`"),
             None,
             Domain::Py,
+            &EntitySchema::empty(),
         );
 
         // Then
@@ -187,7 +219,13 @@ mod tests {
     fn test_handle_inline_match_func_variant_strips_call_parens() {
         // Given / When — routed through the dispatcher with an unrelated
         // default domain, so the explicit `c:` prefix is what picks the rule.
-        let result = handle_inline_match("func", ":c:func:`Py_SIZE()`", None, Domain::Py);
+        let result = handle_inline_match(
+            "func",
+            ":c:func:`Py_SIZE()`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
 
         // Then
         assert_eq!(

@@ -358,6 +358,50 @@ diagnostic_codes! {
     /// name must be unique.
     SubstitutionImageNameNotAllowed => "substitution.image-name-not-allowed",
 
+    // --- Entities (project-declared types), reported by parse and index ----
+    /// An option on an entity directive that its type declares as neither an
+    /// attribute nor a relation.
+    EntityUnknownAttribute => "entity.unknown-attribute",
+    /// An attribute value that does not fit its declared type — a word where
+    /// an `int` was declared, a value outside an `enum`'s permitted set.
+    EntityInvalidAttributeValue => "entity.invalid-attribute-value",
+    /// A `required` attribute the entity did not give a value for.
+    EntityMissingRequiredAttribute => "entity.missing-required-attribute",
+    /// A directive argument a type takes none of, or one with more
+    /// comma-separated parts than the type declares fields.
+    EntityMalformedArgument => "entity.malformed-argument",
+    /// An `:id:` that is not a legal entity id, or one that could not be
+    /// derived because a source attribute had no value.
+    EntityInvalidId => "entity.invalid-id",
+    /// Two entities in the project claiming one id. Found by the index phase,
+    /// which is the first to see every document.
+    EntityDuplicateId => "entity.duplicate-id",
+    /// A relation or role naming an entity that no document declares.
+    EntityUnknownTarget => "entity.unknown-target",
+    /// A relation target whose type is outside the relation's declared `to`.
+    EntityDisallowedRelation => "entity.disallowed-relation",
+    /// A `required` relation the entity named no target for.
+    EntityMissingRequiredRelation => "entity.missing-required-relation",
+    /// Several targets on a relation declared to take exactly one.
+    EntityMultipleRelationTargets => "entity.multiple-relation-targets",
+    /// A sub-directive inside an entity that its type does not declare as a
+    /// section.
+    EntityUnknownSection => "entity.unknown-section",
+    /// A section directive written outside any entity, which would otherwise
+    /// render as nothing at all.
+    EntitySectionOutsideEntity => "entity.section-outside-entity",
+    /// A section written more than once without being declared `multiple`.
+    EntityDuplicateSection => "entity.duplicate-section",
+    /// A `required` section the entity did not write.
+    EntityMissingRequiredSection => "entity.missing-required-section",
+    /// A role reference resolving to an entity whose type the role does not
+    /// accept. Links anyway, as a domain-object type mismatch does.
+    EntityRoleTypeMismatch => "entity.role-type-mismatch",
+    /// A document parsed against a different schema than the one the index is
+    /// being built with — a build misconfiguration that would otherwise
+    /// produce quietly wrong output.
+    EntitySchemaMismatch => "entity.schema-mismatch",
+
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never
     /// suppressible: a suppression that silences the report of its own typo

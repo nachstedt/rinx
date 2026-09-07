@@ -16,6 +16,7 @@
 //! filesystem-backed loader.
 
 use rusty_sphinx_ast::{Domain, FileId, Position, Span};
+use rusty_sphinx_entity::{EntitySchema, EntityType};
 
 /// A file read at parse time, and the identity the parser knows it by.
 ///
@@ -87,6 +88,28 @@ pub struct ParseCtx<'a> {
     pub default_domain: Domain,
     /// How to read a file named by a directive.
     pub files: &'a dyn ParseFileLoader,
+    /// The project's entity meta-model, which is what tells this parse that
+    /// `.. req::` is a directive at all.
+    ///
+    /// Empty for a project that declares no entities, in which case every
+    /// entity lookup misses and parsing behaves exactly as it did before the
+    /// feature existed.
+    pub schema: &'a EntitySchema,
+    /// The document being parsed, as the project knows it.
+    ///
+    /// Needed only by generated entity ids, which hash it so that the first
+    /// unnamed `.. req::` of two different documents cannot collide. Set by
+    /// [`crate::parse_with_ctx`] from the path it is already given, so no
+    /// caller has to remember to supply it twice.
+    pub doc_path: &'a str,
+    /// The entity type whose body is currently being parsed, if any.
+    ///
+    /// This is what makes a section sub-directive recognisable *only* inside
+    /// the entity that declares it: `.. verification-criteria::` written at
+    /// top level matches nothing and is diagnosed, rather than silently
+    /// rendering as an unknown directive. Cleared again inside a section's own
+    /// body, so sections cannot nest.
+    pub enclosing_entity: Option<&'a EntityType>,
     /// Where the current line slice came from, or `None` when it came from
     /// nowhere in the source — see [`Self::synthetic`].
     origin: Option<Origin>,
@@ -124,10 +147,47 @@ impl<'a> ParseCtx<'a> {
         Self {
             default_domain,
             files,
+            schema: EntitySchema::empty_ref(),
+            doc_path: "",
+            enclosing_entity: None,
             origin: Some(Origin { line: 1, column: 1 }),
             file: None,
             current_file: None,
             include_stack: &[],
+        }
+    }
+
+    /// The same context, parsing the document at `doc_path`.
+    #[must_use]
+    pub(crate) fn for_document(&self, doc_path: &'a str) -> Self {
+        Self { doc_path, ..*self }
+    }
+
+    /// The same context, parsing against `schema`.
+    #[must_use]
+    pub fn with_schema(self, schema: &'a EntitySchema) -> Self {
+        Self { schema, ..self }
+    }
+
+    /// The context for parsing the body of an entity of `entity_type`.
+    #[must_use]
+    pub(crate) fn inside_entity(&self, entity_type: &'a EntityType) -> Self {
+        Self {
+            enclosing_entity: Some(entity_type),
+            ..*self
+        }
+    }
+
+    /// The context for parsing a section's own body.
+    ///
+    /// Clears the enclosing entity, so a section sub-directive written inside
+    /// a section is not recognised — sections are one level deep by design,
+    /// and the alternative is a nesting whose rendering has no meaning.
+    #[must_use]
+    pub(crate) fn outside_entity(&self) -> Self {
+        Self {
+            enclosing_entity: None,
+            ..*self
         }
     }
 
@@ -179,6 +239,9 @@ impl<'a> ParseCtx<'a> {
         ParseCtx {
             default_domain: self.default_domain,
             files: self.files,
+            schema: self.schema,
+            doc_path: self.doc_path,
+            enclosing_entity: self.enclosing_entity,
             origin: Some(Origin { line: 1, column: 1 }),
             file: Some(file),
             current_file: Some(id),

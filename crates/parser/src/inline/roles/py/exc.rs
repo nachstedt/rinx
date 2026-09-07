@@ -26,6 +26,7 @@ mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
     use rusty_sphinx_ast::TargetSearchOrder;
+    use rusty_sphinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_exc_match_resolves_exc_role() {
@@ -79,7 +80,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_exc_variant_bare_uses_default_domain() {
-        let result = handle_inline_match("exc", ":exc:`GreeterError`", None, Domain::Py);
+        let result = handle_inline_match(
+            "exc",
+            ":exc:`GreeterError`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -94,7 +101,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_exc_variant_explicit_py_domain() {
-        let result = handle_inline_match("exc", ":py:exc:`GreeterError`", None, Domain::C);
+        let result = handle_inline_match(
+            "exc",
+            ":py:exc:`GreeterError`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -109,7 +122,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_exc_variant_falls_back_to_text_when_unresolvable() {
-        let result = handle_inline_match("exc", ":exc:`GreeterError`", None, Domain::C);
+        let result = handle_inline_match(
+            "exc",
+            ":exc:`GreeterError`",
+            None,
+            Domain::C,
+            &EntitySchema::empty(),
+        );
         assert_eq!(result, InlineNode::Text(":exc:`GreeterError`".to_string()));
     }
 }

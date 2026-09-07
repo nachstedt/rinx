@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `rusty-sphinx` is a Rust re-implementation of (a subset of) the Sphinx documentation generator, designed to be fast and to integrate natively with Bazel as a first-class, cache-friendly build step (not a wrapped external tool). It parses reStructuredText (`.rst`) into HTML documentation sites, with cross-file references, toctree-based navigation, and PlantUML diagram rendering.
 
-Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`); `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl` and `rusty_sphinx_toctree` aren't part of architecture.md's crate split (that doc is aspirational and predates all four), the other five match it. The `rusty_sphinx_lsp` crate architecture.md also describes is not yet built.
+Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_entity`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`); `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree` and `rusty_sphinx_entity` aren't part of architecture.md's crate split (that doc is aspirational and predates all five), the other five match it. The `rusty_sphinx_lsp` crate architecture.md also describes is not yet built.
 
 ## Commands
 
@@ -82,6 +82,14 @@ Four independent dependency mechanisms, don't confuse them:
 - **`parse_data` on `rusty_sphinx_library`** — files, not documents: everything the *parser* reads *at parse time*. That is the `.csv` behind a `.. csv-table:: :file:`, and the sources `.. include::` and `.. literalinclude::` splice into a document. They join the parse action's inputs, so a path resolves inside the sandbox; an undeclared file is simply absent and the parse fails. Nothing about this is a dependency on another library. Two traps worth knowing: an `.rst` reached by `.. include::` must **not** also appear in `srcs`, or it is published as a page of its own as well as being spliced in; and a `.. toctree::` written *inside* an included fragment still needs its documents in `deps`, because `validate_toctree` runs on the already-merged AST. Unlike `images` below there is no cache firewall here — an included file's text really is part of the including document, so editing it re-parses and re-renders every page that includes it.
 - **`images` on `rusty_sphinx_library`** — the pictures a `.. image::`/`.. figure::` shows. Unlike `parse_data` these are *not* parse-action inputs: parsing succeeds whether or not the file exists, because nothing reads it then. They ride the provider to the site rule, which copies them into `_images/` keeping their source-root-relative path (not Sphinx's flattened basename — see `docs/decisions/007-image-assets.md`), and an undeclared one fails the site's `validate_images` action. A `:loading: embed` image is additionally read by the per-document `embed_assets` action described below.
 
+- **`entity_schema` on both rules** — the project's construct vocabulary, not
+  content. Read at *parse* time (it is what makes `.. req::` a directive), so it
+  is declared on `rusty_sphinx_library`, and again on `rusty_sphinx_site` whose
+  index action derives back-links from it and whose render actions read its
+  labels. Both must name the same file; a mismatch is `entity.schema-mismatch`.
+  Unlike `parse_data` there is no cache firewall and no per-directive scope:
+  editing it re-parses every document in the library.
+
 (A fifth attribute, `py_deps` on `rusty_sphinx_doctest_tests`, is *not* a mechanism of rusty-sphinx's own — it is rules_python's ordinary `py_test.deps`, surfaced so documented code is importable while doctests run. It has nothing to do with any of the above.)
 
 See `examples/BUILD.bazel` + `examples/team_a`, `examples/team_b` for a concrete two-team library/site setup, and `tests/test_strict_deps.sh` for how the strict-toctree-dep enforcement is tested (it mutates `examples/BUILD.bazel` temporarily to prove a missing dep fails the build). `tests/test_parse_data.sh` does the same for `parse_data` (checking all three of its readers: `csv-table :file:`, `include` and `literalinclude`), and `tests/test_image_data.sh` for `images`; both have to edit the referencing `.rst` as well, since Bazel does not invalidate an action when an input is merely *removed*, so the affected action must be forced to re-run before the missing file is observed. Note `examples/BUILD.bazel` declares *two* libraries in one package: `root_docs` and the `doctest_docs` it depends on — see the doctest section below for why that split exists.
@@ -137,6 +145,36 @@ Two consequences shape the code around them:
 `Directive::CodeBlock` the two inline code directives produce, tagged
 `CodeBlockSource::LiteralInclude`, because every option it adds is a parse-time
 source transform. The renderer needed no changes at all.
+
+### Entities: a project's own construct vocabulary (`docs/entities.md`, `docs/decisions/009-entities.md`)
+
+A project declares its own entity types — `.. req::`, `.. audit-event::`,
+whatever it names — in a schema file, and the build treats them as first-class
+constructs. `docs/entities.md` is the guide; the two things to know before
+touching the code:
+
+- **Four kinds of declaration, and they are not interchangeable.**
+  *Attributes* are values (typed, validated, indexed, never parsed as RST);
+  *sections* are documents (fully-parsed RST, not indexed) and are what this
+  model adds over sphinx-needs; *relations* are edges declared on the type that
+  carries them, with back-links **derived** project-wide, never declared;
+  *roles* are optional sugar, since every entity is already a `:ref:` target.
+- **The schema is a parse-time input.** It is what makes `.. req::` a directive
+  rather than an unknown name, so `entity_schema` is an attribute on
+  `rusty_sphinx_library` *and* on `rusty_sphinx_site`, and editing it re-parses
+  everything. A library parsed against a different schema than the site indexes
+  with is reported as `entity.schema-mismatch`, in both directions.
+
+`schemas/entities.schema.json` is generated from the loader's `Raw*` types
+(`cargo run -p rusty_sphinx_worker -- entity_json_schema`) and checked in, with a
+test that regenerates and compares; it gives editors completion over an
+`entities.toml` but validates only its *grammar* — every cross-reference rule
+stays in `crates/entity/src/load.rs`, which is the authority.
+
+`rusty_sphinx_entity` owns the meta-model; `rusty_sphinx_ast`'s `entity/` owns
+the instance data (`EntityId`, `AttributeValue`, `EntityBody`, `EntitySection`),
+because that is what survives into a `.ast` file. The dependency runs
+`ast → entity`, so the split cannot go the other way.
 
 ### Config vs. CLI flags (see `docs/decisions/001-template-system.md`)
 

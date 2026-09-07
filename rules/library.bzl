@@ -9,6 +9,16 @@ load("//:providers.bzl", "RustySphinxInfo")
 
 def _rusty_sphinx_library_impl(ctx):
     worker = ctx.executable._worker
+
+    # The entity schema is the vocabulary the *parser* works from: without it,
+    # a `.. req::` is an unknown directive rather than an entity. It therefore
+    # joins the parse action's inputs, and editing it re-parses every document
+    # in this library. That cost is the price of parse-time diagnostics, and is
+    # why the schema is its own attribute rather than part of `parse_data` —
+    # it is configuration, not content a single directive reads.
+    entity_schema = ctx.file.entity_schema
+    schema_args = ["--entity-schema", entity_schema.path] if entity_schema else []
+    schema_inputs = [entity_schema] if entity_schema else []
     plantuml = ctx.executable._plantuml
     ast_files = []
     svg_dirs = []
@@ -34,7 +44,7 @@ def _rusty_sphinx_library_impl(ctx):
                 "--input", src.path,
                 "--output", ast_raw.path,
                 "--default-domain", ctx.attr.default_domain,
-            ],
+            ] + schema_args,
             # `parse_data` files join the parse action's inputs because the
             # parser genuinely reads them: `.. csv-table::`'s `:file:`, and the
             # sources `.. include::`/`.. literalinclude::` splice into the
@@ -48,7 +58,7 @@ def _rusty_sphinx_library_impl(ctx):
             # included file's text becomes part of the .ast, so editing it
             # re-parses and re-renders every document that includes it. That is
             # correct — the page really did change.
-            inputs = [src] + ctx.files.parse_data,
+            inputs = [src] + ctx.files.parse_data + schema_inputs,
             outputs = [ast_raw],
             mnemonic = "RustySphinxParse",
             progress_message = "Parsing %s" % src.short_path,
@@ -218,6 +228,10 @@ rusty_sphinx_library = rule(
         "deps": attr.label_list(
             providers = [RustySphinxInfo],
             doc = "Other rusty_sphinx_library targets that are structurally included via `.. toctree::`. Not required for standard cross-references.",
+        ),
+        "entity_schema": attr.label(
+            allow_single_file = [".toml"],
+            doc = "The project's entity meta-model: the types, attributes, sections, relations and roles this library's documents may use. Read at *parse* time, since it is what makes `.. req::` a directive rather than an unknown name, so editing it re-parses every document here. Every library in a site and the site itself must name the same file — a mismatch is reported as `entity.schema-mismatch` when the index is built. Omit it for a project that declares no entities, which then behaves exactly as before this feature existed.",
         ),
         "default_domain": attr.string(
             default = "py",

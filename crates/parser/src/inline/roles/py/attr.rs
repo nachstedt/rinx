@@ -26,6 +26,7 @@ mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
     use rusty_sphinx_ast::TargetSearchOrder;
+    use rusty_sphinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_attr_match_resolves_when_domain_defines_attr_role() {
@@ -64,7 +65,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_attr_variant() {
-        let result = handle_inline_match("attr", ":attr:`Greeter.name`", None, Domain::Py);
+        let result = handle_inline_match(
+            "attr",
+            ":attr:`Greeter.name`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -79,7 +86,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_attr_variant_bang_prefix_suppresses_link() {
-        let result = handle_inline_match("attr", ":attr:`!Greeter.secret`", None, Domain::Py);
+        let result = handle_inline_match(
+            "attr",
+            ":attr:`!Greeter.secret`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
@@ -94,7 +107,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_attr_variant_tilde_prefix_shortens_display() {
-        let result = handle_inline_match("attr", ":attr:`~Greeter.name`", None, Domain::Py);
+        let result = handle_inline_match(
+            "attr",
+            ":attr:`~Greeter.name`",
+            None,
+            Domain::Py,
+            &EntitySchema::empty(),
+        );
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {

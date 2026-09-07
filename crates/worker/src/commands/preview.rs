@@ -16,8 +16,10 @@ use super::diagnostics::{
     report_diagnostic,
 };
 use super::embed_assets::embed_available_assets;
+use super::entity_schema::{load_entity_schema, load_entity_templates};
 use super::parse::parse_default_domain_flag;
-use super::parse_files::{DocumentRelativeFiles, parse_ctx};
+use super::parse_files::DocumentRelativeFiles;
+use super::parse_inputs::ParseInputs;
 use super::suppression::{
     retain_reportable, retain_reportable_highlight_errors, retain_reportable_image_errors,
     retain_reportable_links, retain_reportable_math_errors, retain_reportable_mismatches,
@@ -49,10 +51,10 @@ pub(super) fn process_preview(
     config: &config::SiteConfig,
     template_str: &str,
     doc_path: &str,
-    default_domain: ast::Domain,
-    parse_files: &DocumentRelativeFiles,
+    inputs: &ParseInputs<'_>,
+    entity_templates: &renderer::EntityTemplates,
 ) -> Result<PreviewedPage> {
-    let doc = parser::parse_with_ctx(doc_path, rst, &parse_ctx(default_domain, parse_files));
+    let doc = parser::parse_with_ctx(doc_path, rst, &inputs.ctx());
     let origin = WarningOrigin::new(doc_path, &doc.source_files);
     for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
         report_diagnostic(&origin, diagnostic);
@@ -69,8 +71,15 @@ pub(super) fn process_preview(
     // Read straight from the filesystem rather than from a sidecar: a preview
     // has the real working tree in front of it, and no build step to run.
     let embedded_assets = embed_available_assets(&doc, std::path::Path::new("."));
-    let render_output =
-        renderer::render_with_assets(&doc, &index, doc_path, config, &embedded_assets);
+    let render_output = renderer::render_with_assets(
+        &doc,
+        &index,
+        doc_path,
+        config,
+        &embedded_assets,
+        inputs.schema,
+        entity_templates,
+    );
     // Filtered here rather than by the caller so that a suppressed link is
     // invisible to *every* consumer of this function, not just the one that
     // remembers to ask.
@@ -155,16 +164,21 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     let template_str = fs::read_to_string(&template_path)
         .with_context(|| format!("Error reading template '{template_path}'"))?;
 
+    let schema = load_entity_schema(args)?;
     let page = process_preview(
         &rst,
         index_json.as_deref(),
         &site_config,
         &template_str,
         &doc_path,
-        default_domain,
-        // The editor previews a real file on disk, so `:file:` resolves
-        // against its directory exactly as it does in the `parse` subcommand.
-        &DocumentRelativeFiles::for_document(&doc_path),
+        &ParseInputs {
+            default_domain,
+            // The editor previews a real file on disk, so `:file:` resolves
+            // against its directory exactly as it does in `parse`.
+            files: &DocumentRelativeFiles::for_document(&doc_path),
+            schema: &schema,
+        },
+        &load_entity_templates(args)?,
     )?;
 
     // Preview is deliberately lenient (it renders over incomplete/WIP
@@ -193,6 +207,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_entity::EntitySchema;
 
     /// A loader rooted at a directory holding no CSV files, for the tests
     /// whose input has no `:file:` option.
@@ -216,8 +231,12 @@ mod tests {
             &config,
             template,
             "test.rst",
-            ast::Domain::Py,
-            &no_parse_files(),
+            &ParseInputs {
+                default_domain: ast::Domain::Py,
+                files: &no_parse_files(),
+                schema: &EntitySchema::empty(),
+            },
+            &renderer::EntityTemplates::new(),
         )
         .unwrap();
 
@@ -242,8 +261,12 @@ mod tests {
             &config,
             template,
             "test.rst",
-            ast::Domain::Py,
-            &no_parse_files(),
+            &ParseInputs {
+                default_domain: ast::Domain::Py,
+                files: &no_parse_files(),
+                schema: &EntitySchema::empty(),
+            },
+            &renderer::EntityTemplates::new(),
         )
         .unwrap();
 
@@ -266,8 +289,12 @@ mod tests {
             &config,
             template,
             "test.rst",
-            ast::Domain::Py,
-            &no_parse_files(),
+            &ParseInputs {
+                default_domain: ast::Domain::Py,
+                files: &no_parse_files(),
+                schema: &EntitySchema::empty(),
+            },
+            &renderer::EntityTemplates::new(),
         )
         .unwrap();
 

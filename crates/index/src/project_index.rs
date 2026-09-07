@@ -1,8 +1,8 @@
 use crate::{
-    DocumentNumbers, DocumentOutline, DocumentToctree, EquationLocation, GenIndexEntry,
-    TargetLocation,
+    DocumentNumbers, DocumentOutline, DocumentToctree, EntityRecord, EquationLocation,
+    GenIndexEntry, TargetLocation,
 };
-use rusty_sphinx_ast::{ObjectType, SectnumOptions, TargetName};
+use rusty_sphinx_ast::{EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -81,6 +81,25 @@ pub struct ProjectIndex {
     /// `.. sectnum::`.
     #[serde(default)]
     pub sectnum: BTreeMap<String, SectnumOptions>,
+    /// Every entity in the project, keyed by its id.
+    ///
+    /// Per-document data, so it merges — and a merge that finds one id twice
+    /// reports it, the way a duplicate glossary term is reported. This is the
+    /// entity *graph*: each record carries only its own outgoing edges, which
+    /// is what lets a single document's entities be merged into a stale index
+    /// on the live-preview path.
+    #[serde(default)]
+    pub entities: BTreeMap<EntityId, EntityRecord>,
+    /// Which entities point *at* each entity, keyed by the target's id and
+    /// then by the back-link's name.
+    ///
+    /// Project-wide rather than per-document, because an entity's incoming
+    /// edges come from documents it has never heard of. So, like `page_order`
+    /// and `section_numbers`, this is recomputed by `build_project_index`
+    /// rather than merged — storing it per document would be storing a
+    /// conclusion that only the whole graph can reach.
+    #[serde(default)]
+    pub entity_backlinks: BTreeMap<EntityId, BTreeMap<String, Vec<EntityId>>>,
 }
 
 impl ProjectIndex {
@@ -105,7 +124,7 @@ impl ProjectIndex {
     ///
     /// Emits a diagnostic string for each glossary term defined in both indices
     /// (case-insensitive duplicate detection). Last-writer-wins for the mapping value.
-    pub fn merge(&mut self, other: Self) -> Vec<String> {
+    pub fn merge(&mut self, other: Self) -> MergeConflicts {
         self.targets.extend(other.targets);
         self.document_titles.extend(other.document_titles);
         self.document_outlines.extend(other.document_outlines);
@@ -119,12 +138,23 @@ impl ProjectIndex {
         self.genindex_entries.extend(other.genindex_entries);
         self.equations.extend(other.equations);
         self.sectnum.extend(other.sectnum);
-        // root_documents, page_order and section_numbers are built globally from
-        // the whole graph, so they are recomputed rather than merged
-        let mut diagnostics = Vec::new();
+        // root_documents, page_order, section_numbers and entity_backlinks are
+        // built globally from the whole graph, so they are recomputed rather
+        // than merged
+        let mut conflicts = MergeConflicts::default();
+        for (id, record) in other.entities {
+            if let Some(existing) = self.entities.get(&id) {
+                conflicts.duplicate_entity_ids.push(DuplicateEntityId {
+                    id: id.clone(),
+                    first_doc: existing.doc_path.clone(),
+                    second_doc: record.doc_path.clone(),
+                });
+            }
+            self.entities.insert(id, record);
+        }
         for (term, path) in other.glossary_terms {
             if let Some(existing) = self.glossary_terms.get(&term) {
-                diagnostics.push(format!(
+                conflicts.duplicate_glossary_terms.push(format!(
                     "Duplicate glossary term '{}': defined in '{}' and '{}'. The latter definition wins.",
                     term.as_str(),
                     existing,
@@ -133,7 +163,51 @@ impl ProjectIndex {
             }
             self.glossary_terms.insert(term, path);
         }
-        diagnostics
+        conflicts
+    }
+}
+
+/// What a [`ProjectIndex::merge`] found defined twice.
+///
+/// Two fields rather than one list of messages, because the two are reported
+/// differently: a duplicate entity id becomes a coded diagnostic attributed to
+/// a document, while duplicate glossary terms have no diagnostic code yet and
+/// are still only a message. Keeping them apart means neither can be
+/// mislabelled as the other.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct MergeConflicts {
+    pub duplicate_entity_ids: Vec<DuplicateEntityId>,
+    pub duplicate_glossary_terms: Vec<String>,
+}
+
+impl MergeConflicts {
+    /// Reports whether the merge found nothing defined twice.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.duplicate_entity_ids.is_empty() && self.duplicate_glossary_terms.is_empty()
+    }
+}
+
+/// One entity id claimed by two documents.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DuplicateEntityId {
+    pub id: EntityId,
+    /// The document that defined it first, and whose definition is discarded.
+    pub first_doc: String,
+    /// The document merged in second, whose definition wins.
+    pub second_doc: String,
+}
+
+impl DuplicateEntityId {
+    /// The author-facing explanation, naming both documents and which won.
+    #[must_use]
+    pub fn message(&self) -> String {
+        format!(
+            "Duplicate entity id '{}': defined in '{}' and '{}'. The latter definition wins.",
+            self.id.as_str(),
+            self.first_doc,
+            self.second_doc,
+        )
     }
 }
 
@@ -300,12 +374,12 @@ mod tests {
             .insert(TargetName::new("environment"), "other.rst".to_string());
 
         // When
-        let diagnostics = idx1.merge(idx2);
+        let conflicts = idx1.merge(idx2);
 
         // Then
-        assert_eq!(diagnostics.len(), 1);
-        assert!(diagnostics[0].contains("Duplicate glossary term"));
-        assert!(diagnostics[0].contains("environment"));
+        assert_eq!(conflicts.duplicate_glossary_terms.len(), 1);
+        assert!(conflicts.duplicate_glossary_terms[0].contains("Duplicate glossary term"));
+        assert!(conflicts.duplicate_glossary_terms[0].contains("environment"));
         // Last-writer-wins: idx2's path should be kept
         assert_eq!(
             idx1.glossary_terms.get(&TargetName::new("environment")),
@@ -399,10 +473,14 @@ mod tests {
             .insert(TargetName::new("environment"), "b.rst".to_string());
 
         // When
-        let diagnostics = idx1.merge(idx2);
+        let conflicts = idx1.merge(idx2);
 
         // Then
-        assert_eq!(diagnostics.len(), 1, "Expected duplicate diagnostic");
+        assert_eq!(
+            conflicts.duplicate_glossary_terms.len(),
+            1,
+            "Expected duplicate diagnostic"
+        );
     }
 
     #[test]

@@ -160,7 +160,11 @@ mod tests {
 
     /// Builds the index for `docs` and collects their diagnostics.
     fn diagnose(docs: &[Document]) -> Vec<DocumentDiagnostics> {
-        let index = super::super::build_project_index(docs, "index");
+        let index = super::super::build_project_index(
+            docs,
+            "index",
+            &rusty_sphinx_entity::EntitySchema::empty(),
+        );
         collect_nav_diagnostics(docs, &index)
     }
 

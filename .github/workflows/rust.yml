@@ -67,6 +67,9 @@ jobs:
     - name: Run image data test
       run: ./tests/test_image_data.sh
 
+    - name: Run entity schema test
+      run: ./tests/test_entity_schema.sh
+
     - name: Run doctest isolation test
       run: ./tests/test_doctest_isolation.sh
 

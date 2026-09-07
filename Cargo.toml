@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["crates/cdecl", "crates/ast", "crates/scope",
-    "crates/toctree", "crates/index", "crates/parser", "crates/analyzer", "crates/renderer", "crates/worker"]
+    "crates/toctree", "crates/entity", "crates/index", "crates/parser", "crates/analyzer", "crates/renderer", "crates/worker"]
 
 [workspace.package]
 edition = "2024"

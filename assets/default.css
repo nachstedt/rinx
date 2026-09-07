@@ -972,6 +972,281 @@ dl.py dd > p.deprecated {
   margin-bottom: 0.5rem;
 }
 
+/* ── Entities (project-declared types) ─────────────────────────────── */
+
+/* A card, like an admonition, since an entity is a self-contained block that
+   interrupts the prose around it. The accent is on the left edge for the same
+   reason, and the type badge repeats the colour so the two read as one unit. */
+.entity {
+  margin: 2rem 0;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--bg-sidebar);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* The header is a flex row so its three parts separate on their own, and the
+   id can sit at the far end without markup that says so. `wrap` keeps it
+   readable when the title is long or the viewport narrow. */
+.entity-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.875rem 1.25rem;
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border);
+}
+
+.entity-type {
+  flex: none;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.entity-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-header);
+}
+
+/* Monospace and muted: an id is a token to copy, not prose to read. */
+.entity-id {
+  flex: none;
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Hover-reveal permalink, mirroring dl.glossary dt::after. */
+.entity:hover > .entity-header > .entity-id::after {
+  content: " ¶";
+  color: var(--primary);
+}
+
+/* A key/value list rather than tabular data, so it opts out of the page's
+   table styling: no grid, no zebra stripes, no full-bleed width. */
+.document table.entity-attributes {
+  width: auto;
+  margin: 1rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+.document table.entity-attributes tbody tr:nth-child(even) {
+  background: none;
+}
+
+.document table.entity-attributes th,
+.document table.entity-attributes td {
+  padding: 0.3rem 0.75rem 0.3rem 0;
+  text-align: left;
+  vertical-align: top;
+  border: none;
+}
+
+.document table.entity-attributes th {
+  width: 1%;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.entity-content,
+.entity-section {
+  padding: 0 1.25rem;
+}
+
+.entity-content > :first-child,
+.entity-section > .entity-section-label + * {
+  margin-top: 0;
+}
+
+/* A section is a labelled sub-part, so it gets a rule above it and a heading
+   that is unmistakably a heading — the complaint the built-in rendering
+   originally invited was that this looked like ordinary body text. */
+.entity-section {
+  margin-top: 1rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--border);
+}
+
+.entity-section-label {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.entity-links {
+  margin-top: 1rem;
+  padding: 0.875rem 1.25rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--bg-main);
+}
+
+.entity-link-label {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.entity-link-label:first-child {
+  margin-top: 0;
+}
+
+/* Inline, comma-free: these are short id tokens, and a bulleted column of them
+   wastes a lot of vertical space on an entity with several relations. */
+.entity-link-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.entity-link-list li {
+  margin: 0;
+}
+
+.entity-link-list a,
+.entity-link-list .broken-link {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-sidebar);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.entity-link-list .broken-link {
+  border-style: dashed;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* An anchored entity is highlighted, as a targeted glossary term is. */
+.entity:target {
+  border-left-color: #f59e0b;
+}
+
+.entity:target > .entity-header {
+  background: #fffbeb;
+}
+
+/* Inline references produced by an entity role. */
+.document a .xref.entity {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+
+
+/* The disclosure a collapsible type folds its detail into. Collapsed, only the
+   header and the leading prose remain — everything a reader needs to scan a
+   long page of entities. */
+.entity-more {
+  border-top: 1px solid var(--border);
+}
+
+.entity-more-toggle {
+  cursor: pointer;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-main);
+  outline: none;
+}
+
+.entity-more-toggle:hover {
+  color: var(--primary);
+}
+
+/* The disclosure's own children already carry the dividers, so the summary
+   must not add a second rule directly above the first of them. */
+.entity-more[open] > .entity-more-toggle {
+  border-bottom: 1px solid var(--border);
+}
+
+.entity-more > .entity-attributes {
+  margin-top: 0.875rem;
+}
+
+.entity-more > .entity-section:first-of-type,
+.entity-more > .entity-links {
+  border-top: none;
+}
+
+/* ── Audit events ──────────────────────────────────────────────────── */
+
+/* The counter-example to the entity box: `audit-event` reads as prose, so it
+   gets a rule and an indent rather than a card. Enough to group each event
+   with the description that follows it — without which a page of them is an
+   undifferentiated run of paragraphs — and no more. */
+.audit-event {
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--border);
+}
+
+.audit-event:first-of-type {
+  margin-top: 2rem;
+}
+
+.audit-event > p:first-child {
+  margin-top: 0;
+}
+
+.audit-event > :last-child {
+  margin-bottom: 0;
+}
+
+/* The event's name is the thing a reader scans for, so it carries the accent;
+   its arguments are supporting detail and stay muted.
+   `.document` is on both selectors because `.document code` already sets a
+   colour at that specificity — the bare class silently lost to it. */
+.document .audit-event-name {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.document .audit-event-args {
+  color: var(--text-muted);
+}
+
+.audit-event-version {
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
+
+/* Anchored by a reference, highlighted the same way an entity is. */
+.audit-event:target {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+}
+
 /* ── Option Lists ──────────────────────────────────────────────────── */
 
 dl.option-list {

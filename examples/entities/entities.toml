@@ -1,0 +1,214 @@
+#:schema ../../schemas/entities.schema.json
+#
+# A worked entity meta-model.
+#
+# The first half reproduces sphinx-needs' built-in vocabulary closely enough
+# that an existing project can migrate by choosing a schema rather than by
+# changing its documents. The second half is CPython's `.. audit-event::`,
+# which is here to prove the model is not sphinx-needs in disguise: it maps a
+# comma-separated signature onto three attributes and derives its id from one
+# of them, neither of which sphinx-needs can express.
+
+# ── Requirements ────────────────────────────────────────────────────
+
+[[entity_type]]
+name = "req"
+label = "Requirement"
+argument = { fields = ["title"] }
+id = { prefix = "REQ_" }
+
+
+# `title` is an ordinary attribute; nothing about the name is privileged in
+# the schema. The rendering convention is that an attribute called `title`
+# becomes the entity's heading rather than a row of its field table.
+[[entity_type.attribute]]
+name = "title"
+label = "Title"
+type = "string"
+[[entity_type.attribute]]
+name = "status"
+label = "Status"
+type = "enum"
+values = ["open", "in_progress", "closed"]
+default = "open"
+
+[[entity_type.attribute]]
+name = "tags"
+label = "Tags"
+type = "list<string>"
+
+[[entity_type.attribute]]
+name = "owner"
+label = "Owner"
+type = "string"
+required = true
+
+# Sections are the part that goes beyond sphinx-needs: their content is
+# fully-parsed RST, not a string, so it may hold nested directives,
+# cross-references, code blocks — anything a document may hold.
+[[entity_type.section]]
+name = "verification-criteria"
+label = "Verification criteria"
+required = true
+
+[[entity_type.section]]
+name = "safety-comment"
+label = "Safety comment"
+multiple = true
+
+[[entity_type.relation]]
+name = "links"
+label = "Links to"
+to = ["spec", "impl"]
+multiple = true
+incoming = "linked_by"
+incoming_label = "Linked by"
+
+[[entity_type.relation]]
+name = "supersedes"
+label = "Supersedes"
+to = ["req"]
+incoming = "superseded_by"
+incoming_label = "Superseded by"
+
+# ── Specifications ──────────────────────────────────────────────────
+
+[[entity_type]]
+name = "spec"
+label = "Specification"
+argument = { fields = ["title"] }
+id = { prefix = "SPEC_" }
+
+
+# `title` is an ordinary attribute; nothing about the name is privileged in
+# the schema. The rendering convention is that an attribute called `title`
+# becomes the entity's heading rather than a row of its field table.
+[[entity_type.attribute]]
+name = "title"
+label = "Title"
+type = "string"
+[[entity_type.attribute]]
+name = "status"
+label = "Status"
+type = "enum"
+values = ["draft", "approved"]
+default = "draft"
+
+[[entity_type.section]]
+name = "rationale"
+label = "Rationale"
+
+[[entity_type.relation]]
+name = "implemented_by"
+label = "Implemented by"
+to = ["impl"]
+multiple = true
+incoming = "implements"
+incoming_label = "Implements"
+
+# ── Implementations ─────────────────────────────────────────────────
+
+[[entity_type]]
+name = "impl"
+label = "Implementation"
+argument = { fields = ["title"] }
+id = { prefix = "IMPL_" }
+
+
+# `title` is an ordinary attribute; nothing about the name is privileged in
+# the schema. The rendering convention is that an attribute called `title`
+# becomes the entity's heading rather than a row of its field table.
+[[entity_type.attribute]]
+name = "title"
+label = "Title"
+type = "string"
+[[entity_type.attribute]]
+name = "module"
+label = "Module"
+type = "string"
+
+# ── Tests ───────────────────────────────────────────────────────────
+
+[[entity_type]]
+name = "test"
+label = "Test case"
+argument = { fields = ["title"] }
+id = { prefix = "TEST_" }
+
+
+# `title` is an ordinary attribute; nothing about the name is privileged in
+# the schema. The rendering convention is that an attribute called `title`
+# becomes the entity's heading rather than a row of its field table.
+[[entity_type.attribute]]
+name = "title"
+label = "Title"
+type = "string"
+[[entity_type.attribute]]
+name = "automated"
+label = "Automated"
+type = "bool"
+default = "true"
+
+[[entity_type.relation]]
+name = "verifies"
+label = "Verifies"
+to = ["req"]
+required = true
+multiple = true
+incoming = "verified_by"
+incoming_label = "Verified by"
+
+# ── CPython's audit events ──────────────────────────────────────────
+
+[[entity_type]]
+name = "audit-event"
+label = "Audit event"
+# A comma-separated signature rather than a title, and an id built out of the
+# first field instead of generated.
+argument = { fields = ["name", "args", "version"], split = "comma" }
+# Renders as prose rather than as a titled box; the file is supplied by the
+# site's `entity_templates` attribute, and referred to here by name only.
+template = "entity_audit_event.html"
+id = { from = ["name"] }
+
+[[entity_type.attribute]]
+name = "name"
+label = "Event"
+type = "string"
+
+[[entity_type.attribute]]
+name = "args"
+label = "Arguments"
+type = "string"
+
+[[entity_type.attribute]]
+name = "version"
+label = "Added in"
+type = "string"
+
+# ── Roles ───────────────────────────────────────────────────────────
+#
+# Optional: every entity is reachable by `:ref:` and by the built-in
+# `:entity:` role without any of these. What a declared role adds is the type
+# check on the link, and the spelling an existing project already writes.
+
+[[role]]
+name = "req"
+types = ["req"]
+
+[[role]]
+name = "spec"
+types = ["spec"]
+
+[[role]]
+name = "test"
+types = ["test"]
+
+# sphinx-needs' own spelling, which refers to any of the four.
+[[role]]
+name = "need"
+types = ["req", "spec", "impl", "test"]
+
+[[role]]
+name = "audit-event"
+types = ["audit-event"]

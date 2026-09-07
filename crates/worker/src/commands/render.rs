@@ -12,6 +12,7 @@ use super::diagnostics::{
     format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
     format_object_type_mismatch_warning,
 };
+use super::entity_schema::{load_entity_schema, load_entity_templates};
 use super::suppression::{
     retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
     retain_reportable_math_errors, retain_reportable_mismatches,
@@ -35,6 +36,18 @@ pub(super) struct RenderedPage {
     pub math_errors: Vec<renderer::MathError>,
     pub highlight_errors: Vec<renderer::HighlightError>,
     pub image_errors: Vec<renderer::ImageError>,
+    /// Entity templates the schema named but the site could not use.
+    pub entity_template_errors: Vec<String>,
+}
+
+/// The entity-side inputs a render works from.
+///
+/// One value rather than two parameters, because they are read together and by
+/// nothing else: the schema supplies the vocabulary and the labels, and the
+/// templates supply the presentation a type may ask for by name.
+pub(super) struct EntityInputs<'a> {
+    pub schema: &'a rusty_sphinx_entity::EntitySchema,
+    pub templates: &'a renderer::EntityTemplates,
 }
 
 pub(super) fn process_render(
@@ -44,14 +57,22 @@ pub(super) fn process_render(
     template_str: &str,
     doc_path: &str,
     embedded_assets: &renderer::EmbeddedAssets,
+    entities: &EntityInputs<'_>,
 ) -> Result<RenderedPage> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
     let index: rusty_sphinx_index::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
 
-    let render_output =
-        renderer::render_with_assets(&doc, &index, doc_path, config, embedded_assets);
+    let render_output = renderer::render_with_assets(
+        &doc,
+        &index,
+        doc_path,
+        config,
+        embedded_assets,
+        entities.schema,
+        entities.templates,
+    );
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc
@@ -101,6 +122,10 @@ pub(super) fn process_render(
             &render_output.image_errors,
             &doc.suppressions,
         ),
+        // Not filtered by `.. noqa:`: a misconfigured template is a fault in
+        // the *site*, not in any document, so no document's comment should be
+        // able to silence it.
+        entity_template_errors: render_output.entity_template_errors,
         source_path: doc.path,
         source_files: doc.source_files,
     })
@@ -142,6 +167,8 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
         None => renderer::EmbeddedAssets::new(),
     };
 
+    let schema = load_entity_schema(args)?;
+    let entity_templates = load_entity_templates(args)?;
     let page = process_render(
         &ast_json,
         &index_json,
@@ -149,10 +176,25 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
         &template_str,
         &doc_path,
         &embedded_assets,
+        &EntityInputs {
+            schema: &schema,
+            templates: &entity_templates,
+        },
     )?;
 
     // Warnings name the `.rst` the document came from, not the site-relative
     // `doc_path` — a `file:line:column` is only useful if the file opens.
+    for message in &page.entity_template_errors {
+        eprintln!("error: {message}");
+    }
+    if !page.entity_template_errors.is_empty() {
+        return Err(anyhow::anyhow!(
+            "{}: {} entity template(s) could not be used",
+            page.source_path,
+            page.entity_template_errors.len()
+        ));
+    }
+
     let origin = WarningOrigin::new(&page.source_path, &page.source_files);
     for link in &page.broken_links {
         eprintln!("{}", format_broken_link_warning(&origin, link));
@@ -195,6 +237,7 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rusty_sphinx_entity::EntitySchema;
 
     #[test]
     fn test_process_render_returns_html_string() {
@@ -213,6 +256,10 @@ mod tests {
             template,
             "test.rst",
             &renderer::EmbeddedAssets::new(),
+            &EntityInputs {
+                schema: &EntitySchema::empty(),
+                templates: &renderer::EntityTemplates::new(),
+            },
         )
         .unwrap();
 
@@ -240,6 +287,10 @@ mod tests {
             template,
             "test.rst",
             &renderer::EmbeddedAssets::new(),
+            &EntityInputs {
+                schema: &EntitySchema::empty(),
+                templates: &renderer::EntityTemplates::new(),
+            },
         )
         .unwrap();
 
@@ -268,6 +319,10 @@ mod tests {
             template,
             "test.rst",
             &renderer::EmbeddedAssets::new(),
+            &EntityInputs {
+                schema: &EntitySchema::empty(),
+                templates: &renderer::EntityTemplates::new(),
+            },
         )
         .unwrap();
 

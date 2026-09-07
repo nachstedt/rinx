@@ -15,6 +15,8 @@ use super::data_table::{parse_csv_table, parse_list_table};
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
 use super::domains::{DirectiveSignatures, parse_domain_object};
+use super::entity::{EntityDirective, parse_entity};
+use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::glossary::parse_glossary;
 use super::image::{parse_figure_directive, parse_image_directive};
 use super::include::parse_include;
@@ -94,6 +96,26 @@ pub(crate) fn try_parse_directive(
             1 + continuations_consumed + body.consumed,
             vec![Node::Directive(Directive::DomainObject(domain_object))],
         ));
+    }
+
+    // Checked here rather than in the `if name ==` chain below because an
+    // entity type is a *vocabulary* lookup, like a domain object's, not a
+    // fixed name — and because the entity parser needs the directive's own
+    // line to discriminate a generated id.
+    if let Some(result) = try_parse_entity_directive(
+        &name,
+        &argument,
+        &DirectiveSite {
+            lines,
+            index: i,
+            line,
+            min_indent,
+        },
+        adornment_order,
+        diagnostics,
+        ctx,
+    ) {
+        return Some(result);
     }
 
     let body = collect_directive_body(lines, i + 1, min_indent);
@@ -211,6 +233,60 @@ fn try_parse_sectnum(
     )))
 }
 
+/// Where in the source a directive marker sits, and the lines it may claim.
+///
+/// One value rather than four parameters, because every one of them is read
+/// only to answer the same question — how far this directive's body reaches
+/// and where its diagnostics point.
+struct DirectiveSite<'a> {
+    /// The whole line slice being parsed.
+    lines: &'a [&'a str],
+    /// The marker's index within it.
+    index: usize,
+    /// The marker line itself.
+    line: &'a str,
+    /// The indent the body must exceed.
+    min_indent: usize,
+}
+
+/// Parses `.. <type>::` when the schema declares an entity type of that name.
+///
+/// Split out of [`try_parse_directive`] purely to keep that function's line
+/// count readable, the same reason `try_parse_contents_family` exists.
+fn try_parse_entity_directive(
+    name: &str,
+    argument: &str,
+    site: &DirectiveSite<'_>,
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<(usize, Vec<Node>)> {
+    let entity_type = ctx.schema.entity_type(name)?;
+    let &DirectiveSite {
+        lines,
+        index: i,
+        line,
+        min_indent,
+    } = site;
+    let body = collect_directive_body(lines, i + 1, min_indent);
+    let body_ctx = ctx.nested(i + 1 + body.first_line_offset, body_indent(&body.lines));
+    let discriminator = ctx.position(i, 0).map_or(0, |position| position.line);
+    let directive = parse_entity(
+        &EntityDirective {
+            entity_type,
+            argument,
+            span: ctx.line_span(i, line),
+            body_lines: &body.lines,
+            discriminator,
+            doc_path: ctx.doc_path,
+        },
+        adornment_order,
+        diagnostics,
+        &body_ctx,
+    );
+    Some((1 + body.consumed, vec![Node::Directive(directive)]))
+}
+
 fn parse_body_directive(
     name: String,
     argument: String,
@@ -230,9 +306,47 @@ fn parse_body_directive(
     ) {
         return node;
     }
+    if let Some(node) = try_parse_entity_section(
+        &name,
+        &argument,
+        &EntitySectionSite {
+            span: directive_span,
+            body_lines,
+        },
+        adornment_order,
+        diagnostics,
+        ctx,
+    ) {
+        return node;
+    }
     if let Some(node) = try_parse_contents_family(&name, &argument, body_lines, diagnostics, ctx) {
         return node;
     }
+    parse_remaining_body_directive(
+        name,
+        argument,
+        directive_span,
+        body_lines,
+        adornment_order,
+        diagnostics,
+        ctx,
+    )
+}
+
+/// The rest of the directive chain, from `.. sectnum::` onwards.
+///
+/// Split from [`parse_body_directive`] only to keep both under the line limit
+/// as the chain grows; the order across the two is the order a name is tried
+/// in, and nothing else distinguishes them.
+fn parse_remaining_body_directive(
+    name: String,
+    argument: String,
+    directive_span: Option<rusty_sphinx_ast::Span>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Node {
     if let Some(node) = try_parse_sectnum(&name, &argument, body_lines, diagnostics, ctx) {
         return node;
     }
@@ -759,5 +873,246 @@ mod tests {
         };
         assert_eq!(block.language, CodeLanguage::Inherit);
         assert_eq!(block.content, "x = 1");
+    }
+}
+
+/// Every directive name this build already dispatches.
+///
+/// Kept beside the chain above deliberately: the two are edited together, and
+/// a name added there without being added here would let a project declare an
+/// entity section that silently shadows it. `is_builtin_directive_name` is the
+/// only consumer — the entity schema loader asks it through the worker, rather
+/// than `rusty_sphinx_entity` keeping a copy that could drift.
+///
+/// Domain-object and scope directive names are included: they are resolved by
+/// [`resolve_domain_object_type`] and [`try_parse_scope_directive`] rather than
+/// by the chain, but they are just as much names a section must not take.
+const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
+    // Admonitions
+    "attention",
+    "caution",
+    "danger",
+    "error",
+    "hint",
+    "important",
+    "note",
+    "tip",
+    "warning",
+    "admonition",
+    "seealso",
+    // Version changes
+    "versionadded",
+    "versionchanged",
+    "deprecated",
+    // Doctests
+    "doctest",
+    "testcode",
+    "testoutput",
+    "testsetup",
+    "testcleanup",
+    // Code
+    "code-block",
+    "code",
+    "literalinclude",
+    "highlight",
+    // Images
+    "image",
+    "figure",
+    // Tables
+    "list-table",
+    "csv-table",
+    "table",
+    // Navigation and structure
+    "toctree",
+    "contents",
+    "sectnum",
+    "section-numbering",
+    "include",
+    "glossary",
+    "index",
+    // Other content
+    "plantuml",
+    "math",
+    // Domain objects and scope directives
+    "function",
+    "decorator",
+    "module",
+    "data",
+    "method",
+    "classmethod",
+    "staticmethod",
+    "decoratormethod",
+    "class",
+    "attribute",
+    "exception",
+    "macro",
+    "struct",
+    "union",
+    "member",
+    "var",
+    "type",
+    "option",
+    "cmdoption",
+    "currentmodule",
+    "program",
+    "namespace",
+    "namespace-push",
+    "namespace-pop",
+];
+
+/// Reports whether `name` is a directive this build already understands.
+///
+/// Used by the entity schema loader to refuse a section that would shadow one.
+/// Matches the bare name only: a domain-qualified spelling like `py:class`
+/// cannot collide with a section name, which never carries a colon.
+#[must_use]
+pub fn is_builtin_directive_name(name: &str) -> bool {
+    BUILTIN_DIRECTIVE_NAMES.contains(&name)
+}
+
+#[cfg(test)]
+mod builtin_name_tests {
+    use super::*;
+
+    /// The names derived from an enum elsewhere in the workspace, which is
+    /// where silent drift is likeliest: adding an `AdmonitionKind` variant is a
+    /// one-line change that would otherwise leave this list stale and let a
+    /// project declare a section shadowing the new directive.
+    ///
+    /// The hand-written remainder of `BUILTIN_DIRECTIVE_NAMES` is maintained
+    /// with the dispatch chain above, which is why the two sit in one file.
+    #[test]
+    fn test_every_admonition_kind_is_reserved() {
+        // Given — one per `AdmonitionKind`, via its own `FromStr`
+        let names = [
+            "attention",
+            "caution",
+            "danger",
+            "error",
+            "hint",
+            "important",
+            "note",
+            "tip",
+            "warning",
+            "admonition",
+        ];
+
+        // When / Then
+        for name in names {
+            assert!(
+                name.parse::<rusty_sphinx_ast::AdmonitionKind>().is_ok(),
+                "`{name}` is no longer an admonition; this list is stale"
+            );
+            assert!(
+                is_builtin_directive_name(name),
+                "admonition `{name}` is not reserved"
+            );
+        }
+    }
+
+    #[test]
+    fn test_every_version_change_kind_is_reserved() {
+        // Given
+        let names = ["versionadded", "versionchanged", "deprecated"];
+
+        // When / Then
+        for name in names {
+            assert!(
+                name.parse::<rusty_sphinx_ast::VersionChangeKind>().is_ok(),
+                "`{name}` is no longer a version change; this list is stale"
+            );
+            assert!(
+                is_builtin_directive_name(name),
+                "version change `{name}` is not reserved"
+            );
+        }
+    }
+
+    #[test]
+    fn test_every_doctest_directive_is_reserved() {
+        // Given
+        let names = [
+            "doctest",
+            "testcode",
+            "testoutput",
+            "testsetup",
+            "testcleanup",
+        ];
+
+        // When / Then
+        for name in names {
+            assert!(
+                DocTestDirectiveKind::from_name(name).is_some(),
+                "`{name}` is no longer a doctest directive; this list is stale"
+            );
+            assert!(
+                is_builtin_directive_name(name),
+                "doctest directive `{name}` is not reserved"
+            );
+        }
+    }
+
+    #[test]
+    fn test_every_domain_object_directive_name_is_reserved() {
+        // Given — both domains, since a bare name resolves through either
+        let domains = [rusty_sphinx_ast::Domain::Py, rusty_sphinx_ast::Domain::C];
+
+        // When / Then
+        for domain in domains {
+            for name in [
+                "function",
+                "module",
+                "data",
+                "method",
+                "class",
+                "attribute",
+                "exception",
+                "macro",
+                "struct",
+                "union",
+                "member",
+                "type",
+                "option",
+            ] {
+                if resolve_domain_object_type(name, domain).is_some() {
+                    assert!(
+                        is_builtin_directive_name(name),
+                        "domain object directive `{name}` is not reserved"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_the_reserved_list_holds_no_duplicates() {
+        // Given
+        let mut seen: Vec<&str> = Vec::new();
+
+        // When / Then
+        for name in BUILTIN_DIRECTIVE_NAMES {
+            assert!(!seen.contains(name), "`{name}` is listed twice");
+            seen.push(name);
+        }
+    }
+
+    #[test]
+    fn test_a_name_no_directive_uses_is_not_reserved() {
+        // Given / When / Then
+        assert!(!is_builtin_directive_name("verification-criteria"));
+        assert!(!is_builtin_directive_name("req"));
+        assert!(!is_builtin_directive_name("safety-comment"));
+    }
+
+    #[test]
+    fn test_a_representative_directive_name_from_each_family_is_reserved() {
+        // Given / When / Then
+        assert!(is_builtin_directive_name("note"));
+        assert!(is_builtin_directive_name("toctree"));
+        assert!(is_builtin_directive_name("csv-table"));
+        assert!(is_builtin_directive_name("code-block"));
+        assert!(is_builtin_directive_name("image"));
+        assert!(is_builtin_directive_name("include"));
+        assert!(is_builtin_directive_name("currentmodule"));
     }
 }

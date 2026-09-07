@@ -1,0 +1,20 @@
+# Associates every entity schema file with the JSON Schema generated from the
+# `Raw*` types in `crates/entity/src/load.rs`, so an editor with TOML support
+# (taplo, or VS Code's Even Better TOML) offers completions and flags shape
+# errors while the file is being written.
+#
+# The schema validates the *grammar* only — table structure, field names and
+# types, the seven attribute type spellings, unknown keys. Every rule that is a
+# cross-reference within the document (a relation's `to` naming a declared type,
+# `argument.fields` naming a declared attribute, duplicate names, back-link
+# clashes) stays in the loader, which is the authority. A clean editor does not
+# mean a schema that loads.
+#
+# Regenerate the schema after changing those types:
+#   cargo run -p rusty_sphinx_worker -- entity_json_schema > schemas/entities.schema.json
+# A test in `rusty_sphinx_entity` fails if it is stale.
+
+[[rule]]
+name = "rusty-sphinx entity schema"
+include = ["**/entities.toml"]
+schema.path = "schemas/entities.schema.json"

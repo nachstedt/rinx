@@ -7,7 +7,9 @@ use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{WarningOrigin, report_diagnostic};
-use super::parse_files::{DocumentRelativeFiles, parse_ctx};
+use super::entity_schema::load_entity_schema;
+use super::parse_files::DocumentRelativeFiles;
+use super::parse_inputs::ParseInputs;
 use super::suppression::retain_reportable;
 
 /// `parse_files` is injected rather than built here so this stays the pure,
@@ -16,10 +18,13 @@ use super::suppression::retain_reportable;
 pub(super) fn process_parse(
     path: &str,
     rst_content: &str,
-    default_domain: ast::Domain,
-    parse_files: &DocumentRelativeFiles,
+    inputs: &ParseInputs<'_>,
 ) -> Result<String> {
-    let doc = parser::parse_with_ctx(path, rst_content, &parse_ctx(default_domain, parse_files));
+    let mut doc = parser::parse_with_ctx(path, rst_content, &inputs.ctx());
+    // Stamped here rather than inside the parser: it identifies the *build's*
+    // schema, and only the worker knows which file that came from. The index
+    // phase compares it against its own.
+    doc.entity_schema_hash = inputs.schema_hash();
     // The document's own `.. noqa:` comments decide what is worth showing.
     let origin = WarningOrigin::new(path, &doc.source_files);
     for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
@@ -65,7 +70,16 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     // which under Bazel is the sandbox location of the declared source — see
     // `parse_files`.
     let parse_files = DocumentRelativeFiles::for_document(&input);
-    let json = process_parse(&input, &rst, default_domain, &parse_files)?;
+    let schema = load_entity_schema(args)?;
+    let json = process_parse(
+        &input,
+        &rst,
+        &ParseInputs {
+            default_domain,
+            files: &parse_files,
+            schema: &schema,
+        },
+    )?;
 
     // A file that could not be read means a whole table or section is missing
     // from the page, so the build fails rather than shipping the gap — the
@@ -103,8 +117,16 @@ mod tests {
         let rst = "Title\n=====";
 
         // When
-        let json =
-            process_parse("team_a/index.rst", rst, ast::Domain::Py, &no_parse_files()).unwrap();
+        let json = process_parse(
+            "team_a/index.rst",
+            rst,
+            &ParseInputs {
+                default_domain: ast::Domain::Py,
+                files: &no_parse_files(),
+                schema: &rusty_sphinx_entity::EntitySchema::empty(),
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(json.contains("Title"));
@@ -117,7 +139,16 @@ mod tests {
         let rst = ".. function:: greet(name)\n\n   Greets the given name.";
 
         // When
-        let json = process_parse("api.rst", rst, ast::Domain::C, &no_parse_files()).unwrap();
+        let json = process_parse(
+            "api.rst",
+            rst,
+            &ParseInputs {
+                default_domain: ast::Domain::C,
+                files: &no_parse_files(),
+                schema: &rusty_sphinx_entity::EntitySchema::empty(),
+            },
+        )
+        .unwrap();
 
         // Then
         assert!(json.contains(r#""CFunction""#));

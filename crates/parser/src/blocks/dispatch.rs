@@ -73,7 +73,7 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     // a stray paragraph.
     let (metadata, metadata_lines) = super::docinfo::split_document_metadata(&all_lines);
     let lines = &all_lines[metadata_lines..];
-    let ctx = &ctx.nested(metadata_lines, 0);
+    let ctx = &ctx.nested(metadata_lines, 0).for_document(path);
 
     let mut adornment_order: Vec<Adornment> = Vec::new();
     let mut diagnostics = Diagnostics::default();

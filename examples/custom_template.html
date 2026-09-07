@@ -527,6 +527,198 @@
       border-radius: 4px;
       padding: 0.15rem 0.4rem;
     }
+
+    /* Entities. A project declares its own construct types, so the template
+       styles the generic shape (`.entity`, `.entity-header`, …) rather than
+       any one type — a new `.. req::` needs no CSS of its own. */
+    .entity {
+      margin: 2rem 0;
+      border: 1px solid #dfe6e9;
+      border-left: 5px solid #3498db;
+      border-radius: 8px;
+      background: #fbfcfc;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    /* A flex row, so the type, title and id separate on their own and the id
+       can sit at the far end without markup that says so. */
+    .entity-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin: 0;
+      padding: 0.875rem 1.25rem;
+      background: #fff;
+      border-bottom: 1px solid #dfe6e9;
+    }
+    .entity-type {
+      flex: none;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      background: #3498db;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .entity-title {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+    /* Monospace and muted: an id is a token to copy, not prose to read. */
+    .entity-id {
+      flex: none;
+      margin-left: auto;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.8rem;
+      color: #7f8c8d;
+    }
+    .entity:hover > .entity-header > .entity-id::after {
+      content: " \00B6";
+      color: #3498db;
+    }
+
+    /* A key/value list, not tabular data, so it opts out of the table styling
+       above: no grid, no zebra stripes, no full-bleed width. */
+    table.entity-attributes {
+      width: auto;
+      margin: 1rem 1.25rem;
+      font-size: 0.9rem;
+    }
+    table.entity-attributes tbody tr:nth-child(even) { background: none; }
+    table.entity-attributes th,
+    table.entity-attributes td {
+      border: none;
+      padding: 0.3rem 0.75rem 0.3rem 0;
+    }
+    table.entity-attributes th {
+      width: 1%;
+      white-space: nowrap;
+      font-weight: 600;
+      color: #7f8c8d;
+    }
+
+    .entity-content,
+    .entity-section { padding: 0 1.25rem; }
+    .entity-content > :first-child { margin-top: 0; }
+
+    /* A labelled sub-part, so it gets a rule above it and a heading that is
+       unmistakably a heading rather than another paragraph of body text. */
+    .entity-section {
+      margin-top: 1rem;
+      padding-top: 0.875rem;
+      border-top: 1px solid #dfe6e9;
+    }
+    .entity-section-label {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #3498db;
+    }
+    .entity-section > .entity-section-label + * { margin-top: 0; }
+
+    .entity-links {
+      margin-top: 1rem;
+      padding: 0.875rem 1.25rem 1rem;
+      border-top: 1px solid #dfe6e9;
+      background: #fff;
+    }
+    .entity-link-label {
+      margin: 0.5rem 0 0.25rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #7f8c8d;
+    }
+    .entity-link-label:first-child { margin-top: 0; }
+
+    /* Inline pills: these are short id tokens, and a bulleted column of them
+       wastes a lot of height on an entity with several relations. */
+    .entity-link-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .entity-link-list li { margin: 0; }
+    .entity-link-list a,
+    .entity-link-list .broken-link {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border: 1px solid #dfe6e9;
+      border-radius: 999px;
+      background: #fbfcfc;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .entity-link-list .broken-link {
+      border-style: dashed;
+      border-color: #e74c3c;
+      color: #e74c3c;
+    }
+
+    /* An anchored entity is highlighted, as a targeted glossary term is. */
+    .entity:target { border-left-color: #f39c12; }
+    .entity:target > .entity-header { background: #fef9e7; }
+
+    a .xref.entity {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9em;
+    }
+
+
+    /* The disclosure a collapsible type folds its detail into. Collapsed, only
+       the header and the leading prose remain. */
+    .entity-more { border-top: 1px solid #dfe6e9; }
+    .entity-more-toggle {
+      cursor: pointer;
+      padding: 0.55rem 1.25rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #7f8c8d;
+      background: #fff;
+      outline: none;
+    }
+    .entity-more-toggle:hover { color: #3498db; }
+    /* The folded children carry their own dividers, so the summary adds a rule
+       only when open, and the first of them drops its own. */
+    .entity-more[open] > .entity-more-toggle { border-bottom: 1px solid #dfe6e9; }
+    .entity-more > .entity-attributes { margin-top: 0.875rem; }
+    .entity-more > .entity-section:first-of-type,
+    .entity-more > .entity-links { border-top: none; }
+
+    /* Audit events: the counter-example to the entity box, so a rule and an
+       indent rather than a card — just enough to group each event with its
+       description. */
+    .audit-event {
+      margin: 1.5rem 0;
+      padding-left: 1rem;
+      border-left: 3px solid #dfe6e9;
+    }
+    .audit-event:first-of-type { margin-top: 2rem; }
+    .audit-event > p:first-child { margin-top: 0; }
+    .audit-event > :last-child { margin-bottom: 0; }
+    /* The name is what a reader scans for; the arguments are supporting
+       detail and stay muted. */
+    .audit-event-name { font-weight: 600; color: #3498db; }
+    .audit-event-args { color: #7f8c8d; }
+    .audit-event-version { font-size: 0.9em; color: #7f8c8d; }
+    .audit-event:target { border-left-color: #f39c12; background: #fef9e7; }
   </style>
 </head>
 <body>

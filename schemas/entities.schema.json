@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "rusty-sphinx entity schema",
+  "description": "A project's entity meta-model, as the schema file spells it.",
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "description": "The entity types this project declares, one `[[entity_type]]` each.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RawEntityType"
+      }
+    },
+    "role": {
+      "description": "Inline roles that reference an entity from prose. Optional: every entity\nis reachable by `:ref:` and by the built-in `:entity:` role regardless.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RawRole"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "RawArgument": {
+      "description": "How `.. <type>:: <argument>` maps onto the type's attributes.",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "description": "Attribute names, in the order the argument's parts fill them. Each must\nbe an attribute the type declares.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "split": {
+          "description": "How the argument text is divided before being mapped.",
+          "$ref": "#/$defs/RawSplit"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RawAttribute": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "description": "The value used when the option is absent.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "description": "Human-readable label for the rendered field table.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "The option spelling, e.g. `status` for `:status:`.",
+          "type": "string"
+        },
+        "required": {
+          "description": "Whether the option must be given.",
+          "type": "boolean",
+          "default": false
+        },
+        "type": {
+          "$ref": "#/$defs/RawAttributeType"
+        },
+        "values": {
+          "description": "The permitted values. Required for the two enum types, and refused for\nevery other — both spellings look like they constrain the value, and\nonly one does.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "type"
+      ]
+    },
+    "RawAttributeType": {
+      "description": "The `type = \"...\"` spellings an attribute may declare.\n\nA typed enum rather than a free string, so an unknown spelling is refused\nby deserialization — which both shortens the loader and lets the generated\nJSON Schema offer the seven valid values as completions.",
+      "type": "string",
+      "enum": [
+        "string",
+        "text",
+        "int",
+        "bool",
+        "enum",
+        "list<string>",
+        "list<enum>"
+      ]
+    },
+    "RawEntityType": {
+      "description": "One entity type: a directive name plus everything an instance may carry.",
+      "type": "object",
+      "properties": {
+        "argument": {
+          "description": "How the text after `::` maps onto attributes. Omit for a type that\ntakes no argument.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawArgument"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attribute": {
+          "description": "Typed values, never parsed as RST.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RawAttribute"
+          }
+        },
+        "id": {
+          "description": "How instances of this type are identified.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RawId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "description": "Human-readable label for the built-in rendering; defaults to `name`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "The directive name, e.g. `req` for `.. req::`.",
+          "type": "string"
+        },
+        "relation": {
+          "description": "Typed edges to other entities, declared on the type that carries them.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RawRelation"
+          }
+        },
+        "section": {
+          "description": "Named prose sections, whose content *is* fully-parsed RST.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RawSection"
+          }
+        },
+        "template": {
+          "description": "A `MiniJinja` template's file name, supplied by the site's\n`entity_templates` attribute. Omit for the built-in rendering.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "RawId": {
+      "description": "How an entity type's ids are determined.",
+      "type": "object",
+      "properties": {
+        "from": {
+          "description": "Attributes whose values compose the id, joined with `_`. Each must be an\nattribute the type declares.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "prefix": {
+          "description": "Prepended to derived and generated ids, never to an explicit `:id:`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "required": {
+          "description": "Whether the author must write an explicit `:id:`.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "RawRelation": {
+      "description": "A typed edge to other entities, declared on the type that carries it.",
+      "type": "object",
+      "properties": {
+        "incoming": {
+          "description": "The back-link name derived on each target. Omit for a one-directional\nrelation.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "incoming_label": {
+          "description": "Heading for that back-link; defaults to `incoming`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "description": "Label shown by the built-in rendering; defaults to `name`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "multiple": {
+          "description": "Whether more than one target id may be named.",
+          "type": "boolean",
+          "default": false
+        },
+        "name": {
+          "description": "The option spelling on the source entity, e.g. `links` for `:links:`.",
+          "type": "string"
+        },
+        "required": {
+          "description": "Whether at least one target id must be named.",
+          "type": "boolean",
+          "default": false
+        },
+        "to": {
+          "description": "Entity types a target may have. Omit to accept any type.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "RawRole": {
+      "description": "An inline role that references an entity from prose.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The role spelling, e.g. `req` for ``:req:`REQ_001` ``.",
+          "type": "string"
+        },
+        "types": {
+          "description": "Entity types the role may resolve to. Omit to accept any type.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "RawSection": {
+      "description": "A named prose section, written as a sub-directive inside an entity's body.",
+      "type": "object",
+      "properties": {
+        "label": {
+          "description": "Heading shown by the built-in rendering; defaults to `name`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "multiple": {
+          "description": "Whether it may appear more than once, kept in document order.",
+          "type": "boolean",
+          "default": false
+        },
+        "name": {
+          "description": "The sub-directive name. May not shadow a directive the build already has.",
+          "type": "string"
+        },
+        "required": {
+          "description": "Whether the sub-directive must appear at least once.",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "RawSplit": {
+      "description": "How a directive's argument text is divided.",
+      "oneOf": [
+        {
+          "description": "The whole argument is one value — the sphinx-needs shape.",
+          "type": "string",
+          "const": "whole"
+        },
+        {
+          "description": "A comma-separated signature — `CPython`'s `.. audit-event::` shape.",
+          "type": "string",
+          "const": "comma"
+        }
+      ]
+    }
+  }
+}

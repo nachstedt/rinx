@@ -345,6 +345,18 @@ fn resolve_directive(
         Directive::Admonition { body, .. }
         | Directive::VersionChange { body, .. }
         | Directive::SeeAlso { body } => resolve_nodes(body, defs, cache, visiting, diagnostics),
+        // Every section of an entity is ordinary body content, so a `|name|`
+        // written inside a `.. verification-criteria::` resolves like any other.
+        // Attribute values are deliberately *not* touched: they are typed
+        // values validated against the schema, not inline markup.
+        Directive::Entity(entity) => {
+            for section in &mut entity.sections {
+                resolve_nodes(&mut section.body, defs, cache, visiting, diagnostics);
+            }
+        }
+        Directive::EntitySection { body, .. } => {
+            resolve_nodes(body, defs, cache, visiting, diagnostics);
+        }
         Directive::Glossary { entries, .. } => {
             for entry in entries {
                 resolve_nodes(&mut entry.definition, defs, cache, visiting, diagnostics);

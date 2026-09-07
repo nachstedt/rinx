@@ -1,0 +1,26 @@
+"""Documents exercising the entity meta-model.
+
+Its own library and package so that `entities.toml` — which is a *parse-time*
+input, unlike the site's `rusty_sphinx.toml` — is declared once, next to the
+documents it gives a vocabulary to.
+
+Note the schema is named twice: here, because these documents are parsed
+against it, and on `//examples:site`, because the index action derives
+back-links from it and each render action reads its labels. The two must be
+the same file; a mismatch is reported as `entity.schema-mismatch`.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    entity_schema = "entities.toml",
+    deps = [],
+    visibility = ["//visibility:public"],
+)
+
+exports_files([
+    "entities.toml",
+    "entity_audit_event.html",
+])

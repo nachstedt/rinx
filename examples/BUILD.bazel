@@ -68,6 +68,7 @@ rusty_sphinx_library(
         # `index.rst`'s toctree pulls in `doctests`, so the library owning it
         # has to be a declared dep.
         ":doctest_docs",
+        "//examples/entities:docs",
         "//examples/toctree:docs",
         "//examples/contents:docs",
         "//examples/sectnum:docs",
@@ -95,6 +96,11 @@ rusty_sphinx_doctest_tests(
 rusty_sphinx_site(
     name = "site",
     config = "rusty_sphinx.toml",
+    # The same schema `//examples/entities:docs` was parsed against: the index
+    # action derives back-links from its relations, and each render action
+    # reads its labels.
+    entity_schema = "//examples/entities:entities.toml",
+    entity_templates = ["//examples/entities:entity_audit_event.html"],
     template = "custom_template.html",
     strict_links = True,
     # Only the root library. Every other library reaches the site transitively

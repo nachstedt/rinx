@@ -23,15 +23,36 @@ trap restore EXIT
 # Warm the cache so the baseline is a known-cached state.
 $BAZEL test "$TARGET" > /dev/null 2>&1
 
-echo "=== Testing that a prose edit does NOT re-run the doctests ==="
-printf '\nAn added paragraph that changes the document but no test code.\n' >> "$DOC"
+# Runs `bazel test` and reports whether the result came from the cache, keeping
+# a build or test failure distinguishable from a cache miss. Piping straight
+# into `grep -q` cannot: under `pipefail` a failing `bazel test` and a genuine
+# cache miss both make the pipeline non-zero, so the caller would blame the
+# plan for either.
+bazel_test_was_cached() {
+    if ! test_output=$($BAZEL test "$TARGET" 2>&1); then
+        echo "ERROR: 'bazel test $TARGET' failed. That says nothing about the"
+        echo "       cache firewall — fix the failure below first."
+        echo "$test_output" | tail -20
+        exit 1
+    fi
+    grep -q "(cached)" <<<"$test_output"
+}
 
-if $BAZEL test "$TARGET" 2>&1 | grep -q "(cached)"; then
+echo "=== Testing that a prose edit does NOT re-run the doctests ==="
+# Unique per run. Appending the *same* paragraph every time leaves the edited
+# variant in the machine's cache, so every later run finds a cached result and
+# passes whether or not the firewall works — a false pass that hides exactly
+# the regression this test exists to catch.
+printf '\nAn added paragraph unique to this run (%s), changing no test code.\n' \
+    "$(date +%s%N)" >> "$DOC"
+
+if bazel_test_was_cached; then
     echo "SUCCESS: Test result was reused; no interpreter ran."
 else
     echo "ERROR: The test re-ran after a prose-only edit."
     echo "       The plan is no longer a pure projection of the test code —"
     echo "       something presentational has leaked into doctest_plan.rs."
+    echo "$test_output" | tail -20
     exit 1
 fi
 
@@ -41,7 +62,7 @@ cp "$DOC" "$DOC.bak"
 # `1 + 1` appears in the first doctest block; changing it changes the plan.
 sed -i 's/>>> 1 + 1$/>>> 1 + 1 + 0/' "$DOC"
 
-if $BAZEL test "$TARGET" 2>&1 | grep -q "(cached)"; then
+if bazel_test_was_cached; then
     echo "ERROR: The test was cached even though its code changed."
     exit 1
 else

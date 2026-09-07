@@ -24,6 +24,18 @@ pub enum BrokenLinkKind {
     /// at the point resolution failed and worth surfacing in diagnostics even
     /// though nothing resolved.
     DomainObjectReference(ObjectType),
+    /// An entity role (`:req:`, `:need:`, `:entity:`) naming no entity.
+    /// Carries the role as written, since a schema names its own roles and the
+    /// diagnostic should quote what the author typed.
+    EntityReference(String),
+    /// An entity role that resolved, but to an entity of a type the role does
+    /// not accept. Links anyway, as a domain-object type mismatch does — the
+    /// target exists, and refusing the link would help nobody.
+    EntityTypeMismatch {
+        role: String,
+        /// The type the entity actually has.
+        found_type: String,
+    },
     /// A dot-prefixed domain-object role whose suffix search matched several
     /// objects, so the target names no single one. Deliberately unresolved
     /// rather than linked to an arbitrary candidate (real Sphinx links the
@@ -48,6 +60,8 @@ impl BrokenLinkKind {
             Self::TermReference => DiagnosticCode::LinkBrokenTerm,
             Self::OptionReference => DiagnosticCode::LinkBrokenOption,
             Self::EquationReference => DiagnosticCode::LinkBrokenEquation,
+            Self::EntityReference(_) => DiagnosticCode::EntityUnknownTarget,
+            Self::EntityTypeMismatch { .. } => DiagnosticCode::EntityRoleTypeMismatch,
             Self::DomainObjectReference(_) => DiagnosticCode::LinkBrokenObject,
             Self::AmbiguousDomainObjectReference { .. } => DiagnosticCode::LinkAmbiguousObject,
         }
@@ -63,6 +77,8 @@ impl BrokenLinkKind {
             Self::TermReference => "term",
             Self::OptionReference => "option",
             Self::EquationReference => "equation",
+            Self::EntityReference(_) => "entity",
+            Self::EntityTypeMismatch { .. } => "entity type mismatch",
             Self::DomainObjectReference(_) => "domain object",
             Self::AmbiguousDomainObjectReference { .. } => "ambiguous domain object",
         }

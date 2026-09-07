@@ -1,0 +1,22 @@
+[package]
+name = "rusty_sphinx_entity"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+rusty_sphinx_ast = { path = "../ast" }
+schemars = "1.2.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11.0"
+toml = "0.8"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+# `default-features = false` deliberately: the default set pulls in HTTP
+# retrieval of remote `$ref`s, and with it rustls and the `aws-lc-rs` C
+# toolchain. This schema has no remote references and validation runs offline
+# in a sandbox, so that whole tree is cost with no benefit.
+jsonschema = { version = "0.54.0", default-features = false }

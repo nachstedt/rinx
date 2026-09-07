@@ -11,3 +11,4 @@ pub(crate) mod inline;
 
 pub use blocks::{parse, parse_with_ctx, parse_with_domain};
 pub use context::{LoadedFile, ParseCtx, ParseFileLoader, RejectParseFiles};
+pub use directives::is_builtin_directive_name;
