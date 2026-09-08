@@ -115,6 +115,23 @@ Domain-object cross-reference roles (`:func:`, `:mod:`, `:meth:`, `:class:`, `:a
 | `.. sectionauthor::` / `.. moduleauthor::` / `.. codeauthor::` (author metadata; no visible output by default in real Sphinx either) | ❌ | — |
 | `.. target-notes::` (footnote-style listing of link targets, for hardcopy output) | ❌ | — |
 
+## Third-party extension directives
+
+Everything above is docutils' or Sphinx's own. This section is for constructs
+that come from a *Sphinx extension*: a project using one writes `extensions =`
+in its `conf.py`, which this build has no equivalent of — a supported extension
+directive is simply always available, and its name is reserved against entity
+schemas like any built-in.
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `.. dropdown::` (sphinx-design's collapsible container) | ✅ | All ten options supported (`:open:`, `:color:`, `:icon:`, `:chevron:`, `:animate:`, `:margin:`, `:name:`, `:class-container:`, `:class-title:`, `:class-body:`), rendered as `DropdownHtmlTransform`'s own element structure class for class, so a page already styled for sphinx-design keeps its appearance. The title is parsed as inline markup rather than plain text — the one caption in this build that is, matching sphinx-design's own `inline_text` call — and a dropdown with no argument draws the `kebab-horizontal` placeholder rather than an empty bar. Icons come from `octicons-pack`, a redistribution of `@primer/octicons`, and the name is validated while parsing, so a misspelled one is `dropdown.unknown-icon` rather than a silently missing picture. Three deliberate narrowings: the bundled icon set is *newer* than the one sphinx-design pins, so it accepts 57 names sphinx-design does not and rejects `commit` (renamed upstream); `sd_custom_directives` and the per-directive option defaults `SdDirective` applies are unsupported, both being `conf.py` features; and the `:octicon:` role, along with the material-icon sets sphinx-design also bundles, is not implemented |
+| `.. grid::` / `.. card::` / `.. tab-set::` / `.. button-link::` (the rest of sphinx-design) | ❌ | — |
+| `.. needtable::`, `.. needflow::`, `.. needpie::`, `.. needbar::`, `.. needsequence::` (sphinx-needs' rendered views over the need graph) | ❌ | Filter-and-layout views over entities. The entity model has the data; nothing renders it yet |
+| `.. needextend::`, `.. needimport::`, `.. needservice::` (sphinx-needs' entity-mutating directives) | ❌ | Unlike the views above these *add or modify* entities, so each needs a decision about where in the pipeline it belongs |
+| `.. uml::` (sphinxcontrib-plantuml) | 🔶 | Written as `.. plantuml::` here; the `uml` spelling is not recognized |
+| `.. automodule::` / `.. autofunction::` (autodoc) | ❌ | Out of scope — would require importing user code to generate content |
+
 ## Domains
 
 ### `py` domain

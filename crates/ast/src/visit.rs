@@ -121,6 +121,7 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         // it never got folded into one. Its body is still ordinary content.
         | Directive::EntitySection { body, .. }
         | Directive::SeeAlso { body } => walk_nodes(body, visit),
+        Directive::Dropdown(dropdown) => walk_nodes(&dropdown.body, visit),
         Directive::Glossary { entries, .. } => {
             for entry in entries {
                 walk_nodes(&entry.definition, visit);

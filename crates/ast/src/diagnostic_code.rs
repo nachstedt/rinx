@@ -129,6 +129,7 @@ diagnostic_codes! {
     DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
     DirectiveContentsUnknownOption => "directive.contents-unknown-option",
     DirectiveSectnumUnknownOption => "directive.sectnum-unknown-option",
+    DirectiveDropdownUnknownOption => "directive.dropdown-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
     DirectiveTitleArgumentMissing => "directive.title-argument-missing",
@@ -307,6 +308,24 @@ diagnostic_codes! {
     /// A `:name:` option with no value, so nothing could `:ref:` the table of
     /// contents.
     ContentsEmptyName => "contents.empty-name",
+
+    // --- `.. dropdown::` ----------------------------------------------------
+    /// A `:color:` naming none of the eleven semantic colours. The summary is
+    /// left unpainted rather than given a class no stylesheet defines.
+    DropdownInvalidColor => "dropdown.invalid-color",
+    /// An `:icon:` naming no octicon. Reported here, while parsing, because
+    /// this is where the `:icon:` line can be pointed at — the name itself is
+    /// checked against the icon set the renderer draws from.
+    DropdownUnknownIcon => "dropdown.unknown-icon",
+    /// A `:chevron:` other than `right-down` or `down-up`.
+    DropdownInvalidChevron => "dropdown.invalid-chevron",
+    /// An `:animate:` other than `fade-in` or `fade-in-slide-down`.
+    DropdownInvalidAnimate => "dropdown.invalid-animate",
+    /// A `:margin:` that is neither one nor four values, or that names a step
+    /// off the 0–5 scale.
+    DropdownInvalidMargin => "dropdown.invalid-margin",
+    /// An option that needs a value but was written without one.
+    DropdownEmptyOptionValue => "dropdown.empty-option-value",
 
     // --- `.. sectnum::` / `.. section-numbering::` --------------------------
     /// A `:depth:` whose value is not a positive integer. Treated as no depth

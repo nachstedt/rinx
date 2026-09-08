@@ -15,6 +15,7 @@ use super::data_table::{parse_csv_table, parse_list_table};
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
 use super::domains::{DirectiveSignatures, parse_domain_object};
+use super::dropdown::parse_dropdown;
 use super::entity::{EntityDirective, parse_entity};
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::glossary::parse_glossary;
@@ -363,6 +364,17 @@ fn parse_remaining_body_directive(
         let directive = parse_version_change(
             kind,
             argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        );
+        return Node::Directive(directive);
+    }
+    if name == "dropdown" {
+        let directive = parse_dropdown(
+            &argument,
+            directive_span,
             body_lines,
             adornment_order,
             diagnostics,
@@ -931,6 +943,7 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     "glossary",
     "index",
     // Other content
+    "dropdown",
     "plantuml",
     "math",
     // Domain objects and scope directives

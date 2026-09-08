@@ -380,6 +380,13 @@ fn resolve_directive(
                 }
             }
         }
+        // Both halves carry markup: the title is inline-parsed, unlike every
+        // other directive caption in this build, and the body is ordinary
+        // block content.
+        Directive::Dropdown(dropdown) => {
+            resolve_list(&mut dropdown.title, defs, cache, visiting, diagnostics);
+            resolve_nodes(&mut dropdown.body, defs, cache, visiting, diagnostics);
+        }
         Directive::DomainObject(body) => {
             resolve_nodes(body.body_mut(), defs, cache, visiting, diagnostics);
         }

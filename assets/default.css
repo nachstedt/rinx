@@ -577,6 +577,160 @@ details.admonition[open] summary {
   margin-bottom: 1rem;
 }
 
+/* ── Dropdowns (sphinx-design's `.. dropdown::`) ────────────────────── */
+
+/* The class names below are sphinx-design's, so a page written for that
+   extension keeps its structure here; the rules themselves are this build's
+   own — sphinx-design's stylesheet is not vendored. */
+
+.sd-dropdown {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-sidebar);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.sd-dropdown > .sd-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  outline: none;
+  list-style: none;
+  padding: 0.85rem 1.25rem;
+  font-weight: 700;
+  color: var(--text-header);
+}
+
+.sd-dropdown > .sd-summary-title::-webkit-details-marker { display: none; }
+
+.sd-summary-text { flex: 1 1 auto; }
+
+.sd-summary-icon,
+.sd-summary-state-marker {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+/* The marker is the *closed* half of the chevron pair; opening rotates it,
+   which is why only one icon is ever embedded. */
+.sd-summary-state-marker {
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.sd-dropdown[open] > .sd-summary-title > .sd-summary-chevron-right {
+  transform: rotate(90deg);
+}
+
+.sd-dropdown[open] > .sd-summary-title > .sd-summary-chevron-down {
+  transform: rotate(180deg);
+}
+
+.sd-summary-content {
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.sd-card-text:first-child { margin-top: 0; }
+.sd-card-text:last-child { margin-bottom: 0; }
+
+/* `:color:` — the eleven semantic colours, each a background/foreground pair. */
+.sd-bg-primary { background: #0d6efd; }
+.sd-bg-secondary { background: #6c757d; }
+.sd-bg-success { background: #198754; }
+.sd-bg-info { background: #0dcaf0; }
+.sd-bg-warning { background: #ffc107; }
+.sd-bg-danger { background: #dc3545; }
+.sd-bg-light { background: #f8f9fa; }
+.sd-bg-muted { background: #6c757d; }
+.sd-bg-dark { background: #212529; }
+.sd-bg-white { background: #ffffff; }
+.sd-bg-black { background: #000000; }
+
+/* Scoped to the summary they were written for: sphinx-design puts the pair on
+   one element, and an unscoped `.sd-bg-text-*` would recolour anything else
+   that happened to carry the class. */
+.sd-dropdown > .sd-bg-text-primary,
+.sd-dropdown > .sd-bg-text-secondary,
+.sd-dropdown > .sd-bg-text-success,
+.sd-dropdown > .sd-bg-text-danger,
+.sd-dropdown > .sd-bg-text-muted,
+.sd-dropdown > .sd-bg-text-dark,
+.sd-dropdown > .sd-bg-text-black { color: #ffffff; }
+
+.sd-dropdown > .sd-bg-text-info,
+.sd-dropdown > .sd-bg-text-warning,
+.sd-dropdown > .sd-bg-text-light,
+.sd-dropdown > .sd-bg-text-white { color: #212529; }
+
+/* On a painted bar the marker takes the title's colour; left to its own muted
+   grey it disappears into a dark background. */
+.sd-dropdown > [class*="sd-bg-"] .sd-summary-state-marker { color: inherit; }
+
+/* `:margin:` — one step per side on sphinx-design's 0-5 spacing scale. */
+.sd-m-0 { margin: 0; }
+.sd-m-1 { margin: 0.25rem; }
+.sd-m-2 { margin: 0.5rem; }
+.sd-m-3 { margin: 1rem; }
+.sd-m-4 { margin: 1.5rem; }
+.sd-m-5 { margin: 3rem; }
+.sd-m-auto { margin: auto; }
+
+.sd-mt-0 { margin-top: 0; }
+.sd-mt-1 { margin-top: 0.25rem; }
+.sd-mt-2 { margin-top: 0.5rem; }
+.sd-mt-3 { margin-top: 1rem; }
+.sd-mt-4 { margin-top: 1.5rem; }
+.sd-mt-5 { margin-top: 3rem; }
+.sd-mt-auto { margin-top: auto; }
+
+.sd-mb-0 { margin-bottom: 0; }
+.sd-mb-1 { margin-bottom: 0.25rem; }
+.sd-mb-2 { margin-bottom: 0.5rem; }
+.sd-mb-3 { margin-bottom: 1rem; }
+.sd-mb-4 { margin-bottom: 1.5rem; }
+.sd-mb-5 { margin-bottom: 3rem; }
+.sd-mb-auto { margin-bottom: auto; }
+
+.sd-ml-0 { margin-left: 0; }
+.sd-ml-1 { margin-left: 0.25rem; }
+.sd-ml-2 { margin-left: 0.5rem; }
+.sd-ml-3 { margin-left: 1rem; }
+.sd-ml-4 { margin-left: 1.5rem; }
+.sd-ml-5 { margin-left: 3rem; }
+.sd-ml-auto { margin-left: auto; }
+
+.sd-mr-0 { margin-right: 0; }
+.sd-mr-1 { margin-right: 0.25rem; }
+.sd-mr-2 { margin-right: 0.5rem; }
+.sd-mr-3 { margin-right: 1rem; }
+.sd-mr-4 { margin-right: 1.5rem; }
+.sd-mr-5 { margin-right: 3rem; }
+.sd-mr-auto { margin-right: auto; }
+
+/* `:animate:` — applied to the body, which is what appears when it opens. */
+.sd-fade-in[open] > .sd-summary-content {
+  animation: sd-fade-in 0.4s ease-in-out;
+}
+
+.sd-fade-in-slide-down[open] > .sd-summary-content {
+  animation: sd-fade-in 0.4s ease-in-out, sd-slide-down 0.4s ease-in-out;
+}
+
+@keyframes sd-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sd-slide-down {
+  from { transform: translateY(-0.5rem); }
+  to { transform: translateY(0); }
+}
+
 /* ── Block quotes ──────────────────────────────────────────────────── */
 
 blockquote {

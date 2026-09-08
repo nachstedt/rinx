@@ -21,6 +21,7 @@ mod image_error;
 mod inline;
 mod math;
 mod nav;
+mod octicon;
 mod page;
 mod resolution;
 

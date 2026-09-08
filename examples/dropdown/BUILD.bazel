@@ -1,0 +1,19 @@
+"""Documents exercising every `.. dropdown::` option.
+
+Its own library and package, mirroring `//examples/sectnum`'s shape: the
+directive has ten options whose effects are visual and independent, so each
+group gets a small page of its own rather than one page trying to show them
+all at once.
+
+The first third-party *extension* directive this build supports — see
+`spec_gaps.md`'s "Third-party extension directives" section.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    deps = [],
+    visibility = ["//visibility:public"],
+)
