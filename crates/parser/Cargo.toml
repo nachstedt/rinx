@@ -7,6 +7,7 @@ edition.workspace = true
 rusty_sphinx_ast = { path = "../ast" }
 rusty_sphinx_entity = { path = "../entity" }
 csv = "1"
+octicons-pack = { version = "19.33", default-features = false }
 regex = "1.10"
 
 [lints]

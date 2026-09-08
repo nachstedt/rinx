@@ -197,6 +197,19 @@ class RenderCorpusBuildFileTest(unittest.TestCase):
         # Then it still has to reach the parse action's sandbox
         self.assertIn('"pharaoh.toml"', text.split("parse_data = ")[1])
 
+    def test_every_glob_excludes_bazels_output_symlinks(self):
+        # Given a corpus whose root package *is* the workspace root, so the
+        # convenience symlinks sit inside every glob's reach
+        # When
+        text = benchmark_entities.render_corpus_build_file([], [])
+
+        # Then no glob can follow one into the previous run's outputs — which
+        # would make the site's own output an input to the action writing it
+        globs = text.count("glob(")
+        excludes = text.count(f'{json.dumps(benchmark_entities.OUTPUT_SYMLINK_GLOB)}')
+        self.assertEqual(globs, 3)
+        self.assertEqual(excludes, 3)
+
     def test_the_schema_is_declared_on_both_rules(self):
         # Given any corpus — the library parses against the schema and the site
         # indexes against it; a mismatch is `entity.schema-mismatch`

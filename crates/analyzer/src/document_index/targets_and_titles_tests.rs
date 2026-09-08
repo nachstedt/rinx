@@ -475,6 +475,58 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
     );
 }
 
+/// A `.. dropdown::` carrying `name` and `body`.
+fn dropdown_named(name: Option<&str>, body: Vec<Node>) -> Node {
+    Node::Directive(Directive::Dropdown(Box::new(rusty_sphinx_ast::Dropdown {
+        name: name.map(TargetName::new),
+        body,
+        ..rusty_sphinx_ast::Dropdown::new()
+    })))
+}
+
+#[test]
+fn test_analyze_registers_dropdown_name_as_target() {
+    // Given — a `.. dropdown::` with a `:name:` option
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![dropdown_named(Some("the-dropdown"), vec![])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("the-dropdown")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_indexes_targets_inside_a_dropdown_body() {
+    // Given — the reason this directive is supported at all: an unparsed
+    // container hides everything written inside it from the index
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![dropdown_named(
+            None,
+            vec![Node::Target {
+                name: TargetName::new("in-dropdown"),
+                uri: None,
+            }],
+        )],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("in-dropdown")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
 fn contents_named(name: Option<&str>) -> Node {
     let options = rusty_sphinx_ast::ContentsOptions {
         name: name.map(TargetName::new),

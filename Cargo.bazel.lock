@@ -1,5 +1,5 @@
 {
-  "checksum": "3e352038582545ca9a90993f5469f5a7c0880b0bbf1fb7520b2c672a9aa3ff9f",
+  "checksum": "c79620cb0f79d12975c6c9a7c0b643fba8631c4e86fab04a8f1d7cb81ef13bd0",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -2940,6 +2940,34 @@
       ],
       "version": "0.2.19"
     },
+    "octicons-pack 19.33.0": {
+      "common_attrs": {
+        "edition": "2024"
+      },
+      "library_target_name": "octicons_pack",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "MIT"
+      ],
+      "name": "octicons-pack",
+      "package_url": "https://github.com/2bndy5/redist-icons",
+      "repository": {
+        "Http": {
+          "sha256": "83927b8a178ed4e5a3215f7c02c771e2639ec7690981dc83692918128d1b824e",
+          "url": "https://static.crates.io/crates/octicons-pack/19.33.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "octicons_pack",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "19.33.0"
+    },
     "once_cell 1.21.4": {
       "common_attrs": {
         "crate_features": [
@@ -4085,6 +4113,10 @@
             "target": "csv"
           },
           {
+            "id": "octicons-pack 19.33.0",
+            "target": "octicons_pack"
+          },
+          {
             "id": "regex 1.12.4",
             "target": "regex"
           }
@@ -4122,6 +4154,10 @@
           {
             "id": "minijinja 2.21.0",
             "target": "minijinja"
+          },
+          {
+            "id": "octicons-pack 19.33.0",
+            "target": "octicons_pack"
           },
           {
             "id": "pathdiff 0.2.3",
@@ -6548,6 +6584,7 @@
     "html-escape 0.2.14",
     "math-core 0.8.1",
     "minijinja 2.21.0",
+    "octicons-pack 19.33.0",
     "pathdiff 0.2.3",
     "regex 1.12.4",
     "schemars 1.2.2",

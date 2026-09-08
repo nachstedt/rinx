@@ -6,6 +6,7 @@ use crate::code_language::ResolvedLanguage;
 use crate::contents::Contents;
 use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
+use crate::dropdown::Dropdown;
 use crate::entity::EntityBody;
 use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
@@ -66,6 +67,17 @@ pub enum Directive {
         collapsible: Option<bool>,
         body: Vec<Node>,
     },
+    /// `.. dropdown::` — sphinx-design's collapsible container.
+    ///
+    /// Boxed for the same reason [`Self::Entity`] is: ten options, an
+    /// inline-markup title and a body make it one of the largest payloads
+    /// here, and an enum costs its largest variant everywhere one is stored.
+    ///
+    /// The one variant here that is neither docutils' nor Sphinx's. It earns
+    /// its place because an *unknown* directive never parses its body, so a
+    /// missing `dropdown` silently swallows every construct written inside
+    /// one — targets, sections and entities alike.
+    Dropdown(Box<Dropdown>),
     VersionChange {
         kind: VersionChangeKind,
         version: String,

@@ -226,7 +226,8 @@ pub(super) fn index_nodes(
                 directive @ (Directive::CodeBlock(_)
                 | Directive::Image(_)
                 | Directive::Figure(_)
-                | Directive::Contents(_)),
+                | Directive::Contents(_)
+                | Directive::Dropdown(_)),
             ) => index_name_bearing_directive(directive, doc_path, index, scope),
             Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
             _ => {}
@@ -272,9 +273,9 @@ fn apply_scope_directive(directive: &Directive, scope: &mut Scope) {
 /// Split out of [`index_nodes`] for the same reason
 /// [`rusty_sphinx_ast::walk_nodes`] splits its directive arm out: three
 /// near-identical arms make the node match harder to read than the one thing
-/// they have in common. A figure additionally carries a body — its legend is
-/// ordinary content, so anything referenceable written there has to be indexed
-/// like any other body's. Any other directive is a no-op rather than a panic:
+/// they have in common. A figure and a dropdown additionally carry a body — a
+/// legend and a dropdown's content are ordinary content, so anything
+/// referenceable written there has to be indexed like any other body's. Any other directive is a no-op rather than a panic:
 /// the caller's match decides which ones arrive, and duplicating that list
 /// would be a second place to keep in step.
 fn index_name_bearing_directive(
@@ -296,6 +297,13 @@ fn index_name_bearing_directive(
         }
         Directive::Contents(contents) => {
             register_directive_name(contents.options.name.as_ref(), doc_path, index);
+        }
+        // A dropdown carries both: a `:name:` of its own, and a body whose
+        // targets, sections and entities belong to this document exactly as
+        // if they had been written outside it.
+        Directive::Dropdown(dropdown) => {
+            register_directive_name(dropdown.name.as_ref(), doc_path, index);
+            index_nodes(&dropdown.body, doc_path, index, scope);
         }
         _ => {}
     }

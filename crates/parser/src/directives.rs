@@ -29,6 +29,7 @@ mod data_table;
 mod dispatch;
 mod doctest;
 mod domains;
+mod dropdown;
 mod entity;
 mod entity_section;
 mod glossary;

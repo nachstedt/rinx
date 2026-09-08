@@ -65,6 +65,25 @@ CORPUS_SRCDIR = "docs"
 # stops at its boundary and cannot pick up the warm-up document.
 GENERATED_PACKAGES = ("assets", WARMUP_PACKAGE)
 
+# Bazel's convenience symlinks, which sit in the workspace *root* — and this
+# corpus' root package is the corpus itself, so every glob below would otherwise
+# follow them straight into the previous run's outputs.
+#
+# What that costs is not theoretical: a `**/*.jpg` matching
+# `bazel-bin/site_site_out/_images/...` makes the site's own output an input to
+# the action that writes it, and the image bundling then fails with a `cp` of a
+# path Bazel cannot materialize. It stays hidden while that action is an
+# action-cache hit and appears the moment anything re-keys it — such as a change
+# to the rusty-sphinx binary, which is the one thing this benchmark exists to
+# measure. `discard_stale_corpus_outputs` below cannot be relied on to prevent
+# it: Bazel leaves its output directories read-only, so removing them is
+# best-effort.
+#
+# The CPython benchmark needs no such exclusion, and the difference is
+# structural rather than an oversight: its corpus is the `Doc/` *subdirectory*
+# of the generated workspace, so the symlinks are outside the globbed package.
+OUTPUT_SYMLINK_GLOB = "bazel-*/**"
+
 # Hand-authored list of entity warnings we accept, relative to the workspace
 # root (main() chdirs there via BUILD_WORKSPACE_DIRECTORY).
 WHITELIST_PATH = Path("scripts/entity_warnings_whitelist.json")
@@ -259,7 +278,11 @@ def render_corpus_build_file(included_rst, spliced_from_outside):
     so is every source copied in from outside the source root. The generated
     `assets` and warm-up packages need no exclusion — a glob never crosses a
     package boundary."""
-    excludes = "".join(f"            {json.dumps(path)},\n" for path in included_rst)
+    output_symlink_exclude = json.dumps(OUTPUT_SYMLINK_GLOB)
+    excludes = "".join(
+        f"            {json.dumps(path)},\n"
+        for path in [*included_rst, OUTPUT_SYMLINK_GLOB]
+    )
     spliced = "".join(
         f"        {json.dumps(path)},\n"
         for path in sorted(set(included_rst) | set(spliced_from_outside))
@@ -286,6 +309,7 @@ rusty_sphinx_library(
             "**/*.svg",
             "**/*.webp",
         ],
+        exclude = [{output_symlink_exclude}],
         allow_empty = True,
     ),
     # Everything the *parser* reads at parse time: the documents `.. include::`
@@ -301,6 +325,7 @@ rusty_sphinx_library(
             "**/*.txt",
             "**/*.yaml",
         ],
+        exclude = [{output_symlink_exclude}],
         allow_empty = True,
     ) + [
 {spliced}    ],

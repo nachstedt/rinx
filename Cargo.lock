@@ -621,6 +621,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "octicons-pack"
+version = "19.33.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83927b8a178ed4e5a3215f7c02c771e2639ec7690981dc83692918128d1b824e"
+
+[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -875,6 +881,7 @@ name = "rusty_sphinx_parser"
 version = "0.1.0"
 dependencies = [
  "csv",
+ "octicons-pack",
  "regex",
  "rusty_sphinx_ast",
  "rusty_sphinx_entity",
@@ -888,6 +895,7 @@ dependencies = [
  "html-escape",
  "math-core",
  "minijinja",
+ "octicons-pack",
  "pathdiff",
  "rusty_sphinx_ast",
  "rusty_sphinx_entity",

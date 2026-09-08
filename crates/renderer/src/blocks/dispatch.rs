@@ -163,7 +163,48 @@ fn render_inlines(html: &mut String, inlines: &[InlineNode], ctx: &mut RenderCtx
     }
 }
 
+/// Renders one paragraph, optionally carrying a class.
+///
+/// Only `.. dropdown::` asks for a class here; see
+/// [`render_nodes_with_paragraph_class`].
+fn render_paragraph(
+    html: &mut String,
+    inlines: &[InlineNode],
+    class: Option<&str>,
+    ctx: &mut RenderCtx<'_>,
+) {
+    match class {
+        Some(class) => {
+            let class_attr = html_escape::encode_double_quoted_attribute(class);
+            let _ = write!(html, "<p class=\"{class_attr}\">");
+        }
+        None => {
+            let _ = write!(html, "<p>");
+        }
+    }
+    render_inlines(html, inlines, ctx);
+    let _ = writeln!(html, "</p>");
+}
+
 pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCtx<'_>) {
+    render_nodes_with_paragraph_class(html, nodes, None, ctx);
+}
+
+/// [`render_nodes`], with a class stamped on the paragraphs of *this* list.
+///
+/// Exists for `.. dropdown::`, whose card body gives its own direct child
+/// paragraphs `sd-card-text` and leaves paragraphs nested deeper alone
+/// (sphinx-design's issue #40). Nested lists reach this through
+/// [`render_nodes`] and therefore carry no class, which is exactly the
+/// distinction being drawn — so this stays one traversal rather than the
+/// caller rendering node by node, which would restart the section-index
+/// bookkeeping below on every node.
+pub(crate) fn render_nodes_with_paragraph_class(
+    html: &mut String,
+    nodes: &[Node],
+    paragraph_class: Option<&str>,
+    ctx: &mut RenderCtx<'_>,
+) {
     // Only the document's own top level holds sections, so only there does a
     // heading carry an `id`. Clearing the flag for the duration of this list's
     // nested bodies — and restoring it after — keeps a heading inside an
@@ -186,9 +227,7 @@ pub(crate) fn render_nodes(html: &mut String, nodes: &[Node], ctx: &mut RenderCt
                 render_heading(html, *level, text, id.as_ref(), index == title_index, ctx);
             }
             Node::Paragraph(inlines) => {
-                let _ = write!(html, "<p>");
-                render_inlines(html, inlines, ctx);
-                let _ = writeln!(html, "</p>");
+                render_paragraph(html, inlines, paragraph_class, ctx);
             }
             Node::Target { name, uri } => {
                 if uri.is_none() {
@@ -463,6 +502,9 @@ fn render_directive(
             body,
         } => render_version_change(html, *kind, version, body, ctx),
         Directive::SeeAlso { body } => render_seealso(html, body, ctx),
+        Directive::Dropdown(dropdown) => {
+            super::dropdown::render_dropdown(html, dropdown, ctx);
+        }
         // Misplaced (see the variant's own doc); its body still renders.
         Directive::EntitySection { body, .. } => render_nodes(html, body, ctx),
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),

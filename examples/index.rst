@@ -44,6 +44,7 @@ Welcome to the Rusty-Sphinx example.
    toctree/index
    contents/index
    sectnum/index
+   dropdown/index
    team_a/index
    team_b/index
 

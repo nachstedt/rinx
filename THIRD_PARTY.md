@@ -34,6 +34,20 @@ for license in listing.for_themes() { /* … */ }
 Pin the URL above to the `two-face` version in `Cargo.toml` when that dependency
 is upgraded, since the asset set changes with it.
 
+## GitHub octicons (`octicons-pack`)
+
+`.. dropdown::`'s `:icon:` option, and the chevron marking a dropdown's
+open/closed state, are drawn with icons from
+[`octicons-pack`](https://crates.io/crates/octicons-pack) (MIT) — a generated
+redistribution of the [`@primer/octicons`](https://github.com/primer/octicons)
+npm package (MIT), whose SVG data it embeds as string constants.
+
+Two consequences worth knowing. The icon *set* is GitHub's, so its own MIT
+notice travels with any page this build renders an icon into; and the set is
+versioned by the crate rather than by us, so upgrading the dependency can change
+which `:icon:` names a document may use — see `spec_gaps.md` for the names this
+differs on from sphinx-design's own pinned copy.
+
 ## Everything else
 
 The remaining dependencies are listed in each crate's `Cargo.toml` and resolved
