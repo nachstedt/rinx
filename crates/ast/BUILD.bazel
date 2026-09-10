@@ -10,5 +10,6 @@ rust_library(
         normal = True,
     ) + [
         "//crates/cdecl:rusty_sphinx_cdecl",
+        "//crates/filter:rusty_sphinx_filter",
     ],
 )

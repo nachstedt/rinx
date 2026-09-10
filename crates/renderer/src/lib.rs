@@ -16,6 +16,7 @@ mod broken_link;
 pub mod config;
 mod doc_href;
 mod embedded_assets;
+mod entity_table_error;
 mod highlight;
 mod image_error;
 mod inline;
@@ -28,6 +29,7 @@ mod resolution;
 pub use blocks::EntityTemplates;
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 pub use embedded_assets::EmbeddedAssets;
+pub use entity_table_error::EntityTableError;
 pub use highlight::{HighlightError, HighlightErrorKind};
 pub use image_error::ImageError;
 pub use math::MathError;
@@ -52,6 +54,9 @@ pub struct RenderOutput {
     pub broken_links: Vec<BrokenLink>,
     pub object_type_mismatches: Vec<ObjectTypeMismatch>,
     pub math_errors: Vec<MathError>,
+    /// Listing directives whose filter matched nothing. Only reportable here:
+    /// whether a filter selects anything depends on the whole project.
+    pub entity_table_errors: Vec<EntityTableError>,
     pub highlight_errors: Vec<HighlightError>,
     /// Images whose `:loading: embed` could not be honoured because the bytes
     /// never reached this render. Every other image problem is decidable from
@@ -93,6 +98,7 @@ pub(crate) struct RenderCtx<'a> {
     pub broken_links: &'a mut Vec<BrokenLink>,
     pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
     pub math_errors: &'a mut Vec<MathError>,
+    pub entity_table_errors: &'a mut Vec<EntityTableError>,
     /// Converts LaTeX to `MathML`. Held for the whole document so the backend's
     /// per-converter setup happens once per page rather than once per equation.
     pub math: &'a MathRenderer,
@@ -222,6 +228,7 @@ pub fn render_with_assets(
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
     let mut math_errors = Vec::new();
+    let mut entity_table_errors = Vec::new();
     let mut highlight_errors = Vec::new();
     let mut image_errors = Vec::new();
     let mut contents_backlinks = std::collections::HashMap::new();
@@ -252,6 +259,7 @@ pub fn render_with_assets(
         broken_links: &mut broken_links,
         object_type_mismatches: &mut object_type_mismatches,
         math_errors: &mut math_errors,
+        entity_table_errors: &mut entity_table_errors,
         math: &math,
         highlight_errors: &mut highlight_errors,
         image_errors: &mut image_errors,
@@ -275,6 +283,7 @@ pub fn render_with_assets(
         broken_links,
         object_type_mismatches,
         math_errors,
+        entity_table_errors,
         highlight_errors,
         image_errors,
         entity_template_errors,

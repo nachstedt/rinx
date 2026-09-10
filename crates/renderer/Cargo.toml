@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 rusty_sphinx_ast = { path = "../ast" }
+rusty_sphinx_filter = { path = "../filter" }
 rusty_sphinx_entity = { path = "../entity" }
 rusty_sphinx_index = { path = "../index" }
 rusty_sphinx_toctree = { path = "../toctree" }

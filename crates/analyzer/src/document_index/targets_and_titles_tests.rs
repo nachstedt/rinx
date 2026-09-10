@@ -484,6 +484,45 @@ fn dropdown_named(name: Option<&str>, body: Vec<Node>) -> Node {
     })))
 }
 
+/// An `.. entity-table::` carrying `name`.
+fn entity_table_named(name: Option<&str>) -> Node {
+    let mut table =
+        rusty_sphinx_ast::EntityTable::new(rusty_sphinx_ast::EntityTableSource::EntityTable);
+    table.name = name.map(TargetName::new);
+    Node::Directive(Directive::EntityTable(Box::new(table)))
+}
+
+#[test]
+fn test_analyze_registers_entity_table_name_as_target() {
+    // Given — an `.. entity-table::` with a `:name:` option
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![entity_table_named(Some("every-requirement"))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("every-requirement")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_registers_nothing_for_an_unnamed_entity_table() {
+    // Given — the rows come from the index being built, so an unnamed table
+    // contributes nothing at all to it
+    let doc = Document::new("test.rst".to_string(), vec![entity_table_named(None)]);
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.targets.is_empty());
+}
+
 #[test]
 fn test_analyze_registers_dropdown_name_as_target() {
     // Given — a `.. dropdown::` with a `:name:` option

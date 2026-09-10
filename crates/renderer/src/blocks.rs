@@ -27,6 +27,7 @@ mod doctest;
 mod domain_object;
 mod dropdown;
 mod entity;
+mod entity_table;
 mod figure;
 mod glossary;
 mod image;

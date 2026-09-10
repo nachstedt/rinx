@@ -808,6 +808,22 @@
     .entity:target { border-left-color: #f39c12; }
     .entity:target > .entity-header { background: #fef9e7; }
 
+    /* A listing (`.. entity-table::` / `.. needtable::`) is a *report* about
+       the entities, not one of them, so it keeps this theme's ordinary table
+       styling rather than the entity card's. Only the id column is restyled,
+       so a column of ids scans as ids. `assets/default.css` has the default
+       theme's equivalents, written against its custom properties, which is why
+       these are transcribed with this theme's own literal palette rather than
+       copied. */
+    table.entity-table {
+      font-size: 0.9rem;
+    }
+    table.entity-table th.head { white-space: nowrap; }
+    table.entity-table td:first-child a {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9em;
+    }
+
     a .xref.entity {
       font-family: 'Consolas', 'Monaco', monospace;
       font-size: 0.9em;

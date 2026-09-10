@@ -77,6 +77,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Declare a relationship on the side that writes it, so the declared source can never drift from actual use, and derive the reverse direction rather than asking for it twice.
 - Give a generated identifier a deterministic source (position, not content) so a cached build artefact stays byte-identical, and say plainly which edits perturb it.
 - Store only what a later reader needs in a shared index: prose belongs in the document, not in an artefact every phase loads.
+- When implementing a subset of a language a reference implementation embeds whole, recognise the constructs outside the subset and reject each *by name*, since the common failure is an unsupported feature rather than a typo.
+- Choose a parsing library for what it produces, not for what it saves: one that hands back a token tree still leaves the tree-building, the error wording and the panic-freedom to write by hand.
 
 ## Porting from a reference implementation
 
@@ -150,6 +152,11 @@ entry under the heading it belongs to, as a single short sentence.
 - A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
 - Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
 - In spec_gaps.md, mark a row 🔶 partial rather than ✅ whenever its own Notes say a specific argument/option/variant of that feature is unsupported, even though the feature's core case works.
+
+## Interoperability
+
+- Give a borrowed construct this project's own name and accept the other tool's spelling as an alias, so a migrating project keeps its documents without the foreign vocabulary becoming ours.
+- Name a diagnostic code after the construct rather than the spelling it was written under, so one code serves every alias of it.
 
 ## Scope of a guideline
 

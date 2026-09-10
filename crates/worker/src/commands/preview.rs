@@ -11,9 +11,9 @@ use std::io::{self, Read};
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
-    WarningOrigin, format_broken_link_warning, format_highlight_error_warning,
-    format_image_error_warning, format_math_error_warning, format_object_type_mismatch_warning,
-    report_diagnostic,
+    WarningOrigin, format_broken_link_warning, format_entity_table_error_warning,
+    format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
+    format_object_type_mismatch_warning, report_diagnostic,
 };
 use super::embed_assets::embed_available_assets;
 use super::entity_schema::{load_entity_schema, load_entity_templates};
@@ -21,8 +21,9 @@ use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::ParseInputs;
 use super::suppression::{
-    retain_reportable, retain_reportable_highlight_errors, retain_reportable_image_errors,
-    retain_reportable_links, retain_reportable_math_errors, retain_reportable_mismatches,
+    retain_reportable, retain_reportable_entity_table_errors, retain_reportable_highlight_errors,
+    retain_reportable_image_errors, retain_reportable_links, retain_reportable_math_errors,
+    retain_reportable_mismatches,
 };
 
 /// One previewed page, plus every warning it produced.
@@ -37,6 +38,9 @@ pub(super) struct PreviewedPage {
     pub broken_links: Vec<renderer::BrokenLink>,
     pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
     pub math_errors: Vec<renderer::MathError>,
+    /// Listing directives whose filter matched no entity. Always empty when
+    /// the caller supplied no global index — see [`process_preview`].
+    pub entity_table_errors: Vec<renderer::EntityTableError>,
     pub highlight_errors: Vec<renderer::HighlightError>,
     pub image_errors: Vec<renderer::ImageError>,
     /// The files this document included, so the caller's warnings can resolve
@@ -87,6 +91,15 @@ pub(super) fn process_preview(
     let object_type_mismatches =
         retain_reportable_mismatches(&render_output.object_type_mismatches, &doc.suppressions);
     let math_errors = retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions);
+    // An empty listing is reported only when there *is* a project to list. With
+    // no global index the graph is unknown, so every table would be empty
+    // through no fault of the author — the one case this diagnostic must stay
+    // quiet in, and the reason it is dropped here rather than never raised.
+    let entity_table_errors = if index_json.is_some() {
+        retain_reportable_entity_table_errors(&render_output.entity_table_errors, &doc.suppressions)
+    } else {
+        Vec::new()
+    };
     let highlight_errors =
         retain_reportable_highlight_errors(&render_output.highlight_errors, &doc.suppressions);
     let image_errors =
@@ -131,6 +144,7 @@ pub(super) fn process_preview(
         broken_links,
         object_type_mismatches,
         math_errors,
+        entity_table_errors,
         highlight_errors,
         image_errors,
         source_files: doc.source_files,
@@ -192,6 +206,9 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     }
     for error in &page.math_errors {
         eprintln!("{}", format_math_error_warning(&origin, error));
+    }
+    for error in &page.entity_table_errors {
+        eprintln!("{}", format_entity_table_error_warning(&origin, error));
     }
     for error in &page.highlight_errors {
         eprintln!("{}", format_highlight_error_warning(&origin, error));

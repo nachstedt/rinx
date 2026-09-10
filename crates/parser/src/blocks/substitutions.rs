@@ -398,8 +398,13 @@ fn resolve_directive(
         }
         // No `InlineNode`/`Node` content: an image's `:alt:` and a toctree
         // entry's title are plain strings, not inline-parsed, matching every
-        // other caption in this codebase; the rest carry no text at all.
-        Directive::Image(_)
+        // other caption in this codebase; the rest carry no text at all. An
+        // entity table's cells are not text of this document either — they are
+        // resolved from the project index while rendering, so a `|name|` in
+        // one would have to be substituted there, where the definition no
+        // longer exists.
+        Directive::EntityTable(_)
+        | Directive::Image(_)
         | Directive::DocTest(_)
         | Directive::CodeBlock(_)
         | Directive::Highlight { .. }

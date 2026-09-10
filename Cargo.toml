@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/cdecl", "crates/ast", "crates/scope",
+members = ["crates/cdecl", "crates/filter", "crates/ast", "crates/scope",
     "crates/toctree", "crates/entity", "crates/index", "crates/parser", "crates/analyzer", "crates/renderer", "crates/worker"]
 
 [workspace.package]

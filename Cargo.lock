@@ -844,6 +844,7 @@ name = "rusty_sphinx_ast"
 version = "0.1.0"
 dependencies = [
  "rusty_sphinx_cdecl",
+ "rusty_sphinx_filter",
  "serde",
  "serde_json",
  "sha2",
@@ -868,6 +869,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rusty_sphinx_filter"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "rusty_sphinx_index"
 version = "0.1.0"
 dependencies = [
@@ -885,6 +894,7 @@ dependencies = [
  "regex",
  "rusty_sphinx_ast",
  "rusty_sphinx_entity",
+ "rusty_sphinx_filter",
 ]
 
 [[package]]
@@ -899,6 +909,7 @@ dependencies = [
  "pathdiff",
  "rusty_sphinx_ast",
  "rusty_sphinx_entity",
+ "rusty_sphinx_filter",
  "rusty_sphinx_index",
  "rusty_sphinx_scope",
  "rusty_sphinx_toctree",
