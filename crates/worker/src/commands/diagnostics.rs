@@ -188,6 +188,24 @@ pub(super) fn format_math_error_warning(
     )
 }
 
+/// Formats a single empty-listing diagnostic as a warning line.
+///
+/// Like [`format_math_error_warning`], this never feeds into
+/// [`check_broken_links_strict`]: a filter that matched nothing is not a
+/// reference that failed to resolve. The page still renders, showing the
+/// table's headings so a reader can see what was asked for.
+pub(super) fn format_entity_table_error_warning(
+    origin: &WarningOrigin<'_>,
+    error: &renderer::EntityTableError,
+) -> String {
+    format!(
+        "warning: {} {}: {}",
+        origin.location(error.span),
+        error.code(),
+        error.message()
+    )
+}
+
 /// Formats a single highlighting-failure diagnostic as a warning line.
 ///
 /// Like [`format_math_error_warning`], this never feeds into

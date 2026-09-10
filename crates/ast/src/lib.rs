@@ -1,12 +1,14 @@
 //! Abstract Syntax Tree representations for the Rusty-Sphinx Document.
 //!
-//! One module per node type or supporting value type, with six families
+//! One module per node type or supporting value type, with seven families
 //! grouped into their own trees: `object_type` (the `domain:objtype` tags),
 //! `doctest` (the `sphinx.ext.doctest` node family), `enumerator`
 //! (enumerated-list markers), `table` (table content and layout), `image`
 //! (the URI, measurement and alignment vocabulary the two image directives
-//! share) and `dropdown` (the colour, marker, spacing and icon vocabulary
-//! sphinx-design's collapsible container is written in).
+//! share), `dropdown` (the colour, marker, spacing and icon vocabulary
+//! sphinx-design's collapsible container is written in) and `entity_table`
+//! (the listing directive that asks the entity graph a question, as opposed
+//! to `entity`, which holds what an author wrote about one thing).
 //! `object_naming` holds the signature/option naming helpers every later
 //! pipeline phase shares, and `visit` the traversal every phase walks with.
 //!
@@ -38,6 +40,7 @@ mod domain;
 mod domain_object_body;
 mod dropdown;
 mod entity;
+mod entity_table;
 mod enumerator;
 mod glossary_entry;
 mod hashed_content;
@@ -85,6 +88,7 @@ pub use dropdown::{
     OcticonName, SemanticColor,
 };
 pub use entity::{AttributeValue, EntityBody, EntityId, EntityIdError, EntitySection, SectionKind};
+pub use entity_table::{EntityTable, EntityTableSource};
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use hashed_content::HashedContent;

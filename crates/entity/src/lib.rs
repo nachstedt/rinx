@@ -40,6 +40,7 @@ pub mod attribute;
 pub mod backlinks;
 pub mod entity_type;
 pub mod error;
+pub mod field;
 pub mod id;
 pub mod json_schema;
 pub mod load;
@@ -55,6 +56,7 @@ pub use attribute::{
 pub use backlinks::{BacklinkSource, BacklinkSpec, BacklinkTable, derive_backlinks};
 pub use entity_type::{EntityType, ID_OPTION};
 pub use error::{DeclarationKind, SchemaError, SchemaErrors};
+pub use field::{BUILTIN_FIELDS, is_builtin_field};
 pub use id::{IdContext, IdDerivationError, IdSpec};
 pub use json_schema::{SCHEMA_PATH, entity_json_schema, entity_json_schema_text};
 pub use load::{NoReservedNames, ReservedDirectiveNames, load_schema};

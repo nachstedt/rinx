@@ -166,8 +166,11 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         // `.. image::` is a leaf by definition. A substitution definition's
         // `replace` content is `InlineNode` only, like a line block's — this
         // walker doesn't descend into inline content at all (see the module
-        // doc comment).
-        Directive::Image(_)
+        // doc comment). An entity table's rows are not children either: they
+        // are resolved from the project index while rendering, so there is
+        // nothing in this document to walk.
+        Directive::EntityTable(_)
+        | Directive::Image(_)
         | Directive::DocTest(_)
         | Directive::CodeBlock(_)
         | Directive::Highlight { .. }

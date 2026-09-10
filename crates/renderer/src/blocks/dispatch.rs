@@ -511,6 +511,9 @@ fn render_directive(
         Directive::Index { id, .. } => render_index_anchor(html, id),
         Directive::DomainObject(obj) => render_domain_object(html, obj, ctx),
         Directive::Entity(entity) => super::entity::render_entity(html, entity, ctx),
+        Directive::EntityTable(table) => {
+            super::entity_table::render_entity_table(html, table, ctx);
+        }
         Directive::Math {
             parts,
             label,

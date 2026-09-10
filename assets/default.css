@@ -1308,6 +1308,39 @@ dl.py dd > p.deprecated {
   background: #fffbeb;
 }
 
+/* ── Entity tables (`.. entity-table::` / `.. needtable::`) ────────── */
+
+/* A listing is a *report* about the entities, not one of them, so it is
+   deliberately not styled as an entity card: it reads as a table, like every
+   other table on the site. What it adds is a monospace id column, so a column
+   of ids scans as ids, and a full-width layout, since a listing is usually the
+   widest thing on its page.
+
+   `.document` prefixes the rules that fight `table th`/`td`'s own selectors,
+   which are specific enough to win otherwise. */
+.document table.entity-table {
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.document table.entity-table th.head {
+  white-space: nowrap;
+}
+
+.document table.entity-table td {
+  vertical-align: top;
+}
+
+/* An id is an identifier, so it is set as one — and the first column is the id
+   column in every table this build's default columns produce. */
+.document table.entity-table td:first-child a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+
+/* An empty cell is a field this entity's type does not declare. Left blank on
+   purpose: a placeholder would read as a value. */
+
 /* Inline references produced by an entity role. */
 .document a .xref.entity {
   font-family: 'JetBrains Mono', monospace;

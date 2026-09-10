@@ -1,5 +1,5 @@
 {
-  "checksum": "c79620cb0f79d12975c6c9a7c0b643fba8631c4e86fab04a8f1d7cb81ef13bd0",
+  "checksum": "53a5791dc043214fd2fd1d55c8dbd900b64112c41fc42c968d84d8f35ba2105a",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4076,6 +4076,35 @@
       ],
       "version": "0.1.0"
     },
+    "rusty_sphinx_filter 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rusty_sphinx_filter",
+      "name": "rusty_sphinx_filter",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rusty_sphinx_filter",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
     "rusty_sphinx_index 0.1.0": {
       "common_attrs": {
         "deps": [
@@ -6604,6 +6633,7 @@
     "rusty_sphinx_ast 0.1.0": "crates/ast",
     "rusty_sphinx_cdecl 0.1.0": "crates/cdecl",
     "rusty_sphinx_entity 0.1.0": "crates/entity",
+    "rusty_sphinx_filter 0.1.0": "crates/filter",
     "rusty_sphinx_index 0.1.0": "crates/index",
     "rusty_sphinx_parser 0.1.0": "crates/parser",
     "rusty_sphinx_renderer 0.1.0": "crates/renderer",

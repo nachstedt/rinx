@@ -32,6 +32,7 @@ mod domains;
 mod dropdown;
 mod entity;
 mod entity_section;
+mod entity_table;
 mod glossary;
 mod image;
 mod include;

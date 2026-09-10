@@ -130,6 +130,7 @@ diagnostic_codes! {
     DirectiveContentsUnknownOption => "directive.contents-unknown-option",
     DirectiveSectnumUnknownOption => "directive.sectnum-unknown-option",
     DirectiveDropdownUnknownOption => "directive.dropdown-unknown-option",
+    DirectiveEntityTableUnknownOption => "directive.entity-table-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
     DirectiveTitleArgumentMissing => "directive.title-argument-missing",
@@ -420,6 +421,32 @@ diagnostic_codes! {
     /// being built with — a build misconfiguration that would otherwise
     /// produce quietly wrong output.
     EntitySchemaMismatch => "entity.schema-mismatch",
+
+    // --- `.. entity-table::` / `.. needtable::` ----------------------------
+    //
+    // One family for both spellings of the directive: an author who wrote
+    // `.. needtable::` still suppresses with `entity-table.*`, because a code
+    // names the construct rather than the name it was written under.
+    /// A `:filter:` this build's filter language cannot evaluate — either a
+    /// syntax error, or a Python construct it deliberately does not support.
+    /// The table still renders, listing everything, rather than vanishing.
+    EntityTableInvalidFilter => "entity-table.invalid-filter",
+    /// A `:filter:`, `:columns:` or `:sort:` naming a field no entity type
+    /// declares and that is none of the built-in ones. Reported while parsing,
+    /// where the schema is already in hand, rather than silently matching or
+    /// showing nothing.
+    EntityTableUnknownField => "entity-table.unknown-field",
+    /// Both `:widths:` and its sphinx-needs spelling `:colwidths:` given at
+    /// once. Neither is guessed at, since the two disagreeing is exactly the
+    /// case where picking one silently renders the wrong table.
+    EntityTableDuplicateWidths => "entity-table.duplicate-widths",
+    /// A `:style:` this build has no rendering for — `datatables`, which is a
+    /// JavaScript feature. A static table is rendered instead.
+    EntityTableUnsupportedStyle => "entity-table.unsupported-style",
+    /// A table whose filter matched no entity at all. Reported for the reason
+    /// `.. literalinclude::` reports every way of selecting nothing: an empty
+    /// table is far more often a mistaken filter than an intended statement.
+    EntityTableEmptyResult => "entity-table.empty-result",
 
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never

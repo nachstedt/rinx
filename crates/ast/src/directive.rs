@@ -8,6 +8,7 @@ use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
 use crate::dropdown::Dropdown;
 use crate::entity::EntityBody;
+use crate::entity_table::EntityTable;
 use crate::glossary_entry::GlossaryEntry;
 use crate::hashed_content::HashedContent;
 use crate::image::{Figure, ImageOptions};
@@ -78,6 +79,19 @@ pub enum Directive {
     /// missing `dropdown` silently swallows every construct written inside
     /// one — targets, sections and entities alike.
     Dropdown(Box<Dropdown>),
+    /// `.. entity-table::`, and its sphinx-needs spelling `.. needtable::` —
+    /// a table of the entities matching a filter.
+    ///
+    /// Boxed like [`Self::Dropdown`], for the same reason: a filter
+    /// expression, a column list and the shared table options make it a large
+    /// payload, and an enum costs its largest variant everywhere one is
+    /// stored.
+    ///
+    /// The one directive here whose content comes from *other documents*. It
+    /// carries the question rather than the rows, because the entities it
+    /// lists are declared in documents this one never mentions — only the
+    /// project index knows them, so the rows are resolved while rendering.
+    EntityTable(Box<EntityTable>),
     VersionChange {
         kind: VersionChangeKind,
         version: String,

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `rusty-sphinx` is a Rust re-implementation of (a subset of) the Sphinx documentation generator, designed to be fast and to integrate natively with Bazel as a first-class, cache-friendly build step (not a wrapped external tool). It parses reStructuredText (`.rst`) into HTML documentation sites, with cross-file references, toctree-based navigation, and PlantUML diagram rendering.
 
-Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_entity`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`); `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree` and `rusty_sphinx_entity` aren't part of architecture.md's crate split (that doc is aspirational and predates all five), the other five match it. The `rusty_sphinx_lsp` crate architecture.md also describes is not yet built.
+Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_entity`, `rusty_sphinx_filter`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`); `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_entity` and `rusty_sphinx_filter` aren't part of architecture.md's crate split (that doc is aspirational and predates all six), the other five match it. The `rusty_sphinx_lsp` crate architecture.md also describes is not yet built.
 
 ## Commands
 
@@ -55,7 +55,7 @@ Each subcommand handler is split into a pure `process_*` function (testable with
 
 ### Crate layout (`crates/`)
 
-Each crate is a workspace member with its own `Cargo.toml` and `BUILD.bazel`; dependencies between them flow strictly `ast → scope`/`index` → `analyzer`/`renderer` → `worker`, with `parser` depending only on `ast`, parallel to `scope` and `index`.
+Each crate is a workspace member with its own `Cargo.toml` and `BUILD.bazel`; dependencies between them flow strictly `ast → scope`/`index` → `analyzer`/`renderer` → `worker`, with `parser` depending only on `ast`, parallel to `scope` and `index`. `cdecl` and `filter` are leaves depending on nothing of ours, with `ast → filter` because a parsed filter expression is stored in the `.ast`.
 
 Within a crate, a file is split once it grows past ~800 lines, along construct/responsibility boundaries. Prefer expressing the relationship via a same-named subdirectory (`inline.rs` splitting into `inline/reference.rs`, `inline/hyperlink.rs`, ...) over flat filename-prefixed siblings (`inline_reference.rs`) — `mod x;` in the parent file resolves to `parent_dir/x.rs` by default, so this needs no `#[path]` attribute; the one place this isn't possible is a crate root (`lib.rs`/`main.rs`), whose direct children are necessarily flat siblings of `lib.rs`/`main.rs` itself since that file's own directory *is* `src/`. When an implementation is genuinely one cohesive unit and its bulk is in `#[cfg(test)]` content (e.g. `ast/domain_object_body.rs`'s single enum+impl, `cdecl/parser.rs`'s one recursive-descent `Parser`), split only the tests into topic-based sibling files instead of fragmenting the implementation.
 
@@ -177,11 +177,28 @@ the instance data (`EntityId`, `AttributeValue`, `EntityBody`, `EntitySection`),
 because that is what survives into a `.ast` file. The dependency runs
 `ast → entity`, so the split cannot go the other way.
 
-### Extension directives (`.. dropdown::`)
+- `rusty_sphinx_filter` (`crates/filter/src/`) — the typed expression language a
+  listing directive's `:filter:` is written in (`parse_filter` → `Expr` →
+  `Expr::matches`). A leaf crate like `rusty_sphinx_cdecl`, and for the same
+  reason its parser is hand-rolled: two phases that may not depend on each other
+  both need it — the **parser** parses a filter, so a syntax error lands on the
+  option line the author wrote, and the **renderer** evaluates one. It therefore
+  knows nothing about entities at all; what it learns about the thing being
+  filtered arrives through the injected `FilterSubject` trait, which
+  `renderer`'s `blocks/entity_table/subject.rs` implements over an
+  `EntityRecord`. Python's spelling over the subset real sphinx-needs filters
+  use, with everything outside it — calls, comprehensions, `!= None`, `&&`,
+  ordering — refused *by name* with a character offset rather than as a generic
+  syntax error. Which field *names* exist is not here but in
+  `rusty_sphinx_entity`'s `field.rs`, because the parser must check them without
+  an index in hand; this crate only evaluates.
+
+### Extension directives (`.. dropdown::`, `.. entity-table::`; see `docs/decisions/011-entity-listing.md`)
 
 Everything else this build parses is docutils' or Sphinx's own. `.. dropdown::`
-comes from **sphinx-design**, and supporting it settles two things that any
-further extension directive inherits:
+comes from **sphinx-design** and `.. entity-table::`/`.. needtable::` from
+**sphinx-needs**; `directives/dispatch.rs`'s `try_parse_extension_directive`
+groups them, because they share a rule the built-ins do not:
 
 - **There is no `extensions =` config**, so a supported extension directive is
   simply always available, and its name joins `BUILTIN_DIRECTIVE_NAMES` — which
@@ -190,6 +207,16 @@ further extension directive inherits:
   its place ahead of prettier candidates: the entity benchmark's corpus nests
   `.. seq_msg::` entities inside dropdowns, and every one of them was invisible
   to the index until the container parsed.
+
+`.. entity-table::` is the odd member of that group: the name is *ours* and
+`.. needtable::` is the compatibility spelling, since the entity model's whole
+claim is that sphinx-needs is a schema rather than a feature. Both names are
+reserved, they parse to one `Directive::EntityTable` recording which was
+written, and they share one `entity-table.*` diagnostic family — a code names
+the construct, not the spelling. It is also the only directive whose *content*
+comes from other documents: the node carries a question and
+`renderer/blocks/entity_table/` resolves the rows against `ProjectIndex`, which
+is why an empty result can only be reported while rendering.
 
 Icons come from `octicons-pack` (a redistribution of `@primer/octicons`), and
 the split of responsibility is deliberate: the AST carries only the *name*

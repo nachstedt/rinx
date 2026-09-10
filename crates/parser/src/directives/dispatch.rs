@@ -18,6 +18,7 @@ use super::domains::{DirectiveSignatures, parse_domain_object};
 use super::dropdown::parse_dropdown;
 use super::entity::{EntityDirective, parse_entity};
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
+use super::entity_table::parse_entity_table;
 use super::glossary::parse_glossary;
 use super::image::{parse_figure_directive, parse_image_directive};
 use super::include::parse_include;
@@ -371,15 +372,15 @@ fn parse_remaining_body_directive(
         );
         return Node::Directive(directive);
     }
-    if name == "dropdown" {
-        let directive = parse_dropdown(
-            &argument,
-            directive_span,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        );
+    if let Some(directive) = try_parse_extension_directive(
+        &name,
+        &argument,
+        directive_span,
+        body_lines,
+        adornment_order,
+        diagnostics,
+        ctx,
+    ) {
         return Node::Directive(directive);
     }
     if name == "seealso" {
@@ -446,6 +447,48 @@ fn parse_remaining_body_directive(
         body: join_body_lines(body_lines),
     };
     Node::Directive(directive)
+}
+
+/// Parses the directives that come from a *Sphinx extension* rather than from
+/// docutils or Sphinx itself.
+///
+/// Grouped because they share a rule the built-ins do not: this build has no
+/// `extensions =` config, so a supported extension directive is simply always
+/// available and its name is reserved against entity schemas. See
+/// `spec_gaps.md`'s "Third-party extension directives" section, which lists
+/// exactly these.
+fn try_parse_extension_directive(
+    name: &str,
+    argument: &str,
+    directive_span: Option<rusty_sphinx_ast::Span>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<Directive> {
+    // sphinx-design's collapsible container.
+    if name == "dropdown" {
+        return Some(parse_dropdown(
+            argument,
+            directive_span,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        ));
+    }
+    // This build's own listing directive, and sphinx-needs' spelling of it.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityTableSource>() {
+        return Some(parse_entity_table(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
+    None
 }
 
 /// Whether a directive of this object type may declare more than one
@@ -944,6 +987,9 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     "index",
     // Other content
     "dropdown",
+    // Listing directives over the entity graph, in both spellings
+    "entity-table",
+    "needtable",
     "plantuml",
     "math",
     // Domain objects and scope directives

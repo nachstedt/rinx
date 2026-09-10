@@ -9,13 +9,14 @@ use std::fs;
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
     WarningOrigin, check_broken_links_strict, format_broken_link_warning,
-    format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
-    format_object_type_mismatch_warning,
+    format_entity_table_error_warning, format_highlight_error_warning, format_image_error_warning,
+    format_math_error_warning, format_object_type_mismatch_warning,
 };
 use super::entity_schema::{load_entity_schema, load_entity_templates};
 use super::suppression::{
-    retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
-    retain_reportable_math_errors, retain_reportable_mismatches,
+    retain_reportable_entity_table_errors, retain_reportable_highlight_errors,
+    retain_reportable_image_errors, retain_reportable_links, retain_reportable_math_errors,
+    retain_reportable_mismatches,
 };
 
 /// One rendered page, plus everything the caller reports about it.
@@ -34,6 +35,8 @@ pub(super) struct RenderedPage {
     pub broken_links: Vec<renderer::BrokenLink>,
     pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
     pub math_errors: Vec<renderer::MathError>,
+    /// Listing directives whose filter matched no entity.
+    pub entity_table_errors: Vec<renderer::EntityTableError>,
     pub highlight_errors: Vec<renderer::HighlightError>,
     pub image_errors: Vec<renderer::ImageError>,
     /// Entity templates the schema named but the site could not use.
@@ -114,6 +117,10 @@ pub(super) fn process_render(
             &doc.suppressions,
         ),
         math_errors: retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions),
+        entity_table_errors: retain_reportable_entity_table_errors(
+            &render_output.entity_table_errors,
+            &doc.suppressions,
+        ),
         highlight_errors: retain_reportable_highlight_errors(
             &render_output.highlight_errors,
             &doc.suppressions,
@@ -204,6 +211,9 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     }
     for error in &page.math_errors {
         eprintln!("{}", format_math_error_warning(&origin, error));
+    }
+    for error in &page.entity_table_errors {
+        eprintln!("{}", format_entity_table_error_warning(&origin, error));
     }
     for error in &page.highlight_errors {
         eprintln!("{}", format_highlight_error_warning(&origin, error));

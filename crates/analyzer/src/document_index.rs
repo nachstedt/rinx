@@ -227,7 +227,8 @@ pub(super) fn index_nodes(
                 | Directive::Image(_)
                 | Directive::Figure(_)
                 | Directive::Contents(_)
-                | Directive::Dropdown(_)),
+                | Directive::Dropdown(_)
+                | Directive::EntityTable(_)),
             ) => index_name_bearing_directive(directive, doc_path, index, scope),
             Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
             _ => {}
@@ -297,6 +298,12 @@ fn index_name_bearing_directive(
         }
         Directive::Contents(contents) => {
             register_directive_name(contents.options.name.as_ref(), doc_path, index);
+        }
+        // A listing directive's `:name:` is all it contributes: its rows are
+        // resolved from this very index while rendering, so there is nothing
+        // here to index them from.
+        Directive::EntityTable(table) => {
+            register_directive_name(table.name.as_ref(), doc_path, index);
         }
         // A dropdown carries both: a `:name:` of its own, and a body whose
         // targets, sections and entities belong to this document exactly as

@@ -25,7 +25,7 @@ reach for is most of learning the model.
 
 | kind | what it is | parsed as RST? | in the index? | filterable? |
 |---|---|---|---|---|
-| **attribute** | a value — a status, a priority, a list of tags | no | yes | yes (a later increment) |
+| **attribute** | a value — a status, a priority, a list of tags | no | yes | yes |
 | **section** | a document — prose with headings, directives, links | **yes** | no | no |
 | **relation** | an edge to another entity | no | yes | yes |
 | **role** | how prose *points at* an entity | — | — | — |
@@ -459,6 +459,122 @@ example and the loader cannot drift apart.
 
 ---
 
+## Listing entities
+
+*(Why it is built this way: `docs/decisions/011-entity-listing.md`.)*
+
+A `.. entity-table::` asks the graph a question and renders the answer as a
+table. Its rows come from the project index rather than from the document it is
+written in, so it lists entities declared anywhere in the site.
+
+```rst
+.. entity-table::
+   :filter: type == "req" and status != "closed"
+   :columns: id, title, status, verified_by
+   :sort: title
+```
+
+`.. needtable::` is accepted as a second spelling of the same directive, so a
+project migrating from sphinx-needs keeps its documents. Both names are
+reserved, which means an entity schema may not declare a type or section called
+either. The two render identically and share one set of diagnostic codes: an
+author who wrote `.. needtable::` still suppresses with
+`entity-table.invalid-filter`.
+
+### The field vocabulary
+
+A field name is any of five built-ins, or anything the schema declares — an
+attribute, an outgoing relation, or a **derived back-link**, which is nowhere
+declared and still filterable and showable. One name works in `:filter:`,
+`:columns:` and `:sort:` alike, and a name no type declares is
+`entity-table.unknown-field` at parse time rather than a column that silently
+renders empty.
+
+| field | value |
+|---|---|
+| `id` | the entity's id |
+| `type` | the *directive name* — `req` |
+| `type_name` | the schema's *label* — `Requirement` |
+| `title` | the title, absent when the type maps none |
+| `docname` | the document the entity was written in |
+
+`type` and `type_name` read backwards, and are sphinx-needs' own names kept
+deliberately, so a migrating project's filters mean here what they meant there.
+A built-in wins over a same-named attribute.
+
+Since one table may list several types, a field only some of them declare is
+perfectly good: it is simply missing on the others, which is what makes
+`status == "open"` skip an entity whose type has no status rather than fail.
+
+### The filter language
+
+Python's spelling, over the subset that real filters use:
+
+| | |
+|---|---|
+| comparison | `==`, `!=` |
+| containment | `in`, `not in` — substring over text, membership over a list |
+| presence | `is None`, `is not None` |
+| combination | `and`, `or`, `not`, parentheses |
+| values | field names, `"strings"`, `'strings'`, whole numbers, `True`/`False` |
+| bare field | true when the value is non-empty, as in Python |
+
+Missing values have a defined answer everywhere rather than an error: a missing
+field equals nothing (so `status == "open"` is false), `!=` is the exact
+negation of `==`, and `in` against a missing haystack is false.
+
+**Everything outside this is refused by name, with a position.** These are all
+valid Python and none of them is silently ignored:
+
+| written | reported |
+|---|---|
+| `len(tags) > 0` | function calls are not supported, pointing at `len` |
+| `[[copy('id')]]` | dynamic functions are not supported |
+| `[n for n in needs]` | comprehensions are not supported |
+| `status != None` | comparing to `None`; use `is not None` |
+| `a && b` | use `and` |
+| `priority > 2` | ordering comparisons are not supported |
+
+A filter that fails to parse leaves the table listing *everything* rather than
+nothing: the diagnostic already says what is wrong, and an empty table on top of
+it would hide what the author was reaching for.
+
+There is deliberately no `filter_func` and no dynamic function: both are
+sphinx-needs calling Python, and this build has no interpreter.
+
+### Options
+
+| option | meaning |
+|---|---|
+| `:filter:` | which entities to list; omitted lists every one |
+| `:columns:` | the fields to show, in order. Default: `id`, `type`, `title` |
+| `:sort:` | one field to order by; omitted orders by id |
+| `:widths:` / `:colwidths:` | two spellings of one option — giving both is an error rather than a guess |
+| `:width:`, `:align:`, `:class:`, `:name:` | as on every other table directive |
+| `:style:` | only `table`; `datatables` is reported, since it is a JavaScript grid |
+
+The `id` and `title` columns link to the entity, and a column of relations or
+back-links links to each target. A list-valued column becomes links only when
+every item names an entity the index knows, so a `tags` column stays text.
+
+Ordering by id when no `:sort:` is given is not an implementation detail: a
+rendered page is a build artefact cached on its inputs, so the default order has
+to be deterministic rather than merely stable within one run.
+
+### What it does not do
+
+A table whose filter matches nothing renders its headings and reports
+`entity-table.empty-result` — an empty listing is far more often a filter that
+no longer matches than a deliberate statement. The live preview stays quiet
+about it when no project index is available, since every table would be empty
+through no fault of the author.
+
+`needlist`, `needflow`, `needpie` and `needbar` are not implemented. They are
+the same question with a different presentation, and would reuse this filter
+language unchanged.
+
+---
+
 ## Migrating from sphinx-needs
 
 `examples/entities/entities.toml` reproduces the built-in vocabulary — `req`,
@@ -468,12 +584,13 @@ unchanged.
 
 Deliberately **not** supported:
 
-- **Filter strings.** Sphinx-needs evaluates them as Python expressions.
-  rusty-sphinx has no interpreter, and will grow its own small typed filter
-  language instead, with unsupported syntax diagnosed rather than silently
-  matching nothing.
-- **Listing directives** (`needtable`, `needlist`, `needflow`, `needpie`) —
-  a later increment.
+- **Python filter strings.** `.. needtable::` and its `:filter:` *are*
+  supported — see "Listing entities" above — but through this build's own
+  typed filter language rather than a Python interpreter. It covers the
+  operators real filters use and diagnoses everything else by name, so a filter
+  calling `len()` is reported rather than silently matching nothing.
+- **The other listing directives** (`needlist`, `needflow`, `needpie`,
+  `needbar`) — a later increment. They reuse the same filter language.
 - **Dynamic functions** (`[[copy('id')]]`) and `needextend`.
 
 ---
