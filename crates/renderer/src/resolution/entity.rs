@@ -96,6 +96,7 @@ mod tests {
                     title: None,
                     attributes: BTreeMap::new(),
                     outgoing: BTreeMap::new(),
+                    uml: BTreeMap::new(),
                 },
             );
         }

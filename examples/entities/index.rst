@@ -12,3 +12,4 @@ this document for the meta-model these pages use.
    requirements
    audit_events
    tables
+   diagrams

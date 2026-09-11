@@ -6,16 +6,20 @@
 
 mod document_outline;
 mod entity_record;
+mod entity_subject;
 mod equation_location;
 mod gen_index_entry;
+mod href;
 mod project_index;
 mod section_numbers;
 mod target_location;
 
 pub use document_outline::{DocumentOutline, DocumentToctree, OutlineSection};
 pub use entity_record::EntityRecord;
+pub use entity_subject::EntitySubject;
 pub use equation_location::EquationLocation;
 pub use gen_index_entry::GenIndexEntry;
+pub use href::{entity_anchor, relative_doc_href};
 pub use project_index::{DuplicateEntityId, MergeConflicts, ProjectIndex};
 pub use section_numbers::DocumentNumbers;
 pub use target_location::TargetLocation;

@@ -178,3 +178,11 @@ entry under the heading it belongs to, as a single short sentence.
 - When a template must reproduce what built-in rendering does, give it the declared labels and the document order rather than letting it hardcode a second copy of either.
 - Render a declared vocabulary's parts in the order the schema declares them, not in document order or a map's key order; instances of one type should be comparable at a glance.
 - When adding a rule for a class on an element a generic selector already styles (`.document code`, `table th`), match that selector's specificity or the new rule silently loses.
+- When two phases must agree on a derived value, have both call one pure function rather than passing a sidecar between them; a sidecar makes the agreement a protocol, a shared function makes it impossible to break.
+- A value that two callers each supply separately is the one input they can supply differently — put it on the data being processed, not in a context each of them fills in.
+- Measure a plausible-sounding build optimization before keeping it; batching many small Bazel actions into one action with many outputs can be slower than the actions it replaced.
+- Record what an accepted regression actually costs, measured, in the ADR that accepts it — "some overhead" is not a decision anyone can revisit later.
+- When a build system cannot honour an option's semantics (a `:save:` writing an undeclared path), diagnose it by name and point at what does work, rather than ignoring it or dropping the directive.
+- Pay only for what you use: when the build system cannot discover whether a feature is used before running actions, make it an explicit per-library opt-in rather than a cost every document of every project pays.
+- An opt-in is only honest if forgetting it fails loudly, at the line that needed it, naming the switch to flip.
+- When two actions compute the same thing from the same inputs, fold the second into the first rather than keeping them in step; the cheapest agreement is one process.

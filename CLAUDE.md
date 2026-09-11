@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `rusty-sphinx` is a Rust re-implementation of (a subset of) the Sphinx documentation generator, designed to be fast and to integrate natively with Bazel as a first-class, cache-friendly build step (not a wrapped external tool). It parses reStructuredText (`.rst`) into HTML documentation sites, with cross-file references, toctree-based navigation, and PlantUML diagram rendering.
 
-Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_entity`, `rusty_sphinx_filter`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`); `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_entity` and `rusty_sphinx_filter` aren't part of architecture.md's crate split (that doc is aspirational and predates all six), the other five match it. The `rusty_sphinx_lsp` crate architecture.md also describes is not yet built.
+Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rusty_sphinx_ast`, `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_entity`, `rusty_sphinx_filter`, `rusty_sphinx_uml`, `rusty_sphinx_parser`, `rusty_sphinx_analyzer`, `rusty_sphinx_renderer`, `rusty_sphinx_worker`); `rusty_sphinx_scope`, `rusty_sphinx_index`, `rusty_sphinx_cdecl`, `rusty_sphinx_toctree`, `rusty_sphinx_entity`, `rusty_sphinx_filter` and `rusty_sphinx_uml` aren't part of architecture.md's crate split (that doc is aspirational and predates all seven), the other five match it. The `rusty_sphinx_lsp` crate architecture.md also describes is not yet built.
 
 ## Commands
 
@@ -25,6 +25,8 @@ bazel build //examples:site           # build the example multi-team site end-to
 bazel build //examples/team_a:docs    # build one team's library in isolation
 bash tests/test_strict_deps.sh        # verifies Bazel fails the build when a toctree dep is missing from BUILD.bazel
 bash tests/test_strict_links.sh       # verifies broken links only warn by default, and fail the build when strict_links = True
+bash tests/test_diagram_cache_firewall.sh  # verifies an edit elsewhere does not restart the PlantUML JVM, and a diagram edit does
+bash tests/test_diagram_opt_in.sh     # verifies a diagram in a library without `diagrams = True` fails the build
 bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.md)
 bazel run //scripts:benchmark_entities  # benchmark the entity model against useblocks' sphinx-needs demo (see docs/benchmark.md)
 
@@ -45,7 +47,7 @@ The binary (`crates/worker/src/main.rs`) is a multi-subcommand CLI, one subcomma
 
 - `parse --input file.rst --output file.ast` — RST text to a serialized `ast::Document` (JSON).
 - `validate_toctree --input file.ast --output file.ast [--allowed <doc>...]` — checks toctree entries only reference declared docs.
-- `extract_diagrams` / PlantUML compile / `validate_images` — pulls `Directive::PlantUml` content out of the AST, compiles it to SVG via the `plantuml` jar, and later checks every referenced diagram has a matching SVG.
+- PlantUML compile / `validate_images` — for a document whose library set `diagrams = True`, the `render` action (below) also writes each diagram's expanded text as `<hash>.puml` into `--diagram-outdir`; a per-document compile action turns those into SVGs via the `plantuml` jar, and `validate_images` checks every `.puml` got its `.svg`. All of it is **after** indexing and at the *site* level, because a templated diagram's text is a question asked of the entity graph — see "Diagrams" below.
 - `index --inputs a.ast b.ast ... --output project.index` — merges all documents' local analysis (`analyzer::analyze`) into one global `rusty_sphinx_index::ProjectIndex` (targets, document titles, nav tree, glossary terms).
 - `render --input file.ast --index project.index --doc-path rel/path --output file.html --config site.toml --template layout.html` — turns one AST + the global index into a final HTML page.
 - `preview` — collapses parse+local-analyze+merge+render into one process reading RST from stdin, for low-latency editor use (see "Live preview" below).
@@ -70,18 +72,29 @@ Two rules keep these moves honest. Place a module under whichever dispatcher act
 - `rusty_sphinx_cdecl` (`crates/cdecl/src/`) — a small C declaration parser (`tokenize` → recursive-descent `Parser` → `Declaration`/`Declarator`), used by `parser`'s `c`-domain directives to find the declared name in a `c:function`/`c:type` signature. `parser.rs` is one cohesive recursive-descent unit, so only its tests are split into siblings (`parser/declaration_tests.rs`, `parser/function_tests.rs`).
 - `rusty_sphinx_parser` (`crates/parser/src/`) — three trees, one per parsing phase, each a forwarder over one module per construct: `blocks/` (block-level constructs — bullet/enumerated/definition lists, grid and simple tables, comments, transitions, literal and doctest blocks), `directives/` (everything behind a `.. name::` marker, with `directives/domains/{py,c,std_}/` for the domain objects and `directives/data_table/` for the two table directives that share an AST node; `directives/dropdown.rs` is the one directive here that is neither docutils' nor Sphinx's — see "Extension directives" below), and `inline/` (inline markup, with `inline/roles/{py,c,std_}/` for the cross-reference roles, mirroring `domains/`'s shape). `directives/code_block/` is the forwarder over the four directives that produce a code block (`block.rs` for `.. code-block::`/`.. code::`, `literal_include.rs`, `highlight.rs`) plus the vocabulary they share (`options.rs`, `dedent.rs`, `emphasize.rs`, `selection.rs` — which `directives/include.rs` also uses — and `diff.rs` for `:diff:`). Only `headings.rs`, `indent.rs`, `context.rs` and `diagnostics.rs` sit flat beside them, being reached from all three. `parser::parse()` is the entry point, `parse_with_domain()` and `parse_with_ctx()` its configurable forms — the latter taking the `ParseCtx` (`context.rs`) that every block-level parser threads, carrying the default domain, the injected `ParseFileLoader` that `.. csv-table::`'s `:file:`, `.. include::` and `.. literalinclude::` read through (the crate itself performs no I/O, so the worker supplies the filesystem implementation), and the **`origin`** that turns a slice-relative line/column back into a document position. That last one is why `ParseCtx` is threaded at all rather than just consulted: **any code that dedents or re-slices lines before calling `parse_blocks` must rebase it with `ctx.nested(line_offset, column_offset)`**, or every position inside that block is wrong by the amount trimmed — which is why `collect_directive_body` and `normalize_cell_lines` return how much they trimmed instead of discarding it, and why the list, glossary, table-cell and directive-body parsers each rebase. Content with no source line at all (a `.. csv-table::`'s generated rows) parses under `ctx.synthetic()` and reports positionless diagnostics. `diagnostics.rs`'s `Diagnostics` is the collector threaded alongside it, holding the diagnostics found, the `.. noqa:` suppressions resolved to line ranges, and the table of files an `.. include::` spliced text in from — the three travel together because a span's `FileId` indexes the third and a suppression matches against it. The parser is meant to be error-resilient (bad input becomes an error/unknown node, not a panic/abort) to support live preview over incomplete documents.
 - `rusty_sphinx_analyzer` (`crates/analyzer/src/lib.rs`) — builds the per-document and project-wide index: cross-reference targets, document titles, section outlines, the toctree graph, glossary terms, split across `document_index.rs`/`domain_object_index.rs`/`outline.rs`/`project_index.rs`. `build_project_index` is a sequence of *named phases* (`merge_document_analyses` → `find_root_documents` → `assign_section_numbering` → `collect_page_order` → `collect_nav_diagnostics`) because they have a real order dependency: roots cannot be chosen until every toctree is known, and numbering and page order cannot start until the roots are. The first two are cohesive units whose bulk is tests, so each keeps its implementation whole and splits only its `#[cfg(test)]` content into topic-named siblings (`document_index/targets_and_titles_tests.rs`, …). `rusty_sphinx_index::ProjectIndex::merge` is what lets the `preview` subcommand and the VS Code extension combine a fresh local analysis with a stale global index.
+- `rusty_sphinx_uml` (`crates/uml/src/`) — expanding a diagram's template into the `PlantUML` text that gets compiled (`expand`). The renderer is its only caller; it is a crate of its own because it evaluates templates against an owned snapshot of the entity graph with none of the HTML vocabulary around it — an earlier second caller, a separate expansion action, was removed as duplicate work. `snapshot.rs` owns the awkward part: MiniJinja functions must be `Send + Sync + 'static`, so the entity graph is materialized into an owned snapshot before any closure sees it, with every field's value coming from `rusty_sphinx_index::EntitySubject` so a diagram's `filter()` and a table's `:filter:` cannot disagree. `template.rs` builds the environment; its `uml()`/`imports()` recurse *through* MiniJinja, which is why the import chain and the first-failure slot are shared `Arc`s rather than stack locals.
 - `rusty_sphinx_renderer` (`crates/renderer/src/`) — AST + `rusty_sphinx_index::ProjectIndex` to HTML, in four trees mirroring `parser`'s shape. Its diagnostics carry the `Span` the offending `InlineNode` was parsed with; `inline/ref_text.rs`'s `RefText` bundles the display/target/span triple every index-resolved role passes to its renderer. `lib.rs` holds `RenderCtx`, `RenderOutput` and the `render()`/`render_with_config()` entry points (with the diagnostics it reports in `broken_link.rs`); `highlight.rs` sits flat at the root as the one place `syntect` is called — the same containment `math.rs` gives `math-core` and `octicon.rs` gives `octicons-pack`, and for the same reason: the backend must never reach a `.ast` file. It returns **one HTML string per line**, because `:linenos:` and `:emphasize-lines:` need to address a line on its own, and it rebalances each line's `<span>` tags so a scope spanning several lines cannot nest illegally around that per-line markup; `blocks/` renders body content, its `dispatch.rs` walking the node tree and delegating to one module per construct (`tables.rs`, `data_table.rs` for `list-table`/`csv-table`, `admonitions.rs`, `doctest.rs`, `glossary.rs`, `scope_directives.rs`, `nav.rs` for local toctrees, and `domain_object/` for the definition directives); `inline/` mirrors that for inline markup, one file per role behind its own `dispatch.rs`; `page/` wraps a rendered body in the MiniJinja-templated chrome (`layout.rs`, `nav_hrefs.rs`) and renders the general index (`genindex.rs`). `resolution/` (domain-object and `:option:` cross-reference lookup) and `nav/` (toctree expansion, entry resolution, section numbers, prev/next) stay flat at the root because both `blocks/` and `page/` reach them. `config.rs` holds `SiteConfig`, deserialized from `rusty_sphinx.toml` — deliberately only metadata (project name/version), never file paths, see "Config vs CLI flags" below.
 - `rusty_sphinx_worker` (`crates/worker/src/`) — `main.rs` is the CLI entry point, dispatching into `commands/`, which holds one file per subcommand, each pairing a pure `process_*` with its file-I/O `cmd_*` wrapper per the split described above; `commands/cli_args.rs` holds the shared flag-parsing helpers, `commands/parse_files.rs` the filesystem loader every parse-time file read goes through, `commands/diagnostics.rs` the warning formatting shared by `parse`, `render` and `preview` (one shape for all of them: `warning: path:line:column: code: message`), and `commands/suppression.rs` the `.. noqa:` filtering applied immediately before it — the filtering runs *inside* `process_render`/`process_preview` rather than in their callers, so a suppressed link is invisible to the warning, the `--strict-links` failure and the `--warnings-output` sidecar alike. `lib.rs` holds `process_rst()`, `doctest_plan.rs` (see "Doctests" below), `domain_warnings.rs`, and `validator.rs` (toctree/allowed-docs validation used by the `validate_toctree` subcommand).
 
 ### Bazel rule pair: library vs. site (`rules/library.bzl`, `rules/site.bzl`, `defs.bzl`)
 
-Mirrors `cc_library`/`cc_binary`: `rusty_sphinx_library` runs Phase 1 (parse, toctree-validate, extract/compile PlantUML diagrams) per `.rst` file and exposes a `RustySphinxInfo` provider carrying `.ast` files + SVG dirs. `rusty_sphinx_site` collects everything transitively from `deps`, runs the single Phase 2 index action, then one Phase 3 render action per `.ast` file, bundles images, and copies CSS.
+Mirrors `cc_library`/`cc_binary`: `rusty_sphinx_library` runs Phase 1 (parse, toctree-validate, extract doctests, embed assets) per `.rst` file and exposes a `RustySphinxInfo` provider carrying `.ast` files — plus `diagram_ast_files`, the subset whose library set `diagrams = True`. `rusty_sphinx_site` collects everything transitively from `deps`, runs the single Phase 2 index action, then one render action per `.ast` file (which, for a `diagram_ast_files` document, also writes its `.puml` sources, followed by a compile action), bundles images, and copies CSS. Diagrams are the site's job rather than the library's — see "Diagrams" below.
 
 Four independent dependency mechanisms, don't confuse them:
 - **`deps` on `rusty_sphinx_library`** — strict, DAG-enforced, required *only* for docs pulled in via `.. toctree::`. This is what `validate_toctree` checks against (`--allowed`).
 - **Cross-references / hyperlinks in text** — not declared in `deps` at all; stored as symbolic markers in the Phase-1 AST and resolved later, globally, during the Phase 2 index step. This is why cyclic hyperlinks between docs are fine but cyclic toctrees are not.
 - **`parse_data` on `rusty_sphinx_library`** — files, not documents: everything the *parser* reads *at parse time*. That is the `.csv` behind a `.. csv-table:: :file:`, and the sources `.. include::` and `.. literalinclude::` splice into a document. They join the parse action's inputs, so a path resolves inside the sandbox; an undeclared file is simply absent and the parse fails. Nothing about this is a dependency on another library. Two traps worth knowing: an `.rst` reached by `.. include::` must **not** also appear in `srcs`, or it is published as a page of its own as well as being spliced in; and a `.. toctree::` written *inside* an included fragment still needs its documents in `deps`, because `validate_toctree` runs on the already-merged AST. Unlike `images` below there is no cache firewall here — an included file's text really is part of the including document, so editing it re-parses and re-renders every page that includes it.
 - **`images` on `rusty_sphinx_library`** — the pictures a `.. image::`/`.. figure::` shows. Unlike `parse_data` these are *not* parse-action inputs: parsing succeeds whether or not the file exists, because nothing reads it then. They ride the provider to the site rule, which copies them into `_images/` keeping their source-root-relative path (not Sphinx's flattened basename — see `docs/decisions/007-image-assets.md`), and an undeclared one fails the site's `validate_images` action. A `:loading: embed` image is additionally read by the per-document `embed_assets` action described below.
+
+- **`diagrams` on `rusty_sphinx_library`** — whether its documents may hold
+  PlantUML diagrams. **Off by default**, and that is the point: Bazel cannot
+  know before reading a document whether it draws anything, so without an
+  opt-in every document of every project would pay for the diagram pipeline.
+  A library that leaves it off gets no diagram actions at all; a diagram
+  written in one fails its parse as `uml.diagrams-disabled`, naming the
+  attribute. Keep diagram documents in a library of their own to keep the
+  cost on them — `examples/entities/BUILD.bazel`'s `diagram_docs` does, the
+  same way `doctest_docs` isolates doctests.
 
 - **`entity_schema` on both rules** — the project's construct vocabulary, not
   content. Read at *parse* time (it is what makes `.. req::` a directive), so it
@@ -192,6 +205,42 @@ because that is what survives into a `.ast` file. The dependency runs
   syntax error. Which field *names* exist is not here but in
   `rusty_sphinx_entity`'s `field.rs`, because the parser must check them without
   an index in hand; this crate only evaluates.
+
+### Diagrams: opt-in per library, compiled behind the index (`docs/decisions/012-entity-diagrams.md`)
+
+Six spellings — `.. plantuml::`/`.. uml::`, `.. entity-diagram::`/`.. needuml::`
+and `.. entity-arch::`/`.. needarch::` — parse to one `Directive::Uml`, which
+carries the diagram's **template** rather than its finished text. Four things
+follow, and none of them is optional:
+
+- **You pay only for what you use.** `diagrams = True` on a library is what
+  creates any diagram action at all (see the dependency mechanisms above).
+  Measured on CPython's docs — ~500 documents, no diagrams — the site builds in
+  the same 15.6s it did before diagrams existed; an always-on pipeline cost it
+  20.4s.
+- **Compilation is a `rusty_sphinx_site` action, never a library one.** A
+  templated diagram asks the entity graph questions only `ProjectIndex` can
+  answer. The plain PlantUML pair goes the same way rather than keeping its old
+  Phase-1 path, because two paths would mean two hash populations. A plain
+  `.. plantuml::` is a template with nothing to expand, so its hash is
+  unchanged.
+- **The render action writes the `.puml` files.** It already expands each
+  diagram to get the hash its `<img>` names, so `rusty_sphinx_uml::expand` is
+  called once per diagram, in one process that emits both the page and the
+  file — no separate expansion action, no sidecar. The renderer crate still
+  does no I/O: `RenderOutput::diagram_sources` hands the text back and
+  `cmd_render` writes it. The expander must be **deterministic** (every
+  iteration is over a `BTreeMap`), or an unchanged diagram hashes differently
+  and its compile misses the cache.
+- **The cache firewall is the `.puml` directory.** The index is an input, so any
+  edit re-runs every render; identical bytes leave the per-document compile
+  action's key unchanged and no JVM starts.
+
+`filter()` is `rusty_sphinx_filter` and `flow()`/`ref()` build hrefs from
+`rusty_sphinx_index`'s `relative_doc_href`/`entity_anchor` — which is why those
+two, and `EntitySubject`, live in `index` rather than in the renderer where
+they began. A filter or a link meaning one thing in a table and another in a
+diagram would be a bug neither crate's tests could see.
 
 ### Extension directives (`.. dropdown::`, `.. entity-table::`; see `docs/decisions/011-entity-listing.md`)
 

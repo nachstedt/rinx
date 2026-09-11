@@ -11,9 +11,9 @@ use std::io::{self, Read};
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
-    WarningOrigin, format_broken_link_warning, format_entity_table_error_warning,
-    format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
-    format_object_type_mismatch_warning, report_diagnostic,
+    WarningOrigin, format_broken_link_warning, format_diagram_error_warning,
+    format_entity_table_error_warning, format_highlight_error_warning, format_image_error_warning,
+    format_math_error_warning, format_object_type_mismatch_warning, report_diagnostic,
 };
 use super::embed_assets::embed_available_assets;
 use super::entity_schema::{load_entity_schema, load_entity_templates};
@@ -21,9 +21,9 @@ use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::ParseInputs;
 use super::suppression::{
-    retain_reportable, retain_reportable_entity_table_errors, retain_reportable_highlight_errors,
-    retain_reportable_image_errors, retain_reportable_links, retain_reportable_math_errors,
-    retain_reportable_mismatches,
+    retain_reportable, retain_reportable_diagram_errors, retain_reportable_entity_table_errors,
+    retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
+    retain_reportable_math_errors, retain_reportable_mismatches,
 };
 
 /// One previewed page, plus every warning it produced.
@@ -41,6 +41,7 @@ pub(super) struct PreviewedPage {
     /// Listing directives whose filter matched no entity. Always empty when
     /// the caller supplied no global index — see [`process_preview`].
     pub entity_table_errors: Vec<renderer::EntityTableError>,
+    pub diagram_errors: Vec<renderer::DiagramError>,
     pub highlight_errors: Vec<renderer::HighlightError>,
     pub image_errors: Vec<renderer::ImageError>,
     /// The files this document included, so the caller's warnings can resolve
@@ -100,6 +101,17 @@ pub(super) fn process_preview(
     } else {
         Vec::new()
     };
+    // A template asking about an entity is asking about the whole project, so
+    // with no global index every `need('REQ_001')` would fail through no fault
+    // of the author. Dropped for the same reason an empty listing is, and only
+    // for the failures that depend on the graph: a *syntax* error in the
+    // template is the author's either way, and is worth seeing in an editor
+    // long before a build runs.
+    let diagram_errors =
+        retain_reportable_diagram_errors(&render_output.diagram_errors, &doc.suppressions)
+            .into_iter()
+            .filter(|error| index_json.is_some() || !error.depends_on_the_project())
+            .collect();
     let highlight_errors =
         retain_reportable_highlight_errors(&render_output.highlight_errors, &doc.suppressions);
     let image_errors =
@@ -145,6 +157,7 @@ pub(super) fn process_preview(
         object_type_mismatches,
         math_errors,
         entity_table_errors,
+        diagram_errors,
         highlight_errors,
         image_errors,
         source_files: doc.source_files,
@@ -209,6 +222,9 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     }
     for error in &page.entity_table_errors {
         eprintln!("{}", format_entity_table_error_warning(&origin, error));
+    }
+    for error in &page.diagram_errors {
+        eprintln!("{}", format_diagram_error_warning(&origin, error));
     }
     for error in &page.highlight_errors {
         eprintln!("{}", format_highlight_error_warning(&origin, error));

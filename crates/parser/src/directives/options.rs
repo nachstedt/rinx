@@ -164,6 +164,20 @@ pub(in crate::directives) fn parse_positive_depth(
     }
 }
 
+/// Reads an option whose value is a percentage — `.. image::`'s `:scale:`
+/// and a diagram's alike.
+///
+/// docutils' `directives.percentage` strips one trailing `%` and then demands
+/// a non-negative integer, so `50` and `50%` are the same option and `-50` is
+/// no option at all. Shared for the reason [`parse_positive_depth`] is: two
+/// directives agreeing on one ambiguity should not each own a copy of the
+/// answer.
+pub(in crate::directives) fn parse_percentage(raw: &str) -> Option<u32> {
+    let trimmed = raw.trim();
+    let number = trimmed.strip_suffix('%').unwrap_or(trimmed).trim();
+    number.parse::<u32>().ok()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -490,5 +504,50 @@ mod tests {
             DiagnosticCode::ContentsDepthInvalid
         );
         assert!(diagnostics.entries()[0].message.contains(":depth:"));
+    }
+
+    #[test]
+    fn test_parse_percentage_reads_a_bare_integer() {
+        // Given / When / Then
+        assert_eq!(parse_percentage("50"), Some(50));
+    }
+
+    #[test]
+    fn test_parse_percentage_strips_one_trailing_percent_sign() {
+        // Given — docutils' `directives.percentage` accepts both spellings of
+        // the same option
+        assert_eq!(parse_percentage("50%"), parse_percentage("50"));
+    }
+
+    #[test]
+    fn test_parse_percentage_ignores_surrounding_whitespace() {
+        // Given / When / Then
+        assert_eq!(parse_percentage("  75 % "), Some(75));
+    }
+
+    #[test]
+    fn test_parse_percentage_accepts_zero() {
+        // Given — zero is a real percentage, unlike a depth limit's zero
+        assert_eq!(parse_percentage("0"), Some(0));
+    }
+
+    #[test]
+    fn test_parse_percentage_refuses_a_negative_number() {
+        // Given — docutils demands a non-negative integer
+        assert_eq!(parse_percentage("-50"), None);
+    }
+
+    #[test]
+    fn test_parse_percentage_refuses_a_fraction() {
+        // Given / When / Then
+        assert_eq!(parse_percentage("50.5"), None);
+    }
+
+    #[test]
+    fn test_parse_percentage_refuses_text() {
+        // Given / When / Then
+        assert_eq!(parse_percentage("half"), None);
+        assert_eq!(parse_percentage(""), None);
+        assert_eq!(parse_percentage("%"), None);
     }
 }

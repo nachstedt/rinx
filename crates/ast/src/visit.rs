@@ -5,7 +5,7 @@
 //! This walker exists for the *collect matching nodes* use cases — the pipeline
 //! phases that need to find every node of some kind anywhere in a document,
 //! regardless of nesting, and that carry no state across the traversal:
-//! [`crate::Directive::PlantUml`] extraction and validation being the original
+//! [`crate::Directive::Uml`] extraction and validation being the original
 //! two.
 //!
 //! It is deliberately **not** a general refactoring target for
@@ -178,7 +178,7 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         | Directive::Toctree { .. }
         | Directive::Contents { .. }
         | Directive::Sectnum(_)
-        | Directive::PlantUml(_)
+        | Directive::Uml(_)
         | Directive::Index { .. }
         | Directive::PyCurrentModule { .. }
         | Directive::CNamespace { .. }
@@ -197,23 +197,26 @@ mod tests {
     use crate::definition_list_item::DefinitionListItem;
     use crate::domain_object_body::DomainObjectBody;
     use crate::glossary_entry::GlossaryEntry;
-    use crate::hashed_content::HashedContent;
     use crate::inline_node::InlineNode;
     use crate::list_item::ListItem;
     use crate::non_empty_vector::NonEmptyVector;
     use crate::table::{TableCell, TableRow};
+    use crate::uml::{Uml, UmlSource};
 
     /// A `.. plantuml::` node whose body identifies it in assertions.
     fn diagram(body: &str) -> Node {
-        Node::Directive(Directive::PlantUml(HashedContent::new(body.to_string())))
+        Node::Directive(Directive::Uml(Box::new(Uml::new(
+            UmlSource::PlantUml,
+            body.to_string(),
+        ))))
     }
 
-    /// Collects the bodies of every `PlantUml` directive the walker visits.
+    /// Collects the templates of every diagram directive the walker visits.
     fn walk_diagram_bodies(nodes: &[Node]) -> Vec<String> {
         let mut bodies = Vec::new();
         walk_nodes(nodes, &mut |node| {
-            if let Node::Directive(Directive::PlantUml(content)) = node {
-                bodies.push(content.body().to_string());
+            if let Node::Directive(Directive::Uml(uml)) = node {
+                bodies.push(uml.template.clone());
             }
         });
         bodies

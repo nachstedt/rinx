@@ -2,9 +2,7 @@
 //! lists, and the directive dispatcher — everything [`render_nodes`] reaches
 //! while walking a document's node tree.
 
-use rusty_sphinx_ast::{
-    Directive, Enumerator, HashedContent, InlineNode, ListItem, Node, Toctree, ToctreeFlag,
-};
+use rusty_sphinx_ast::{Directive, Enumerator, InlineNode, ListItem, Node, Toctree, ToctreeFlag};
 use std::fmt::Write as _;
 
 use super::admonitions::{render_admonition, render_seealso, render_version_change};
@@ -21,6 +19,7 @@ use super::math::render_math;
 use super::option_list::render_option_list;
 use super::scope_directives::apply_scope_directive;
 use super::table_directive::{TableDirectiveParams, render_table_directive};
+use super::uml::render_uml_directive;
 use crate::RenderCtx;
 use crate::inline::render_inline;
 use crate::nav::{expand_toctree_entries, write_nav_list};
@@ -412,24 +411,6 @@ fn render_toctree_directive(html: &mut String, toctree: &Toctree, ctx: &mut Rend
     write_nav_list(html, &entries, toctree.options.caption.as_deref());
 }
 
-/// Renders a `.. plantuml::` diagram as an `<img>` pointing at the SVG a
-/// separate build phase compiled from this block's hashed content (see
-/// `extract_diagrams`/`validate_images` in the worker crate).
-fn render_plantuml_directive(html: &mut String, content: &HashedContent, ctx: &RenderCtx<'_>) {
-    let escaped_hash = html_escape::encode_text(content.hash());
-
-    // The same `_images/` arithmetic an authored `.. image::` uses. The two
-    // had private copies of it once, and only this one was right.
-    let src = super::asset_href::relative_asset_href(
-        std::path::Path::new(&format!("{escaped_hash}.svg")),
-        ctx.doc_path,
-    );
-
-    let _ = writeln!(html, "<div class=\"plantuml-diagram\">");
-    let _ = writeln!(html, "  <img src=\"{src}\" alt=\"PlantUML Diagram\" />");
-    let _ = writeln!(html, "</div>");
-}
-
 /// Renders a `.. list-table::`/`.. csv-table::`.
 ///
 /// Split out of [`render_directive`] because destructuring its ten options
@@ -487,7 +468,7 @@ fn render_directive(
             linenothreshold,
             force,
         } => super::code_block::apply_highlight_directive(language, *linenothreshold, *force, ctx),
-        Directive::PlantUml(content) => render_plantuml_directive(html, content, ctx),
+        Directive::Uml(uml) => render_uml_directive(html, uml, ctx),
         Directive::Image(options) => render_image_directive(html, options, ctx),
         Directive::Figure(figure) => render_figure_directive(html, figure, ctx),
         Directive::Admonition {

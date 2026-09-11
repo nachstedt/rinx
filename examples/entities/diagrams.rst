@@ -1,0 +1,144 @@
+Diagrams over the entity graph
+==============================
+
+A diagram directive's body is PlantUML source. In the plain
+``.. plantuml::``/``.. uml::`` spelling it reaches the compiler exactly as
+written; in the three spellings below it is first expanded as a Jinja template
+against the project's entity graph, so a picture can be *derived* from what the
+documents declare rather than restated beside them.
+
+Because the graph spans documents, expansion happens after the whole project
+has been indexed — which is why diagram compilation belongs to the site rather
+than to any one library.
+
+Drawing what a filter selects
+-----------------------------
+
+``filter()`` takes the same expression language an ``.. entity-table::``'s
+``:filter:`` is written in, and ``flow()`` turns an id into a clickable node.
+Clicking one lands on exactly the anchor a ``:ref:`` to that entity would.
+
+.. entity-diagram::
+   :caption: Every requirement in the project
+   :align: center
+
+   @startuml
+   {% for id in filter('type == "req"') %}
+   {{ flow(id) }}
+   {% endfor %}
+   @enduml
+
+``.. needuml::`` is accepted as a second spelling of the same directive, so a
+migrating sphinx-needs project keeps its documents.
+
+Reading one entity's fields
+---------------------------
+
+``needs`` holds every entity by id and ``need(id)`` fetches one. Attributes,
+relations and derived back-links share the one namespace the directive's
+options do, so ``.. req::``'s ``:owner:`` is read as ``need.owner``.
+
+.. needuml::
+   :caption: One requirement and what it links to
+   :debug:
+
+   @startuml
+   {{ flow('REQ_001') }}
+   note right of REQ_001
+     owner: {{ need('REQ_001').owner }}
+     status: {{ need('REQ_001').status }}
+   end note
+   {% for target in need('REQ_001').links %}
+   {{ flow(target) }}
+   REQ_001 --> {{ target }}
+   {% endfor %}
+   @enduml
+
+``:debug:`` shows the expanded PlantUML below the picture — the text that was
+actually compiled, which is what an author needs when a diagram comes out
+wrong.
+
+Extra values
+------------
+
+``:extra:`` binds names into the template's context, as comma-separated
+``name: value`` pairs.
+
+.. needuml::
+   :extra: heading: Boot requirements, colour: LightBlue
+
+   @startuml
+   rectangle "{{ heading }}" #{{ colour }} {
+     {{ flow('REQ_001') }}
+   }
+   @enduml
+
+An architecture diagram inside an entity
+----------------------------------------
+
+``.. entity-arch::`` — sphinx-needs spells it ``.. needarch::`` — is written
+*inside* an entity and binds that entity as ``need``. Writing one outside any
+entity is reported as ``uml.arch-outside-entity`` rather than drawn against a
+``need`` bound to nothing.
+
+Its `:key:` stores the template on the entity, so another diagram can import
+it. This is what makes architecture diagrams compositional: a component draws
+itself once, and every diagram that reaches it pulls that picture in rather
+than restating it.
+
+.. req:: The bootloader shall verify the kernel signature
+   :id: REQ_BOOT
+   :owner: platform
+   :links: SPEC_001
+
+   .. entity-arch::
+      :key: overview
+
+      component "{{ need.title }}" as {{ need.id }}
+
+   .. verification-criteria::
+
+      A diagram written inside a *section* still knows the entity it sits in,
+      even though a section's body deliberately forgets the entity's *type*:
+
+      .. entity-arch::
+
+         @startuml
+         {{ flow(need.id) }}
+         @enduml
+
+Importing another entity's diagram
+----------------------------------
+
+``uml(id, key)`` expands the diagram another entity wrote, with ``need``
+rebound to that entity. ``imports(id, relation)`` does the same for everything
+an entity points at along a relation, skipping targets that drew nothing.
+
+A diagram that reaches itself — directly, or around a cycle — is reported as
+``uml.recursive-import`` with the route it took, rather than expanding until
+the build dies.
+
+.. entity-diagram::
+   :caption: The bootloader's own picture, pulled in from where it was written
+
+   @startuml
+   {{ uml('REQ_BOOT', 'overview') }}
+   @enduml
+
+Named PlantUML preambles
+------------------------
+
+``:config:`` names a preamble declared under ``[uml_configs]`` in the site's
+``rusty_sphinx.toml`` — the preamble's *text*, never a path to a file holding
+it, so it survives a sandboxed build relocating files. The preamble is inserted
+directly after ``@startuml``, which is the only place PlantUML reads a
+``skinparam`` from. Naming one that is not declared is
+``uml.unknown-config`` rather than a diagram quietly missing its styling.
+
+.. needuml::
+   :config: monochrome
+   :caption: The same graph, with the site's monochrome preamble applied
+
+   @startuml
+   {{ flow('REQ_001') }}
+   @enduml

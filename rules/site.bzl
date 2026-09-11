@@ -7,6 +7,39 @@ one to HTML (Phase 3: render) using the rusty-sphinx worker binary.
 
 load("//:providers.bzl", "RustySphinxInfo")
 
+def _compile_diagrams(ctx, plantuml, puml_dir, doc_path):
+    """Compiles one document's diagram sources to SVG, returning the SVG dir.
+
+    Per document, and taking only that document's sources as input, so a
+    diagram that did not change leaves this action's key untouched and no JVM
+    starts. Wrapped in a shell to pass an absolute output path ($PWD/...) and
+    to handle an opted-in document that happens to draw nothing; passing
+    plantuml in `tools` lets Bazel aggregate its Java runfiles.
+    """
+    svg_dir = ctx.actions.declare_directory(ctx.label.name + "_svgs/" + doc_path)
+    command_script = """
+set -e
+shopt -s nullglob
+files=("{puml_dir}/"*.puml)
+mkdir -p "$PWD/{svg_dir}"
+if [ ${{#files[@]}} -gt 0 ]; then
+  "{plantuml}" -tsvg -nometadata -o "$PWD/{svg_dir}" "${{files[@]}}"
+fi
+""".format(
+        plantuml = plantuml.path,
+        svg_dir = svg_dir.path,
+        puml_dir = puml_dir.path,
+    )
+    ctx.actions.run_shell(
+        tools = [plantuml],
+        command = command_script,
+        inputs = [puml_dir],
+        outputs = [svg_dir],
+        mnemonic = "PlantUMLCompile",
+        progress_message = "Generating diagrams for %s" % doc_path,
+    )
+    return svg_dir
+
 def _rusty_sphinx_site_impl(ctx):
     worker = ctx.executable._worker
 
@@ -76,6 +109,21 @@ def _rusty_sphinx_site_impl(ctx):
         progress_message = "Generating genindex.html for %s" % ctx.label.name,
     )
 
+    # Documents whose library set `diagrams = True`. Only these get a diagram
+    # output and a compile action; every other document renders exactly as it
+    # would in a project that had never heard of diagrams. That is the whole of
+    # "pay only for what you use" here, because Bazel cannot know before
+    # reading a document whether it holds a diagram — the library has to say.
+    diagram_asts = {
+        f: True
+        for f in depset(
+            transitive = [dep[RustySphinxInfo].diagram_ast_files for dep in ctx.attr.deps],
+        ).to_list()
+    }
+    plantuml = ctx.executable._plantuml
+    svg_dirs = []
+    puml_dirs = []
+
     # ── Phase 3: render ───────────────────────────────────────────────────────
     # Each page takes only its own document's embedded-asset sidecar, never the
     # site's images — that is what keeps an image edit from re-rendering every
@@ -121,6 +169,22 @@ def _rusty_sphinx_site_impl(ctx):
             render_args.append("--strict-links")
 
         render_inputs = [ast_file, index_out, template_file, config_file] + schema_inputs + entity_templates
+        render_outputs = [html_out, warnings_out]
+
+        # The render writes each diagram's PlantUML text itself: it already
+        # expands every diagram to get the hash its `<img>` names, so a
+        # separate expansion action would only repeat that work. The page and
+        # the file it names therefore come from one process.
+        #
+        # The cache firewall is this directory. Any edit anywhere re-runs every
+        # render — the index is an input — but for a document whose diagrams
+        # did not change the .puml bytes are identical, so the compile below
+        # keeps its action key and no JVM starts.
+        puml_dir = None
+        if ast_file in diagram_asts:
+            puml_dir = ctx.actions.declare_directory(ctx.label.name + "_puml/" + doc_path)
+            render_args.extend(["--diagram-outdir", puml_dir.path])
+            render_outputs.append(puml_dir)
         embeds_file = embeds_by_doc.get(doc_path)
         if embeds_file:
             render_args.extend(["--embeds", embeds_file.path])
@@ -136,17 +200,20 @@ def _rusty_sphinx_site_impl(ctx):
             executable = worker,
             arguments = render_args,
             inputs = render_inputs,
-            outputs = [html_out, warnings_out],
+            outputs = render_outputs,
             mnemonic = "RustySphinxRender",
             progress_message = "Rendering %s" % ast_file.short_path,
         )
         html_files.append(html_out)
         warnings_files.append(warnings_out)
 
+        if puml_dir:
+            puml_dirs.append(puml_dir)
+            svg_dirs.append(_compile_diagrams(ctx, plantuml, puml_dir, doc_path))
+
     # ── Phase 4: Bundle Images ────────────────────────────────────────────────
-    all_svg_dirs = depset(
-        transitive = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps],
-    ).to_list()
+    # The diagrams this site just compiled, plus the pictures its authors wrote.
+    all_svg_dirs = svg_dirs
 
     # Pictures the authors wrote, as opposed to the diagrams above that this
     # build generated. Both are served from the one `_images/` directory, and
@@ -215,13 +282,23 @@ done
         val_args.add("validate_images")
         val_args.add("--image-dir", images_out.path)
         val_args.add("--output", validation_sentinel.path)
+
+        # Each diagram source a render wrote must have its compiled SVG. The
+        # render already expanded every template, so nothing is re-derived
+        # here: the files are the record of what the pages name.
+        if puml_dirs:
+            val_args.add("--diagram-dirs")
+            val_args.add_all(puml_dirs, expand_directories = False)
+
+        # Last: this flag is variadic, so anything after it would be swallowed
+        # as another .ast path.
         val_args.add("--inputs")
         val_args.add_all(ast_list)
 
         ctx.actions.run(
             executable = worker,
             arguments = [val_args],
-            inputs = ast_list + [images_out],
+            inputs = ast_list + [images_out] + puml_dirs,
             outputs = [validation_sentinel],
             mnemonic = "RustySphinxValidateImages",
             progress_message = "Validating diagram images for %s" % ctx.label.name,
@@ -242,7 +319,19 @@ done
 
     return [
         DefaultInfo(files = depset(final_outputs)),
-        OutputGroupInfo(domain_warnings = depset(warnings_files)),
+        OutputGroupInfo(
+            domain_warnings = depset(warnings_files),
+            # The expanded PlantUML source of every diagram, one directory per
+            # document — sphinx-needs' `needs_build_needumls`, as an output
+            # group rather than a config flag.
+            #
+            # A non-default group, so building a site never materializes them;
+            # ask with `--output_groups=diagram_sources`. This is also the
+            # answer to `:save:`, which cannot work as sphinx-needs spells it:
+            # a sandboxed action may only write files declared at analysis
+            # time, and the path in a `:save:` is written inside the document.
+            diagram_sources = depset(puml_dirs),
+        ),
     ]
 
 rusty_sphinx_site = rule(
@@ -286,6 +375,12 @@ rusty_sphinx_site = rule(
             executable = True,
             cfg = "exec",
             doc = "The rusty-sphinx binary.",
+        ),
+        "_plantuml": attr.label(
+            default = Label("//:plantuml_tool"),
+            executable = True,
+            cfg = "exec",
+            doc = "The PlantUML executable or wrapper. On the site rather than on rusty_sphinx_library, because a diagram's text is not known until the project index exists.",
         ),
     },
     doc = """

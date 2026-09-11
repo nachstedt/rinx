@@ -9,7 +9,9 @@
 
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, EntityBody, EntityId};
+use rusty_sphinx_ast::{
+    Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, Node, walk_nodes,
+};
 
 use super::DocumentDiagnostics;
 use rusty_sphinx_entity::EntitySchema;
@@ -23,8 +25,32 @@ pub(crate) fn index_entity(entity: &EntityBody, doc_path: &str, index: &mut Proj
         title: entity.title(),
         attributes: entity.attributes.clone(),
         outgoing: entity.relations.clone(),
+        uml: collect_entity_umls(entity),
     };
     index.entities.insert(entity.id.clone(), record);
+}
+
+/// The diagram templates written inside `entity`, by `:key:`.
+///
+/// Indexed because another document's diagram may import one by id, and only
+/// the project index spans documents. Kept as the *template* rather than as
+/// its expansion: an imported diagram is expanded in the context of whoever
+/// imports it, which is what makes one architecture block reusable across the
+/// pages that reference it.
+///
+/// Two diagrams sharing a key is the author writing the same name twice; the
+/// last in document order wins, which is `BTreeMap::insert`'s own rule and the
+/// same one a duplicate section name follows.
+fn collect_entity_umls(entity: &EntityBody) -> BTreeMap<String, String> {
+    let mut umls = BTreeMap::new();
+    for section in &entity.sections {
+        walk_nodes(&section.body, &mut |node| {
+            if let Node::Directive(Directive::Uml(uml)) = node {
+                umls.insert(uml.key.clone().unwrap_or_default(), uml.template.clone());
+            }
+        });
+    }
+    umls
 }
 
 /// Recomputes every entity's incoming edges from the merged graph.

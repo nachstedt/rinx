@@ -1,5 +1,5 @@
 {
-  "checksum": "53a5791dc043214fd2fd1d55c8dbd900b64112c41fc42c968d84d8f35ba2105a",
+  "checksum": "c02583667042705a95d96a03ed26997da85e35d9ccb0b11b4ad2019103a919fc",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4109,6 +4109,10 @@
       "common_attrs": {
         "deps": [
           {
+            "id": "pathdiff 0.2.3",
+            "target": "pathdiff"
+          },
+          {
             "id": "serde 1.0.228",
             "target": "serde"
           }
@@ -4264,6 +4268,29 @@
         {
           "Library": {
             "crate_name": "rusty_sphinx_toctree",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rusty_sphinx_uml 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "minijinja 2.21.0",
+            "target": "minijinja"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rusty_sphinx_uml",
+      "name": "rusty_sphinx_uml",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rusty_sphinx_uml",
             "crate_root": "src/lib.rs"
           }
         }
@@ -6639,6 +6666,7 @@
     "rusty_sphinx_renderer 0.1.0": "crates/renderer",
     "rusty_sphinx_scope 0.1.0": "crates/scope",
     "rusty_sphinx_toctree 0.1.0": "crates/toctree",
+    "rusty_sphinx_uml 0.1.0": "crates/uml",
     "rusty_sphinx_worker 0.1.0": "crates/worker"
   }
 }

@@ -1,2 +1,8 @@
 project = "Megacorp Documentation"
 version = "v2.0-beta"
+
+# Named PlantUML preambles a diagram may ask for with `:config:`. The text of a
+# preamble, not a path to one — a path baked into config would not survive a
+# sandboxed build relocating the file (see docs/decisions/001-template-system.md).
+[uml_configs]
+monochrome = "skinparam monochrome true"

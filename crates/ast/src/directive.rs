@@ -10,7 +10,6 @@ use crate::dropdown::Dropdown;
 use crate::entity::EntityBody;
 use crate::entity_table::EntityTable;
 use crate::glossary_entry::GlossaryEntry;
-use crate::hashed_content::HashedContent;
 use crate::image::{Figure, ImageOptions};
 use crate::index_entry::IndexEntry;
 use crate::node::Node;
@@ -23,6 +22,7 @@ use crate::table::TableSource;
 use crate::table::TableWidths;
 use crate::target_name::TargetName;
 use crate::toctree::Toctree;
+use crate::uml::Uml;
 use crate::version_change_kind::VersionChangeKind;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -61,7 +61,20 @@ pub enum Directive {
         body: Vec<Node>,
         span: Option<Span>,
     },
-    PlantUml(HashedContent),
+    /// A `PlantUML` diagram — every spelling of one: `.. plantuml::`/`.. uml::`,
+    /// `.. entity-diagram::`/`.. needuml::` and
+    /// `.. entity-arch::`/`.. needarch::`.
+    ///
+    /// Boxed like [`Self::Dropdown`] and [`Self::EntityTable`], for the same
+    /// reason: a template, an option set and a span make it a large payload,
+    /// and an enum costs its largest variant everywhere one is stored.
+    ///
+    /// Carries the diagram's *template*, not its picture: the templated
+    /// spellings ask the entity graph questions that only the project index
+    /// can answer, so the text that finally reaches `PlantUML` — and the hash
+    /// naming the SVG it compiles to — is produced after indexing. See
+    /// [`Uml`] for why one variant serves all three constructs.
+    Uml(Box<Uml>),
     Admonition {
         kind: AdmonitionKind,
         title: Option<String>,

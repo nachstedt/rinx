@@ -13,9 +13,9 @@ use rusty_sphinx_ast::{ImageAlign, ImageLoading, ImageOptions, ImageTarget, Imag
 use rusty_sphinx_index::TargetLocation;
 
 use crate::RenderCtx;
-use crate::doc_href::relative_doc_href;
 use crate::image_error::ImageError;
 use crate::{BrokenLink, BrokenLinkKind};
+use rusty_sphinx_index::relative_doc_href;
 
 use super::asset_href::relative_asset_href;
 

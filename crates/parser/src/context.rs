@@ -15,7 +15,7 @@
 //! depend on the filesystem. `rusty_sphinx_worker` supplies the real
 //! filesystem-backed loader.
 
-use rusty_sphinx_ast::{Domain, FileId, Position, Span};
+use rusty_sphinx_ast::{Domain, EntityId, FileId, Position, Span};
 use rusty_sphinx_entity::{EntitySchema, EntityType};
 
 /// A file read at parse time, and the identity the parser knows it by.
@@ -110,6 +110,16 @@ pub struct ParseCtx<'a> {
     /// rendering as an unknown directive. Cleared again inside a section's own
     /// body, so sections cannot nest.
     pub enclosing_entity: Option<&'a EntityType>,
+    /// The *id* of that same entity, when one is known.
+    ///
+    /// Kept beside the type rather than derived from it because they answer
+    /// different questions and have different lifetimes: the type decides
+    /// which section names are legal, and is cleared inside a section's body so
+    /// sections cannot nest; the id decides what an `.. entity-arch::` draws,
+    /// and must survive into a section body — a diagram written under
+    /// `.. verification-criteria::` is still a diagram of the entity it sits
+    /// in.
+    pub enclosing_entity_id: Option<&'a EntityId>,
     /// Where the current line slice came from, or `None` when it came from
     /// nowhere in the source — see [`Self::synthetic`].
     origin: Option<Origin>,
@@ -150,6 +160,7 @@ impl<'a> ParseCtx<'a> {
             schema: EntitySchema::empty_ref(),
             doc_path: "",
             enclosing_entity: None,
+            enclosing_entity_id: None,
             origin: Some(Origin { line: 1, column: 1 }),
             file: None,
             current_file: None,
@@ -178,11 +189,29 @@ impl<'a> ParseCtx<'a> {
         }
     }
 
+    /// The same context, recording *which* entity is being parsed.
+    ///
+    /// Separate from [`Self::inside_entity`] because the id is only known
+    /// after the entity's options have been read, while the type is known from
+    /// its directive name — and because, unlike the type, the id survives into
+    /// a section body.
+    #[must_use]
+    pub(crate) fn inside_entity_id(&self, id: &'a EntityId) -> Self {
+        Self {
+            enclosing_entity_id: Some(id),
+            ..*self
+        }
+    }
+
     /// The context for parsing a section's own body.
     ///
-    /// Clears the enclosing entity, so a section sub-directive written inside
-    /// a section is not recognised — sections are one level deep by design,
-    /// and the alternative is a nesting whose rendering has no meaning.
+    /// Clears the enclosing entity *type*, so a section sub-directive written
+    /// inside a section is not recognised — sections are one level deep by
+    /// design, and the alternative is a nesting whose rendering has no meaning.
+    ///
+    /// The id is deliberately kept: a section's body is still the entity's
+    /// content, so an `.. entity-arch::` written there draws the entity it
+    /// sits in rather than reporting that it sits in none.
     #[must_use]
     pub(crate) fn outside_entity(&self) -> Self {
         Self {
@@ -242,6 +271,7 @@ impl<'a> ParseCtx<'a> {
             schema: self.schema,
             doc_path: self.doc_path,
             enclosing_entity: self.enclosing_entity,
+            enclosing_entity_id: self.enclosing_entity_id,
             origin: Some(Origin { line: 1, column: 1 }),
             file: Some(file),
             current_file: Some(id),

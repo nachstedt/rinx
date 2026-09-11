@@ -67,6 +67,20 @@ pub struct SiteConfig {
     /// above.
     #[serde(default = "default_collapse_entities")]
     pub collapse_entities: bool,
+
+    /// Named `PlantUML` preambles a diagram may ask for with `:config:`.
+    ///
+    /// The *text* of a preamble, keyed by the name a directive names it by —
+    /// never a path to a file holding one, which is what keeps this on the
+    /// right side of the no-paths rule above. A build system that relocated
+    /// the file would otherwise break every diagram that referenced it.
+    ///
+    /// Sphinx-needs keeps the same thing in `needs_flow_configs`. Reading it
+    /// from the site config rather than from the schema is deliberate: this is
+    /// presentation, and the schema is a parse-time input, so a tweak to how
+    /// diagrams look must not re-parse every document.
+    #[serde(default)]
+    pub uml_configs: std::collections::BTreeMap<String, String>,
 }
 
 /// Reads `highlight_language` from a TOML string through the same smart
@@ -102,6 +116,7 @@ impl Default for SiteConfig {
             root_doc: default_root_doc(),
             highlight_language: ResolvedLanguage::default(),
             collapse_entities: default_collapse_entities(),
+            uml_configs: std::collections::BTreeMap::new(),
         }
     }
 }

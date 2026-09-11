@@ -1,6 +1,6 @@
 //! Abstract Syntax Tree representations for the Rusty-Sphinx Document.
 //!
-//! One module per node type or supporting value type, with seven families
+//! One module per node type or supporting value type, with eight families
 //! grouped into their own trees: `object_type` (the `domain:objtype` tags),
 //! `doctest` (the `sphinx.ext.doctest` node family), `enumerator`
 //! (enumerated-list markers), `table` (table content and layout), `image`
@@ -8,7 +8,9 @@
 //! share), `dropdown` (the colour, marker, spacing and icon vocabulary
 //! sphinx-design's collapsible container is written in) and `entity_table`
 //! (the listing directive that asks the entity graph a question, as opposed
-//! to `entity`, which holds what an author wrote about one thing).
+//! to `entity`, which holds what an author wrote about one thing) and `uml`
+//! (every spelling of a `PlantUML` diagram, which like `entity_table` carries a
+//! question the project index answers later).
 //! `object_naming` holds the signature/option naming helpers every later
 //! pipeline phase shares, and `visit` the traversal every phase walks with.
 //!
@@ -65,6 +67,7 @@ mod table;
 mod target_name;
 mod target_search_order;
 mod toctree;
+mod uml;
 mod version_change_kind;
 mod visit;
 
@@ -119,5 +122,6 @@ pub use table::{TableAlign, TableCell, TableRow, TableSource, TableWidths};
 pub use target_name::TargetName;
 pub use target_search_order::TargetSearchOrder;
 pub use toctree::{NumberedDepth, TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
+pub use uml::{Uml, UmlSource};
 pub use version_change_kind::VersionChangeKind;
 pub use visit::walk_nodes;

@@ -109,6 +109,7 @@ fn index() -> ProjectIndex {
             title: None,
             attributes: BTreeMap::new(),
             outgoing: BTreeMap::new(),
+            uml: BTreeMap::new(),
         },
     );
     index.entities.insert(
@@ -119,6 +120,7 @@ fn index() -> ProjectIndex {
             title: None,
             attributes: BTreeMap::new(),
             outgoing: BTreeMap::new(),
+            uml: BTreeMap::new(),
         },
     );
     index

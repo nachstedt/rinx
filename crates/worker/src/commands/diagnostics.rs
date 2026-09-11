@@ -104,6 +104,22 @@ pub(super) fn format_diagnostic(origin: &WarningOrigin<'_>, diagnostic: &Diagnos
 /// build step's business, and a parser that printed as it went could not
 /// honour a `.. noqa:` comment appearing anywhere in the document. Which
 /// diagnostics reach here is [`super::suppression`]'s decision.
+/// Formats a diagnostic that fails the build, in the same shape as a warning.
+///
+/// One shape for both, so an editor or CI log parser that understands one line
+/// understands the other; only the leading word differs.
+pub(super) fn format_error_diagnostic(
+    origin: &WarningOrigin<'_>,
+    diagnostic: &Diagnostic,
+) -> String {
+    format!(
+        "error: {} {}: {}",
+        origin.location(diagnostic.span),
+        diagnostic.code,
+        diagnostic.message
+    )
+}
+
 pub(super) fn report_diagnostic(origin: &WarningOrigin<'_>, diagnostic: &Diagnostic) {
     eprintln!("{}", format_diagnostic(origin, diagnostic));
 }
@@ -197,6 +213,24 @@ pub(super) fn format_math_error_warning(
 pub(super) fn format_entity_table_error_warning(
     origin: &WarningOrigin<'_>,
     error: &renderer::EntityTableError,
+) -> String {
+    format!(
+        "warning: {} {}: {}",
+        origin.location(error.span),
+        error.code(),
+        error.message()
+    )
+}
+
+/// Formats a single diagram-expansion diagnostic as a warning line.
+///
+/// Like [`format_entity_table_error_warning`], this never feeds into
+/// [`check_broken_links_strict`]: a template that could not be expanded is not
+/// a reference that failed to resolve. The page still renders — without the
+/// picture, since none was compiled.
+pub(super) fn format_diagram_error_warning(
+    origin: &WarningOrigin<'_>,
+    error: &renderer::DiagramError,
 ) -> String {
     format!(
         "warning: {} {}: {}",
@@ -331,6 +365,28 @@ mod tests {
         assert_eq!(
             message,
             "warning: guide/tables.rst:42:18: table.grid.no-columns: grid table: top border defines no columns"
+        );
+    }
+
+    #[test]
+    fn test_format_error_diagnostic_has_the_warning_shape_with_an_error_prefix() {
+        // Given
+        let diagnostic = Diagnostic::new(
+            DiagnosticCode::UmlDiagramsDisabled,
+            "set diagrams = True",
+            a_span(),
+        );
+
+        // When
+        let message = format_error_diagnostic(
+            &WarningOrigin::document_only("guide/tables.rst"),
+            &diagnostic,
+        );
+
+        // Then
+        assert_eq!(
+            message,
+            "error: guide/tables.rst:42:18: uml.diagrams-disabled: set diagrams = True"
         );
     }
 

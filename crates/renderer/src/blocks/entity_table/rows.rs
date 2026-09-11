@@ -7,9 +7,7 @@
 use rusty_sphinx_ast::{EntityId, EntityTable};
 use rusty_sphinx_entity::EntitySchema;
 use rusty_sphinx_filter::{FieldName, FieldValue, FilterSubject};
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
-
-use super::subject::EntitySubject;
+use rusty_sphinx_index::{EntityRecord, EntitySubject, ProjectIndex};
 
 /// One cell of a rendered row.
 ///

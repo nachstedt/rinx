@@ -7,16 +7,19 @@
 //! construct at all: the entities it lists are declared in documents the
 //! parser of this one never saw.
 //!
-//! Three modules:
+//! Two modules:
 //!
-//! - [`subject`] — how a field name resolves against one entity record, which
-//!   is the half of the field vocabulary `rusty_sphinx_entity` cannot own.
 //! - [`rows`] — selecting, ordering and reducing the index to cells.
 //! - [`html`] — the table markup, over the same shell every other table
 //!   directive uses.
+//!
+//! How a field *name* resolves against one entity is
+//! `rusty_sphinx_index::EntitySubject`, which used to live here. It moved when
+//! a diagram template's `filter()` started resolving the same names: a filter
+//! must mean one thing across the whole build, and two copies of these rules
+//! is the only way it could come to mean two.
 
 mod html;
 mod rows;
-mod subject;
 
 pub(super) use html::render_entity_table;

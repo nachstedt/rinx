@@ -9,14 +9,15 @@ use std::fs;
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
     WarningOrigin, check_broken_links_strict, format_broken_link_warning,
-    format_entity_table_error_warning, format_highlight_error_warning, format_image_error_warning,
-    format_math_error_warning, format_object_type_mismatch_warning,
+    format_diagram_error_warning, format_entity_table_error_warning,
+    format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
+    format_object_type_mismatch_warning,
 };
 use super::entity_schema::{load_entity_schema, load_entity_templates};
 use super::suppression::{
-    retain_reportable_entity_table_errors, retain_reportable_highlight_errors,
-    retain_reportable_image_errors, retain_reportable_links, retain_reportable_math_errors,
-    retain_reportable_mismatches,
+    retain_reportable_diagram_errors, retain_reportable_entity_table_errors,
+    retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
+    retain_reportable_math_errors, retain_reportable_mismatches,
 };
 
 /// One rendered page, plus everything the caller reports about it.
@@ -37,6 +38,9 @@ pub(super) struct RenderedPage {
     pub math_errors: Vec<renderer::MathError>,
     /// Listing directives whose filter matched no entity.
     pub entity_table_errors: Vec<renderer::EntityTableError>,
+    pub diagram_errors: Vec<renderer::DiagramError>,
+    /// The `PlantUML` text of each diagram on the page, for the compile action.
+    pub diagram_sources: Vec<ast::HashedContent>,
     pub highlight_errors: Vec<renderer::HighlightError>,
     pub image_errors: Vec<renderer::ImageError>,
     /// Entity templates the schema named but the site could not use.
@@ -121,6 +125,11 @@ pub(super) fn process_render(
             &render_output.entity_table_errors,
             &doc.suppressions,
         ),
+        diagram_errors: retain_reportable_diagram_errors(
+            &render_output.diagram_errors,
+            &doc.suppressions,
+        ),
+        diagram_sources: render_output.diagram_sources,
         highlight_errors: retain_reportable_highlight_errors(
             &render_output.highlight_errors,
             &doc.suppressions,
@@ -148,6 +157,10 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     let strict_links = args.iter().any(|a| a == "--strict-links");
     let warnings_output = flag_value_opt(args, "--warnings-output");
     let embeds_path = flag_value_opt(args, "--embeds");
+    // Given only for a document whose library set `diagrams = True`. The site
+    // rule declares the directory as an output of exactly those renders, so a
+    // library that draws nothing gets no directory and no compile action.
+    let diagram_outdir = flag_value_opt(args, "--diagram-outdir");
 
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Error reading config '{config_path}'"))?;
@@ -215,6 +228,9 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     for error in &page.entity_table_errors {
         eprintln!("{}", format_entity_table_error_warning(&origin, error));
     }
+    for error in &page.diagram_errors {
+        eprintln!("{}", format_diagram_error_warning(&origin, error));
+    }
     for error in &page.highlight_errors {
         eprintln!("{}", format_highlight_error_warning(&origin, error));
     }
@@ -240,7 +256,28 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
 
     check_broken_links_strict(strict_links, &origin, &page.broken_links)?;
 
+    if let Some(outdir) = &diagram_outdir {
+        write_diagram_sources(&page.diagram_sources, outdir)?;
+    }
+
     fs::write(&output, page.html).with_context(|| format!("Error writing '{output}'"))?;
+    Ok(())
+}
+
+/// Writes each diagram's `PlantUML` text as `<hash>.puml` under `outdir`.
+///
+/// The hash is the one the page's `<img>` was built from, in this same render,
+/// so the compile action downstream produces exactly the SVG the page names.
+/// The directory is created even when there is nothing to write: it is a
+/// declared Bazel output, and a document with no diagrams still has to
+/// produce it.
+fn write_diagram_sources(sources: &[ast::HashedContent], outdir: &str) -> Result<()> {
+    fs::create_dir_all(outdir).with_context(|| format!("Error creating '{outdir}'"))?;
+    for source in sources {
+        let path = std::path::Path::new(outdir).join(format!("{}.puml", source.hash()));
+        fs::write(&path, source.body())
+            .with_context(|| format!("Error writing {}", path.display()))?;
+    }
     Ok(())
 }
 
@@ -248,6 +285,49 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
 mod tests {
     use super::*;
     use rusty_sphinx_entity::EntitySchema;
+
+    /// A fresh, empty directory unique to this test run.
+    fn temp_dir(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "{name}_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let _ = fs::remove_dir_all(&dir);
+        dir
+    }
+
+    #[test]
+    fn test_write_diagram_sources_names_each_file_by_its_hash() {
+        // Given
+        let source = ast::HashedContent::new("@startuml\nA -> B\n@enduml".to_string());
+        let dir = temp_dir("diagram_sources");
+
+        // When
+        write_diagram_sources(std::slice::from_ref(&source), dir.to_str().unwrap()).unwrap();
+
+        // Then
+        let written = fs::read_to_string(dir.join(format!("{}.puml", source.hash()))).unwrap();
+        assert_eq!(written, source.body());
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn test_write_diagram_sources_creates_the_directory_even_when_empty() {
+        // Given — a declared Bazel output must exist however many diagrams the
+        // document turned out to hold
+        let dir = temp_dir("diagram_sources_empty");
+
+        // When
+        write_diagram_sources(&[], dir.to_str().unwrap()).unwrap();
+
+        // Then
+        assert!(dir.is_dir());
+        assert_eq!(fs::read_dir(&dir).unwrap().count(), 0);
+        let _ = fs::remove_dir_all(dir);
+    }
 
     #[test]
     fn test_process_render_returns_html_string() {

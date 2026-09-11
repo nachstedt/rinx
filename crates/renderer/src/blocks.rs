@@ -42,6 +42,7 @@ mod table_shell;
 #[cfg(test)]
 mod table_test_support;
 mod tables;
+mod uml;
 
 pub(crate) use dispatch::{collect_anonymous_targets, render_nodes};
 // Reused by `crate::inline::image` for an `InlineImage` node, whose `<img>`

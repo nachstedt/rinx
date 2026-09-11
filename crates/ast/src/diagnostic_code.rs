@@ -448,6 +448,76 @@ diagnostic_codes! {
     /// table is far more often a mistaken filter than an intended statement.
     EntityTableEmptyResult => "entity-table.empty-result",
 
+    // --- Diagram directives ------------------------------------------------
+    //
+    // One family for all six spellings — `.. plantuml::`/`.. uml::`,
+    // `.. entity-diagram::`/`.. needuml::` and `.. entity-arch::`/`..
+    // needarch::` — for the reason the `entity-table` family covers both of
+    // its own: a code names the construct, and these six produce one node
+    // whose failures are the same failures. `uml` rather than
+    // `entity-diagram`, because the family has to name the plain PlantUML
+    // spellings too, and those have no entity in them.
+    /// An option no diagram directive accepts. The diagram still renders:
+    /// refusing it over a misspelled option would silently drop the picture.
+    UmlUnknownOption => "uml.unknown-option",
+    /// An option whose value is required but was written empty, so the option
+    /// was ignored.
+    UmlEmptyOptionValue => "uml.empty-option-value",
+    /// An `:align:` that is not one of the three horizontal placements. The
+    /// diagram renders unaligned rather than not at all.
+    UmlInvalidAlign => "uml.invalid-align",
+    /// A `:scale:` that is not a non-negative percentage, by the same rule
+    /// `.. image::` reads one.
+    UmlInvalidScale => "uml.invalid-scale",
+    /// A `:width:` that is not a length or a percentage.
+    UmlInvalidWidth => "uml.invalid-width",
+    /// A `:scale:` with no `:width:` for it to apply to. Reported for the same
+    /// reason `.. image::` reports one: this build never opens the picture
+    /// while rendering, so there is no natural size to scale, and dropping an
+    /// author's explicit instruction in silence is what diagnostics exist to
+    /// prevent.
+    UmlUnusableScale => "uml.unusable-scale",
+    /// An `:extra:` that is not a comma-separated list of `name: value` pairs.
+    /// The pairs that did parse are still bound.
+    UmlInvalidExtra => "uml.invalid-extra",
+    /// An option that only means something for a templated diagram — `:key:`,
+    /// `:extra:` — written on a plain `.. plantuml::`, where nothing would
+    /// ever read it.
+    UmlOptionNeedsTemplate => "uml.option-needs-template",
+    /// A template that is not valid Jinja, or whose evaluation failed. The
+    /// diagram is left out rather than compiled from half-expanded text, which
+    /// would fail in `PlantUML` with a message about a construct the author
+    /// never wrote.
+    UmlTemplateError => "uml.template-error",
+    /// A template asking for an entity no document declares. Reported while
+    /// rendering, because only then is the whole project's entity graph known.
+    UmlUnknownEntity => "uml.unknown-entity",
+    /// A `filter()` this build's filter language cannot evaluate — the same
+    /// language, and the same refusals, a listing directive's `:filter:` uses.
+    UmlInvalidFilter => "uml.invalid-filter",
+    /// An `.. entity-arch::` written outside any entity, where the `need` it
+    /// exists to draw would be bound to nothing.
+    UmlArchOutsideEntity => "uml.arch-outside-entity",
+    /// A `uml()` import that reaches itself, directly or through a cycle.
+    UmlRecursiveImport => "uml.recursive-import",
+    /// A diagram in a library that did not opt in with `diagrams = True`.
+    ///
+    /// Diagram compilation is opt-in per library so that a project drawing
+    /// nothing pays nothing for it — Bazel cannot know which documents hold a
+    /// diagram before reading them, so the build must be told. This is what
+    /// keeps the opt-in honest: a forgotten attribute fails on the directive's
+    /// own line rather than shipping a page with a broken picture.
+    UmlDiagramsDisabled => "uml.diagrams-disabled",
+    /// A `:save:`, which cannot be honoured: a sandboxed build action may only
+    /// write files declared before it runs, and this path is written inside the
+    /// document. The site's `diagram_sources` output group carries every
+    /// diagram's expanded source instead.
+    UmlSaveUnsupported => "uml.save-unsupported",
+    /// A `:config:` naming a `PlantUML` preamble the site config does not
+    /// declare. Refused rather than ignored: a diagram silently missing the
+    /// styling its author asked for looks finished and is wrong.
+    UmlUnknownConfig => "uml.unknown-config",
+
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never
     /// suppressible: a suppression that silences the report of its own typo

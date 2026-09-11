@@ -880,7 +880,10 @@ dependencies = [
 name = "rusty_sphinx_index"
 version = "0.1.0"
 dependencies = [
+ "pathdiff",
  "rusty_sphinx_ast",
+ "rusty_sphinx_entity",
+ "rusty_sphinx_filter",
  "serde",
  "serde_json",
 ]
@@ -913,6 +916,7 @@ dependencies = [
  "rusty_sphinx_index",
  "rusty_sphinx_scope",
  "rusty_sphinx_toctree",
+ "rusty_sphinx_uml",
  "serde",
  "serde_json",
  "syntect",
@@ -933,6 +937,17 @@ version = "0.1.0"
 dependencies = [
  "globset",
  "rusty_sphinx_ast",
+]
+
+[[package]]
+name = "rusty_sphinx_uml"
+version = "0.1.0"
+dependencies = [
+ "minijinja",
+ "rusty_sphinx_ast",
+ "rusty_sphinx_entity",
+ "rusty_sphinx_filter",
+ "rusty_sphinx_index",
 ]
 
 [[package]]

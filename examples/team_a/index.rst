@@ -32,6 +32,25 @@ Download the latest package and follow the setup steps below.
        Gateway --> Client: Nested Response
        @enduml
 
+.. uml::
+   :caption: The same directive under sphinxcontrib-plantuml's shorter name
+   :align: center
+   :width: 400px
+   :scale: 75
+   :class: bordered
+   :name: retry-flow
+
+    @startuml
+    Client -> Server: Request
+    Server --> Client: 503
+    Client -> Server: Retry
+    @enduml
+
+``.. uml::`` is the same construct as ``.. plantuml::`` above — one node, one
+compiled picture — so a diagnostic about either names ``uml.*``. The options
+here decide only how the finished picture sits on the page, which is why they
+never reach the hash the SVG is named by. See :ref:`retry-flow`.
+
 .. function:: int subtract(int a, int b)
 
    Subtracts ``b`` from ``a``. Written without an explicit domain prefix —

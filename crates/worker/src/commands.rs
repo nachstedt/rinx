@@ -29,7 +29,7 @@ mod render;
 mod suppression;
 mod validate_toctree;
 
-pub(crate) use diagrams::{cmd_extract_diagrams, cmd_validate_images};
+pub(crate) use diagrams::cmd_validate_images;
 pub(crate) use embed_assets::cmd_embed_assets;
 pub(crate) use entity_json_schema::cmd_entity_json_schema;
 pub(crate) use extract_doctests::cmd_extract_doctests;

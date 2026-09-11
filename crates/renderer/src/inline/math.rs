@@ -12,9 +12,9 @@ use rusty_sphinx_ast::Span;
 use rusty_sphinx_index::ProjectIndex;
 
 use crate::blocks::equation_anchor_id;
-use crate::doc_href::relative_doc_href;
 use crate::math::{MathError, MathRenderer};
 use crate::{BrokenLink, BrokenLinkKind};
+use rusty_sphinx_index::relative_doc_href;
 
 /// Renders a `:math:` role.
 ///

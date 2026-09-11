@@ -14,7 +14,6 @@
 mod blocks;
 mod broken_link;
 pub mod config;
-mod doc_href;
 mod embedded_assets;
 mod entity_table_error;
 mod highlight;
@@ -25,6 +24,7 @@ mod nav;
 mod octicon;
 mod page;
 mod resolution;
+mod uml_error;
 
 pub use blocks::EntityTemplates;
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
@@ -35,6 +35,9 @@ pub use image_error::ImageError;
 pub use math::MathError;
 pub use nav::{PageLink, ResolvedNavEntry};
 pub use page::{PageMeta, css_relative_path, render_genindex, render_page};
+pub use uml_error::DiagramError;
+
+use rusty_sphinx_ast::HashedContent;
 
 use blocks::{collect_anonymous_targets, render_nodes};
 use highlight::Highlighter;
@@ -57,6 +60,16 @@ pub struct RenderOutput {
     /// Listing directives whose filter matched nothing. Only reportable here:
     /// whether a filter selects anything depends on the whole project.
     pub entity_table_errors: Vec<EntityTableError>,
+    /// Diagrams whose template could not be expanded against the project.
+    pub diagram_errors: Vec<DiagramError>,
+    /// The `PlantUML` text of every diagram on the page, one entry per
+    /// distinct hash, in document order.
+    ///
+    /// Handed back rather than written, because this crate performs no I/O:
+    /// the render subcommand writes each as `<hash>.puml` for the compile
+    /// action. The page's `<img>` and the file it names therefore come from
+    /// this one render, which is what makes them agree by construction.
+    pub diagram_sources: Vec<HashedContent>,
     pub highlight_errors: Vec<HighlightError>,
     /// Images whose `:loading: embed` could not be honoured because the bytes
     /// never reached this render. Every other image problem is decidable from
@@ -99,6 +112,10 @@ pub(crate) struct RenderCtx<'a> {
     pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
     pub math_errors: &'a mut Vec<MathError>,
     pub entity_table_errors: &'a mut Vec<EntityTableError>,
+    /// Where a diagram whose template failed to expand is recorded.
+    pub diagram_errors: &'a mut Vec<DiagramError>,
+    /// Where each diagram's expanded text is recorded for the compile action.
+    pub diagram_sources: &'a mut Vec<HashedContent>,
     /// Converts LaTeX to `MathML`. Held for the whole document so the backend's
     /// per-converter setup happens once per page rather than once per equation.
     pub math: &'a MathRenderer,
@@ -123,6 +140,8 @@ pub(crate) struct RenderCtx<'a> {
     /// Whether the built-in entity rendering folds its detail behind a
     /// disclosure. From the site config; see [`config::SiteConfig`].
     pub collapse_entities: bool,
+    /// The site's named `PlantUML` preambles, for a diagram's `:config:`.
+    pub uml_configs: &'a std::collections::BTreeMap<String, String>,
     /// `:linenothreshold:` from the `.. highlight::` in force: a block at
     /// least this many lines long gets line numbers without asking for them.
     pub linenothreshold: Option<std::num::NonZeroU32>,
@@ -229,6 +248,8 @@ pub fn render_with_assets(
     let mut object_type_mismatches = Vec::new();
     let mut math_errors = Vec::new();
     let mut entity_table_errors = Vec::new();
+    let mut diagram_errors = Vec::new();
+    let mut diagram_sources = Vec::new();
     let mut highlight_errors = Vec::new();
     let mut image_errors = Vec::new();
     let mut contents_backlinks = std::collections::HashMap::new();
@@ -260,6 +281,8 @@ pub fn render_with_assets(
         object_type_mismatches: &mut object_type_mismatches,
         math_errors: &mut math_errors,
         entity_table_errors: &mut entity_table_errors,
+        diagram_errors: &mut diagram_errors,
+        diagram_sources: &mut diagram_sources,
         math: &math,
         highlight_errors: &mut highlight_errors,
         image_errors: &mut image_errors,
@@ -267,6 +290,7 @@ pub fn render_with_assets(
         highlighter: &highlighter,
         highlight_language: config.highlight_language.clone(),
         collapse_entities: config.collapse_entities,
+        uml_configs: &config.uml_configs,
         linenothreshold: None,
         highlight_force: false,
         section_ids: &section_ids,
@@ -284,6 +308,8 @@ pub fn render_with_assets(
         object_type_mismatches,
         math_errors,
         entity_table_errors,
+        diagram_errors,
+        diagram_sources,
         highlight_errors,
         image_errors,
         entity_template_errors,
@@ -294,8 +320,8 @@ pub fn render_with_assets(
 mod tests {
     use super::*;
     use rusty_sphinx_ast::{
-        Directive, Enumerator, EnumeratorFormat, EnumeratorSequence, HashedContent, InlineNode,
-        ListItem, Node, TargetName, TargetSearchOrder,
+        Directive, Enumerator, EnumeratorFormat, EnumeratorSequence, InlineNode, ListItem, Node,
+        TargetName, TargetSearchOrder, Uml, UmlSource,
     };
 
     #[test]
@@ -810,11 +836,21 @@ mod tests {
     #[test]
     fn test_render_formats_plantuml_with_relative_path() {
         // Given a document in a subdirectory
-        let content = HashedContent::new("A -> B".to_string());
-        let expected_hash = content.hash().to_string();
+        let uml = Uml::new(UmlSource::PlantUml, "A -> B".to_string());
+        let expected_hash = rusty_sphinx_uml::expand(
+            &uml,
+            &rusty_sphinx_uml::UmlContext::new(
+                &ProjectIndex::default(),
+                rusty_sphinx_entity::EntitySchema::empty_ref(),
+                "examples/team_b/index.rst",
+            ),
+        )
+        .expect("expansion succeeds")
+        .hash()
+        .to_string();
         let doc = Document::new(
             "examples/team_b/index.rst".to_string(),
-            vec![Node::Directive(Directive::PlantUml(content))],
+            vec![Node::Directive(Directive::Uml(Box::new(uml)))],
         );
 
         let index = ProjectIndex::default();

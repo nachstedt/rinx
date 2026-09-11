@@ -16,15 +16,13 @@ use rusty_sphinx_ast::{EntityBody, EntitySection};
 use crate::RenderCtx;
 use crate::inline::entity_reference::entity_href;
 
-/// The `id` an entity's anchor carries, and the fragment a link to it uses.
+/// The anchor an entity is linked by.
 ///
-/// One function rather than two spellings, so a reference and the definition
-/// it points at cannot drift — the same reason `build_domain_object_key`
-/// exists for domain objects.
-#[must_use]
-pub(crate) fn entity_anchor(id: &str) -> String {
-    format!("entity-{id}")
-}
+/// Re-exported from `rusty_sphinx_index` rather than defined here: a
+/// templated diagram's generated node links have to land on exactly this
+/// anchor, and that text is built by a phase that cannot depend on the
+/// renderer.
+pub(crate) use rusty_sphinx_index::entity_anchor;
 
 mod template;
 
