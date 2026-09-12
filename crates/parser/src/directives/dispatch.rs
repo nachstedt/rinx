@@ -273,7 +273,7 @@ fn try_parse_entity_directive(
     } = site;
     let body = collect_directive_body(lines, i + 1, min_indent);
     let body_ctx = ctx.nested(i + 1 + body.first_line_offset, body_indent(&body.lines));
-    let discriminator = ctx.position(i, 0).map_or(0, |position| position.line);
+    let discriminator = ctx.position(i, 0).map_or(0, |point| point.position.line);
     let directive = parse_entity(
         &EntityDirective {
             entity_type,

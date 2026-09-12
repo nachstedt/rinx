@@ -19,7 +19,7 @@ use super::embed_assets::embed_available_assets;
 use super::entity_schema::{load_entity_schema, load_entity_templates};
 use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
-use super::parse_inputs::ParseInputs;
+use super::parse_inputs::{ParseInputs, jinja_from_args};
 use super::suppression::{
     retain_reportable, retain_reportable_diagram_errors, retain_reportable_entity_table_errors,
     retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
@@ -192,6 +192,9 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
         .with_context(|| format!("Error reading template '{template_path}'"))?;
 
     let schema = load_entity_schema(args)?;
+    // The editor's buffer is templated exactly as the file on disk would be,
+    // which is the whole point of the preview sharing `ParseInputs`.
+    let jinja = jinja_from_args(args)?;
     let page = process_preview(
         &rst,
         index_json.as_deref(),
@@ -204,6 +207,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
             // against its directory exactly as it does in `parse`.
             files: &DocumentRelativeFiles::for_document(&doc_path),
             schema: &schema,
+            jinja: jinja.as_deref(),
         },
         &load_entity_templates(args)?,
     )?;
@@ -268,6 +272,7 @@ mod tests {
                 default_domain: ast::Domain::Py,
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
+                jinja: None,
             },
             &renderer::EntityTemplates::new(),
         )
@@ -298,6 +303,7 @@ mod tests {
                 default_domain: ast::Domain::Py,
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
+                jinja: None,
             },
             &renderer::EntityTemplates::new(),
         )
@@ -326,6 +332,7 @@ mod tests {
                 default_domain: ast::Domain::Py,
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
+                jinja: None,
             },
             &renderer::EntityTemplates::new(),
         )

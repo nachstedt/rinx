@@ -133,6 +133,13 @@ TRANSCLUSION_DIRECTIVE = re.compile(
 )
 CSV_FILE_OPTION = re.compile(r"^[ \t]*:file:[ \t]*(\S+)[ \t]*$", re.MULTILINE)
 
+# The corpus renders every document as a Jinja template before Sphinx parses
+# it (`docs/conf.py`'s `rstjinja` handler on the `source-read` event), and uses
+# that for one thing: `{% include %}`-ing a shared page header. Those templates
+# are files the parser reads, so they belong in `parse_data` and out of `srcs`,
+# exactly like an `.. include::`d document.
+JINJA_INCLUDE = re.compile(r"""{%-?\s*include\s+["']([^"']+)["']""")
+
 
 def transclusion_targets(source_dir: Path):
     """Find every file the corpus splices in at parse time.
@@ -160,6 +167,11 @@ def transclusion_targets(source_dir: Path):
         relative_doc = document.relative_to(source_dir)
         text = document.read_text(errors="replace")
         targets = TRANSCLUSION_DIRECTIVE.findall(text) + CSV_FILE_OPTION.findall(text)
+        # A Jinja template name resolves against the *source root*, the way a
+        # `FileSystemLoader` rooted at the Sphinx source directory does — not
+        # against the including document, the way a `.. include::` does. The
+        # leading slash is how the parser's own resolver is told that.
+        targets += [f"/{name}" for name in JINJA_INCLUDE.findall(text)]
         for target in targets:
             # Pharaoh templates the argument (`{{page}}`); there is no file to
             # declare, and the parse reports it.
@@ -300,6 +312,11 @@ rusty_sphinx_library(
     # A parse-time input: it is what makes `.. req::` a directive rather than an
     # unknown name.
     entity_schema = "{SCHEMA_NAME}",
+    # The corpus's `conf.py` renders every document as a Jinja template before
+    # parsing it — there is no Sphinx feature for that, so this build declares
+    # it instead. 24 of the 31 documents open with a `{{% set %}}` naming the
+    # page and an `{{% include %}}` pulling in the shared header.
+    jinja = True,
     # The demo draws 21 `.. uml::` diagrams across its documents, and diagram
     # compilation is opt-in per library. One library holds the whole corpus
     # here, so it opts in as a whole; a real project would split its diagram

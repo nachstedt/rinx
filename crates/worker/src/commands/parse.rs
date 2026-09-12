@@ -9,7 +9,7 @@ use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{WarningOrigin, format_error_diagnostic, report_diagnostic};
 use super::entity_schema::load_entity_schema;
 use super::parse_files::DocumentRelativeFiles;
-use super::parse_inputs::ParseInputs;
+use super::parse_inputs::{ParseInputs, jinja_from_args};
 use super::suppression::retain_reportable;
 
 /// Whether the library a document belongs to opted in to diagrams.
@@ -131,6 +131,28 @@ pub(super) fn parse_default_domain_flag(args: &[String]) -> Result<ast::Domain> 
     }
 }
 
+/// Writes the Jinja-rendered source to `--dump-rendered`, when asked.
+///
+/// A debugging aid, passed by no Bazel rule: the rendered text is otherwise
+/// never materialized — it lives inside the parse action and dies with it — so
+/// this is how somebody reproduces a surprising page by hand. `-` writes to
+/// standard output.
+///
+/// # Errors
+///
+/// Fails when the named file cannot be written.
+fn dump_rendered_source(args: &[String], rst: &str, inputs: &ParseInputs<'_>) -> Result<()> {
+    let Some(path) = flag_value_opt(args, "--dump-rendered") else {
+        return Ok(());
+    };
+    let rendered = parser::rendered_source(rst, &inputs.ctx()).unwrap_or_else(|| rst.to_string());
+    if path == "-" {
+        print!("{rendered}");
+        return Ok(());
+    }
+    fs::write(&path, rendered).with_context(|| format!("Error writing '{path}'"))
+}
+
 pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     let input = flag_value(args, "--input")?;
     let output = flag_value(args, "--output")?;
@@ -142,16 +164,15 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     // `parse_files`.
     let parse_files = DocumentRelativeFiles::for_document(&input);
     let schema = load_entity_schema(args)?;
-    let json = process_parse(
-        &input,
-        &rst,
-        &ParseInputs {
-            default_domain,
-            files: &parse_files,
-            schema: &schema,
-        },
-        DiagramSupport::from_args(args),
-    )?;
+    let jinja = jinja_from_args(args)?;
+    let inputs = ParseInputs {
+        default_domain,
+        files: &parse_files,
+        schema: &schema,
+        jinja: jinja.as_deref(),
+    };
+    dump_rendered_source(args, &rst, &inputs)?;
+    let json = process_parse(&input, &rst, &inputs, DiagramSupport::from_args(args))?;
 
     // A file that could not be read means a whole table or section is missing
     // from the page, so the build fails rather than shipping the gap — the
@@ -196,6 +217,7 @@ mod tests {
                 default_domain: ast::Domain::Py,
                 files: &no_parse_files(),
                 schema: &rusty_sphinx_entity::EntitySchema::empty(),
+                jinja: None,
             },
             DiagramSupport::Enabled,
         )
@@ -215,6 +237,7 @@ mod tests {
                 default_domain: ast::Domain::Py,
                 files: &no_parse_files(),
                 schema: &rusty_sphinx_entity::EntitySchema::empty(),
+                jinja: None,
             },
             diagrams,
         )
@@ -316,6 +339,7 @@ mod tests {
                 default_domain: ast::Domain::C,
                 files: &no_parse_files(),
                 schema: &rusty_sphinx_entity::EntitySchema::empty(),
+                jinja: None,
             },
             DiagramSupport::Enabled,
         )
@@ -384,6 +408,83 @@ mod tests {
             !std::path::Path::new(&args[3]).exists(),
             "no .ast should be written when the parse fails"
         );
+    }
+
+    #[test]
+    fn test_cmd_parse_renders_the_source_as_a_template() {
+        // Given a document opening the way the sphinx-needs demo's do.
+        // The `{% include %}` half is exercised where it can be: against a
+        // stub loader in `rusty_sphinx_parser::templating`, and against a real
+        // source root in `tests/test_jinja.sh` — a template name resolves from
+        // the source root, which for an ad-hoc run is the working directory,
+        // and a unit test must not depend on that.
+        let args = parse_args_for(
+            "rusty_sphinx_cmd_parse_jinja_ok",
+            "{% set page=\"doc.rst\" %}\nSource of {{ page }}, release {{ release }}.\n",
+        );
+        let args = [
+            args,
+            vec![
+                "--jinja".to_string(),
+                "--jinja-context".to_string(),
+                "release=0.1".to_string(),
+            ],
+        ]
+        .concat();
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then
+        assert!(result.is_ok(), "{result:?}");
+        let ast = std::fs::read_to_string(&args[3]).expect("read ast");
+        assert!(ast.contains("Source of doc.rst, release 0.1."), "{ast}");
+    }
+
+    #[test]
+    fn test_cmd_parse_leaves_a_template_alone_without_the_opt_in() {
+        // Given the same document, in a library that did not ask for Jinja
+        let args = parse_args_for(
+            "rusty_sphinx_cmd_parse_jinja_off",
+            "{% set page=\"doc.rst\" %}\n\nBody\n",
+        );
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then the markup is the text it literally is, and nothing is read
+        assert!(result.is_ok(), "{result:?}");
+        let ast = std::fs::read_to_string(&args[3]).expect("read ast");
+        assert!(ast.contains("{% set page="), "{ast}");
+    }
+
+    #[test]
+    fn test_cmd_parse_writes_the_rendered_source_when_asked() {
+        // Given
+        let args = parse_args_for(
+            "rusty_sphinx_cmd_parse_jinja_dump",
+            "{% set page=\"doc.rst\" %}\nSource of {{ page }}.\n",
+        );
+        let dump = std::path::Path::new(&args[1])
+            .parent()
+            .expect("input has a directory")
+            .join("rendered.rst");
+        let args = [
+            args,
+            vec![
+                "--jinja".to_string(),
+                "--dump-rendered".to_string(),
+                dump.to_str().expect("utf-8 temp path").to_string(),
+            ],
+        ]
+        .concat();
+
+        // When
+        cmd_parse(&args).expect("parses");
+
+        // Then the file holds exactly what the parser saw
+        let rendered = std::fs::read_to_string(&dump).expect("read dump");
+        assert_eq!(rendered, "\nSource of doc.rst.\n");
     }
 
     #[test]

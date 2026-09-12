@@ -170,6 +170,15 @@ Two things differ from the CPython benchmark's generated project, both forced by
 - **Every glob excludes `bazel-*/**`.** A consequence of the point above: Bazel's convenience symlinks (`bazel-bin`, `bazel-out`, …) are created in the workspace root, which here is also the globbed package, so without the exclusion `**/*.jpg` matches the *previous run's* `site_site_out/_images/` and makes the site's own output an input to the action that writes it — the image bundling then fails on a path Bazel cannot materialize. It hides while that action is an action-cache hit and surfaces as soon as anything re-keys it, such as a change to the rusty-sphinx binary, which is the one thing this benchmark exists to measure. `discard_stale_corpus_outputs` is not a substitute: Bazel leaves its output directories read-only, so clearing them is best-effort. The CPython benchmark needs none of this — its corpus is the `Doc/` subdirectory, so the symlinks fall outside the globbed package.
 - **Sources spliced in from outside the source root are copied in.** The parser resolves `..` by popping, so a `.. literalinclude:: ../pharaoh.toml` written in a root-level document is looked for at `pharaoh.toml`. The script copies the real file to that path in the generated workspace and declares it in `parse_data`. The alternative would be editing the corpus' own directives, which would make the benchmark measure a document set nobody wrote.
 
+- **The corpus's sources are Jinja templates.** Its `conf.py` connects the
+  `source-read` event and runs every document through Jinja2; 24 of the 31 open
+  with a `{% set %}` naming the page and an `{% include %}` pulling in a shared
+  header. The generated library therefore sets `jinja = True`, and
+  `transclusion_targets` collects Jinja include targets alongside the
+  `.. include::` ones so each template is declared in `parse_data` and kept out
+  of `srcs`. Without it the two lines parse as the prose they literally are and
+  the header reaches no page — see `docs/decisions/013-source-templating.md`.
+
 `entity_schema` is declared on the library *and* on the site: it is a parse-time input (it is what makes `.. req::` a directive) and an index/render-time one, and a mismatch between the two is `entity.schema-mismatch`.
 
 ## Reading the report

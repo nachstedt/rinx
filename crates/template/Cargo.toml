@@ -1,0 +1,10 @@
+[package]
+name = "rusty_sphinx_template"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+minijinja = { version = "2", features = ["loader"] }
+
+[lints]
+workspace = true
