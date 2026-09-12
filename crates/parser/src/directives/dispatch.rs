@@ -17,6 +17,7 @@ use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_typ
 use super::domains::{DirectiveSignatures, parse_domain_object};
 use super::dropdown::parse_dropdown;
 use super::entity::{EntityDirective, parse_entity};
+use super::entity_flow::parse_entity_flow;
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::entity_table::parse_entity_table;
 use super::glossary::parse_glossary;
@@ -498,6 +499,19 @@ fn try_parse_extension_directive(
     // This build's own listing directive, and sphinx-needs' spelling of it.
     if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityTableSource>() {
         return Some(parse_entity_table(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
+    // This build's own flowchart, and sphinx-needs' spelling of it. A sibling
+    // of the listing directive above rather than of the diagram below: it
+    // carries a question, not a template, and its picture is generated.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityFlowSource>() {
+        return Some(parse_entity_flow(
             source,
             argument,
             directive_span,
@@ -1026,6 +1040,10 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     // Listing directives over the entity graph, in both spellings
     "entity-table",
     "needtable",
+    // This build's own flowchart over the entity graph, and sphinx-needs'
+    // spelling of it.
+    "entity-flow",
+    "needflow",
     // Diagram directives: sphinxcontrib-plantuml's two names, this build's
     // two and sphinx-needs' two
     "plantuml",

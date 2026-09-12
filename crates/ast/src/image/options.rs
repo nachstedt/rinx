@@ -11,7 +11,7 @@ use crate::span::Span;
 use crate::target_name::TargetName;
 
 use super::align::ImageAlign;
-use super::length::{Length, LengthOrPercentage};
+use super::length::{Length, LengthOrPercentage, scaled_width};
 use super::uri::{ImageTarget, ImageUri};
 
 /// How an image's bytes reach the page — docutils' `:loading:` option.
@@ -128,11 +128,7 @@ impl ImageOptions {
     /// which no phase of this build reads (see `docs/decisions/007-image-assets.md`).
     #[must_use]
     pub fn rendered_width(&self) -> Option<LengthOrPercentage> {
-        let width = self.width.as_ref()?;
-        Some(match self.scale {
-            Some(scale) => width.scaled(scale),
-            None => width.clone(),
-        })
+        scaled_width(self.width.as_ref(), self.scale)
     }
 
     /// The height to render with, `:scale:` applied. See

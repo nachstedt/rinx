@@ -737,3 +737,27 @@ fn test_analyze_keeps_the_last_sectnum_directive_when_a_document_writes_two() {
     // Then
     assert_eq!(index.sectnum.get("test.rst"), Some(&last));
 }
+
+#[test]
+fn test_analyze_registers_a_flowcharts_name_as_a_target() {
+    // Given — a `.. entity-flow::` with a `:name:` option
+    let doc = Document::new(
+        "specs.rst".to_string(),
+        vec![Node::Directive(Directive::EntityFlow(Box::new(
+            rusty_sphinx_ast::EntityFlow {
+                name: Some(TargetName::new("requirement-flow")),
+                ..rusty_sphinx_ast::EntityFlow::new(rusty_sphinx_ast::EntityFlowSource::EntityFlow)
+            },
+        )))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — a picture is a cross-reference target like any other
+    assert!(
+        index
+            .targets
+            .contains_key(&TargetName::new("requirement-flow"))
+    );
+}

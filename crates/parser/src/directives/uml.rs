@@ -219,7 +219,8 @@ fn report_unusable_scale(
     diagnostics.push(Diagnostic::at(
         DiagnosticCode::UmlUnusableScale,
         format!(
-            "{}: :scale: has no :width: to apply to, so it was ignored — the compiled diagram is              never opened while rendering, so it has no size of its own to scale",
+            "{}: :scale: has no :width: to apply to, so it was ignored — the compiled diagram \
+             is never opened while rendering, so it has no size of its own to scale",
             source.as_str()
         ),
         span,

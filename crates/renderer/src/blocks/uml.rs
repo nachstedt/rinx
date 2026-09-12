@@ -1,63 +1,39 @@
-//! Diagram rendering — every spelling of one.
+//! Rendering every spelling of a *written* `PlantUML` diagram.
 //!
-//! What reaches the page is an `<img>` pointing into the site's `_images/`
-//! directory, named by the hash of the `PlantUML` text the build compiled. This
-//! renderer never opens that file and never runs `PlantUML`: the picture is
-//! produced by a build action, and the only thing agreed between the two is
-//! the hash.
+//! What this module owns is the one thing a written diagram has that a
+//! generated one does not: a template, which must be expanded against the
+//! entity graph before there is any text to compile. Everything after that —
+//! the `<img>`, the wrapper, the caption, the `:debug:` block and the source
+//! handed back for the build to compile — is [`super::diagram_figure`], shared
+//! with `.. entity-flow::` so two pictures on one page cannot be told apart by
+//! how their text came about.
 //!
-//! That agreement is the whole design. The hash is computed here from the
-//! diagram's *expanded* text — which, for now, is its template verbatim — and
-//! computed again, independently, by the action that writes the `.puml` file.
-//! Neither reads a sidecar naming the other's answer, in the same way
-//! `ImageUri::resolve` keeps the embedder, the validator and this renderer
-//! from disagreeing about where a picture lives.
+//! The expansion goes through `rusty_sphinx_uml` rather than being done here,
+//! because the hash of the result *is* the compiled SVG's filename: a renderer
+//! with its own idea of the text would emit an `<img>` pointing at a file
+//! nothing compiled.
 
-use std::fmt::Write as _;
-
-use rusty_sphinx_ast::{HashedContent, ImageAlign, Uml};
+use rusty_sphinx_ast::{HashedContent, Uml};
 use rusty_sphinx_uml::{UmlContext, expand};
 
 use crate::RenderCtx;
 use crate::uml_error::DiagramError;
 
-use super::asset_href::relative_asset_href;
-
-/// The alt text every diagram gets.
-///
-/// Deliberately generic: the alt text of a diagram whose content is generated
-/// cannot describe the picture, and a `:caption:` — which authors write in
-/// prose — is rendered as visible text below it, where a screen reader reaches
-/// it anyway.
-const DIAGRAM_ALT: &str = "PlantUML Diagram";
+use super::diagram_figure::{DiagramFigure, record_diagram_source, render_diagram_figure};
 
 /// Expands the diagram's template, recording a failure against the directive.
-///
-/// The expansion goes through `rusty_sphinx_uml` rather than being done here,
-/// because the build action that writes the `.puml` file expands the very same
-/// template and the two must agree byte for byte — the hash is the SVG's
-/// filename, so a renderer with its own idea of the text would emit an `<img>`
-/// pointing at a file nothing compiled.
 fn expanded_content(uml: &Uml, ctx: &mut RenderCtx) -> Option<HashedContent> {
     let uml_ctx =
         UmlContext::new(ctx.index, ctx.schema, ctx.original_doc_path).with_configs(ctx.uml_configs);
     match expand(uml, &uml_ctx) {
         Ok(content) => {
-            // Once per distinct picture: two identical diagrams on one page
-            // share one compiled SVG, so they need one source file too.
-            if !ctx
-                .diagram_sources
-                .iter()
-                .any(|seen| seen.hash() == content.hash())
-            {
-                ctx.diagram_sources.push(content.clone());
-            }
+            record_diagram_source(ctx, &content);
             Some(content)
         }
         Err(error) => {
             ctx.diagram_errors.push(DiagramError {
                 directive: uml.source.as_str().to_string(),
-                error,
+                error: error.into(),
                 span: uml.span,
             });
             None
@@ -65,32 +41,7 @@ fn expanded_content(uml: &Uml, ctx: &mut RenderCtx) -> Option<HashedContent> {
     }
 }
 
-/// The `src` a compiled SVG is served from, relative to the page.
-///
-/// The hash names the file, so two documents drawing the same diagram share
-/// one compiled picture and a diagram that did not change keeps its filename
-/// across builds — which is what lets Bazel skip recompiling it.
-fn diagram_src(content: &HashedContent, ctx: &RenderCtx<'_>) -> String {
-    relative_asset_href(
-        std::path::Path::new(&format!("{}.svg", content.hash())),
-        ctx.doc_path,
-    )
-}
-
-/// The classes on the wrapper: the diagram's own marker, its `:align:` and
-/// whatever `:class:` added.
-fn wrapper_classes(uml: &Uml) -> String {
-    let mut classes = vec!["plantuml-diagram".to_string()];
-    classes.extend(uml.align.map(ImageAlign::css_class));
-    classes.extend(uml.classes.iter().cloned());
-    classes.join(" ")
-}
-
 /// Renders a diagram directive.
-///
-/// The markup for an option-free diagram is exactly what this build has always
-/// produced, because the overwhelming majority of diagrams carry no options
-/// and a changed wrapper would invalidate every cached page for nothing.
 pub(super) fn render_uml_directive(html: &mut String, uml: &Uml, ctx: &mut RenderCtx) {
     // A diagram whose template failed to expand was never compiled, so there
     // is no picture to point at. The failure is already recorded against the
@@ -100,55 +51,27 @@ pub(super) fn render_uml_directive(html: &mut String, uml: &Uml, ctx: &mut Rende
         return;
     };
 
-    let src = diagram_src(&content, ctx);
-    let src = html_escape::encode_double_quoted_attribute(&src);
-    let classes = wrapper_classes(uml);
-    let classes = html_escape::encode_double_quoted_attribute(&classes);
-
-    let _ = write!(html, "<div class=\"{classes}\"");
-    if let Some(name) = &uml.name {
-        let id_attr = html_escape::encode_double_quoted_attribute(name.as_str());
-        let _ = write!(html, " id=\"{id_attr}\"");
-    }
-    let _ = writeln!(html, ">");
-
-    let _ = write!(html, "  <img src=\"{src}\" alt=\"{DIAGRAM_ALT}\"");
-    if let Some(width) = uml.rendered_width() {
-        let style = format!("width: {width}");
-        let style = html_escape::encode_double_quoted_attribute(&style);
-        let _ = write!(html, " style=\"{style}\"");
-    }
-    let _ = writeln!(html, " />");
-
-    if let Some(caption) = &uml.caption {
-        let text = html_escape::encode_text(caption);
-        let _ = writeln!(html, "  <p class=\"caption\">{text}</p>");
-    }
-
-    let _ = writeln!(html, "</div>");
-
-    if uml.debug {
-        render_debug_source(html, &content);
-    }
-}
-
-/// Renders the `:debug:` block: the `PlantUML` text that was actually compiled.
-///
-/// Shown *after* the picture rather than instead of it, because the option
-/// exists to explain a diagram that came out wrong — an author needs to see
-/// both the result and the source that produced it.
-fn render_debug_source(html: &mut String, content: &HashedContent) {
-    let source = html_escape::encode_text(content.body());
-    let _ = writeln!(
+    render_diagram_figure(
         html,
-        "<pre class=\"plantuml-debug\"><code>{source}</code></pre>"
+        &DiagramFigure {
+            content: &content,
+            classes: &uml.classes,
+            align: uml.align,
+            width: uml.rendered_width(),
+            caption: uml.caption.as_deref(),
+            name: uml.name.as_ref(),
+            debug: uml.debug,
+        },
+        ctx,
     );
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{LengthOrPercentage, ResolvedLanguage, TargetName, UmlSource};
+    use rusty_sphinx_ast::{
+        ImageAlign, LengthOrPercentage, ResolvedLanguage, TargetName, UmlSource,
+    };
     use rusty_sphinx_index::ProjectIndex;
 
     use crate::EmbeddedAssets;

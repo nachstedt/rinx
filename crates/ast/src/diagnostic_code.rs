@@ -138,6 +138,7 @@ diagnostic_codes! {
     DirectiveGridUnknownOption => "directive.grid-unknown-option",
     DirectiveGridItemUnknownOption => "directive.grid-item-unknown-option",
     DirectiveEntityTableUnknownOption => "directive.entity-table-unknown-option",
+    DirectiveEntityFlowUnknownOption => "directive.entity-flow-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
     DirectiveTitleArgumentMissing => "directive.title-argument-missing",
@@ -486,6 +487,56 @@ diagnostic_codes! {
     /// `.. literalinclude::` reports every way of selecting nothing: an empty
     /// table is far more often a mistaken filter than an intended statement.
     EntityTableEmptyResult => "entity-table.empty-result",
+
+    // --- `.. entity-flow::` / `.. needflow::` ------------------------------
+    //
+    // One family for both spellings, as `entity-table.*` is one for its own
+    // pair. Its own family rather than `uml.*`, even though a flowchart ends
+    // as a compiled PlantUML picture like every diagram does: what can go
+    // wrong here is a *question* about the entity graph, not a template, and
+    // `uml.invalid-filter` on a directive holding no template names a
+    // construct that is not there.
+    /// A `:filter:` this build's filter language cannot evaluate. The
+    /// flowchart still draws, showing everything, for the reason
+    /// `entity-table.invalid-filter` still lists everything.
+    EntityFlowInvalidFilter => "entity-flow.invalid-filter",
+    /// A `:filter:` naming a field no entity type declares and that is none of
+    /// the built-in ones. Reported while parsing, where the schema is in hand.
+    EntityFlowUnknownField => "entity-flow.unknown-field",
+    /// A `:relations:` entry naming a relation no entity type declares. The
+    /// remaining entries are still drawn, since one misspelling should not
+    /// cost every edge.
+    EntityFlowUnknownRelation => "entity-flow.unknown-relation",
+    /// A `:direction:` naming a layout `PlantUML` cannot draw. The default is
+    /// used instead.
+    EntityFlowInvalidDirection => "entity-flow.invalid-direction",
+    /// An `:align:` that is not one of docutils' three.
+    EntityFlowInvalidAlign => "entity-flow.invalid-align",
+    /// A `:scale:` that is not a non-negative percentage.
+    EntityFlowInvalidScale => "entity-flow.invalid-scale",
+    /// A `:width:` that is not a length or a percentage.
+    EntityFlowInvalidWidth => "entity-flow.invalid-width",
+    /// A `:scale:` with no `:width:` to apply to. Reported for the reason
+    /// `uml.unusable-scale` is: the compiled SVG is never opened while
+    /// rendering, so it has no size of its own to scale.
+    EntityFlowUnusableScale => "entity-flow.unusable-scale",
+    /// An option whose value is required but was left empty.
+    EntityFlowEmptyOptionValue => "entity-flow.empty-option-value",
+    /// An option sphinx-needs' `needflow` has that this build does not
+    /// implement. Reported by name rather than ignored, so an author who asked
+    /// for a legend learns they did not get one.
+    EntityFlowUnsupportedOption => "entity-flow.unsupported-option",
+    /// A flowchart whose filter matched no entity at all, so there was nothing
+    /// to draw. Reported for the reason `entity-table.empty-result` is, and it
+    /// has to be: `PlantUML` rejects an empty diagram, so compiling one would
+    /// fail the build with a syntax error naming a generated file.
+    EntityFlowEmptyResult => "entity-flow.empty-result",
+    /// A `:config:` naming a preamble the site config does not declare.
+    EntityFlowUnknownConfig => "entity-flow.unknown-config",
+    /// A flowchart written in a library that did not opt in to diagrams.
+    /// Fails the parse, as `uml.diagrams-disabled` does and for the same
+    /// reason: the picture would silently never be compiled.
+    EntityFlowDiagramsDisabled => "entity-flow.diagrams-disabled",
 
     // --- Diagram directives ------------------------------------------------
     //

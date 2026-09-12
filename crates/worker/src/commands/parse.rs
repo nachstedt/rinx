@@ -47,17 +47,30 @@ impl DiagramSupport {
 pub(super) fn find_disabled_diagrams(doc: &ast::Document) -> Vec<ast::Diagnostic> {
     let mut found = Vec::new();
     ast::walk_nodes(&doc.nodes, &mut |node| {
-        if let ast::Node::Directive(ast::Directive::Uml(uml)) = node {
-            found.push(ast::Diagnostic::at(
+        let (directive, code, span) = match node {
+            ast::Node::Directive(ast::Directive::Uml(uml)) => (
+                uml.source.as_str(),
                 ast::DiagnosticCode::UmlDiagramsDisabled,
-                format!(
-                    "{}: this library does not compile diagrams; set `diagrams = True` on its \
-                     rusty_sphinx_library to enable them",
-                    uml.source.as_str()
-                ),
                 uml.span,
-            ));
-        }
+            ),
+            // A flowchart draws no less of a picture for having generated it,
+            // so it needs the same opt-in — under its own code, because a code
+            // names the construct.
+            ast::Node::Directive(ast::Directive::EntityFlow(flow)) => (
+                flow.source.as_str(),
+                ast::DiagnosticCode::EntityFlowDiagramsDisabled,
+                flow.span,
+            ),
+            _ => return,
+        };
+        found.push(ast::Diagnostic::at(
+            code,
+            format!(
+                "{directive}: this library does not compile diagrams; set `diagrams = True` on \
+                 its rusty_sphinx_library to enable them"
+            ),
+            span,
+        ));
     });
     found
 }
@@ -315,6 +328,31 @@ mod tests {
                 .iter()
                 .all(|d| d.code == ast::DiagnosticCode::UmlDiagramsDisabled)
         );
+    }
+
+    #[test]
+    fn test_a_flowchart_needs_the_same_opt_in_under_its_own_code() {
+        // Given — a generated picture is compiled by the same action a written
+        // one is, so a library that creates no diagram actions has nowhere to
+        // put it either
+        let rst = ".. entity-flow::\n";
+        let doc = parser::parse("index.rst", rst);
+
+        // When
+        let found = find_disabled_diagrams(&doc);
+
+        // Then
+        assert_eq!(found.len(), 1);
+        assert_eq!(
+            found[0].code,
+            ast::DiagnosticCode::EntityFlowDiagramsDisabled
+        );
+        assert!(found[0].message.contains("diagrams = True"), "{found:?}");
+        assert!(
+            parse_with_diagrams(rst, DiagramSupport::Disabled).is_err(),
+            "a flowchart in a library without the opt-in must fail the parse"
+        );
+        assert!(parse_with_diagrams(rst, DiagramSupport::Enabled).is_ok());
     }
 
     #[test]

@@ -47,6 +47,7 @@ mod domain;
 mod domain_object_body;
 mod dropdown;
 mod entity;
+mod entity_flow;
 mod entity_table;
 mod enumerator;
 mod glossary_entry;
@@ -95,6 +96,7 @@ pub use domain::Domain;
 pub use domain_object_body::DomainObjectBody;
 pub use dropdown::{Animation, Chevron, Dropdown, InvalidOcticonName, OcticonName, SemanticColor};
 pub use entity::{AttributeValue, EntityBody, EntityId, EntityIdError, EntitySection, SectionKind};
+pub use entity_flow::{EntityFlow, EntityFlowSource, FlowDirection, InvalidFlowDirection};
 pub use entity_table::{EntityTable, EntityTableSource};
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
 pub use glossary_entry::{GlossaryEntry, term_id};
@@ -106,6 +108,7 @@ pub use hashed_content::HashedContent;
 pub use image::{
     Figure, FigureWidth, ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri,
     InvalidLength, Length, LengthOrPercentage, LengthUnit, Percentage, is_vertical_name,
+    scaled_width,
 };
 pub use index_entry::IndexEntry;
 pub use inline_node::{InlineNode, inline_plain_text};

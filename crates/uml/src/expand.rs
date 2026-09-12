@@ -2,6 +2,7 @@
 
 use rusty_sphinx_ast::{EntityId, HashedContent, Uml};
 
+use crate::assemble::finished;
 use crate::context::UmlContext;
 use crate::error::UmlError;
 use crate::snapshot::Snapshot;
@@ -24,7 +25,7 @@ pub fn expand(uml: &Uml, ctx: &UmlContext<'_>) -> Result<HashedContent, UmlError
         // lets one pipeline serve a plain `.. plantuml::` without changing the
         // hash it has always had — and it is why the snapshot below, which is
         // linear in the size of the project, is never built for one.
-        return finished(&uml.template, uml, ctx);
+        return assembled(&uml.template, uml, ctx);
     }
 
     // An architecture diagram exists to draw the entity it sits in, so one
@@ -44,85 +45,17 @@ pub fn expand(uml: &Uml, ctx: &UmlContext<'_>) -> Result<HashedContent, UmlError
         &uml.extra,
         uml.entity.as_ref().map(EntityId::as_str),
     )?;
-    finished(&text, uml, ctx)
+    assembled(&text, uml, ctx)
 }
 
-/// The expanded text as the content to compile, or why there is none.
+/// The expanded text as the finished diagram, under this crate's error type.
 ///
-/// An expansion that drew nothing is refused here rather than handed on.
-/// `PlantUML` rejects an empty diagram, so compiling one fails the whole build
-/// with a syntax error naming a generated file the author never wrote — while
-/// the real cause is usually a `filter()` that matched nothing, which is a
-/// content problem and belongs in a warning beside the directive.
-fn finished(text: &str, uml: &Uml, ctx: &UmlContext<'_>) -> Result<HashedContent, UmlError> {
-    if drew_nothing(text) {
-        return Err(UmlError::EmptyDiagram);
-    }
-    Ok(HashedContent::new(assembled(text, uml, ctx)?))
-}
-
-/// Whether `text` holds no diagram content — only whitespace, and possibly the
-/// `@startuml`/`@enduml` markers around it.
-///
-/// The markers have to be discounted because a template usually writes them
-/// itself, so the empty case arrives as `@startuml\n\n@enduml` rather than as
-/// an empty string.
-fn drew_nothing(text: &str) -> bool {
-    text.lines()
-        .map(str::trim)
-        .filter(|line| !line.is_empty())
-        .all(|line| line.starts_with("@start") || line.starts_with("@end"))
-}
-
-/// The finished `PlantUML` file: the diagram's text, its `:config:` preamble,
-/// and the `@startuml`/`@enduml` markers around both.
-///
-/// Assembled in one place because the three interact — a preamble has to land
-/// *inside* the markers, whether the author wrote them or the wrapper added
-/// them, and `PlantUML` silently ignores a `skinparam` written outside.
-fn assembled(text: &str, uml: &Uml, ctx: &UmlContext<'_>) -> Result<String, UmlError> {
-    let preamble = match &uml.config {
-        Some(name) => Some(
-            ctx.configs
-                .get(name)
-                .ok_or_else(|| UmlError::UnknownConfig(name.clone()))?
-                .as_str(),
-        ),
-        None => None,
-    };
-    Ok(wrapped(text, preamble))
-}
-
-/// `text` with `@startuml`/`@enduml` around it, and `preamble` inside them.
-///
-/// Both sphinxcontrib-plantuml and sphinx-needs add the markers when they are
-/// missing, and here that earns its place twice over. `PlantUML` refuses a file
-/// without them outright, so a diagram written as a bare fragment would
-/// otherwise fail the build with a message about the *compiler* rather than
-/// about the document. And a fragment is exactly what a `:key:` diagram is:
-/// written to be imported into somebody else's `@startuml`, but still a
-/// diagram in its own right on the page it was written on.
-///
-/// A diagram that already opens with the marker keeps its own text untouched
-/// when it also has no preamble, so no existing picture — and so no existing
-/// hash — moves.
-fn wrapped(text: &str, preamble: Option<&str>) -> String {
-    let trimmed = text.trim();
-    let Some(preamble) = preamble else {
-        if trimmed.starts_with("@start") {
-            return text.to_string();
-        }
-        return format!("@startuml\n{trimmed}\n@enduml");
-    };
-
-    // The preamble goes directly after the opening marker, which is the only
-    // place `PlantUML` reads a `skinparam` from.
-    match trimmed.split_once('\n') {
-        Some((first, rest)) if first.trim_start().starts_with("@start") => {
-            format!("{first}\n{}\n{rest}", preamble.trim())
-        }
-        _ => format!("@startuml\n{}\n{trimmed}\n@enduml", preamble.trim()),
-    }
+/// The assembly itself — the `:config:` preamble, the `@startuml` markers, the
+/// refusal to compile a picture with nothing in it — is [`finished`], shared
+/// with the generated flowchart so the two cannot end up with two populations
+/// of diagram hashes.
+fn assembled(text: &str, uml: &Uml, ctx: &UmlContext<'_>) -> Result<HashedContent, UmlError> {
+    finished(text, uml.config.as_deref(), ctx).map_err(UmlError::from)
 }
 
 #[cfg(test)]
@@ -221,17 +154,6 @@ mod tests {
 
         // When / Then
         assert!(with_ctx(|ctx| expand(&uml, ctx)).is_ok());
-    }
-
-    #[test]
-    fn test_drew_nothing_discounts_only_the_markers() {
-        // Given / When / Then
-        assert!(drew_nothing(""));
-        assert!(drew_nothing("  \n\t\n"));
-        assert!(drew_nothing("@startuml\n\n@enduml"));
-        assert!(drew_nothing("@startuml\n@enduml"));
-        assert!(!drew_nothing("node A"));
-        assert!(!drew_nothing("@startuml\nnode A\n@enduml"));
     }
 
     #[test]

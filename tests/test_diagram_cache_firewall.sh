@@ -11,7 +11,10 @@
 # unchanged and its result cached.
 #
 # This asserts both halves: an edit elsewhere must NOT recompile a diagram, and
-# an edit to the diagram's own source MUST.
+# an edit to the diagram's own source MUST. A *generated* picture adds a third
+# case with no equivalent for a written one: a `.. entity-flow::` has no source
+# of its own, so what must recompile it is an edit to the entity graph it draws
+# — in a document it never mentions.
 
 set -euo pipefail
 
@@ -21,6 +24,8 @@ BAZEL=${BAZEL:-bazel}
 # same-document one the .ast would absorb anyway.
 DIAGRAM_DOC=examples/team_a/index.rst
 OTHER_DOC=examples/team_b/index.rst
+# A document declaring entities a flowchart draws, in yet another library.
+ENTITY_DOC=examples/entities/requirements.rst
 TARGET=//examples:site
 
 cp "$DIAGRAM_DOC" "$DIAGRAM_DOC.bak"
@@ -82,6 +87,29 @@ if plantuml_ran; then
 else
     echo "ERROR: The diagram was not recompiled even though its source changed."
     echo "       Its page now points at an SVG nothing produced."
+    exit 1
+fi
+
+echo "=== Testing that editing an entity a flowchart draws DOES recompile it ==="
+restore
+cp "$DIAGRAM_DOC" "$DIAGRAM_DOC.bak"
+cp "$OTHER_DOC" "$OTHER_DOC.bak"
+cp "$ENTITY_DOC" "$ENTITY_DOC.bak"
+restore() {
+    mv "$DIAGRAM_DOC.bak" "$DIAGRAM_DOC"
+    mv "$OTHER_DOC.bak" "$OTHER_DOC"
+    mv "$ENTITY_DOC.bak" "$ENTITY_DOC"
+}
+# The flowchart in examples/entities/diagrams.rst draws this requirement's
+# title, and that document does not mention this one at all — the picture is
+# derived from the project index, which is exactly what has to be caught here.
+sed -i 's/^.. req:: The system shall boot within two seconds$/.. req:: The system shall boot within one second/' "$ENTITY_DOC"
+
+if plantuml_ran; then
+    echo "SUCCESS: PlantUML re-ran after the entity graph a flowchart draws changed."
+else
+    echo "ERROR: A flowchart was not recompiled even though an entity it draws changed."
+    echo "       Its page now points at an SVG showing the old graph."
     exit 1
 fi
 

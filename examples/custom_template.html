@@ -11,7 +11,13 @@
     .sidebar { flex: 0 0 280px; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: fit-content; }
     .genindex-link { margin: 0 0 1rem 0; }
     .genindex-link a { font-weight: 600; color: #2980b9; }
-    main { flex: 1; background: #fff; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    /* `min-width: 0` is what makes `img { max-width: 100% }` below actually
+       bind: a flex item's automatic minimum size is its content's, so without
+       it a wide picture — a generated `.. entity-flow::` over a whole project,
+       say — widens this column instead of being scaled down, and the page
+       scrolls sideways. `assets/default.css` bounds its own column with a
+       `max-width` instead. */
+    main { flex: 1; min-width: 0; background: #fff; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     
     /* Admonitions */
     .admonition {

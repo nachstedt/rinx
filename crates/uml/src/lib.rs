@@ -26,12 +26,16 @@
 //! compilation happens after indexing, at the site level — which is why a
 //! `rusty_sphinx_library` no longer compiles diagrams of its own.
 
+mod assemble;
 mod context;
 mod error;
 mod expand;
+mod flow;
+mod node;
 mod snapshot;
 mod template;
 
 pub use context::UmlContext;
-pub use error::UmlError;
+pub use error::{FlowError, UmlError};
 pub use expand::expand;
+pub use flow::build_flow;

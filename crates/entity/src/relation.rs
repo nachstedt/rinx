@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::schema::EntitySchema;
+
 /// A typed edge an entity type may carry to other entities.
 ///
 /// Relations are declared on the type that *carries* them, beside its
@@ -54,6 +56,40 @@ impl RelationSpec {
             None => true,
             Some(types) => types.iter().any(|t| t == type_name),
         }
+    }
+}
+
+impl EntitySchema {
+    /// Every relation name any declared type carries, sorted and deduplicated.
+    ///
+    /// What a flowchart draws when its `:relations:` is omitted, and what an
+    /// unknown one is answered with. Sorted rather than in declaration order
+    /// because the answer decides the order edges are generated in, and those
+    /// bytes are hashed into the compiled picture's filename — a schema whose
+    /// types were merely reordered must not recompile every diagram.
+    #[must_use]
+    pub fn relation_names(&self) -> Vec<String> {
+        let mut names: Vec<String> = self
+            .types()
+            .iter()
+            .flat_map(|entity_type| entity_type.relations.iter().map(|r| r.name.clone()))
+            .collect();
+        names.sort();
+        names.dedup();
+        names
+    }
+
+    /// The specification of a relation by name, from whichever type carries it.
+    ///
+    /// The first declaration wins when two types spell one relation, which is
+    /// what lets a label be looked up without knowing the source type. The
+    /// loader already refuses two declarations that disagree about their
+    /// back-link, so the remaining difference between them is presentational.
+    #[must_use]
+    pub fn relation(&self, name: &str) -> Option<&RelationSpec> {
+        self.types()
+            .iter()
+            .find_map(|entity_type| entity_type.relation(name))
     }
 }
 
@@ -145,5 +181,74 @@ mod tests {
 
         // Then
         assert_eq!(shown, None);
+    }
+
+    /// A schema whose two types carry three relations between them, one of
+    /// them spelled by both.
+    fn schema() -> EntitySchema {
+        let text = r#"
+[[entity_type]]
+name = "req"
+
+[[entity_type]]
+name = "test"
+[[entity_type.relation]]
+name = "verifies"
+label = "Verifies"
+to = ["req"]
+incoming = "verified_by"
+
+[[entity_type]]
+name = "spec"
+[[entity_type.relation]]
+name = "implements"
+to = ["req"]
+
+[[entity_type.relation]]
+name = "verifies"
+to = ["req"]
+incoming = "verified_by"
+"#;
+        crate::load::load_schema(text, &crate::load::NoReservedNames)
+            .expect("expected this schema to load")
+    }
+
+    #[test]
+    fn test_relation_names_lists_every_declared_relation_once_in_order() {
+        // Given
+        let schema = schema();
+
+        // When
+        let names = schema.relation_names();
+
+        // Then
+        assert_eq!(names, ["implements", "verifies"]);
+    }
+
+    #[test]
+    fn test_a_relation_is_found_whichever_type_carries_it() {
+        // Given
+        let schema = schema();
+
+        // When
+        let implements = schema.relation("implements").unwrap();
+        let verifies = schema.relation("verifies").unwrap();
+
+        // Then
+        assert_eq!(implements.display_label(), "implements");
+        assert_eq!(verifies.display_label(), "Verifies");
+    }
+
+    #[test]
+    fn test_a_relation_no_type_declares_is_not_found() {
+        // Given
+        let schema = schema();
+
+        // When
+        let found = schema.relation("links");
+
+        // Then
+        assert!(found.is_none());
+        assert!(!schema.relation_names().contains(&"links".to_string()));
     }
 }
