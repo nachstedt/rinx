@@ -193,6 +193,17 @@ pub(super) fn index_nodes(
             ) => {
                 index_nodes(body, doc_path, index, scope);
             }
+            // A grid carries no `:name:` of its own, so unlike a dropdown it
+            // reaches none of the name-bearing arms — but its body is still
+            // this document's content, and a target, section or entity
+            // written in a cell belongs to the document exactly as if it had
+            // been written outside one.
+            Node::Directive(Directive::Grid(grid)) => {
+                index_nodes(&grid.body, doc_path, index, scope);
+            }
+            Node::Directive(Directive::GridItem(item)) => {
+                index_nodes(&item.body, doc_path, index, scope);
+            }
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
                     index_nodes(&item.nodes, doc_path, index, scope);

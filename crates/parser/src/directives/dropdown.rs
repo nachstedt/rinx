@@ -13,7 +13,7 @@
 
 use rusty_sphinx_ast::{
     Animation, Chevron, Diagnostic, DiagnosticCode, Directive, Dropdown, InvalidOcticonName,
-    Margin, OcticonName, SemanticColor, Span, TargetName,
+    OcticonName, SemanticColor, Spacing, SpacingKind, Span, TargetName,
 };
 
 use crate::blocks::parse_blocks;
@@ -125,7 +125,7 @@ fn read_options<'a>(
                     ctx,
                 ),
             },
-            "margin" => match Margin::parse(&line.value) {
+            "margin" => match Spacing::parse(&line.value, SpacingKind::Margin) {
                 Ok(margin) => dropdown.margin = Some(margin),
                 Err(error) => diagnostics.push(Diagnostic::at(
                     DiagnosticCode::DropdownInvalidMargin,
@@ -258,7 +258,7 @@ fn report_empty_value(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{InlineNode, MarginValue, Node};
+    use rusty_sphinx_ast::{InlineNode, Node, SpacingValue};
 
     /// Parses a whole document and returns its single `.. dropdown::` with the
     /// document's diagnostics — the dispatcher is what positions the parse
@@ -379,11 +379,11 @@ mod tests {
         assert_eq!(dropdown.animate, Some(Animation::FadeInSlideDown));
         assert_eq!(
             dropdown.margin,
-            Some(Margin::Sides {
-                top: MarginValue::Zero,
-                bottom: MarginValue::One,
-                left: MarginValue::Two,
-                right: MarginValue::Auto,
+            Some(Spacing::Sides {
+                top: SpacingValue::Zero,
+                bottom: SpacingValue::One,
+                left: SpacingValue::Two,
+                right: SpacingValue::Auto,
             })
         );
         assert_eq!(

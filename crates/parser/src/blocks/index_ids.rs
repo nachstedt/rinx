@@ -33,6 +33,18 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
             ) => {
                 assign_index_ids(body, counter);
             }
+            // The three sphinx-design containers. Their bodies are ordinary
+            // content, so an `.. index::` written in one needs an id like any
+            // other — and without these arms it would silently get none.
+            Node::Directive(Directive::Dropdown(dropdown)) => {
+                assign_index_ids(&mut dropdown.body, counter);
+            }
+            Node::Directive(Directive::Grid(grid)) => {
+                assign_index_ids(&mut grid.body, counter);
+            }
+            Node::Directive(Directive::GridItem(item)) => {
+                assign_index_ids(&mut item.body, counter);
+            }
             Node::Directive(Directive::DomainObject(obj)) => {
                 assign_index_ids(obj.body_mut(), counter);
             }

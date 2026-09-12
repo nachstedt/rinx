@@ -5,10 +5,10 @@ use serde::{Deserialize, Serialize};
 use crate::dropdown::animation::Animation;
 use crate::dropdown::chevron::Chevron;
 use crate::dropdown::color::SemanticColor;
-use crate::dropdown::margin::Margin;
 use crate::dropdown::octicon::OcticonName;
 use crate::inline_node::InlineNode;
 use crate::node::Node;
+use crate::spacing::Spacing;
 use crate::span::Span;
 use crate::target_name::TargetName;
 
@@ -39,8 +39,8 @@ pub struct Dropdown {
     /// `:animate:` — how the body appears when the dropdown opens.
     pub animate: Option<Animation>,
     /// `:margin:` — the space kept around the container. `None` renders
-    /// [`Margin::DEFAULT_CLASSES`], not nothing.
-    pub margin: Option<Margin>,
+    /// [`Dropdown::DEFAULT_MARGIN_CLASSES`], not nothing.
+    pub margin: Option<Spacing>,
     /// `:name:` — reuses [`TargetName`] like the image, table and math
     /// directives do, so it registers in `ProjectIndex::targets` with no
     /// conversion.
@@ -61,6 +61,15 @@ pub struct Dropdown {
 }
 
 impl Dropdown {
+    /// The classes an *omitted* `:margin:` produces.
+    ///
+    /// sphinx-design defaults the container's margin classes to `sd-mb-3`
+    /// rather than to nothing, so a dropdown with no `:margin:` still clears
+    /// the content below it. Kept here, beside the node it belongs to, rather
+    /// than on the shared [`Spacing`] — the default is the *directive's*, not
+    /// the spacing vocabulary's, and `.. grid::` has a different one.
+    pub const DEFAULT_MARGIN_CLASSES: &'static [&'static str] = &["sd-mb-3"];
+
     /// A dropdown with no title, no options and no content.
     #[must_use]
     pub fn new() -> Self {
@@ -101,7 +110,13 @@ impl Default for Dropdown {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dropdown::margin::MarginValue;
+    use crate::spacing::SpacingValue;
+
+    #[test]
+    fn test_default_margin_classes_match_the_bottom_margin_sphinx_design_applies() {
+        // Given / When / Then
+        assert_eq!(Dropdown::DEFAULT_MARGIN_CLASSES, &["sd-mb-3"]);
+    }
 
     #[test]
     fn test_new_is_closed_with_no_options() {
@@ -168,7 +183,7 @@ mod tests {
             icon: Some(OcticonName::new("light-bulb").expect("a slug is valid")),
             chevron: Chevron::DownUp,
             animate: Some(Animation::FadeIn),
-            margin: Some(Margin::All(MarginValue::Three)),
+            margin: Some(Spacing::All(SpacingValue::Three)),
             name: Some(TargetName::new("my-dropdown")),
             class_container: vec!["a".to_string()],
             class_title: vec!["b".to_string()],

@@ -20,6 +20,7 @@ use super::entity::{EntityDirective, parse_entity};
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::entity_table::parse_entity_table;
 use super::glossary::parse_glossary;
+use super::grid::{parse_grid, parse_grid_item};
 use super::image::{parse_figure_directive, parse_image_directive};
 use super::include::parse_include;
 use super::index_directive::parse_index_directive;
@@ -465,6 +466,28 @@ fn try_parse_extension_directive(
     if name == "dropdown" {
         return Some(parse_dropdown(
             argument,
+            directive_span,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        ));
+    }
+    // sphinx-design's responsive row, and the cell that goes in it. Two
+    // directives, one construct — a grid-item written anywhere else is still
+    // parsed, so its content survives to be warned about rather than lost.
+    if name == "grid" {
+        return Some(parse_grid(
+            argument,
+            directive_span,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        ));
+    }
+    if name == "grid-item" {
+        return Some(parse_grid_item(
             directive_span,
             body_lines,
             adornment_order,
@@ -998,6 +1021,8 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     "index",
     // Other content
     "dropdown",
+    "grid",
+    "grid-item",
     // Listing directives over the entity graph, in both spellings
     "entity-table",
     "needtable",

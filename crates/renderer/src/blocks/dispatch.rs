@@ -86,6 +86,18 @@ pub(crate) fn collect_anonymous_targets(nodes: &[Node], targets: &mut Vec<String
             ) => {
                 collect_anonymous_targets(body, targets);
             }
+            // The three sphinx-design containers, for the reason the doc
+            // comment above gives: an anonymous target written inside one
+            // would otherwise never pair with its reference.
+            Node::Directive(Directive::Dropdown(dropdown)) => {
+                collect_anonymous_targets(&dropdown.body, targets);
+            }
+            Node::Directive(Directive::Grid(grid)) => {
+                collect_anonymous_targets(&grid.body, targets);
+            }
+            Node::Directive(Directive::GridItem(item)) => {
+                collect_anonymous_targets(&item.body, targets);
+            }
             Node::Directive(Directive::DomainObject(obj)) => {
                 collect_anonymous_targets(obj.body(), targets);
             }
@@ -469,6 +481,8 @@ fn render_directive(
             force,
         } => super::code_block::apply_highlight_directive(language, *linenothreshold, *force, ctx),
         Directive::Uml(uml) => render_uml_directive(html, uml, ctx),
+        Directive::Grid(grid) => super::grid::render_grid(html, grid, ctx),
+        Directive::GridItem(item) => super::grid::render_grid_item(html, item, ctx),
         Directive::Image(options) => render_image_directive(html, options, ctx),
         Directive::Figure(figure) => render_figure_directive(html, figure, ctx),
         Directive::Admonition {

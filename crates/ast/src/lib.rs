@@ -1,16 +1,21 @@
 //! Abstract Syntax Tree representations for the Rusty-Sphinx Document.
 //!
-//! One module per node type or supporting value type, with eight families
+//! One module per node type or supporting value type, with nine families
 //! grouped into their own trees: `object_type` (the `domain:objtype` tags),
 //! `doctest` (the `sphinx.ext.doctest` node family), `enumerator`
 //! (enumerated-list markers), `table` (table content and layout), `image`
 //! (the URI, measurement and alignment vocabulary the two image directives
-//! share), `dropdown` (the colour, marker, spacing and icon vocabulary
-//! sphinx-design's collapsible container is written in) and `entity_table`
+//! share), `dropdown` (the colour, marker and icon vocabulary
+//! sphinx-design's collapsible container is written in), `grid` (the
+//! breakpoint, column and layout vocabulary sphinx-design's responsive row is
+//! written in) and `entity_table`
 //! (the listing directive that asks the entity graph a question, as opposed
 //! to `entity`, which holds what an author wrote about one thing) and `uml`
 //! (every spelling of a `PlantUML` diagram, which like `entity_table` carries a
 //! question the project index answers later).
+//! `spacing` sits flat beside those two rather than inside either: the
+//! one-or-four `:margin:`/`:padding:` scale is the one piece of vocabulary
+//! `dropdown` and `grid` share.
 //! `object_naming` holds the signature/option naming helpers every later
 //! pipeline phase shares, and `visit` the traversal every phase walks with.
 //!
@@ -45,6 +50,7 @@ mod entity;
 mod entity_table;
 mod enumerator;
 mod glossary_entry;
+mod grid;
 mod hashed_content;
 mod image;
 mod index_entry;
@@ -60,6 +66,7 @@ mod path_normalization;
 mod py_version_spec;
 mod section_id;
 mod sectnum;
+mod spacing;
 mod span;
 mod substitution;
 mod suppression;
@@ -86,14 +93,15 @@ pub use doctest::{
 pub use document::Document;
 pub use domain::Domain;
 pub use domain_object_body::DomainObjectBody;
-pub use dropdown::{
-    Animation, Chevron, Dropdown, InvalidMargin, InvalidOcticonName, Margin, MarginValue,
-    OcticonName, SemanticColor,
-};
+pub use dropdown::{Animation, Chevron, Dropdown, InvalidOcticonName, OcticonName, SemanticColor};
 pub use entity::{AttributeValue, EntityBody, EntityId, EntityIdError, EntitySection, SectionKind};
 pub use entity_table::{EntityTable, EntityTableSource};
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
 pub use glossary_entry::{GlossaryEntry, term_id};
+pub use grid::{
+    ChildAlign, ChildDirection, ColumnPrefix, ColumnSpec, Grid, GridItem, Gutter, InvalidMediaSpec,
+    MediaDomain, MediaSpec, MediaValue,
+};
 pub use hashed_content::HashedContent;
 pub use image::{
     Figure, FigureWidth, ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri,
@@ -115,6 +123,7 @@ pub use path_normalization::{normalize_path, resolve_from_document};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
 pub use sectnum::SectnumOptions;
+pub use spacing::{InvalidSpacing, Spacing, SpacingKind, SpacingValue};
 pub use span::{FileId, Position, Span};
 pub use substitution::{SubstitutionDefinition, SubstitutionKind, TrimSides};
 pub use suppression::{Suppression, SuppressionCodes};

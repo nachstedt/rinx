@@ -23,7 +23,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{Dropdown, Margin};
+use rusty_sphinx_ast::{Dropdown, SpacingKind};
 
 use crate::RenderCtx;
 use crate::inline::render_inline;
@@ -108,11 +108,11 @@ fn container_classes(dropdown: &Dropdown) -> Vec<String> {
         // An omitted `:margin:` is not "no margin": sphinx-design defaults the
         // container to a bottom margin so consecutive dropdowns do not touch.
         None => classes.extend(
-            Margin::DEFAULT_CLASSES
+            Dropdown::DEFAULT_MARGIN_CLASSES
                 .iter()
                 .map(|&class| class.to_string()),
         ),
-        Some(margin) => classes.extend(margin.css_classes()),
+        Some(margin) => classes.extend(margin.css_classes(SpacingKind::Margin)),
     }
     classes.extend(dropdown.class_container.iter().cloned());
     if let Some(animation) = dropdown.animate {
@@ -156,8 +156,8 @@ mod tests {
     use super::*;
     use crate::blocks::render_test_support::render_directive_html;
     use rusty_sphinx_ast::{
-        Animation, Chevron, Directive, InlineNode, Margin, MarginValue, Node, OcticonName,
-        SemanticColor, TargetName,
+        Animation, Chevron, Directive, InlineNode, Node, OcticonName, SemanticColor, Spacing,
+        SpacingValue, TargetName,
     };
     use rusty_sphinx_index::ProjectIndex;
 
@@ -374,7 +374,7 @@ mod tests {
     fn test_margin_replaces_the_default_bottom_margin() {
         // Given
         let dropdown = Dropdown {
-            margin: Some(Margin::All(MarginValue::Auto)),
+            margin: Some(Spacing::All(SpacingValue::Auto)),
             ..titled("Details")
         };
 
@@ -460,7 +460,7 @@ mod tests {
     fn test_container_classes_order_matches_sphinx_design() {
         // Given
         let dropdown = Dropdown {
-            margin: Some(Margin::All(MarginValue::Two)),
+            margin: Some(Spacing::All(SpacingValue::Two)),
             class_container: vec!["mine".to_string()],
             animate: Some(Animation::FadeIn),
             ..titled("Details")

@@ -10,6 +10,7 @@ use crate::dropdown::Dropdown;
 use crate::entity::EntityBody;
 use crate::entity_table::EntityTable;
 use crate::glossary_entry::GlossaryEntry;
+use crate::grid::{Grid, GridItem};
 use crate::image::{Figure, ImageOptions};
 use crate::index_entry::IndexEntry;
 use crate::node::Node;
@@ -92,6 +93,20 @@ pub enum Directive {
     /// missing `dropdown` silently swallows every construct written inside
     /// one — targets, sections and entities alike.
     Dropdown(Box<Dropdown>),
+    /// `.. grid::` — sphinx-design's responsive row of cells.
+    ///
+    /// Boxed like [`Self::Dropdown`], for the same reason, and here for the
+    /// same reason too: the demo corpus this build benchmarks against draws a
+    /// `PlantUML` diagram inside a `.. grid-item::`, and an unknown `grid`
+    /// swallowed it whole.
+    Grid(Box<Grid>),
+    /// `.. grid-item::` — one cell of a [`Self::Grid`].
+    ///
+    /// Its own variant rather than a field of the grid: sphinx-design only
+    /// *warns* when an item is written outside a grid, or when a grid holds
+    /// something that is not one, and still renders both. Nesting the type
+    /// would turn those warnings into content loss.
+    GridItem(Box<GridItem>),
     /// `.. entity-table::`, and its sphinx-needs spelling `.. needtable::` —
     /// a table of the entities matching a filter.
     ///

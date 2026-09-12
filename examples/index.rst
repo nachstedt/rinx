@@ -46,6 +46,7 @@ Welcome to the Rusty-Sphinx example.
    contents/index
    sectnum/index
    dropdown/index
+   grid/index
    jinja/index
    team_a/index
    team_b/index

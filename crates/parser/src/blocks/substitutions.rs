@@ -357,6 +357,10 @@ fn resolve_directive(
         Directive::EntitySection { body, .. } => {
             resolve_nodes(body, defs, cache, visiting, diagnostics);
         }
+        Directive::Grid(grid) => resolve_nodes(&mut grid.body, defs, cache, visiting, diagnostics),
+        Directive::GridItem(item) => {
+            resolve_nodes(&mut item.body, defs, cache, visiting, diagnostics);
+        }
         Directive::Glossary { entries, .. } => {
             for entry in entries {
                 resolve_nodes(&mut entry.definition, defs, cache, visiting, diagnostics);

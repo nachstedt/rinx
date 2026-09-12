@@ -30,6 +30,7 @@ mod entity;
 mod entity_table;
 mod figure;
 mod glossary;
+mod grid;
 mod image;
 mod line_block;
 mod math;

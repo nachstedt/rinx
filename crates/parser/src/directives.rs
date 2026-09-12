@@ -34,6 +34,7 @@ mod entity;
 mod entity_section;
 mod entity_table;
 mod glossary;
+mod grid;
 mod image;
 mod include;
 mod index_directive;
