@@ -1,0 +1,26 @@
+"""Documents whose sources are rendered as Jinja templates before parsing.
+
+The one library in this example site with `jinja = True`. Its own package for
+the reason `//examples/dropdown` is: the feature is opt-in per library, so
+showing it needs a library that opts in — and keeping it here means every
+other example library still proves that `{{` and `{%` are ordinary text
+without it.
+
+`_templates/page_header.rst` is `parse_data`, not a source: it is rendered
+into each of these pages, and listing it in `srcs` would publish it as a page
+of its own as well.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    jinja = True,
+    # What a Sphinx project's `html_context` binds. The other name these pages
+    # read, `page`, comes from each document's own `{% set %}`.
+    jinja_context = {"release": "0.1"},
+    parse_data = ["_templates/page_header.rst"],
+    deps = [],
+    visibility = ["//visibility:public"],
+)

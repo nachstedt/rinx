@@ -189,3 +189,9 @@ entry under the heading it belongs to, as a single short sentence.
 - When two actions compute the same thing from the same inputs, fold the second into the first rather than keeping them in step; the cheapest agreement is one process.
 - Check a generated artifact for the degenerate case the external tool it is fed to rejects; an empty PlantUML diagram fails the build with a syntax error naming a file nobody wrote, when the real cause is a filter that matched nothing.
 - Run every shell test the CI workflow runs before calling a change done, and add new ones to that workflow in the same change.
+- Make a feature opt-in when its trigger is a character sequence ordinary prose already contains; a construct nobody writes by accident (a directive name) can be always available, but `{{` cannot.
+- Narrow an opt-in further with a cheap lexical check, so that within an opted-in library only the documents actually using the feature are subject to its rules.
+- When emulating something another tool gets from a scripting hook, follow that tool's own resolution rules rather than the local convention, and say in the ADR where the two deliberately disagree.
+- A transform whose output only ever feeds the next step of the same process needs no intermediate artifact; splitting it into a pipeline phase costs a second file for the metadata that cannot be reconstructed from the first, with no cache firewall to win. Give it a debugging flag instead.
+- When a transform makes an existing position mapping non-affine, extend the lookup rather than the offset: consult the map once, at the single point that resolves a position, after every composable offset has been added.
+- Refuse a construct whose semantics the surrounding mechanism cannot preserve (a whitespace trim that would swallow an injected marker) by name, rather than rendering something subtly wrong.

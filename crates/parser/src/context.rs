@@ -18,6 +18,8 @@
 use rusty_sphinx_ast::{Domain, EntityId, FileId, Position, Span};
 use rusty_sphinx_entity::{EntitySchema, EntityType};
 
+use crate::templating::TemplateMap;
+
 /// A file read at parse time, and the identity the parser knows it by.
 ///
 /// `id` is the loader's resolved, canonical name for the file — a path
@@ -82,6 +84,34 @@ struct Origin {
     column: u32,
 }
 
+/// A position, and the file it was measured in.
+///
+/// The two travel together because a [`TemplateMap`] answers both at once: the
+/// line a rendered line came from and the template it was written in are one
+/// lookup, and separating them would let a span carry one file's line number
+/// under another file's name.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct SourcePoint {
+    /// Where in that file the position is.
+    pub(crate) position: Position,
+    /// The file, or `None` for the document being parsed.
+    file: Option<FileId>,
+}
+
+impl SourcePoint {
+    /// The span from here to `end`, measured in this point's file.
+    ///
+    /// The only way a [`Span`] is built in this crate, so that a span cannot
+    /// be measured in one file and named after another: every span-building
+    /// helper — [`ParseCtx::line_span`], the simple-table context's, the
+    /// inline source map's — ends here, and the file arrives already attached
+    /// to the point [`ParseCtx::position`] resolved.
+    #[must_use]
+    pub(crate) const fn to(self, end: Self) -> Span {
+        Span::new(self.position, end.position).with_file(self.file)
+    }
+}
+
 /// Configuration for one parse, borrowed by every block-level parser.
 pub struct ParseCtx<'a> {
     /// The domain a bare (unprefixed) directive or role resolves to.
@@ -102,6 +132,13 @@ pub struct ParseCtx<'a> {
     /// [`crate::parse_with_ctx`] from the path it is already given, so no
     /// caller has to remember to supply it twice.
     pub doc_path: &'a str,
+    /// Whether the document's source is rendered as a Jinja template before
+    /// it is parsed, and the names such a template may read.
+    ///
+    /// Off unless the library asked for it: a document is free to contain
+    /// `{{` and `{%` as text, and most do not mean Jinja by them. See
+    /// [`crate::templating`].
+    pub jinja: Option<&'a [(String, String)]>,
     /// The entity type whose body is currently being parsed, if any.
     ///
     /// This is what makes a section sub-directive recognisable *only* inside
@@ -140,6 +177,14 @@ pub struct ParseCtx<'a> {
     /// chain an `.. include::` would extend. A file already in it would close
     /// a cycle, so this is what makes that detectable at all.
     include_stack: &'a [String],
+    /// Where each line of the text being parsed came from, when a Jinja pass
+    /// rewrote it — see [`crate::templating`].
+    ///
+    /// Present only on the document's own context. A Jinja pass moves lines
+    /// around freely, so unlike [`Self::origin`] this mapping is not an offset
+    /// and cannot compose; it is consulted once, at the end of
+    /// [`Self::position`], after every nested offset has been added.
+    template_map: Option<&'a TemplateMap>,
 }
 
 impl<'a> ParseCtx<'a> {
@@ -159,12 +204,14 @@ impl<'a> ParseCtx<'a> {
             files,
             schema: EntitySchema::empty_ref(),
             doc_path: "",
+            jinja: None,
             enclosing_entity: None,
             enclosing_entity_id: None,
             origin: Some(Origin { line: 1, column: 1 }),
             file: None,
             current_file: None,
             include_stack: &[],
+            template_map: None,
         }
     }
 
@@ -178,6 +225,30 @@ impl<'a> ParseCtx<'a> {
     #[must_use]
     pub fn with_schema(self, schema: &'a EntitySchema) -> Self {
         Self { schema, ..self }
+    }
+
+    /// The same context, rendering each document's source as a Jinja template
+    /// first, with `context` bound for it to read.
+    #[must_use]
+    pub fn with_jinja(self, context: &'a [(String, String)]) -> Self {
+        Self {
+            jinja: Some(context),
+            ..self
+        }
+    }
+
+    /// The context for parsing text a Jinja pass produced, whose lines `map`
+    /// traces back to the files they were written in.
+    ///
+    /// Borrows for a possibly shorter lifetime than `'a` because the map is
+    /// built during the parse it configures, exactly as
+    /// [`included`](Self::included)'s stack is.
+    #[must_use]
+    pub(crate) fn templated<'b>(&'b self, map: &'b TemplateMap) -> ParseCtx<'b> {
+        ParseCtx {
+            template_map: Some(map),
+            ..*self
+        }
     }
 
     /// The context for parsing the body of an entity of `entity_type`.
@@ -270,12 +341,17 @@ impl<'a> ParseCtx<'a> {
             files: self.files,
             schema: self.schema,
             doc_path: self.doc_path,
+            jinja: self.jinja,
             enclosing_entity: self.enclosing_entity,
             enclosing_entity_id: self.enclosing_entity_id,
             origin: Some(Origin { line: 1, column: 1 }),
             file: Some(file),
             current_file: Some(id),
             include_stack: stack,
+            // An `.. include::` fragment is not Jinja-rendered: Sphinx's
+            // `source-read` fires for documents, not for transcluded text. Its
+            // positions therefore restart at line 1 of its own file.
+            template_map: None,
         }
     }
 
@@ -293,28 +369,23 @@ impl<'a> ParseCtx<'a> {
     }
 
     /// The source position of `local_column` on `local_line`, both 0-based
-    /// indices into the slice being parsed.
+    /// indices into the slice being parsed, and the file it is measured in.
     #[must_use]
-    pub(crate) fn position(&self, local_line: usize, local_column: usize) -> Option<Position> {
-        self.origin.map(|origin| {
-            Position::new(
-                origin.line + u32::try_from(local_line).unwrap_or(0),
-                origin.column + u32::try_from(local_column).unwrap_or(0),
-            )
+    pub(crate) fn position(&self, local_line: usize, local_column: usize) -> Option<SourcePoint> {
+        let origin = self.origin?;
+        let line = origin.line + u32::try_from(local_line).unwrap_or(0);
+        let column = origin.column + u32::try_from(local_column).unwrap_or(0);
+        let Some(map) = self.template_map else {
+            return Some(SourcePoint {
+                position: Position::new(line, column),
+                file: self.file,
+            });
+        };
+        let written = map.written_at(line);
+        Some(SourcePoint {
+            position: Position::new(written.line, column),
+            file: written.file,
         })
-    }
-
-    /// A span from `start` to `end`, attributed to the file this context is
-    /// parsing.
-    ///
-    /// The single point at which a [`Span`] learns which file it is measured
-    /// in, so every span-building helper in the crate — here, the simple-table
-    /// context's, and the inline source map's — must go through it rather than
-    /// calling [`Span::new`]. A span that skipped it would carry an included
-    /// fragment's line numbers under the document's name.
-    #[must_use]
-    pub(crate) const fn span(&self, start: Position, end: Position) -> Span {
-        Span::new(start, end).with_file(self.file)
     }
 
     /// A span covering the whole of `local_line`, whose content is `text`.
@@ -324,7 +395,7 @@ impl<'a> ParseCtx<'a> {
     pub(crate) fn line_span(&self, local_line: usize, text: &str) -> Option<Span> {
         let start = self.position(local_line, 0)?;
         let end = self.position(local_line, text.chars().count())?;
-        Some(self.span(start, end))
+        Some(start.to(end))
     }
 
     /// A span covering `first` through `last` inclusive (0-based indices),
@@ -334,7 +405,7 @@ impl<'a> ParseCtx<'a> {
     pub(crate) fn lines_span(&self, first: usize, last: usize, last_text: &str) -> Option<Span> {
         let start = self.position(first, 0)?;
         let end = self.position(last, last_text.chars().count())?;
-        Some(self.span(start, end))
+        Some(start.to(end))
     }
 }
 

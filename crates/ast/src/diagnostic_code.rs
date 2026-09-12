@@ -532,6 +532,37 @@ diagnostic_codes! {
     /// styling its author asked for looks finished and is wrong.
     UmlUnknownConfig => "uml.unknown-config",
 
+    // --- Jinja-templated sources -------------------------------------------
+    /// A document or template that is not valid Jinja. Reported rather than
+    /// rendered: the parse then runs on the *unrendered* text, so the page is
+    /// still built, but every `{% %}` in it stays visible as the tell.
+    JinjaSyntax => "jinja.syntax",
+    /// A template reading a name bound by neither a `{% set %}` nor the
+    /// library's `jinja_context`. Jinja2 would substitute the empty string;
+    /// a page silently missing a value it asked for looks finished and is
+    /// wrong.
+    JinjaUndefinedValue => "jinja.undefined-value",
+    /// A template that failed to render for a reason that is neither a syntax
+    /// error nor an undefined value.
+    JinjaRenderError => "jinja.render-error",
+    /// An `{% include %}` naming a template the build did not declare. Carries
+    /// the loader's own explanation, which names the `parse_data` attribute
+    /// the file belongs in.
+    JinjaTemplateNotFound => "jinja.template-not-found",
+    /// A whitespace-control modifier (`{%-`, `-%}`), which this build refuses:
+    /// tracking which line a rendered line came from means injecting markers
+    /// that a trim would swallow, and in reStructuredText a silently changed
+    /// indent changes what a block contains.
+    JinjaWhitespaceControl => "jinja.whitespace-control",
+    /// An `{% include %}` whose target is computed rather than written. Every
+    /// file an action reads is declared before it runs, so a name that only
+    /// exists mid-render could never be one of them.
+    JinjaDynamicTemplateName => "jinja.dynamic-template-name",
+    /// An `{% include %}` chain that reaches a template already being
+    /// rendered. Reported with the whole chain, because the offending edit may
+    /// be in any link of it.
+    JinjaRecursiveInclude => "jinja.recursive-include",
+
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never
     /// suppressible: a suppression that silences the report of its own typo

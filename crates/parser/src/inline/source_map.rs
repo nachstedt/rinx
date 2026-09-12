@@ -11,9 +11,9 @@
 //! Positions come out as characters, not bytes, because that is what
 //! [`Position`] documents and what a reader counting along a line expects.
 
-use rusty_sphinx_ast::{Position, Span};
+use rusty_sphinx_ast::Span;
 
-use crate::context::ParseCtx;
+use crate::context::{ParseCtx, SourcePoint};
 
 /// One contiguous run of text that came from a single source line.
 struct Segment {
@@ -88,7 +88,7 @@ impl SourceMap {
     /// end rather than yielding `None`: the inline scan's *end* offsets are
     /// exclusive, so the last role on a line legitimately points one past its
     /// final character.
-    pub(crate) fn position(&self, offset: usize, ctx: &ParseCtx<'_>) -> Option<Position> {
+    pub(crate) fn position(&self, offset: usize, ctx: &ParseCtx<'_>) -> Option<SourcePoint> {
         let segment = self
             .segments
             .iter()
@@ -107,14 +107,14 @@ impl SourceMap {
 
     /// The span from byte offset `start` to `end` in the joined text.
     pub(crate) fn span(&self, start: usize, end: usize, ctx: &ParseCtx<'_>) -> Option<Span> {
-        Some(ctx.span(self.position(start, ctx)?, self.position(end, ctx)?))
+        Some(self.position(start, ctx)?.to(self.position(end, ctx)?))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rusty_sphinx_ast::{Domain, Position};
 
     fn ctx() -> ParseCtx<'static> {
         ParseCtx::with_domain(Domain::Py)
@@ -140,7 +140,7 @@ mod tests {
         let position = map.position(6, &ctx()).expect("within the segment");
 
         // Then — 1-based line 4, and column 1 + 4 stripped + 6 into the text
-        assert_eq!(position, Position::new(4, 11));
+        assert_eq!(position.position, Position::new(4, 11));
     }
 
     #[test]
@@ -169,8 +169,8 @@ mod tests {
         let in_second = map.position(8, &ctx()).expect("in the second segment");
 
         // Then each lands on its own source line, with the indent restored
-        assert_eq!(in_first, Position::new(1, 3));
-        assert_eq!(in_second, Position::new(2, 6));
+        assert_eq!(in_first.position, Position::new(1, 3));
+        assert_eq!(in_second.position, Position::new(2, 6));
     }
 
     #[test]
@@ -197,7 +197,7 @@ mod tests {
         let position = map.position(5, &ctx()).expect("within the segment");
 
         // Then it reports column 4 — the third character — not column 6
-        assert_eq!(position, Position::new(1, 4));
+        assert_eq!(position.position, Position::new(1, 4));
     }
 
     #[test]
@@ -209,7 +209,7 @@ mod tests {
         let position = map.position(5, &ctx()).expect("clamped, not dropped");
 
         // Then — the position just past the last character
-        assert_eq!(position, Position::new(1, 6));
+        assert_eq!(position.position, Position::new(1, 6));
     }
 
     #[test]
@@ -224,6 +224,6 @@ mod tests {
         let position = map.position(0, &nested).expect("within the segment");
 
         // Then the offsets compose with the map's own
-        assert_eq!(position, Position::new(3, 4));
+        assert_eq!(position.position, Position::new(3, 4));
     }
 }

@@ -316,7 +316,7 @@ fn filter_error_span(
     let value_column = line.raw.chars().count() - line.value.chars().count();
     let start = ctx.position(line.line_index, value_column + error.offset)?;
     let end = ctx.position(line.line_index, value_column + error.offset + error.length)?;
-    Some(ctx.span(start, end))
+    Some(start.to(end))
 }
 
 /// Splits a comma-separated option value, dropping empty entries.

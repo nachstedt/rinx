@@ -20,6 +20,15 @@ def _rusty_sphinx_library_impl(ctx):
     schema_args = ["--entity-schema", entity_schema.path] if entity_schema else []
     schema_inputs = [entity_schema] if entity_schema else []
 
+    # The Jinja pass is opt-in per library for the same reason diagrams are:
+    # `{{` and `{%` are ordinary text in most projects, and a build that
+    # rendered every document would turn a page *about* templating into a
+    # syntax error. The templates themselves are ordinary `parse_data`.
+    jinja_args = ["--jinja"] if ctx.attr.jinja else []
+    if ctx.attr.jinja and ctx.attr.jinja_context:
+        jinja_args.append("--jinja-context")
+        jinja_args.extend(["%s=%s" % (name, value) for name, value in sorted(ctx.attr.jinja_context.items())])
+
     # Diagrams are opt-in, because Bazel cannot know before reading a document
     # whether it holds one — without the opt-in, every document of every
     # project would pay for a diagram pipeline most of them never use. A
@@ -50,7 +59,7 @@ def _rusty_sphinx_library_impl(ctx):
                 "--input", src.path,
                 "--output", ast_raw.path,
                 "--default-domain", ctx.attr.default_domain,
-            ] + schema_args + diagram_args,
+            ] + schema_args + diagram_args + jinja_args,
             # `parse_data` files join the parse action's inputs because the
             # parser genuinely reads them: `.. csv-table::`'s `:file:`, and the
             # sources `.. include::`/`.. literalinclude::` splice into the
@@ -201,6 +210,13 @@ rusty_sphinx_library = rule(
             allow_single_file = [".toml"],
             doc = "The project's entity meta-model: the types, attributes, sections, relations and roles this library's documents may use. Read at *parse* time, since it is what makes `.. req::` a directive rather than an unknown name, so editing it re-parses every document here. Every library in a site and the site itself must name the same file — a mismatch is reported as `entity.schema-mismatch` when the index is built. Omit it for a project that declares no entities, which then behaves exactly as before this feature existed.",
         ),
+        "jinja": attr.bool(
+            default = False,
+            doc = "Whether this library's `.rst` sources are rendered as Jinja templates before they are parsed — the transform a Sphinx project gets by connecting the `source-read` event in its `conf.py`. Off by default, because a document is free to contain `{{` and `{%` as text and most projects mean nothing by them. The templates an `{% include %}` reads are declared in `parse_data`, like every other file the parser reads, and must not also appear in `srcs`.",
+        ),
+        "jinja_context": attr.string_dict(
+            doc = "Names a Jinja-rendered source may read, the way a Sphinx project's `html_context` binds them. Values only; a name bound by neither this nor a `{% set %}` is reported rather than silently rendered as the empty string. Meaningless without `jinja = True`.",
+        ),
         "default_domain": attr.string(
             default = "py",
             values = ["py", "c"],
@@ -228,9 +244,14 @@ strict structural dependencies (i.e. targets included in a `.. toctree::`) in `d
 Standard cross-references/hyperlinks do not need to be declared in `deps` as they are
 resolved late during the site rendering phase.
 
+Sources can be rendered as Jinja templates before parsing with `jinja = True`
+— what a Sphinx project gets from a `source-read` hook in its `conf.py`. The
+templates an `{% include %}` names are declared in `parse_data` and must not
+also appear in `srcs`.
+
 Files read while parsing go in `parse_data` — the data behind
-`.. csv-table:: :file:`, and the sources `.. include::`/`.. literalinclude::`
-splice in. That is unrelated to `deps`: it declares bytes the parser reads, not
+`.. csv-table:: :file:`, the templates a Jinja `{% include %}` reads, and the
+sources `.. include::`/`.. literalinclude::` splice in. That is unrelated to `deps`: it declares bytes the parser reads, not
 another library. A `.. toctree::` written *inside* an included fragment still
 needs its documents in `deps`, because toctree validation runs on the merged
 AST. Pictures

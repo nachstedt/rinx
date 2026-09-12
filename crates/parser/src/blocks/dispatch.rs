@@ -67,6 +67,18 @@ pub fn parse_with_domain(path: &str, input: &str, default_domain: Domain) -> Doc
 /// to be non-empty by preceding checks.
 #[must_use]
 pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
+    let mut diagnostics = Diagnostics::default();
+    // The Jinja pass runs before anything reads a line, because it decides
+    // what the lines *are*. Its map is what every position below it is
+    // resolved through, so the context carrying it has to be the one the whole
+    // parse runs under.
+    let templated = crate::templating::apply_templating(input, ctx, &mut diagnostics);
+    let (input, templated_ctx) = match &templated {
+        Some(source) => (source.text.as_str(), Some(ctx.templated(&source.map))),
+        None => (input, None),
+    };
+    let ctx = templated_ctx.as_ref().unwrap_or(ctx);
+
     let all_lines: Vec<&str> = input.lines().collect();
     // The document's leading field list is metadata, not content: consuming it
     // here keeps it out of the block parser, where it would otherwise render as
@@ -76,7 +88,6 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     let ctx = &ctx.nested(metadata_lines, 0).for_document(path);
 
     let mut adornment_order: Vec<Adornment> = Vec::new();
-    let mut diagnostics = Diagnostics::default();
 
     let mut nodes = parse_blocks(lines, &mut adornment_order, &mut diagnostics, ctx);
 

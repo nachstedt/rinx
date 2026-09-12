@@ -898,6 +898,7 @@ dependencies = [
  "rusty_sphinx_ast",
  "rusty_sphinx_entity",
  "rusty_sphinx_filter",
+ "rusty_sphinx_template",
  "unicode-width",
 ]
 
@@ -930,6 +931,13 @@ name = "rusty_sphinx_scope"
 version = "0.1.0"
 dependencies = [
  "rusty_sphinx_ast",
+]
+
+[[package]]
+name = "rusty_sphinx_template"
+version = "0.1.0"
+dependencies = [
+ "minijinja",
 ]
 
 [[package]]

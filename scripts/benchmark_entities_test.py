@@ -97,6 +97,35 @@ class TransclusionTargetsTest(unittest.TestCase):
             # Then nothing is declared — the parse will report it instead
             self.assertEqual((included, outside), ([], []))
 
+    def test_a_jinja_include_is_declared_like_any_other_parse_time_read(self):
+        # Given the two lines 24 of the corpus's documents open with
+        with tempfile.TemporaryDirectory() as tmp:
+            docs = Path(tmp) / "docs"
+            write(
+                docs / "basic_example" / "index.rst",
+                '{% set page="index.rst" %}\n'
+                '{% include "demo_page_header.rst" with context %}\n',
+            )
+            write(docs / "demo_page_header.rst", "Header\n")
+
+            # When
+            included, outside = benchmark_entities.transclusion_targets(docs)
+
+            # Then the template is a file the parser reads, so it is declared
+            # as parse_data and kept out of srcs — resolved from the *source
+            # root*, as Jinja's own loader resolves a template name, not from
+            # the subdirectory the including document sits in
+            self.assertEqual(included, ["demo_page_header.rst"])
+            self.assertEqual(outside, [])
+
+    def test_the_corpus_library_asks_for_its_sources_to_be_templated(self):
+        # Given / When
+        text = benchmark_entities.render_corpus_build_file([], [])
+
+        # Then — without it the preamble would parse as the prose it is, and
+        # the shared header would never reach a page
+        self.assertIn("jinja = True", text)
+
     def test_a_non_rst_source_inside_the_package_needs_no_special_handling(self):
         # Given a literalinclude of a Python file inside the package, which the
         # generated `parse_data` glob already covers

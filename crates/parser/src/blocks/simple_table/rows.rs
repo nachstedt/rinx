@@ -33,10 +33,11 @@ impl SimpleTableCtx<'_> {
     fn line_span(&self, offset: usize) -> Option<Span> {
         let line = self.start_i + offset;
         let width = self.grid.get(offset).map_or(0, Vec::len);
-        Some(self.parse_ctx.span(
-            self.parse_ctx.position(line, self.indent)?,
-            self.parse_ctx.position(line, self.indent + width)?,
-        ))
+        Some(
+            self.parse_ctx
+                .position(line, self.indent)?
+                .to(self.parse_ctx.position(line, self.indent + width)?),
+        )
     }
 
     /// The `end` offset of the table's rightmost column (docutils'
