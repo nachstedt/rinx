@@ -45,6 +45,7 @@ fn requirement(status: &str, title: &str, doc: &str) -> EntityRecord {
             AttributeValue::String(status.to_string()),
         )]),
         outgoing: BTreeMap::new(),
+        uml: BTreeMap::new(),
     }
 }
 
@@ -71,6 +72,7 @@ fn index() -> ProjectIndex {
             title: None,
             attributes: BTreeMap::new(),
             outgoing: BTreeMap::from([("verifies".to_string(), vec![id("REQ_1")])]),
+            uml: BTreeMap::new(),
         },
     );
     index

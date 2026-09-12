@@ -10,6 +10,7 @@ rusty_sphinx_entity = { path = "../entity" }
 rusty_sphinx_index = { path = "../index" }
 rusty_sphinx_toctree = { path = "../toctree" }
 rusty_sphinx_scope = { path = "../scope" }
+rusty_sphinx_uml = { path = "../uml" }
 anyhow = "1.0.102"
 html-escape = "0.2.13"
 math-core = "0.8"

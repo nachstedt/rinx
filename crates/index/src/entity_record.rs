@@ -29,6 +29,18 @@ pub struct EntityRecord {
     /// Outgoing edges, keyed by the relation's option spelling.
     #[serde(default)]
     pub outgoing: BTreeMap<String, Vec<EntityId>>,
+    /// The diagram templates written inside this entity, by `:key:` — the
+    /// empty key being the one written without.
+    ///
+    /// The one place this record knowingly relaxes its "no prose" rule, and
+    /// the trade is deliberate: a diagram's `uml('REQ_001')` pulls in another
+    /// entity's template, and that entity is declared in a document the
+    /// importing one has never seen. Keeping the templates here makes the
+    /// import an index lookup instead of a second, diagram-shaped index. What
+    /// bounds the growth is that only a diagram an author actually wrote
+    /// inside an entity lands here.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub uml: BTreeMap<String, String>,
 }
 
 impl EntityRecord {
@@ -68,6 +80,7 @@ mod tests {
                 "links".to_string(),
                 vec![EntityId::new("SPEC_003").unwrap()],
             )]),
+            uml: BTreeMap::new(),
         }
     }
 

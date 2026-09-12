@@ -79,6 +79,12 @@ jobs:
     - name: Run doctest cache firewall test
       run: ./tests/test_doctest_cache_firewall.sh
 
+    - name: Run diagram opt-in test
+      run: ./tests/test_diagram_opt_in.sh
+
+    - name: Run diagram cache firewall test
+      run: ./tests/test_diagram_cache_firewall.sh
+
   vscode_extension:
     runs-on: ubuntu-latest
     steps:

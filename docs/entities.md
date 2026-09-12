@@ -575,6 +575,138 @@ language unchanged.
 
 ---
 
+## Diagramming entities
+
+`.. entity-diagram::` — sphinx-needs spells it `.. needuml::` — is a PlantUML
+diagram whose body is a Jinja template expanded against the entity graph, so a
+picture can be *derived* from what the documents declare rather than restated
+beside them.
+
+```rst
+.. entity-diagram::
+   :caption: Every requirement in the project
+
+   @startuml
+   {% for id in filter('type == "req"') %}
+   {{ flow(id) }}
+   {% endfor %}
+   @enduml
+```
+
+The template surface:
+
+| written | what it does |
+|---|---|
+| `needs` | every entity, by id, in id order |
+| `need` | the entity an `.. entity-arch::` sits inside |
+| `need(id)` | one entity's fields |
+| `filter(expr)` | the ids matching a filter, in id order |
+| `flow(id)` | a clickable PlantUML node for one entity |
+| `ref(id, text)` | a PlantUML link to one entity |
+| `uml(id, key)` | another entity's diagram, expanded here |
+| `imports(id, rel…)` | the diagrams of everything `id` points at |
+
+`filter()` is the very language "Listing entities" describes, so a filter means
+the same thing in a table and in a diagram. `flow()` and `ref()` build the same
+href a `:ref:` to that entity would, so a clickable node lands on the anchor the
+page actually has.
+
+An entity's attributes, relations and derived back-links share one namespace
+with the built-in `id`, `type`, `type_name`, `docname` and `title` — so a
+`.. req::`'s `:owner:` reads as `need.owner`. A built-in name always wins, so a
+schema declaring an attribute called `id` cannot change what `need.id` means.
+
+### Architecture diagrams
+
+`.. entity-arch::` (sphinx-needs: `.. needarch::`) is written *inside* an entity
+and binds it as `need`. Its `:key:` stores the template on the entity so
+another diagram can import it:
+
+```rst
+.. req:: The bootloader shall verify the kernel signature
+   :id: REQ_BOOT
+   :owner: platform
+
+   .. entity-arch::
+      :key: overview
+
+      component "{{ need.title }}" as {{ need.id }}
+```
+
+```rst
+.. entity-diagram::
+
+   @startuml
+   {{ uml('REQ_BOOT', 'overview') }}
+   @enduml
+```
+
+This is what makes architecture diagrams compositional: a component draws
+itself once, and every diagram that reaches it pulls that picture in. A diagram
+written inside a *section* still knows its entity, even though a section body
+deliberately forgets the entity's type.
+
+An import that reaches itself — directly or around a cycle — is
+`uml.recursive-import`, reported with the route it took. Importing the same
+picture twice side by side is ordinary composition, not a cycle.
+
+### Options
+
+`:caption:`, `:align:`, `:width:`, `:scale:`, `:class:` and `:name:` place the
+finished picture, exactly as they place an `.. image::`; a `:name:` registers as
+a `:ref:` target. `:extra:` binds comma-separated `name: value` pairs into the
+template. `:debug:` shows the expanded PlantUML below the picture — the text
+that was actually compiled, which is what you need when a diagram comes out
+wrong. `:config:` names a preamble declared under `[uml_configs]` in the site's
+`rusty_sphinx.toml`.
+
+`@startuml`/`@enduml` are added when they are missing, so a `:key:` fragment is
+both importable and a diagram in its own right. A diagram that draws nothing —
+a `filter()` matching no entity, say — is reported as `uml.empty-result` and
+the page simply shows no picture, the same way an empty `.. entity-table::`
+renders its headings and warns.
+
+`:save:` is reported as `uml.save-unsupported`: a sandboxed build action may
+only write files declared before it runs. Build the site's `diagram_sources`
+output group to get every diagram's expanded source instead.
+
+### Build wiring
+
+Diagrams are **opt-in per library**: a library whose documents draw anything
+sets `diagrams = True`, and one that does not pays nothing for the feature.
+
+```python
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"], exclude = ["diagrams.rst"]),
+    entity_schema = "entities.toml",
+    deps = [":diagram_docs"],
+)
+
+# The diagram documents, in a library of their own so the cost stays on them.
+rusty_sphinx_library(
+    name = "diagram_docs",
+    srcs = ["diagrams.rst"],
+    entity_schema = "entities.toml",
+    diagrams = True,
+)
+```
+
+Forgetting the attribute is not silent: a diagram in a library without it
+fails the parse as `uml.diagrams-disabled`, on the directive's own line, naming
+the attribute to set.
+
+A diagram's text depends on the whole entity graph, so it cannot be expanded
+until every document has been indexed. Compilation therefore belongs to
+`rusty_sphinx_site`, not to any `rusty_sphinx_library` — including for a plain
+`.. plantuml::`, which goes the same way so that the set of diagrams the build
+compiles and the set it validates cannot drift apart. The render action writes
+each diagram's expanded source, and a per-document compile turns it into an
+SVG; an edit that leaves a diagram's text unchanged starts no JVM. See
+`docs/decisions/012-entity-diagrams.md`.
+
+---
+
 ## Migrating from sphinx-needs
 
 `examples/entities/entities.toml` reproduces the built-in vocabulary — `req`,
@@ -590,7 +722,9 @@ Deliberately **not** supported:
   operators real filters use and diagnoses everything else by name, so a filter
   calling `len()` is reported rather than silently matching nothing.
 - **The other listing directives** (`needlist`, `needflow`, `needpie`,
-  `needbar`) — a later increment. They reuse the same filter language.
+  `needbar`) — a later increment. They reuse the same filter language, and now
+  the diagram expander too. `needuml` and `needarch` *are* supported; see
+  "Diagramming entities" above.
 - **Dynamic functions** (`[[copy('id')]]`) and `needextend`.
 
 ---

@@ -52,6 +52,7 @@ fn index() -> ProjectIndex {
                 AttributeValue::String("open".to_string()),
             )]),
             outgoing: BTreeMap::new(),
+            uml: BTreeMap::new(),
         },
     );
     index.entities.insert(
@@ -62,6 +63,7 @@ fn index() -> ProjectIndex {
             title: None,
             attributes: BTreeMap::new(),
             outgoing: BTreeMap::from([("verifies".to_string(), vec![id("REQ_1")])]),
+            uml: BTreeMap::new(),
         },
     );
     index.entity_backlinks.insert(

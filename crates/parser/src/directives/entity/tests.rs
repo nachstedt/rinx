@@ -637,3 +637,62 @@ fn test_a_section_inside_a_section_is_not_recognised() {
     assert_eq!(entity.named_sections("safety-comment").len(), 0);
     assert!(codes(rst).contains(&"entity.section-outside-entity".to_string()));
 }
+
+/// The first diagram in `rst`, wherever it was written.
+fn first_diagram(rst: &str) -> rusty_sphinx_ast::Uml {
+    let doc = parse(rst);
+    let mut found = None;
+    rusty_sphinx_ast::walk_nodes(&doc.nodes, &mut |node| {
+        if let Node::Directive(Directive::Uml(uml)) = node
+            && found.is_none()
+        {
+            found = Some((**uml).clone());
+        }
+    });
+    found.unwrap_or_else(|| panic!("no diagram parsed from:\n{rst}"))
+}
+
+#[test]
+fn test_a_diagram_in_an_entity_body_records_the_entity_it_sits_in() {
+    // Given — an architecture diagram written directly in a requirement
+    let rst = "\
+.. req:: Boot sequence
+   :owner: alice
+
+   .. entity-arch::
+
+      {{ flow(need.id) }}
+";
+
+    // When
+    let uml = first_diagram(rst);
+    let entity = parse_entity_of(rst);
+
+    // Then — the diagram names the very entity it was written in, whatever
+    // that entity's id turned out to be
+    assert_eq!(uml.entity.as_ref(), Some(&entity.id));
+}
+
+#[test]
+fn test_a_diagram_in_a_named_section_still_records_the_entity() {
+    // Given — a section body deliberately clears the enclosing entity *type*,
+    // so that sections cannot nest. The id must survive that: a diagram
+    // written under `.. verification-criteria::` is still a diagram of the
+    // requirement it sits in.
+    let rst = "\
+.. req:: Boot sequence
+   :owner: alice
+
+   .. verification-criteria::
+
+      .. entity-arch::
+
+         {{ flow(need.id) }}
+";
+
+    // When
+    let uml = first_diagram(rst);
+
+    // Then
+    assert!(uml.entity.is_some(), "the enclosing entity was lost");
+}

@@ -1,0 +1,54 @@
+#!/bin/bash
+# test_diagram_opt_in.sh
+# Verifies the `diagrams` attribute on rusty_sphinx_library is enforced.
+#
+# Diagram compilation is opt-in per library, so a project that draws nothing
+# pays nothing for it: Bazel cannot know before reading a document whether it
+# holds a diagram, so the library has to say. The opt-in is only honest if
+# forgetting it fails loudly — otherwise the page would ship with an `<img>`
+# pointing at an SVG no action ever compiled.
+#
+# This asserts both halves: without the attribute, a library holding a diagram
+# fails to build, naming the attribute; with it, the build succeeds.
+
+set -euo pipefail
+
+BAZEL=${BAZEL:-bazel}
+BUILD_FILE=examples/team_a/BUILD.bazel
+TARGET=//examples:site
+
+cp "$BUILD_FILE" "$BUILD_FILE.bak"
+restore() { mv "$BUILD_FILE.bak" "$BUILD_FILE"; }
+trap restore EXIT
+
+echo "=== Testing that a library with diagrams builds when it opts in ==="
+if $BAZEL build "$TARGET" > /dev/null 2>&1; then
+    echo "SUCCESS: The opted-in library built."
+else
+    echo "ERROR: The site failed to build with team_a opted in to diagrams."
+    exit 1
+fi
+
+echo "=== Testing that the same library fails without the opt-in ==="
+# Removing the attribute changes the parse action's arguments, so Bazel re-runs
+# the parse — no need to also touch the .rst, unlike the image tests.
+sed -i '/^    diagrams = True,$/d' "$BUILD_FILE"
+if grep -q "diagrams = True" "$BUILD_FILE"; then
+    echo "ERROR: could not remove the attribute from $BUILD_FILE; the test is broken."
+    exit 1
+fi
+
+if build_output=$($BAZEL build "$TARGET" 2>&1); then
+    echo "ERROR: The build succeeded although team_a holds diagrams and no longer opts in."
+    exit 1
+fi
+if grep -q "uml.diagrams-disabled" <<<"$build_output" \
+    && grep -q "diagrams = True" <<<"$build_output"; then
+    echo "SUCCESS: The build failed, naming the attribute to set."
+else
+    echo "ERROR: The build failed, but not with the opt-in error."
+    echo "$build_output" | tail -20
+    exit 1
+fi
+
+exit 0

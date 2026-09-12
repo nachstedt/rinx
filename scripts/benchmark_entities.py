@@ -300,6 +300,11 @@ rusty_sphinx_library(
     # A parse-time input: it is what makes `.. req::` a directive rather than an
     # unknown name.
     entity_schema = "{SCHEMA_NAME}",
+    # The demo draws 21 `.. uml::` diagrams across its documents, and diagram
+    # compilation is opt-in per library. One library holds the whole corpus
+    # here, so it opts in as a whole; a real project would split its diagram
+    # documents into a library of their own to keep the cost on them.
+    diagrams = True,
     images = glob(
         [
             "**/*.png",

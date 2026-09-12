@@ -492,6 +492,69 @@ fn entity_table_named(name: Option<&str>) -> Node {
     Node::Directive(Directive::EntityTable(Box::new(table)))
 }
 
+/// A diagram directive carrying `name`.
+fn diagram_named(name: Option<&str>) -> Node {
+    let mut uml =
+        rusty_sphinx_ast::Uml::new(rusty_sphinx_ast::UmlSource::PlantUml, "A -> B".to_string());
+    uml.name = name.map(TargetName::new);
+    Node::Directive(Directive::Uml(Box::new(uml)))
+}
+
+#[test]
+fn test_analyze_registers_a_diagram_name_as_target() {
+    // Given — a diagram with a `:name:` option, which the renderer turns into
+    // the `id` a `:ref:` has to land on
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![diagram_named(Some("retry-flow"))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("retry-flow")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
+#[test]
+fn test_analyze_registers_nothing_for_an_unnamed_diagram() {
+    // Given — by far the common case
+    let doc = Document::new("test.rst".to_string(), vec![diagram_named(None)]);
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.targets.is_empty());
+}
+
+#[test]
+fn test_analyze_registers_a_diagram_name_nested_in_an_admonition() {
+    // Given — the walk reaches a diagram wherever it is written, the same way
+    // diagram extraction does
+    let doc = Document::new(
+        "test.rst".to_string(),
+        vec![Node::Directive(Directive::Admonition {
+            kind: rusty_sphinx_ast::AdmonitionKind::Note,
+            title: None,
+            collapsible: None,
+            body: vec![diagram_named(Some("nested-flow"))],
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.targets.get(&TargetName::new("nested-flow")),
+        Some(&TargetLocation::Internal("test.rst".to_string()))
+    );
+}
+
 #[test]
 fn test_analyze_registers_entity_table_name_as_target() {
     // Given — an `.. entity-table::` with a `:name:` option

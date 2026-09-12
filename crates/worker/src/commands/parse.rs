@@ -6,19 +6,76 @@ use rusty_sphinx_parser as parser;
 use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
-use super::diagnostics::{WarningOrigin, report_diagnostic};
+use super::diagnostics::{WarningOrigin, format_error_diagnostic, report_diagnostic};
 use super::entity_schema::load_entity_schema;
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::ParseInputs;
 use super::suppression::retain_reportable;
 
+/// Whether the library a document belongs to opted in to diagrams.
+///
+/// An enum rather than a `bool` so a call site reads as the decision it is.
+/// Diagram compilation is opt-in because Bazel cannot know which documents
+/// hold a diagram before reading them: without the opt-in, every document of
+/// every project would pay for a pipeline most of them never use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum DiagramSupport {
+    Enabled,
+    Disabled,
+}
+
+impl DiagramSupport {
+    /// Reads the `--diagrams` flag `rusty_sphinx_library` passes when its
+    /// `diagrams` attribute is set. Absent means disabled, matching the
+    /// attribute's default.
+    pub(super) fn from_args(args: &[String]) -> Self {
+        if args.iter().any(|arg| arg == "--diagrams") {
+            Self::Enabled
+        } else {
+            Self::Disabled
+        }
+    }
+}
+
+/// One diagnostic per diagram directive in `doc`, however deeply nested.
+///
+/// Walks the parsed document rather than asking the parser to refuse the
+/// directive, so the parser stays unaware of build configuration — the live
+/// preview, which has no library at all, parses a diagram like any other
+/// construct. An `.. include::`d fragment is covered too, since by now it is
+/// part of the document's own tree.
+pub(super) fn find_disabled_diagrams(doc: &ast::Document) -> Vec<ast::Diagnostic> {
+    let mut found = Vec::new();
+    ast::walk_nodes(&doc.nodes, &mut |node| {
+        if let ast::Node::Directive(ast::Directive::Uml(uml)) = node {
+            found.push(ast::Diagnostic::at(
+                ast::DiagnosticCode::UmlDiagramsDisabled,
+                format!(
+                    "{}: this library does not compile diagrams; set `diagrams = True` on its \
+                     rusty_sphinx_library to enable them",
+                    uml.source.as_str()
+                ),
+                uml.span,
+            ));
+        }
+    });
+    found
+}
+
 /// `parse_files` is injected rather than built here so this stays the pure,
 /// I/O-free half of the subcommand: a test can hand in a loader that reads
 /// nothing, while `cmd_parse` hands in the real filesystem one.
+///
+/// # Errors
+///
+/// Fails when `diagrams` is [`DiagramSupport::Disabled`] and the document holds
+/// a diagram. That is strict where the parser is resilient, for the reason an
+/// unreadable file is: the alternative ships a page with a picture missing.
 pub(super) fn process_parse(
     path: &str,
     rst_content: &str,
     inputs: &ParseInputs<'_>,
+    diagrams: DiagramSupport,
 ) -> Result<String> {
     let mut doc = parser::parse_with_ctx(path, rst_content, &inputs.ctx());
     // Stamped here rather than inside the parser: it identifies the *build's*
@@ -29,6 +86,20 @@ pub(super) fn process_parse(
     let origin = WarningOrigin::new(path, &doc.source_files);
     for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
         report_diagnostic(&origin, diagnostic);
+    }
+    // Not subject to `.. noqa:`: a suppressed opt-in check would still leave
+    // the page pointing at an SVG nothing compiled.
+    if diagrams == DiagramSupport::Disabled {
+        let disabled = find_disabled_diagrams(&doc);
+        if !disabled.is_empty() {
+            for diagnostic in &disabled {
+                eprintln!("{}", format_error_diagnostic(&origin, diagnostic));
+            }
+            return Err(anyhow!(
+                "{path}: {} diagram(s) in a library without `diagrams = True`",
+                disabled.len()
+            ));
+        }
     }
     serde_json::to_string(&doc).context("Serialization error")
 }
@@ -79,6 +150,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
             files: &parse_files,
             schema: &schema,
         },
+        DiagramSupport::from_args(args),
     )?;
 
     // A file that could not be read means a whole table or section is missing
@@ -125,12 +197,110 @@ mod tests {
                 files: &no_parse_files(),
                 schema: &rusty_sphinx_entity::EntitySchema::empty(),
             },
+            DiagramSupport::Enabled,
         )
         .unwrap();
 
         // Then
         assert!(json.contains("Title"));
         assert!(json.contains(r#""path":"team_a/index.rst""#));
+    }
+
+    /// Parses `rst` with diagrams switched as `diagrams` says.
+    fn parse_with_diagrams(rst: &str, diagrams: DiagramSupport) -> Result<String> {
+        process_parse(
+            "index.rst",
+            rst,
+            &ParseInputs {
+                default_domain: ast::Domain::Py,
+                files: &no_parse_files(),
+                schema: &rusty_sphinx_entity::EntitySchema::empty(),
+            },
+            diagrams,
+        )
+    }
+
+    #[test]
+    fn test_diagram_support_is_enabled_only_by_the_flag() {
+        // Given / When / Then — absent means disabled, matching the library
+        // attribute's default
+        let enabled = vec!["--input".to_string(), "--diagrams".to_string()];
+        let disabled = vec!["--input".to_string()];
+        assert_eq!(DiagramSupport::from_args(&enabled), DiagramSupport::Enabled);
+        assert_eq!(
+            DiagramSupport::from_args(&disabled),
+            DiagramSupport::Disabled
+        );
+    }
+
+    #[test]
+    fn test_a_diagram_in_a_library_without_diagrams_fails_the_parse() {
+        // Given
+        let rst = ".. plantuml::\n\n   A -> B\n";
+
+        // When
+        let result = parse_with_diagrams(rst, DiagramSupport::Disabled);
+
+        // Then — failing here, rather than shipping a page whose picture no
+        // action ever compiled
+        let error = result.expect_err("the opt-in is enforced");
+        assert!(error.to_string().contains("diagrams = True"), "{error}");
+    }
+
+    #[test]
+    fn test_a_diagram_in_a_library_with_diagrams_parses() {
+        // Given
+        let rst = ".. plantuml::\n\n   A -> B\n";
+
+        // When / Then
+        assert!(parse_with_diagrams(rst, DiagramSupport::Enabled).is_ok());
+    }
+
+    #[test]
+    fn test_a_document_without_diagrams_parses_whatever_the_setting() {
+        // Given — the whole point: a library that draws nothing pays nothing,
+        // including no obligation to opt in
+        let rst = "Title\n=====\n\nProse.\n";
+
+        // When / Then
+        assert!(parse_with_diagrams(rst, DiagramSupport::Disabled).is_ok());
+    }
+
+    #[test]
+    fn test_find_disabled_diagrams_reports_each_diagram_at_its_own_line() {
+        // Given — one at top level and one nested in an admonition
+        let rst = ".. plantuml::\n\n   A -> B\n\n.. note::\n\n   .. uml::\n\n      C -> D\n";
+        let doc = parser::parse("index.rst", rst);
+
+        // When
+        let found = find_disabled_diagrams(&doc);
+
+        // Then
+        let lines: Vec<u32> = found
+            .iter()
+            .map(|diagnostic| {
+                diagnostic
+                    .span
+                    .expect("a diagram has a position")
+                    .start
+                    .line
+            })
+            .collect();
+        assert_eq!(lines, [1, 7]);
+        assert!(
+            found
+                .iter()
+                .all(|d| d.code == ast::DiagnosticCode::UmlDiagramsDisabled)
+        );
+    }
+
+    #[test]
+    fn test_find_disabled_diagrams_finds_nothing_in_a_document_without_one() {
+        // Given
+        let doc = parser::parse("index.rst", "Just prose.\n");
+
+        // When / Then
+        assert!(find_disabled_diagrams(&doc).is_empty());
     }
 
     #[test]
@@ -147,6 +317,7 @@ mod tests {
                 files: &no_parse_files(),
                 schema: &rusty_sphinx_entity::EntitySchema::empty(),
             },
+            DiagramSupport::Enabled,
         )
         .unwrap();
 

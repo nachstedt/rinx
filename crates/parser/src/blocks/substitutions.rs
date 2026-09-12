@@ -412,7 +412,7 @@ fn resolve_directive(
         | Directive::Toctree { .. }
         | Directive::Contents { .. }
         | Directive::Sectnum(_)
-        | Directive::PlantUml(_)
+        | Directive::Uml(_)
         | Directive::Index { .. }
         | Directive::PyCurrentModule { .. }
         | Directive::CNamespace { .. }

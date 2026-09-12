@@ -46,6 +46,7 @@ mod table;
 mod table_options;
 mod table_widths;
 mod toctree;
+mod uml;
 
 pub use dispatch::is_builtin_directive_name;
 pub(super) use dispatch::try_parse_directive;

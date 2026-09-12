@@ -47,6 +47,7 @@ fn entity(id: &str, type_name: &str, outgoing: &[(&str, &[&str])]) -> (EntityId,
                 )
             })
             .collect(),
+        uml: BTreeMap::new(),
     };
     (EntityId::new(id).unwrap(), record)
 }

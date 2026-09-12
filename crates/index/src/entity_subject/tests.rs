@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
+use crate::{EntityRecord, ProjectIndex};
 use rusty_sphinx_ast::{AttributeValue, EntityId};
 use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
 use rusty_sphinx_filter::{FieldName, FieldValue, FilterSubject};
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
 
 use super::EntitySubject;
 
@@ -60,6 +60,7 @@ fn index() -> ProjectIndex {
                 ("priority".to_string(), AttributeValue::Int(2)),
             ]),
             outgoing: BTreeMap::new(),
+            uml: BTreeMap::new(),
         },
     );
     index.entities.insert(
@@ -70,6 +71,7 @@ fn index() -> ProjectIndex {
             title: None,
             attributes: BTreeMap::new(),
             outgoing: BTreeMap::from([("verifies".to_string(), vec![id("REQ_1")])]),
+            uml: BTreeMap::new(),
         },
     );
     index.entity_backlinks.insert(

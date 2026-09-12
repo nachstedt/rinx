@@ -17,7 +17,7 @@ use rusty_sphinx_ast::{
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::options::OptionLine;
+use crate::directives::options::{OptionLine, parse_percentage};
 
 /// Which of the two places an image's options may be written in — the two
 /// differ in which `:align:` values are valid and whether `:name:` is
@@ -85,17 +85,6 @@ impl CommonImageOptions {
     }
 }
 
-/// Reads a `:scale:` value.
-///
-/// docutils' `directives.percentage` strips one trailing `%` and then demands
-/// a non-negative integer, so `50` and `50%` are the same option and `-50` is
-/// no option at all.
-fn parse_scale(raw: &str) -> Option<u32> {
-    let trimmed = raw.trim();
-    let number = trimmed.strip_suffix('%').unwrap_or(trimmed).trim();
-    number.parse::<u32>().ok()
-}
-
 /// Reports an option whose value is required but was left empty.
 fn report_empty_value(
     line: &OptionLine,
@@ -142,7 +131,7 @@ pub(in crate::directives) fn parse_common_image_options<'a>(
                 Ok(width) => options.width = Some(width),
                 Err(problem) => report_invalid_length(line, directive, &problem, diagnostics, ctx),
             },
-            "scale" => match parse_scale(&line.value) {
+            "scale" => match parse_percentage(&line.value) {
                 Some(scale) => options.scale = Some(scale),
                 None => diagnostics.push(Diagnostic::at(
                     DiagnosticCode::ImageInvalidScale,

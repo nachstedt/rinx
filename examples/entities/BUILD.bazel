@@ -14,10 +14,28 @@ load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
 
 rusty_sphinx_library(
     name = "docs",
-    srcs = glob(["*.rst"]),
+    srcs = glob(
+        ["*.rst"],
+        exclude = ["diagrams.rst"],
+    ),
     entity_schema = "entities.toml",
-    deps = [],
+    # `index.rst`'s toctree lists `diagrams`, so the dependency is required,
+    # not just convenient — see `tests/test_strict_deps.sh`.
+    deps = [":diagram_docs"],
     visibility = ["//visibility:public"],
+)
+
+# The diagram documents live in a library of their own, which is the pattern
+# the `diagrams` attribute is built for: diagram compilation is opt-in per
+# library, so keeping the diagrams together keeps the cost on the documents
+# that actually draw something. The rest of this package's documents get no
+# diagram actions at all. (`//examples:doctest_docs` splits doctests out for
+# the same reason.)
+rusty_sphinx_library(
+    name = "diagram_docs",
+    srcs = ["diagrams.rst"],
+    entity_schema = "entities.toml",
+    diagrams = True,
 )
 
 exports_files([

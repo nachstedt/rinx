@@ -19,9 +19,15 @@ def _rusty_sphinx_library_impl(ctx):
     entity_schema = ctx.file.entity_schema
     schema_args = ["--entity-schema", entity_schema.path] if entity_schema else []
     schema_inputs = [entity_schema] if entity_schema else []
-    plantuml = ctx.executable._plantuml
+
+    # Diagrams are opt-in, because Bazel cannot know before reading a document
+    # whether it holds one — without the opt-in, every document of every
+    # project would pay for a diagram pipeline most of them never use. A
+    # library that leaves this off gets no diagram actions at all, and a
+    # diagram written in it fails its parse on the directive's own line rather
+    # than shipping a page with a picture nothing compiled.
+    diagram_args = ["--diagrams"] if ctx.attr.diagrams else []
     ast_files = []
-    svg_dirs = []
     doctest_plans = []
     embed_sidecars = []
 
@@ -44,7 +50,7 @@ def _rusty_sphinx_library_impl(ctx):
                 "--input", src.path,
                 "--output", ast_raw.path,
                 "--default-domain", ctx.attr.default_domain,
-            ] + schema_args,
+            ] + schema_args + diagram_args,
             # `parse_data` files join the parse action's inputs because the
             # parser genuinely reads them: `.. csv-table::`'s `:file:`, and the
             # sources `.. include::`/`.. literalinclude::` splice into the
@@ -143,54 +149,9 @@ def _rusty_sphinx_library_impl(ctx):
         )
         embed_sidecars.append(embeds_out)
 
-        # Phase 1.8: Extract PlantUML diagrams
-        puml_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_puml", sibling = src)
-        args_puml = ctx.actions.args()
-        args_puml.add("extract_diagrams")
-        args_puml.add("--input", ast_out.path)
-        args_puml.add("--outdir", puml_dir.path)
-        
-        ctx.actions.run(
-            executable = worker,
-            arguments = [args_puml],
-            inputs = [ast_out],
-            outputs = [puml_dir],
-            mnemonic = "RustySphinxExtractPuml",
-            progress_message = "Extracting diagram definitions from %s" % src.short_path,
-        )
-
-        # Phase 1.9: Compile PlantUML
-        svg_dir = ctx.actions.declare_directory(src.basename.removesuffix(".rst") + "_svgs", sibling = src)
-        
-        # We wrap in a shell to pass an absolute output path ($PWD/...) and check for empty directories.
-        # By passing plantuml in 'tools', Bazel safely aggregates the Java runfiles!
-        command_script = """
-set -e
-shopt -s nullglob
-files=("{puml_dir}/"*.puml)
-mkdir -p "$PWD/{svg_dir}"
-if [ ${{#files[@]}} -gt 0 ]; then
-  "{plantuml}" -tsvg -nometadata -o "$PWD/{svg_dir}" "${{files[@]}}"
-fi
-""".format(
-            plantuml = plantuml.path,
-            svg_dir = svg_dir.path,
-            puml_dir = puml_dir.path,
-        )
-
-        ctx.actions.run_shell(
-            tools = [plantuml],
-            command = command_script,
-            inputs = [puml_dir],
-            outputs = [svg_dir],
-            mnemonic = "PlantUMLCompile",
-            progress_message = "Generating Diagrams for %s" % src.short_path,
-        )
-        svg_dirs.append(svg_dir)
-
     # Collect .ast files from deps (other rusty_sphinx_library targets).
     transitive_asts = [dep[RustySphinxInfo].ast_files for dep in ctx.attr.deps]
-    transitive_svg_dirs = [dep[RustySphinxInfo].svg_dirs for dep in ctx.attr.deps]
+    transitive_diagram_asts = [dep[RustySphinxInfo].diagram_ast_files for dep in ctx.attr.deps]
     transitive_images = [dep[RustySphinxInfo].image_files for dep in ctx.attr.deps]
     transitive_embeds = [dep[RustySphinxInfo].embed_sidecars for dep in ctx.attr.deps]
 
@@ -203,8 +164,11 @@ fi
         OutputGroupInfo(doctest_plans = depset(doctest_plans)),
         RustySphinxInfo(
             ast_files = depset(ast_files, transitive = transitive_asts),
+            diagram_ast_files = depset(
+                ast_files if ctx.attr.diagrams else [],
+                transitive = transitive_diagram_asts,
+            ),
             direct_doc_names = local_doc_names,
-            svg_dirs = depset(svg_dirs, transitive = transitive_svg_dirs),
             image_files = depset(ctx.files.images, transitive = transitive_images),
             embed_sidecars = depset(embed_sidecars, transitive = transitive_embeds),
         ),
@@ -229,6 +193,10 @@ rusty_sphinx_library = rule(
             providers = [RustySphinxInfo],
             doc = "Other rusty_sphinx_library targets that are structurally included via `.. toctree::`. Not required for standard cross-references.",
         ),
+        "diagrams": attr.bool(
+            default = False,
+            doc = "Whether this library's documents may hold PlantUML diagrams — `.. plantuml::`/`.. uml::`, `.. entity-diagram::`/`.. needuml::` and `.. entity-arch::`/`.. needarch::`. Off by default so a library that draws nothing pays nothing: the site creates diagram actions only for documents of libraries that set this. A diagram written in a library without it fails the parse, naming this attribute. To keep the cost narrow, put diagram documents in a library of their own.",
+        ),
         "entity_schema": attr.label(
             allow_single_file = [".toml"],
             doc = "The project's entity meta-model: the types, attributes, sections, relations and roles this library's documents may use. Read at *parse* time, since it is what makes `.. req::` a directive rather than an unknown name, so editing it re-parses every document here. Every library in a site and the site itself must name the same file — a mismatch is reported as `entity.schema-mismatch` when the index is built. Omit it for a project that declares no entities, which then behaves exactly as before this feature existed.",
@@ -244,15 +212,16 @@ rusty_sphinx_library = rule(
             cfg = "exec",
             doc = "The rusty-sphinx binary.",
         ),
-        "_plantuml": attr.label(
-            default = Label("//:plantuml_tool"),
-            executable = True,
-            cfg = "exec",
-            doc = "The PlantUML executable or wrapper.",
-        ),
     },
     doc = """
 Parses a set of reStructuredText files into AST files (Phase 1).
+
+Diagrams are opt-in with `diagrams = True`; see that attribute. Note this rule
+does *not* compile them itself. A `.. needuml::` is expanded
+against the project's entity graph, which only exists once every document has
+been indexed, so diagram compilation belongs to `rusty_sphinx_site` — and a
+plain `.. plantuml::` goes the same way, because two compile paths would mean
+two hash populations and the compiled set could drift from the validated one.
 
 Each .rst file becomes an independently cacheable .ast file. Declare
 strict structural dependencies (i.e. targets included in a `.. toctree::`) in `deps`.

@@ -10,5 +10,7 @@ rust_library(
         normal = True,
     ) + [
         "//crates/ast:rusty_sphinx_ast",
+        "//crates/entity:rusty_sphinx_entity",
+        "//crates/filter:rusty_sphinx_filter",
     ],
 )

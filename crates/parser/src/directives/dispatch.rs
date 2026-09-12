@@ -29,6 +29,7 @@ use super::sectnum::{is_sectnum, parse_sectnum};
 use super::substitution::{parse_substitution_definition, split_substitution_marker};
 use super::table::parse_table_directive;
 use super::toctree::parse_toctree;
+use super::uml::parse_uml;
 use rusty_sphinx_ast::{CodeBlockSource, Directive, Node};
 
 /// The indentation every directive-body parser strips before parsing, so a
@@ -352,12 +353,6 @@ fn parse_remaining_body_directive(
     if let Some(node) = try_parse_sectnum(&name, &argument, body_lines, diagnostics, ctx) {
         return node;
     }
-    if name == "plantuml" {
-        let directive = Directive::PlantUml(rusty_sphinx_ast::HashedContent::new(join_body_lines(
-            body_lines,
-        )));
-        return Node::Directive(directive);
-    }
     if let Some(directive) = parse_code_family(&name, &argument, body_lines, diagnostics, ctx) {
         return Node::Directive(directive);
     }
@@ -488,6 +483,20 @@ fn try_parse_extension_directive(
             ctx,
         ));
     }
+    // sphinxcontrib-plantuml's two names, this build's two diagram names and
+    // sphinx-needs' two — one node, one parser. The plain PlantUML pair is
+    // nobody's extension in the sense the others are, but it belongs to the
+    // same construct, and splitting the six across two dispatch sites is
+    // exactly how the compiled set and the rendered set drift apart.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::UmlSource>() {
+        return Some(parse_uml(
+            source,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
     None
 }
 
@@ -590,7 +599,6 @@ mod tests {
     use crate::parse;
     use rusty_sphinx_ast::CodeLanguage;
     use rusty_sphinx_ast::Domain;
-    use rusty_sphinx_ast::HashedContent;
 
     /// A plain toctree document entry spanning the whole of source line
     /// `line`, which is the shape `parse_toctree` produces for an unindented
@@ -880,8 +888,11 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 2);
 
-        let expected = HashedContent::new("A -> B\nB -> C".to_string());
-        assert_eq!(doc.nodes[0], Node::Directive(Directive::PlantUml(expected)));
+        let Node::Directive(Directive::Uml(uml)) = &doc.nodes[0] else {
+            panic!("expected a diagram, found {:?}", doc.nodes[0]);
+        };
+        assert_eq!(uml.source, rusty_sphinx_ast::UmlSource::PlantUml);
+        assert_eq!(uml.template, "A -> B\nB -> C");
         assert_eq!(
             doc.nodes[1],
             Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
@@ -990,7 +1001,14 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     // Listing directives over the entity graph, in both spellings
     "entity-table",
     "needtable",
+    // Diagram directives: sphinxcontrib-plantuml's two names, this build's
+    // two and sphinx-needs' two
     "plantuml",
+    "uml",
+    "entity-diagram",
+    "needuml",
+    "entity-arch",
+    "needarch",
     "math",
     // Domain objects and scope directives
     "function",

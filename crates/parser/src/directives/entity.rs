@@ -98,7 +98,10 @@ pub(in crate::directives) fn parse_entity(
     );
 
     let sections = parse_sections(
-        entity_type,
+        &EnclosingEntity {
+            entity_type,
+            id: &id,
+        },
         &unindented[body_start.min(unindented.len())..],
         body_start,
         directive_span,
@@ -359,9 +362,20 @@ fn fallback_id(type_name: &str, doc_path: &str, discriminator: u32) -> EntityId 
         })
 }
 
+/// The entity a body is being parsed inside: what it is, and which one.
+///
+/// One value rather than two parameters because the two are always read
+/// together and answer the same question from different sides — the type says
+/// which sections are legal, the id says what an `.. entity-arch::` draws —
+/// and because [`ParseCtx`] binds them as a pair.
+pub(super) struct EnclosingEntity<'a> {
+    pub entity_type: &'a EntityType,
+    pub id: &'a EntityId,
+}
+
 /// Parses the entity's body and divides it into sections.
 fn parse_sections(
-    entity_type: &EntityType,
+    entity: &EnclosingEntity<'_>,
     body_lines: &[String],
     body_start: usize,
     directive_span: Option<Span>,
@@ -369,11 +383,19 @@ fn parse_sections(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Vec<EntitySection> {
-    let body_ctx = ctx.nested(body_start, 0).inside_entity(entity_type);
+    // The id is bound as well as the type, so an `.. entity-arch::` written
+    // anywhere in this body — including inside one of its sections, where the
+    // *type* is deliberately cleared — knows which entity it draws. Safe to do
+    // here because `determine_id` runs before this, which is the whole reason
+    // this call sits where it does in the pipeline.
+    let body_ctx = ctx
+        .nested(body_start, 0)
+        .inside_entity(entity.entity_type)
+        .inside_entity_id(entity.id);
     let lines: Vec<&str> = body_lines.iter().map(String::as_str).collect();
     let nodes = parse_blocks(&lines, adornment_order, diagnostics, &body_ctx);
     let sections = partition_sections(nodes);
-    report_section_cardinality(entity_type, &sections, directive_span, diagnostics);
+    report_section_cardinality(entity.entity_type, &sections, directive_span, diagnostics);
     sections
 }
 
