@@ -29,6 +29,8 @@ pub enum UmlError {
     RecursiveImport { chain: Vec<String> },
     /// A `:config:` naming a preamble the site config does not declare.
     UnknownConfig(String),
+    /// The expansion drew nothing at all.
+    EmptyDiagram,
 }
 
 impl UmlError {
@@ -46,6 +48,7 @@ impl UmlError {
             Self::ArchOutsideEntity => DiagnosticCode::UmlArchOutsideEntity,
             Self::RecursiveImport { .. } => DiagnosticCode::UmlRecursiveImport,
             Self::UnknownConfig(_) => DiagnosticCode::UmlUnknownConfig,
+            Self::EmptyDiagram => DiagnosticCode::UmlEmptyResult,
         }
     }
 }
@@ -76,6 +79,11 @@ impl fmt::Display for UmlError {
                 f,
                 "no PlantUML preamble named '{name}' is declared; add it under [uml_configs] in \
                  the site's rusty_sphinx.toml"
+            ),
+            Self::EmptyDiagram => write!(
+                f,
+                "the diagram is empty, so no picture was drawn — a filter that matches nothing \
+                 expands to nothing, and PlantUML has no empty diagram to compile"
             ),
             Self::RecursiveImport { chain } => write!(
                 f,
@@ -108,6 +116,7 @@ mod tests {
                 chain: vec!["A".to_string(), "A".to_string()],
             },
             UmlError::UnknownConfig("monochrome".to_string()),
+            UmlError::EmptyDiagram,
         ];
 
         // When

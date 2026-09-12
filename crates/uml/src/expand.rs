@@ -24,7 +24,7 @@ pub fn expand(uml: &Uml, ctx: &UmlContext<'_>) -> Result<HashedContent, UmlError
         // lets one pipeline serve a plain `.. plantuml::` without changing the
         // hash it has always had — and it is why the snapshot below, which is
         // linear in the size of the project, is never built for one.
-        return Ok(HashedContent::new(assembled(&uml.template, uml, ctx)?));
+        return finished(&uml.template, uml, ctx);
     }
 
     // An architecture diagram exists to draw the entity it sits in, so one
@@ -44,7 +44,34 @@ pub fn expand(uml: &Uml, ctx: &UmlContext<'_>) -> Result<HashedContent, UmlError
         &uml.extra,
         uml.entity.as_ref().map(EntityId::as_str),
     )?;
-    Ok(HashedContent::new(assembled(&text, uml, ctx)?))
+    finished(&text, uml, ctx)
+}
+
+/// The expanded text as the content to compile, or why there is none.
+///
+/// An expansion that drew nothing is refused here rather than handed on.
+/// `PlantUML` rejects an empty diagram, so compiling one fails the whole build
+/// with a syntax error naming a generated file the author never wrote — while
+/// the real cause is usually a `filter()` that matched nothing, which is a
+/// content problem and belongs in a warning beside the directive.
+fn finished(text: &str, uml: &Uml, ctx: &UmlContext<'_>) -> Result<HashedContent, UmlError> {
+    if drew_nothing(text) {
+        return Err(UmlError::EmptyDiagram);
+    }
+    Ok(HashedContent::new(assembled(text, uml, ctx)?))
+}
+
+/// Whether `text` holds no diagram content — only whitespace, and possibly the
+/// `@startuml`/`@enduml` markers around it.
+///
+/// The markers have to be discounted because a template usually writes them
+/// itself, so the empty case arrives as `@startuml\n\n@enduml` rather than as
+/// an empty string.
+fn drew_nothing(text: &str) -> bool {
+    text.lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .all(|line| line.starts_with("@start") || line.starts_with("@end"))
 }
 
 /// The finished `PlantUML` file: the diagram's text, its `:config:` preamble,
@@ -151,6 +178,60 @@ mod tests {
         // Then
         assert_eq!(first.hash(), second.hash());
         assert_eq!(first.body(), second.body());
+    }
+
+    #[test]
+    fn test_a_filter_matching_nothing_is_reported_rather_than_compiled() {
+        // Given — the empty case arrives as `@startuml\n\n@enduml`, which
+        // PlantUML refuses; compiling it would fail the whole build with a
+        // syntax error naming a file the author never wrote
+        let uml = Uml::new(
+            UmlSource::EntityDiagram,
+            "@startuml\n{% for id in filter('type == \"req\"') %}\n{{ flow(id) }}\n{% endfor %}\n@enduml"
+                .to_string(),
+        );
+
+        // When — over a project with no entities at all
+        let error = with_ctx(|ctx| expand(&uml, ctx)).expect_err("nothing was drawn");
+
+        // Then
+        assert_eq!(error, UmlError::EmptyDiagram);
+    }
+
+    #[test]
+    fn test_a_diagram_with_no_body_at_all_is_reported() {
+        // Given
+        let uml = Uml::new(UmlSource::PlantUml, String::new());
+
+        // When
+        let error = with_ctx(|ctx| expand(&uml, ctx)).expect_err("nothing was drawn");
+
+        // Then
+        assert_eq!(error, UmlError::EmptyDiagram);
+    }
+
+    #[test]
+    fn test_one_line_of_content_is_enough_to_draw() {
+        // Given — the check must not mistake a real, small diagram for an
+        // empty one
+        let uml = Uml::new(
+            UmlSource::PlantUml,
+            "@startuml\nnode A\n@enduml".to_string(),
+        );
+
+        // When / Then
+        assert!(with_ctx(|ctx| expand(&uml, ctx)).is_ok());
+    }
+
+    #[test]
+    fn test_drew_nothing_discounts_only_the_markers() {
+        // Given / When / Then
+        assert!(drew_nothing(""));
+        assert!(drew_nothing("  \n\t\n"));
+        assert!(drew_nothing("@startuml\n\n@enduml"));
+        assert!(drew_nothing("@startuml\n@enduml"));
+        assert!(!drew_nothing("node A"));
+        assert!(!drew_nothing("@startuml\nnode A\n@enduml"));
     }
 
     #[test]

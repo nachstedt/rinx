@@ -54,7 +54,10 @@ impl DiagramError {
             | UmlError::UnknownConfig(_) => false,
             UmlError::UnknownEntity(_)
             | UmlError::InvalidFilter { .. }
-            | UmlError::RecursiveImport { .. } => true,
+            | UmlError::RecursiveImport { .. }
+            // An empty result usually means a filter matched nothing, which in
+            // a preview may only be because the merged index is stale.
+            | UmlError::EmptyDiagram => true,
         }
     }
 

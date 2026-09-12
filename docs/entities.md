@@ -661,7 +661,10 @@ wrong. `:config:` names a preamble declared under `[uml_configs]` in the site's
 `rusty_sphinx.toml`.
 
 `@startuml`/`@enduml` are added when they are missing, so a `:key:` fragment is
-both importable and a diagram in its own right.
+both importable and a diagram in its own right. A diagram that draws nothing —
+a `filter()` matching no entity, say — is reported as `uml.empty-result` and
+the page simply shows no picture, the same way an empty `.. entity-table::`
+renders its headings and warns.
 
 `:save:` is reported as `uml.save-unsupported`: a sandboxed build action may
 only write files declared before it runs. Build the site's `diagram_sources`

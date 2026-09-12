@@ -203,6 +203,16 @@ rather than the document — and a fragment is exactly what a `:key:` diagram is
 A diagram that already opens with the marker is untouched, so no existing hash
 moves.
 
+An expansion that draws *nothing* is refused the same way, as
+`uml.empty-result`, and no `.puml` is written. It has to be: `PlantUML` rejects
+an empty diagram, so compiling one fails the whole build with a syntax error
+naming a generated file the author never wrote — while the real cause is
+usually a `filter()` that matched nothing, which is a content problem and
+belongs in a warning beside the directive, exactly as
+`entity-table.empty-result` already is. This surfaced from CI, where dropping a
+library's `entity_schema` left every entity unknown and one diagram's filter
+matching nothing.
+
 `:save:` cannot work as sphinx-needs spells it: a sandboxed action may only
 write files declared at analysis time, and the path is written inside the
 document. It is reported as `uml.save-unsupported` rather than silently

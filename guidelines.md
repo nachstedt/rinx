@@ -186,3 +186,5 @@ entry under the heading it belongs to, as a single short sentence.
 - Pay only for what you use: when the build system cannot discover whether a feature is used before running actions, make it an explicit per-library opt-in rather than a cost every document of every project pays.
 - An opt-in is only honest if forgetting it fails loudly, at the line that needed it, naming the switch to flip.
 - When two actions compute the same thing from the same inputs, fold the second into the first rather than keeping them in step; the cheapest agreement is one process.
+- Check a generated artifact for the degenerate case the external tool it is fed to rejects; an empty PlantUML diagram fails the build with a syntax error naming a file nobody wrote, when the real cause is a filter that matched nothing.
+- Run every shell test the CI workflow runs before calling a change done, and add new ones to that workflow in the same change.

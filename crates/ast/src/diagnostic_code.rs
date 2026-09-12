@@ -500,6 +500,15 @@ diagnostic_codes! {
     UmlArchOutsideEntity => "uml.arch-outside-entity",
     /// A `uml()` import that reaches itself, directly or through a cycle.
     UmlRecursiveImport => "uml.recursive-import",
+    /// A diagram whose expansion drew nothing — most often a `filter()` that
+    /// matched no entity.
+    ///
+    /// Reported for the reason `entity-table.empty-result` is, and handled the
+    /// same way: the page simply shows no picture. It has to be *reported*
+    /// rather than compiled, because `PlantUML` refuses an empty diagram and
+    /// would fail the whole build with a message about a generated file the
+    /// author never wrote.
+    UmlEmptyResult => "uml.empty-result",
     /// A diagram in a library that did not opt in with `diagrams = True`.
     ///
     /// Diagram compilation is opt-in per library so that a project drawing
