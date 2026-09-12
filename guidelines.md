@@ -104,6 +104,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Report a position as a range rather than a point, even while only its start is printed, because the end is free wherever the start is and retrofitting it later re-touches every reporting site.
 - Name a file a reader can actually open in a diagnostic — the source path, not an internal logical path that merely looks like one.
 - Count columns in characters, not bytes, and convert to a protocol's encoding at that protocol's boundary rather than in the middle.
+- Measure a source line against author-drawn markup in display columns, since the author drew it under what they saw, not under its encoded length.
 - Any code that dedents or re-slices lines before parsing them must rebase the position context by the same amount, so a helper that trims should return how much it trimmed rather than discarding it.
 - Report no position rather than a wrong one for content that corresponds to no source line.
 - Author-facing suppression belongs in the document, spelled as a construct the reference implementation already ignores, so the file stays buildable by both tools.

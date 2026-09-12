@@ -13,6 +13,7 @@ rusty_sphinx_library(
     name = "root_docs",
     srcs = [
         "index.rst",
+        "headings.rst",
         "hyperlinks.rst",
         "admonitions.rst",
         "inline_roles.rst",

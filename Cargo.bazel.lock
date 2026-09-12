@@ -1,5 +1,5 @@
 {
-  "checksum": "c02583667042705a95d96a03ed26997da85e35d9ccb0b11b4ad2019103a919fc",
+  "checksum": "a04fe0c4038a21442d2f20e9c129280b9aca8320aad0ad1b00f8e9364a8a0a0a",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4152,6 +4152,10 @@
           {
             "id": "regex 1.12.4",
             "target": "regex"
+          },
+          {
+            "id": "unicode-width 0.2.2",
+            "target": "unicode_width"
           }
         ],
         "edition": "2024"
@@ -5898,6 +5902,39 @@
       ],
       "version": "0.1.25"
     },
+    "unicode-width 0.2.2": {
+      "common_attrs": {
+        "crate_features": [
+          "cjk",
+          "default"
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "unicode_width",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "unicode-width",
+      "package_url": "https://github.com/unicode-rs/unicode-width",
+      "repository": {
+        "Http": {
+          "sha256": "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254",
+          "url": "https://static.crates.io/crates/unicode-width/0.2.2/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "unicode_width",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.2.2"
+    },
     "uuid-simd 0.8.0": {
       "common_attrs": {
         "crate_features": [
@@ -6650,7 +6687,8 @@
     "syntect 5.3.0",
     "toml 0.8.23",
     "two-face 0.5.2+bat-0.26.1",
-    "unicode-normalization 0.1.25"
+    "unicode-normalization 0.1.25",
+    "unicode-width 0.2.2"
   ],
   "direct_dev_deps": [
     "jsonschema 0.54.0"
