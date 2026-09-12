@@ -8,6 +8,7 @@ Welcome to the Rusty-Sphinx example.
 
 .. toctree::
 
+   headings
    hyperlinks
    admonitions
    inline_roles

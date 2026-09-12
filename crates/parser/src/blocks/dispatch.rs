@@ -188,7 +188,7 @@ fn try_parse_construct(
     if let Some(found) = try_parse_transition(lines, i, nodes, diagnostics, ctx) {
         return Some(single(found));
     }
-    if let Some(found) = try_parse_heading(lines, i, adornment_order, ctx) {
+    if let Some(found) = try_parse_heading(lines, i, adornment_order, diagnostics, ctx) {
         return Some(single(found));
     }
     // docutils' own relative order: `line_block` is tried immediately before

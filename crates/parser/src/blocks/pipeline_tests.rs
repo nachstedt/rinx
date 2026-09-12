@@ -187,8 +187,10 @@ fn test_parse_creates_indented_external_target_node() {
 
 #[test]
 fn test_parse_paragraph_breaks_at_overline() {
-    // Given
-    let input = "Para text.\n#######\nHeading\n#######";
+    // Given — an adornment of fewer than four characters, so the paragraph
+    // line above it cannot itself be read as a too-short-underlined heading
+    // (see `headings.rs`) and the overlined form below is the only heading.
+    let input = "Para text.\n###\nHi\n###";
     // When
     let doc = parse("test.rst", input);
     // Then
@@ -201,7 +203,7 @@ fn test_parse_paragraph_breaks_at_overline() {
         doc.nodes[1],
         Node::Heading {
             level: 1,
-            text: vec![InlineNode::Text("Heading".to_string())]
+            text: vec![InlineNode::Text("Hi".to_string())]
         }
     );
 }

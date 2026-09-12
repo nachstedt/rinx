@@ -15,8 +15,8 @@ Legend: ✅ implemented · 🔶 partial · ❌ not implemented
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Underline-only headings | ✅ | — |
-| Overlined headings (`===` above **and** below the text) | ✅ | Treated as a distinct adornment style from a same-character underline, so it can be assigned its own heading level |
+| Underline-only headings | ✅ | The title is measured in **display columns** (docutils' `column_width`), not bytes or codepoints, so an emoji- or CJK-bearing title needs only the underline its author sees. An underline narrower than the title still makes a heading and reports `heading.underline-too-short`, matching docutils; below four characters the pair degrades to ordinary text instead, also matching docutils, but silently — docutils' info-level message there fires on nine literal-block `::` markers across the CPython corpus and no real heading, and this build has no severity below warning |
+| Overlined headings (`===` above **and** below the text) | ✅ | Treated as a distinct adornment style from a same-character underline, so it can be assigned its own heading level. Overline and underline must be the same length; a mismatch is not read as the three-line form. One deliberate narrowing: where docutils reports a mismatch as a severe error and drops the block, this build leaves the overline as ordinary text and reads the remaining two lines as an underlined heading, per the error-resilient parser rule |
 | Per-document level reset vs. project-wide level tracking | 🔶 | Heading *levels* still reset per file. Section *numbering* now does accumulate across files linked via `toctree`, so `:numbered:` matches Sphinx even though the underlying level assignment is per-document |
 | Inline markup/roles inside heading text (e.g. `` :mod:`x` ``, `**bold**`) | ✅ | — |
 

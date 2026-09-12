@@ -84,6 +84,11 @@ diagnostic_codes! {
     /// definition's own type differs from the one the role asked for.
     LinkTypeMismatch => "link.type-mismatch",
 
+    // --- Headings ----------------------------------------------------------
+    /// A section adornment shorter than the title's display width, which
+    /// docutils accepts and reports rather than rejecting.
+    HeadingUnderlineTooShort => "heading.underline-too-short",
+
     // --- Transitions -------------------------------------------------------
     TransitionAtDocumentStart => "transition.at-document-start",
     TransitionAdjacent => "transition.adjacent",

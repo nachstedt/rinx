@@ -8,6 +8,7 @@ pub(crate) mod explicit_title;
 pub(crate) mod headings;
 pub(crate) mod indent;
 pub(crate) mod inline;
+pub(crate) mod width;
 
 pub use blocks::{parse, parse_with_ctx, parse_with_domain};
 pub use context::{LoadedFile, ParseCtx, ParseFileLoader, RejectParseFiles};
