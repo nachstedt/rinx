@@ -6,7 +6,9 @@
 //! [`block_quote`], [`data_table`], [`table_directive`] (`.. table::`, sharing
 //! [`table_shell`]'s presentation-shell helpers with `data_table`),
 //! [`doctest`], [`glossary`], [`image`], [`figure`], [`line_block`],
-//! [`option_list`], [`scope_directives`], [`tables`], [`contents`] (the
+//! [`option_list`], [`scope_directives`], [`tables`], [`directive_error`]
+//! (the two nodes a directive that could not become content degrades to),
+//! [`contents`] (the
 //! local, single-document table of contents `.. contents::` renders — not to
 //! be confused with the cross-document toctree sidebar markup in `crate::nav`),
 //! and the domain-object directives in [`domain_object`].
@@ -23,6 +25,7 @@ mod code_block;
 mod contents;
 mod data_table;
 mod diagram_figure;
+mod directive_error;
 mod dispatch;
 mod doctest;
 mod domain_object;

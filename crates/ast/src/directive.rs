@@ -320,8 +320,9 @@ pub enum Directive {
         namespace: Option<String>,
     },
     /// `.. c:namespace-push::` — extends the current `c`-domain scope
-    /// relatively. Always carries a scope: an empty argument is malformed and
-    /// stays a [`Directive::Unknown`] rather than becoming a no-op push.
+    /// relatively. Always carries a scope: an empty argument becomes a
+    /// [`Self::Malformed`] rather than a no-op push, which a later
+    /// [`Self::CNamespacePop`] would then unbalance.
     CNamespacePush {
         namespace: String,
     },
@@ -338,10 +339,32 @@ pub enum Directive {
     StdProgram {
         name: Option<String>,
     },
+    /// A directive whose name this build does not recognize at all.
+    ///
+    /// The body is kept as written but deliberately *not* parsed — an
+    /// unrecognized name says nothing about what its content means — so
+    /// everything inside it is invisible to every later phase. That is why the
+    /// renderer draws it as a visible error block quoting the source rather
+    /// than omitting it, and why the parser reports
+    /// [`crate::DiagnosticCode::DirectiveUnknown`] alongside.
     Unknown {
         name: String,
         argument: String,
         body: String,
+    },
+    /// A directive whose *name* this build recognizes but whose content it
+    /// could not accept — a `.. figure::` with no URI, a `.. table::` holding
+    /// no table.
+    ///
+    /// Distinct from [`Self::Unknown`] so the page never claims the name was
+    /// the problem. `message` is the same text the parse-time diagnostic
+    /// reports, so a reader of the page and a reader of the build log get one
+    /// explanation.
+    Malformed {
+        name: String,
+        argument: String,
+        body: String,
+        message: String,
     },
     /// A `.. |name| replace::`/`unicode::`/`image::` substitution definition.
     ///

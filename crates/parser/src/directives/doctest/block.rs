@@ -10,6 +10,7 @@ use rusty_sphinx_ast::{
     NonEmptyVector, Span,
 };
 
+use crate::directives::error_node::malformed_directive;
 use crate::indent::strip_common_indent;
 
 use super::kind::DocTestDirectiveKind;
@@ -17,8 +18,8 @@ use super::options::{DocTestOptions, scan_options};
 
 /// Parses one directive of the family into a [`Directive`].
 ///
-/// Returns [`Directive::Unknown`] only when the body is empty — a doctest block
-/// with no code is unusable, and Sphinx warns about it too.
+/// Returns [`Directive::Malformed`] only when the body is empty — a doctest
+/// block with no code is unusable, and Sphinx warns about it too.
 pub(crate) fn parse_doctest_directive(
     kind: DocTestDirectiveKind,
     argument: &str,
@@ -34,16 +35,15 @@ pub(crate) fn parse_doctest_directive(
     let content_text = strip_common_indent(content_lines);
 
     if content_text.trim().is_empty() {
-        diagnostics.push(Diagnostic::at(
+        return malformed_directive(
+            kind.as_name(),
+            argument,
+            body_lines,
             DiagnosticCode::DoctestNoCode,
             format!("{}: no code in block", kind.as_name()),
             block_span,
-        ));
-        return Directive::Unknown {
-            name: kind.as_name().to_string(),
-            argument: argument.to_string(),
-            body: content_text,
-        };
+            diagnostics,
+        );
     }
 
     let groups = parse_group_argument(kind, argument, diagnostics, block_span);
@@ -286,7 +286,7 @@ pub(super) mod tests {
         let (directive, diagnostics) = parse(DocTestDirectiveKind::TestCode, "", &body);
 
         // Then
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
         assert!(
             diagnostics
                 .iter()
@@ -303,7 +303,7 @@ pub(super) mod tests {
         let (directive, _) = parse(DocTestDirectiveKind::Doctest, "", &body);
 
         // Then
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]

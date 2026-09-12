@@ -119,6 +119,9 @@ entry under the heading it belongs to, as a single short sentence.
 - Scope a suppression to the file it was written in; line numbers from two different files are not comparable, and matching them silences something the author never looked at.
 - Distinguish a fault in the *build's configuration* from a fault in a document: the first is reported outside the suppression mechanism, since no document's comment should be able to silence it.
 - When a pattern matches far more than the construct it is looking for, let an unrecognised match degrade to plain text rather than to a diagnostic — reporting on text the author never meant as markup is worse than staying quiet.
+- Render an unrecognized construct visibly, quoting its source, rather than omitting it: invisible content loss is worse than an ugly page.
+- Distinguish "this build does not know that name" from "it knows the name and had to refuse the content", since one diagnostic for both blames the wrong thing.
+- Build the node a reader sees and the diagnostic a log records from one message, so the page and the build log cannot explain the same failure differently.
 - Check a configuration invariant in both directions: the mistake of declaring something in one place and forgetting it in another is likelier than declaring it wrongly twice.
 
 ## Testing

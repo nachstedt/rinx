@@ -8,7 +8,7 @@ use crate::headings::Adornment;
 use crate::indent::indent_width;
 
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
-use super::body::{collect_argument_continuation_lines, collect_directive_body, join_body_lines};
+use super::body::{collect_argument_continuation_lines, collect_directive_body};
 use super::code_block::{parse_code_block, parse_highlight, parse_literal_include};
 use super::contents::parse_contents;
 use super::data_table::{parse_csv_table, parse_list_table};
@@ -20,6 +20,7 @@ use super::entity::{EntityDirective, parse_entity};
 use super::entity_flow::parse_entity_flow;
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::entity_table::parse_entity_table;
+use super::error_node::unknown_directive;
 use super::glossary::parse_glossary;
 use super::grid::{parse_grid, parse_grid_item};
 use super::image::{parse_figure_directive, parse_image_directive};
@@ -170,8 +171,9 @@ pub(crate) fn try_parse_directive(
 /// is, all of them except domain objects, which peel extra signature lines off
 /// the argument before their body starts and so are handled by the caller.
 ///
-/// Falls back to [`Directive::Unknown`], which is what the benchmark counts as
-/// an unsupported directive.
+/// Falls back to [`Directive::Unknown`] — reported as `directive.unknown` and
+/// drawn as a visible error block, and what the benchmark counts as an
+/// unsupported directive.
 /// Recognizes and parses a substitution definition's marker, `.. |name|
 /// inner::`, which is not a directive name at all — tried before every other
 /// name below, which would otherwise match nothing and fall all the way to
@@ -400,11 +402,11 @@ fn parse_remaining_body_directive(
         return Node::Directive(directive);
     }
     if name == "list-table" {
-        let directive = parse_list_table(argument, body_lines, adornment_order, diagnostics, ctx);
+        let directive = parse_list_table(&argument, body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if name == "csv-table" {
-        let directive = parse_csv_table(argument, body_lines, adornment_order, diagnostics, ctx);
+        let directive = parse_csv_table(&argument, body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if let Some(directive) = parse_image_family(
@@ -424,7 +426,7 @@ fn parse_remaining_body_directive(
     }
     if name == "table" {
         let directive =
-            parse_table_directive(argument, body_lines, adornment_order, diagnostics, ctx);
+            parse_table_directive(&argument, body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
     if name == "index" {
@@ -435,14 +437,17 @@ fn parse_remaining_body_directive(
         let directive = parse_doctest_directive(kind, &argument, body_lines, diagnostics, ctx);
         return Node::Directive(directive);
     }
-    if let Some(directive) = try_parse_scope_directive(&name, &argument, ctx.default_domain) {
+    if let Some(directive) = try_parse_scope_directive(
+        &name,
+        &argument,
+        directive_span,
+        body_lines,
+        diagnostics,
+        ctx,
+    ) {
         return Node::Directive(directive);
     }
-    let directive = Directive::Unknown {
-        name,
-        argument,
-        body: join_body_lines(body_lines),
-    };
+    let directive = unknown_directive(name, argument, body_lines, directive_span, diagnostics);
     Node::Directive(directive)
 }
 
@@ -722,16 +727,32 @@ mod tests {
         let body = ["   content"];
 
         // When
-        let (node, _) = dispatch("not-a-real-directive", "arg", &body);
+        let (node, diagnostics) = dispatch("not-a-real-directive", "arg", &body);
 
-        // Then
+        // Then — the name and body are kept for the visible error block the
+        // renderer draws, and the fall-through is reported rather than silent
         match node {
-            Node::Directive(Directive::Unknown { name, argument, .. }) => {
+            Node::Directive(Directive::Unknown {
+                name,
+                argument,
+                body,
+            }) => {
                 assert_eq!(name, "not-a-real-directive");
                 assert_eq!(argument, "arg");
+                assert_eq!(body, "content");
             }
             other => panic!("expected an unknown directive, got {other:?}"),
         }
+        let (found, _, _) = diagnostics.into_parts();
+        assert_eq!(found.len(), 1);
+        assert_eq!(
+            found[0].code,
+            rusty_sphinx_ast::DiagnosticCode::DirectiveUnknown
+        );
+        assert_eq!(
+            found[0].message,
+            "unknown directive type 'not-a-real-directive'"
+        );
     }
 
     #[test]

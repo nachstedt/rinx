@@ -590,7 +590,13 @@ fn test_an_unknown_directive_is_untouched_without_a_schema() {
         doc.nodes.first(),
         Some(Node::Directive(Directive::Unknown { .. }))
     ));
-    assert!(doc.diagnostics.is_empty());
+    assert_eq!(
+        doc.diagnostics
+            .iter()
+            .map(|d| d.code)
+            .collect::<Vec<rusty_sphinx_ast::DiagnosticCode>>(),
+        vec![rusty_sphinx_ast::DiagnosticCode::DirectiveUnknown],
+    );
 }
 
 #[test]

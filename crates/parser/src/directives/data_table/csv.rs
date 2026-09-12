@@ -11,6 +11,7 @@ use super::options::{SharedTableOptions, parse_shared_table_options};
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::directives::body::join_body_lines;
+use crate::directives::error_node::malformed_node;
 use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
@@ -52,7 +53,7 @@ impl CsvSource {
 /// `collect_directive_body`, exactly as every other content-bearing directive
 /// parser receives it.
 pub(in crate::directives) fn parse_csv_table(
-    argument: String,
+    argument: &str,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -61,7 +62,7 @@ pub(in crate::directives) fn parse_csv_table(
     let title = if argument.is_empty() {
         None
     } else {
-        Some(argument.clone())
+        Some(argument.to_string())
     };
 
     let unindented_lines = unindent_body_lines(body_lines);
@@ -97,7 +98,7 @@ pub(in crate::directives) fn parse_csv_table(
     let table_span = body_span(body_lines, ctx);
 
     let Some(data) = resolve_csv_data(&inline_data, &source, ctx, diagnostics, table_span) else {
-        return unknown_csv_table(argument, body_lines);
+        return malformed_csv_table(argument, body_lines);
     };
 
     let Some(rows) = collect_csv_rows(
@@ -107,7 +108,7 @@ pub(in crate::directives) fn parse_csv_table(
         diagnostics,
         table_span,
     ) else {
-        return unknown_csv_table(argument, body_lines);
+        return malformed_csv_table(argument, body_lines);
     };
     let header_rows = source.header.as_deref().map_or(0, |header| {
         parse_csv_rows(header, &dialect).map_or(0, |rows| rows.len())
@@ -125,7 +126,7 @@ pub(in crate::directives) fn parse_csv_table(
         ctx,
         table_span,
     )
-    .unwrap_or_else(|| unknown_csv_table(argument, body_lines))
+    .unwrap_or_else(|| malformed_csv_table(argument, body_lines))
 }
 
 /// Obtains the CSV text, from the directive body or from `:file:`.
@@ -380,12 +381,20 @@ fn parse_cell_content(
     parse_blocks(&lines, adornment_order, diagnostics, &ctx.synthetic())
 }
 
-fn unknown_csv_table(argument: String, body_lines: &[&str]) -> Directive {
-    Directive::Unknown {
-        name: DIRECTIVE.to_string(),
+/// The degraded node for a `.. csv-table::` whose data would not become a
+/// table.
+///
+/// Every path here has its reason reported already, by the helper that found
+/// it (`resolve_csv_data`, `collect_csv_rows`, `build_csv_table`) — see
+/// [`malformed_node`]'s doc comment for why that means this states the outcome
+/// rather than restating the cause.
+fn malformed_csv_table(argument: &str, body_lines: &[&str]) -> Directive {
+    malformed_node(
+        DIRECTIVE,
         argument,
-        body: join_body_lines(body_lines),
-    }
+        body_lines,
+        format!("{DIRECTIVE}: this data could not be read as a table"),
+    )
 }
 
 #[cfg(test)]
@@ -422,13 +431,8 @@ mod tests {
     fn parse_with(body_lines: &[&str], ctx: &ParseCtx<'_>) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();
         let mut diagnostics = Diagnostics::default();
-        let directive = parse_csv_table(
-            String::new(),
-            body_lines,
-            &mut adornment_order,
-            &mut diagnostics,
-            ctx,
-        );
+        let directive =
+            parse_csv_table("", body_lines, &mut adornment_order, &mut diagnostics, ctx);
         (directive, diagnostics)
     }
 
@@ -497,7 +501,7 @@ mod tests {
 
         // When
         let directive = parse_csv_table(
-            "Popular Fruits".to_string(),
+            "Popular Fruits",
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -753,7 +757,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { name, .. } if name == "csv-table"));
+        assert!(matches!(directive, Directive::Malformed { name, .. } if name == "csv-table"));
     }
 
     #[test]
@@ -771,7 +775,7 @@ mod tests {
         let message = &diagnostics[0].message;
         assert!(message.starts_with("csv-table: "), "{message}");
         assert!(message.contains("data/fruits.csv"), "{message}");
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -794,7 +798,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -814,7 +818,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -832,7 +836,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -867,7 +871,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -885,7 +889,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -903,7 +907,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -921,7 +925,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -1069,20 +1073,21 @@ mod tests {
     }
 
     #[test]
-    fn test_unknown_csv_table_carries_argument_and_body() {
+    fn test_malformed_csv_table_carries_argument_and_body() {
         // Given
         let body_lines = vec!["   Apple, Red"];
 
         // When
-        let directive = unknown_csv_table("My Title".to_string(), &body_lines);
+        let directive = malformed_csv_table("My Title", &body_lines);
 
         // Then
         assert_eq!(
             directive,
-            Directive::Unknown {
+            Directive::Malformed {
                 name: "csv-table".to_string(),
                 argument: "My Title".to_string(),
                 body: "Apple, Red".to_string(),
+                message: "csv-table: this data could not be read as a table".to_string(),
             }
         );
     }

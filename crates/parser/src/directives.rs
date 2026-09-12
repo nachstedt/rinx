@@ -18,6 +18,11 @@
 //! expression and refuse the same ones at the same column, so there is one
 //! reader for both and only the diagnostic code differs.
 //!
+//! [`error_node`] is the other shared-on-purpose module: it owns the two nodes
+//! a directive degrades to when it cannot become itself — an unrecognized name
+//! and a recognized name with content this build cannot accept — so that every
+//! such failure reports its diagnostic and keeps its source in one place.
+//!
 //! [`options`] sits one level more general still: scanning a body's leading
 //! `:name: value` run and diagnosing unclaimed options is common to *every*
 //! directive, tables included, so it is named for what it does rather than
@@ -40,6 +45,7 @@ mod entity;
 mod entity_flow;
 mod entity_section;
 mod entity_table;
+mod error_node;
 mod filter_option;
 mod glossary;
 mod grid;

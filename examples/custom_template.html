@@ -668,6 +668,37 @@
       padding: 0.15rem 0.4rem;
     }
 
+    /* A directive this build could not turn into content — an unrecognized name,
+       or a recognized one whose content it had to refuse. Loud on purpose: the
+       directive's body never reaches the page any other way, so a quiet style
+       would leave the reader with silently missing content. */
+    .directive-error {
+      margin: 1rem 0;
+      border: 1px solid #fecaca;
+      border-left: 5px solid #b91c1c;
+      border-radius: 4px;
+      background: #fef2f2;
+      padding: 0.6rem 0.9rem;
+    }
+
+    .directive-error-message {
+      margin: 0 0 0.5rem;
+      color: #b91c1c;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .directive-error-source {
+      margin: 0;
+      overflow-x: auto;
+      background: none;
+      border: 0;
+      padding: 0;
+      color: #7f1d1d;
+      font-size: 0.9em;
+      white-space: pre;
+    }
+
     /* Entities. A project declares its own construct types, so the template
        styles the generic shape (`.entity`, `.entity-header`, …) rather than
        any one type — a new `.. req::` needs no CSS of its own. */

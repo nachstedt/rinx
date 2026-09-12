@@ -40,6 +40,7 @@ Welcome to the Rusty-Sphinx example.
    includes
    index_entries
    noqa
+   unknown_directives
    doctests
    entities/index
    toctree/index

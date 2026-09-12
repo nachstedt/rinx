@@ -21,6 +21,7 @@ use rusty_sphinx_ast::{
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
+use crate::directives::error_node::{malformed_directive, malformed_node};
 use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
 use crate::indent::unindent_body_lines;
 
@@ -53,7 +54,7 @@ struct LiteralIncludeOptions {
 /// Parses a `.. literalinclude::` into a [`Directive::CodeBlock`], reading the
 /// file it names through `ctx`.
 ///
-/// Degrades to [`Directive::Unknown`] whenever the content cannot be
+/// Degrades to [`Directive::Malformed`] whenever the content cannot be
 /// established — an unreadable file, a selection that matches nothing — having
 /// reported why. The parser stays resilient, and the `parse` subcommand turns
 /// the loader's recorded failure into a failed build.
@@ -67,12 +68,15 @@ pub(in crate::directives) fn parse_literal_include(
 
     let path = argument.trim();
     if path.is_empty() {
-        diagnostics.push(Diagnostic::at(
+        return malformed_directive(
+            DIRECTIVE,
+            argument,
+            body_lines,
             DiagnosticCode::IncludeMissingPath,
             format!("{DIRECTIVE}: needs the path of a file to show"),
             span,
-        ));
-        return unknown(argument, body_lines);
+            diagnostics,
+        );
     }
 
     let unindented = unindent_body_lines(body_lines);
@@ -93,22 +97,25 @@ pub(in crate::directives) fn parse_literal_include(
     );
 
     if own.pyobject.is_some() {
-        diagnostics.push(Diagnostic::at(
+        return malformed_directive(
+            DIRECTIVE,
+            argument,
+            body_lines,
             DiagnosticCode::LiteralIncludePyObjectUnsupported,
             format!(
                 "{DIRECTIVE}: :pyobject: is unsupported; select the object's lines with \
                  :start-after:/:end-before: or :lines: instead"
             ),
             span,
-        ));
-        return unknown(argument, body_lines);
+            diagnostics,
+        );
     }
     if !check_encoding(own.encoding.as_deref(), DIRECTIVE, diagnostics, span) {
-        return unknown(argument, body_lines);
+        return showed_nothing(argument, body_lines);
     }
 
     let Some(read) = read_content(path, &own, diagnostics, ctx, span) else {
-        return unknown(argument, body_lines);
+        return showed_nothing(argument, body_lines);
     };
 
     let lineno_start = resolve_lineno_start(&own, &read, shared.lineno_start, diagnostics, span);
@@ -324,17 +331,17 @@ fn splice(options: &LiteralIncludeOptions, content: String) -> String {
     parts.join("\n")
 }
 
-/// The degraded node for a directive that could not produce content.
-fn unknown(argument: &str, body_lines: &[&str]) -> Directive {
-    Directive::Unknown {
-        name: DIRECTIVE.to_string(),
-        argument: argument.to_string(),
-        body: body_lines
-            .iter()
-            .map(|line| (*line).to_string())
-            .collect::<Vec<String>>()
-            .join("\n"),
-    }
+/// The degraded node for a directive whose reason a shared checker
+/// (`check_encoding`, `read_content`) has already reported — see
+/// [`malformed_node`]'s doc comment for why that means this states the outcome
+/// rather than restating the cause.
+fn showed_nothing(argument: &str, body_lines: &[&str]) -> Directive {
+    malformed_node(
+        DIRECTIVE,
+        argument,
+        body_lines,
+        format!("{DIRECTIVE}: '{}' could not be shown", argument.trim()),
+    )
 }
 
 #[cfg(test)]
@@ -427,7 +434,7 @@ mod tests {
         let (directive, diagnostics) = parse("", &[]);
 
         // Then
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
         assert_eq!(
             codes(&diagnostics),
             vec![DiagnosticCode::IncludeMissingPath]
@@ -440,7 +447,7 @@ mod tests {
         let (directive, diagnostics) = parse("nowhere.py", &[]);
 
         // Then
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
         assert_eq!(
             codes(&diagnostics),
             vec![DiagnosticCode::IncludeFileUnreadable]
@@ -648,7 +655,7 @@ mod tests {
         let (directive, diagnostics) = parse("example.py", &["   :diff: nowhere.py"]);
 
         // Then
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
         assert_eq!(
             codes(&diagnostics),
             vec![DiagnosticCode::LiteralIncludeDiffUnreadable]
@@ -662,7 +669,7 @@ mod tests {
 
         // Then — refused rather than ignored, so the page never quietly shows
         // the whole file where one function was meant
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
         assert_eq!(
             codes(&diagnostics),
             vec![DiagnosticCode::LiteralIncludePyObjectUnsupported]
@@ -680,7 +687,7 @@ mod tests {
         let (directive, diagnostics) = parse("example.py", &["   :encoding: latin-1"]);
 
         // Then
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
         assert_eq!(
             codes(&diagnostics),
             vec![DiagnosticCode::IncludeEncodingUnsupported]
@@ -705,7 +712,7 @@ mod tests {
         let (directive, diagnostics) = parse("example.py", &["   :start-after: nowhere"]);
 
         // Then
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
         assert_eq!(
             codes(&diagnostics),
             vec![DiagnosticCode::IncludeTextNotFound]

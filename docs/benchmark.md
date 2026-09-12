@@ -84,10 +84,15 @@ audit-event: 191
 
 This list serves as a prioritized roadmap for feature implementation. Implementing the most frequent missing directives will rapidly increase our compatibility with real-world Sphinx codebases.
 
-### 3. Ignored Toctree Options / Parser Diagnostics Summaries
+Every one of these also reports `directive.unknown` and renders as a visible error block quoting its source, so the tally below and the corpus' own pages agree about what is missing.
+
+### 3. Malformed Directives Summary
+The same shape, for directives `rusty-sphinx` *does* implement whose content it had to refuse (`Directive::Malformed` nodes) — a `.. figure::` with no image path, a `.. csv-table::` whose data would not parse. These used to inflate the unsupported tally above, which made a document's mistake look like a gap in coverage. Each one has already reported its own diagnostic under the summary below, so this is a count rather than a roadmap.
+
+### 4. Ignored Toctree Options / Parser Diagnostics Summaries
 Two smaller summaries follow: options seen on `.. toctree::` directives that are recognized but not yet acted upon (e.g. `:caption:`, `:numbered:`, `:hidden:`), and aggregated parser diagnostics (e.g. malformed grid tables) emitted per document. Both are minor compared to the unsupported-directives list, but flag smaller gaps worth closing.
 
-### 4. Domain-Object Warnings vs. the Whitelist
+### 5. Domain-Object Warnings vs. the Whitelist
 The render step reports **domain-object** cross-references (`:func:`, `:py:class:`, `:c:type:`, …) that either fail to resolve or resolve only via an object-type alias fallback. Against a large corpus like CPython these number in the hundreds, and most are *expected* — references to stdlib/C-API symbols this doc set doesn't index. To separate those from genuine regressions, the benchmark diffs them against a checked-in whitelist.
 
 **How it's wired:** each `render` action writes a machine-readable sidecar (`--warnings-output`, one `*.warnings.json` per document) into `bazel-bin/Doc/site_warnings/`. These are a non-default output group (`domain_warnings`) — they never land in the published site bundle, but they're produced on every build. `scripts/benchmark.py` globs them and compares against the whitelist.

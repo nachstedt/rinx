@@ -10,7 +10,8 @@ use rusty_sphinx_ast::{
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::{body_span, join_body_lines};
+use crate::directives::body::body_span;
+use crate::directives::error_node::malformed_directive;
 use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
 use crate::indent::unindent_body_lines;
 
@@ -20,7 +21,7 @@ pub(in crate::directives) const DIRECTIVE: &str = "image";
 
 /// Parses a `.. image::` directive into a [`Directive::Image`].
 ///
-/// A missing argument degrades to [`Directive::Unknown`] rather than to an
+/// A missing argument degrades to [`Directive::Malformed`] rather than to an
 /// image of nothing: there is no URI to put in a `src`, and the parser's job
 /// is to record what went wrong and carry on, leaving the build to decide
 /// whether that is fatal.
@@ -47,16 +48,15 @@ pub(in crate::directives) fn parse_image_directive(
     report_unexpected_content(&unindented_lines, body_start, diagnostics, ctx);
 
     if argument.trim().is_empty() {
-        diagnostics.push(Diagnostic::at(
+        return malformed_directive(
+            DIRECTIVE,
+            "",
+            body_lines,
             DiagnosticCode::ImageMissingUri,
-            "image: the directive needs an image path or URL as its argument",
+            "image: the directive needs an image path or URL as its argument".to_string(),
             body_span(body_lines, ctx),
-        ));
-        return Directive::Unknown {
-            name: DIRECTIVE.to_string(),
-            argument: String::new(),
-            body: join_body_lines(body_lines),
-        };
+            diagnostics,
+        );
     }
 
     let mut options = common.with_uri(ImageUri::new(argument));
@@ -238,7 +238,7 @@ mod tests {
         let (directive, diagnostics) = parse(argument, &[]);
 
         // Then
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
         assert_eq!(codes(&diagnostics), vec![DiagnosticCode::ImageMissingUri]);
     }
 
@@ -252,7 +252,7 @@ mod tests {
 
         // Then
         match directive {
-            Directive::Unknown { name, body, .. } => {
+            Directive::Malformed { name, body, .. } => {
                 assert_eq!(name, "image");
                 assert!(body.contains(":alt: x"));
             }

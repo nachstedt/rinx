@@ -71,7 +71,13 @@ fn test_a_name_no_type_declares_is_left_to_the_ordinary_chain() {
         doc.nodes.first(),
         Some(Node::Directive(Directive::Unknown { .. }))
     ));
-    assert!(doc.diagnostics.is_empty());
+    assert_eq!(
+        doc.diagnostics
+            .iter()
+            .map(|d| d.code)
+            .collect::<Vec<rusty_sphinx_ast::DiagnosticCode>>(),
+        vec![rusty_sphinx_ast::DiagnosticCode::DirectiveUnknown],
+    );
 }
 
 #[test]
@@ -103,5 +109,11 @@ fn test_a_section_name_is_inert_without_a_schema() {
         doc.nodes.first(),
         Some(Node::Directive(Directive::Unknown { .. }))
     ));
-    assert!(doc.diagnostics.is_empty());
+    assert_eq!(
+        doc.diagnostics
+            .iter()
+            .map(|d| d.code)
+            .collect::<Vec<rusty_sphinx_ast::DiagnosticCode>>(),
+        vec![rusty_sphinx_ast::DiagnosticCode::DirectiveUnknown],
+    );
 }

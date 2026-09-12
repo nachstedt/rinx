@@ -1,7 +1,10 @@
 //! Collection of the lines belonging to an explicit-markup block — a
 //! directive's indented body, the further signature lines a domain-object
-//! directive may declare, and the flattening of a body back to plain text
-//! for [`rusty_sphinx_ast::Directive::Unknown`].
+//! directive may declare, and the flattening of a body back to plain text for
+//! the callers that want the body as *data* — `.. csv-table::`'s inline rows.
+//! A body kept to be shown back as *source* goes through
+//! `crate::indent::strip_common_indent` instead, which preserves the relative
+//! indentation this does not.
 //!
 //! Also reached from `crate::blocks::comment`, since an RST comment is the
 //! same `.. ` explicit-markup construct and its body is delimited by exactly
