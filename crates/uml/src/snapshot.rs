@@ -147,6 +147,17 @@ impl Snapshot {
         )
     }
 
+    /// Every entity's id, in id order — what a flowchart with no `:filter:`
+    /// draws.
+    ///
+    /// Order is not tidiness here, for the reason it is not in
+    /// [`Self::matching`]: it decides the order nodes appear in the generated
+    /// `PlantUML`, and so the bytes that get hashed into the compiled
+    /// picture's filename.
+    pub(crate) fn ids(&self) -> Vec<&String> {
+        self.entities.keys().collect()
+    }
+
     /// The ids of every entity matching `filter`, in id order.
     ///
     /// Order is not tidiness here: it decides the order nodes appear in the

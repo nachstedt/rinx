@@ -320,6 +320,25 @@ impl LengthOrPercentage {
     }
 }
 
+/// The width to render with, a `:scale:` percentage applied.
+///
+/// A free function because three directives place a picture by exactly this
+/// rule — `.. image::`, every spelling of a `PlantUML` diagram, and
+/// `.. entity-flow::` — and a fourth copy of four lines is how two of them
+/// quietly stop agreeing. `None` when no width was written: a scale alone has
+/// nothing to apply to, which each directive reports for itself.
+#[must_use]
+pub fn scaled_width(
+    width: Option<&LengthOrPercentage>,
+    scale: Option<u32>,
+) -> Option<LengthOrPercentage> {
+    let width = width?;
+    Some(match scale {
+        Some(scale) => width.scaled(scale),
+        None => width.clone(),
+    })
+}
+
 impl fmt::Display for LengthOrPercentage {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -741,5 +760,38 @@ mod tests {
                 .to_string()
                 .contains("'rem' is not a length unit")
         );
+    }
+
+    #[test]
+    fn test_scaled_width_applies_the_percentage_to_the_width() {
+        // Given
+        let width = LengthOrPercentage::new("400px").unwrap();
+
+        // When
+        let rendered = scaled_width(Some(&width), Some(25)).unwrap();
+
+        // Then
+        assert_eq!(rendered.to_string(), "100px");
+    }
+
+    #[test]
+    fn test_scaled_width_keeps_a_width_written_without_a_scale() {
+        // Given
+        let width = LengthOrPercentage::new("50%").unwrap();
+
+        // When
+        let rendered = scaled_width(Some(&width), None).unwrap();
+
+        // Then
+        assert_eq!(rendered.to_string(), "50%");
+    }
+
+    #[test]
+    fn test_scaled_width_has_nothing_to_scale_without_a_width() {
+        // Given / When
+        let rendered = scaled_width(None, Some(50));
+
+        // Then
+        assert_eq!(rendered, None);
     }
 }

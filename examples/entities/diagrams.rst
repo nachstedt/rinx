@@ -142,3 +142,58 @@ directly after ``@startuml``, which is the only place PlantUML reads a
    @startuml
    {{ flow('REQ_001') }}
    @enduml
+
+Flowcharts of the graph itself
+------------------------------
+
+``.. entity-flow::`` — sphinx-needs spells it ``.. needflow::`` — draws the
+entities a filter selects and the relations between them, without a template.
+The picture is *generated*: there is no body to write, and the directive
+reports one rather than mistaking it for PlantUML source.
+
+.. entity-flow::
+   :caption: Every entity in the project, and every relation between them
+
+Selecting a subgraph, and labelling its edges
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``:filter:`` is the same expression language an ``.. entity-table::``'s is, and
+``:relations:`` — sphinx-needs spells it ``:link_types:`` — says which relations
+become edges. An edge whose target the filter left out is not drawn, so a
+filtered picture stays a picture of what was asked for.
+
+.. entity-flow::
+   :filter: type == "req" or type == "spec"
+   :relations: links
+   :show-link-names:
+   :direction: LR
+   :caption: Requirements and the specifications they link to, laid out sideways
+   :align: center
+   :width: 600px
+   :name: requirement-flow
+
+The ``:name:`` above registers as an ordinary cross-reference target, so
+:ref:`requirement-flow` links to the picture.
+
+The generated source, and a preamble
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``:debug:`` shows the PlantUML that was compiled — worth more here than on a
+written diagram, since this text exists nowhere else — and ``:config:`` names a
+preamble from the site's ``[uml_configs]``, exactly as it does above.
+
+.. needflow::
+   :filter: type == "test"
+   :config: monochrome
+   :debug:
+   :caption: The test cases, in monochrome
+
+A filter matching nothing is reported as ``entity-flow.empty-result`` rather
+than compiled: PlantUML rejects an empty diagram, so the build would otherwise
+fail with a syntax error naming a generated file nobody wrote.
+
+.. noqa: entity-flow.empty-result
+
+.. entity-flow::
+   :filter: status == "withdrawn"
+   :caption: Withdrawn requirements — there are none, so nothing is drawn

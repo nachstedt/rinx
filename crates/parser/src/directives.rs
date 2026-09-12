@@ -12,6 +12,12 @@
 //! directive, not just the two that spell their rows out as data — [`table`]
 //! needs them too, and produces no `Directive::DataTable` at all.
 //!
+//! [`filter_option`] is shared in the same spirit but for a narrower reason:
+//! the two directives that ask the entity graph a question — [`entity_table`]
+//! and [`entity_flow`] — must select the same entities from the same
+//! expression and refuse the same ones at the same column, so there is one
+//! reader for both and only the diagnostic code differs.
+//!
 //! [`options`] sits one level more general still: scanning a body's leading
 //! `:name: value` run and diagnosing unclaimed options is common to *every*
 //! directive, tables included, so it is named for what it does rather than
@@ -31,8 +37,10 @@ mod doctest;
 mod domains;
 mod dropdown;
 mod entity;
+mod entity_flow;
 mod entity_section;
 mod entity_table;
+mod filter_option;
 mod glossary;
 mod grid;
 mod image;

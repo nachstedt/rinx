@@ -569,9 +569,68 @@ no longer matches than a deliberate statement. The live preview stays quiet
 about it when no project index is available, since every table would be empty
 through no fault of the author.
 
-`needlist`, `needflow`, `needpie` and `needbar` are not implemented. They are
-the same question with a different presentation, and would reuse this filter
-language unchanged.
+`needflow` *is* implemented — see "Flowcharts of the graph" below, which asks
+this same question and draws the answer instead of tabulating it. `needlist`,
+`needpie` and `needbar` are not. They are the same question again with a
+different presentation, and would reuse this filter language unchanged.
+
+---
+
+## Flowcharts of the graph
+
+`.. entity-flow::` — sphinx-needs spells it `.. needflow::` — draws the entities
+a filter selects and the relations between them. It asks the question
+`.. entity-table::` asks and answers it as a picture instead of as rows, so
+there is nothing to write: the directive takes options only, and its `PlantUML`
+is generated.
+
+```rst
+.. entity-flow::
+   :filter: type == "req" or type == "spec"
+   :relations: links
+   :show-link-names:
+   :direction: LR
+   :caption: Requirements and the specifications they link to
+```
+
+| option | what it does |
+|---|---|
+| `:filter:` | which entities to draw; omitted, the whole project |
+| `:relations:` | which relations become edges, in the order written; sphinx-needs spells it `:link_types:` |
+| `:show-link-names:` | label each edge with its relation |
+| `:direction:` | `TB` (the default) or `LR` |
+| `:config:` | a `PlantUML` preamble: sphinx-needs' built-in `lefttoright`/`toptobottom`, or one declared under `[uml_configs]` |
+| `:debug:` | also show the generated source, below the picture |
+| `:caption:` `:align:` `:width:` `:scale:` `:class:` `:name:` | as on every diagram |
+
+Each node is the same clickable rectangle `flow(id)` draws in a written
+diagram, so clicking one lands on exactly the anchor a `:ref:` to that entity
+would, and a `:name:` makes the picture itself a `:ref:` target.
+
+Three defaults differ from sphinx-needs', because a schema here declares its own
+vocabulary:
+
+- **An omitted `:relations:` draws every relation the schema declares**, where
+  sphinx-needs defaults to `links` — a name a schema here need not have at all.
+- **An edge whose target the filter excluded is not drawn.** A filter selects a
+  subgraph, and drawing the edge would make `PlantUML` invent an unlabelled box
+  for every entity the author filtered out.
+- **`:direction:` takes `TB` or `LR` only.** `PlantUML` has two layout
+  directions; graphviz' `RL` and `BT` are reported rather than ignored.
+
+A filter matching nothing is `entity-flow.empty-result` and no picture is
+compiled — `PlantUML` rejects an empty diagram, so the build would otherwise
+fail with a syntax error naming a generated file nobody wrote.
+
+sphinx-needs' `:show_filters:`, `:show_legend:`, `:highlight:`,
+`:border_color:`, `:filter-func:`, `:engine:`, the `:root_id:` family and the
+legacy `:tags:`/`:status:`/`:types:` filters are each reported by name as
+`entity-flow.unsupported-option`, with what to write instead, rather than
+silently doing nothing.
+
+A flowchart is a diagram, so its library needs `diagrams = True` exactly as the
+written ones do — see the build wiring under "Diagramming entities" below. See
+`docs/decisions/014-entity-flow.md`.
 
 ---
 
@@ -658,7 +717,9 @@ a `:ref:` target. `:extra:` binds comma-separated `name: value` pairs into the
 template. `:debug:` shows the expanded PlantUML below the picture — the text
 that was actually compiled, which is what you need when a diagram comes out
 wrong. `:config:` names a preamble declared under `[uml_configs]` in the site's
-`rusty_sphinx.toml`.
+`rusty_sphinx.toml`, or one of the two sphinx-needs ships — `lefttoright` and
+`toptobottom` — which need nothing declared anywhere; a site entry of the same
+name redefines one.
 
 `@startuml`/`@enduml` are added when they are missing, so a `:key:` fragment is
 both importable and a diagram in its own right. A diagram that draws nothing —
@@ -693,8 +754,9 @@ rusty_sphinx_library(
 ```
 
 Forgetting the attribute is not silent: a diagram in a library without it
-fails the parse as `uml.diagrams-disabled`, on the directive's own line, naming
-the attribute to set.
+fails the parse as `uml.diagrams-disabled` — a flowchart as
+`entity-flow.diagrams-disabled` — on the directive's own line, naming the
+attribute to set.
 
 A diagram's text depends on the whole entity graph, so it cannot be expanded
 until every document has been indexed. Compilation therefore belongs to
@@ -721,10 +783,11 @@ Deliberately **not** supported:
   typed filter language rather than a Python interpreter. It covers the
   operators real filters use and diagnoses everything else by name, so a filter
   calling `len()` is reported rather than silently matching nothing.
-- **The other listing directives** (`needlist`, `needflow`, `needpie`,
-  `needbar`) — a later increment. They reuse the same filter language, and now
-  the diagram expander too. `needuml` and `needarch` *are* supported; see
-  "Diagramming entities" above.
+- **The remaining listing directives** (`needlist`, `needpie`, `needbar`) — a
+  later increment. They reuse the same filter language, and now the diagram
+  pipeline too. `needtable`, `needflow`, `needuml` and `needarch` *are*
+  supported; see "Listing entities", "Flowcharts of the graph" and "Diagramming
+  entities".
 - **Dynamic functions** (`[[copy('id')]]`) and `needextend`.
 
 ---
@@ -765,6 +828,8 @@ entity:
 | code | when |
 |---|---|
 | `entity.role-type-mismatch` | a role resolving to a type it does not accept |
+| `entity-flow.empty-result` | a flowchart whose filter matched no entity |
+| `entity-flow.unknown-config` | a `:config:` naming no declared preamble |
 
 A faulty schema is not a diagnostic but a hard error: it is the vocabulary the
 parser works from, so continuing would report a cascade of unknown-directive

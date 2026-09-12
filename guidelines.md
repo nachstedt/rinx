@@ -158,6 +158,8 @@ entry under the heading it belongs to, as a single short sentence.
 
 - Give a borrowed construct this project's own name and accept the other tool's spelling as an alias, so a migrating project keeps its documents without the foreign vocabulary becoming ours.
 - Name a diagnostic code after the construct rather than the spelling it was written under, so one code serves every alias of it.
+- Default a borrowed construct's options to what this project's own schema declares, not to the vocabulary the other tool hardcodes, and say in the ADR where the two deliberately disagree.
+- Generate a derived construct's content as data rather than lowering it to a template of another construct: the shortcut works, but every diagnostic then lands on text the author never wrote.
 
 ## Scope of a guideline
 

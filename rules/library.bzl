@@ -204,7 +204,7 @@ rusty_sphinx_library = rule(
         ),
         "diagrams": attr.bool(
             default = False,
-            doc = "Whether this library's documents may hold PlantUML diagrams — `.. plantuml::`/`.. uml::`, `.. entity-diagram::`/`.. needuml::` and `.. entity-arch::`/`.. needarch::`. Off by default so a library that draws nothing pays nothing: the site creates diagram actions only for documents of libraries that set this. A diagram written in a library without it fails the parse, naming this attribute. To keep the cost narrow, put diagram documents in a library of their own.",
+            doc = "Whether this library's documents may hold PlantUML diagrams — `.. plantuml::`/`.. uml::`, `.. entity-diagram::`/`.. needuml::`, `.. entity-arch::`/`.. needarch::` and the generated `.. entity-flow::`/`.. needflow::`. Off by default so a library that draws nothing pays nothing: the site creates diagram actions only for documents of libraries that set this. A diagram written in a library without it fails the parse, naming this attribute. To keep the cost narrow, put diagram documents in a library of their own.",
         ),
         "entity_schema": attr.label(
             allow_single_file = [".toml"],

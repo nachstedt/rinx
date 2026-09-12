@@ -8,6 +8,7 @@ use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
 use crate::dropdown::Dropdown;
 use crate::entity::EntityBody;
+use crate::entity_flow::EntityFlow;
 use crate::entity_table::EntityTable;
 use crate::glossary_entry::GlossaryEntry;
 use crate::grid::{Grid, GridItem};
@@ -120,6 +121,17 @@ pub enum Directive {
     /// lists are declared in documents this one never mentions — only the
     /// project index knows them, so the rows are resolved while rendering.
     EntityTable(Box<EntityTable>),
+    /// `.. entity-flow::`, and its sphinx-needs spelling `.. needflow::` — a
+    /// picture of the entities matching a filter and the relations between
+    /// them.
+    ///
+    /// Boxed like [`Self::EntityTable`], for the same reason, and carrying a
+    /// question for the same reason too. What separates the two is only how
+    /// the answer is presented: a table renders rows, a flowchart generates
+    /// `PlantUML` that a build action compiles — which is why this is not a
+    /// [`Self::Uml`] with a template. There is no template here; nothing the
+    /// author wrote reaches `PlantUML` at all.
+    EntityFlow(Box<EntityFlow>),
     VersionChange {
         kind: VersionChangeKind,
         version: String,

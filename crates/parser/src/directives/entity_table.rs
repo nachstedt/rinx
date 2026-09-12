@@ -14,12 +14,13 @@
 use rusty_sphinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource, Span,
 };
-use rusty_sphinx_filter::{FieldName, FilterError, parse_filter};
+use rusty_sphinx_filter::FieldName;
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::indent::unindent_body_lines;
 
+use super::filter_option::{FilterCodes, read_filter_option, report_unknown_field};
 use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 use super::table_options::parse_common_table_options;
 use super::table_widths::parse_widths_option;
@@ -110,11 +111,14 @@ pub(super) fn parse_entity_table(
     Directive::EntityTable(Box::new(table))
 }
 
-/// Reads `:filter:`, reporting a broken expression at the column it breaks at.
+/// Reads `:filter:` under this directive's own diagnostic codes.
 ///
-/// A table whose filter could not be parsed lists *everything* rather than
-/// nothing: the diagnostic already says what is wrong, and an empty table on
-/// top of it would hide which entities the author was reaching for.
+/// The reading itself is [`read_filter_option`], shared with
+/// `.. entity-flow::` so the two cannot disagree about which entities an
+/// expression selects. A table whose filter could not be parsed lists
+/// *everything* rather than nothing: the diagnostic already says what is
+/// wrong, and an empty table on top of it would hide which entities the author
+/// was reaching for.
 fn read_filter(
     line: &OptionLine,
     source_line: Option<&str>,
@@ -122,28 +126,14 @@ fn read_filter(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Option<rusty_sphinx_filter::Expr> {
-    match parse_filter(&line.value) {
-        Ok(expr) => {
-            let unknown: Vec<&FieldName> = expr
-                .field_names()
-                .into_iter()
-                .filter(|name| !ctx.schema.declares_field(name.as_str()))
-                .collect();
-            for name in &unknown {
-                report_unknown_field(name, line, directive, diagnostics, ctx);
-            }
-            Some(expr)
-        }
-        Err(error) => {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::EntityTableInvalidFilter,
-                format!("{directive}: :filter: {error}"),
-                filter_error_span(line, source_line, &error, ctx),
-            ));
-            None
-        }
-    }
+    read_filter_option(line, source_line, directive, FILTER_CODES, diagnostics, ctx)
 }
+
+/// The codes a table reports its filter's failures under.
+const FILTER_CODES: FilterCodes = FilterCodes {
+    invalid: DiagnosticCode::EntityTableInvalidFilter,
+    unknown_field: DiagnosticCode::EntityTableUnknownField,
+};
 
 /// Reads `:columns:`, dropping the whole option if any entry is unusable.
 ///
@@ -214,29 +204,17 @@ fn read_field(
         }
     };
     if !ctx.schema.declares_field(name.as_str()) {
-        report_unknown_field(&name, line, directive, diagnostics, ctx);
+        report_unknown_field(
+            &name,
+            line,
+            directive,
+            DiagnosticCode::EntityTableUnknownField,
+            diagnostics,
+            ctx,
+        );
         return None;
     }
     Some(name)
-}
-
-/// Reports a field no entity type declares, offering the whole vocabulary.
-fn report_unknown_field(
-    name: &FieldName,
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntityTableUnknownField,
-        format!(
-            "{directive}: :{}: unknown field '{name}'; the schema declares {}",
-            line.name,
-            ctx.schema.field_names().join(", ")
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
 }
 
 /// Resolves `:widths:` and sphinx-needs' `:colwidths:` spelling of it.
@@ -289,34 +267,6 @@ fn check_style(
         ),
         ctx.line_span(line.line_index, &line.raw),
     ));
-}
-
-/// The span a filter error points at.
-///
-/// A filter written on one line gets the exact characters that broke; one
-/// wrapped across several gets the whole first line, because the continuation
-/// lines were joined with spaces and an offset into the joined text no longer
-/// names a column in any of them. Reporting the line is right where reporting
-/// a column would be wrong.
-///
-/// A joined value is recognised by comparing against the *source* line rather
-/// than by looking at the value: continuations are appended to `raw` and
-/// `value` alike, so `raw` still ends with `value` and only the original text
-/// can tell the two cases apart.
-fn filter_error_span(
-    line: &OptionLine,
-    source_line: Option<&str>,
-    error: &FilterError,
-    ctx: &ParseCtx<'_>,
-) -> Option<Span> {
-    let written_on_one_line = source_line.is_some_and(|source| source.trim() == line.raw);
-    if !written_on_one_line {
-        return ctx.line_span(line.line_index, &line.raw);
-    }
-    let value_column = line.raw.chars().count() - line.value.chars().count();
-    let start = ctx.position(line.line_index, value_column + error.offset)?;
-    let end = ctx.position(line.line_index, value_column + error.offset + error.length)?;
-    Some(start.to(end))
 }
 
 /// Splits a comma-separated option value, dropping empty entries.

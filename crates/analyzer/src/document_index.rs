@@ -240,6 +240,7 @@ pub(super) fn index_nodes(
                 | Directive::Contents(_)
                 | Directive::Dropdown(_)
                 | Directive::EntityTable(_)
+                | Directive::EntityFlow(_)
                 | Directive::Uml(_)),
             ) => index_name_bearing_directive(directive, doc_path, index, scope),
             Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
@@ -322,6 +323,12 @@ fn index_name_bearing_directive(
         // and its content, when templated, is resolved from this very index.
         Directive::Uml(uml) => {
             register_directive_name(uml.name.as_ref(), doc_path, index);
+        }
+        // A flowchart contributes its `:name:` and nothing else, being both of
+        // the above at once: a question answered from this index, drawn as a
+        // picture a build action compiles.
+        Directive::EntityFlow(flow) => {
+            register_directive_name(flow.name.as_ref(), doc_path, index);
         }
         // A dropdown carries both: a `:name:` of its own, and a body whose
         // targets, sections and entities belong to this document exactly as

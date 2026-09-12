@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::EntityId;
-use crate::image::{ImageAlign, LengthOrPercentage};
+use crate::image::{ImageAlign, LengthOrPercentage, scaled_width};
 use crate::span::Span;
 use crate::target_name::TargetName;
 use crate::uml::source::UmlSource;
@@ -128,11 +128,7 @@ impl Uml {
     /// picture is.
     #[must_use]
     pub fn rendered_width(&self) -> Option<LengthOrPercentage> {
-        let width = self.width.as_ref()?;
-        Some(match self.scale {
-            Some(scale) => width.scaled(scale),
-            None => width.clone(),
-        })
+        scaled_width(self.width.as_ref(), self.scale)
     }
 
     /// Whether a `:scale:` was written that nothing can be applied to.

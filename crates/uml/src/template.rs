@@ -32,6 +32,7 @@ use std::sync::{Arc, Mutex};
 use minijinja::{Environment, Error, ErrorKind, Value};
 
 use crate::error::UmlError;
+use crate::node::{node_for, quote_safe};
 use crate::snapshot::Snapshot;
 
 /// Where a function records a structured failure on its way out.
@@ -341,29 +342,6 @@ fn left(chain: &ImportChain) {
     if let Ok(mut stack) = chain.lock() {
         stack.pop();
     }
-}
-
-/// The `PlantUML` node text for one entity.
-///
-/// A `rectangle` with the entity's id as its alias, so a template can draw
-/// edges between nodes by id — `flow('A')` and `flow('B')` followed by
-/// `A --> B` is the shape every sphinx-needs diagram is written in.
-fn node_for(snapshot: &Snapshot, id: &str) -> String {
-    let label = quote_safe(snapshot.title(id));
-    let type_name = quote_safe(snapshot.type_name(id));
-    let link = snapshot
-        .href(id)
-        .map_or_else(String::new, |href| format!(" [[{href}]]"));
-    format!("rectangle \"{label}\\n<size:10>{type_name}: {id}</size>\" as {id}{link}")
-}
-
-/// Text that cannot end a `PlantUML` quoted string early.
-///
-/// A title is prose an author wrote, so it may hold anything; a stray `"`
-/// would not corrupt the page but the diagram, where the failure surfaces as
-/// `PlantUML`'s own syntax error about a line nobody wrote.
-fn quote_safe(text: &str) -> String {
-    text.replace('"', "'").replace('\n', " ")
 }
 
 #[cfg(test)]

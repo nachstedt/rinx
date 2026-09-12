@@ -4,6 +4,8 @@ use std::fmt;
 
 use rusty_sphinx_ast::DiagnosticCode;
 
+use crate::assemble::AssemblyError;
+
 /// A template that could not be expanded.
 ///
 /// Carries no [`Span`](rusty_sphinx_ast::Span): the caller holds the diagram
@@ -89,6 +91,71 @@ impl fmt::Display for UmlError {
                 f,
                 "a diagram cannot import itself: {}",
                 chain.join(" imports ")
+            ),
+        }
+    }
+}
+
+impl From<AssemblyError> for UmlError {
+    fn from(error: AssemblyError) -> Self {
+        match error {
+            AssemblyError::DrewNothing => Self::EmptyDiagram,
+            AssemblyError::UnknownConfig(name) => Self::UnknownConfig(name),
+        }
+    }
+}
+
+/// A flowchart that could not be drawn.
+///
+/// Its own type rather than a [`UmlError`] variant, and for the reason the
+/// diagnostic family is `entity-flow.*` rather than `uml.*`: a flowchart has no
+/// template, so most of what can go wrong with a written diagram cannot happen
+/// to it, and the two failures that *can* are about a question asked of the
+/// entity graph. Everything the parser could already check — the filter, the
+/// relation names, the presentation options — was checked while parsing.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum FlowError {
+    /// The filter matched no entity, so there was nothing to draw.
+    EmptyResult,
+    /// A `:config:` naming a preamble the site config does not declare.
+    UnknownConfig(String),
+}
+
+impl FlowError {
+    /// The diagnostic code a caller reports this under.
+    #[must_use]
+    pub const fn code(&self) -> DiagnosticCode {
+        match self {
+            Self::EmptyResult => DiagnosticCode::EntityFlowEmptyResult,
+            Self::UnknownConfig(_) => DiagnosticCode::EntityFlowUnknownConfig,
+        }
+    }
+}
+
+impl From<AssemblyError> for FlowError {
+    fn from(error: AssemblyError) -> Self {
+        match error {
+            // Every flowchart that reaches the assembly drew at least one
+            // node, so the only way to arrive here with nothing is a filter
+            // that matched nothing — which is what the message says.
+            AssemblyError::DrewNothing => Self::EmptyResult,
+            AssemblyError::UnknownConfig(name) => Self::UnknownConfig(name),
+        }
+    }
+}
+
+impl fmt::Display for FlowError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::EmptyResult => write!(
+                f,
+                "no entity matched, so there was nothing to draw — PlantUML has no empty \
+                 diagram to compile"
+            ),
+            Self::UnknownConfig(name) => write!(
+                f,
+                "no PlantUML preamble named '{name}' is declared; add it under [uml_configs] \
+                 in the site's rusty_sphinx.toml"
             ),
         }
     }

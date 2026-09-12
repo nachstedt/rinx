@@ -22,6 +22,8 @@ mod uri;
 
 pub use align::{ImageAlign, is_vertical_name};
 pub use figure::Figure;
-pub use length::{FigureWidth, InvalidLength, Length, LengthOrPercentage, LengthUnit, Percentage};
+pub use length::{
+    FigureWidth, InvalidLength, Length, LengthOrPercentage, LengthUnit, Percentage, scaled_width,
+};
 pub use options::{ImageLoading, ImageOptions};
 pub use uri::{ImageTarget, ImageUri};

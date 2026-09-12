@@ -35,7 +35,7 @@ pub use image_error::ImageError;
 pub use math::MathError;
 pub use nav::{PageLink, ResolvedNavEntry};
 pub use page::{PageMeta, css_relative_path, render_genindex, render_page};
-pub use uml_error::DiagramError;
+pub use uml_error::{DiagramError, DiagramFailure};
 
 use rusty_sphinx_ast::HashedContent;
 
