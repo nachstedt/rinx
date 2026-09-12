@@ -74,6 +74,7 @@ rusty_sphinx_library(
         "//examples/contents:docs",
         "//examples/sectnum:docs",
         "//examples/dropdown:docs",
+        "//examples/grid:docs",
         "//examples/jinja:docs",
         "//examples/team_a:docs",
         "//examples/team_b:docs",

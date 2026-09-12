@@ -135,6 +135,8 @@ diagnostic_codes! {
     DirectiveContentsUnknownOption => "directive.contents-unknown-option",
     DirectiveSectnumUnknownOption => "directive.sectnum-unknown-option",
     DirectiveDropdownUnknownOption => "directive.dropdown-unknown-option",
+    DirectiveGridUnknownOption => "directive.grid-unknown-option",
+    DirectiveGridItemUnknownOption => "directive.grid-item-unknown-option",
     DirectiveEntityTableUnknownOption => "directive.entity-table-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
@@ -332,6 +334,38 @@ diagnostic_codes! {
     DropdownInvalidMargin => "dropdown.invalid-margin",
     /// An option that needs a value but was written without one.
     DropdownEmptyOptionValue => "dropdown.empty-option-value",
+
+    // --- `.. grid::` / `.. grid-item::` -------------------------------------
+    //
+    // One family for both directives, as `entity-table.*` is one family for
+    // both its spellings: a code names the construct, and a grid and its
+    // items are one construct written in two directives.
+    /// A `.. grid::` argument or a `:columns:` that is neither one nor four
+    /// values, or that names something other than `auto` or a column from 1
+    /// to 12. The row or item is rendered without column classes rather than
+    /// refused — see `grid.rs` for why a grid never dies of a bad option.
+    GridInvalidColumns => "grid.invalid-columns",
+    /// A `:gutter:` that is neither one nor four values, or that names a step
+    /// off the 0–5 scale. `auto` is a step a column count allows and a gutter
+    /// does not, and lands here.
+    GridInvalidGutter => "grid.invalid-gutter",
+    /// A `:margin:` or `:padding:` that is neither one nor four values, or
+    /// that names a step off the scale.
+    GridInvalidSpacing => "grid.invalid-spacing",
+    /// A `:child-align:` other than `start`, `end`, `center`, `justify` or
+    /// `spaced`.
+    GridInvalidChildAlign => "grid.invalid-child-align",
+    /// A `:child-direction:` other than `column` or `row`.
+    GridInvalidChildDirection => "grid.invalid-child-direction",
+    /// Content written directly inside a `.. grid::` that is not a
+    /// `.. grid-item::`. Reported and *kept*, as sphinx-design keeps it: the
+    /// layout is wrong, but dropping the content would be worse.
+    GridUnexpectedChild => "grid.unexpected-child",
+    /// A `.. grid-item::` written outside any `.. grid::`. Likewise reported
+    /// and still rendered.
+    GridItemOutsideGrid => "grid.item-outside-grid",
+    /// An option that needs a value but was written without one.
+    GridEmptyOptionValue => "grid.empty-option-value",
 
     // --- `.. sectnum::` / `.. section-numbering::` --------------------------
     /// A `:depth:` whose value is not a positive integer. Treated as no depth

@@ -1,0 +1,36 @@
+"""Documents exercising `.. grid::` and `.. grid-item::`.
+
+Its own library and package, mirroring `//examples/dropdown`'s shape: the two
+directives have ten options between them whose effects are visual and
+independent, so each group gets a small page of its own rather than one page
+trying to show them all at once.
+
+sphinx-design's second *extension* directive family here — see `spec_gaps.md`'s
+"Third-party extension directives" section.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(
+        ["*.rst"],
+        exclude = ["nesting.rst"],
+    ),
+    # `index.rst`'s toctree lists `nesting`, so the dependency is required,
+    # not just convenient — see `tests/test_strict_deps.sh`.
+    deps = [":diagram_docs"],
+    visibility = ["//visibility:public"],
+)
+
+# The one page that draws something lives in a library of its own, the pattern
+# the `diagrams` attribute is built for — the same split
+# `//examples/entities:diagram_docs` makes, and for the same reason. It carries
+# the regression this directive family was added for: a diagram written inside
+# a `.. grid-item::` reaches the compile action only because the grid parses
+# its body.
+rusty_sphinx_library(
+    name = "diagram_docs",
+    srcs = ["nesting.rst"],
+    diagrams = True,
+)

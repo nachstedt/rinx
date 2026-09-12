@@ -157,6 +157,14 @@ pub struct ParseCtx<'a> {
     /// `.. verification-criteria::` is still a diagram of the entity it sits
     /// in.
     pub enclosing_entity_id: Option<&'a EntityId>,
+    /// Whether the lines being parsed are the body of a `.. grid::`.
+    ///
+    /// Only a `.. grid-item::` asks: sphinx-design warns when one is written
+    /// with any other parent, and this is the parser's way of knowing. It is
+    /// *not* cleared by [`Self::inside_entity`] and friends for the same
+    /// reason [`Self::enclosing_entity_id`] is not — but it is cleared by an
+    /// item's own body, since a grid-item does not make its content a row.
+    pub in_grid_row: bool,
     /// Where the current line slice came from, or `None` when it came from
     /// nowhere in the source — see [`Self::synthetic`].
     origin: Option<Origin>,
@@ -207,6 +215,7 @@ impl<'a> ParseCtx<'a> {
             jinja: None,
             enclosing_entity: None,
             enclosing_entity_id: None,
+            in_grid_row: false,
             origin: Some(Origin { line: 1, column: 1 }),
             file: None,
             current_file: None,
@@ -270,6 +279,27 @@ impl<'a> ParseCtx<'a> {
     pub(crate) fn inside_entity_id(&self, id: &'a EntityId) -> Self {
         Self {
             enclosing_entity_id: Some(id),
+            ..*self
+        }
+    }
+
+    /// The context for parsing the body of a `.. grid::`, in which a
+    /// `.. grid-item::` is the expected child.
+    #[must_use]
+    pub(crate) fn inside_grid_row(&self) -> Self {
+        Self {
+            in_grid_row: true,
+            ..*self
+        }
+    }
+
+    /// The context for parsing the body of a `.. grid-item::`, which is
+    /// content rather than a row — an item written inside an item is as
+    /// misplaced as one written at top level.
+    #[must_use]
+    pub(crate) fn outside_grid_row(&self) -> Self {
+        Self {
+            in_grid_row: false,
             ..*self
         }
     }
@@ -344,6 +374,7 @@ impl<'a> ParseCtx<'a> {
             jinja: self.jinja,
             enclosing_entity: self.enclosing_entity,
             enclosing_entity_id: self.enclosing_entity_id,
+            in_grid_row: self.in_grid_row,
             origin: Some(Origin { line: 1, column: 1 }),
             file: Some(file),
             current_file: Some(id),

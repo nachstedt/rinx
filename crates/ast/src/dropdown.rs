@@ -9,8 +9,9 @@
 //! - [`chevron`] — which state marker `:chevron:` draws, and the octicon that
 //!   marker is.
 //! - [`animation`] — the two ways `:animate:` reveals the body.
-//! - [`margin`] — the one-or-four spacing values `:margin:` accepts, and the
-//!   `sd-m*` classes they become.
+//!
+//! `:margin:` is read by the shared [`crate::Spacing`], which `.. grid::`
+//! writes its `:margin:` and `:padding:` in too.
 //! - [`octicon`] — the *name* `:icon:` carries, deliberately unvalidated
 //!   against any icon set (see that module for why).
 //!
@@ -23,12 +24,10 @@ mod animation;
 mod block;
 mod chevron;
 mod color;
-mod margin;
 mod octicon;
 
 pub use animation::Animation;
 pub use block::Dropdown;
 pub use chevron::Chevron;
 pub use color::SemanticColor;
-pub use margin::{InvalidMargin, Margin, MarginValue};
 pub use octicon::{InvalidOcticonName, OcticonName};

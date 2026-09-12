@@ -712,6 +712,266 @@ details.admonition[open] summary {
 .sd-mr-5 { margin-right: 3rem; }
 .sd-mr-auto { margin-right: auto; }
 
+/* `:padding:` — the same 0-5 scale as `:margin:` above, inside the box
+   rather than around it. `auto` is deliberately absent: sphinx-design's
+   `padding_option` leaves it off the scale, and the parser refuses it. */
+.sd-p-0 { padding: 0; }
+.sd-p-1 { padding: 0.25rem; }
+.sd-p-2 { padding: 0.5rem; }
+.sd-p-3 { padding: 1rem; }
+.sd-p-4 { padding: 1.5rem; }
+.sd-p-5 { padding: 3rem; }
+
+.sd-pt-0 { padding-top: 0; }
+.sd-pt-1 { padding-top: 0.25rem; }
+.sd-pt-2 { padding-top: 0.5rem; }
+.sd-pt-3 { padding-top: 1rem; }
+.sd-pt-4 { padding-top: 1.5rem; }
+.sd-pt-5 { padding-top: 3rem; }
+
+.sd-pb-0 { padding-bottom: 0; }
+.sd-pb-1 { padding-bottom: 0.25rem; }
+.sd-pb-2 { padding-bottom: 0.5rem; }
+.sd-pb-3 { padding-bottom: 1rem; }
+.sd-pb-4 { padding-bottom: 1.5rem; }
+.sd-pb-5 { padding-bottom: 3rem; }
+
+.sd-pl-0 { padding-left: 0; }
+.sd-pl-1 { padding-left: 0.25rem; }
+.sd-pl-2 { padding-left: 0.5rem; }
+.sd-pl-3 { padding-left: 1rem; }
+.sd-pl-4 { padding-left: 1.5rem; }
+.sd-pl-5 { padding-left: 3rem; }
+
+.sd-pr-0 { padding-right: 0; }
+.sd-pr-1 { padding-right: 0.25rem; }
+.sd-pr-2 { padding-right: 0.5rem; }
+.sd-pr-3 { padding-right: 1rem; }
+.sd-pr-4 { padding-right: 1.5rem; }
+.sd-pr-5 { padding-right: 3rem; }
+
+/* ── Grids (sphinx-design's `.. grid::` / `.. grid-item::`) ─────────── */
+
+/* A twelve-column flex layout, in sphinx-design's class names so a page
+   written for that extension keeps its structure; the rules themselves are
+   this build's own. The breakpoints are Bootstrap's, which sphinx-design's
+   grid derives from: xs is the unqualified base and the three below are
+   min-width queries.
+
+   Every width rule below is deliberately kept to *one* class of specificity
+   (`> *`, not `> .sd-col`), so that an item's own `:columns:` — written later
+   in this file — can override the count its row asked for. */
+
+.sd-container-fluid {
+  width: 100%;
+}
+
+.sd-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: calc(-0.5 * var(--sd-gutter-x, 1.5rem));
+  margin-right: calc(-0.5 * var(--sd-gutter-x, 1.5rem));
+  margin-top: calc(-1 * var(--sd-gutter-y, 0rem));
+}
+
+.sd-row > * {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  padding-left: calc(0.5 * var(--sd-gutter-x, 1.5rem));
+  padding-right: calc(0.5 * var(--sd-gutter-x, 1.5rem));
+  margin-top: var(--sd-gutter-y, 0rem);
+}
+
+.sd-col {
+  display: flex;
+  min-width: 0;
+}
+
+/* `:child-direction:` — always present on an item, since an omitted value
+   means `column`. */
+.sd-d-flex-column { flex-direction: column; }
+.sd-d-flex-row { flex-direction: row; flex-wrap: wrap; }
+
+/* `:child-align:` — along the item's own major axis. */
+.sd-align-major-start { justify-content: flex-start; }
+.sd-align-major-end { justify-content: flex-end; }
+.sd-align-major-center { justify-content: center; }
+.sd-align-major-justify { justify-content: space-between; }
+.sd-align-major-spaced { justify-content: space-evenly; }
+
+/* `:reverse:` on a `.. grid::`. */
+.sd-flex-row-reverse { flex-direction: row-reverse; }
+
+/* `:outline:`, on a grid and on an item alike. */
+.sd-border-1 {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* A cell should not inherit the page's block margins at its own edges, or a
+   one-paragraph cell sits off-centre in its box. */
+.sd-col > :first-child { margin-top: 0; }
+.sd-col > :last-child { margin-bottom: 0; }
+
+/* `:gutter:` — the 0-5 scale again, as the gap between cells. Set as
+   custom properties so the row's negative margins stay in step. */
+.sd-g-0 { --sd-gutter-x: 0rem; --sd-gutter-y: 0rem; }
+.sd-g-1 { --sd-gutter-x: 0.25rem; --sd-gutter-y: 0.25rem; }
+.sd-g-2 { --sd-gutter-x: 0.5rem; --sd-gutter-y: 0.5rem; }
+.sd-g-3 { --sd-gutter-x: 1rem; --sd-gutter-y: 1rem; }
+.sd-g-4 { --sd-gutter-x: 1.5rem; --sd-gutter-y: 1.5rem; }
+.sd-g-5 { --sd-gutter-x: 3rem; --sd-gutter-y: 3rem; }
+
+/* A `.. grid::` argument — how many cells fit on a row. The unqualified
+   class and the `-xs-` one name the same breakpoint; both are emitted,
+   as sphinx-design's `_media_option` emits them. */
+.sd-row-cols-1 > * { flex: 0 0 auto; width: 100%; }
+.sd-row-cols-2 > * { flex: 0 0 auto; width: 50%; }
+.sd-row-cols-3 > * { flex: 0 0 auto; width: 33.333333%; }
+.sd-row-cols-4 > * { flex: 0 0 auto; width: 25%; }
+.sd-row-cols-5 > * { flex: 0 0 auto; width: 20%; }
+.sd-row-cols-6 > * { flex: 0 0 auto; width: 16.666667%; }
+.sd-row-cols-7 > * { flex: 0 0 auto; width: 14.285714%; }
+.sd-row-cols-8 > * { flex: 0 0 auto; width: 12.5%; }
+.sd-row-cols-9 > * { flex: 0 0 auto; width: 11.111111%; }
+.sd-row-cols-10 > * { flex: 0 0 auto; width: 10%; }
+.sd-row-cols-11 > * { flex: 0 0 auto; width: 9.090909%; }
+.sd-row-cols-12 > * { flex: 0 0 auto; width: 8.333333%; }
+.sd-row-cols-auto > * { flex: 0 0 auto; width: auto; }
+
+.sd-row-cols-xs-1 > * { flex: 0 0 auto; width: 100%; }
+.sd-row-cols-xs-2 > * { flex: 0 0 auto; width: 50%; }
+.sd-row-cols-xs-3 > * { flex: 0 0 auto; width: 33.333333%; }
+.sd-row-cols-xs-4 > * { flex: 0 0 auto; width: 25%; }
+.sd-row-cols-xs-5 > * { flex: 0 0 auto; width: 20%; }
+.sd-row-cols-xs-6 > * { flex: 0 0 auto; width: 16.666667%; }
+.sd-row-cols-xs-7 > * { flex: 0 0 auto; width: 14.285714%; }
+.sd-row-cols-xs-8 > * { flex: 0 0 auto; width: 12.5%; }
+.sd-row-cols-xs-9 > * { flex: 0 0 auto; width: 11.111111%; }
+.sd-row-cols-xs-10 > * { flex: 0 0 auto; width: 10%; }
+.sd-row-cols-xs-11 > * { flex: 0 0 auto; width: 9.090909%; }
+.sd-row-cols-xs-12 > * { flex: 0 0 auto; width: 8.333333%; }
+.sd-row-cols-xs-auto > * { flex: 0 0 auto; width: auto; }
+
+/* A `.. grid-item::`'s `:columns:` — how many of twelve one cell spans. */
+.sd-col-1 { flex: 0 0 auto; width: 8.333333%; }
+.sd-col-2 { flex: 0 0 auto; width: 16.666667%; }
+.sd-col-3 { flex: 0 0 auto; width: 25%; }
+.sd-col-4 { flex: 0 0 auto; width: 33.333333%; }
+.sd-col-5 { flex: 0 0 auto; width: 41.666667%; }
+.sd-col-6 { flex: 0 0 auto; width: 50%; }
+.sd-col-7 { flex: 0 0 auto; width: 58.333333%; }
+.sd-col-8 { flex: 0 0 auto; width: 66.666667%; }
+.sd-col-9 { flex: 0 0 auto; width: 75%; }
+.sd-col-10 { flex: 0 0 auto; width: 83.333333%; }
+.sd-col-11 { flex: 0 0 auto; width: 91.666667%; }
+.sd-col-12 { flex: 0 0 auto; width: 100%; }
+.sd-col-auto { flex: 0 0 auto; width: auto; }
+
+.sd-col-xs-1 { flex: 0 0 auto; width: 8.333333%; }
+.sd-col-xs-2 { flex: 0 0 auto; width: 16.666667%; }
+.sd-col-xs-3 { flex: 0 0 auto; width: 25%; }
+.sd-col-xs-4 { flex: 0 0 auto; width: 33.333333%; }
+.sd-col-xs-5 { flex: 0 0 auto; width: 41.666667%; }
+.sd-col-xs-6 { flex: 0 0 auto; width: 50%; }
+.sd-col-xs-7 { flex: 0 0 auto; width: 58.333333%; }
+.sd-col-xs-8 { flex: 0 0 auto; width: 66.666667%; }
+.sd-col-xs-9 { flex: 0 0 auto; width: 75%; }
+.sd-col-xs-10 { flex: 0 0 auto; width: 83.333333%; }
+.sd-col-xs-11 { flex: 0 0 auto; width: 91.666667%; }
+.sd-col-xs-12 { flex: 0 0 auto; width: 100%; }
+.sd-col-xs-auto { flex: 0 0 auto; width: auto; }
+
+@media (min-width: 576px) {
+  .sd-row-cols-sm-1 > * { flex: 0 0 auto; width: 100%; }
+  .sd-row-cols-sm-2 > * { flex: 0 0 auto; width: 50%; }
+  .sd-row-cols-sm-3 > * { flex: 0 0 auto; width: 33.333333%; }
+  .sd-row-cols-sm-4 > * { flex: 0 0 auto; width: 25%; }
+  .sd-row-cols-sm-5 > * { flex: 0 0 auto; width: 20%; }
+  .sd-row-cols-sm-6 > * { flex: 0 0 auto; width: 16.666667%; }
+  .sd-row-cols-sm-7 > * { flex: 0 0 auto; width: 14.285714%; }
+  .sd-row-cols-sm-8 > * { flex: 0 0 auto; width: 12.5%; }
+  .sd-row-cols-sm-9 > * { flex: 0 0 auto; width: 11.111111%; }
+  .sd-row-cols-sm-10 > * { flex: 0 0 auto; width: 10%; }
+  .sd-row-cols-sm-11 > * { flex: 0 0 auto; width: 9.090909%; }
+  .sd-row-cols-sm-12 > * { flex: 0 0 auto; width: 8.333333%; }
+  .sd-row-cols-sm-auto > * { flex: 0 0 auto; width: auto; }
+
+  .sd-col-sm-1 { flex: 0 0 auto; width: 8.333333%; }
+  .sd-col-sm-2 { flex: 0 0 auto; width: 16.666667%; }
+  .sd-col-sm-3 { flex: 0 0 auto; width: 25%; }
+  .sd-col-sm-4 { flex: 0 0 auto; width: 33.333333%; }
+  .sd-col-sm-5 { flex: 0 0 auto; width: 41.666667%; }
+  .sd-col-sm-6 { flex: 0 0 auto; width: 50%; }
+  .sd-col-sm-7 { flex: 0 0 auto; width: 58.333333%; }
+  .sd-col-sm-8 { flex: 0 0 auto; width: 66.666667%; }
+  .sd-col-sm-9 { flex: 0 0 auto; width: 75%; }
+  .sd-col-sm-10 { flex: 0 0 auto; width: 83.333333%; }
+  .sd-col-sm-11 { flex: 0 0 auto; width: 91.666667%; }
+  .sd-col-sm-12 { flex: 0 0 auto; width: 100%; }
+  .sd-col-sm-auto { flex: 0 0 auto; width: auto; }
+}
+
+@media (min-width: 768px) {
+  .sd-row-cols-md-1 > * { flex: 0 0 auto; width: 100%; }
+  .sd-row-cols-md-2 > * { flex: 0 0 auto; width: 50%; }
+  .sd-row-cols-md-3 > * { flex: 0 0 auto; width: 33.333333%; }
+  .sd-row-cols-md-4 > * { flex: 0 0 auto; width: 25%; }
+  .sd-row-cols-md-5 > * { flex: 0 0 auto; width: 20%; }
+  .sd-row-cols-md-6 > * { flex: 0 0 auto; width: 16.666667%; }
+  .sd-row-cols-md-7 > * { flex: 0 0 auto; width: 14.285714%; }
+  .sd-row-cols-md-8 > * { flex: 0 0 auto; width: 12.5%; }
+  .sd-row-cols-md-9 > * { flex: 0 0 auto; width: 11.111111%; }
+  .sd-row-cols-md-10 > * { flex: 0 0 auto; width: 10%; }
+  .sd-row-cols-md-11 > * { flex: 0 0 auto; width: 9.090909%; }
+  .sd-row-cols-md-12 > * { flex: 0 0 auto; width: 8.333333%; }
+  .sd-row-cols-md-auto > * { flex: 0 0 auto; width: auto; }
+
+  .sd-col-md-1 { flex: 0 0 auto; width: 8.333333%; }
+  .sd-col-md-2 { flex: 0 0 auto; width: 16.666667%; }
+  .sd-col-md-3 { flex: 0 0 auto; width: 25%; }
+  .sd-col-md-4 { flex: 0 0 auto; width: 33.333333%; }
+  .sd-col-md-5 { flex: 0 0 auto; width: 41.666667%; }
+  .sd-col-md-6 { flex: 0 0 auto; width: 50%; }
+  .sd-col-md-7 { flex: 0 0 auto; width: 58.333333%; }
+  .sd-col-md-8 { flex: 0 0 auto; width: 66.666667%; }
+  .sd-col-md-9 { flex: 0 0 auto; width: 75%; }
+  .sd-col-md-10 { flex: 0 0 auto; width: 83.333333%; }
+  .sd-col-md-11 { flex: 0 0 auto; width: 91.666667%; }
+  .sd-col-md-12 { flex: 0 0 auto; width: 100%; }
+  .sd-col-md-auto { flex: 0 0 auto; width: auto; }
+}
+
+@media (min-width: 992px) {
+  .sd-row-cols-lg-1 > * { flex: 0 0 auto; width: 100%; }
+  .sd-row-cols-lg-2 > * { flex: 0 0 auto; width: 50%; }
+  .sd-row-cols-lg-3 > * { flex: 0 0 auto; width: 33.333333%; }
+  .sd-row-cols-lg-4 > * { flex: 0 0 auto; width: 25%; }
+  .sd-row-cols-lg-5 > * { flex: 0 0 auto; width: 20%; }
+  .sd-row-cols-lg-6 > * { flex: 0 0 auto; width: 16.666667%; }
+  .sd-row-cols-lg-7 > * { flex: 0 0 auto; width: 14.285714%; }
+  .sd-row-cols-lg-8 > * { flex: 0 0 auto; width: 12.5%; }
+  .sd-row-cols-lg-9 > * { flex: 0 0 auto; width: 11.111111%; }
+  .sd-row-cols-lg-10 > * { flex: 0 0 auto; width: 10%; }
+  .sd-row-cols-lg-11 > * { flex: 0 0 auto; width: 9.090909%; }
+  .sd-row-cols-lg-12 > * { flex: 0 0 auto; width: 8.333333%; }
+  .sd-row-cols-lg-auto > * { flex: 0 0 auto; width: auto; }
+
+  .sd-col-lg-1 { flex: 0 0 auto; width: 8.333333%; }
+  .sd-col-lg-2 { flex: 0 0 auto; width: 16.666667%; }
+  .sd-col-lg-3 { flex: 0 0 auto; width: 25%; }
+  .sd-col-lg-4 { flex: 0 0 auto; width: 33.333333%; }
+  .sd-col-lg-5 { flex: 0 0 auto; width: 41.666667%; }
+  .sd-col-lg-6 { flex: 0 0 auto; width: 50%; }
+  .sd-col-lg-7 { flex: 0 0 auto; width: 58.333333%; }
+  .sd-col-lg-8 { flex: 0 0 auto; width: 66.666667%; }
+  .sd-col-lg-9 { flex: 0 0 auto; width: 75%; }
+  .sd-col-lg-10 { flex: 0 0 auto; width: 83.333333%; }
+  .sd-col-lg-11 { flex: 0 0 auto; width: 91.666667%; }
+  .sd-col-lg-12 { flex: 0 0 auto; width: 100%; }
+  .sd-col-lg-auto { flex: 0 0 auto; width: auto; }
+}
+
 /* `:animate:` — applied to the body, which is what appears when it opens. */
 .sd-fade-in[open] > .sd-summary-content {
   animation: sd-fade-in 0.4s ease-in-out;
