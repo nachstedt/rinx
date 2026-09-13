@@ -34,6 +34,7 @@
 
 mod admonition_kind;
 mod c_signature;
+mod chart_color;
 mod code_block;
 mod code_language;
 mod contents;
@@ -48,6 +49,7 @@ mod domain_object_body;
 mod dropdown;
 mod entity;
 mod entity_flow;
+mod entity_pie;
 mod entity_table;
 mod enumerator;
 mod glossary_entry;
@@ -81,6 +83,7 @@ mod visit;
 
 pub use admonition_kind::AdmonitionKind;
 pub use c_signature::{CSignature, NameSource, extract_c_object_name};
+pub use chart_color::{ChartColor, InvalidChartColor};
 pub use code_block::{CodeBlock, CodeBlockSource};
 pub use code_language::{CodeLanguage, EmptyLanguageName, LanguageName, ResolvedLanguage};
 pub use contents::{Contents, ContentsBacklinks, ContentsOptions};
@@ -97,6 +100,7 @@ pub use domain_object_body::DomainObjectBody;
 pub use dropdown::{Animation, Chevron, Dropdown, InvalidOcticonName, OcticonName, SemanticColor};
 pub use entity::{AttributeValue, EntityBody, EntityId, EntityIdError, EntitySection, SectionKind};
 pub use entity_flow::{EntityFlow, EntityFlowSource, FlowDirection, InvalidFlowDirection};
+pub use entity_pie::{EntityPie, EntityPieSource, PieSlice, SliceSource};
 pub use entity_table::{EntityTable, EntityTableSource};
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
 pub use glossary_entry::{GlossaryEntry, term_id};

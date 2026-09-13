@@ -148,6 +148,7 @@ diagnostic_codes! {
     DirectiveGridItemUnknownOption => "directive.grid-item-unknown-option",
     DirectiveEntityTableUnknownOption => "directive.entity-table-unknown-option",
     DirectiveEntityFlowUnknownOption => "directive.entity-flow-unknown-option",
+    DirectiveEntityPieUnknownOption => "directive.entity-pie-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
     DirectiveTitleArgumentMissing => "directive.title-argument-missing",
@@ -546,6 +547,54 @@ diagnostic_codes! {
     /// Fails the parse, as `uml.diagrams-disabled` does and for the same
     /// reason: the picture would silently never be compiled.
     EntityFlowDiagramsDisabled => "entity-flow.diagrams-disabled",
+
+    // --- `.. entity-pie::` / `.. needpie::` --------------------------------
+    //
+    // One family for both spellings, as the two families above are for their
+    // own pairs, and its own family for the reason `entity-flow.*` is not
+    // `uml.*`: a code names the construct. Nothing here is `uml.*` in any
+    // case — a pie is drawn as SVG by the render action, never compiled, so
+    // it has no `:config:`, no hash and no `diagrams-disabled`.
+    /// A slice's filter, or the chart's own `:filter:`, that this build's
+    /// filter language cannot evaluate. The slice still counts, selecting
+    /// everything, for the reason `entity-table.invalid-filter` still lists
+    /// everything: the diagnostic says what is wrong, and an empty wedge on
+    /// top of it would hide what the author was reaching for.
+    EntityPieInvalidFilter => "entity-pie.invalid-filter",
+    /// A filter naming a field no entity type declares and that is none of the
+    /// built-in ones. Reported while parsing, where the schema is in hand.
+    EntityPieUnknownField => "entity-pie.unknown-field",
+    /// A chart whose body holds no content line at all, so there is nothing to
+    /// count and no chart to draw. Reported while parsing, unlike
+    /// `entity-pie.empty-result`, because the body is this document's own text.
+    EntityPieNoSlices => "entity-pie.no-slices",
+    /// More or fewer `:labels:` than content lines. They pair by position, so
+    /// a mismatch means at least one wedge is named wrongly or not at all —
+    /// the wedges are still drawn, and the surplus labels dropped.
+    EntityPieLabelCountMismatch => "entity-pie.label-count-mismatch",
+    /// A `:colors:` entry that is not a colour this build can draw with. The
+    /// built-in palette is used for that wedge instead.
+    EntityPieInvalidColor => "entity-pie.invalid-color",
+    /// An `:align:` that is not one of docutils' three.
+    EntityPieInvalidAlign => "entity-pie.invalid-align",
+    /// A `:scale:` that is not a non-negative percentage.
+    EntityPieInvalidScale => "entity-pie.invalid-scale",
+    /// A `:width:` that is not a length or a percentage.
+    EntityPieInvalidWidth => "entity-pie.invalid-width",
+    /// A `:scale:` with no `:width:` to apply to. The chart is drawn at a size
+    /// this build chooses, so a bare percentage has nothing to scale.
+    EntityPieUnusableScale => "entity-pie.unusable-scale",
+    /// An option whose value is required but was left empty.
+    EntityPieEmptyOptionValue => "entity-pie.empty-option-value",
+    /// An option sphinx-needs' `needpie` has that this build does not
+    /// implement. Reported by name rather than ignored, so an author who asked
+    /// for exploded wedges learns they did not get them.
+    EntityPieUnsupportedOption => "entity-pie.unsupported-option",
+    /// A chart every one of whose wedges counted zero, so there is no chart to
+    /// draw at all. Reported for the reason `entity-table.empty-result` is,
+    /// and only the renderer can raise it: whether a filter selects anything
+    /// depends on every document in the project.
+    EntityPieEmptyResult => "entity-pie.empty-result",
 
     // --- `.. needimport::` -------------------------------------------------
     //

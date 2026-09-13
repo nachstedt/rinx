@@ -274,9 +274,9 @@ fn test_an_empty_filter_result_is_reported() {
     let output = render(&table, "specs/boot");
 
     // Then
-    assert_eq!(output.entity_table_errors.len(), 1);
+    assert_eq!(output.empty_listing_errors.len(), 1);
     assert!(
-        output.entity_table_errors[0]
+        output.empty_listing_errors[0]
             .message()
             .contains("no entity")
     );
@@ -291,7 +291,7 @@ fn test_a_table_with_rows_reports_nothing() {
     let output = render(&table, "specs/boot");
 
     // Then
-    assert!(output.entity_table_errors.is_empty());
+    assert!(output.empty_listing_errors.is_empty());
 }
 
 #[test]
@@ -320,7 +320,7 @@ fn test_the_empty_result_names_the_spelling_the_author_wrote() {
 
     // Then
     assert!(
-        output.entity_table_errors[0]
+        output.empty_listing_errors[0]
             .message()
             .starts_with("needtable:")
     );

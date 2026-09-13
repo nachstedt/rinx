@@ -406,10 +406,12 @@ fn resolve_directive(
         // entity table's cells are not text of this document either — they are
         // resolved from the project index while rendering, so a `|name|` in
         // one would have to be substituted there, where the definition no
-        // longer exists, and neither is a flowchart's — its labels come from
-        // the same index.
+        // longer exists, and neither is a flowchart's or a pie chart's — their
+        // labels come from the same index, or from an option line, which is
+        // not inline-parsed either.
         Directive::EntityTable(_)
         | Directive::EntityFlow(_)
+        | Directive::EntityPie(_)
         | Directive::Image(_)
         | Directive::DocTest(_)
         | Directive::CodeBlock(_)

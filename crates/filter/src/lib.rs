@@ -33,7 +33,7 @@ mod value;
 
 pub use error::{FilterError, FilterErrorKind};
 pub use eval::FilterSubject;
-pub use expr::{CompareOp, Expr, Operand};
+pub use expr::{Affix, CompareOp, Expr, Operand};
 pub use field_name::{FieldName, FieldNameError};
 pub use parse::parse_filter;
 pub use value::{FieldValue, Literal};

@@ -365,3 +365,78 @@ fn test_a_whole_corpus_filter_selects_the_entity_it_describes() {
     // Then
     assert!(matched);
 }
+
+#[test]
+fn test_startswith_selects_by_prefix() {
+    // Given
+    let fields = [("id", text("FSR_STEER_CTRL_01"))];
+
+    // When
+    let selected = selects(r#"id.startswith("FSR_STEER")"#, &fields);
+
+    // Then
+    assert!(selected);
+}
+
+#[test]
+fn test_startswith_rejects_a_prefix_that_is_merely_contained() {
+    // Given — this is what separates it from `"FSR_STEER" in id`
+    let fields = [("id", text("X_FSR_STEER_01"))];
+
+    // When
+    let selected = selects(r#"id.startswith("FSR_STEER")"#, &fields);
+
+    // Then
+    assert!(!selected);
+}
+
+#[test]
+fn test_endswith_selects_by_suffix() {
+    // Given
+    let fields = [("docname", text("safety_example/fsr.rst"))];
+
+    // When
+    let selected = selects("docname.endswith('.rst')", &fields);
+
+    // Then
+    assert!(selected);
+}
+
+#[test]
+fn test_an_affix_test_on_a_missing_field_does_not_match() {
+    // Given — an entity of a type that never declares `asil`
+    let fields = [("id", text("REQ_1"))];
+
+    // When
+    let selected = selects(r#"asil.startswith("D")"#, &fields);
+
+    // Then
+    assert!(!selected);
+}
+
+#[test]
+fn test_an_affix_test_on_a_list_does_not_match() {
+    // Given — a list has no text form, as `in` already treats it
+    let fields = [("tags", FieldValue::List(vec!["api".to_string()]))];
+
+    // When
+    let selected = selects(r#"tags.startswith("a")"#, &fields);
+
+    // Then
+    assert!(!selected);
+}
+
+#[test]
+fn test_an_affix_test_sees_a_number_the_way_contains_does() {
+    // Given — `"1" in weight` and `weight.startswith("1")` must agree about
+    // what a non-text field is worth
+    let fields = [("weight", FieldValue::Int(120))];
+
+    // When
+    let by_affix = selects(r#"weight.startswith("1")"#, &fields);
+    let by_contains = selects(r#""1" in weight"#, &fields);
+
+    // Then
+    assert!(by_affix);
+    assert_eq!(by_affix, by_contains);
+}

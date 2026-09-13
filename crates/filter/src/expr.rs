@@ -22,6 +22,30 @@ pub enum CompareOp {
     Ne,
 }
 
+/// Which end of a value a [`Expr::TextAffix`] test looks at.
+///
+/// Two variants rather than a free predicate because Python has exactly two
+/// such methods and this language admits exactly those two: `startswith` and
+/// `endswith`. Every other method is refused by name while parsing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Affix {
+    /// `field.startswith("…")`
+    Prefix,
+    /// `field.endswith("…")`
+    Suffix,
+}
+
+impl Affix {
+    /// How this affix is spelled in a filter, for a diagnostic to quote.
+    #[must_use]
+    pub const fn method_name(self) -> &'static str {
+        match self {
+            Self::Prefix => "startswith",
+            Self::Suffix => "endswith",
+        }
+    }
+}
+
 /// A parsed filter expression.
 ///
 /// Serialized into the `.ast`, because the filter is parsed while the document
@@ -43,6 +67,28 @@ pub enum Expr {
         needle: Operand,
         haystack: Operand,
         negated: bool,
+    },
+    /// `field.startswith("…")` or `field.endswith("…")`.
+    ///
+    /// The one place this grammar admits Python's `.` at all, and it is a
+    /// narrowing rather than an opening: every *other* attribute access and
+    /// every other method is still refused by name. It earns the exception
+    /// because real corpus filters select by id prefix
+    /// (`id.startswith("FSR_STEER")`) often enough that refusing it left a
+    /// whole chart counting the wrong thing.
+    ///
+    /// There is no `negated` field, unlike [`Self::Contains`]: `not in` is a
+    /// distinct token sequence that has to be recognised where it is written,
+    /// whereas `not x.startswith(…)` already parses as a [`Self::Not`] around
+    /// this.
+    ///
+    /// The left side is a [`FieldName`] rather than an [`Operand`] for
+    /// [`Self::IsNone`]'s reason: `"abc".startswith("a")` is answerable and
+    /// meaningless, so it is unrepresentable instead.
+    TextAffix {
+        field: FieldName,
+        affix: Affix,
+        text: String,
     },
     /// `field is None`, or `field is not None` when negated.
     ///
@@ -89,7 +135,7 @@ impl Expr {
                 push_operand_name(needle, names);
                 push_operand_name(haystack, names);
             }
-            Self::IsNone { field, .. } => names.push(field),
+            Self::IsNone { field, .. } | Self::TextAffix { field, .. } => names.push(field),
             Self::Truthy(operand) => push_operand_name(operand, names),
         }
     }

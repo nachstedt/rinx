@@ -13,6 +13,7 @@ use super::directive_error::render_directive_error;
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
 use super::entity_flow::render_entity_flow;
+use super::entity_pie::render_entity_pie;
 use super::figure::render_figure_directive;
 use super::glossary::{render_glossary, render_index_anchor};
 use super::image::render_image_directive;
@@ -486,6 +487,7 @@ fn render_directive(
         // A generated picture rather than a written one, but a picture all the
         // same: the markup below it is the diagrams' own.
         Directive::EntityFlow(flow) => render_entity_flow(html, flow, ctx),
+        Directive::EntityPie(pie) => render_entity_pie(html, pie, ctx),
         Directive::Grid(grid) => super::grid::render_grid(html, grid, ctx),
         Directive::GridItem(item) => super::grid::render_grid_item(html, item, ctx),
         Directive::Image(options) => render_image_directive(html, options, ctx),

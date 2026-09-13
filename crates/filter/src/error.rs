@@ -62,6 +62,14 @@ pub enum FilterErrorKind {
         construct: &'static str,
         hint: Option<&'static str>,
     },
+    /// A method this language does not have, named as the author wrote it.
+    ///
+    /// Its own variant rather than [`Self::Unsupported`], whose `construct` is
+    /// `&'static str` because it names a closed set of Python constructs. A
+    /// method name is whatever was typed, and naming it is the whole point —
+    /// "function calls are not supported" would not tell an author that
+    /// `startswith` right beside it would have worked.
+    UnsupportedMethod(String),
 }
 
 impl FilterErrorKind {
@@ -98,6 +106,10 @@ impl fmt::Display for FilterErrorKind {
                 construct,
                 hint: None,
             } => write!(f, "{construct} are not supported here"),
+            Self::UnsupportedMethod(name) => write!(
+                f,
+                "`.{name}()` is not supported here; only `startswith` and `endswith` are"
+            ),
         }
     }
 }

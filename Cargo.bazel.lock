@@ -1,5 +1,5 @@
 {
-  "checksum": "5c51650fb183d178307f23936ad3b522a998e4cf439e3dc99e0598e011d50bae",
+  "checksum": "21bbf6fa8607ff81944e6040438b9ed2609087247da290818873e804930971f7",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -13,6 +13,7 @@
       "aarch64-apple-darwin"
     ],
     "cfg(all(target_arch = \"loongarch64\", target_os = \"linux\"))": [],
+    "cfg(all(target_arch = \"wasm32\", not(target_os = \"wasi\")))": [],
     "cfg(all(target_arch = \"wasm32\", target_os = \"wasi\", target_env = \"p2\"))": [],
     "cfg(all(target_os = \"uefi\", getrandom_backend = \"efi_rng\"))": [],
     "cfg(any())": [],
@@ -52,6 +53,82 @@
     ]
   },
   "crates": {
+    "ab_glyph 0.2.32": {
+      "common_attrs": {
+        "crate_features": [
+          "default",
+          "gvar-alloc",
+          "std",
+          "variable-fonts"
+        ],
+        "deps": [
+          {
+            "id": "ab_glyph_rasterizer 0.1.10",
+            "target": "ab_glyph_rasterizer"
+          },
+          {
+            "id": "owned_ttf_parser 0.25.1",
+            "target": "owned_ttf_parser"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "ab_glyph",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "name": "ab_glyph",
+      "package_url": "https://github.com/alexheretic/ab-glyph",
+      "repository": {
+        "Http": {
+          "sha256": "01c0457472c38ea5bd1c3b5ada5e368271cb550be7a4ca4a0b4634e9913f6cc2",
+          "url": "https://static.crates.io/crates/ab_glyph/0.2.32/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ab_glyph",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.2.32"
+    },
+    "ab_glyph_rasterizer 0.1.10": {
+      "common_attrs": {
+        "crate_features": [
+          "default",
+          "std"
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "ab_glyph_rasterizer",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "name": "ab_glyph_rasterizer",
+      "package_url": "https://github.com/alexheretic/ab-glyph",
+      "repository": {
+        "Http": {
+          "sha256": "366ffbaa4442f4684d91e2cd7c5ea7c4ed8add41959a31447066e279e432b618",
+          "url": "https://static.crates.io/crates/ab_glyph_rasterizer/0.1.10/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ab_glyph_rasterizer",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.10"
+    },
     "adler2 2.0.1": {
       "common_attrs": {
         "edition": "2021"
@@ -1460,6 +1537,107 @@
         }
       ],
       "version": "0.17.0"
+    },
+    "futures-core 0.3.34": {
+      "common_attrs": {
+        "edition": "2018"
+      },
+      "library_target_name": "futures_core",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "futures-core",
+      "package_url": "https://github.com/rust-lang/futures-rs",
+      "repository": {
+        "Http": {
+          "sha256": "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e",
+          "url": "https://static.crates.io/crates/futures-core/0.3.34/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "futures_core",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.3.34"
+    },
+    "futures-task 0.3.34": {
+      "common_attrs": {
+        "edition": "2018"
+      },
+      "library_target_name": "futures_task",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "futures-task",
+      "package_url": "https://github.com/rust-lang/futures-rs",
+      "repository": {
+        "Http": {
+          "sha256": "cd417de3d1d015fc3bfd2b1ea46dfc7bab72ef86f1cc7cc9c78e728b34a6d1fd",
+          "url": "https://static.crates.io/crates/futures-task/0.3.34/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "futures_task",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.3.34"
+    },
+    "futures-util 0.3.34": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "futures-core 0.3.34",
+            "target": "futures_core"
+          },
+          {
+            "id": "futures-task 0.3.34",
+            "target": "futures_task"
+          },
+          {
+            "id": "pin-project-lite 0.2.17",
+            "target": "pin_project_lite"
+          }
+        ],
+        "edition": "2018"
+      },
+      "library_target_name": "futures_util",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "futures-util",
+      "package_url": "https://github.com/rust-lang/futures-rs",
+      "repository": {
+        "Http": {
+          "sha256": "0d50a92467f8ba5dd6e3ee5d4bd04d73ab2e4e1c44474a0674821dfce14b79bc",
+          "url": "https://static.crates.io/crates/futures-util/0.3.34/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "futures_util",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.3.34"
     },
     "getrandom 0.3.4": {
       "build_script_attrs": {},
@@ -3032,6 +3210,49 @@
       ],
       "version": "0.5.2"
     },
+    "owned_ttf_parser 0.25.1": {
+      "common_attrs": {
+        "crate_features": [
+          "apple-layout",
+          "default",
+          "glyph-names",
+          "gvar-alloc",
+          "opentype-layout",
+          "std",
+          "variable-fonts"
+        ],
+        "deps": [
+          {
+            "id": "ttf-parser 0.25.1",
+            "target": "ttf_parser"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "owned_ttf_parser",
+      "license": "Apache-2.0",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "Apache-2.0"
+      ],
+      "name": "owned_ttf_parser",
+      "package_url": "https://github.com/alexheretic/owned-ttf-parser",
+      "repository": {
+        "Http": {
+          "sha256": "36820e9051aca1014ddc75770aab4d68bc1e9e632f0f5627c4086bc216fb583b",
+          "url": "https://static.crates.io/crates/owned_ttf_parser/0.25.1/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "owned_ttf_parser",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.25.1"
+    },
     "parking_lot 0.12.5": {
       "common_attrs": {
         "crate_features": [
@@ -3385,6 +3606,167 @@
         }
       ],
       "version": "0.14.0"
+    },
+    "pin-project-lite 0.2.17": {
+      "common_attrs": {
+        "edition": "2018"
+      },
+      "library_target_name": "pin_project_lite",
+      "license": "Apache-2.0 OR MIT",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "pin-project-lite",
+      "package_url": "https://github.com/taiki-e/pin-project-lite",
+      "repository": {
+        "Http": {
+          "sha256": "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd",
+          "url": "https://static.crates.io/crates/pin-project-lite/0.2.17/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "pin_project_lite",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.2.17"
+    },
+    "plotters 0.3.7": {
+      "common_attrs": {
+        "crate_features": [
+          "ab_glyph",
+          "once_cell",
+          "plotters-svg",
+          "svg_backend"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "ab_glyph 0.2.32",
+              "target": "ab_glyph"
+            },
+            {
+              "id": "num-traits 0.2.19",
+              "target": "num_traits"
+            },
+            {
+              "id": "once_cell 1.21.4",
+              "target": "once_cell"
+            },
+            {
+              "id": "plotters-backend 0.3.7",
+              "target": "plotters_backend"
+            },
+            {
+              "id": "plotters-svg 0.3.7",
+              "target": "plotters_svg"
+            }
+          ],
+          "selects": {
+            "cfg(all(target_arch = \"wasm32\", not(target_os = \"wasi\")))": [
+              {
+                "id": "wasm-bindgen 0.2.128",
+                "target": "wasm_bindgen"
+              },
+              {
+                "id": "web-sys 0.3.105",
+                "target": "web_sys"
+              }
+            ]
+          }
+        },
+        "edition": "2018"
+      },
+      "library_target_name": "plotters",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "MIT"
+      ],
+      "name": "plotters",
+      "package_url": "https://github.com/plotters-rs/plotters",
+      "repository": {
+        "Http": {
+          "sha256": "5aeb6f403d7a4911efb1e33402027fc44f29b5bf6def3effcc22d7bb75f2b747",
+          "url": "https://static.crates.io/crates/plotters/0.3.7/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "plotters",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.3.7"
+    },
+    "plotters-backend 0.3.7": {
+      "common_attrs": {
+        "edition": "2018"
+      },
+      "library_target_name": "plotters_backend",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "MIT"
+      ],
+      "name": "plotters-backend",
+      "package_url": "https://github.com/plotters-rs/plotters",
+      "repository": {
+        "Http": {
+          "sha256": "df42e13c12958a16b3f7f4386b9ab1f3e7933914ecea48da7139435263a4172a",
+          "url": "https://static.crates.io/crates/plotters-backend/0.3.7/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "plotters_backend",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.3.7"
+    },
+    "plotters-svg 0.3.7": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "plotters-backend 0.3.7",
+            "target": "plotters_backend"
+          }
+        ],
+        "edition": "2018"
+      },
+      "library_target_name": "plotters_svg",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "MIT"
+      ],
+      "name": "plotters-svg",
+      "package_url": "https://github.com/plotters-rs/plotters.git",
+      "repository": {
+        "Http": {
+          "sha256": "51bae2ac328883f7acdfea3d66a7c35751187f870bc81f94563733a154d7a670",
+          "url": "https://static.crates.io/crates/plotters-svg/0.3.7/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "plotters_svg",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.3.7"
     },
     "proc-macro2 1.0.106": {
       "build_script_attrs": {},
@@ -4200,6 +4582,10 @@
           {
             "id": "pathdiff 0.2.3",
             "target": "pathdiff"
+          },
+          {
+            "id": "plotters 0.3.7",
+            "target": "plotters"
           },
           {
             "id": "serde 1.0.228",
@@ -5028,6 +5414,34 @@
       ],
       "version": "1.0.3"
     },
+    "slab 0.4.12": {
+      "common_attrs": {
+        "edition": "2018"
+      },
+      "library_target_name": "slab",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "license_ids": [
+        "MIT"
+      ],
+      "name": "slab",
+      "package_url": "https://github.com/tokio-rs/slab",
+      "repository": {
+        "Http": {
+          "sha256": "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5",
+          "url": "https://static.crates.io/crates/slab/0.4.12/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "slab",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.4.12"
+    },
     "smallvec 1.16.0": {
       "common_attrs": {
         "edition": "2018"
@@ -5739,6 +6153,43 @@
       ],
       "version": "0.1.2"
     },
+    "ttf-parser 0.25.1": {
+      "common_attrs": {
+        "crate_features": [
+          "apple-layout",
+          "glyph-names",
+          "gvar-alloc",
+          "opentype-layout",
+          "std",
+          "variable-fonts"
+        ],
+        "edition": "2018"
+      },
+      "library_target_name": "ttf_parser",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "ttf-parser",
+      "package_url": "https://github.com/harfbuzz/ttf-parser",
+      "repository": {
+        "Http": {
+          "sha256": "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31",
+          "url": "https://static.crates.io/crates/ttf-parser/0.25.1/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ttf_parser",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.25.1"
+    },
     "two-face 0.5.2+bat-0.26.1": {
       "common_attrs": {
         "crate_features": [
@@ -6352,6 +6803,45 @@
       ],
       "version": "0.2.128"
     },
+    "web-sys 0.3.105": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "js-sys 0.3.105",
+            "target": "js_sys"
+          },
+          {
+            "id": "wasm-bindgen 0.2.128",
+            "target": "wasm_bindgen"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "web_sys",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "web-sys",
+      "package_url": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/web-sys",
+      "repository": {
+        "Http": {
+          "sha256": "9fbddc4a036f00ec4f18c83445bd3115cb306a91da554919a099d9222fe4a7f8",
+          "url": "https://static.crates.io/crates/web-sys/0.3.105/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "web_sys",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.3.105"
+    },
     "winapi-util 0.1.11": {
       "common_attrs": {
         "deps": {
@@ -6703,6 +7193,7 @@
     "minijinja 2.21.0",
     "octicons-pack 19.33.0",
     "pathdiff 0.2.3",
+    "plotters 0.3.7",
     "regex 1.12.4",
     "schemars 1.2.2",
     "serde 1.0.228",

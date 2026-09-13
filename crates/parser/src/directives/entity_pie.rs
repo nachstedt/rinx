@@ -1,0 +1,431 @@
+//! `.. entity-pie::`, and its sphinx-needs spelling `.. needpie::` — a pie
+//! chart of how many entities each of several filters selects.
+//!
+//! Its shape is unlike either directive it is a sibling of. An
+//! `.. entity-table::` refuses an argument and an `.. entity-flow::` refuses
+//! content; a pie takes **both** — the argument is the chart's title, and each
+//! content line is one wedge. That is sphinx-needs' own shape, and every
+//! `.. needpie::` in the benchmark corpus writes it.
+//!
+//! The body is therefore where most of the work is. Each line is parsed here,
+//! while its own position is still in hand, so a broken expression is reported
+//! at the character it breaks at — the same reason a `:filter:` option is
+//! parsed here rather than where it is evaluated, reached through the same
+//! [`read_filter_text`] the option goes through so the two cannot select
+//! differently.
+//!
+//! What is left for the renderer is the counting, which needs the whole
+//! project, and the drawing.
+//!
+//! sphinx-needs' `needpie` has a wider option set than this build draws. The
+//! ones it does not are refused **by name**, not ignored: an author who asked
+//! for exploded wedges and silently got none has no way to find out why.
+
+use rusty_sphinx_ast::{
+    ChartColor, Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, ImageAlign,
+    LengthOrPercentage, PieSlice, Span, TargetName,
+};
+
+use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
+use crate::indent::unindent_body_lines;
+
+use super::filter_option::{
+    FilterCodes, FilterOwner, FilterSite, read_filter_option, read_filter_text,
+};
+use super::options::{OptionLine, parse_percentage, report_unknown_options, scan_option_lines};
+
+/// The options sphinx-needs' `needpie` accepts that this build does not, each
+/// with what an author should reach for instead.
+///
+/// A table rather than a match arm apiece for the reason `entity_flow.rs`'s
+/// own table gives: the option is being refused, so the sentence beside it is
+/// the entire feature. Both spellings of every multiword name are listed,
+/// since sphinx-needs writes them with underscores and this build with
+/// hyphens, and an author migrating a document will write either.
+const UNSUPPORTED_OPTIONS: [(&str, &str); 6] = [
+    (
+        "explode",
+        "every wedge is drawn in place; use :colors: to tell them apart",
+    ),
+    ("shadow", "wedges are drawn flat"),
+    (
+        "style",
+        "that names a matplotlib stylesheet, which this build does not use",
+    ),
+    ("filter-func", "write the selection as :filter:"),
+    ("filter_func", "write the selection as :filter:"),
+    (
+        "filter_warning",
+        "an empty chart is reported as entity-pie.empty-result",
+    ),
+];
+
+/// Parses a `.. entity-pie::` / `.. needpie::` into a [`Directive::EntityPie`].
+pub(super) fn parse_entity_pie(
+    source: EntityPieSource,
+    argument: &str,
+    directive_span: Option<Span>,
+    body_lines: &[&str],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Directive {
+    let directive = source.as_str();
+    let unindented_lines = unindent_body_lines(body_lines);
+    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
+
+    let mut pie = EntityPie {
+        span: directive_span,
+        title: (!argument.trim().is_empty()).then(|| argument.trim().to_string()),
+        ..EntityPie::new(source)
+    };
+
+    let unrecognized = read_options(&mut pie, &option_lines, &unindented_lines, diagnostics, ctx);
+    report_unknown_options(
+        &unrecognized,
+        directive,
+        DiagnosticCode::DirectiveEntityPieUnknownOption,
+        diagnostics,
+        ctx,
+    );
+
+    pie.slices = read_slices(&unindented_lines, body_start, directive, diagnostics, ctx);
+    if pie.slices.is_empty() {
+        report_no_slices(directive, directive_span, diagnostics);
+    }
+    apply_labels(&mut pie, &option_lines, directive, diagnostics, ctx);
+
+    if pie.has_unusable_scale() {
+        report_unusable_scale(&option_lines, directive, diagnostics, ctx);
+    }
+
+    Directive::EntityPie(Box::new(pie))
+}
+
+/// Reads the body into one wedge per non-blank line.
+///
+/// A line is a number or a filter, tried in that order because a bare `12` is
+/// also a perfectly good filter — a [`Truthy`] test on an integer literal —
+/// and reading it as one would count the whole project instead of drawing a
+/// wedge of twelve.
+///
+/// Blank lines are skipped rather than becoming empty wedges, so the option
+/// block and the content may be separated the way every directive's are.
+///
+/// [`Truthy`]: rusty_sphinx_filter::Expr::Truthy
+fn read_slices(
+    unindented_lines: &[String],
+    body_start: usize,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Vec<PieSlice> {
+    let mut slices = Vec::new();
+    for (offset, line) in unindented_lines[body_start..].iter().enumerate() {
+        let written = line.trim();
+        if written.is_empty() {
+            continue;
+        }
+        let line_index = body_start + offset;
+        slices.push(match written.parse::<u64>() {
+            Ok(count) => PieSlice::from_count(count),
+            Err(_) => PieSlice::from_filter(read_slice_filter(
+                written,
+                line,
+                line_index,
+                directive,
+                diagnostics,
+                ctx,
+            )),
+        });
+    }
+    slices
+}
+
+/// Parses one body line as a filter, under this directive's own codes.
+///
+/// The column the filter starts at is whatever indentation survived
+/// `unindent_body_lines`, which strips only the block's *common* indent — so a
+/// line indented further than its siblings still reports at the right column.
+fn read_slice_filter(
+    written: &str,
+    line: &str,
+    line_index: usize,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<rusty_sphinx_filter::Expr> {
+    let column = line.chars().count() - line.trim_start().chars().count();
+    read_filter_text(
+        written,
+        FilterSite {
+            line_index,
+            column: Some(column),
+            raw: line,
+        },
+        FilterOwner {
+            directive,
+            option: None,
+            codes: FILTER_CODES,
+        },
+        diagnostics,
+        ctx,
+    )
+}
+
+/// Pairs `:labels:` with the wedges by position.
+///
+/// Position is the whole interface between the two, which is what makes a
+/// count mismatch worth reporting: the author cannot see from the labels alone
+/// that one of them has slid onto the wrong wedge. The wedges are still drawn
+/// and the surplus labels dropped — losing the data over a naming mistake
+/// would be the larger failure.
+fn apply_labels(
+    pie: &mut EntityPie,
+    option_lines: &[OptionLine],
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    let Some(line) = option_lines.iter().rev().find(|line| line.name == "labels") else {
+        return;
+    };
+    let labels: Vec<&str> = line.value.split(',').map(str::trim).collect();
+    if labels.len() != pie.slices.len() {
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::EntityPieLabelCountMismatch,
+            format!(
+                "{directive}: :labels: has {} entr{} but the chart has {} wedge{}; they pair by \
+                 position, so at least one wedge is named wrongly",
+                labels.len(),
+                if labels.len() == 1 { "y" } else { "ies" },
+                pie.slices.len(),
+                if pie.slices.len() == 1 { "" } else { "s" },
+            ),
+            ctx.line_span(line.line_index, &line.raw),
+        ));
+    }
+    for (slice, label) in pie.slices.iter_mut().zip(labels) {
+        if !label.is_empty() {
+            slice.label = Some(label.to_string());
+        }
+    }
+}
+
+/// Reads every option onto `pie`, returning the lines nobody claimed.
+fn read_options<'a>(
+    pie: &mut EntityPie,
+    option_lines: &'a [OptionLine],
+    unindented_lines: &[String],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Vec<&'a OptionLine> {
+    let directive = pie.source.as_str();
+    let mut unrecognized = Vec::new();
+    for line in option_lines {
+        match line.name.as_str() {
+            "filter" => {
+                let source_line = unindented_lines.get(line.line_index).map(String::as_str);
+                pie.filter = read_filter_option(
+                    line,
+                    source_line,
+                    directive,
+                    FILTER_CODES,
+                    diagnostics,
+                    ctx,
+                );
+            }
+            // Read after the body, since it pairs with the wedges by position
+            // and they do not exist yet.
+            "labels" => {}
+            "legend" => pie.legend = true,
+            "colors" => pie.colors = read_colors(line, directive, diagnostics, ctx),
+            "text_color" | "text-color" => {
+                pie.text_color = read_color(&line.value, line, directive, diagnostics, ctx);
+            }
+            "caption" => pie.caption = Some(line.value.clone()),
+            "align" => match ImageAlign::parse(&line.value) {
+                Some(align) => pie.align = Some(align),
+                None => diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::EntityPieInvalidAlign,
+                    format!(
+                        "{directive}: :align: expects one of center, left, right, found '{}'",
+                        line.value
+                    ),
+                    ctx.line_span(line.line_index, &line.raw),
+                )),
+            },
+            "scale" => match parse_percentage(&line.value) {
+                Some(scale) => pie.scale = Some(scale),
+                None => diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::EntityPieInvalidScale,
+                    format!(
+                        "{directive}: :scale: expects a non-negative percentage, found '{}'",
+                        line.value
+                    ),
+                    ctx.line_span(line.line_index, &line.raw),
+                )),
+            },
+            "width" => match LengthOrPercentage::new(&line.value) {
+                Ok(width) => pie.width = Some(width),
+                Err(problem) => diagnostics.push(Diagnostic::at(
+                    DiagnosticCode::EntityPieInvalidWidth,
+                    format!("{directive}: :width: {problem}"),
+                    ctx.line_span(line.line_index, &line.raw),
+                )),
+            },
+            "class" => pie.classes = line.value.split_whitespace().map(str::to_string).collect(),
+            "name" => {
+                if line.value.is_empty() {
+                    report_empty_value(line, directive, diagnostics, ctx);
+                } else {
+                    pie.name = Some(TargetName::new(&line.value));
+                }
+            }
+            name => match unsupported_advice(name) {
+                Some(advice) => report_unsupported(line, advice, directive, diagnostics, ctx),
+                None => unrecognized.push(line),
+            },
+        }
+    }
+    unrecognized
+}
+
+/// Reads `:colors:` — one colour per wedge, in order.
+///
+/// An entry this build cannot draw with is dropped and reported while the rest
+/// are kept, which is `:relations:`'s rule rather than `:columns:`'s: losing
+/// every colour over one misspelling would change a chart the author can see
+/// into one they cannot recognise. A dropped entry shifts the rest, so the
+/// diagnostic matters — it is the only sign the wedges are no longer the
+/// colours that were written.
+fn read_colors(
+    line: &OptionLine,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Vec<ChartColor> {
+    line.value
+        .split(',')
+        .map(str::trim)
+        .filter(|written| !written.is_empty())
+        .filter_map(|written| read_color(written, line, directive, diagnostics, ctx))
+        .collect()
+}
+
+/// Reads one colour, reporting it against the option line it was written on.
+fn read_color(
+    written: &str,
+    line: &OptionLine,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<ChartColor> {
+    match ChartColor::parse(written) {
+        Ok(color) => Some(color),
+        Err(problem) => {
+            diagnostics.push(Diagnostic::at(
+                DiagnosticCode::EntityPieInvalidColor,
+                format!("{directive}: :{}: {problem}", line.name),
+                ctx.line_span(line.line_index, &line.raw),
+            ));
+            None
+        }
+    }
+}
+
+/// What to tell an author who wrote an option this build does not implement,
+/// or `None` when the name is not one of sphinx-needs' at all.
+fn unsupported_advice(name: &str) -> Option<&'static str> {
+    UNSUPPORTED_OPTIONS
+        .iter()
+        .find(|(option, _)| *option == name)
+        .map(|(_, advice)| *advice)
+}
+
+/// The codes a pie chart reports its filters' failures under.
+const FILTER_CODES: FilterCodes = FilterCodes {
+    invalid: DiagnosticCode::EntityPieInvalidFilter,
+    unknown_field: DiagnosticCode::EntityPieUnknownField,
+};
+
+/// Reports a chart whose body held nothing to count.
+///
+/// Reported while parsing, unlike `entity-pie.empty-result`, because the body
+/// is this document's own text: no index is needed to see that there is
+/// nothing there. The message names the shape, since a `.. needpie::` whose
+/// filters were written as options rather than content is the likely mistake.
+fn report_no_slices(directive: &str, directive_span: Option<Span>, diagnostics: &mut Diagnostics) {
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::EntityPieNoSlices,
+        format!(
+            "{directive}: has no content, so there is nothing to chart; write one filter per line \
+             below the options, and name them with :labels:"
+        ),
+        directive_span,
+    ));
+}
+
+/// Reports a `:scale:` that has no `:width:` to apply to.
+///
+/// Pointed at the `:scale:` line rather than at the directive, since that is
+/// the line the author would have to change — the choice `.. image::` and
+/// every other picture directive already make for their own version of this.
+fn report_unusable_scale(
+    option_lines: &[OptionLine],
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    let span = option_lines
+        .iter()
+        .rev()
+        .find(|line| line.name == "scale")
+        .and_then(|line| ctx.line_span(line.line_index, &line.raw));
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::EntityPieUnusableScale,
+        format!(
+            "{directive}: :scale: has no :width: to apply to, so it was ignored — the chart is \
+             drawn at a size this build chooses, so it has no size of its own to scale"
+        ),
+        span,
+    ));
+}
+
+/// Reports an option this build does not implement, and what to write instead.
+fn report_unsupported(
+    line: &OptionLine,
+    advice: &str,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::EntityPieUnsupportedOption,
+        format!(
+            "{directive}: :{}: is not supported, so it was ignored — {advice}",
+            line.name
+        ),
+        ctx.line_span(line.line_index, &line.raw),
+    ));
+}
+
+/// Reports an option whose value is required but was left empty.
+fn report_empty_value(
+    line: &OptionLine,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) {
+    diagnostics.push(Diagnostic::at(
+        DiagnosticCode::EntityPieEmptyOptionValue,
+        format!(
+            "{directive}: :{}: needs a value, so the option was ignored",
+            line.name
+        ),
+        ctx.line_span(line.line_index, &line.raw),
+    ));
+}
+
+#[cfg(test)]
+mod tests;

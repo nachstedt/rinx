@@ -65,6 +65,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When constructs depend on exact character alignment (e.g. grid tables), validate the alignment strictly and reject on mismatch instead of silently padding lines to paper over it.
 - When a prefix/sigil is markup rather than part of a name, strip it during parsing and record its meaning as typed intent on the AST node, rather than leaving it in the string for a later phase to re-interpret.
 - Two directives that differ only in how their source spells out the same data should share one AST node, with a small enum recording which one wrote it.
+- Two directives asking one question with different presentations stay separate nodes; put the generality in the layer that answers the question, not in one directive with a mode switch whose options are each valid in only one mode.
 - Keep parse-time configuration in one context object threaded through the parsers, rather than adding a parameter per setting.
 - A pure phase should take an injected trait object for anything it cannot do itself (like reading a file) rather than acquiring the capability directly.
 - Convert an embedded notation (LaTeX, CSV) with an established library during the build rather than shipping a client-side script, so the output stays self-contained and malformed input becomes a build diagnostic instead of a silent failure in the reader's browser.
@@ -79,6 +80,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Store only what a later reader needs in a shared index: prose belongs in the document, not in an artefact every phase loads.
 - When implementing a subset of a language a reference implementation embeds whole, recognise the constructs outside the subset and reject each *by name*, since the common failure is an unsupported feature rather than a typo.
 - Choose a parsing library for what it produces, not for what it saves: one that hands back a token tree still leaves the tree-building, the error wording and the panic-freedom to write by hand.
+- Weigh a library against the features still to come, not only the one at hand: accepting a vendored asset and a larger output is worth it when the next construct in the same family reuses the library's harder parts instead of hand-rolling them too.
+- Pin a rendering library to an asset-free, host-independent configuration and vendor whatever it then needs, since anything it resolves from the build host makes a cached artefact differ between machines.
 
 ## Porting from a reference implementation
 
@@ -194,12 +197,14 @@ entry under the heading it belongs to, as a single short sentence.
 - Render a declared vocabulary's parts in the order the schema declares them, not in document order or a map's key order; instances of one type should be comparable at a glance.
 - When adding a rule for a class on an element a generic selector already styles (`.document code`, `table th`), match that selector's specificity or the new rule silently loses.
 - When two phases must agree on a derived value, have both call one pure function rather than passing a sidecar between them; a sidecar makes the agreement a protocol, a shared function makes it impossible to break.
+- When a second construct needs the same reporting plumbing, widen the existing error type with a code field rather than adding a parallel one; the duplicate would have to re-derive every downstream rule, including the ones nothing tests, like staying quiet in live preview.
 - A value that two callers each supply separately is the one input they can supply differently — put it on the data being processed, not in a context each of them fills in.
 - Measure a plausible-sounding build optimization before keeping it; batching many small Bazel actions into one action with many outputs can be slower than the actions it replaced.
 - Record what an accepted regression actually costs, measured, in the ADR that accepts it — "some overhead" is not a decision anyone can revisit later.
 - When a build system cannot honour an option's semantics (a `:save:` writing an undeclared path), diagnose it by name and point at what does work, rather than ignoring it or dropping the directive.
 - Pay only for what you use: when the build system cannot discover whether a feature is used before running actions, make it an explicit per-library opt-in rather than a cost every document of every project pays.
 - An opt-in is only honest if forgetting it fails loudly, at the line that needed it, naming the switch to flip.
+- A feature that declares no build action of its own needs no opt-in at all: the per-library switch exists because actions are created before any document is read, so a step folded into an action that was already running is free and should stay unconditional.
 - When two actions compute the same thing from the same inputs, fold the second into the first rather than keeping them in step; the cheapest agreement is one process.
 - Check a generated artifact for the degenerate case the external tool it is fed to rejects; an empty PlantUML diagram fails the build with a syntax error naming a file nobody wrote, when the real cause is a filter that matched nothing.
 - Run every shell test the CI workflow runs before calling a change done, and add new ones to that workflow in the same change.

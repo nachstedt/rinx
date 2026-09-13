@@ -9,6 +9,7 @@ use crate::domain_object_body::DomainObjectBody;
 use crate::dropdown::Dropdown;
 use crate::entity::EntityBody;
 use crate::entity_flow::EntityFlow;
+use crate::entity_pie::EntityPie;
 use crate::entity_table::EntityTable;
 use crate::glossary_entry::GlossaryEntry;
 use crate::grid::{Grid, GridItem};
@@ -132,6 +133,17 @@ pub enum Directive {
     /// [`Self::Uml`] with a template. There is no template here; nothing the
     /// author wrote reaches `PlantUML` at all.
     EntityFlow(Box<EntityFlow>),
+    /// `.. entity-pie::`, and its sphinx-needs spelling `.. needpie::` — a pie
+    /// chart of how many entities each of several filters selects.
+    ///
+    /// Boxed like [`Self::EntityFlow`], for the same reason, and carrying a
+    /// question for the same reason too. It is the third presentation of the
+    /// one question [`Self::EntityTable`] asks: rows, a graph, or proportions.
+    ///
+    /// Unlike the other two pictures this build draws, nothing here is
+    /// compiled — the chart is SVG produced by the render action itself, so a
+    /// library holding one needs no `diagrams = True`.
+    EntityPie(Box<EntityPie>),
     VersionChange {
         kind: VersionChangeKind,
         version: String,

@@ -9,13 +9,13 @@ use std::fs;
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
     WarningOrigin, check_broken_links_strict, format_broken_link_warning,
-    format_diagram_error_warning, format_entity_table_error_warning,
+    format_diagram_error_warning, format_empty_listing_error_warning,
     format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
     format_object_type_mismatch_warning,
 };
 use super::entity_schema::{load_entity_schema, load_entity_templates};
 use super::suppression::{
-    retain_reportable_diagram_errors, retain_reportable_entity_table_errors,
+    retain_reportable_diagram_errors, retain_reportable_empty_listing_errors,
     retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
     retain_reportable_math_errors, retain_reportable_mismatches,
 };
@@ -37,7 +37,7 @@ pub(super) struct RenderedPage {
     pub object_type_mismatches: Vec<renderer::ObjectTypeMismatch>,
     pub math_errors: Vec<renderer::MathError>,
     /// Listing directives whose filter matched no entity.
-    pub entity_table_errors: Vec<renderer::EntityTableError>,
+    pub empty_listing_errors: Vec<renderer::EmptyListingError>,
     pub diagram_errors: Vec<renderer::DiagramError>,
     /// The `PlantUML` text of each diagram on the page, for the compile action.
     pub diagram_sources: Vec<ast::HashedContent>,
@@ -121,8 +121,8 @@ pub(super) fn process_render(
             &doc.suppressions,
         ),
         math_errors: retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions),
-        entity_table_errors: retain_reportable_entity_table_errors(
-            &render_output.entity_table_errors,
+        empty_listing_errors: retain_reportable_empty_listing_errors(
+            &render_output.empty_listing_errors,
             &doc.suppressions,
         ),
         diagram_errors: retain_reportable_diagram_errors(
@@ -225,8 +225,8 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     for error in &page.math_errors {
         eprintln!("{}", format_math_error_warning(&origin, error));
     }
-    for error in &page.entity_table_errors {
-        eprintln!("{}", format_entity_table_error_warning(&origin, error));
+    for error in &page.empty_listing_errors {
+        eprintln!("{}", format_empty_listing_error_warning(&origin, error));
     }
     for error in &page.diagram_errors {
         eprintln!("{}", format_diagram_error_warning(&origin, error));

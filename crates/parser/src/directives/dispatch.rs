@@ -18,6 +18,7 @@ use super::domains::{DirectiveSignatures, parse_domain_object};
 use super::dropdown::parse_dropdown;
 use super::entity::{EntityDirective, parse_entity};
 use super::entity_flow::parse_entity_flow;
+use super::entity_pie::parse_entity_pie;
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::entity_table::parse_entity_table;
 use super::error_node::unknown_directive;
@@ -586,6 +587,20 @@ fn try_parse_extension_directive(
             ctx,
         ));
     }
+    // This build's own pie chart, and sphinx-needs' spelling of it. The third
+    // presentation of the listing directive's question — rows, a graph, or
+    // proportions — and the only picture here that is never compiled: its SVG
+    // is drawn by the render action itself.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityPieSource>() {
+        return Some(parse_entity_pie(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
     // sphinxcontrib-plantuml's two names, this build's two diagram names and
     // sphinx-needs' two — one node, one parser. The plain PlantUML pair is
     // nobody's extension in the sense the others are, but it belongs to the
@@ -1128,6 +1143,10 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     // spelling of it.
     "entity-flow",
     "needflow",
+    // This build's own pie chart over the entity graph, and sphinx-needs'
+    // spelling of it.
+    "entity-pie",
+    "needpie",
     // sphinx-needs' import, which keeps its own name alone — see
     // `docs/decisions/016-needimport.md` for why `entity-import` is not
     // claimed beside it.

@@ -1,4 +1,4 @@
-use crate::expr::{CompareOp, Expr, Operand};
+use crate::expr::{Affix, CompareOp, Expr, Operand};
 use crate::field_name::FieldName;
 use crate::value::{FieldValue, Literal};
 
@@ -41,6 +41,9 @@ impl Expr {
                 let found = haystack_contains(needle, haystack, subject);
                 found != *negated
             }
+            Self::TextAffix { field, affix, text } => {
+                has_affix(&subject.field(field), *affix, text)
+            }
             Self::IsNone { field, negated } => {
                 let missing = subject.field(field) == FieldValue::Missing;
                 missing != *negated
@@ -79,6 +82,20 @@ fn operands_are_equal(left: &Operand, right: &Operand, subject: &impl FilterSubj
             matches!(&left_value, FieldValue::List(left_items) if left_items == items)
         }
     }
+}
+
+/// Whether `value` starts or ends with `text`.
+///
+/// Measured through [`FieldValue::as_text`], the same view
+/// [`FieldValue::contains`] takes, so `"F" in id` and `id.startswith("F")`
+/// agree about what a non-text field is worth. A list has no text form and a
+/// missing value has none, so both are `false` — an entity that lacks the
+/// field simply does not match, which is this language's rule everywhere.
+fn has_affix(value: &FieldValue, affix: Affix, text: &str) -> bool {
+    value.as_text().is_some_and(|value| match affix {
+        Affix::Prefix => value.starts_with(text),
+        Affix::Suffix => value.ends_with(text),
+    })
 }
 
 /// Whether `haystack` contains `needle`.

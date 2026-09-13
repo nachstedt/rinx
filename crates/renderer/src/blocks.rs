@@ -32,6 +32,7 @@ mod domain_object;
 mod dropdown;
 mod entity;
 mod entity_flow;
+mod entity_pie;
 mod entity_table;
 mod figure;
 mod glossary;

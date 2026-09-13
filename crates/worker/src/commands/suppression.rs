@@ -11,7 +11,7 @@
 
 use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, Suppression};
 use rusty_sphinx_renderer::{
-    BrokenLink, DiagramError, EntityTableError, HighlightError, ImageError, MathError,
+    BrokenLink, DiagramError, EmptyListingError, HighlightError, ImageError, MathError,
     ObjectTypeMismatch,
 };
 
@@ -74,10 +74,10 @@ pub(super) fn retain_reportable_math_errors(
 ///
 /// Owned for the same reason [`retain_reportable_links`] returns owned links:
 /// a suppressed table must leave no trace in the warning sidecar either.
-pub(super) fn retain_reportable_entity_table_errors(
-    errors: &[EntityTableError],
+pub(super) fn retain_reportable_empty_listing_errors(
+    errors: &[EmptyListingError],
     suppressions: &[Suppression],
-) -> Vec<EntityTableError> {
+) -> Vec<EmptyListingError> {
     errors
         .iter()
         .filter(|error| !is_suppressed(suppressions, error.code(), error.span))

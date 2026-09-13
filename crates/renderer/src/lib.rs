@@ -15,7 +15,7 @@ mod blocks;
 mod broken_link;
 pub mod config;
 mod embedded_assets;
-mod entity_table_error;
+mod empty_listing_error;
 mod highlight;
 mod image_error;
 mod inline;
@@ -23,13 +23,14 @@ mod math;
 mod nav;
 mod octicon;
 mod page;
+mod pie_chart;
 mod resolution;
 mod uml_error;
 
 pub use blocks::EntityTemplates;
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 pub use embedded_assets::EmbeddedAssets;
-pub use entity_table_error::EntityTableError;
+pub use empty_listing_error::EmptyListingError;
 pub use highlight::{HighlightError, HighlightErrorKind};
 pub use image_error::ImageError;
 pub use math::MathError;
@@ -59,7 +60,7 @@ pub struct RenderOutput {
     pub math_errors: Vec<MathError>,
     /// Listing directives whose filter matched nothing. Only reportable here:
     /// whether a filter selects anything depends on the whole project.
-    pub entity_table_errors: Vec<EntityTableError>,
+    pub empty_listing_errors: Vec<EmptyListingError>,
     /// Diagrams whose template could not be expanded against the project.
     pub diagram_errors: Vec<DiagramError>,
     /// The `PlantUML` text of every diagram on the page, one entry per
@@ -111,7 +112,7 @@ pub(crate) struct RenderCtx<'a> {
     pub broken_links: &'a mut Vec<BrokenLink>,
     pub object_type_mismatches: &'a mut Vec<ObjectTypeMismatch>,
     pub math_errors: &'a mut Vec<MathError>,
-    pub entity_table_errors: &'a mut Vec<EntityTableError>,
+    pub empty_listing_errors: &'a mut Vec<EmptyListingError>,
     /// Where a diagram whose template failed to expand is recorded.
     pub diagram_errors: &'a mut Vec<DiagramError>,
     /// Where each diagram's expanded text is recorded for the compile action.
@@ -247,7 +248,7 @@ pub fn render_with_assets(
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
     let mut math_errors = Vec::new();
-    let mut entity_table_errors = Vec::new();
+    let mut empty_listing_errors = Vec::new();
     let mut diagram_errors = Vec::new();
     let mut diagram_sources = Vec::new();
     let mut highlight_errors = Vec::new();
@@ -280,7 +281,7 @@ pub fn render_with_assets(
         broken_links: &mut broken_links,
         object_type_mismatches: &mut object_type_mismatches,
         math_errors: &mut math_errors,
-        entity_table_errors: &mut entity_table_errors,
+        empty_listing_errors: &mut empty_listing_errors,
         diagram_errors: &mut diagram_errors,
         diagram_sources: &mut diagram_sources,
         math: &math,
@@ -307,7 +308,7 @@ pub fn render_with_assets(
         broken_links,
         object_type_mismatches,
         math_errors,
-        entity_table_errors,
+        empty_listing_errors,
         diagram_errors,
         diagram_sources,
         highlight_errors,

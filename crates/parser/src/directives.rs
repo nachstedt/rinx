@@ -53,6 +53,7 @@ mod dropdown;
 mod entity;
 mod entity_fields;
 mod entity_flow;
+mod entity_pie;
 mod entity_section;
 mod entity_table;
 mod error_node;
