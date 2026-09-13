@@ -413,3 +413,70 @@ class TomlRenderingTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ImportKeysTest(unittest.TestCase):
+    """`[needs.import_keys]` maps a name a `.. needimport::` may write onto the
+    file it stands for. This build reads the same table from the entity schema,
+    so the conversion is a straight copy."""
+
+    def test_import_keys_are_carried_over_verbatim(self):
+        # Given the table the sphinx-needs demo declares
+        needs = {"import_keys": {"imported_project": "/needs_import.json"}}
+
+        # When it is converted
+        text, _report = convert(needs)
+
+        # Then the value crosses unchanged. sphinx-needs writes it
+        # source-root-relative with a leading `/`, which is exactly how this
+        # build resolves a path in an entity schema, so there is nothing to
+        # translate.
+        self.assertIn("[import_keys]", text)
+        self.assertIn('imported_project = "/needs_import.json"', text)
+
+    def test_the_table_is_emitted_before_the_first_entity_type(self):
+        # Given a project declaring both an import key and a type
+        needs = {
+            "import_keys": {"upstream": "/u.json"},
+            "types": [{"directive": "req", "title": "Requirement"}],
+        }
+
+        # When it is converted
+        text, _report = convert(needs)
+
+        # Then the top-level table comes first. Written after an array of
+        # tables it would still be top-level, but it reads as if it were
+        # nested — and between `[[entity_type]]` and `[[entity_type.attribute]]`
+        # it would break the nesting outright.
+        self.assertLess(text.index("[import_keys]"), text.index("[[entity_type]]"))
+
+    def test_a_project_without_import_keys_emits_no_table(self):
+        # Given a project that declares none
+        needs = {"types": [{"directive": "req", "title": "Requirement"}]}
+
+        # When it is converted
+        text, _report = convert(needs)
+
+        # Then nothing is emitted, rather than an empty table
+        self.assertNotIn("[import_keys]", text)
+
+    def test_import_keys_are_not_reported_as_unconvertible(self):
+        # Given a project declaring an import key
+        needs = {"import_keys": {"upstream": "/u.json"}}
+
+        # When it is converted
+        _text, report = convert(needs)
+
+        # Then it is absent from the report: the construct is supported, and
+        # listing it would overstate what a migrating project loses.
+        self.assertNotIn("import keys", report_categories(report))
+
+    def test_import_keys_reads_the_table_on_its_own(self):
+        # Given the table, and a project without one
+        # When each is read
+        # Then the helper is a plain copy, and missing means empty
+        self.assertEqual(
+            needs_schema.import_keys({"import_keys": {"a": "/a.json"}}),
+            {"a": "/a.json"},
+        )
+        self.assertEqual(needs_schema.import_keys({}), {})

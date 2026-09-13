@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde::Serialize;
 
 use crate::backlinks::{BacklinkSpec, BacklinkTable, derive_backlinks};
@@ -17,10 +19,17 @@ pub struct EntitySchema {
     roles: Vec<RoleSpec>,
     backlinks: BacklinkTable,
     hash: String,
+    import_keys: BTreeMap<String, String>,
 }
 
 /// The shape hashed to identify a schema, independent of the presentation
 /// details of the file it was written in.
+///
+/// [`EntitySchema::import_keys`] is deliberately **not** part of it. The hash
+/// exists so a library and the site agree on the vocabulary the *index* and
+/// the *renderer* read — that is what `entity.schema-mismatch` catches — and
+/// an import key is read only while parsing. Adding it would make the hash
+/// sensitive to something no later phase can observe, so leave it out.
 #[derive(Serialize)]
 struct SchemaFingerprint<'a> {
     types: &'a [EntityType],
@@ -42,7 +51,27 @@ impl EntitySchema {
             roles,
             backlinks,
             hash,
+            import_keys: BTreeMap::new(),
         })
+    }
+
+    /// Records the `[import_keys]` table, as written.
+    ///
+    /// A builder rather than a parameter on [`Self::new`] because it changes
+    /// nothing the constructor checks: the values are paths, whose meaning
+    /// depends on where the schema file itself sits, and only the worker knows
+    /// that. It resolves them; see `commands::entity_schema`.
+    #[must_use]
+    pub fn with_import_keys(mut self, import_keys: BTreeMap<String, String>) -> Self {
+        self.import_keys = import_keys;
+        self
+    }
+
+    /// The `[import_keys]` table: an alias a `.. needimport::` may write,
+    /// mapped to the file it stands for, exactly as the schema spelled it.
+    #[must_use]
+    pub fn import_keys(&self) -> &BTreeMap<String, String> {
+        &self.import_keys
     }
 
     /// A borrowable empty schema with the process's lifetime.
@@ -67,6 +96,7 @@ impl EntitySchema {
             roles: Vec::new(),
             backlinks: BacklinkTable::new(),
             hash: fingerprint(&[], &[]),
+            import_keys: BTreeMap::new(),
         }
     }
 
@@ -333,5 +363,49 @@ mod tests {
 
         // Then
         assert_eq!(schema, EntitySchema::empty());
+    }
+
+    #[test]
+    fn test_import_keys_do_not_change_the_schema_fingerprint() {
+        // Given one schema, and the same schema with an import key added
+        let plain = EntitySchema::new(Vec::new(), Vec::new()).expect("valid");
+        let hash = plain.hash().to_string();
+        let keyed = EntitySchema::new(Vec::new(), Vec::new())
+            .expect("valid")
+            .with_import_keys(BTreeMap::from([(
+                "upstream".to_string(),
+                "/needs.json".to_string(),
+            )]));
+
+        // Then the fingerprint is unmoved. It exists so a library and the site
+        // agree on the vocabulary the *index* and *renderer* read, and an
+        // import key is read only while parsing — making the hash sensitive to
+        // it would report `entity.schema-mismatch` for a difference no later
+        // phase can observe.
+        assert_eq!(keyed.hash(), hash);
+    }
+
+    #[test]
+    fn test_a_declared_type_does_change_the_schema_fingerprint() {
+        // Given an empty schema and one declaring a type
+        let empty = EntitySchema::empty();
+        let with_type = EntitySchema::new(
+            vec![crate::entity_type::EntityType {
+                name: "req".to_string(),
+                label: None,
+                argument: crate::argument::ArgumentSpec::default(),
+                id: crate::id::IdSpec::default(),
+                template: None,
+                attributes: Vec::new(),
+                sections: Vec::new(),
+                relations: Vec::new(),
+            }],
+            Vec::new(),
+        )
+        .expect("valid");
+
+        // Then the hash moves — the pin above narrows what the fingerprint
+        // ignores, it does not disable it
+        assert_ne!(with_type.hash(), empty.hash());
     }
 }

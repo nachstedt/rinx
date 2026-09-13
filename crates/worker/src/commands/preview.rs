@@ -16,7 +16,7 @@ use super::diagnostics::{
     format_math_error_warning, format_object_type_mismatch_warning, report_diagnostic,
 };
 use super::embed_assets::embed_available_assets;
-use super::entity_schema::{load_entity_schema, load_entity_templates};
+use super::entity_schema::{import_keys_from_args, load_entity_schema, load_entity_templates};
 use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::{ParseInputs, jinja_from_args};
@@ -195,6 +195,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     // The editor's buffer is templated exactly as the file on disk would be,
     // which is the whole point of the preview sharing `ParseInputs`.
     let jinja = jinja_from_args(args)?;
+    let import_keys = import_keys_from_args(args, &schema);
     let page = process_preview(
         &rst,
         index_json.as_deref(),
@@ -208,6 +209,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
             files: &DocumentRelativeFiles::for_document(&doc_path),
             schema: &schema,
             jinja: jinja.as_deref(),
+            import_keys: &import_keys,
         },
         &load_entity_templates(args)?,
     )?;
@@ -245,6 +247,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
 mod tests {
     use super::*;
     use rusty_sphinx_entity::EntitySchema;
+    use std::collections::BTreeMap;
 
     /// A loader rooted at a directory holding no CSV files, for the tests
     /// whose input has no `:file:` option.
@@ -273,6 +276,7 @@ mod tests {
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
                 jinja: None,
+                import_keys: &BTreeMap::new(),
             },
             &renderer::EntityTemplates::new(),
         )
@@ -304,6 +308,7 @@ mod tests {
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
                 jinja: None,
+                import_keys: &BTreeMap::new(),
             },
             &renderer::EntityTemplates::new(),
         )
@@ -333,6 +338,7 @@ mod tests {
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
                 jinja: None,
+                import_keys: &BTreeMap::new(),
             },
             &renderer::EntityTemplates::new(),
         )

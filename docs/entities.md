@@ -788,7 +788,133 @@ Deliberately **not** supported:
   pipeline too. `needtable`, `needflow`, `needuml` and `needarch` *are*
   supported; see "Listing entities", "Flowcharts of the graph" and "Diagramming
   entities".
-- **Dynamic functions** (`[[copy('id')]]`) and `needextend`.
+- **Dynamic functions** (`[[copy('id')]]`), `needextend` and `needservice`.
+  `needimport` *is* supported — see "Importing from sphinx-needs" below.
+
+---
+
+## Importing from sphinx-needs
+
+`.. needimport::` reads a sphinx-needs `needs.json` and turns every need in it
+into an entity of the importing document. It is a **migration bridge**: it
+keeps an existing project's import lines working, and deliberately does not
+take a name of this build's own — `entity-import` is left free for a richer
+construct later. *(Why it is built this way:
+`docs/decisions/016-needimport.md`.)*
+
+```rst
+.. needimport:: needs.json
+   :version: 2.0
+   :ids: PLAT_REQ_1, PLAT_REQ_2
+   :filter: "startup" in tags
+   :id_prefix: EXT_
+   :tags: imported, upstream
+```
+
+Because the file is read *while parsing*, an imported need is an ordinary
+entity in every later phase: it is indexed, it is a `:ref:` target, its
+relations contribute derived back-links, and `.. entity-table::` and
+`.. entity-flow::` list and draw it. There is no notion of an "external"
+entity.
+
+### Options
+
+| option | what it does |
+|---|---|
+| *(argument)* | the `needs.json` to read, relative to the document, or to the source root with a leading `/` |
+| `:version:` | which version block to import; defaults to the file's `current_version`, or to its sole version |
+| `:ids:` | import only the needs named, as a comma-separated list |
+| `:filter:` | import only the needs matching, in the same filter language a listing directive uses |
+| `:id_prefix:` | prepend a prefix to every imported id, rewriting the links *within this import* to match |
+| `:tags:` | add these values to each imported entity's `tags` attribute |
+
+### What the schema decides
+
+The schema is the authority over the file, not the other way round:
+
+- A need's `type` must name a declared entity type; one that does not is
+  reported and skipped.
+- Its other fields must be attributes or relations that type declares. Values
+  go through the same validation a written `:option:` does, so an `enum`
+  cannot accept something when imported that it would refuse when typed.
+- sphinx-needs' own bookkeeping keys are ignored by design — `docname`,
+  `lineno`, `is_need`, `is_external`, `sections`, `parent_needs`, `layout`,
+  `constraints*`, the whole `type_*` family and some thirty more. A field that
+  is neither bookkeeping nor declared is **reported**, not dropped, since the
+  likeliest cause is a project attribute the schema has not declared yet.
+- A need's body comes from its `content` field, parsed as reStructuredText
+  into the unnamed content section. Named sections cannot be imported: the
+  format has no way to express one.
+- **An unset field is silent.** A `needs.json` writes every registered option
+  for every need, most of them empty, so an undeclared field with an empty
+  value or an explicit `null` is ignored rather than reported — the author
+  wrote neither. A field carrying a real value is still reported. A back-link
+  this project *derives* is ignored for the same reason: the incoming side is
+  computed project-wide, so a file's stored copy of it is discarded.
+
+### Importing by name
+
+An argument may be a *name* instead of a path, declared in the schema's
+top-level `[import_keys]` table — sphinx-needs spells the same thing
+`needs_import_keys` in its `conf.py`:
+
+```toml
+[import_keys]
+upstream_platform = "needs.json"
+```
+
+```rst
+.. needimport:: upstream_platform
+```
+
+It lives in `entities.toml` rather than in the build file because the alias is
+written in a *document*: a reader needs the map to understand the line, and it
+should travel with the documents. A value resolves like every other written
+path here — relative to the schema file, or to the source root with a leading
+`/` — so a schema and the data files beside it move together.
+
+The name is looked up *before* the argument is treated as a path, which is the
+order sphinx-needs resolves in, so a key may be spelled with a `.json` suffix
+and still win over a file of that name.
+
+### Build wiring
+
+The file is ordinary `parse_data` — a file the parser opens, like the `.csv`
+behind a `.. csv-table::`'s `:file:`, not a dependency on another library. A
+file named through `[import_keys]` needs its entry too: a config file can say
+what a name means, but only the build system can put the file in the parse
+action's sandbox.
+
+```python
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    entity_schema = "entities.toml",
+    parse_data = ["needs.json"],
+)
+```
+
+There is no cache firewall, as there is none for `.. include::`: editing the
+`needs.json` re-parses and re-renders every document that imports it, because
+the needs really are part of those documents.
+
+### What it does not do
+
+- **Nothing is fetched.** sphinx-needs accepts an `http`/`https` URL; a
+  sandboxed build action may only read files declared before it runs, so a URL
+  is refused by name.
+- **A name matching no declared import key** is refused by name rather than
+  opened as a file, so a forgotten `[import_keys]` entry warns where a
+  forgotten `parse_data` entry fails the build.
+- **`:hide:`, `:collapse:`, `:layout:` and `:style:`** are refused by name.
+  Presentation comes from the schema's per-type `template` and the render-time
+  site config.
+- **`:setup:`, `:pre_template:` and `:post_template:`** are refused by name.
+  They run Python.
+- **A `.. noqa:` cannot silence a diagnostic from imported prose**, which
+  carries no position — JSON has no line to point at. The `needimport.*`
+  diagnostics themselves are reported against the directive's own line and
+  suppress normally.
 
 ---
 
@@ -812,6 +938,29 @@ name.
 | `entity.missing-required-section` | a `required` section not written |
 | `entity.missing-required-relation` | a `required` relation with no target |
 | `entity.multiple-relation-targets` | several targets on a single-target relation |
+
+And, for a `.. needimport::`, reported against the directive's own line, since
+a `needs.json` has no line of its own to name:
+
+| code | when |
+|---|---|
+| `needimport.missing-path` | no file to import |
+| `needimport.remote-source` | an `http`/`https` argument, which is never fetched |
+| `needimport.unsupported-import-key` | an argument that is not a path to a `.json` file, such as a `needs_import_keys` alias |
+| `needimport.file-unreadable` | the file could not be read; usually a missing `parse_data` entry |
+| `needimport.malformed-json` | the file is not a readable `needs.json` |
+| `needimport.unknown-version` | no single version block could be chosen |
+| `needimport.unknown-type` | a need whose `type` names no declared entity type |
+| `needimport.unknown-field` | a field that is neither bookkeeping nor declared |
+| `needimport.invalid-value` | a JSON value no option could have been written with |
+| `needimport.invalid-id` | a need whose id is missing or illegal |
+| `needimport.unknown-id` | an `:ids:` entry the file does not hold |
+| `needimport.invalid-filter` | a `:filter:` the filter language cannot parse |
+| `needimport.unknown-filter-field` | a `:filter:` naming an undeclared field |
+| `needimport.unsupported-option` | one of sphinx-needs' options this build refuses |
+| `needimport.unknown-option` | an option this directive does not accept |
+| `needimport.no-tags-attribute` | `:tags:` on a type declaring no list attribute `tags` |
+| `needimport.empty-result` | an import that selected no need at all |
 
 **While building the index**, attributed to the document that wrote the source
 entity:

@@ -61,6 +61,7 @@ pub fn load_schema(
     })?;
 
     let mut errors = Vec::new();
+    let import_keys = raw.import_keys;
     let declared_types: Vec<String> = raw.entity_type.iter().map(|t| t.name.clone()).collect();
 
     let types: Vec<EntityType> = raw
@@ -88,7 +89,9 @@ pub fn load_schema(
     if !errors.is_empty() {
         return Err(SchemaErrors(errors));
     }
-    EntitySchema::new(types, roles).map_err(SchemaErrors)
+    EntitySchema::new(types, roles)
+        .map(|schema| schema.with_import_keys(import_keys))
+        .map_err(SchemaErrors)
 }
 
 /// Reports each name that appears more than once in `names`.
@@ -333,6 +336,16 @@ fn check_declared_types(
 #[serde(deny_unknown_fields)]
 #[schemars(title = "rusty-sphinx entity schema")]
 pub(crate) struct RawSchema {
+    /// Names a `.. needimport::` may write instead of a path, each mapped to
+    /// the file it stands for — sphinx-needs' `needs_import_keys`.
+    ///
+    /// A path, unlike the `template` an entity type names: the alias is
+    /// written in a *document*, so its meaning belongs with the project's
+    /// vocabulary rather than in the build file. The file it names must still
+    /// be declared in the library's `parse_data`, since only the build system
+    /// can put it in the parse action's sandbox.
+    #[serde(default)]
+    import_keys: std::collections::BTreeMap<String, String>,
     /// The entity types this project declares, one `[[entity_type]]` each.
     #[serde(default)]
     entity_type: Vec<RawEntityType>,

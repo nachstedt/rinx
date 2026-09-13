@@ -18,8 +18,12 @@ use rusty_sphinx_ast::{
     AttributeValue, Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, EntitySection,
     Node, Span,
 };
-use rusty_sphinx_entity::{EntityType, ID_OPTION, IdContext, parse_attribute_value, split_list};
+use rusty_sphinx_entity::{EntityType, ID_OPTION, IdContext};
 
+use super::entity_fields::{
+    apply_defaults, collect_relation_targets, describe_options, report_missing_attributes,
+    report_relation_cardinality, store_attribute,
+};
 use super::options::{OptionLine, scan_option_lines};
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
@@ -194,115 +198,6 @@ fn collect_options(
     relations
 }
 
-/// Parses one attribute's text and records it, or diagnoses why it could not.
-fn store_attribute(
-    schema: &rusty_sphinx_entity::AttributeSchema,
-    name: &str,
-    text: &str,
-    span: Option<Span>,
-    attributes: &mut BTreeMap<String, AttributeValue>,
-    diagnostics: &mut Diagnostics,
-) {
-    match parse_attribute_value(&schema.value_type, text) {
-        Ok(value) => {
-            attributes.insert(name.to_string(), value);
-        }
-        Err(error) => diagnostics.push(Diagnostic::at(
-            DiagnosticCode::EntityInvalidAttributeValue,
-            format!("`:{name}:`: {error}"),
-            span,
-        )),
-    }
-}
-
-/// Reads a relation option's comma-separated ids, diagnosing illegal ones.
-fn collect_relation_targets(
-    text: &str,
-    span: Option<Span>,
-    diagnostics: &mut Diagnostics,
-) -> Vec<EntityId> {
-    let mut targets = Vec::new();
-    for written in split_list(text) {
-        match EntityId::new(&written) {
-            Ok(id) => targets.push(id),
-            Err(error) => diagnostics.push(Diagnostic::at(
-                DiagnosticCode::EntityInvalidId,
-                format!("link target {written:?}: {error}"),
-                span,
-            )),
-        }
-    }
-    targets
-}
-
-/// Supplies the declared default for every attribute left unset.
-fn apply_defaults(entity_type: &EntityType, attributes: &mut BTreeMap<String, AttributeValue>) {
-    for schema in &entity_type.attributes {
-        let Some(default) = schema.default.as_deref() else {
-            continue;
-        };
-        if attributes.contains_key(&schema.name) {
-            continue;
-        }
-        // A default that does not fit its own type is a schema fault, not an
-        // author's, and this is not the phase that reports it — a value that
-        // fails to parse here is simply left unset.
-        if let Ok(value) = parse_attribute_value(&schema.value_type, default) {
-            attributes.insert(schema.name.clone(), value);
-        }
-    }
-}
-
-/// Reports every `required` attribute the entity left unset.
-fn report_missing_attributes(
-    entity_type: &EntityType,
-    attributes: &BTreeMap<String, AttributeValue>,
-    span: Option<Span>,
-    diagnostics: &mut Diagnostics,
-) {
-    for schema in &entity_type.attributes {
-        if schema.required && !attributes.contains_key(&schema.name) {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::EntityMissingRequiredAttribute,
-                format!("`.. {}::` requires `:{}:`", entity_type.name, schema.name),
-                span,
-            ));
-        }
-    }
-}
-
-/// Reports relations written too few or too many times.
-fn report_relation_cardinality(
-    entity_type: &EntityType,
-    relations: &BTreeMap<String, Vec<EntityId>>,
-    span: Option<Span>,
-    diagnostics: &mut Diagnostics,
-) {
-    for relation in &entity_type.relations {
-        let targets = relations.get(&relation.name).map_or(0, Vec::len);
-        if relation.required && targets == 0 {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::EntityMissingRequiredRelation,
-                format!(
-                    "`.. {}::` requires at least one target on `:{}:`",
-                    entity_type.name, relation.name
-                ),
-                span,
-            ));
-        }
-        if !relation.multiple && targets > 1 {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::EntityMultipleRelationTargets,
-                format!(
-                    "`:{}:` takes one target, but {targets} were given",
-                    relation.name
-                ),
-                span,
-            ));
-        }
-    }
-}
-
 /// Determines the entity's id, degrading to a generated one on failure.
 ///
 /// A parse that could not determine an id still yields an entity: this parser
@@ -460,16 +355,6 @@ fn report_section_cardinality(
             ));
         }
     }
-}
-
-/// Lists a type's option vocabulary for an unknown-option diagnostic.
-fn describe_options(entity_type: &EntityType) -> String {
-    let names = entity_type.option_names();
-    names
-        .iter()
-        .map(|name| format!(":{name}:"))
-        .collect::<Vec<_>>()
-        .join(", ")
 }
 
 #[cfg(test)]

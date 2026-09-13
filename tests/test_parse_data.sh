@@ -5,10 +5,15 @@
 # parse action's sandbox, rather than the build merely finding it in the source
 # tree.
 #
-# Three directives read files at parse time, and each is checked here:
+# Four directives read files at parse time, and each is checked here:
 #   - `.. csv-table::` with `:file:`   (examples/csv_table.rst)
 #   - `.. include::`                   (examples/includes.rst)
 #   - `.. literalinclude::`            (examples/includes.rst)
+#   - `.. needimport::`                (examples/entities/imported.rst)
+#
+# The last one lives in a different package, which is why the BUILD file to
+# edit is a parameter rather than a constant: `entities.toml` is a parse-time
+# input too, so the entity documents have a library of their own.
 
 set -euo pipefail
 
@@ -16,15 +21,21 @@ set -euo pipefail
 # is installed; override with BAZEL=... to pin a specific one.
 BAZEL=${BAZEL:-bazel}
 
-BUILD_FILE=examples/BUILD.bazel
+ROOT_BUILD=examples/BUILD.bazel
+ENTITY_BUILD=examples/entities/BUILD.bazel
 CSV_DOC=examples/csv_table.rst
 INCLUDE_DOC=examples/includes.rst
+IMPORT_DOC=examples/entities/imported.rst
+
+# Every file this run has copied aside, so a failure at any point puts the
+# working tree back exactly as it found it.
+EDITED=("$ROOT_BUILD" "$ENTITY_BUILD" "$CSV_DOC" "$INCLUDE_DOC" "$IMPORT_DOC")
 
 restore() {
-    for f in "$BUILD_FILE" "$CSV_DOC" "$INCLUDE_DOC"; do
+    for f in "${EDITED[@]}"; do
         if [ -f "$f.bak" ]; then mv "$f.bak" "$f"; fi
+        rm -f "$f.tmp"
     done
-    rm -f "$BUILD_FILE.tmp" "$CSV_DOC.tmp" "$INCLUDE_DOC.tmp"
 }
 trap restore EXIT
 
@@ -36,19 +47,25 @@ force_reparse() {
     printf '\n.. This comment exists only to force a re-parse; see tests/test_parse_data.sh\n' >> "$1"
 }
 
-# Drops one `parse_data` entry, forces the document that reads it to re-parse,
-# and asserts the build fails.
+# Drops one `parse_data` entry from `build_file`, forces the document that
+# reads it to re-parse, and asserts the build fails.
 expect_failure_without() {
-    local entry="$1" doc="$2" label="$3"
+    local build_file="$1" entry="$2" doc="$3" label="$4"
     echo "=== Testing undeclared $label ==="
-    cp "$BUILD_FILE" "$BUILD_FILE.bak"
+    cp "$build_file" "$build_file.bak"
     cp "$doc" "$doc.bak"
 
-    sed -i.tmp "\|\"$entry\",|d" "$BUILD_FILE"
-    # Only the list entry matters; the surrounding comments name these paths
-    # too, and leaving those in place is what keeps the diff honest.
-    if grep -q "\"$entry\"," "$BUILD_FILE"; then
-        echo "ERROR: failed to remove '$entry' from $BUILD_FILE; the test would not prove anything."
+    # Removes the entry from whatever list holds it, whether the list is
+    # written one item per line or inline — a single-element `parse_data` is
+    # spelled `["needs.json"]`, with no trailing comma to anchor on. Comment
+    # lines are skipped: they name these paths too, and leaving them in place
+    # is what keeps the diff honest.
+    sed -i.tmp -E "/^[[:space:]]*#/! s|\"$entry\",?[[:space:]]*||" "$build_file"
+    # Compared against the copy rather than grepped for, since the surrounding
+    # comments would match a grep and a test that removed nothing would then
+    # prove nothing.
+    if cmp -s "$build_file" "$build_file.bak"; then
+        echo "ERROR: failed to remove '$entry' from $build_file; the test would not prove anything."
         exit 1
     fi
     force_reparse "$doc"
@@ -70,9 +87,10 @@ else
     exit 1
 fi
 
-expect_failure_without "data/fruits.csv"          "$CSV_DOC"     "csv-table :file:"
-expect_failure_without "shared/parameters.rst"    "$INCLUDE_DOC" "include source"
-expect_failure_without "shared/greeter.py"        "$INCLUDE_DOC" "literalinclude source"
+expect_failure_without "$ROOT_BUILD"   "data/fruits.csv"       "$CSV_DOC"     "csv-table :file:"
+expect_failure_without "$ROOT_BUILD"   "shared/parameters.rst" "$INCLUDE_DOC" "include source"
+expect_failure_without "$ROOT_BUILD"   "shared/greeter.py"     "$INCLUDE_DOC" "literalinclude source"
+expect_failure_without "$ENTITY_BUILD" "needs.json"            "$IMPORT_DOC"  "needimport source"
 
 echo "=== All parse_data cases behaved correctly ==="
 exit 0

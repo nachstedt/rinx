@@ -70,7 +70,7 @@ def convert(ubproject, schemas=None):
         types.append(entity_type(raw_type, needs, fields, relations, required))
 
     report.extend(unsupported_constructs(needs))
-    return render_schema(types, roles(types)), report
+    return render_schema(types, roles(types), import_keys(needs)), report
 
 
 # ── Entity types ──────────────────────────────────────────────────────────────
@@ -256,6 +256,17 @@ def required_options_by_type(schemas, report):
 
 # ── Constructs with no equivalent ─────────────────────────────────────────────
 
+def import_keys(needs):
+    """The `[needs.import_keys]` table: names a `.. needimport::` may write
+    instead of a path.
+
+    Carried over verbatim, values included. sphinx-needs writes them
+    source-root-relative with a leading `/`, which is exactly how this build
+    resolves a path in an entity schema, so there is nothing to translate — and
+    nothing to report as unconvertible either."""
+    return dict(needs.get("import_keys") or {})
+
+
 def unsupported_constructs(needs):
     """Everything in the sphinx-needs configuration our model cannot express.
 
@@ -298,13 +309,16 @@ def unsupported_constructs(needs):
 
 # ── TOML rendering ────────────────────────────────────────────────────────────
 
-def render_schema(types, declared_roles):
+def render_schema(types, declared_roles, keys=None):
     """Render the converted model as `entities.toml` text.
 
     Written by hand rather than through a TOML library so the benchmark keeps
     its zero-dependency `py_binary` — the shape emitted here is a fixed handful
     of tables, and `Cargo.bazel.lock`-style repinning for a formatting
-    convenience is not worth it."""
+    convenience is not worth it.
+
+    `keys` is the `[import_keys]` table, which defaults to none so the existing
+    callers that render a schema alone keep working."""
     lines = [
         "#:schema ../../schemas/entities.schema.json",
         "#",
@@ -312,6 +326,16 @@ def render_schema(types, declared_roles):
         "# Edits are lost on the next `bazel run //scripts:benchmark_entities`.",
         "",
     ]
+    if keys:
+        # Emitted before the first `[[entity_type]]`. A top-level table written
+        # after an array of tables is legal TOML but reads as if it were nested,
+        # and one written between `[[entity_type]]` and
+        # `[[entity_type.attribute]]` would break the nesting outright.
+        lines.append("# Files a `.. needimport::` may name instead of a path.")
+        lines.append("[import_keys]")
+        for alias, path in sorted(keys.items()):
+            lines.append(f"{alias} = {toml_value(path)}")
+        lines.append("")
     for entity in types:
         lines.append("[[entity_type]]")
         lines.append(f"name = {toml_value(entity['name'])}")

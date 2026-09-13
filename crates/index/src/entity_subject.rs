@@ -15,7 +15,7 @@
 //! resolves here, and neither side holds a second copy of the list.
 
 use crate::{EntityRecord, ProjectIndex};
-use rusty_sphinx_ast::{AttributeValue, EntityId};
+use rusty_sphinx_ast::EntityId;
 use rusty_sphinx_entity::EntitySchema;
 use rusty_sphinx_filter::{FieldName, FieldValue, FilterSubject};
 
@@ -79,23 +79,13 @@ impl EntitySubject<'_> {
     /// can match and the precedence never actually arbitrates.
     fn declared_field(&self, name: &str) -> FieldValue {
         if let Some(value) = self.record.attributes.get(name) {
-            return attribute_value(value);
+            return FieldValue::from(value);
         }
         if let Some(targets) = self.record.outgoing.get(name) {
             return FieldValue::List(targets.iter().map(ToString::to_string).collect());
         }
         self.backlink_targets(name)
             .map_or(FieldValue::Missing, FieldValue::List)
-    }
-}
-
-/// An entity's stored attribute value as the filter language sees it.
-fn attribute_value(value: &AttributeValue) -> FieldValue {
-    match value {
-        AttributeValue::String(text) => FieldValue::Text(text.clone()),
-        AttributeValue::Int(number) => FieldValue::Int(*number),
-        AttributeValue::Bool(flag) => FieldValue::Bool(*flag),
-        AttributeValue::List(items) => FieldValue::List(items.clone()),
     }
 }
 

@@ -444,3 +444,63 @@ fn test_resolve_attribute_type_pairs_each_spelling_with_its_values() {
         Err(())
     );
 }
+
+#[test]
+fn test_import_keys_are_read_as_written() {
+    // Given a schema declaring the aliases a `.. needimport::` may write
+    let text = r#"
+        [import_keys]
+        imported_project = "/needs_import.json"
+        upstream = "data/upstream.json"
+
+        [[entity_type]]
+        name = "req"
+    "#;
+
+    // When it is loaded
+    let schema = load_schema(text, &NoReservedNames).expect("the schema is valid");
+
+    // Then both survive exactly as spelled — resolving a value needs the
+    // schema file's own location, which this crate never sees
+    assert_eq!(
+        schema
+            .import_keys()
+            .get("imported_project")
+            .map(String::as_str),
+        Some("/needs_import.json")
+    );
+    assert_eq!(
+        schema.import_keys().get("upstream").map(String::as_str),
+        Some("data/upstream.json")
+    );
+}
+
+#[test]
+fn test_a_schema_without_import_keys_declares_none() {
+    // Given a schema that never mentions the table
+    let text = r#"
+        [[entity_type]]
+        name = "req"
+    "#;
+
+    // When it is loaded
+    let schema = load_schema(text, &NoReservedNames).expect("the schema is valid");
+
+    // Then the map is empty rather than absent, so every lookup simply misses
+    assert!(schema.import_keys().is_empty());
+}
+
+#[test]
+fn test_an_unknown_top_level_table_is_still_refused() {
+    // Given a misspelled table beside the real ones
+    let text = r#"
+        [import_key]
+        upstream = "u.json"
+    "#;
+
+    // When it is loaded
+    let errors = load_schema(text, &NoReservedNames).expect_err("the table is unknown");
+
+    // Then adding `import_keys` did not loosen `deny_unknown_fields`
+    assert!(errors.to_string().contains("import_key"), "{errors}");
+}
