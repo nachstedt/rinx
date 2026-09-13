@@ -1,4 +1,7 @@
-use rusty_sphinx_ast::{Directive, Domain};
+use super::error_node::malformed_directive;
+use crate::context::ParseCtx;
+use crate::diagnostics::Diagnostics;
+use rusty_sphinx_ast::{DiagnosticCode, Directive, Domain, Span};
 
 /// Tries to parse `name`/`argument` as one of the *scope* directives: the
 /// content-less, domain-qualified directives that document nothing and only
@@ -16,15 +19,21 @@ use rusty_sphinx_ast::{Directive, Domain};
 /// `split_domain_qualified_name` only splits on `:`, so the hyphen rides
 /// along in the bare name exactly as `code-block`/`list-table` already do.
 ///
-/// A `namespace-push` with no scope argument is malformed — it returns
-/// `None` so the caller falls through to `Directive::Unknown`, rather than
-/// being silently accepted as a no-op push that a later `namespace-pop`
-/// would then unbalance.
+/// A `namespace-push` with no scope argument is malformed — it degrades to
+/// [`Directive::Malformed`] and reports itself, rather than being silently
+/// accepted as a no-op push that a later `namespace-pop` would then unbalance.
+/// It is the one arm here that is *malformed* rather than unrecognized: every
+/// other miss is a name this domain genuinely does not define, so letting it
+/// fall through to `Directive::Unknown` says the right thing.
 pub(super) fn try_parse_scope_directive(
     name: &str,
     argument: &str,
-    default_domain: Domain,
+    directive_span: Option<Span>,
+    body_lines: &[&str],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
 ) -> Option<Directive> {
+    let default_domain = ctx.default_domain;
     // `.. program::` is `std`-domain and bypasses `default_domain` entirely,
     // exactly like `.. option::`/`.. cmdoption::` above (see
     // `resolve_domain_object_type`) — recognized unconditionally rather than
@@ -41,11 +50,21 @@ pub(super) fn try_parse_scope_directive(
         Some((Domain::C, "namespace")) => Some(Directive::CNamespace {
             namespace: parse_c_namespace_argument(argument),
         }),
-        Some((Domain::C, "namespace-push")) => {
-            (!argument.is_empty()).then(|| Directive::CNamespacePush {
+        Some((Domain::C, "namespace-push")) => Some(if argument.is_empty() {
+            malformed_directive(
+                name,
+                argument,
+                body_lines,
+                DiagnosticCode::DirectiveNamespacePushArgumentMissing,
+                format!("{name}: the directive needs a scope name as its argument"),
+                directive_span,
+                diagnostics,
+            )
+        } else {
+            Directive::CNamespacePush {
                 namespace: argument.to_string(),
-            })
-        }
+            }
+        }),
         // Any argument is ignored: real Sphinx's pop takes none, and undoes
         // the previous push whatever it was.
         Some((Domain::C, "namespace-pop")) => Some(Directive::CNamespacePop),
@@ -294,7 +313,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_c_namespace_push_without_argument_is_unknown() {
+    fn test_parse_c_namespace_push_without_argument_is_malformed() {
         // Given — a push with no scope is malformed; accepting it as a no-op
         // would leave a later `namespace-pop` unbalanced.
         let input = ".. c:namespace-push::";
@@ -305,8 +324,12 @@ mod tests {
         // Then
         assert!(matches!(
             &doc.nodes[0],
-            Node::Directive(Directive::Unknown { name, .. }) if name == "c:namespace-push"
+            Node::Directive(Directive::Malformed { name, .. }) if name == "c:namespace-push"
         ));
+        assert!(
+            doc.diagnostics.iter().any(|d| d.code
+                == rusty_sphinx_ast::DiagnosticCode::DirectiveNamespacePushArgumentMissing)
+        );
     }
 
     #[test]

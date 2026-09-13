@@ -9,6 +9,7 @@ use super::admonitions::{render_admonition, render_seealso, render_version_chang
 use super::block_quote::render_block_quote;
 use super::contents::{ContentsPlacement, render_contents_directive};
 use super::data_table::{DataTableParams, render_data_table};
+use super::directive_error::render_directive_error;
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
 use super::entity_flow::render_entity_flow;
@@ -544,6 +545,13 @@ fn render_directive(
             },
             ctx,
         ),
+        // A directive this build could not turn into content is the one
+        // failure that must never be silent: it takes everything written
+        // inside it off the page, so it is drawn as a visible error block
+        // quoting its source.
+        directive @ (Directive::Unknown { .. } | Directive::Malformed { .. }) => {
+            render_directive_error(html, directive);
+        }
         directive @ (Directive::PyCurrentModule { .. }
         | Directive::CNamespace { .. }
         | Directive::CNamespacePush { .. }
@@ -551,7 +559,6 @@ fn render_directive(
         | Directive::StdProgram { .. }
         | Directive::DocTest(_)
         | Directive::Sectnum(_)
-        | Directive::Unknown { .. }
         | Directive::SubstitutionDefinition(_)) => {
             render_side_effect_directive(html, directive, ctx);
         }
@@ -583,12 +590,9 @@ fn render_side_effect_directive(html: &mut String, directive: &Directive, ctx: &
             }
         }
         // `SubstitutionDefinition` was already spliced in by the parser's
-        // `resolve_substitutions` pass, `Sectnum`'s numbers are precomputed,
-        // and an unrecognized directive has nothing sensible to render — all
-        // three produce no output here.
-        Directive::Sectnum(_)
-        | Directive::Unknown { .. }
-        | Directive::SubstitutionDefinition(_) => {}
+        // `resolve_substitutions` pass and `Sectnum`'s numbers are
+        // precomputed, so both produce no output here.
+        Directive::Sectnum(_) | Directive::SubstitutionDefinition(_) => {}
         _ => unreachable!("render_directive routes every other variant to its own arm"),
     }
 }

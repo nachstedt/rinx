@@ -10,7 +10,7 @@ use rusty_sphinx_ast::{
 use super::options::{SharedTableOptions, parse_shared_table_options};
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
-use crate::directives::body::join_body_lines;
+use crate::directives::error_node::malformed_directive;
 use crate::directives::options::{report_unknown_options, scan_option_lines};
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
@@ -22,7 +22,7 @@ use crate::indent::unindent_body_lines;
 /// collected by `collect_directive_body`, exactly as every other
 /// content-bearing directive parser receives it.
 pub(in crate::directives) fn parse_list_table(
-    argument: String,
+    argument: &str,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -31,7 +31,7 @@ pub(in crate::directives) fn parse_list_table(
     let title = if argument.is_empty() {
         None
     } else {
-        Some(argument.clone())
+        Some(argument.to_string())
     };
 
     let unindented_lines = unindent_body_lines(body_lines);
@@ -58,12 +58,12 @@ pub(in crate::directives) fn parse_list_table(
         },
     ] = body_nodes.as_slice()
     else {
-        diagnostics.push(Diagnostic::at(
-            DiagnosticCode::TableDataNotABulletList,
-            "list-table: directive body must be a single bullet list of rows",
+        return malformed_list_table(
+            argument,
+            body_lines,
+            diagnostics,
             body_span(body_lines, ctx),
-        ));
-        return unknown_list_table(argument, body_lines);
+        );
     };
 
     // Rows are lowered from already-parsed nodes, which carry no position of
@@ -161,12 +161,23 @@ fn lower_list_table_rows(
     (rows, ncols)
 }
 
-fn unknown_list_table(argument: String, body_lines: &[&str]) -> Directive {
-    Directive::Unknown {
-        name: "list-table".to_string(),
+/// Degrades a `.. list-table::` whose body is not the single bullet list of
+/// rows it must be, reporting why.
+fn malformed_list_table(
+    argument: &str,
+    body_lines: &[&str],
+    diagnostics: &mut Diagnostics,
+    span: Option<Span>,
+) -> Directive {
+    malformed_directive(
+        TableSource::List.as_str(),
         argument,
-        body: join_body_lines(body_lines),
-    }
+        body_lines,
+        DiagnosticCode::TableDataNotABulletList,
+        "list-table: directive body must be a single bullet list of rows".to_string(),
+        span,
+        diagnostics,
+    )
 }
 
 #[cfg(test)]
@@ -178,7 +189,7 @@ mod tests {
         let mut adornment_order = Vec::new();
         let mut diagnostics = Diagnostics::default();
         let directive = parse_list_table(
-            String::new(),
+            "",
             body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -228,7 +239,7 @@ mod tests {
 
         // When
         let directive = parse_list_table(
-            "My Title".to_string(),
+            "My Title",
             &body_lines,
             &mut adornment_order,
             &mut diagnostics,
@@ -527,7 +538,7 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics.len(), 1);
-        assert!(matches!(directive, Directive::Unknown { name, .. } if name == "list-table"));
+        assert!(matches!(directive, Directive::Malformed { name, .. } if name == "list-table"));
     }
 
     #[test]
@@ -557,22 +568,28 @@ mod tests {
     }
 
     #[test]
-    fn test_unknown_list_table_carries_argument_and_body() {
+    fn test_malformed_list_table_carries_argument_body_and_reason() {
         // Given
         let body_lines = vec!["   not a list"];
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let directive = unknown_list_table("My Title".to_string(), &body_lines);
+        let directive = malformed_list_table("My Title", &body_lines, &mut diagnostics, None);
 
         // Then
         assert_eq!(
             directive,
-            Directive::Unknown {
+            Directive::Malformed {
                 name: "list-table".to_string(),
                 argument: "My Title".to_string(),
                 body: "not a list".to_string(),
+                message: "list-table: directive body must be a single bullet list of rows"
+                    .to_string(),
             }
         );
+        let (found, _, _) = diagnostics.into_parts();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].code, DiagnosticCode::TableDataNotABulletList);
     }
 
     #[test]

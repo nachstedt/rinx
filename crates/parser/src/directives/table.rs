@@ -12,13 +12,13 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
-use crate::directives::body::join_body_lines;
+use crate::directives::error_node::malformed_directive;
 use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
 use crate::directives::table_options::parse_common_table_options;
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive, Node};
+use rusty_sphinx_ast::{DiagnosticCode, Directive, Node};
 
 /// The directive name, used throughout this module's diagnostics.
 const DIRECTIVE: &str = "table";
@@ -27,7 +27,7 @@ const DIRECTIVE: &str = "table";
 /// body collected by `collect_directive_body`, exactly as every other
 /// content-bearing directive parser receives it.
 pub(in crate::directives) fn parse_table_directive(
-    argument: String,
+    argument: &str,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -36,7 +36,7 @@ pub(in crate::directives) fn parse_table_directive(
     let title = if argument.is_empty() {
         None
     } else {
-        Some(argument.clone())
+        Some(argument.to_string())
     };
 
     let unindented_lines = unindent_body_lines(body_lines);
@@ -73,8 +73,7 @@ pub(in crate::directives) fn parse_table_directive(
         },
     ] = body_nodes.as_slice()
     else {
-        report_structure_error(node_count, diagnostics, span);
-        return unknown_table_directive(argument, body_lines);
+        return malformed_table_directive(node_count, argument, body_lines, diagnostics, span);
     };
 
     let ncols = body_rows
@@ -97,13 +96,19 @@ pub(in crate::directives) fn parse_table_directive(
     }
 }
 
-/// Diagnoses why the directive's content wasn't exactly one wrapped table:
-/// no content at all, content that isn't a table, or more than one block.
-fn report_structure_error(
+/// Degrades the directive, saying why its content wasn't exactly one wrapped
+/// table: no content at all, content that isn't a table, or more than one
+/// block.
+///
+/// The diagnostic and the node are built from one message so the build log and
+/// the rendered error block cannot disagree about the reason.
+fn malformed_table_directive(
     node_count: usize,
+    argument: &str,
+    body_lines: &[&str],
     diagnostics: &mut Diagnostics,
     span: Option<rusty_sphinx_ast::Span>,
-) {
+) -> Directive {
     let (code, message) = match node_count {
         0 => (
             DiagnosticCode::TableDirectiveNoContent,
@@ -120,15 +125,15 @@ fn report_structure_error(
             ),
         ),
     };
-    diagnostics.push(Diagnostic::at(code, message, span));
-}
-
-fn unknown_table_directive(argument: String, body_lines: &[&str]) -> Directive {
-    Directive::Unknown {
-        name: DIRECTIVE.to_string(),
+    malformed_directive(
+        DIRECTIVE,
         argument,
-        body: join_body_lines(body_lines),
-    }
+        body_lines,
+        code,
+        message,
+        span,
+        diagnostics,
+    )
 }
 
 #[cfg(test)]
@@ -137,10 +142,10 @@ mod tests {
     use rusty_sphinx_ast::{Domain, TableAlign, TableWidths, TargetName};
 
     fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
-        parse_with(String::new(), body_lines)
+        parse_with("", body_lines)
     }
 
-    fn parse_with(argument: String, body_lines: &[&str]) -> (Directive, Diagnostics) {
+    fn parse_with(argument: &str, body_lines: &[&str]) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();
         let mut diagnostics = Diagnostics::default();
         let directive = parse_table_directive(
@@ -210,7 +215,7 @@ mod tests {
     #[test]
     fn test_parse_table_directive_with_title() {
         // Given / When
-        let (directive, diagnostics) = parse_with("Truth Table".to_string(), GRID_TABLE);
+        let (directive, diagnostics) = parse_with("Truth Table", GRID_TABLE);
 
         // Then
         assert!(diagnostics.is_empty(), "{diagnostics:?}");
@@ -322,7 +327,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { name, .. } if name == "table"));
+        assert!(matches!(directive, Directive::Malformed { name, .. } if name == "table"));
     }
 
     #[test]
@@ -340,7 +345,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -359,7 +364,7 @@ mod tests {
             "{}",
             diagnostics[0].message
         );
-        assert!(matches!(directive, Directive::Unknown { .. }));
+        assert!(matches!(directive, Directive::Malformed { .. }));
     }
 
     #[test]
@@ -437,21 +442,28 @@ mod tests {
     }
 
     #[test]
-    fn test_unknown_table_directive_carries_argument_and_body() {
+    fn test_malformed_table_directive_carries_argument_body_and_reason() {
         // Given
         let body_lines = vec!["   Just a paragraph."];
+        let mut diagnostics = Diagnostics::default();
 
         // When
-        let directive = unknown_table_directive("My Title".to_string(), &body_lines);
+        let directive =
+            malformed_table_directive(1, "My Title", &body_lines, &mut diagnostics, None);
 
         // Then
         assert_eq!(
             directive,
-            Directive::Unknown {
+            Directive::Malformed {
                 name: "table".to_string(),
                 argument: "My Title".to_string(),
                 body: "Just a paragraph.".to_string(),
+                message: "table: directive content must be a single grid or simple table"
+                    .to_string(),
             }
         );
+        let (found, _, _) = diagnostics.into_parts();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].code, DiagnosticCode::TableDirectiveNotATable);
     }
 }

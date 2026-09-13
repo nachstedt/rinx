@@ -599,7 +599,7 @@ mod tests {
         assert_eq!(result, "<h6 id=\"verydeep\">VeryDeep</h6>\n");
     }
     #[test]
-    fn test_render_ignores_unknown_directive() {
+    fn test_render_shows_an_unknown_directive_as_a_visible_error_block() {
         // Given a document with an unknown directive
         let doc = Document::new(
             "test.rst".to_string(),
@@ -614,8 +614,11 @@ mod tests {
         // When
         let result = render(&doc, &index, &doc.path).html;
 
-        // Then the output should be empty, as unknown directives are ignored
-        assert_eq!(result, "");
+        // Then the page says what it could not render, and quotes the source
+        // rather than dropping it
+        assert!(result.contains("class=\"directive-error\""));
+        assert!(result.contains("unknown directive type 'some-unknown'"));
+        assert!(result.contains(".. some-unknown:: arg\n   body"));
     }
     #[test]
     fn test_render_formats_target_node_as_html_anchor() {

@@ -131,6 +131,15 @@ diagnostic_codes! {
     LineBlockEndsWithoutBlankLine => "line-block.ends-without-blank-line",
 
     // --- Directives, generally ---------------------------------------------
+    /// A directive name this build does not recognize. Its body is never
+    /// parsed, so everything inside it is lost to every later phase — which is
+    /// why this is reported rather than left to the visible error block the
+    /// renderer draws in its place.
+    DirectiveUnknown => "directive.unknown",
+    /// A `.. c:namespace-push::` with no scope argument. Refused rather than
+    /// accepted as a no-op push, which a later `namespace-pop` would then
+    /// unbalance.
+    DirectiveNamespacePushArgumentMissing => "directive.namespace-push-argument-missing",
     DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
     DirectiveContentsUnknownOption => "directive.contents-unknown-option",
     DirectiveSectnumUnknownOption => "directive.sectnum-unknown-option",

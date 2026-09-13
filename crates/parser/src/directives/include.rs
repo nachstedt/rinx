@@ -26,6 +26,7 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
+use crate::directives::error_node::{malformed_directive, malformed_node};
 use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
@@ -60,9 +61,10 @@ struct IncludeOptions {
 /// Parses a `.. include::`, returning the nodes its file contributed.
 ///
 /// Returns a single degraded [`Node::Directive`] holding
-/// [`Directive::Unknown`] when the file could not be read or the selection
-/// matched nothing, having reported why — the parser stays resilient, and the
-/// `parse` subcommand turns the loader's recorded failure into a failed build.
+/// [`rusty_sphinx_ast::Directive::Malformed`] when the file could not be read
+/// or the selection matched nothing, having reported why — the parser stays
+/// resilient, and the `parse` subcommand turns the loader's recorded failure
+/// into a failed build.
 pub(in crate::directives) fn parse_include(
     argument: &str,
     body_lines: &[&str],
@@ -74,12 +76,14 @@ pub(in crate::directives) fn parse_include(
 
     let path = argument.trim();
     if path.is_empty() {
-        diagnostics.push(Diagnostic::at(
+        return vec![malformed(
+            argument,
+            body_lines,
             DiagnosticCode::IncludeMissingPath,
             format!("{DIRECTIVE}: needs the path of a file to include"),
             span,
-        ));
-        return vec![unknown(argument, body_lines)];
+            diagnostics,
+        )];
     }
 
     let unindented = unindent_body_lines(body_lines);
@@ -94,46 +98,52 @@ pub(in crate::directives) fn parse_include(
     );
 
     if !check_encoding(options.encoding.as_deref(), DIRECTIVE, diagnostics, span) {
-        return vec![unknown(argument, body_lines)];
+        return vec![contributed_nothing(argument, body_lines)];
     }
     if ctx.include_stack().len() >= MAX_DEPTH {
-        diagnostics.push(Diagnostic::at(
+        return vec![malformed(
+            argument,
+            body_lines,
             DiagnosticCode::IncludeDepthExceeded,
             format!(
                 "{DIRECTIVE}: includes nested more than {MAX_DEPTH} deep; \
                  '{path}' was not read"
             ),
             span,
-        ));
-        return vec![unknown(argument, body_lines)];
+            diagnostics,
+        )];
     }
 
     let file = match ctx.files.load(path, ctx.current_file()) {
         Ok(file) => file,
         Err(message) => {
-            diagnostics.push(Diagnostic::at(
+            return vec![malformed(
+                argument,
+                body_lines,
                 DiagnosticCode::IncludeFileUnreadable,
                 format!("{DIRECTIVE}: {message}"),
                 span,
-            ));
-            return vec![unknown(argument, body_lines)];
+                diagnostics,
+            )];
         }
     };
 
     if let Some(chain) = closes_a_cycle(ctx, &file.id) {
-        diagnostics.push(Diagnostic::at(
+        return vec![malformed(
+            argument,
+            body_lines,
             DiagnosticCode::IncludeCycle,
             format!("{DIRECTIVE}: '{path}' includes itself: {chain}"),
             span,
-        ));
-        return vec![unknown(argument, body_lines)];
+            diagnostics,
+        )];
     }
 
     let text = options
         .tab_width
         .map_or_else(|| file.text.clone(), |width| expand_tabs(&file.text, width));
     let Some(text) = select(&options, &text, diagnostics, span) else {
-        return vec![unknown(argument, body_lines)];
+        return vec![contributed_nothing(argument, body_lines)];
     };
 
     if options.literal || options.code.is_some() {
@@ -285,17 +295,37 @@ fn parse_index(
     Some(index)
 }
 
-/// The degraded node for an include that produced nothing.
-fn unknown(argument: &str, body_lines: &[&str]) -> Node {
-    Node::Directive(Directive::Unknown {
-        name: DIRECTIVE.to_string(),
-        argument: argument.to_string(),
-        body: body_lines
-            .iter()
-            .map(|line| (*line).to_string())
-            .collect::<Vec<String>>()
-            .join("\n"),
-    })
+/// The degraded node for an include that produced nothing, reporting `code`
+/// and `message` as the reason.
+fn malformed(
+    argument: &str,
+    body_lines: &[&str],
+    code: DiagnosticCode,
+    message: String,
+    span: Option<Span>,
+    diagnostics: &mut Diagnostics,
+) -> Node {
+    Node::Directive(malformed_directive(
+        DIRECTIVE,
+        argument,
+        body_lines,
+        code,
+        message,
+        span,
+        diagnostics,
+    ))
+}
+
+/// The degraded node for an include whose reason a shared checker
+/// (`check_encoding`, `select`) has already reported — see
+/// [`malformed_node`]'s own doc comment for why this second spelling exists.
+fn contributed_nothing(argument: &str, body_lines: &[&str]) -> Node {
+    Node::Directive(malformed_node(
+        DIRECTIVE,
+        argument,
+        body_lines,
+        format!("{DIRECTIVE}: '{}' contributed no content", argument.trim()),
+    ))
 }
 
 #[cfg(test)]
@@ -499,7 +529,7 @@ mod tests {
         );
         assert!(matches!(
             document.nodes.first(),
-            Some(Node::Directive(Directive::Unknown { .. }))
+            Some(Node::Directive(Directive::Malformed { .. }))
         ));
     }
 

@@ -43,6 +43,7 @@ rusty_sphinx_library(
         "figures.rst",
         "index_entries.rst",
         "noqa.rst",
+        "unknown_directives.rst",
         "includes.rst",
         "substitutions.rst",
     ],

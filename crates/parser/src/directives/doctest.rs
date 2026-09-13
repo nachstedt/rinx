@@ -12,7 +12,8 @@
 //! built. Falling back to [`rusty_sphinx_ast::Directive::Unknown`] would make
 //! "not implemented" indistinguishable from "implemented, with a gap" in the
 //! benchmark's unsupported-directive tally, and would drop code the author
-//! wrote. Only genuinely unusable input (an empty body) degrades.
+//! wrote. Only genuinely unusable input (an empty body) degrades, and then to
+//! [`rusty_sphinx_ast::Directive::Malformed`], which says the name was fine.
 
 mod block;
 mod kind;

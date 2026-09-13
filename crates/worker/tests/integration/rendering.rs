@@ -532,6 +532,61 @@ fn test_e2e_unknown_code_block_language_still_shows_the_source() {
 }
 
 #[test]
+fn test_e2e_unknown_directive_shows_its_source_instead_of_vanishing() {
+    // Given a directive name this build does not implement, holding content
+    // that would otherwise be lost with it — an unknown directive's body is
+    // never parsed
+    let input = "\
+.. mermaid:: A flowchart
+
+   graph TD;
+     A --> B;
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the page names what it could not render and quotes the source
+    assert!(
+        result.contains("unknown directive type 'mermaid'"),
+        "the page must say what it could not render in:\n{result}"
+    );
+    assert!(
+        result.contains("graph TD;"),
+        "the directive's content must survive in:\n{result}"
+    );
+    assert!(
+        result.contains("class=\"directive-error\""),
+        "the block must be marked up so a stylesheet can make it visible in:\n{result}"
+    );
+}
+
+#[test]
+fn test_e2e_malformed_directive_is_reported_against_what_is_wrong_with_it() {
+    // Given a directive whose *name* this build knows and whose content it
+    // cannot use
+    let input = "\
+.. figure::
+
+   A caption for a picture that was never named.
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then — the block says what is actually wrong, never that the name was
+    // unknown
+    assert!(
+        result.contains("figure: the directive needs an image path or URL as its argument"),
+        "the block must carry the diagnostic's own reason in:\n{result}"
+    );
+    assert!(
+        !result.contains("unknown directive type"),
+        "a recognized name must not be blamed in:\n{result}"
+    );
+}
+
+#[test]
 fn test_e2e_replace_substitution_renders_its_resolved_content() {
     // Given — the definition follows its use, as it typically does in real
     // documents (CPython's own docs define `|release|` once, near the bottom

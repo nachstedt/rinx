@@ -426,7 +426,8 @@ fn resolve_directive(
         | Directive::CNamespacePop
         | Directive::StdProgram { .. }
         | Directive::SubstitutionDefinition(_)
-        | Directive::Unknown { .. } => {}
+        | Directive::Unknown { .. }
+        | Directive::Malformed { .. } => {}
     }
 }
 

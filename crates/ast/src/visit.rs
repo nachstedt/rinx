@@ -190,7 +190,8 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         | Directive::CNamespacePop
         | Directive::StdProgram { .. }
         | Directive::SubstitutionDefinition(_)
-        | Directive::Unknown { .. } => {}
+        | Directive::Unknown { .. }
+        | Directive::Malformed { .. } => {}
     }
 }
 

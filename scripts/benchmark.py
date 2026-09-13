@@ -283,6 +283,7 @@ def analyze_results(build_succeeded=False):
         return
         
     unknown_directives = {}
+    malformed_directives = {}
     toctree_options_used = {}
     parser_diagnostics = {}
     
@@ -295,6 +296,15 @@ def analyze_results(build_succeeded=False):
                     if "Unknown" in directive:
                         name = directive["Unknown"].get("name", "unnamed")
                         unknown_directives[name] = unknown_directives.get(name, 0) + 1
+                    elif "Malformed" in directive:
+                        # A directive this build *does* implement, whose
+                        # content it had to refuse. Counted separately from
+                        # the unsupported tally above, which it used to
+                        # inflate: "not implemented" and "implemented, and
+                        # this document got it wrong" are different numbers,
+                        # and only the first is a gap in coverage.
+                        name = directive["Malformed"].get("name", "unnamed")
+                        malformed_directives[name] = malformed_directives.get(name, 0) + 1
                     elif "Toctree" in directive:
                         # Which `.. toctree::` options the corpus actually
                         # exercises. This used to count options the parser
@@ -355,6 +365,7 @@ def analyze_results(build_succeeded=False):
     with open(result_path, "w") as out:
         print("=== rusty-sphinx benchmark: full report ===", file=out)
         write_frequency_summary(out, "Unsupported Directives Summary", unknown_directives)
+        write_frequency_summary(out, "Malformed Directives Summary", malformed_directives)
         write_frequency_summary(
             out,
             "Toctree Options Exercised Summary",
@@ -370,19 +381,23 @@ def analyze_results(build_succeeded=False):
     print_benchmark_summary(
         result_path,
         unknown_directives,
+        malformed_directives,
         toctree_options_used,
         parser_diagnostics,
         domain,
     )
 
 
-def print_benchmark_summary(result_path, unknown, toctree_opts, diagnostics, domain):
+def print_benchmark_summary(
+    result_path, unknown, malformed, toctree_opts, diagnostics, domain
+):
     """Print the compact, terminal-friendly summary (counts only) and point at
     the full report file."""
     line = benchmark_common.summary_line
 
     print("\n=== Benchmark Summary ===")
     line("Unsupported directives:", len(unknown), sum(unknown.values()))
+    line("Malformed directives:", len(malformed), sum(malformed.values()))
     line("Toctree options exercised:", len(toctree_opts), sum(toctree_opts.values()))
     line("Parser diagnostics:", len(diagnostics))
     line(
