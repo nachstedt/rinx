@@ -15,6 +15,8 @@
 //! depend on the filesystem. `rusty_sphinx_worker` supplies the real
 //! filesystem-backed loader.
 
+use std::collections::BTreeMap;
+
 use rusty_sphinx_ast::{Domain, EntityId, FileId, Position, Span};
 use rusty_sphinx_entity::{EntitySchema, EntityType};
 
@@ -165,6 +167,14 @@ pub struct ParseCtx<'a> {
     /// reason [`Self::enclosing_entity_id`] is not — but it is cleared by an
     /// item's own body, since a grid-item does not make its content a row.
     pub in_grid_row: bool,
+    /// Names a `.. needimport::` may write instead of a path, each already
+    /// resolved to a source-root-relative file — the schema's `[import_keys]`
+    /// table, which is sphinx-needs' `needs_import_keys`.
+    ///
+    /// Resolved before it gets here: the values are written relative to the
+    /// schema file, and only the worker knows where that is. This crate reads
+    /// a map it can hand straight to [`ParseFileLoader::load`] with no anchor.
+    pub import_keys: &'a BTreeMap<String, String>,
     /// Where the current line slice came from, or `None` when it came from
     /// nowhere in the source — see [`Self::synthetic`].
     origin: Option<Origin>,
@@ -195,6 +205,15 @@ pub struct ParseCtx<'a> {
     template_map: Option<&'a TemplateMap>,
 }
 
+/// The map a context built without a schema points at.
+///
+/// A borrowed field needs something to borrow, and allocating an empty map per
+/// context would be waste — the same reason [`EntitySchema::empty_ref`] exists.
+fn empty_import_keys() -> &'static BTreeMap<String, String> {
+    static EMPTY: std::sync::OnceLock<BTreeMap<String, String>> = std::sync::OnceLock::new();
+    EMPTY.get_or_init(BTreeMap::new)
+}
+
 impl<'a> ParseCtx<'a> {
     /// A context that resolves bare constructs in `default_domain` and has no
     /// filesystem access.
@@ -216,6 +235,7 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity: None,
             enclosing_entity_id: None,
             in_grid_row: false,
+            import_keys: empty_import_keys(),
             origin: Some(Origin { line: 1, column: 1 }),
             file: None,
             current_file: None,
@@ -234,6 +254,21 @@ impl<'a> ParseCtx<'a> {
     #[must_use]
     pub fn with_schema(self, schema: &'a EntitySchema) -> Self {
         Self { schema, ..self }
+    }
+
+    /// The same context, with the schema's `[import_keys]` resolved for a
+    /// `.. needimport::` to look an alias up in.
+    ///
+    /// Separate from [`Self::with_schema`] even though the table is declared
+    /// in the schema file, because what belongs here is the *resolved* map and
+    /// the schema holds the values as written — see
+    /// `commands::entity_schema::resolve_import_keys`.
+    #[must_use]
+    pub fn with_import_keys(self, import_keys: &'a BTreeMap<String, String>) -> Self {
+        Self {
+            import_keys,
+            ..self
+        }
     }
 
     /// The same context, rendering each document's source as a Jinja template
@@ -375,6 +410,7 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity: self.enclosing_entity,
             enclosing_entity_id: self.enclosing_entity_id,
             in_grid_row: self.in_grid_row,
+            import_keys: self.import_keys,
             origin: Some(Origin { line: 1, column: 1 }),
             file: Some(file),
             current_file: Some(id),

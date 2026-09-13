@@ -547,6 +547,73 @@ diagnostic_codes! {
     /// reason: the picture would silently never be compiled.
     EntityFlowDiagramsDisabled => "entity-flow.diagrams-disabled",
 
+    // --- `.. needimport::` -------------------------------------------------
+    //
+    // The one family named after another tool's spelling rather than after a
+    // name of this build's own, because here the spelling *is* the construct:
+    // `.. needimport::` exists to read sphinx-needs' `needs.json` and nothing
+    // else, and the richer import this project may grow later should be free
+    // to take the `entity-import` name and its own family with it. See
+    // `docs/decisions/016-needimport.md`.
+    /// A `.. needimport::` with no file to read.
+    NeedImportMissingPath => "needimport.missing-path",
+    /// An argument naming an `http`/`https` URL. Refused by name rather than
+    /// fetched: a sandboxed build action may only read files declared before
+    /// it runs, so a download would either fail or make the build
+    /// unreproducible.
+    NeedImportRemoteSource => "needimport.remote-source",
+    /// An argument that is not a path to a `.json` file at all. sphinx-needs
+    /// resolves a bare name through `needs_import_keys` in `conf.py` — a
+    /// config this build has no equivalent of — so the name is refused by
+    /// name rather than opened as a file and reported as missing.
+    NeedImportUnsupportedImportKey => "needimport.unsupported-import-key",
+    /// A `needs.json` that could not be read. Fails the build, the way every
+    /// unreadable parse-time file does.
+    NeedImportFileUnreadable => "needimport.file-unreadable",
+    /// A file that is not the JSON this directive reads.
+    NeedImportMalformedJson => "needimport.malformed-json",
+    /// No single version block could be chosen — a `:version:` naming one the
+    /// file does not hold, a dangling `current_version`, or several versions
+    /// with nothing naming one.
+    NeedImportUnknownVersion => "needimport.unknown-version",
+    /// A need whose `type` names no declared entity type. The need is skipped,
+    /// since there is no vocabulary to read its fields against.
+    NeedImportUnknownType => "needimport.unknown-type",
+    /// A need carrying a field that is neither one of sphinx-needs' own
+    /// bookkeeping keys nor an attribute or relation the type declares.
+    NeedImportUnknownField => "needimport.unknown-field",
+    /// A field whose JSON value has no spelling an option could have been
+    /// written with — an object, a null, or a list holding either.
+    NeedImportInvalidValue => "needimport.invalid-value",
+    /// A need whose `id` is missing or is not a legal entity id. Skipped: an
+    /// entity with no id cannot be indexed or referred to.
+    NeedImportInvalidId => "needimport.invalid-id",
+    /// An `:ids:` entry naming a need the chosen version does not hold.
+    NeedImportUnknownId => "needimport.unknown-id",
+    /// A `:filter:` this build's filter language could not parse. Listed
+    /// separately from the field check for the reason
+    /// `entity-table.invalid-filter` is.
+    NeedImportInvalidFilter => "needimport.invalid-filter",
+    /// A `:filter:` naming a field no entity type declares and that is none of
+    /// the built-ins.
+    NeedImportUnknownFilterField => "needimport.unknown-filter-field",
+    /// An option sphinx-needs accepts that this build must refuse — the
+    /// presentation and templating family. Refused *by name*, with what to
+    /// write instead, since the common failure here is an unsupported feature
+    /// rather than a typo.
+    NeedImportUnsupportedOption => "needimport.unsupported-option",
+    /// An option `.. needimport::` does not accept at all.
+    NeedImportUnknownOption => "needimport.unknown-option",
+    /// A `:tags:` written for a type declaring no list attribute called
+    /// `tags`. Nothing in this model privileges that name, so there is nowhere
+    /// to put the values.
+    NeedImportNoTagsAttribute => "needimport.no-tags-attribute",
+    /// An import that contributed no entity at all, because `:ids:` or
+    /// `:filter:` selected none. Reported for the reason
+    /// `entity-table.empty-result` is: a selection matching nothing is far
+    /// likelier to be a mistake than an intention.
+    NeedImportEmptyResult => "needimport.empty-result",
+
     // --- Diagram directives ------------------------------------------------
     //
     // One family for all six spellings — `.. plantuml::`/`.. uml::`,

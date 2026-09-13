@@ -18,12 +18,14 @@
 //! expression and refuse the same ones at the same column, so there is one
 //! reader for both and only the diagnostic code differs.
 //!
-//! [`include`] and [`if_builder`] are the two *splicing* directives: alone
-//! among the body-bearing ones they contribute several nodes to the enclosing
-//! block instead of wrapping them in one, so a heading, target or
-//! `.. toctree::` written inside either belongs to the document itself.
-//! [`dispatch`]'s `try_parse_splicing_directive` handles the pair ahead of the
-//! chain that wraps a single node.
+//! [`include`], [`if_builder`] and [`needimport`] are the three *splicing*
+//! directives: alone among the body-bearing ones they contribute several nodes
+//! to the enclosing block instead of wrapping them in one, so a heading,
+//! target or `.. toctree::` written inside one belongs to the document itself
+//! — and an entity [`needimport`] reads out of a `needs.json` is an entity of
+//! the document, not something nested inside a directive. [`dispatch`]'s
+//! `try_parse_splicing_directive` handles the three ahead of the chain that
+//! wraps a single node.
 //!
 //! [`error_node`] is the other shared-on-purpose module: it owns the two nodes
 //! a directive degrades to when it cannot become itself — an unrecognized name
@@ -49,6 +51,7 @@ mod doctest;
 mod domains;
 mod dropdown;
 mod entity;
+mod entity_fields;
 mod entity_flow;
 mod entity_section;
 mod entity_table;
@@ -61,6 +64,7 @@ mod image;
 mod include;
 mod index_directive;
 mod math;
+mod needimport;
 mod options;
 mod scope;
 mod sectnum;

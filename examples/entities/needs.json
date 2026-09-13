@@ -1,0 +1,70 @@
+{
+    "created": "2026-09-13T09:00:00.000000",
+    "current_version": "2.0",
+    "project": "Upstream platform",
+    "versions": {
+        "1.0": {
+            "created": "2026-03-01T09:00:00.000000",
+            "needs": {
+                "PLAT_REQ_1": {
+                    "id": "PLAT_REQ_1",
+                    "type": "req",
+                    "title": "Retired: the platform boots",
+                    "status": "closed",
+                    "owner": "platform-team",
+                    "docname": "upstream/requirements",
+                    "lineno": 14,
+                    "is_need": true,
+                    "type_name": "Requirement",
+                    "type_color": "#BFD8D2"
+                }
+            }
+        },
+        "2.0": {
+            "created": "2026-09-01T09:00:00.000000",
+            "needs": {
+                "PLAT_REQ_1": {
+                    "id": "PLAT_REQ_1",
+                    "type": "req",
+                    "title": "The platform boots within one second",
+                    "status": "closed",
+                    "owner": "platform-team",
+                    "tags": ["startup", "performance"],
+                    "links": ["PLAT_SPEC_1"],
+                    "content": "Measured from power-on to the first rendered frame.\n\nThe upstream project owns this requirement; this site only shows it.",
+                    "docname": "upstream/requirements",
+                    "lineno": 14,
+                    "is_need": true,
+                    "type_name": "Requirement",
+                    "type_color": "#BFD8D2",
+                    "parent_needs": [],
+                    "sections": ["Boot"]
+                },
+                "PLAT_REQ_2": {
+                    "id": "PLAT_REQ_2",
+                    "type": "req",
+                    "title": "The platform survives a power cut",
+                    "status": "open",
+                    "owner": "platform-team",
+                    "tags": ["resilience"],
+                    "content": "No data written before the cut is lost.",
+                    "docname": "upstream/requirements",
+                    "lineno": 31,
+                    "is_need": true,
+                    "type_name": "Requirement"
+                },
+                "PLAT_SPEC_1": {
+                    "id": "PLAT_SPEC_1",
+                    "type": "spec",
+                    "title": "Boot sequence",
+                    "status": "approved",
+                    "content": "The loader starts three services in parallel.",
+                    "docname": "upstream/specifications",
+                    "lineno": 8,
+                    "is_need": true,
+                    "type_name": "Specification"
+                }
+            }
+        }
+    }
+}

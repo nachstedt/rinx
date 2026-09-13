@@ -1,5 +1,6 @@
 use std::fmt;
 
+use rusty_sphinx_filter::FieldValue;
 use serde::{Deserialize, Serialize};
 
 /// A validated attribute value, as stored in the AST and the project index.
@@ -41,6 +42,25 @@ impl fmt::Display for AttributeValue {
             Self::Int(i) => write!(f, "{i}"),
             Self::Bool(b) => write!(f, "{b}"),
             Self::List(items) => f.write_str(&items.join(", ")),
+        }
+    }
+}
+
+/// What an attribute is worth to a filter.
+///
+/// Here rather than beside either caller because there are two, in crates that
+/// may not depend on each other: `rusty_sphinx_index`'s `EntitySubject`
+/// answers a filter over an entity already in the index, and the parser's
+/// `.. needimport::` answers one over a need it is about to build. Two copies
+/// of this mapping would let a filter select differently depending on where
+/// the entity came from — which is the one thing an import must not do.
+impl From<&AttributeValue> for FieldValue {
+    fn from(value: &AttributeValue) -> Self {
+        match value {
+            AttributeValue::String(text) => Self::Text(text.clone()),
+            AttributeValue::Int(number) => Self::Int(*number),
+            AttributeValue::Bool(flag) => Self::Bool(*flag),
+            AttributeValue::List(items) => Self::List(items.clone()),
         }
     }
 }
@@ -111,6 +131,29 @@ mod tests {
             let json = serde_json::to_string(&original).unwrap();
             let restored: AttributeValue = serde_json::from_str(&json).unwrap();
             assert_eq!(original, restored);
+        }
+    }
+
+    #[test]
+    fn test_attribute_value_maps_onto_the_filter_value_of_the_same_shape() {
+        // Given one value of each shape
+        let cases = [
+            (
+                AttributeValue::String("open".to_string()),
+                FieldValue::Text("open".to_string()),
+            ),
+            (AttributeValue::Int(3), FieldValue::Int(3)),
+            (AttributeValue::Bool(true), FieldValue::Bool(true)),
+            (
+                AttributeValue::List(vec!["a".to_string(), "b".to_string()]),
+                FieldValue::List(vec!["a".to_string(), "b".to_string()]),
+            ),
+        ];
+
+        // When each is converted for a filter
+        // Then it keeps its shape, so a filter cannot see a number as text
+        for (value, expected) in cases {
+            assert_eq!(FieldValue::from(&value), expected);
         }
     }
 }

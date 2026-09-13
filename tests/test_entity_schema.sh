@@ -59,7 +59,11 @@ force_reparse "$DOC"
 # Without the vocabulary the entities are never defined, so every reference to
 # one dangles — and the example site's `strict_links` turns that into a build
 # failure rather than a quiet gap in the page.
-OUTPUT=$("$BAZEL" build //examples:site 2>&1 || true)
+#
+# `--keep_going` because this asserts on a diagnostic from *one* render action
+# while several fail: without it Bazel stops at whichever failed first, and
+# which one that is depends on the cache and on scheduling.
+OUTPUT=$("$BAZEL" build --keep_going //examples:site 2>&1 || true)
 if ! echo "$OUTPUT" | grep -q "entity.unknown-target"; then
     echo "FAIL: dropping the library's entity_schema did not break the entity references"
     echo "$OUTPUT" | tail -20

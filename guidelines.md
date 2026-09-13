@@ -143,6 +143,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Prefer a single configuration file over accumulating individual CLI flags; adding future fields requires no interface changes.
 - Keep a resource's *name* in configuration and its *path* on the command line, so a sandboxed build can relocate the file without invalidating the config that refers to it.
 - Configuration files should contain metadata and settings, not file paths; sandboxed build systems relocate files, breaking embedded paths.
+- Check whether a rule about configuration is about *paths* or about *phases* before invoking it: a config file the parser reads is fine, and a workspace-relative path survives relocation — what a config file cannot do is declare a build input.
 - Relative file paths work correctly for offline viewing; do not use inlining as a workaround for path computation.
 
 ## Build, examples and documentation
@@ -165,6 +166,12 @@ entry under the heading it belongs to, as a single short sentence.
 - Generate a derived construct's content as data rather than lowering it to a template of another construct: the shortcut works, but every diagnostic then lands on text the author never wrote.
 - Do not reproduce a structural node a reference implementation emits as plumbing, when wrapping the content would defeat the structure the construct exists to enable; splice it transparently and say in a comment why the wrapper is missing.
 - Read a reference implementation's actual source before porting it, rather than a neighbouring construct that solves the same problem: two tools' answers to one question differ in exactly the details worth porting.
+- Keep this project's own name unclaimed when a borrowed construct is only a compatibility bridge, adopt the other tool's spelling alone, and say in the ADR what the good name is being saved for.
+- Ignore a foreign format's bookkeeping fields by an explicit list and report every other unrecognised one, since silently ignoring them all drops exactly the data the import exists to carry.
+- Put an imported construct through the very same validation funnel the written one uses, so a value cannot be accepted by one path and refused by the other.
+- Separate "this argument was never a path" from "this path could not be read" before touching the filesystem, since a reference implementation's config may resolve the argument first and blaming the filesystem for a missing config fails the build for a document that is not wrong.
+- An exported record carries every registered field whether set or not, so treat an unrecognised empty value — or an explicit null — as absent rather than as something to report.
+- Declare a name a *document* writes in the project's own configuration rather than in the build file, so the meaning travels with the documents that depend on it.
 
 ## Scope of a guideline
 

@@ -117,7 +117,11 @@ Seven independent dependency mechanisms, don't confuse them:
   index action derives back-links from it and whose render actions read its
   labels. Both must name the same file; a mismatch is `entity.schema-mismatch`.
   Unlike `parse_data` there is no cache firewall and no per-directive scope:
-  editing it re-parses every document in the library.
+  editing it re-parses every document in the library. Note this is a *config
+  file the parser reads* — there is nothing odd about that, and its
+  `[import_keys]` table is a second thing the parser takes from it. What a
+  config file cannot do is declare a build input, which is why a keyed
+  `needs.json` still needs its `parse_data` entry.
 
 (One more attribute, `py_deps` on `rusty_sphinx_doctest_tests`, is *not* a mechanism of rusty-sphinx's own — it is rules_python's ordinary `py_test.deps`, surfaced so documented code is importable while doctests run. It has nothing to do with any of the above.)
 
@@ -146,6 +150,49 @@ Two details worth knowing before touching this:
 That is the same **cache firewall** shape as the doctest plans: every declared image is an input to the embed action (Bazel cannot know at analysis time which one a document embeds), so an image edit re-runs that cheap AST walk everywhere, but its bytes only differ for a document that actually embeds the changed file — and only that page re-renders. `tests/test_image_data.sh` and the ADR cover the rest.
 
 Keys are the path from `ast::ImageUri::resolve`, which the embedder, the `validate_images` check and the renderer all call, so no two phases can disagree about where `../shared/logo.png` points.
+
+### Importing entities (`docs/decisions/016-needimport.md`)
+
+`.. needimport::` reads a sphinx-needs `needs.json` and splices the needs in it
+into the document as ordinary `Directive::Entity` nodes — the third splicing
+directive, and the only one whose nodes are not reStructuredText the author
+wrote. Four things to know:
+
+- **It is a bridge, so it takes sphinx-needs' name *alone*.** Every other
+  borrowed construct here gets a local name plus the foreign spelling as an
+  alias; this one deliberately does not, so `entity-import` stays free for the
+  richer construct that would read this project's own format and carry named
+  sections. The diagnostic family is `needimport.*` for the same reason: here
+  the spelling is the construct.
+- **Importing at parse time is what makes every later phase free.** The
+  analyzer, index and renderer were not touched: an imported need is indexed,
+  is a `:ref:` target, contributes derived back-links and is listed by
+  `.. entity-table::`/`.. entity-flow::` because it is an ordinary entity of
+  the importing document. Merging an external graph at index time was rejected
+  — an entity no document holds has no anchor and nowhere to render.
+- **The schema is the authority over the file.** `needs_json.rs`'s
+  `INTERNAL_FIELDS` lists sphinx-needs' ~34 bookkeeping keys, ignored by
+  design; any *other* undeclared field is reported rather than dropped. Values
+  go through the same `parse_attribute_value` funnel a written option does, via
+  `directives/entity_fields.rs` — which exists so a written `.. req::` and an
+  imported one cannot validate differently.
+- **The file is ordinary `parse_data`, and nothing is fetched.** A URL argument
+  is refused by name. JSON has no line numbers, so every diagnostic lands on
+  the `.. needimport::` line and imported prose parses under `ctx.synthetic()`,
+  reporting positionless — as a `.. csv-table::`'s `:file:` rows already do.
+- **An argument may be a *name*, resolved through the schema's
+  `[import_keys]`** — sphinx-needs' `needs_import_keys`. It lives in
+  `entities.toml` rather than in the build file because the alias is written in
+  a document and must travel with it; a value resolves relative to the schema
+  file, or to the source root with a leading `/`. The worker resolves it once
+  (`commands/entity_schema.rs`) and `ParseCtx::import_keys` carries the result.
+  It is deliberately outside the schema fingerprint: parse-only, so no
+  `entity.schema-mismatch`.
+- **An export's unset fields are silent.** A `needs.json` writes every
+  registered option for every need, so an undeclared field with an empty value,
+  an explicit `null`, and a back-link this build *derives* are all skipped; a
+  field carrying a real value is still reported. Measured against the benchmark
+  corpus, where the alternative was 19 spurious names per need.
 
 ### Source transclusion (`docs/decisions/008-source-transclusion.md`)
 
@@ -346,10 +393,10 @@ drawing the answer instead of tabulating it; its filter goes through the one
 shared reader in `parser/directives/filter_option.rs`, so the two cannot select
 differently.
 
-`.. if-builder::` is the odd one out of that group in a different way: it is
-the second **splicing** directive, not a container at all. `.. include::` and
-it are the only two that contribute *several* nodes to the enclosing block
-rather than exactly one, so neither can live in
+`.. if-builder::` is the odd one out of that group in a different way: it is a
+**splicing** directive, not a container at all. It, `.. include::` and
+`.. needimport::` are the only three that contribute *several* nodes to the
+enclosing block rather than exactly one, so none can live in
 `try_parse_extension_directive` (which returns a single `Directive`) — they are
 dispatched together by `try_parse_splicing_directive`, ahead of the one-node
 chain. That is what keeps a heading, target or `.. toctree::` written inside a

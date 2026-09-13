@@ -7,7 +7,7 @@ use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{WarningOrigin, format_error_diagnostic, report_diagnostic};
-use super::entity_schema::load_entity_schema;
+use super::entity_schema::{import_keys_from_args, load_entity_schema};
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::{ParseInputs, jinja_from_args};
 use super::suppression::retain_reportable;
@@ -177,12 +177,14 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     // `parse_files`.
     let parse_files = DocumentRelativeFiles::for_document(&input);
     let schema = load_entity_schema(args)?;
+    let import_keys = import_keys_from_args(args, &schema);
     let jinja = jinja_from_args(args)?;
     let inputs = ParseInputs {
         default_domain,
         files: &parse_files,
         schema: &schema,
         jinja: jinja.as_deref(),
+        import_keys: &import_keys,
     };
     dump_rendered_source(args, &rst, &inputs)?;
     let json = process_parse(&input, &rst, &inputs, DiagramSupport::from_args(args))?;
@@ -210,6 +212,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::BTreeMap;
 
     /// A loader rooted at a directory holding no CSV files, for the tests
     /// whose input has no `:file:` option.
@@ -231,6 +234,7 @@ mod tests {
                 files: &no_parse_files(),
                 schema: &rusty_sphinx_entity::EntitySchema::empty(),
                 jinja: None,
+                import_keys: &BTreeMap::new(),
             },
             DiagramSupport::Enabled,
         )
@@ -251,6 +255,7 @@ mod tests {
                 files: &no_parse_files(),
                 schema: &rusty_sphinx_entity::EntitySchema::empty(),
                 jinja: None,
+                import_keys: &BTreeMap::new(),
             },
             diagrams,
         )
@@ -378,6 +383,7 @@ mod tests {
                 files: &no_parse_files(),
                 schema: &rusty_sphinx_entity::EntitySchema::empty(),
                 jinja: None,
+                import_keys: &BTreeMap::new(),
             },
             DiagramSupport::Enabled,
         )

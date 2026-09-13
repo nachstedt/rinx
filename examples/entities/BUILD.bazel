@@ -19,6 +19,10 @@ rusty_sphinx_library(
         exclude = ["diagrams.rst"],
     ),
     entity_schema = "entities.toml",
+    # `imported.rst`'s `.. needimport::` reads this at parse time, the same way
+    # a `.. csv-table::`'s `:file:` is read — a file the parser opens, not a
+    # dependency on another library. Leave it out and the parse fails.
+    parse_data = ["needs.json"],
     # `index.rst`'s toctree lists `diagrams`, so the dependency is required,
     # not just convenient — see `tests/test_strict_deps.sh`.
     deps = [":diagram_docs"],

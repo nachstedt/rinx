@@ -1,10 +1,11 @@
 //! Everything a subcommand needs in order to *parse*, bundled.
 //!
-//! Four settings travel together wherever RST is turned into an AST — the
+//! Five settings travel together wherever RST is turned into an AST — the
 //! default domain, the loader a file-reading directive goes through, the
-//! entity schema that supplies the project's own directive vocabulary, and
-//! whether the source is rendered as a Jinja template first. Both `parse` and
-//! `preview` take all four, so they are one parameter rather than four, for
+//! entity schema that supplies the project's own directive vocabulary, the
+//! import keys it declares, and whether the source is rendered as a Jinja
+//! template first. Both `parse` and `preview` take all five, so they are one
+//! parameter rather than five, for
 //! the same reason `ParseCtx` exists in the parser: the next parse-time
 //! setting should not have to touch every signature again.
 
@@ -12,6 +13,7 @@ use anyhow::{Result, anyhow};
 use rusty_sphinx_ast as ast;
 use rusty_sphinx_entity::EntitySchema;
 use rusty_sphinx_parser::ParseCtx;
+use std::collections::BTreeMap;
 
 use super::cli_args::flag_values_opt;
 use super::parse_files::{DocumentRelativeFiles, parse_ctx};
@@ -27,12 +29,21 @@ pub(super) struct ParseInputs<'a> {
     /// The names a Jinja template may read, when the library asked for its
     /// sources to be templated, and `None` when it did not.
     pub jinja: Option<&'a [(String, String)]>,
+    /// The schema's `[import_keys]`, already resolved to source-root-relative
+    /// paths — what a `.. needimport::` looks its argument up in.
+    ///
+    /// Beside the schema rather than taken from it because the resolution
+    /// needs the schema *file's* location, which only the caller that read it
+    /// knows; see `entity_schema::resolve_import_keys`.
+    pub import_keys: &'a BTreeMap<String, String>,
 }
 
 impl<'a> ParseInputs<'a> {
     /// Builds the parser context these inputs describe.
     pub(super) fn ctx(&self) -> ParseCtx<'a> {
-        let ctx = parse_ctx(self.default_domain, self.files).with_schema(self.schema);
+        let ctx = parse_ctx(self.default_domain, self.files)
+            .with_schema(self.schema)
+            .with_import_keys(self.import_keys);
         match self.jinja {
             Some(context) => ctx.with_jinja(context),
             None => ctx,
@@ -99,6 +110,7 @@ mod tests {
             files: &files,
             schema: &schema,
             jinja: None,
+            import_keys: &BTreeMap::new(),
         };
 
         // When
@@ -119,6 +131,7 @@ mod tests {
             files: &files,
             schema: &schema,
             jinja: None,
+            import_keys: &BTreeMap::new(),
         };
 
         // When
@@ -142,6 +155,7 @@ mod tests {
             files: &files,
             schema: &schema,
             jinja: None,
+            import_keys: &BTreeMap::new(),
         };
 
         // When
@@ -225,6 +239,7 @@ mod tests {
             files: &files,
             schema: &schema,
             jinja: Some(&context),
+            import_keys: &BTreeMap::new(),
         };
 
         // When

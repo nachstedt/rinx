@@ -11,6 +11,14 @@
         "$ref": "#/$defs/RawEntityType"
       }
     },
+    "import_keys": {
+      "description": "Names a `.. needimport::` may write instead of a path, each mapped to\nthe file it stands for — sphinx-needs' `needs_import_keys`.\n\nA path, unlike the `template` an entity type names: the alias is\nwritten in a *document*, so its meaning belongs with the project's\nvocabulary rather than in the build file. The file it names must still\nbe declared in the library's `parse_data`, since only the build system\ncan put it in the parse action's sandbox.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {}
+    },
     "role": {
       "description": "Inline roles that reference an entity from prose. Optional: every entity\nis reachable by `:ref:` and by the built-in `:entity:` role regardless.",
       "type": "array",

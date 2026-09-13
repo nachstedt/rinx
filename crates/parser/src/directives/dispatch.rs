@@ -28,6 +28,7 @@ use super::image::{parse_figure_directive, parse_image_directive};
 use super::include::parse_include;
 use super::index_directive::parse_index_directive;
 use super::math::parse_math_directive;
+use super::needimport::parse_needimport;
 use super::scope::try_parse_scope_directive;
 use super::sectnum::{is_sectnum, parse_sectnum};
 use super::substitution::{parse_substitution_definition, split_substitution_marker};
@@ -169,15 +170,21 @@ pub(crate) fn try_parse_directive(
 /// Dispatches the directives that contribute their nodes to the *enclosing*
 /// block instead of wrapping them in one of their own.
 ///
-/// Both of them are transclusions rather than containers, and that is the
+/// All three are transclusions rather than containers, and that is the
 /// property they share: a section heading, hyperlink target, index entry or
 /// `.. toctree::` written inside one belongs to this document exactly as if it
 /// had been typed here. Wrapping the result in a node would break every one of
-/// those — section nesting first — so neither can live in
+/// those — section nesting first — so none of them can live in
 /// [`try_parse_extension_directive`] or the chain below, which answer with a
 /// single [`Directive`].
 ///
-/// Returns `None` for a name that is neither, leaving it to that chain.
+/// `.. needimport::` is the one whose nodes are not reStructuredText the
+/// author wrote: it builds entities out of a `needs.json`. It belongs here
+/// all the same, and for the same reason — an imported entity must be an
+/// ordinary entity of this document, not something nested inside a directive
+/// that every later traversal would have to learn about.
+///
+/// Returns `None` for a name that is none of them, leaving it to that chain.
 fn try_parse_splicing_directive(
     name: &str,
     argument: &str,
@@ -191,6 +198,17 @@ fn try_parse_splicing_directive(
         // Splices another file's reStructuredText in where it stands.
         "include" => Some(parse_include(
             argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        )),
+        // sphinx-needs': splices the entities it reads out of a needs.json,
+        // rather than its own body — the only one of the three whose nodes
+        // come from somewhere other than reStructuredText.
+        "needimport" => Some(parse_needimport(
+            argument,
+            directive_span,
             body_lines,
             adornment_order,
             diagnostics,
@@ -1110,6 +1128,10 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     // spelling of it.
     "entity-flow",
     "needflow",
+    // sphinx-needs' import, which keeps its own name alone — see
+    // `docs/decisions/016-needimport.md` for why `entity-import` is not
+    // claimed beside it.
+    "needimport",
     // Diagram directives: sphinxcontrib-plantuml's two names, this build's
     // two and sphinx-needs' two
     "plantuml",

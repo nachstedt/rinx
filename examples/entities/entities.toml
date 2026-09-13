@@ -9,6 +9,21 @@
 # comma-separated signature onto three attributes and derives its id from one
 # of them, neither of which sphinx-needs can express.
 
+# ── Import keys ─────────────────────────────────────────────────────
+#
+# Names a `.. needimport::` may write instead of a path — sphinx-needs spells
+# this `needs_import_keys` in its `conf.py`. It lives here rather than in the
+# build file because the alias is written in a *document*, so its meaning
+# belongs with the project's own vocabulary.
+#
+# A value resolves the way every written path in this build does: relative to
+# this file, or to the source root with a leading `/`. The file must still be
+# declared in the library's `parse_data`, since only the build system can put
+# it in the parse action's sandbox.
+
+[import_keys]
+upstream_platform = "needs.json"
+
 # ── Requirements ────────────────────────────────────────────────────
 
 [[entity_type]]

@@ -9,6 +9,7 @@
 use anyhow::{Context, Result, anyhow};
 use rusty_sphinx_entity::{EntitySchema, ReservedDirectiveNames, load_schema};
 use rusty_sphinx_renderer::EntityTemplates;
+use std::collections::BTreeMap;
 use std::fs;
 
 use super::cli_args::{flag_value_opt, flag_values_opt};
@@ -54,6 +55,53 @@ pub(super) fn load_entity_schema(args: &[String]) -> Result<EntitySchema> {
 pub(super) fn parse_entity_schema(text: &str, path: &str) -> Result<EntitySchema> {
     load_schema(text, &ParserDirectiveNames)
         .map_err(|errors| anyhow!("Invalid entity schema '{path}':\n{errors}"))
+}
+
+/// The schema's import keys, resolved against wherever `--entity-schema`
+/// pointed.
+///
+/// Reads the flag a second time rather than being handed the path, so a caller
+/// that already has an [`EntitySchema`] cannot pass a location it was not
+/// loaded from. Without the flag there is no schema and no keys.
+pub(super) fn import_keys_from_args(
+    args: &[String],
+    schema: &EntitySchema,
+) -> BTreeMap<String, String> {
+    flag_value_opt(args, "--entity-schema")
+        .map(|path| resolve_import_keys(schema, &path))
+        .unwrap_or_default()
+}
+
+/// Resolves the schema's `[import_keys]` values into paths the parser's file
+/// loader can take.
+///
+/// Two transformations, both of which need to happen exactly once and in a
+/// phase that knows where the schema file sits — which is why they are here
+/// and not in `rusty_sphinx_entity`, whose schema keeps the values as written:
+///
+/// 1. **Anchored at the schema file**, by the rule every other written path in
+///    this build follows (`resolve_from_document`): a leading `/` means the
+///    source root, anything else is relative to the file that wrote it. That
+///    keeps a schema relocatable together with the data files beside it, and
+///    takes sphinx-needs' own `/needs_import.json` spelling verbatim.
+/// 2. **Prefixed with `/`** afterwards, so the parser can hand it to
+///    [`ParseFileLoader`](rusty_sphinx_parser::ParseFileLoader) with no anchor
+///    of its own and get source-root resolution — the same trick
+///    `rusty_sphinx_parser`'s Jinja template loader uses, and for the same
+///    reason: a project-level config names a file from the project's root, not
+///    from whichever document happens to mention it.
+pub(super) fn resolve_import_keys(
+    schema: &EntitySchema,
+    schema_path: &str,
+) -> BTreeMap<String, String> {
+    schema
+        .import_keys()
+        .iter()
+        .map(|(alias, written)| {
+            let resolved = rusty_sphinx_ast::resolve_from_document(written, schema_path);
+            (alias.clone(), format!("/{}", resolved.to_string_lossy()))
+        })
+        .collect()
 }
 
 /// Reads the per-type entity templates named by `--entity-templates`.
@@ -174,5 +222,89 @@ mod tests {
         assert!(reserved.is_reserved("note"));
         assert!(reserved.is_reserved("toctree"));
         assert!(!reserved.is_reserved("verification-criteria"));
+    }
+
+    /// A schema declaring `import_keys`, for the resolution tests below.
+    fn keyed_schema(pairs: &[(&str, &str)]) -> EntitySchema {
+        let table = pairs
+            .iter()
+            .map(|(alias, path)| format!("{alias} = \"{path}\""))
+            .collect::<Vec<_>>()
+            .join("\n");
+        parse_entity_schema(
+            &format!("[import_keys]\n{table}\n[[entity_type]]\nname = \"req\"\n"),
+            "entities.toml",
+        )
+        .expect("the fixture schema is valid")
+    }
+
+    #[test]
+    fn test_a_bare_import_key_resolves_beside_the_schema_file() {
+        // Given a schema nested in the tree, naming a file with no leading `/`
+        let schema = keyed_schema(&[("upstream", "needs.json")]);
+
+        // When its keys are resolved
+        let resolved = resolve_import_keys(&schema, "examples/entities/entities.toml");
+
+        // Then the file is found beside the schema, which is what lets a
+        // schema and its data files move through the tree together
+        assert_eq!(
+            resolved.get("upstream").map(String::as_str),
+            Some("/examples/entities/needs.json")
+        );
+    }
+
+    #[test]
+    fn test_a_slash_prefixed_import_key_resolves_at_the_source_root() {
+        // Given sphinx-needs' own spelling, which is source-root-relative
+        let schema = keyed_schema(&[("imported_project", "/needs_import.json")]);
+
+        // When its keys are resolved
+        let resolved = resolve_import_keys(&schema, "deep/nested/entities.toml");
+
+        // Then the leading `/` wins over the schema's location, so a converted
+        // `ubproject.toml` value carries across verbatim
+        assert_eq!(
+            resolved.get("imported_project").map(String::as_str),
+            Some("/needs_import.json")
+        );
+    }
+
+    #[test]
+    fn test_every_resolved_import_key_is_prefixed_for_the_loader() {
+        // Given keys written both ways
+        let schema = keyed_schema(&[("a", "beside.json"), ("b", "/root.json")]);
+
+        // When they are resolved
+        let resolved = resolve_import_keys(&schema, "docs/entities.toml");
+
+        // Then both come out `/`-prefixed, so the parser can hand them to the
+        // file loader with no anchor of its own and get source-root resolution
+        assert!(
+            resolved.values().all(|path| path.starts_with('/')),
+            "{resolved:?}"
+        );
+    }
+
+    #[test]
+    fn test_a_schema_without_import_keys_resolves_to_an_empty_map() {
+        // Given a schema declaring none
+        let schema = parse_entity_schema("[[entity_type]]\nname = \"req\"\n", "entities.toml")
+            .expect("valid");
+
+        // When its keys are resolved
+        // Then there are none, and every lookup simply misses
+        assert!(resolve_import_keys(&schema, "entities.toml").is_empty());
+    }
+
+    #[test]
+    fn test_import_keys_from_args_needs_the_schema_flag() {
+        // Given a command line with no --entity-schema
+        let args = vec!["parse".to_string()];
+
+        // When the keys are read
+        // Then there are none: without the flag there is no schema to have
+        // declared any, so there is no path to resolve against either
+        assert!(import_keys_from_args(&args, &EntitySchema::empty()).is_empty());
     }
 }

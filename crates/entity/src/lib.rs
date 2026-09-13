@@ -44,6 +44,7 @@ pub mod field;
 pub mod id;
 pub mod json_schema;
 pub mod load;
+pub mod needs_json;
 pub mod relation;
 pub mod role;
 pub mod schema;
@@ -60,6 +61,10 @@ pub use field::{BUILTIN_FIELDS, is_builtin_field};
 pub use id::{IdContext, IdDerivationError, IdSpec};
 pub use json_schema::{SCHEMA_PATH, entity_json_schema, entity_json_schema_text};
 pub use load::{NoReservedNames, ReservedDirectiveNames, load_schema};
+pub use needs_json::{
+    INTERNAL_FIELDS, NeedsFile, NeedsVersion, RawNeed, VersionError, field_is_list, field_is_null,
+    field_text, is_internal_field, read_needs_json,
+};
 pub use relation::RelationSpec;
 pub use role::{BUILTIN_ROLE, RoleSpec};
 pub use schema::EntitySchema;
