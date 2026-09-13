@@ -23,6 +23,7 @@ use super::entity_table::parse_entity_table;
 use super::error_node::unknown_directive;
 use super::glossary::parse_glossary;
 use super::grid::{parse_grid, parse_grid_item};
+use super::if_builder::parse_if_builder;
 use super::image::{parse_figure_directive, parse_image_directive};
 use super::include::parse_include;
 use super::index_directive::parse_index_directive;
@@ -139,19 +140,17 @@ pub(crate) fn try_parse_directive(
     let body_ctx = ctx.nested(i + 1 + body.first_line_offset, body_indent(&body.lines));
     let (consumed_lines, body_lines) = (body.consumed, body.lines);
 
-    // `.. include::` is the one directive that contributes *several* nodes:
-    // it splices a file's blocks in where it stands, so the fragment's
-    // sections and targets belong to this document rather than nesting inside
-    // a container of their own. Every other directive answers with exactly
-    // one node, wrapped here.
-    if name == "include" {
-        let nodes = parse_include(
-            &argument,
-            &body_lines,
-            adornment_order,
-            diagnostics,
-            &body_ctx,
-        );
+    // Checked before the one-node chain below, because these are the
+    // directives that answer with any number of nodes rather than exactly one.
+    if let Some(nodes) = try_parse_splicing_directive(
+        &name,
+        &argument,
+        directive_span,
+        &body_lines,
+        adornment_order,
+        diagnostics,
+        &body_ctx,
+    ) {
         return Some((1 + consumed_lines, nodes));
     }
 
@@ -165,6 +164,50 @@ pub(crate) fn try_parse_directive(
         &body_ctx,
     );
     Some((1 + consumed_lines, vec![node]))
+}
+
+/// Dispatches the directives that contribute their nodes to the *enclosing*
+/// block instead of wrapping them in one of their own.
+///
+/// Both of them are transclusions rather than containers, and that is the
+/// property they share: a section heading, hyperlink target, index entry or
+/// `.. toctree::` written inside one belongs to this document exactly as if it
+/// had been typed here. Wrapping the result in a node would break every one of
+/// those — section nesting first — so neither can live in
+/// [`try_parse_extension_directive`] or the chain below, which answer with a
+/// single [`Directive`].
+///
+/// Returns `None` for a name that is neither, leaving it to that chain.
+fn try_parse_splicing_directive(
+    name: &str,
+    argument: &str,
+    directive_span: Option<rusty_sphinx_ast::Span>,
+    body_lines: &[&str],
+    adornment_order: &mut Vec<Adornment>,
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<Vec<Node>> {
+    match name {
+        // Splices another file's reStructuredText in where it stands.
+        "include" => Some(parse_include(
+            argument,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        )),
+        // sphinx-simplepdf's: splices its own body, but only for the builder
+        // this build is.
+        "if-builder" => Some(parse_if_builder(
+            argument,
+            directive_span,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        )),
+        _ => None,
+    }
 }
 
 /// Dispatches every directive whose body is collected the ordinary way — that
@@ -1058,6 +1101,8 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     "dropdown",
     "grid",
     "grid-item",
+    // sphinx-simplepdf's conditional-on-the-builder content
+    "if-builder",
     // Listing directives over the entity graph, in both spellings
     "entity-table",
     "needtable",

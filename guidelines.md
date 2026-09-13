@@ -163,6 +163,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Name a diagnostic code after the construct rather than the spelling it was written under, so one code serves every alias of it.
 - Default a borrowed construct's options to what this project's own schema declares, not to the vocabulary the other tool hardcodes, and say in the ADR where the two deliberately disagree.
 - Generate a derived construct's content as data rather than lowering it to a template of another construct: the shortcut works, but every diagnostic then lands on text the author never wrote.
+- Do not reproduce a structural node a reference implementation emits as plumbing, when wrapping the content would defeat the structure the construct exists to enable; splice it transparently and say in a comment why the wrapper is missing.
+- Read a reference implementation's actual source before porting it, rather than a neighbouring construct that solves the same problem: two tools' answers to one question differ in exactly the details worth porting.
 
 ## Scope of a guideline
 
