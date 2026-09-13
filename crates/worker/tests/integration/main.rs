@@ -1,5 +1,6 @@
 //! Integration tests for Rusty Sphinx public API.
 
+mod builder_conditionals;
 mod c_domain;
 mod domain_directives;
 mod domain_scoping;

@@ -41,6 +41,7 @@ Welcome to the Rusty-Sphinx example.
    index_entries
    noqa
    unknown_directives
+   if_builder
    doctests
    entities/index
    toctree/index

@@ -18,6 +18,13 @@
 //! expression and refuse the same ones at the same column, so there is one
 //! reader for both and only the diagnostic code differs.
 //!
+//! [`include`] and [`if_builder`] are the two *splicing* directives: alone
+//! among the body-bearing ones they contribute several nodes to the enclosing
+//! block instead of wrapping them in one, so a heading, target or
+//! `.. toctree::` written inside either belongs to the document itself.
+//! [`dispatch`]'s `try_parse_splicing_directive` handles the pair ahead of the
+//! chain that wraps a single node.
+//!
 //! [`error_node`] is the other shared-on-purpose module: it owns the two nodes
 //! a directive degrades to when it cannot become itself — an unrecognized name
 //! and a recognized name with content this build cannot accept — so that every
@@ -49,6 +56,7 @@ mod error_node;
 mod filter_option;
 mod glossary;
 mod grid;
+mod if_builder;
 mod image;
 mod include;
 mod index_directive;

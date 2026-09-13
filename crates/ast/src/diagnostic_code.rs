@@ -657,6 +657,24 @@ diagnostic_codes! {
     /// be in any link of it.
     JinjaRecursiveInclude => "jinja.recursive-include",
 
+    // --- `.. if-builder::` (sphinx-simplepdf) -------------------------------
+    /// The directive has no argument, so it names no builder to compare
+    /// against. Upstream gets docutils' generic "1 argument(s) required" here;
+    /// a code of its own lets a document suppress this without suppressing
+    /// every other malformed directive.
+    IfBuilderMissingBuilder => "if-builder.missing-builder",
+    /// An argument that names no builder this build knows — including a
+    /// multi-word one, since the directive takes the rest of its line.
+    /// sphinx-simplepdf excludes the body silently, which makes a typo
+    /// indistinguishable from a deliberate exclusion and deletes content with
+    /// nothing to grep for.
+    IfBuilderUnknownBuilder => "if-builder.unknown-builder",
+    /// A block whose builder *matches* but which has no content, so the
+    /// directive contributes nothing where it was written to contribute
+    /// something. A non-matching block is silent — emptiness only means a
+    /// mistake on the branch that was selected.
+    IfBuilderEmptyBody => "if-builder.empty-body",
+
     // --- The suppression mechanism itself ----------------------------------
     /// A `.. noqa:` comment naming an id that is not a diagnostic code. Never
     /// suppressible: a suppression that silences the report of its own typo
