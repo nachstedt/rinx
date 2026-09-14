@@ -4,6 +4,11 @@ load("@rules_rust//rust:defs.bzl", "rust_library")
 rust_library(
     name = "rusty_sphinx_renderer",
     srcs = glob(["src/**/*.rs"]),
+    # `pie_chart.rs` reads the vendored font with `include_bytes!`, so it has
+    # to be an input to the compile — it is not a `.rs` file, so the `srcs`
+    # glob above does not reach it. See `fonts/README.md` for why the font is
+    # vendored rather than found on the build host.
+    compile_data = ["fonts/DejaVuSans.ttf"],
     edition = "2024",
     visibility = ["//visibility:public"],
     deps = all_crate_deps(

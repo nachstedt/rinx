@@ -12,7 +12,7 @@ use std::io::{self, Read};
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
     WarningOrigin, format_broken_link_warning, format_diagram_error_warning,
-    format_entity_table_error_warning, format_highlight_error_warning, format_image_error_warning,
+    format_empty_listing_error_warning, format_highlight_error_warning, format_image_error_warning,
     format_math_error_warning, format_object_type_mismatch_warning, report_diagnostic,
 };
 use super::embed_assets::embed_available_assets;
@@ -21,7 +21,7 @@ use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::{ParseInputs, jinja_from_args};
 use super::suppression::{
-    retain_reportable, retain_reportable_diagram_errors, retain_reportable_entity_table_errors,
+    retain_reportable, retain_reportable_diagram_errors, retain_reportable_empty_listing_errors,
     retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
     retain_reportable_math_errors, retain_reportable_mismatches,
 };
@@ -40,7 +40,7 @@ pub(super) struct PreviewedPage {
     pub math_errors: Vec<renderer::MathError>,
     /// Listing directives whose filter matched no entity. Always empty when
     /// the caller supplied no global index — see [`process_preview`].
-    pub entity_table_errors: Vec<renderer::EntityTableError>,
+    pub empty_listing_errors: Vec<renderer::EmptyListingError>,
     pub diagram_errors: Vec<renderer::DiagramError>,
     pub highlight_errors: Vec<renderer::HighlightError>,
     pub image_errors: Vec<renderer::ImageError>,
@@ -96,8 +96,11 @@ pub(super) fn process_preview(
     // no global index the graph is unknown, so every table would be empty
     // through no fault of the author — the one case this diagnostic must stay
     // quiet in, and the reason it is dropped here rather than never raised.
-    let entity_table_errors = if index_json.is_some() {
-        retain_reportable_entity_table_errors(&render_output.entity_table_errors, &doc.suppressions)
+    let empty_listing_errors = if index_json.is_some() {
+        retain_reportable_empty_listing_errors(
+            &render_output.empty_listing_errors,
+            &doc.suppressions,
+        )
     } else {
         Vec::new()
     };
@@ -156,7 +159,7 @@ pub(super) fn process_preview(
         broken_links,
         object_type_mismatches,
         math_errors,
-        entity_table_errors,
+        empty_listing_errors,
         diagram_errors,
         highlight_errors,
         image_errors,
@@ -226,8 +229,8 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     for error in &page.math_errors {
         eprintln!("{}", format_math_error_warning(&origin, error));
     }
-    for error in &page.entity_table_errors {
-        eprintln!("{}", format_entity_table_error_warning(&origin, error));
+    for error in &page.empty_listing_errors {
+        eprintln!("{}", format_empty_listing_error_warning(&origin, error));
     }
     for error in &page.diagram_errors {
         eprintln!("{}", format_diagram_error_warning(&origin, error));

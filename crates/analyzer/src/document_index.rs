@@ -241,6 +241,7 @@ pub(super) fn index_nodes(
                 | Directive::Dropdown(_)
                 | Directive::EntityTable(_)
                 | Directive::EntityFlow(_)
+                | Directive::EntityPie(_)
                 | Directive::Uml(_)),
             ) => index_name_bearing_directive(directive, doc_path, index, scope),
             Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
@@ -329,6 +330,13 @@ fn index_name_bearing_directive(
         // picture a build action compiles.
         Directive::EntityFlow(flow) => {
             register_directive_name(flow.name.as_ref(), doc_path, index);
+        }
+        // A pie chart contributes its `:name:` and nothing else, for the
+        // listing directive's reason: its wedges are counted from this very
+        // index while rendering. Unlike a flowchart, no build action is
+        // involved at all — the chart is drawn in the render itself.
+        Directive::EntityPie(pie) => {
+            register_directive_name(pie.name.as_ref(), doc_path, index);
         }
         // A dropdown carries both: a `:name:` of its own, and a body whose
         // targets, sections and entities belong to this document exactly as

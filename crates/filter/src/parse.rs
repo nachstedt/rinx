@@ -1,5 +1,5 @@
 use crate::error::{FilterError, FilterErrorKind};
-use crate::expr::{CompareOp, Expr, Operand};
+use crate::expr::{Affix, CompareOp, Expr, Operand};
 use crate::field_name::FieldName;
 use crate::token::{Token, TokenKind, tokenize};
 use crate::value::Literal;
@@ -47,6 +47,18 @@ fn unexpected(token: &Token) -> FilterError {
         FilterErrorKind::UnexpectedToken(token.kind.describe()),
         token.offset,
         token.length,
+    )
+}
+
+/// The message a `.` that is not one of the two string methods still gets.
+///
+/// Unchanged from when the tokenizer refused every `.`, because for everything
+/// but `startswith`/`endswith` the advice is unchanged too.
+fn attribute_access((offset, length): (usize, usize)) -> FilterError {
+    FilterError::new(
+        FilterErrorKind::unsupported_but("attribute access", "name the field on its own"),
+        offset,
+        length,
     )
 }
 
@@ -99,6 +111,9 @@ impl Parser<'_> {
 
         let left = self.parse_operand()?;
 
+        if self.check(&TokenKind::Dot) {
+            return self.finish_method_call(left);
+        }
         if self.eat(&TokenKind::EqEq) {
             return self.finish_equality(left, CompareOp::Eq);
         }
@@ -194,6 +209,97 @@ impl Parser<'_> {
             ));
         };
         Ok(Expr::IsNone { field, negated })
+    }
+
+    /// `method := operand "." ("startswith" | "endswith") "(" string ")"`
+    ///
+    /// The one Python construct this grammar admits past a `.`, and everything
+    /// around it is still refused **by name** (ADR-011 §2): a bare attribute
+    /// access, any other method, and the tuple argument Python's own
+    /// `startswith` accepts. Each says what to write instead, because an
+    /// author who gets "syntax error" from a filter that is valid Python has
+    /// nothing to go on.
+    fn finish_method_call(&mut self, left: Operand) -> Result<Expr, FilterError> {
+        let dot = self.here();
+        self.at += 1;
+
+        let Some(token) = self.peek() else {
+            return Err(self.at_end(FilterErrorKind::UnexpectedEnd));
+        };
+        let (TokenKind::Ident(method), method_at, method_len) =
+            (&token.kind, token.offset, token.length)
+        else {
+            return Err(attribute_access(dot));
+        };
+        let method = method.clone();
+
+        // `need.id` — a `.` with no call after it is the attribute access this
+        // language has always refused, and the message it has always given.
+        if !self.check_at(1, &TokenKind::LParen) {
+            return Err(attribute_access(dot));
+        }
+
+        let affix = match method.as_str() {
+            "startswith" => Affix::Prefix,
+            "endswith" => Affix::Suffix,
+            _ => {
+                return Err(FilterError::new(
+                    FilterErrorKind::UnsupportedMethod(method),
+                    method_at,
+                    method_len,
+                ));
+            }
+        };
+
+        let Operand::Field(field) = left else {
+            return Err(FilterError::new(
+                FilterErrorKind::UnexpectedToken(format!("a constant before `.{method}()`")),
+                method_at,
+                method_len,
+            ));
+        };
+
+        self.at += 2;
+        let text = self.parse_affix_argument(&method)?;
+        if !self.eat(&TokenKind::RParen) {
+            let (offset, length) = self.here();
+            return Err(FilterError::new(
+                FilterErrorKind::UnexpectedToken(format!("the end of `.{method}(`")),
+                offset,
+                length,
+            ));
+        }
+
+        Ok(Expr::TextAffix { field, affix, text })
+    }
+
+    /// The single literal string `startswith`/`endswith` takes here.
+    ///
+    /// Python also accepts a *tuple* of prefixes. That form needs no branch
+    /// here: the tokenizer refuses the `,` before the parser ever runs, under
+    /// the "tuples are not supported here; combine conditions with `and` or
+    /// `or`" message it already gave every other tuple — which is the right
+    /// advice for `id.startswith(("A", "B"))` too. A one-element `(("A"))`
+    /// falls through to the message below, naming the `(` it found.
+    fn parse_affix_argument(&mut self, method: &str) -> Result<String, FilterError> {
+        let Some(token) = self.peek() else {
+            return Err(self.at_end(FilterErrorKind::UnexpectedEnd));
+        };
+        let (offset, length) = (token.offset, token.length);
+
+        let TokenKind::Str(text) = &token.kind else {
+            return Err(FilterError::new(
+                FilterErrorKind::UnexpectedToken(format!(
+                    "{} where `.{method}()` takes a string",
+                    token.kind.describe()
+                )),
+                offset,
+                length,
+            ));
+        };
+        let text = text.clone();
+        self.at += 1;
+        Ok(text)
     }
 
     /// `operand := field | string | int | "True" | "False"`

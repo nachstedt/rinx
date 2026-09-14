@@ -353,17 +353,24 @@ fn test_a_comprehension_keyword_is_reported_by_name() {
 }
 
 #[test]
-fn test_attribute_access_is_rejected_with_advice() {
-    // Given
+fn test_a_dot_is_read_as_a_token_rather_than_rejected_here() {
+    // Given — the tokenizer cannot tell `links.id` from `id.startswith("a")`;
+    // both open the same way, so the parser is what decides between them
     let input = "links.id == 'X'";
 
     // When
-    let failure = error(input);
+    let read = kinds(input);
 
     // Then
     assert_eq!(
-        failure.kind,
-        FilterErrorKind::unsupported_but("attribute access", "name the field on its own")
+        read,
+        [
+            ident("links"),
+            TokenKind::Dot,
+            ident("id"),
+            TokenKind::EqEq,
+            string("X"),
+        ]
     );
 }
 

@@ -9,7 +9,7 @@ use crate::RenderCtx;
 use crate::blocks::table_shell::{
     render_table_colgroup, render_table_name_anchor, render_table_open_tag,
 };
-use crate::entity_table_error::EntityTableError;
+use crate::empty_listing_error::EmptyListingError;
 use crate::inline::entity_reference::entity_href;
 
 use super::rows::{Cell, Row, select_rows};
@@ -28,10 +28,8 @@ pub(in crate::blocks) fn render_entity_table(
 ) {
     let rows = select_rows(table, ctx.index, ctx.schema);
     if rows.is_empty() {
-        ctx.entity_table_errors.push(EntityTableError {
-            directive: table.source.as_str().to_string(),
-            span: table.span,
-        });
+        ctx.empty_listing_errors
+            .push(EmptyListingError::table(table.source.as_str(), table.span));
     }
 
     render_table_name_anchor(html, table.name.as_ref());

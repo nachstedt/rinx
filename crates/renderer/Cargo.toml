@@ -17,6 +17,9 @@ math-core = "0.8"
 minijinja = "2"
 octicons-pack = { version = "19.33", default-features = false }
 pathdiff = "0.2.3"
+# `default-features = false` + `ab_glyph` keeps every system font lookup out of
+# the build — see `fonts/README.md`, which is also why a TTF is vendored.
+plotters = { version = "0.3.7", default-features = false, features = ["svg_backend", "ab_glyph"] }
 serde = { version = "1", features = ["derive"] }
 syntect = { version = "5.3", default-features = false, features = ["parsing", "html", "regex-fancy"] }
 two-face = { version = "0.5", default-features = false, features = ["syntect-fancy"] }

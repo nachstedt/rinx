@@ -70,7 +70,7 @@ pub(super) fn with_ctx_for<R>(
         broken_links: &mut Vec::new(),
         object_type_mismatches: &mut Vec::new(),
         math_errors: &mut Vec::new(),
-        entity_table_errors: &mut Vec::new(),
+        empty_listing_errors: &mut Vec::new(),
         diagram_errors: &mut Vec::new(),
         diagram_sources: &mut Vec::new(),
         math: &math,

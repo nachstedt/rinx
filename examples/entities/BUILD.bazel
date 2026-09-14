@@ -29,6 +29,11 @@ rusty_sphinx_library(
     visibility = ["//visibility:public"],
 )
 
+# Note `charts.rst` is *not* here but in `:docs` above, and that is the whole
+# point of it: an `.. entity-pie::` is drawn as inline SVG by the render action
+# itself, so a library holding one needs no `diagrams` opt-in and gets no
+# diagram actions at all. A chart costs a project nothing it does not use.
+
 # The diagram documents live in a library of their own, which is the pattern
 # the `diagrams` attribute is built for: diagram compilation is opt-in per
 # library, so keeping the diagrams together keeps the cost on the documents

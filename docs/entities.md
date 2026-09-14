@@ -516,12 +516,22 @@ Python's spelling, over the subset that real filters use:
 | containment | `in`, `not in` — substring over text, membership over a list |
 | presence | `is None`, `is not None` |
 | combination | `and`, `or`, `not`, parentheses |
+| affixes | `field.startswith("…")`, `field.endswith("…")` — the only two methods |
 | values | field names, `"strings"`, `'strings'`, whole numbers, `True`/`False` |
 | bare field | true when the value is non-empty, as in Python |
 
 Missing values have a defined answer everywhere rather than an error: a missing
 field equals nothing (so `status == "open"` is false), `!=` is the exact
-negation of `==`, and `in` against a missing haystack is false.
+negation of `==`, and `in` against a missing haystack is false. The same holds
+for the two affix tests, which are measured over the text `in` already sees —
+so `"F" in id` and `id.startswith("F")` cannot disagree about what a
+non-text field is worth.
+
+`startswith` and `endswith` are the one place this language admits Python's
+`.`, and they earned it by measurement: eight wedges of the benchmark corpus'
+pie charts select by id prefix, and refusing them left each one counting the
+whole project. Every *other* method and every bare attribute access is still
+refused by name.
 
 **Everything outside this is refused by name, with a position.** These are all
 valid Python and none of them is silently ignored:
@@ -529,6 +539,8 @@ valid Python and none of them is silently ignored:
 | written | reported |
 |---|---|
 | `len(tags) > 0` | function calls are not supported, pointing at `len` |
+| `title.lower() == "x"` | `.lower()` is not supported; only `startswith` and `endswith` are |
+| `need.id == "REQ_1"` | attribute access is not supported; name the field on its own |
 | `[[copy('id')]]` | dynamic functions are not supported |
 | `[n for n in needs]` | comprehensions are not supported |
 | `status != None` | comparing to `None`; use `is not None` |
@@ -569,10 +581,11 @@ no longer matches than a deliberate statement. The live preview stays quiet
 about it when no project index is available, since every table would be empty
 through no fault of the author.
 
-`needflow` *is* implemented — see "Flowcharts of the graph" below, which asks
-this same question and draws the answer instead of tabulating it. `needlist`,
-`needpie` and `needbar` are not. They are the same question again with a
-different presentation, and would reuse this filter language unchanged.
+`needflow` and `needpie` *are* implemented — see "Flowcharts of the graph" and
+"Charting the graph" below, which ask this same question and draw the answer
+instead of tabulating it. `needlist` and `needbar` are not. They are the same
+question again with a different presentation, and would reuse this filter
+language unchanged — `needbar` would reuse the counting a chart already does.
 
 ---
 
@@ -631,6 +644,67 @@ silently doing nothing.
 A flowchart is a diagram, so its library needs `diagrams = True` exactly as the
 written ones do — see the build wiring under "Diagramming entities" below. See
 `docs/decisions/014-entity-flow.md`.
+
+---
+
+## Charting the graph
+
+`.. entity-pie::` — sphinx-needs spells it `.. needpie::` — asks the question
+`.. entity-table::` asks and answers it as *proportions*. Each line of its body
+is one filter, and the wedge it draws is how many entities that filter selects.
+
+```rst
+.. entity-pie:: Requirements by status
+   :labels: Open, In progress, Closed
+   :legend:
+   :colors: #4c72b0, #dd852c, #55a868
+   :caption: Where the requirements on this site stand
+
+   type == "req" and status == "open"
+   type == "req" and status == "in_progress"
+   type == "req" and status == "closed"
+```
+
+Its shape is unlike either sibling's: an `.. entity-table::` takes no argument
+and an `.. entity-flow::` takes no content, while a chart takes **both**. The
+argument is the title, and `:labels:` pairs with the content lines **by
+position**.
+
+| option | what it does |
+|---|---|
+| `:labels:` | names the wedges, in the order their filters were written |
+| `:filter:` | narrows the entities *before* any wedge counts them, so a chart can be scoped once |
+| `:legend:` | draw a key naming each wedge with its count |
+| `:colors:` | the wedge colours, as CSS hex (`#4c72b0`, `#abc`) or a basic keyword; short lists repeat |
+| `:text_color:` | the colour of the percentages drawn on the wedges |
+| `:caption:` `:align:` `:width:` `:scale:` `:class:` `:name:` | as on every picture |
+
+A body line that is a plain **number** is used as the wedge's size directly,
+for a chart whose data does not come from the graph at all. A chart of numbers
+alone never reads the index.
+
+**A chart needs no `diagrams = True`.** It is the one picture here that is not
+compiled: its SVG is drawn while the page is rendered, so it creates no build
+action, writes no `.puml`, and starts no JVM. Keep charts in an ordinary
+library — `examples/entities/charts.rst` does, beside the tables rather than in
+`diagram_docs`.
+
+Three things are reported rather than passed over:
+
+- **A chart whose every wedge counts zero** is `entity-pie.empty-result` and no
+  picture is drawn, for the reason an empty table is reported: a filter that no
+  longer matches is far likelier than a deliberate statement. As with a table,
+  the live preview stays quiet about it when no project index is available.
+- **A body with no content line at all** is `entity-pie.no-slices`, reported
+  while parsing — the body is this document's own text, so no index is needed.
+- **`:labels:` disagreeing with the wedge count** is
+  `entity-pie.label-count-mismatch`. They pair by position, so a mismatch means
+  at least one wedge is named wrongly, and the labels alone do not show it. The
+  wedges are drawn either way.
+
+sphinx-needs' `:explode:`, `:shadow:`, `:style:` and `:filter-func:` are each
+reported by name as `entity-pie.unsupported-option`, with what to write
+instead. See `docs/decisions/017-entity-pie.md`.
 
 ---
 
@@ -783,11 +857,11 @@ Deliberately **not** supported:
   typed filter language rather than a Python interpreter. It covers the
   operators real filters use and diagnoses everything else by name, so a filter
   calling `len()` is reported rather than silently matching nothing.
-- **The remaining listing directives** (`needlist`, `needpie`, `needbar`) — a
-  later increment. They reuse the same filter language, and now the diagram
-  pipeline too. `needtable`, `needflow`, `needuml` and `needarch` *are*
-  supported; see "Listing entities", "Flowcharts of the graph" and "Diagramming
-  entities".
+- **The remaining listing directives** (`needlist`, `needbar`) — a later
+  increment. They reuse the same filter language, and now the counting a chart
+  already does. `needtable`, `needflow`, `needpie`, `needuml` and `needarch`
+  *are* supported; see "Listing entities", "Flowcharts of the graph",
+  "Charting the graph" and "Diagramming entities".
 - **Dynamic functions** (`[[copy('id')]]`), `needextend` and `needservice`.
   `needimport` *is* supported — see "Importing from sphinx-needs" below.
 

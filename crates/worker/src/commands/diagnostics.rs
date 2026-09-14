@@ -210,9 +210,9 @@ pub(super) fn format_math_error_warning(
 /// [`check_broken_links_strict`]: a filter that matched nothing is not a
 /// reference that failed to resolve. The page still renders, showing the
 /// table's headings so a reader can see what was asked for.
-pub(super) fn format_entity_table_error_warning(
+pub(super) fn format_empty_listing_error_warning(
     origin: &WarningOrigin<'_>,
-    error: &renderer::EntityTableError,
+    error: &renderer::EmptyListingError,
 ) -> String {
     format!(
         "warning: {} {}: {}",
@@ -224,7 +224,7 @@ pub(super) fn format_entity_table_error_warning(
 
 /// Formats a single diagram-expansion diagnostic as a warning line.
 ///
-/// Like [`format_entity_table_error_warning`], this never feeds into
+/// Like [`format_empty_listing_error_warning`], this never feeds into
 /// [`check_broken_links_strict`]: a template that could not be expanded is not
 /// a reference that failed to resolve. The page still renders — without the
 /// picture, since none was compiled.

@@ -241,3 +241,112 @@ fn test_a_reported_offset_stays_inside_the_input() {
     // Then
     assert!(failures.iter().all(|(offset, length)| *offset < *length));
 }
+
+#[test]
+fn test_a_bare_attribute_access_is_still_refused_with_the_same_advice() {
+    // Given — admitting `.startswith` must not admit `.` in general
+    let input = "links.id == 'X'";
+
+    // When
+    let failure = error(input);
+
+    // Then
+    assert_eq!(
+        failure.kind,
+        FilterErrorKind::unsupported_but("attribute access", "name the field on its own")
+    );
+}
+
+#[test]
+fn test_an_unsupported_method_is_named_rather_than_called_a_syntax_error() {
+    // Given — "function calls are not supported" would not tell the author
+    // that `startswith` right beside it would have worked
+    let input = r#"id.lower() == "x""#;
+
+    // When
+    let failure = error(input);
+
+    // Then
+    assert_eq!(
+        failure.kind,
+        FilterErrorKind::UnsupportedMethod("lower".to_string())
+    );
+    assert_eq!(
+        failure.to_string(),
+        "`.lower()` is not supported here; only `startswith` and `endswith` are"
+    );
+}
+
+#[test]
+fn test_an_unsupported_method_is_reported_at_its_own_name() {
+    // Given
+    let input = r#"id.lower() == "x""#;
+
+    // When
+    let failure = error(input);
+
+    // Then — `id.` is three characters, and `lower` is five
+    assert_eq!((failure.offset, failure.length), (3, 5));
+}
+
+#[test]
+fn test_a_tuple_of_prefixes_is_refused_with_the_advice_every_tuple_gets() {
+    // Given — Python's own `startswith` accepts a tuple; this language has no
+    // list type, and the tokenizer refuses the `,` before the parser runs, so
+    // the author reads the same advice every other tuple gets
+    let input = r#"id.startswith(("A", "B"))"#;
+
+    // When
+    let failure = error(input);
+
+    // Then
+    assert_eq!(
+        failure.kind,
+        FilterErrorKind::unsupported_but("tuples", "combine conditions with `and` or `or`")
+    );
+}
+
+#[test]
+fn test_an_affix_argument_that_is_not_a_string_is_refused() {
+    // Given
+    let input = "id.startswith(42)";
+
+    // When
+    let failure = error(input);
+
+    // Then
+    assert_eq!(
+        failure.to_string(),
+        "unexpected `42` where `.startswith()` takes a string"
+    );
+}
+
+#[test]
+fn test_an_affix_test_on_a_constant_is_refused() {
+    // Given — answerable, but meaningless: it says nothing about the entity
+    let input = r#""abc".startswith("a")"#;
+
+    // When
+    let failure = error(input);
+
+    // Then
+    assert_eq!(
+        failure.kind,
+        FilterErrorKind::UnexpectedToken("a constant before `.startswith()`".to_string())
+    );
+}
+
+#[test]
+fn test_an_unclosed_affix_call_is_refused() {
+    // Given
+    let input = r#"id.startswith("A""#;
+
+    // When
+    let failure = error(input);
+
+    // Then
+    assert_eq!(
+        failure.kind,
+        FilterErrorKind::UnexpectedToken("the end of `.startswith(`".to_string())
+    );
+}

@@ -24,6 +24,11 @@ pub(crate) enum TokenKind {
     NotEq,
     LParen,
     RParen,
+    /// Python's `.`, admitted only so the parser can decide between the two
+    /// string methods this language has and the attribute access it still
+    /// refuses. The tokenizer cannot tell them apart: `id.startswith("a")` and
+    /// `need.id` differ only in what follows the name.
+    Dot,
 }
 
 impl TokenKind {
@@ -45,6 +50,7 @@ impl TokenKind {
             Self::NotEq => "`!=`".to_string(),
             Self::LParen => "`(`".to_string(),
             Self::RParen => "`)`".to_string(),
+            Self::Dot => "`.`".to_string(),
         }
     }
 }
@@ -246,6 +252,7 @@ fn scan_operator(chars: &[char], start: usize) -> Result<Token, FilterError> {
         ('!', Some('=')) => TokenKind::NotEq,
         ('(', _) => TokenKind::LParen,
         (')', _) => TokenKind::RParen,
+        ('.', _) => TokenKind::Dot,
         _ => return Err(rejected_operator(c, next, start)),
     };
 
@@ -285,10 +292,6 @@ fn rejected_operator(c: char, next: Option<char>, start: usize) -> FilterError {
         ('{', _) => (FilterErrorKind::unsupported("dict and set literals"), 1),
         (',', _) => (
             FilterErrorKind::unsupported_but("tuples", "combine conditions with `and` or `or`"),
-            1,
-        ),
-        ('.', _) => (
-            FilterErrorKind::unsupported_but("attribute access", "name the field on its own"),
             1,
         ),
         ('+' | '-' | '*' | '/' | '%', _) => (FilterErrorKind::unsupported("arithmetic"), 1),

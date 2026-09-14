@@ -309,3 +309,116 @@ fn test_whitespace_between_tokens_is_irrelevant() {
     // Then
     assert_eq!(from_spaced, from_tight);
 }
+
+#[test]
+fn test_startswith_parses_into_a_prefix_test() {
+    // Given — the spelling 8 slices of the benchmark corpus' pies use
+    let input = r#"id.startswith("FSR_STEER")"#;
+
+    // When
+    let expr = parsed(input);
+
+    // Then
+    assert_eq!(
+        expr,
+        Expr::TextAffix {
+            field: FieldName::new("id").unwrap(),
+            affix: Affix::Prefix,
+            text: "FSR_STEER".to_string(),
+        }
+    );
+}
+
+#[test]
+fn test_endswith_parses_into_a_suffix_test() {
+    // Given
+    let input = "docname.endswith('.rst')";
+
+    // When
+    let expr = parsed(input);
+
+    // Then
+    assert_eq!(
+        expr,
+        Expr::TextAffix {
+            field: FieldName::new("docname").unwrap(),
+            affix: Affix::Suffix,
+            text: ".rst".to_string(),
+        }
+    );
+}
+
+#[test]
+fn test_an_affix_test_combines_with_the_rest_of_the_grammar() {
+    // Given — the exact shape of `safety_example/analysis.rst:67`
+    let input = r#"type == "fsr" and id.startswith("FSR_STEER")"#;
+
+    // When
+    let expr = parsed(input);
+
+    // Then
+    assert_eq!(
+        expr,
+        Expr::And(
+            Box::new(Expr::Compare {
+                left: field("type"),
+                op: CompareOp::Eq,
+                right: text("fsr"),
+            }),
+            Box::new(Expr::TextAffix {
+                field: FieldName::new("id").unwrap(),
+                affix: Affix::Prefix,
+                text: "FSR_STEER".to_string(),
+            }),
+        )
+    );
+}
+
+#[test]
+fn test_a_negated_affix_test_needs_no_variant_of_its_own() {
+    // Given — unlike `not in`, `not` here is an ordinary prefix operator
+    let input = r#"not id.startswith("X")"#;
+
+    // When
+    let expr = parsed(input);
+
+    // Then
+    assert_eq!(
+        expr,
+        Expr::Not(Box::new(Expr::TextAffix {
+            field: FieldName::new("id").unwrap(),
+            affix: Affix::Prefix,
+            text: "X".to_string(),
+        }))
+    );
+}
+
+#[test]
+fn test_an_affix_test_reports_the_field_it_reads() {
+    // Given — the parser checks every name against the entity schema, so a
+    // field reachable only through a method must not escape that check
+    let input = r#"id.startswith("SG_")"#;
+
+    // When
+    let expr = parsed(input);
+    let names = expr.field_names();
+
+    // Then
+    assert_eq!(
+        names.iter().map(ToString::to_string).collect::<Vec<_>>(),
+        ["id"]
+    );
+}
+
+#[test]
+fn test_an_affix_test_survives_a_serialization_round_trip() {
+    // Given — the expression is stored in the `.ast` and read back to render
+    let expr = parsed(r#"id.endswith("_01")"#);
+
+    // When
+    let json = serde_json::to_string(&expr).unwrap();
+    let decoded: Expr = serde_json::from_str(&json).unwrap();
+
+    // Then
+    assert_eq!(decoded, expr);
+}

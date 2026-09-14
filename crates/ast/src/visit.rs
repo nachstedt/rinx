@@ -171,9 +171,11 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         // doc comment). An entity table's rows are not children either: they
         // are resolved from the project index while rendering, so there is
         // nothing in this document to walk, and neither are a flowchart's
-        // nodes and edges: they are generated from that same index.
+        // nodes and edges or a pie chart's wedges: they are generated from
+        // that same index.
         Directive::EntityTable(_)
         | Directive::EntityFlow(_)
+        | Directive::EntityPie(_)
         | Directive::Image(_)
         | Directive::DocTest(_)
         | Directive::CodeBlock(_)

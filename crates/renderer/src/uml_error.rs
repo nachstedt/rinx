@@ -7,7 +7,7 @@ use rusty_sphinx_uml::{FlowError, UmlError};
 
 /// A diagram directive that produced no picture.
 ///
-/// Only reportable here, like [`crate::EntityTableError`], and for the same
+/// Only reportable here, like [`crate::EmptyListingError`], and for the same
 /// reason: a diagram asks the entity graph questions — whether written as a
 /// template or generated from a filter — and whether they can be answered
 /// depends on every document in the project. The parser, which sees one, cannot

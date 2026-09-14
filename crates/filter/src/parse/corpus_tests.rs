@@ -110,3 +110,37 @@ fn test_a_corpus_filter_survives_a_serialization_round_trip() {
     // Then
     assert_eq!(decoded, expr);
 }
+
+/// The filters the corpus' `.. needpie::` slices are written with, verbatim.
+///
+/// Kept apart from [`CORPUS_FILTERS`] because these come from a different
+/// construct — a pie's body, one filter per line — and because the eight
+/// `startswith` ones are why this language grew a string method at all. Before
+/// that, every one of them was refused as "attribute access", which left the
+/// slice counting the whole project.
+const CORPUS_PIE_FILTERS: &[&str] = &[
+    r#"type == "hazard" and docname is not None and "safety_example" in docname"#,
+    r#"type == "safety_goal" and docname is not None and "safety_example" in docname and (id == "SG_01" or id == "SG_02" or id == "SG_03" or id == "SG_04")"#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and asil == "D""#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and id.startswith("FSR_STEER")"#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and id.startswith("FSR_BRAKE")"#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and id.startswith("FSR_DRIVE")"#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and id.startswith("FSR_WRDC")"#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and id.startswith("FSR_VDC")"#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and (id.startswith("FSR_VEHICLE_SENS") or id.startswith("FSR_WHEEL_SENS"))"#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and id.startswith("FSR_POWER")"#,
+    r#"type == "fsr" and docname is not None and "safety_example" in docname and id.startswith("FSR_PROC")"#,
+];
+
+#[test]
+fn test_every_corpus_pie_filter_parses() {
+    for filter in CORPUS_PIE_FILTERS {
+        // Given a filter written in the corpus' own pies
+
+        // When
+        let parsed = parse_filter(filter);
+
+        // Then
+        assert!(parsed.is_ok(), "{filter}: {:?}", parsed.unwrap_err());
+    }
+}
