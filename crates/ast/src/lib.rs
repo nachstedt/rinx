@@ -33,6 +33,7 @@
 //! share one implementation.
 
 mod admonition_kind;
+mod button_link;
 mod c_signature;
 mod chart_color;
 mod code_block;
@@ -82,6 +83,7 @@ mod version_change_kind;
 mod visit;
 
 pub use admonition_kind::AdmonitionKind;
+pub use button_link::{ButtonFlag, ButtonLink, ButtonTarget, TextAlign};
 pub use c_signature::{CSignature, NameSource, extract_c_object_name};
 pub use chart_color::{ChartColor, InvalidChartColor};
 pub use code_block::{CodeBlock, CodeBlockSource};

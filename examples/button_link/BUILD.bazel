@@ -1,0 +1,21 @@
+"""Documents exercising every `.. button-link::` option.
+
+Its own library and package, mirroring `//examples/dropdown`'s and
+`//examples/grid`'s shape: the directive has nine options whose effects are
+visual and independent, so each group gets a small page of its own rather than
+one page trying to show them all at once.
+
+sphinx-design's third *extension* directive family here — see `spec_gaps.md`'s
+"Third-party extension directives" section. Unlike the other two it needs no
+library of its own for anything it draws: a button is ordinary HTML, so there
+is no `diagrams = True` split here.
+"""
+
+load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = glob(["*.rst"]),
+    deps = [],
+    visibility = ["//visibility:public"],
+)

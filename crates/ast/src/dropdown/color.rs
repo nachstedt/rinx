@@ -1,10 +1,17 @@
-//! The semantic colour a `.. dropdown::` paints its summary bar with.
+//! The semantic colour a sphinx-design construct is painted in.
 //!
 //! Eleven names, which are sphinx-design's own `SEMANTIC_COLORS` tuple in its
 //! own order. They are a closed enum rather than an open string because each
-//! one becomes a *pair* of CSS classes (`sd-bg-<name>` and
-//! `sd-bg-text-<name>`) that this build's stylesheet has to define: a colour
-//! nobody styled would render as an unpainted bar rather than as an error.
+//! one becomes CSS classes this build's stylesheet has to define — a *pair*
+//! for a `.. dropdown::`'s summary bar (`sd-bg-<name>` and
+//! `sd-bg-text-<name>`), one for a `.. button-link::` (`sd-btn-<name>`, or
+//! `sd-btn-outline-<name>`): a colour nobody styled would render as an
+//! unpainted element rather than as an error.
+//!
+//! It lives under `dropdown/` because that is the directive that needed it
+//! first, and stays there rather than moving to the crate root: the vocabulary
+//! is sphinx-design's, not either directive's, and the module path is not
+//! worth a churn of every import. [`crate::ButtonLink`] is its second writer.
 
 use std::fmt;
 

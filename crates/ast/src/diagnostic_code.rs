@@ -146,6 +146,7 @@ diagnostic_codes! {
     DirectiveDropdownUnknownOption => "directive.dropdown-unknown-option",
     DirectiveGridUnknownOption => "directive.grid-unknown-option",
     DirectiveGridItemUnknownOption => "directive.grid-item-unknown-option",
+    DirectiveButtonLinkUnknownOption => "directive.button-link-unknown-option",
     DirectiveEntityTableUnknownOption => "directive.entity-table-unknown-option",
     DirectiveEntityFlowUnknownOption => "directive.entity-flow-unknown-option",
     DirectiveEntityPieUnknownOption => "directive.entity-pie-unknown-option",
@@ -377,6 +378,34 @@ diagnostic_codes! {
     GridItemOutsideGrid => "grid.item-outside-grid",
     /// An option that needs a value but was written without one.
     GridEmptyOptionValue => "grid.empty-option-value",
+
+    // --- `.. button-link::` -------------------------------------------------
+    //
+    // Named for the directive rather than for buttons in general: sphinx-design
+    // builds two of them from one base class, and `.. button-ref::` — which
+    // this build does not yet have — is a second *construct*, not a second
+    // spelling of this one. See `docs/decisions/018-button-link.md`.
+    /// A `:color:` naming none of the eleven semantic colours. The button is
+    /// left unpainted rather than given a class no stylesheet defines.
+    ButtonLinkInvalidColor => "button-link.invalid-color",
+    /// An `:align:` other than `left`, `right`, `center` or `justify`.
+    ButtonLinkInvalidAlign => "button-link.invalid-align",
+    /// A `.. button-link::` written with no URL to point at. The directive is
+    /// drawn as an error block quoting its source, as an argument-less
+    /// `.. image::` is.
+    ButtonLinkMissingTarget => "button-link.missing-target",
+    /// An option that needs a value but was written without one.
+    ButtonLinkEmptyOptionValue => "button-link.empty-option-value",
+    /// An option sphinx-design accepts here that this build refuses by name,
+    /// rather than accepting and ignoring it.
+    ButtonLinkUnsupportedOption => "button-link.unsupported-option",
+    /// An `:outline:` with no `:color:` to outline. sphinx-design produces no
+    /// class at all for that pair, so the option silently does nothing —
+    /// reported for the reason `uml.unusable-scale` is.
+    ButtonLinkUnusableOutline => "button-link.unusable-outline",
+    /// A reference role written inside a button's label, which would nest one
+    /// link inside another. The reference is rendered as its text alone.
+    ButtonLinkNestedReference => "button-link.nested-reference",
 
     // --- `.. sectnum::` / `.. section-numbering::` --------------------------
     /// A `:depth:` whose value is not a positive integer. Treated as no depth

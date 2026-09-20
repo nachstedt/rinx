@@ -198,6 +198,64 @@
       to { transform: translateY(0); }
     }
 
+    /* `.. button-link::` — sphinx-design's button, transcribed here for the
+       reason the dropdown rules above are: a template shipping no rules for it
+       renders every button as an ordinary inline link, which reads as a broken
+       feature rather than an unstyled one. This theme's own palette, not the
+       default theme's. */
+    .sd-btn {
+      display: inline-block;
+      padding: 0.4rem 0.9rem;
+      border: 1px solid #bdc3c7;
+      border-radius: 8px;
+      background: #ecf0f1;
+      color: #2c3e50;
+      line-height: 1.5;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .sd-btn:hover { filter: brightness(0.94); text-decoration: none; }
+    .sd-text-wrap { white-space: normal; }
+    .sd-shadow-sm { box-shadow: 0 2px 4px rgba(0,0,0,0.12); }
+    .sd-d-grid { display: grid; }
+    .sd-d-grid > .sd-btn { width: 100%; }
+    .sd-stretched-link::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    /* `:align:` — written on the paragraph holding the button, not on it. */
+    .sd-text-left { text-align: left; }
+    .sd-text-right { text-align: right; }
+    .sd-text-center { text-align: center; }
+    .sd-text-justify { text-align: justify; }
+    /* `:color:` — the same eleven names the `sd-bg-*` pairs above use. */
+    .sd-btn-primary { background: #2980b9; border-color: #2980b9; color: #ffffff; }
+    .sd-btn-secondary { background: #7f8c8d; border-color: #7f8c8d; color: #ffffff; }
+    .sd-btn-success { background: #27ae60; border-color: #27ae60; color: #ffffff; }
+    .sd-btn-info { background: #3498db; border-color: #3498db; color: #ffffff; }
+    .sd-btn-warning { background: #f39c12; border-color: #f39c12; color: #ffffff; }
+    .sd-btn-danger { background: #e74c3c; border-color: #e74c3c; color: #ffffff; }
+    .sd-btn-muted { background: #95a5a6; border-color: #95a5a6; color: #ffffff; }
+    .sd-btn-dark { background: #2c3e50; border-color: #2c3e50; color: #ffffff; }
+    .sd-btn-black { background: #000000; border-color: #000000; color: #ffffff; }
+    .sd-btn-light { background: #ecf0f1; border-color: #ecf0f1; color: #2c3e50; }
+    .sd-btn-white { background: #ffffff; border-color: #bdc3c7; color: #2c3e50; }
+    /* `:outline:` — the same colour as a border and text on no fill. */
+    .sd-btn-outline-primary { background: transparent; border-color: #2980b9; color: #2980b9; }
+    .sd-btn-outline-secondary { background: transparent; border-color: #7f8c8d; color: #7f8c8d; }
+    .sd-btn-outline-success { background: transparent; border-color: #27ae60; color: #27ae60; }
+    .sd-btn-outline-info { background: transparent; border-color: #3498db; color: #3498db; }
+    .sd-btn-outline-warning { background: transparent; border-color: #f39c12; color: #b9770e; }
+    .sd-btn-outline-danger { background: transparent; border-color: #e74c3c; color: #e74c3c; }
+    .sd-btn-outline-light { background: transparent; border-color: #ecf0f1; color: #7f8c8d; }
+    .sd-btn-outline-muted { background: transparent; border-color: #95a5a6; color: #7f8c8d; }
+    .sd-btn-outline-dark { background: transparent; border-color: #2c3e50; color: #2c3e50; }
+    .sd-btn-outline-white { background: transparent; border-color: #bdc3c7; color: #7f8c8d; }
+    .sd-btn-outline-black { background: transparent; border-color: #000000; color: #000000; }
+
     /* Glossary */
     dl.glossary {
       margin: 2rem 0;
