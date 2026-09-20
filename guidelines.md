@@ -175,6 +175,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Separate "this argument was never a path" from "this path could not be read" before touching the filesystem, since a reference implementation's config may resolve the argument first and blaming the filesystem for a missing config fails the build for a document that is not wrong.
 - An exported record carries every registered field whether set or not, so treat an unrecognised empty value — or an explicit null — as absent rather than as something to report.
 - Declare a name a *document* writes in the project's own configuration rather than in the build file, so the meaning travels with the documents that depend on it.
+- When a borrowed construct has a sibling that differs in exactly one field, model that field as an enum from the first commit — one variant is enough — so adding the sibling later is a new arm rather than a change to every match and every already-serialized file.
 
 ## Scope of a guideline
 

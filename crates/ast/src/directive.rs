@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::admonition_kind::AdmonitionKind;
+use crate::button_link::ButtonLink;
 use crate::code_block::CodeBlock;
 use crate::code_language::ResolvedLanguage;
 use crate::contents::Contents;
@@ -109,6 +110,16 @@ pub enum Directive {
     /// something that is not one, and still renders both. Nesting the type
     /// would turn those warnings into content loss.
     GridItem(Box<GridItem>),
+    /// `.. button-link::` — sphinx-design's button-shaped external link.
+    ///
+    /// Boxed like [`Self::Dropdown`], for the same reason: nine options, an
+    /// inline-markup label and a target make it a large payload beside the
+    /// enum's small variants.
+    ///
+    /// The one sphinx-design variant here with no block body at all — its
+    /// content is a *label*, parsed as inline markup — so unlike its three
+    /// neighbours it needs no arm in the traversals that walk block content.
+    ButtonLink(Box<ButtonLink>),
     /// `.. entity-table::`, and its sphinx-needs spelling `.. needtable::` —
     /// a table of the entities matching a filter.
     ///

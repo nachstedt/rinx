@@ -750,6 +750,87 @@ details.admonition[open] summary {
 .sd-pr-4 { padding-right: 1.5rem; }
 .sd-pr-5 { padding-right: 3rem; }
 
+/* ── Buttons (sphinx-design's `.. button-link::`) ────────────────────── */
+
+/* The class names below are sphinx-design's, so a page written for that
+   extension keeps its structure here; the rules themselves are this build's
+   own. The eleven `:color:` values reuse the palette the dropdown section
+   above defines, as `sd-btn-<name>` fills and `sd-btn-outline-<name>`
+   borders. */
+
+.sd-btn {
+  display: inline-block;
+  padding: 0.375rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  color: var(--text);
+  background: var(--bg-sidebar);
+  border-color: var(--border);
+  transition: filter 0.15s ease-in-out;
+}
+
+.sd-btn:hover { filter: brightness(0.94); text-decoration: none; }
+
+/* `:expand:` — the button fills the width its container offers. The wrapper
+   is what carries the width, so the button itself only has to fill it. */
+.sd-d-grid { display: grid; }
+.sd-d-grid > .sd-btn { width: 100%; }
+
+/* `:shadow:` */
+.sd-shadow-sm { box-shadow: var(--shadow-sm); }
+
+/* `:click-parent:` — the button's hit area covers its whole positioned
+   ancestor, which is how a card becomes clickable through the button in it. */
+.sd-stretched-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* `:align:` — written on the paragraph containing the button, not on the
+   button, which is why these align *text* rather than a box. */
+.sd-text-left { text-align: left; }
+.sd-text-right { text-align: right; }
+.sd-text-center { text-align: center; }
+.sd-text-justify { text-align: justify; }
+
+/* Long labels wrap rather than stretching the button off the line. */
+.sd-text-wrap { white-space: normal; }
+
+/* `:color:` — a filled button per semantic colour. The foreground is the same
+   split the dropdown's `sd-bg-text-*` pairs make: white on the dark seven,
+   near-black on the light four. */
+.sd-btn-primary { background: #0d6efd; border-color: #0d6efd; color: #ffffff; }
+.sd-btn-secondary { background: #6c757d; border-color: #6c757d; color: #ffffff; }
+.sd-btn-success { background: #198754; border-color: #198754; color: #ffffff; }
+.sd-btn-danger { background: #dc3545; border-color: #dc3545; color: #ffffff; }
+.sd-btn-muted { background: #6c757d; border-color: #6c757d; color: #ffffff; }
+.sd-btn-dark { background: #212529; border-color: #212529; color: #ffffff; }
+.sd-btn-black { background: #000000; border-color: #000000; color: #ffffff; }
+.sd-btn-info { background: #0dcaf0; border-color: #0dcaf0; color: #212529; }
+.sd-btn-warning { background: #ffc107; border-color: #ffc107; color: #212529; }
+.sd-btn-light { background: #f8f9fa; border-color: #f8f9fa; color: #212529; }
+.sd-btn-white { background: #ffffff; border-color: #dee2e6; color: #212529; }
+
+/* `:outline:` — the same colour as a border and text on no fill. */
+.sd-btn-outline-primary { background: transparent; border-color: #0d6efd; color: #0d6efd; }
+.sd-btn-outline-secondary { background: transparent; border-color: #6c757d; color: #6c757d; }
+.sd-btn-outline-success { background: transparent; border-color: #198754; color: #198754; }
+.sd-btn-outline-info { background: transparent; border-color: #0dcaf0; color: #0aa2c0; }
+.sd-btn-outline-warning { background: transparent; border-color: #ffc107; color: #997404; }
+.sd-btn-outline-danger { background: transparent; border-color: #dc3545; color: #dc3545; }
+.sd-btn-outline-light { background: transparent; border-color: #f8f9fa; color: #6c757d; }
+.sd-btn-outline-muted { background: transparent; border-color: #6c757d; color: #6c757d; }
+.sd-btn-outline-dark { background: transparent; border-color: #212529; color: #212529; }
+.sd-btn-outline-white { background: transparent; border-color: #dee2e6; color: #6c757d; }
+.sd-btn-outline-black { background: transparent; border-color: #000000; color: #000000; }
+
 /* ── Grids (sphinx-design's `.. grid::` / `.. grid-item::`) ─────────── */
 
 /* A twelve-column flex layout, in sphinx-design's class names so a page

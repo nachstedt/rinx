@@ -507,6 +507,9 @@ fn render_directive(
         Directive::Dropdown(dropdown) => {
             super::dropdown::render_dropdown(html, dropdown, ctx);
         }
+        Directive::ButtonLink(button) => {
+            super::button_link::render_button_link(html, button, ctx);
+        }
         // Misplaced (see the variant's own doc); its body still renders.
         Directive::EntitySection { body, .. } => render_nodes(html, body, ctx),
         Directive::Glossary { entries, .. } => render_glossary(html, entries, ctx),

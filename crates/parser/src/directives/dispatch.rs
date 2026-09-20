@@ -9,6 +9,7 @@ use crate::indent::indent_width;
 
 use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
 use super::body::{collect_argument_continuation_lines, collect_directive_body};
+use super::button_link::parse_button_link;
 use super::code_block::{parse_code_block, parse_highlight, parse_literal_include};
 use super::contents::parse_contents;
 use super::data_table::{parse_csv_table, parse_list_table};
@@ -559,6 +560,19 @@ fn try_parse_extension_directive(
             directive_span,
             body_lines,
             adornment_order,
+            diagnostics,
+            ctx,
+        ));
+    }
+    // sphinx-design's button-shaped external link. Unlike the three above it
+    // has no block body at all — its content is a label, parsed as inline
+    // markup — so it is the one member of this group no block traversal has to
+    // learn about.
+    if name == "button-link" {
+        return Some(parse_button_link(
+            argument,
+            directive_span,
+            body_lines,
             diagnostics,
             ctx,
         ));
@@ -1134,6 +1148,7 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     "dropdown",
     "grid",
     "grid-item",
+    "button-link",
     // sphinx-simplepdf's conditional-on-the-builder content
     "if-builder",
     // Listing directives over the entity graph, in both spellings

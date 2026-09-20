@@ -226,6 +226,34 @@ impl InlineNode {
         }
         self
     }
+
+    /// Whether this node renders as a hyperlink — an `<a>` element.
+    ///
+    /// Exists for the one construct that cannot contain one: a
+    /// [`crate::ButtonLink`]'s label is itself inside an `<a>`, and nesting
+    /// two would be invalid HTML. The parser reports such a label and the
+    /// renderer flattens it, and both ask this rather than keeping a list of
+    /// variants each — two lists that a new linking role would silently leave
+    /// disagreeing.
+    ///
+    /// A [`Self::DomainObjectReference`] written with a `!` prefix has
+    /// `link: false` and is deliberately *not* a link: its target is never
+    /// looked up, so it nests nothing.
+    #[must_use]
+    pub const fn renders_as_link(&self) -> bool {
+        match self {
+            Self::Reference { .. }
+            | Self::Hyperlink { .. }
+            | Self::AnonymousReference { .. }
+            | Self::AnonymousHyperlink { .. }
+            | Self::TermReference { .. }
+            | Self::OptionReference { .. }
+            | Self::EntityReference { .. }
+            | Self::EquationReference { .. } => true,
+            Self::DomainObjectReference { link, .. } => *link,
+            _ => false,
+        }
+    }
 }
 
 /// Flattens a sequence of inline nodes down to the plain text a reader would
@@ -274,6 +302,97 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
 mod tests {
     use super::*;
     use crate::object_type::PyObjectType;
+
+    #[test]
+    fn test_renders_as_link_is_true_for_every_reference_role() {
+        // Given — one node per variant the renderer sends to an `<a>`
+        let links = vec![
+            InlineNode::Reference {
+                display: "d".to_string(),
+                target: "t".to_string(),
+                span: None,
+            },
+            InlineNode::Hyperlink {
+                text: "t".to_string(),
+                target: "u".to_string(),
+                span: None,
+            },
+            InlineNode::AnonymousReference {
+                text: "t".to_string(),
+                span: None,
+            },
+            InlineNode::AnonymousHyperlink {
+                text: "t".to_string(),
+                target: "u".to_string(),
+            },
+            InlineNode::TermReference {
+                display: "d".to_string(),
+                term: "t".to_string(),
+                span: None,
+            },
+            InlineNode::OptionReference {
+                display: "d".to_string(),
+                target: "t".to_string(),
+                span: None,
+            },
+            InlineNode::EntityReference {
+                role: "req".to_string(),
+                target: "REQ_1".to_string(),
+                display: "REQ_1".to_string(),
+                span: None,
+            },
+        ];
+
+        // When / Then
+        for node in links {
+            assert!(
+                node.renders_as_link(),
+                "{node:?} should be reported as a link"
+            );
+        }
+    }
+
+    #[test]
+    fn test_renders_as_link_is_false_for_markup_that_is_not_a_link() {
+        // Given
+        let plain = vec![
+            InlineNode::Text("t".to_string()),
+            InlineNode::Emphasis("t".to_string()),
+            InlineNode::Strong("t".to_string()),
+            InlineNode::Literal("t".to_string()),
+            InlineNode::Program("t".to_string()),
+        ];
+
+        // When / Then
+        for node in plain {
+            assert!(!node.renders_as_link(), "{node:?} should not be a link");
+        }
+    }
+
+    #[test]
+    fn test_a_suppressed_domain_object_reference_is_not_a_link() {
+        // Given — the `!` prefix form, whose target is never looked up
+        let suppressed = InlineNode::DomainObjectReference {
+            object_type: ObjectType::Py(PyObjectType::Function),
+            name: "pkg.f".to_string(),
+            display: "pkg.f".to_string(),
+            link: false,
+            search_order: TargetSearchOrder::default(),
+            span: None,
+        };
+        let linked = InlineNode::DomainObjectReference {
+            object_type: ObjectType::Py(PyObjectType::Function),
+            name: "pkg.f".to_string(),
+            display: "pkg.f".to_string(),
+            link: true,
+            search_order: TargetSearchOrder::default(),
+            span: None,
+        };
+
+        // When / Then
+        assert!(!suppressed.renders_as_link());
+        assert!(linked.renders_as_link());
+    }
 
     #[test]
     fn test_inline_node_program_serialization_roundtrip() {

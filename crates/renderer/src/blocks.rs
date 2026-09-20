@@ -21,6 +21,7 @@
 mod admonitions;
 mod asset_href;
 mod block_quote;
+mod button_link;
 mod code_block;
 mod contents;
 mod data_table;

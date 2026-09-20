@@ -172,8 +172,13 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         // are resolved from the project index while rendering, so there is
         // nothing in this document to walk, and neither are a flowchart's
         // nodes and edges or a pie chart's wedges: they are generated from
-        // that same index.
-        Directive::EntityTable(_)
+        // that same index. A `.. button-link::` is a leaf for the same reason
+        // the substitution definition beside it is: its content is a *label*,
+        // parsed as inline markup, so this walker has nothing to descend into
+        // — which is why it needs no arm in the block traversals its three
+        // sphinx-design neighbours above all appear in.
+        Directive::ButtonLink(_)
+        | Directive::EntityTable(_)
         | Directive::EntityFlow(_)
         | Directive::EntityPie(_)
         | Directive::Image(_)
