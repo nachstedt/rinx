@@ -6,6 +6,7 @@ use super::document_index::analyze;
 use super::entity_index::{
     collect_entity_diagnostics, collect_schema_mismatches, derive_entity_backlinks,
 };
+use super::entity_update_apply::apply_entity_updates;
 use super::page_order::collect_page_order;
 use super::section_numbering::assign_section_numbers;
 use rusty_sphinx_toctree::expand_toctree;
@@ -55,9 +56,14 @@ pub fn build_project_index_reporting(
     index.root_documents = find_root_documents(docs, &index, root_doc);
     index.section_numbers = assign_section_numbers(&index, &universe);
     index.page_order = collect_page_order(&index, &universe);
+    // Applying every collected `.. entity-update::`/`.. needextend::` comes
+    // next: it can change an entity's *effective* outgoing edges (never its
+    // own record — see `apply_entity_updates`'s own doc comment), and
+    // back-links must be derived from those, not from the as-authored ones.
+    let update_diagnostics = apply_entity_updates(&mut index, schema);
     // Entity back-links come last among the index phases: they are a function
-    // of the merged graph, exactly as page order is a function of the merged
-    // toctrees.
+    // of the merged (and now updated) graph, exactly as page order is a
+    // function of the merged toctrees.
     index.entity_backlinks = derive_entity_backlinks(&index, schema);
 
     let schema_hashes: Vec<(&str, Option<&str>)> = docs
@@ -68,6 +74,7 @@ pub fn build_project_index_reporting(
     let mut diagnostics = super::nav_diagnostics::collect_nav_diagnostics(docs, &index);
     diagnostics.extend(merge_diagnostics);
     diagnostics.extend(collect_schema_mismatches(&schema_hashes, schema));
+    diagnostics.extend(update_diagnostics);
     diagnostics.extend(collect_entity_diagnostics(&index, schema));
     ProjectIndexBuild { index, diagnostics }
 }

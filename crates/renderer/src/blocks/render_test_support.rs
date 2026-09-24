@@ -80,6 +80,7 @@ pub(super) fn with_ctx_for<R>(
         highlighter: &highlighter,
         highlight_language: language,
         collapse_entities: true,
+        show_entity_updates: crate::blocks::EntityUpdateVisibility::Show,
         uml_configs: &std::collections::BTreeMap::new(),
         linenothreshold: None,
         highlight_force: false,

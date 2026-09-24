@@ -68,6 +68,18 @@ pub struct SiteConfig {
     #[serde(default = "default_collapse_entities")]
     pub collapse_entities: bool,
 
+    /// Whether `.. entity-update::`/`.. needextend::` renders its own visible
+    /// box — its target, its field mutations and its justification prose.
+    ///
+    /// On by default, the one deliberate divergence from sphinx-needs' own
+    /// `needextend`, which renders nothing at all: the whole point of this
+    /// directive's traceable, non-destructive design (see
+    /// `docs/decisions/019-entity-update.md`) is the audit trail it leaves,
+    /// and an audit trail nobody can see is not much of one. Set `false` for
+    /// a site that wants the mutation applied silently.
+    #[serde(default = "default_show_entity_updates")]
+    pub show_entity_updates: bool,
+
     /// Named `PlantUML` preambles a diagram may ask for with `:config:`.
     ///
     /// The *text* of a preamble, keyed by the name a directive names it by —
@@ -100,6 +112,10 @@ fn default_collapse_entities() -> bool {
     true
 }
 
+fn default_show_entity_updates() -> bool {
+    true
+}
+
 fn default_project() -> String {
     "Documentation".to_string()
 }
@@ -116,6 +132,7 @@ impl Default for SiteConfig {
             root_doc: default_root_doc(),
             highlight_language: ResolvedLanguage::default(),
             collapse_entities: default_collapse_entities(),
+            show_entity_updates: default_show_entity_updates(),
             uml_configs: std::collections::BTreeMap::new(),
         }
     }
@@ -308,5 +325,28 @@ mod collapse_entities_tests {
 
         // Then
         assert!(!config.collapse_entities);
+    }
+}
+
+#[cfg(test)]
+mod show_entity_updates_tests {
+    use super::*;
+
+    #[test]
+    fn test_entity_updates_render_unless_the_config_turns_it_off() {
+        // Given — a config that says nothing about it
+        let config: SiteConfig = toml::from_str("project = \"Docs\"").unwrap();
+
+        // When / Then
+        assert!(config.show_entity_updates);
+    }
+
+    #[test]
+    fn test_silent_application_can_be_asked_for() {
+        // Given / When
+        let config: SiteConfig = toml::from_str("show_entity_updates = false").unwrap();
+
+        // Then
+        assert!(!config.show_entity_updates);
     }
 }

@@ -9,10 +9,11 @@
 //! `MiniJinja` cannot render RST, so the node tree must never reach it — the same
 //! containment `math.rs` and `highlight.rs` give their backends.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use minijinja::{Environment, Value, context};
-use rusty_sphinx_ast::EntityBody;
+use rusty_sphinx_ast::{EntityBody, EntityId, FieldMutationMode};
+use rusty_sphinx_index::{AppliedFieldUpdate, AppliedRelationUpdate};
 
 use crate::RenderCtx;
 
@@ -60,14 +61,52 @@ fn render_source(name: &str, source: &str, value: &Value) -> Result<String, Stri
 
 /// Builds the values a template may read.
 ///
-/// Four separate namespaces — `attributes`, `sections`, `outgoing`,
-/// `incoming` — rather than one flat map. That is what makes a back-link named
-/// `title` harmless, and is why the schema needs no list of reserved words.
+/// Five separate namespaces — `attributes`, `sections`, `outgoing`,
+/// `incoming`, `history` — rather than one flat map. That is what makes a
+/// back-link named `title` harmless, and is why the schema needs no list of
+/// reserved words.
+///
+/// `attributes` and `outgoing` are the entity's *effective* values —
+/// `super::effective_attribute`/`super::effective_relation_targets`, the same
+/// accessors the built-in rendering reads through — never `entity.attributes`/
+/// `entity.relations` directly, or a `.. entity-update::`'s effect would be
+/// invisible to a custom template exactly as it once was to the built-in box.
+/// See `docs/decisions/019-entity-update.md`.
 fn build_context(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
-    let attributes: BTreeMap<String, String> = entity
-        .attributes
-        .iter()
-        .map(|(name, value)| (name.clone(), value.to_string()))
+    let entity_type = ctx.schema.entity_type(&entity.type_name);
+
+    let attribute_names: BTreeSet<&str> = entity_type
+        .map(|t| t.attributes.iter().map(|a| a.name.as_str()).collect())
+        .unwrap_or_default();
+    let attribute_names: BTreeSet<&str> = attribute_names
+        .into_iter()
+        .chain(entity.attributes.keys().map(String::as_str))
+        .collect();
+    let attributes: BTreeMap<String, String> = attribute_names
+        .into_iter()
+        .filter_map(|name| {
+            Some((
+                name.to_string(),
+                super::effective_attribute(entity, name, ctx)?.to_string(),
+            ))
+        })
+        .collect();
+
+    let relation_names: BTreeSet<&str> = entity_type
+        .map(|t| t.relations.iter().map(|r| r.name.as_str()).collect())
+        .unwrap_or_default();
+    let relation_names: BTreeSet<&str> = relation_names
+        .into_iter()
+        .chain(entity.relations.keys().map(String::as_str))
+        .collect();
+    let outgoing: BTreeMap<String, Vec<EntityId>> = relation_names
+        .into_iter()
+        .map(|name| {
+            (
+                name.to_string(),
+                super::effective_relation_targets(entity, name, ctx).to_vec(),
+            )
+        })
         .collect();
 
     // Rendered first, and to HTML, because the template engine cannot render
@@ -97,8 +136,8 @@ fn build_context(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
         }
     }
 
-    let entity_type = ctx.schema.entity_type(&entity.type_name);
     let label = entity_type.map_or(entity.type_name.clone(), |t| t.display_label().to_string());
+    let history = build_history(entity, ctx);
 
     context! {
         labels => declared_labels(entity_type, &entity.type_name, ctx),
@@ -111,7 +150,8 @@ fn build_context(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
         content => content,
         sections => sections,
         attributes => attributes,
-        outgoing => link_namespace(&entity.relations, ctx),
+        history => history,
+        outgoing => link_namespace(&outgoing, ctx),
         incoming => ctx
             .index
             .entity_backlinks
@@ -119,6 +159,117 @@ fn build_context(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
             .map(|backlinks| link_namespace(backlinks, ctx))
             .unwrap_or_default(),
     }
+}
+
+/// The entity's traceable update history — original value, every applied
+/// change (with its source and, when written, a rendered justification), and
+/// the resulting current value — for a custom template that wants to build
+/// its own changelog/audit UI. Empty namespaces for an entity no
+/// `.. entity-update::` ever touched, rather than an absent `history`
+/// variable, so a template can read `history.attributes.status.current`
+/// unconditionally.
+fn build_history(entity: &EntityBody, ctx: &mut RenderCtx<'_>) -> Value {
+    let Some(field_history) = ctx.index.entity_update_history.get(&entity.id).cloned() else {
+        return context! {
+            attributes => BTreeMap::<String, Value>::new(),
+            relations => BTreeMap::<String, Value>::new(),
+        };
+    };
+    let attributes: BTreeMap<String, Value> = field_history
+        .attributes
+        .iter()
+        .map(|(name, history)| {
+            let applied: Vec<Value> = history
+                .applied
+                .iter()
+                .map(|entry| applied_attribute_value(entry, ctx))
+                .collect();
+            (
+                template_key(name),
+                context! {
+                    original => history.original.as_ref().map(ToString::to_string),
+                    current => history.current.as_ref().map(ToString::to_string),
+                    applied => applied,
+                },
+            )
+        })
+        .collect();
+    let relations: BTreeMap<String, Value> = field_history
+        .relations
+        .iter()
+        .map(|(name, history)| {
+            let applied: Vec<Value> = history
+                .applied
+                .iter()
+                .map(|entry| applied_relation_value(entry, ctx))
+                .collect();
+            (
+                template_key(name),
+                context! {
+                    original => history.original.iter().map(EntityId::to_string).collect::<Vec<_>>(),
+                    current => history.current.iter().map(EntityId::to_string).collect::<Vec<_>>(),
+                    applied => applied,
+                },
+            )
+        })
+        .collect();
+    context! { attributes => attributes, relations => relations }
+}
+
+/// One entry of an attribute's audit trail.
+fn applied_attribute_value(entry: &AppliedFieldUpdate, ctx: &mut RenderCtx<'_>) -> Value {
+    context! {
+        doc_path => entry.doc_path.clone(),
+        line => entry.span.map(|s| s.start.line),
+        mode => mode_label(&entry.mode),
+        value => entry.resulting_value.as_ref().map(ToString::to_string),
+        conflict => entry.conflicts_with.is_some(),
+        justification => Value::from_safe_string(justification_html(entry.update_index, ctx)),
+    }
+}
+
+/// One entry of a relation's audit trail.
+fn applied_relation_value(entry: &AppliedRelationUpdate, ctx: &mut RenderCtx<'_>) -> Value {
+    context! {
+        doc_path => entry.doc_path.clone(),
+        line => entry.span.map(|s| s.start.line),
+        mode => mode_label(&entry.mode),
+        targets => entry.resulting_targets.iter().map(EntityId::to_string).collect::<Vec<_>>(),
+        conflict => entry.conflicts_with.is_some(),
+        justification => Value::from_safe_string(justification_html(entry.update_index, ctx)),
+    }
+}
+
+/// The written spelling of a mutation's operation, for a template to switch
+/// or label on.
+fn mode_label(mode: &FieldMutationMode) -> &'static str {
+    match mode {
+        FieldMutationMode::Set(_) => "set",
+        FieldMutationMode::Append(_) => "append",
+        FieldMutationMode::Remove(_) => "remove",
+        FieldMutationMode::Clear => "clear",
+    }
+}
+
+/// The `.. entity-update::`/`.. needextend::` directive's own justification
+/// prose, rendered to HTML — empty when the index carries no directive at
+/// that position (should not happen: `update_index` always names a position
+/// in `ctx.index.entity_updates`, the same vector every history entry's
+/// index was taken from).
+///
+/// The body is cloned out of the index before rendering, rather than
+/// borrowed: rendering needs `&mut RenderCtx`, which cannot coexist with a
+/// borrow of `ctx.index` itself.
+fn justification_html(update_index: usize, ctx: &mut RenderCtx<'_>) -> String {
+    let Some(body) = ctx
+        .index
+        .entity_updates
+        .get(update_index)
+        .map(|record| record.update.body.clone())
+    else {
+        return String::new();
+    };
+    render_nodes_to_html(&body, ctx)
 }
 
 /// The labels the type declares, so a template renders an attribute, a section

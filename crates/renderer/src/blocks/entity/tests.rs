@@ -98,6 +98,26 @@ fn requirement() -> EntityBody {
     }
 }
 
+/// An `EntityRecord` for `REQ_001` agreeing exactly with [`requirement`]'s own
+/// `EntityBody` — the "as-authored, untouched" case, distinct from a test
+/// that gives the record a *different* value to prove the index wins.
+fn requirement_record() -> EntityRecord {
+    EntityRecord {
+        type_name: "req".to_string(),
+        doc_path: "specs/boot".to_string(),
+        title: Some("Boot quickly".to_string()),
+        attributes: BTreeMap::from([(
+            "status".to_string(),
+            AttributeValue::String("open".to_string()),
+        )]),
+        outgoing: BTreeMap::from([(
+            "links".to_string(),
+            vec![EntityId::new("SPEC_003").unwrap()],
+        )]),
+        uml: BTreeMap::new(),
+    }
+}
+
 /// An index holding the requirement's link target, plus its back-link.
 fn index() -> ProjectIndex {
     let mut index = ProjectIndex::default();
@@ -233,6 +253,216 @@ fn test_attributes_render_under_their_declared_labels() {
     assert!(
         html.contains("<th>Current status</th><td>open</td>"),
         "unexpected html: {html}"
+    );
+}
+
+#[test]
+fn test_render_attributes_prefers_the_index_record_over_the_ast() {
+    // Given — REQ_001's own EntityBody says `status: open`, but the merged
+    // project index (as a `.. entity-update::` would leave it) says `closed`
+    let mut index = index();
+    index.entities.insert(
+        EntityId::new("REQ_001").unwrap(),
+        EntityRecord {
+            type_name: "req".to_string(),
+            doc_path: "specs/boot".to_string(),
+            title: Some("Boot quickly".to_string()),
+            attributes: BTreeMap::from([(
+                "status".to_string(),
+                AttributeValue::String("closed".to_string()),
+            )]),
+            outgoing: BTreeMap::new(),
+            uml: BTreeMap::new(),
+        },
+    );
+
+    // When
+    let html = render(requirement(), &index);
+
+    // Then — the index's value wins, not the as-authored one
+    assert!(
+        html.contains("<th>Current status</th><td>closed</td>"),
+        "unexpected html: {html}"
+    );
+    assert!(!html.contains(">open<"), "stale value leaked: {html}");
+}
+
+#[test]
+fn test_render_attributes_prefers_the_update_history_current_value() {
+    // Given — the record's own value agrees with the AST, but a
+    // `.. entity-update::` has since set a different current value
+    let mut index = index();
+    index
+        .entities
+        .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
+    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    history.attributes.insert(
+        "status".to_string(),
+        rusty_sphinx_index::AttributeFieldHistory {
+            original: Some(AttributeValue::String("open".to_string())),
+            applied: Vec::new(),
+            current: Some(AttributeValue::String("closed".to_string())),
+        },
+    );
+    index
+        .entity_update_history
+        .insert(EntityId::new("REQ_001").unwrap(), history);
+
+    // When
+    let html = render(requirement(), &index);
+
+    // Then
+    assert!(
+        html.contains("<th>Current status</th><td>closed</td>"),
+        "unexpected html: {html}"
+    );
+}
+
+#[test]
+fn test_render_attributes_marks_a_conflicting_value() {
+    // Given — the most recent applied change to `status` conflicted with an
+    // earlier one from a different `.. entity-update::`
+    let mut index = index();
+    index
+        .entities
+        .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
+    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    history.attributes.insert(
+        "status".to_string(),
+        rusty_sphinx_index::AttributeFieldHistory {
+            original: Some(AttributeValue::String("open".to_string())),
+            applied: vec![rusty_sphinx_index::AppliedFieldUpdate {
+                update_index: 1,
+                doc_path: "specs/other".to_string(),
+                span: None,
+                mode: rusty_sphinx_ast::FieldMutationMode::Set("in_progress".to_string()),
+                resulting_value: Some(AttributeValue::String("in_progress".to_string())),
+                conflicts_with: Some(0),
+            }],
+            current: Some(AttributeValue::String("in_progress".to_string())),
+        },
+    );
+    index
+        .entity_update_history
+        .insert(EntityId::new("REQ_001").unwrap(), history);
+
+    // When
+    let html = render(requirement(), &index);
+
+    // Then
+    assert!(html.contains("entity-conflict"), "unexpected html: {html}");
+    assert!(html.contains("in_progress"), "unexpected html: {html}");
+}
+
+#[test]
+fn test_render_attributes_does_not_mark_an_undisputed_value() {
+    // Given — a plain update, no conflict
+    let mut index = index();
+    index
+        .entities
+        .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
+    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    history.attributes.insert(
+        "status".to_string(),
+        rusty_sphinx_index::AttributeFieldHistory {
+            original: Some(AttributeValue::String("open".to_string())),
+            applied: vec![rusty_sphinx_index::AppliedFieldUpdate {
+                update_index: 0,
+                doc_path: "specs/boot".to_string(),
+                span: None,
+                mode: rusty_sphinx_ast::FieldMutationMode::Set("closed".to_string()),
+                resulting_value: Some(AttributeValue::String("closed".to_string())),
+                conflicts_with: None,
+            }],
+            current: Some(AttributeValue::String("closed".to_string())),
+        },
+    );
+    index
+        .entity_update_history
+        .insert(EntityId::new("REQ_001").unwrap(), history);
+
+    // When
+    let html = render(requirement(), &index);
+
+    // Then
+    assert!(!html.contains("entity-conflict"), "unexpected html: {html}");
+}
+
+#[test]
+fn test_render_links_marks_a_conflicting_relation() {
+    // Given
+    let mut index = index();
+    index
+        .entities
+        .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
+    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    history.relations.insert(
+        "links".to_string(),
+        rusty_sphinx_index::RelationFieldHistory {
+            original: vec![EntityId::new("SPEC_003").unwrap()],
+            applied: vec![rusty_sphinx_index::AppliedRelationUpdate {
+                update_index: 1,
+                doc_path: "specs/other".to_string(),
+                span: None,
+                mode: rusty_sphinx_ast::FieldMutationMode::Set("SPEC_999".to_string()),
+                resulting_targets: vec![EntityId::new("SPEC_999").unwrap()],
+                conflicts_with: Some(0),
+            }],
+            current: vec![EntityId::new("SPEC_999").unwrap()],
+        },
+    );
+    index
+        .entity_update_history
+        .insert(EntityId::new("REQ_001").unwrap(), history);
+
+    // When
+    let html = render(requirement(), &index);
+
+    // Then
+    assert!(html.contains("entity-conflict"), "unexpected html: {html}");
+}
+
+#[test]
+fn test_render_links_prefers_the_update_history_current_targets() {
+    // Given — an update appended SPEC_004 to REQ_001's `links`
+    let mut index = index();
+    index.entities.insert(
+        EntityId::new("SPEC_004").unwrap(),
+        EntityRecord {
+            type_name: "spec".to_string(),
+            doc_path: "specs/other-detail".to_string(),
+            title: None,
+            attributes: BTreeMap::new(),
+            outgoing: BTreeMap::new(),
+            uml: BTreeMap::new(),
+        },
+    );
+    index
+        .entities
+        .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
+    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    history.relations.insert(
+        "links".to_string(),
+        rusty_sphinx_index::RelationFieldHistory {
+            original: vec![EntityId::new("SPEC_003").unwrap()],
+            applied: Vec::new(),
+            current: vec![
+                EntityId::new("SPEC_003").unwrap(),
+                EntityId::new("SPEC_004").unwrap(),
+            ],
+        },
+    );
+    index
+        .entity_update_history
+        .insert(EntityId::new("REQ_001").unwrap(), history);
+
+    // When
+    let html = render(requirement(), &index);
+
+    // Then
+    assert!(
+        html.contains("href=\"other-detail.html#entity-SPEC_004\""),
+        "the appended target should be linked: {html}"
     );
 }
 
@@ -473,6 +703,134 @@ fn test_a_template_reads_a_back_link_label_declared_on_the_other_type() {
 
     // Then
     assert!(html.contains("Implemented by"), "unexpected html: {html}");
+}
+
+#[test]
+fn test_a_template_reads_the_effective_attribute_value_not_the_ast() {
+    // Given — REQ_001's own EntityBody says `status: open`, but the index
+    // (as a `.. entity-update::` would leave it) says `closed`
+    let schema = template_schema();
+    let templates = one_template("{{ attributes.status }}");
+    let mut index = index();
+    index.entities.insert(
+        EntityId::new("REQ_001").unwrap(),
+        EntityRecord {
+            type_name: "req".to_string(),
+            doc_path: "specs/boot".to_string(),
+            title: Some("Boot quickly".to_string()),
+            attributes: BTreeMap::from([(
+                "status".to_string(),
+                AttributeValue::String("closed".to_string()),
+            )]),
+            outgoing: BTreeMap::new(),
+            uml: BTreeMap::new(),
+        },
+    );
+
+    // When
+    let html = render_through(requirement(), &index, &schema, &templates);
+
+    // Then
+    assert_eq!(html.trim(), "closed");
+}
+
+#[test]
+fn test_a_template_reads_the_effective_outgoing_targets() {
+    // Given — an update appended SPEC_004
+    let schema = template_schema();
+    let templates = one_template("{% for l in outgoing.links %}{{ l.id }} {% endfor %}");
+    let mut index = index();
+    index.entities.insert(
+        EntityId::new("SPEC_004").unwrap(),
+        EntityRecord {
+            type_name: "spec".to_string(),
+            doc_path: "specs/other-detail".to_string(),
+            title: None,
+            attributes: BTreeMap::new(),
+            outgoing: BTreeMap::new(),
+            uml: BTreeMap::new(),
+        },
+    );
+    index
+        .entities
+        .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
+    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    history.relations.insert(
+        "links".to_string(),
+        rusty_sphinx_index::RelationFieldHistory {
+            original: vec![EntityId::new("SPEC_003").unwrap()],
+            applied: Vec::new(),
+            current: vec![
+                EntityId::new("SPEC_003").unwrap(),
+                EntityId::new("SPEC_004").unwrap(),
+            ],
+        },
+    );
+    index
+        .entity_update_history
+        .insert(EntityId::new("REQ_001").unwrap(), history);
+
+    // When
+    let html = render_through(requirement(), &index, &schema, &templates);
+
+    // Then
+    assert!(html.contains("SPEC_003"), "unexpected html: {html}");
+    assert!(html.contains("SPEC_004"), "unexpected html: {html}");
+}
+
+#[test]
+fn test_a_template_reads_the_update_history() {
+    // Given
+    let schema = template_schema();
+    let templates = one_template(
+        "{{ history.attributes.status.original }}|{{ history.attributes.status.current }}\
+         |{{ history.attributes.status.applied.0.doc_path }}\
+         |{{ history.attributes.status.applied.0.mode }}",
+    );
+    let mut index = index();
+    index
+        .entities
+        .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
+    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    history.attributes.insert(
+        "status".to_string(),
+        rusty_sphinx_index::AttributeFieldHistory {
+            original: Some(AttributeValue::String("open".to_string())),
+            applied: vec![rusty_sphinx_index::AppliedFieldUpdate {
+                update_index: 0,
+                doc_path: "specs/review.rst".to_string(),
+                span: None,
+                mode: rusty_sphinx_ast::FieldMutationMode::Set("closed".to_string()),
+                resulting_value: Some(AttributeValue::String("closed".to_string())),
+                conflicts_with: None,
+            }],
+            current: Some(AttributeValue::String("closed".to_string())),
+        },
+    );
+    index
+        .entity_update_history
+        .insert(EntityId::new("REQ_001").unwrap(), history);
+
+    // When
+    let html = render_through(requirement(), &index, &schema, &templates);
+
+    // Then — `doc_path` is a plain string value, escaped like any other by
+    // MiniJinja's default auto-escaping (see `test_render_source_escapes_a_plain_value`)
+    assert_eq!(html.trim(), "open|closed|specs&#x2f;review.rst|set");
+}
+
+#[test]
+fn test_the_update_history_is_empty_for_an_untouched_entity() {
+    // Given — no `.. entity-update::` ever touched REQ_001
+    let schema = template_schema();
+    let templates =
+        one_template("{{ history.attributes | length }}|{{ history.relations | length }}");
+
+    // When
+    let html = render_through(requirement(), &index(), &schema, &templates);
+
+    // Then — empty namespaces, not an undefined `history`
+    assert_eq!(html.trim(), "0|0");
 }
 
 #[test]

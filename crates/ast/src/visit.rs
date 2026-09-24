@@ -122,6 +122,9 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         | Directive::EntitySection { body, .. }
         | Directive::SeeAlso { body } => walk_nodes(body, visit),
         Directive::Dropdown(dropdown) => walk_nodes(&dropdown.body, visit),
+        // Its body is ordinary content, exactly as a dropdown's is — a target
+        // or entity written in the justification belongs to this document.
+        Directive::EntityUpdate(update) => walk_nodes(&update.body, visit),
         Directive::Grid(grid) => walk_nodes(&grid.body, visit),
         Directive::GridItem(item) => walk_nodes(&item.body, visit),
         Directive::Glossary { entries, .. } => {

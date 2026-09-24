@@ -1,5 +1,7 @@
 use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TableRow, TargetName};
-use rusty_sphinx_index::{EquationLocation, GenIndexEntry, ProjectIndex, TargetLocation};
+use rusty_sphinx_index::{
+    EntityUpdateRecord, EquationLocation, GenIndexEntry, ProjectIndex, TargetLocation,
+};
 use rusty_sphinx_scope::Scope;
 
 use super::domain_object_index::index_domain_object;
@@ -88,6 +90,23 @@ fn index_genindex_entries(
     }
 }
 
+/// Records a `.. entity-update::`/`.. needextend::` so `apply_entity_updates`
+/// can act on it once every document is merged, and indexes its body as
+/// ordinary content belonging to this document — a target or entity written
+/// in the justification is reached exactly as a dropdown's body is.
+fn index_entity_update(
+    update: &rusty_sphinx_ast::EntityUpdate,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    scope: &mut Scope,
+) {
+    index.entity_updates.push(EntityUpdateRecord {
+        doc_path: doc_path.to_string(),
+        update: update.clone(),
+    });
+    index_nodes(&update.body, doc_path, index, scope);
+}
+
 /// Records one entity, its link target, and everything inside its sections.
 fn index_entity_and_its_sections(
     entity: &rusty_sphinx_ast::EntityBody,
@@ -163,6 +182,9 @@ pub(super) fn index_nodes(
             Node::Directive(Directive::Entity(entity)) => {
                 index_entity_and_its_sections(entity, doc_path, index, scope);
             }
+            Node::Directive(Directive::EntityUpdate(update)) => {
+                index_entity_update(update, doc_path, index, scope);
+            }
             Node::Directive(Directive::Glossary { entries, .. }) => {
                 for entry in entries {
                     for term in &entry.terms {
@@ -186,24 +208,18 @@ pub(super) fn index_nodes(
                 | Directive::StdProgram { .. }),
             ) => apply_scope_directive(directive, scope),
             Node::Directive(
-                Directive::Admonition { body, .. }
-                | Directive::VersionChange { body, .. }
-                | Directive::EntitySection { body, .. }
-                | Directive::SeeAlso { body },
-            ) => {
-                index_nodes(body, doc_path, index, scope);
-            }
-            // A grid carries no `:name:` of its own, so unlike a dropdown it
-            // reaches none of the name-bearing arms — but its body is still
-            // this document's content, and a target, section or entity
-            // written in a cell belongs to the document exactly as if it had
-            // been written outside one.
-            Node::Directive(Directive::Grid(grid)) => {
-                index_nodes(&grid.body, doc_path, index, scope);
-            }
-            Node::Directive(Directive::GridItem(item)) => {
-                index_nodes(&item.body, doc_path, index, scope);
-            }
+                directive @ (Directive::Admonition { .. }
+                | Directive::VersionChange { .. }
+                | Directive::EntitySection { .. }
+                | Directive::SeeAlso { .. }
+                // A grid carries no `:name:` of its own, so unlike a
+                // dropdown it reaches none of the name-bearing arms — but its
+                // body is still this document's content, and a target,
+                // section or entity written in a cell belongs to the
+                // document exactly as if it had been written outside one.
+                | Directive::Grid(_)
+                | Directive::GridItem(_)),
+            ) => index_body_only_directive(directive, doc_path, index, scope),
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
                     index_nodes(&item.nodes, doc_path, index, scope);
@@ -248,6 +264,33 @@ pub(super) fn index_nodes(
             _ => {}
         }
     }
+}
+
+/// Recurses into the body of a directive that contributes nothing of its own
+/// to the index, but whose content is still ordinary content belonging to
+/// this document — a target, section or entity written inside one of these
+/// must still be reached.
+///
+/// Split out of [`index_nodes`] for the same reason [`apply_scope_directive`]
+/// is: these five arms were the bulk of what made that match too long. Any
+/// other directive is a no-op here rather than a panic, for the same reason
+/// `apply_scope_directive`'s catch-all is.
+fn index_body_only_directive(
+    directive: &Directive,
+    doc_path: &str,
+    index: &mut ProjectIndex,
+    scope: &mut Scope,
+) {
+    let body = match directive {
+        Directive::Admonition { body, .. }
+        | Directive::VersionChange { body, .. }
+        | Directive::EntitySection { body, .. }
+        | Directive::SeeAlso { body } => body,
+        Directive::Grid(grid) => &grid.body,
+        Directive::GridItem(item) => &item.body,
+        _ => return,
+    };
+    index_nodes(body, doc_path, index, scope);
 }
 
 /// Applies the directives that only move the traversal scope, indexing

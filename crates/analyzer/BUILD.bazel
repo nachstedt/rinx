@@ -11,6 +11,7 @@ rust_library(
     ) + [
         "//crates/ast:rusty_sphinx_ast",
         "//crates/entity:rusty_sphinx_entity",
+        "//crates/filter:rusty_sphinx_filter",
         "//crates/toctree:rusty_sphinx_toctree",
         "//crates/index:rusty_sphinx_index",
         "//crates/scope:rusty_sphinx_scope",

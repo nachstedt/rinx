@@ -13,6 +13,7 @@
 mod document_index;
 mod domain_object_index;
 mod entity_index;
+mod entity_update_apply;
 mod equation_numbering;
 mod nav_diagnostics;
 mod outline;

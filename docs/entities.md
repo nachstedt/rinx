@@ -862,8 +862,10 @@ Deliberately **not** supported:
   already does. `needtable`, `needflow`, `needpie`, `needuml` and `needarch`
   *are* supported; see "Listing entities", "Flowcharts of the graph",
   "Charting the graph" and "Diagramming entities".
-- **Dynamic functions** (`[[copy('id')]]`), `needextend` and `needservice`.
-  `needimport` *is* supported — see "Importing from sphinx-needs" below.
+- **Dynamic functions** (`[[copy('id')]]`) and `needservice`. `needimport`
+  *is* supported — see "Importing from sphinx-needs" below — and so is
+  `needextend`, under this build's own name `.. entity-update::`; see
+  `docs/decisions/019-entity-update.md`.
 
 ---
 
