@@ -191,7 +191,7 @@ Two things differ from the CPython benchmark's generated project, both forced by
 The full listing goes to **`benchmark_entities_result.txt`** in the workspace root (git-ignored); the terminal shows counts only.
 
 1. **Entities Parsed By Type** — the positive signal. A declared type with zero instances means either the corpus never used it, or its directives sit somewhere the parser never reached (nested inside a directive we do not recognize, for instance).
-2. **Unsupported Directives Summary** — dominated by the part of sphinx-needs' *query and report* half the entity model does not attempt (`needbar`, `needsequence`, `needservice`) — `needtable`, `needflow`, `needpie`, `needuml`, `needarch`, `needimport` and `needextend` are supported and no longer appear there. Counting them is how we find out what a migrating project would lose.
+2. **Unsupported Directives Summary** — dominated by the part of sphinx-needs' *query and report* half the entity model does not attempt (`needbar`, `needsequence`) — `needservice` is refused by name and so is counted in its own `needservice.unsupported` section below instead, and `needtable`, `needflow`, `needpie`, `needuml`, `needarch`, `needimport` and `needextend` are supported and no longer appear there. Counting them is how we find out what a migrating project would lose.
 3. **Sphinx-Needs Constructs Without An Entity-Model Equivalent** — the converter's report, grouped by category.
 4. **One section per diagnostic code** (`entity.unknown-target`, `entity.role-type-mismatch`, `entity.invalid-attribute-value`, …), most frequent first, diffed against `scripts/entity_warnings_whitelist.json`.
 

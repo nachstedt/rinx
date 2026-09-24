@@ -32,6 +32,7 @@ use super::include::parse_include;
 use super::index_directive::parse_index_directive;
 use super::math::parse_math_directive;
 use super::needimport::parse_needimport;
+use super::needservice::parse_needservice;
 use super::scope::try_parse_scope_directive;
 use super::sectnum::{is_sectnum, parse_sectnum};
 use super::substitution::{parse_substitution_definition, split_substitution_marker};
@@ -631,6 +632,17 @@ fn try_parse_extension_directive(
             ctx,
         ));
     }
+    // sphinx-needs' external-service directive, refused by name so its
+    // warning can say why and what to write instead — `directive.unknown`
+    // would read as a typo.
+    if name == "needservice" {
+        return Some(parse_needservice(
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+        ));
+    }
     // sphinxcontrib-plantuml's two names, this build's two diagram names and
     // sphinx-needs' two — one node, one parser. The plain PlantUML pair is
     // nobody's extension in the sense the others are, but it belongs to the
@@ -858,6 +870,27 @@ mod tests {
         assert_eq!(
             found[0].message,
             "unknown directive type 'not-a-real-directive'"
+        );
+    }
+
+    #[test]
+    fn test_parse_body_directive_refuses_needservice_by_name_rather_than_as_unknown() {
+        // Given
+        let body = ["   :query: repo:useblocks/sphinx-needs"];
+
+        // When
+        let (node, diagnostics) = dispatch("needservice", "github-issues", &body);
+
+        // Then
+        assert!(matches!(
+            node,
+            Node::Directive(Directive::Malformed { ref name, .. }) if name == "needservice"
+        ));
+        let (found, _, _) = diagnostics.into_parts();
+        assert_eq!(found.len(), 1);
+        assert_eq!(
+            found[0].code,
+            rusty_sphinx_ast::DiagnosticCode::NeedServiceUnsupported
         );
     }
 
@@ -1187,6 +1220,9 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     // `docs/decisions/016-needimport.md` for why `entity-import` is not
     // claimed beside it.
     "needimport",
+    // sphinx-needs' external-service directive: refused by name, but reserved
+    // all the same, so a schema section cannot quietly take the name over.
+    "needservice",
     // Diagram directives: sphinxcontrib-plantuml's two names, this build's
     // two and sphinx-needs' two
     "plantuml",
@@ -1377,5 +1413,12 @@ mod builtin_name_tests {
         assert!(is_builtin_directive_name("image"));
         assert!(is_builtin_directive_name("include"));
         assert!(is_builtin_directive_name("currentmodule"));
+    }
+
+    #[test]
+    fn test_a_directive_refused_by_name_is_still_reserved() {
+        // Given / When / Then — a section named `needservice` would otherwise
+        // turn a refused construct into a silently accepted one
+        assert!(is_builtin_directive_name("needservice"));
     }
 }
