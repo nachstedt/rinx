@@ -1,8 +1,8 @@
 use crate::{
-    DocumentNumbers, DocumentOutline, DocumentToctree, EntityRecord, EquationLocation,
-    GenIndexEntry, TargetLocation,
+    DocumentNumbers, DocumentOutline, DocumentToctree, EntityFieldHistory, EntityRecord,
+    EntityUpdateRecord, EquationLocation, GenIndexEntry, TargetLocation,
 };
-use rusty_sphinx_ast::{EntityId, ObjectType, SectnumOptions, TargetName};
+use rusty_sphinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -100,6 +100,25 @@ pub struct ProjectIndex {
     /// conclusion that only the whole graph can reach.
     #[serde(default)]
     pub entity_backlinks: BTreeMap<EntityId, BTreeMap<String, Vec<EntityId>>>,
+    /// Every `.. entity-update::`/`.. needextend::` in the project, collected
+    /// per document. Accumulated, not deduplicated, like `genindex_entries`:
+    /// two authors extending the same entities is expected, and order
+    /// matters, so nothing here collapses duplicates. Sorted into canonical,
+    /// deterministic application order by
+    /// `rusty_sphinx_analyzer::apply_entity_updates` the first time the full
+    /// index is built — every [`crate::AppliedFieldUpdate`]/
+    /// [`crate::AppliedRelationUpdate`]'s `update_index` refers to a position
+    /// in *this* vector.
+    #[serde(default)]
+    pub entity_updates: Vec<EntityUpdateRecord>,
+    /// The derived, non-destructive result of applying every entity update —
+    /// never merged, always recomputed globally, exactly like
+    /// `entity_backlinks`. `entities` itself is never touched by this: read
+    /// through [`Self::effective_attribute`]/
+    /// [`Self::effective_relation_targets`] rather than directly, or an
+    /// update's effect will be invisible to you.
+    #[serde(default)]
+    pub entity_update_history: BTreeMap<EntityId, EntityFieldHistory>,
 }
 
 impl ProjectIndex {
@@ -120,6 +139,44 @@ impl ProjectIndex {
             .insert(object_type, doc_path.into());
     }
 
+    /// The current value of one attribute on one entity, after every applied
+    /// `.. entity-update::`/`.. needextend::` — the entity's own declared
+    /// value when nothing touched this field, else the derived history's
+    /// current value.
+    ///
+    /// Never mutates anything: `entities[id].attributes` stays exactly as
+    /// authored. Every reader of an entity's attribute values — the built-in
+    /// rendering, a custom template, `EntitySubject`'s filter evaluation —
+    /// must go through this rather than `entities` directly, or an update's
+    /// effect will be invisible to it. See
+    /// `docs/decisions/019-entity-update.md`.
+    #[must_use]
+    pub fn effective_attribute(&self, id: &EntityId, field: &str) -> Option<&AttributeValue> {
+        if let Some(history) = self
+            .entity_update_history
+            .get(id)
+            .and_then(|h| h.attributes.get(field))
+        {
+            return history.current.as_ref();
+        }
+        self.entities.get(id)?.attributes.get(field)
+    }
+
+    /// The current outgoing targets of one relation on one entity, after
+    /// every applied `.. entity-update::`/`.. needextend::` — same rule as
+    /// [`Self::effective_attribute`].
+    #[must_use]
+    pub fn effective_relation_targets(&self, id: &EntityId, relation: &str) -> &[EntityId] {
+        if let Some(history) = self
+            .entity_update_history
+            .get(id)
+            .and_then(|h| h.relations.get(relation))
+        {
+            return &history.current;
+        }
+        self.entities.get(id).map_or(&[], |r| r.targets(relation))
+    }
+
     /// Merge another `ProjectIndex` into this one.
     ///
     /// Emits a diagnostic string for each glossary term defined in both indices
@@ -138,9 +195,12 @@ impl ProjectIndex {
         self.genindex_entries.extend(other.genindex_entries);
         self.equations.extend(other.equations);
         self.sectnum.extend(other.sectnum);
-        // root_documents, page_order, section_numbers and entity_backlinks are
-        // built globally from the whole graph, so they are recomputed rather
-        // than merged
+        // Accumulates like `genindex_entries`; applying it is a later phase's
+        // job, not this merge's.
+        self.entity_updates.extend(other.entity_updates);
+        // root_documents, page_order, section_numbers, entity_backlinks and
+        // entity_update_history are built globally from the whole graph, so
+        // they are recomputed rather than merged
         let mut conflicts = MergeConflicts::default();
         for (id, record) in other.entities {
             if let Some(existing) = self.entities.get(&id) {
@@ -521,6 +581,17 @@ mod tests {
                 ..SectnumOptions::default()
             },
         );
+        index.entity_updates.push(crate::EntityUpdateRecord {
+            doc_path: "api.rst".to_string(),
+            update: rusty_sphinx_ast::EntityUpdate::new(
+                rusty_sphinx_ast::EntityUpdateSource::EntityUpdate,
+                rusty_sphinx_ast::UpdateTarget {
+                    candidate_id: EntityId::new("REQ_001").ok(),
+                    filter: None,
+                    raw: "REQ_001".to_string(),
+                },
+            ),
+        });
 
         // When — serialize and deserialize
         let json = serde_json::to_string(&index).unwrap();
@@ -549,5 +620,186 @@ mod tests {
         assert!(index.domain_objects.is_empty());
         assert!(index.genindex_entries.is_empty());
         assert!(index.sectnum.is_empty());
+        assert!(index.entity_updates.is_empty());
+        assert!(index.entity_update_history.is_empty());
+    }
+
+    fn requirement_record() -> EntityRecord {
+        EntityRecord {
+            type_name: "req".to_string(),
+            doc_path: "specs/boot.rst".to_string(),
+            title: None,
+            attributes: BTreeMap::from([(
+                "status".to_string(),
+                AttributeValue::String("open".to_string()),
+            )]),
+            outgoing: BTreeMap::from([(
+                "links".to_string(),
+                vec![EntityId::new("SPEC_001").unwrap()],
+            )]),
+            uml: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn test_effective_attribute_falls_back_to_the_record_when_untouched() {
+        // Given — no history entry at all for this entity
+        let mut index = ProjectIndex::default();
+        let id = EntityId::new("REQ_001").unwrap();
+        index.entities.insert(id.clone(), requirement_record());
+
+        // When
+        let value = index.effective_attribute(&id, "status");
+
+        // Then
+        assert_eq!(value, Some(&AttributeValue::String("open".to_string())));
+    }
+
+    #[test]
+    fn test_effective_attribute_prefers_the_history_current_value() {
+        // Given — an update has touched `status`
+        let mut index = ProjectIndex::default();
+        let id = EntityId::new("REQ_001").unwrap();
+        index.entities.insert(id.clone(), requirement_record());
+        let mut history = EntityFieldHistory::default();
+        history.attributes.insert(
+            "status".to_string(),
+            crate::AttributeFieldHistory {
+                original: Some(AttributeValue::String("open".to_string())),
+                applied: Vec::new(),
+                current: Some(AttributeValue::String("closed".to_string())),
+            },
+        );
+        index.entity_update_history.insert(id.clone(), history);
+
+        // When
+        let value = index.effective_attribute(&id, "status");
+
+        // Then — the record itself is never touched
+        assert_eq!(value, Some(&AttributeValue::String("closed".to_string())));
+        assert_eq!(
+            index.entities[&id].attributes["status"],
+            AttributeValue::String("open".to_string())
+        );
+    }
+
+    #[test]
+    fn test_effective_attribute_is_none_when_the_history_cleared_the_field() {
+        // Given
+        let mut index = ProjectIndex::default();
+        let id = EntityId::new("REQ_001").unwrap();
+        index.entities.insert(id.clone(), requirement_record());
+        let mut history = EntityFieldHistory::default();
+        history.attributes.insert(
+            "status".to_string(),
+            crate::AttributeFieldHistory {
+                original: Some(AttributeValue::String("open".to_string())),
+                applied: Vec::new(),
+                current: None,
+            },
+        );
+        index.entity_update_history.insert(id.clone(), history);
+
+        // When
+        let value = index.effective_attribute(&id, "status");
+
+        // Then
+        assert_eq!(value, None);
+    }
+
+    #[test]
+    fn test_effective_relation_targets_falls_back_to_the_record_when_untouched() {
+        // Given
+        let mut index = ProjectIndex::default();
+        let id = EntityId::new("REQ_001").unwrap();
+        index.entities.insert(id.clone(), requirement_record());
+
+        // When
+        let targets = index.effective_relation_targets(&id, "links");
+
+        // Then
+        assert_eq!(targets, [EntityId::new("SPEC_001").unwrap()]);
+    }
+
+    #[test]
+    fn test_effective_relation_targets_prefers_the_history_current_targets() {
+        // Given
+        let mut index = ProjectIndex::default();
+        let id = EntityId::new("REQ_001").unwrap();
+        index.entities.insert(id.clone(), requirement_record());
+        let mut history = EntityFieldHistory::default();
+        history.relations.insert(
+            "links".to_string(),
+            crate::RelationFieldHistory {
+                original: vec![EntityId::new("SPEC_001").unwrap()],
+                applied: Vec::new(),
+                current: vec![
+                    EntityId::new("SPEC_001").unwrap(),
+                    EntityId::new("SPEC_002").unwrap(),
+                ],
+            },
+        );
+        index.entity_update_history.insert(id.clone(), history);
+
+        // When
+        let targets = index.effective_relation_targets(&id, "links");
+
+        // Then — the record itself is never touched
+        assert_eq!(
+            targets,
+            [
+                EntityId::new("SPEC_001").unwrap(),
+                EntityId::new("SPEC_002").unwrap()
+            ]
+        );
+        assert_eq!(
+            index.entities[&id].outgoing["links"],
+            [EntityId::new("SPEC_001").unwrap()]
+        );
+    }
+
+    #[test]
+    fn test_effective_attribute_is_none_for_an_entity_that_does_not_exist() {
+        // Given
+        let index = ProjectIndex::default();
+        let id = EntityId::new("REQ_999").unwrap();
+
+        // When / Then
+        assert_eq!(index.effective_attribute(&id, "status"), None);
+    }
+
+    #[test]
+    fn test_merge_accumulates_entity_updates_from_both_indices() {
+        // Given
+        let mut stale = ProjectIndex::default();
+        stale.entity_updates.push(crate::EntityUpdateRecord {
+            doc_path: "a.rst".to_string(),
+            update: rusty_sphinx_ast::EntityUpdate::new(
+                rusty_sphinx_ast::EntityUpdateSource::EntityUpdate,
+                rusty_sphinx_ast::UpdateTarget {
+                    candidate_id: EntityId::new("REQ_001").ok(),
+                    filter: None,
+                    raw: "REQ_001".to_string(),
+                },
+            ),
+        });
+        let mut fresh = ProjectIndex::default();
+        fresh.entity_updates.push(crate::EntityUpdateRecord {
+            doc_path: "b.rst".to_string(),
+            update: rusty_sphinx_ast::EntityUpdate::new(
+                rusty_sphinx_ast::EntityUpdateSource::NeedExtend,
+                rusty_sphinx_ast::UpdateTarget {
+                    candidate_id: EntityId::new("REQ_002").ok(),
+                    filter: None,
+                    raw: "REQ_002".to_string(),
+                },
+            ),
+        });
+
+        // When
+        stale.merge(fresh);
+
+        // Then
+        assert_eq!(stale.entity_updates.len(), 2);
     }
 }

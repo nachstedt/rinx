@@ -12,6 +12,7 @@ use crate::entity::EntityBody;
 use crate::entity_flow::EntityFlow;
 use crate::entity_pie::EntityPie;
 use crate::entity_table::EntityTable;
+use crate::entity_update::EntityUpdate;
 use crate::glossary_entry::GlossaryEntry;
 use crate::grid::{Grid, GridItem};
 use crate::image::{Figure, ImageOptions};
@@ -155,6 +156,21 @@ pub enum Directive {
     /// compiled — the chart is SVG produced by the render action itself, so a
     /// library holding one needs no `diagrams = True`.
     EntityPie(Box<EntityPie>),
+    /// `.. entity-update::`, and its sphinx-needs spelling `.. needextend::` —
+    /// a project-wide mutation of one or many entities' fields.
+    ///
+    /// Boxed like [`Self::EntityTable`], for the same reason: a target with
+    /// two possible readings, a field-mutation list and a justification body
+    /// make it a large payload.
+    ///
+    /// Unlike its three siblings above, this directive produces no
+    /// presentation of its own by default — its effect is entirely in what
+    /// `rusty_sphinx_analyzer::apply_entity_updates` writes into a derived,
+    /// non-destructive history beside `ProjectIndex::entities` before
+    /// anything renders (see `docs/decisions/019-entity-update.md`). Its
+    /// `body` is ordinary block content, exactly as [`Self::Dropdown`]'s is,
+    /// so it needs the same traversal arms that container does.
+    EntityUpdate(Box<EntityUpdate>),
     VersionChange {
         kind: VersionChangeKind,
         version: String,

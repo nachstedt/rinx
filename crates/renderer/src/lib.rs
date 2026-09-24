@@ -40,7 +40,7 @@ pub use uml_error::{DiagramError, DiagramFailure};
 
 use rusty_sphinx_ast::HashedContent;
 
-use blocks::{collect_anonymous_targets, render_nodes};
+use blocks::{EntityUpdateVisibility, collect_anonymous_targets, render_nodes};
 use highlight::Highlighter;
 use math::MathRenderer;
 use resolution::{DomainObjectResolver, OptionResolver};
@@ -141,6 +141,15 @@ pub(crate) struct RenderCtx<'a> {
     /// Whether the built-in entity rendering folds its detail behind a
     /// disclosure. From the site config; see [`config::SiteConfig`].
     pub collapse_entities: bool,
+    /// Whether `.. entity-update::`/`.. needextend::` renders its own visible
+    /// box. From the site config; see [`config::SiteConfig::show_entity_updates`].
+    ///
+    /// A two-variant enum rather than a `bool` — unlike every sibling flag
+    /// here, which predates it — specifically so this field does not push
+    /// `RenderCtx` over clippy's `struct_excessive_bools` threshold; the
+    /// config file itself stays a plain `bool`, which is the natural TOML
+    /// shape, and is converted once where this context is built.
+    pub show_entity_updates: EntityUpdateVisibility,
     /// The site's named `PlantUML` preambles, for a diagram's `:config:`.
     pub uml_configs: &'a std::collections::BTreeMap<String, String>,
     /// `:linenothreshold:` from the `.. highlight::` in force: a block at
@@ -291,6 +300,7 @@ pub fn render_with_assets(
         highlighter: &highlighter,
         highlight_language: config.highlight_language.clone(),
         collapse_entities: config.collapse_entities,
+        show_entity_updates: EntityUpdateVisibility::from_config(config.show_entity_updates),
         uml_configs: &config.uml_configs,
         linenothreshold: None,
         highlight_force: false,

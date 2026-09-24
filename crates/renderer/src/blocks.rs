@@ -35,6 +35,7 @@ mod entity;
 mod entity_flow;
 mod entity_pie;
 mod entity_table;
+mod entity_update;
 mod figure;
 mod glossary;
 mod grid;
@@ -57,5 +58,6 @@ pub(crate) use dispatch::{collect_anonymous_targets, render_nodes};
 // element is built exactly the same way as a standalone `.. image::`'s.
 pub use entity::EntityTemplates;
 pub(crate) use entity::entity_anchor;
+pub(crate) use entity_update::EntityUpdateVisibility;
 pub(crate) use image::render_linked_image;
 pub(crate) use math::equation_anchor_id;

@@ -77,11 +77,24 @@ impl EntitySubject<'_> {
     /// The order is the schema loader's own: a back-link may not collide with
     /// anything the target type declares itself, so at most one of the three
     /// can match and the precedence never actually arbitrates.
+    ///
+    /// Attributes and outgoing relations are read through
+    /// [`ProjectIndex::effective_attribute`]/
+    /// [`ProjectIndex::effective_relation_targets`] rather than off
+    /// `self.record` directly — the one change that makes every filter
+    /// evaluation already built on `EntitySubject` (`entity-table`,
+    /// `entity-flow`, `entity-pie`, a diagram's `filter()`, and
+    /// `apply_entity_updates`'s own target resolution) see the effect of a
+    /// `.. entity-update::`/`.. needextend::` automatically. Back-links are
+    /// unaffected by updates, so they still read `self.index.entity_backlinks`
+    /// directly.
     fn declared_field(&self, name: &str) -> FieldValue {
-        if let Some(value) = self.record.attributes.get(name) {
+        let entity_type = self.schema.entity_type(&self.record.type_name);
+        if let Some(value) = self.index.effective_attribute(self.id, name) {
             return FieldValue::from(value);
         }
-        if let Some(targets) = self.record.outgoing.get(name) {
+        if entity_type.is_some_and(|t| t.relation(name).is_some()) {
+            let targets = self.index.effective_relation_targets(self.id, name);
             return FieldValue::List(targets.iter().map(ToString::to_string).collect());
         }
         self.backlink_targets(name)

@@ -60,6 +60,13 @@ fn collect_entity_umls(entity: &EntityBody) -> BTreeMap<String, String> {
 /// each edge would duplicate the schema into the index, where it could
 /// disagree with it.
 ///
+/// Reads each entity's *effective* outgoing edges — [`ProjectIndex::effective_relation_targets`],
+/// not `record.outgoing` directly — so a back-link reflects whatever
+/// `apply_entity_updates` appended or removed, not just the as-authored
+/// graph. That phase already ran by the time this one does (see
+/// `project_index::build_project_index_reporting`), which is exactly why this
+/// ordering matters.
+///
 /// An edge whose target does not exist contributes nothing here; naming that
 /// is [`collect_entity_diagnostics`]'s job, so the derivation stays a pure
 /// function of the graph it is given.
@@ -73,13 +80,11 @@ pub(crate) fn derive_entity_backlinks(
         let Some(entity_type) = schema.entity_type(&record.type_name) else {
             continue;
         };
-        for (relation_name, targets) in &record.outgoing {
-            let Some(relation) = entity_type.relation(relation_name) else {
-                continue;
-            };
+        for relation in &entity_type.relations {
             let Some(incoming) = relation.incoming.as_deref() else {
                 continue;
             };
+            let targets = index.effective_relation_targets(source_id, &relation.name);
             for target in targets {
                 if !index.entities.contains_key(target) {
                     continue;
@@ -107,6 +112,11 @@ pub(crate) fn derive_entity_backlinks(
 /// outside its enum, a missing required section — was already reported while
 /// parsing. What is left needs the merged graph: whether a target exists at
 /// all, and whether its type is one the relation accepts.
+///
+/// Reads each entity's *effective* outgoing edges, exactly as
+/// [`derive_entity_backlinks`] does and for the same reason: a target an
+/// `.. entity-update::`'s `+relation` just appended must still be validated,
+/// not only a target the author wrote by hand.
 pub(crate) fn collect_entity_diagnostics(
     index: &ProjectIndex,
     schema: &EntitySchema,
@@ -117,10 +127,9 @@ pub(crate) fn collect_entity_diagnostics(
         let Some(entity_type) = schema.entity_type(&record.type_name) else {
             continue;
         };
-        for (relation_name, targets) in &record.outgoing {
-            let Some(relation) = entity_type.relation(relation_name) else {
-                continue;
-            };
+        for relation in &entity_type.relations {
+            let relation_name = &relation.name;
+            let targets = index.effective_relation_targets(source_id, relation_name);
             for target in targets {
                 let found = index.entities.get(target);
                 let diagnostic = match found {

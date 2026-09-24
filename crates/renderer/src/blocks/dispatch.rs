@@ -488,6 +488,11 @@ fn render_directive(
         // same: the markup below it is the diagrams' own.
         Directive::EntityFlow(flow) => render_entity_flow(html, flow, ctx),
         Directive::EntityPie(pie) => render_entity_pie(html, pie, ctx),
+        Directive::EntityUpdate(update) => {
+            if ctx.show_entity_updates.is_visible() {
+                super::entity_update::render_entity_update(html, update, ctx);
+            }
+        }
         Directive::Grid(grid) => super::grid::render_grid(html, grid, ctx),
         Directive::GridItem(item) => super::grid::render_grid_item(html, item, ctx),
         Directive::Image(options) => render_image_directive(html, options, ctx),

@@ -21,7 +21,7 @@
 //! position, so it is the only one that can point at the character a broken
 //! expression breaks at.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span};
+use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, EntityId, Span, UpdateTarget};
 use rusty_sphinx_filter::{Expr, FieldName, FilterError, parse_filter};
 
 use crate::context::ParseCtx;
@@ -108,6 +108,58 @@ pub(in crate::directives) fn read_filter_text(
             None
         }
     }
+}
+
+/// Reads a `.. entity-update::`/`.. needextend::` argument, which — unlike
+/// every other filter site — may equally name a single entity's id, a
+/// decision only the merged project can make (see
+/// `docs/decisions/019-entity-update.md`).
+///
+/// Both readings are computed independently and kept: `candidate_id` when the
+/// trimmed text is a legal [`EntityId`] spelling, `filter` when it also parses
+/// as a filter expression (a bare id like `REQ_001` does — it is
+/// `Truthy(Field("REQ_001"))` — while one containing `:`/`-`/`.` usually does
+/// not). Apply time prefers the id whenever it names an entity that actually
+/// exists, exactly as upstream sphinx-needs disambiguates.
+///
+/// Reports [`DiagnosticCode::EntityUpdateInvalidArgument`] only when *neither*
+/// reading survives — deliberately not an unknown-field diagnostic against
+/// the filter reading even when one is available: which reading apply time
+/// ends up using depends on the whole project, and warning about a filter
+/// reading that turns out unused (because the argument was actually a good
+/// id) would be a false positive on the common case.
+pub(in crate::directives) fn read_update_argument(
+    argument: &str,
+    directive_span: Option<Span>,
+    directive: &str,
+    diagnostics: &mut Diagnostics,
+) -> Option<UpdateTarget> {
+    let raw = argument.trim();
+    if raw.is_empty() {
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::EntityUpdateInvalidArgument,
+            format!("{directive}: needs a target — an entity id or a filter"),
+            directive_span,
+        ));
+        return None;
+    }
+    let candidate_id = EntityId::new(raw).ok();
+    let filter = parse_filter(raw).ok();
+    if candidate_id.is_none() && filter.is_none() {
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::EntityUpdateInvalidArgument,
+            format!(
+                "{directive}: '{raw}' is neither a legal entity id nor a filter this build can evaluate"
+            ),
+            directive_span,
+        ));
+        return None;
+    }
+    Some(UpdateTarget {
+        candidate_id,
+        filter,
+        raw: raw.to_string(),
+    })
 }
 
 /// Reads a `:filter:` option, deriving its site from the option line.
@@ -218,4 +270,103 @@ fn filter_error_span(
     let start = ctx.position(site.line_index, column + error.offset)?;
     let end = ctx.position(site.line_index, column + error.offset + error.length)?;
     Some(start.to(end))
+}
+
+#[cfg(test)]
+mod update_argument_tests {
+    use super::*;
+
+    #[test]
+    fn test_a_bare_id_is_read_as_both_a_candidate_id_and_a_filter() {
+        // Given — `REQ_001` is a legal id and also parses as
+        // `Truthy(Field("REQ_001"))`
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let target = read_update_argument("REQ_001", None, "entity-update", &mut diagnostics)
+            .expect("a bare id should read as a target");
+
+        // Then
+        assert_eq!(target.candidate_id, EntityId::new("REQ_001").ok());
+        assert!(target.filter.is_some());
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_an_id_containing_a_colon_is_a_candidate_id_but_not_a_filter() {
+        // Given — legal in an `EntityId` but not in this filter grammar
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let target = read_update_argument("REQ:001", None, "entity-update", &mut diagnostics)
+            .expect("a legal id spelling should still read as a target");
+
+        // Then
+        assert_eq!(target.candidate_id, EntityId::new("REQ:001").ok());
+        assert_eq!(target.filter, None);
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_a_filter_expression_is_read_with_no_candidate_id() {
+        // Given — spaces and quotes are not legal in an `EntityId`
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let target =
+            read_update_argument(r#"type == "req""#, None, "entity-update", &mut diagnostics)
+                .expect("a valid filter should read as a target");
+
+        // Then
+        assert_eq!(target.candidate_id, None);
+        assert!(target.filter.is_some());
+        assert!(diagnostics.is_empty());
+    }
+
+    #[test]
+    fn test_an_empty_argument_is_reported_and_reads_as_no_target() {
+        // Given
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let target = read_update_argument("   ", None, "entity-update", &mut diagnostics);
+
+        // Then
+        assert_eq!(target, None);
+        assert_eq!(
+            diagnostics.entries()[0].code,
+            DiagnosticCode::EntityUpdateInvalidArgument
+        );
+    }
+
+    #[test]
+    fn test_an_argument_that_is_neither_reading_is_reported() {
+        // Given — a space makes this neither a legal id nor a legal filter
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        let target = read_update_argument("not & valid", None, "entity-update", &mut diagnostics);
+
+        // Then
+        assert_eq!(target, None);
+        assert_eq!(diagnostics.len(), 1);
+        assert_eq!(
+            diagnostics.entries()[0].code,
+            DiagnosticCode::EntityUpdateInvalidArgument
+        );
+    }
+
+    #[test]
+    fn test_a_bare_id_argument_reports_no_unknown_field() {
+        // Given — the whole point of deferring the unknown-field check to
+        // apply time: a good id should never be second-guessed as a filter
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        read_update_argument("REQ_001", None, "entity-update", &mut diagnostics);
+
+        // Then — no unknown-field diagnostic, even though `REQ_001` also
+        // parses as a filter over a field this build's schema never declares
+        assert!(diagnostics.is_empty());
+    }
 }

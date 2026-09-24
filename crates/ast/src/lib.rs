@@ -52,6 +52,7 @@ mod entity;
 mod entity_flow;
 mod entity_pie;
 mod entity_table;
+mod entity_update;
 mod enumerator;
 mod glossary_entry;
 mod grid;
@@ -104,6 +105,9 @@ pub use entity::{AttributeValue, EntityBody, EntityId, EntityIdError, EntitySect
 pub use entity_flow::{EntityFlow, EntityFlowSource, FlowDirection, InvalidFlowDirection};
 pub use entity_pie::{EntityPie, EntityPieSource, PieSlice, SliceSource};
 pub use entity_table::{EntityTable, EntityTableSource};
+pub use entity_update::{
+    EntityUpdate, EntityUpdateSource, FieldMutation, FieldMutationMode, UpdateTarget,
+};
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use grid::{

@@ -391,6 +391,11 @@ fn resolve_directive(
             resolve_list(&mut dropdown.title, defs, cache, visiting, diagnostics);
             resolve_nodes(&mut dropdown.body, defs, cache, visiting, diagnostics);
         }
+        // Its body is ordinary block content, with no inline-markup title of
+        // its own to resolve.
+        Directive::EntityUpdate(update) => {
+            resolve_nodes(&mut update.body, defs, cache, visiting, diagnostics);
+        }
         // Inline markup only: a button's content is its label, not a body.
         Directive::ButtonLink(button) => {
             resolve_list(&mut button.label, defs, cache, visiting, diagnostics);

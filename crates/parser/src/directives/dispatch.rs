@@ -22,6 +22,7 @@ use super::entity_flow::parse_entity_flow;
 use super::entity_pie::parse_entity_pie;
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
 use super::entity_table::parse_entity_table;
+use super::entity_update::parse_entity_update;
 use super::error_node::unknown_directive;
 use super::glossary::parse_glossary;
 use super::grid::{parse_grid, parse_grid_item};
@@ -615,6 +616,21 @@ fn try_parse_extension_directive(
             ctx,
         ));
     }
+    // This build's own project-wide field-mutation directive, and
+    // sphinx-needs' spelling of it. Unlike its three siblings above, it
+    // carries a body — ordinary RST prose justifying the mutation — so it
+    // takes `adornment_order` exactly as `.. dropdown::` does.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityUpdateSource>() {
+        return Some(parse_entity_update(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            adornment_order,
+            diagnostics,
+            ctx,
+        ));
+    }
     // sphinxcontrib-plantuml's two names, this build's two diagram names and
     // sphinx-needs' two — one node, one parser. The plain PlantUML pair is
     // nobody's extension in the sense the others are, but it belongs to the
@@ -1162,6 +1178,11 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     // spelling of it.
     "entity-pie",
     "needpie",
+    // This build's own project-wide field-mutation directive, and
+    // sphinx-needs' spelling of it — see
+    // `docs/decisions/019-entity-update.md`.
+    "entity-update",
+    "needextend",
     // sphinx-needs' import, which keeps its own name alone — see
     // `docs/decisions/016-needimport.md` for why `entity-import` is not
     // claimed beside it.

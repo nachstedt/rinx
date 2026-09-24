@@ -625,6 +625,44 @@ diagnostic_codes! {
     /// depends on every document in the project.
     EntityPieEmptyResult => "entity-pie.empty-result",
 
+    // --- `.. entity-update::` / `.. needextend::` --------------------------
+    //
+    // One family for both spellings, as `entity-table.*` is one for its own
+    // pair — the argument's own name rather than `needextend.*`, since this
+    // build owns the construct (see `docs/decisions/019-entity-update.md`).
+    /// An argument that is neither a legal entity id nor a filter this build
+    /// can evaluate — including an empty one.
+    EntityUpdateInvalidArgument => "entity-update.invalid-argument",
+    /// An option naming `id`, `type`, `type_name`, `docname` or `title` —
+    /// identity fields this directive refuses to mutate.
+    EntityUpdateProtectedField => "entity-update.protected-field",
+    /// An option naming a *declared section*, not an attribute or relation.
+    /// Sections are documents, deliberately excluded from the index this
+    /// directive's effects live in, so they cannot be mutated this way.
+    EntityUpdateSectionNotSupported => "entity-update.section-not-supported",
+    /// An option naming a field no entity type declares at all.
+    EntityUpdateUnknownField => "entity-update.unknown-field",
+    /// A field this directive matched an entity for, but that entity's own
+    /// declared type does not have.
+    EntityUpdateFieldNotApplicable => "entity-update.field-not-applicable",
+    /// A value that does not fit its matched field's declared type.
+    EntityUpdateInvalidValue => "entity-update.invalid-value",
+    /// A `+`/`-` operation on a field that is not list-valued.
+    EntityUpdateListOperationOnScalar => "entity-update.list-operation-on-scalar",
+    /// A `:strict:` value that is not a recognised boolean spelling.
+    EntityUpdateInvalidStrict => "entity-update.invalid-strict",
+    /// A `.. entity-update::`/`.. needextend::` whose target matched no
+    /// entity at all, with `:strict:` at its default. Reported for the reason
+    /// `entity-table.empty-result` is: a selection matching nothing is far
+    /// likelier to be a mistake than an intention.
+    EntityUpdateEmptyResult => "entity-update.empty-result",
+    /// A `Set`/`Clear` that overwrote a *different* value a different
+    /// directive had already established for the same field of the same
+    /// entity. Reported once per involved directive, each under its own span
+    /// in its own file, so either author can independently suppress their
+    /// own copy — see `docs/decisions/019-entity-update.md`.
+    EntityUpdateConflictingUpdate => "entity-update.conflicting-update",
+
     // --- `.. needimport::` -------------------------------------------------
     //
     // The one family named after another tool's spelling rather than after a

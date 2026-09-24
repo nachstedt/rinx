@@ -7,6 +7,8 @@
 mod document_outline;
 mod entity_record;
 mod entity_subject;
+mod entity_update_history;
+mod entity_update_record;
 mod equation_location;
 mod gen_index_entry;
 mod href;
@@ -17,6 +19,11 @@ mod target_location;
 pub use document_outline::{DocumentOutline, DocumentToctree, OutlineSection};
 pub use entity_record::EntityRecord;
 pub use entity_subject::EntitySubject;
+pub use entity_update_history::{
+    AppliedFieldUpdate, AppliedRelationUpdate, AttributeFieldHistory, EntityFieldHistory,
+    RelationFieldHistory,
+};
+pub use entity_update_record::EntityUpdateRecord;
 pub use equation_location::EquationLocation;
 pub use gen_index_entry::GenIndexEntry;
 pub use href::{entity_anchor, relative_doc_href};

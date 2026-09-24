@@ -14,4 +14,5 @@ this document for the meta-model these pages use.
    tables
    charts
    imported
+   entity_update
    diagrams
