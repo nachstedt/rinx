@@ -862,7 +862,13 @@ Deliberately **not** supported:
   already does. `needtable`, `needflow`, `needpie`, `needuml` and `needarch`
   *are* supported; see "Listing entities", "Flowcharts of the graph",
   "Charting the graph" and "Diagramming entities".
-- **Dynamic functions** (`[[copy('id')]]`) and `needservice`. `needimport`
+- **Dynamic functions** (`[[copy('id')]]`) and `needservice`. The latter is
+  refused by name as `needservice.unsupported` rather than reported as an
+  unknown directive: it queries an external service while building, which a
+  sandboxed action cannot do, and its warning names the route instead — save
+  the needs to a `needs.json` (a last Sphinx build exports every
+  service-fetched need in one), declare it in `parse_data`, and read it with
+  `.. needimport::`. `needimport`
   *is* supported — see "Importing from sphinx-needs" below — and so is
   `needextend`, under this build's own name `.. entity-update::`; see
   `docs/decisions/019-entity-update.md`.
@@ -1037,6 +1043,12 @@ a `needs.json` has no line of its own to name:
 | `needimport.unknown-option` | an option this directive does not accept |
 | `needimport.no-tags-attribute` | `:tags:` on a type declaring no list attribute `tags` |
 | `needimport.empty-result` | an import that selected no need at all |
+
+A `.. needservice::` is refused outright, reported against its own line:
+
+| code | when |
+|---|---|
+| `needservice.unsupported` | any `.. needservice::`; the message names the `needs.json` + `.. needimport::` route |
 
 **While building the index**, attributed to the document that wrote the source
 entity:

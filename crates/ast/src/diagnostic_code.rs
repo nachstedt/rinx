@@ -730,6 +730,15 @@ diagnostic_codes! {
     /// likelier to be a mistake than an intention.
     NeedImportEmptyResult => "needimport.empty-result",
 
+    // --- `.. needservice::` ------------------------------------------------
+    //
+    // sphinx-needs' name alone, as `needimport.*` is: this build owns no
+    // construct here, so the spelling is the construct.
+    /// A `.. needservice::`, refused by name: it queries an external service
+    /// while building, which a sandboxed action cannot do. The message points
+    /// at a `needs.json` snapshot read by `.. needimport::` instead.
+    NeedServiceUnsupported => "needservice.unsupported",
+
     // --- Diagram directives ------------------------------------------------
     //
     // One family for all six spellings — `.. plantuml::`/`.. uml::`,

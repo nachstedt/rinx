@@ -354,4 +354,5 @@ this preview design.
 `.. needservice::`, the remaining sphinx-needs entity-mutating directive,
 stays unimplemented: it calls out to external systems, which a sandboxed
 build cannot do at all, for the reason ADR-016 §5 gives for refusing a
-`needimport` URL.
+`needimport` URL. It is refused by name as `needservice.unsupported`, pointing
+at a `needs.json` snapshot read by `.. needimport::`.

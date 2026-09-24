@@ -286,4 +286,6 @@ directives, remained unimplemented as of this decision. `needextend` — which
 *modifies* entities other documents declared, a project-wide operation this
 ADR left with no obvious phase — is answered by ADR-019 (`entity-update`).
 `needservice` calls out to external systems, which a sandboxed build cannot
-do at all for the reason §5 gives, and remains undone.
+do at all for the reason §5 gives, and remains undone — it is refused by name
+as `needservice.unsupported`, whose message points at a `needs.json` snapshot
+read by this directive instead.

@@ -68,6 +68,7 @@ mod include;
 mod index_directive;
 mod math;
 mod needimport;
+mod needservice;
 mod options;
 mod scope;
 mod sectnum;
