@@ -12,6 +12,7 @@ use super::data_table::{DataTableParams, render_data_table};
 use super::directive_error::render_directive_error;
 use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
+use super::entity_bar::render_entity_bar;
 use super::entity_flow::render_entity_flow;
 use super::entity_pie::render_entity_pie;
 use super::entity_sequence::render_entity_sequence;
@@ -490,6 +491,7 @@ fn render_directive(
         Directive::EntityFlow(flow) => render_entity_flow(html, flow, ctx),
         Directive::EntitySequence(sequence) => render_entity_sequence(html, sequence, ctx),
         Directive::EntityPie(pie) => render_entity_pie(html, pie, ctx),
+        Directive::EntityBar(bar) => render_entity_bar(html, bar, ctx),
         Directive::EntityUpdate(update) => {
             if ctx.show_entity_updates.is_visible() {
                 super::entity_update::render_entity_update(html, update, ctx);

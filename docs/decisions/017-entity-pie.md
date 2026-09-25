@@ -215,4 +215,6 @@ the larger failure.
 - `needbar` and `needsequence` remain unimplemented. `needbar` is now a
   presentation problem alone: it reuses this increment's counting module, and
   what it adds is a second dimension and an axis. (`needsequence` has since
-  been answered by ADR-020, `entity-sequence`.)
+  been answered by ADR-020, `entity-sequence`, and `needbar` by ADR-021,
+  `entity-bar` — which reused the counting as planned, but not `plotters`'
+  axes; see that ADR's §4.)

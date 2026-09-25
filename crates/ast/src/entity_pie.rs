@@ -22,5 +22,5 @@ mod slice;
 mod source;
 
 pub use pie::EntityPie;
-pub use slice::{PieSlice, SliceSource};
+pub use slice::PieSlice;
 pub use source::EntityPieSource;

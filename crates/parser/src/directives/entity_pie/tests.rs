@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{ChartColor, Directive, EntityPie, ImageAlign, Node, SliceSource};
+use rusty_sphinx_ast::{ChartColor, ChartValue, Directive, EntityPie, ImageAlign, Node};
 use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
@@ -99,8 +99,8 @@ fn test_each_content_line_becomes_one_wedge() {
 
     // Then
     assert_eq!(pie.slices.len(), 2);
-    assert!(matches!(pie.slices[0].source, SliceSource::Filter(Some(_))));
-    assert!(matches!(pie.slices[1].source, SliceSource::Filter(Some(_))));
+    assert!(matches!(pie.slices[0].source, ChartValue::Filter(Some(_))));
+    assert!(matches!(pie.slices[1].source, ChartValue::Filter(Some(_))));
 }
 
 #[test]
@@ -134,8 +134,8 @@ fn test_a_line_that_is_a_number_becomes_a_wedge_of_that_size() {
     let pie = parse_pie(rst);
 
     // Then
-    assert_eq!(pie.slices[0].source, SliceSource::Count(12));
-    assert_eq!(pie.slices[1].source, SliceSource::Count(30));
+    assert_eq!(pie.slices[0].source, ChartValue::Count(12));
+    assert_eq!(pie.slices[1].source, ChartValue::Count(30));
 }
 
 #[test]
@@ -185,7 +185,7 @@ fn test_a_broken_slice_filter_leaves_the_wedge_selecting_everything() {
 
     // Then — the wedge survives, so the labels still line up
     assert_eq!(pie.slices.len(), 1);
-    assert_eq!(pie.slices[0].source, SliceSource::Filter(None));
+    assert_eq!(pie.slices[0].source, ChartValue::Filter(None));
 }
 
 #[test]
@@ -425,5 +425,5 @@ fn test_a_startswith_filter_parses_now_that_the_language_has_one() {
 
     // Then
     assert!(codes(rst).is_empty(), "{:?}", codes(rst));
-    assert!(matches!(pie.slices[0].source, SliceSource::Filter(Some(_))));
+    assert!(matches!(pie.slices[0].source, ChartValue::Filter(Some(_))));
 }

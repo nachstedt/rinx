@@ -22,6 +22,10 @@ mod admonitions;
 mod asset_href;
 mod block_quote;
 mod button_link;
+mod chart_counts;
+mod chart_figure;
+#[cfg(test)]
+mod chart_test_support;
 mod code_block;
 mod contents;
 mod data_table;
@@ -32,6 +36,7 @@ mod doctest;
 mod domain_object;
 mod dropdown;
 mod entity;
+mod entity_bar;
 mod entity_flow;
 mod entity_pie;
 mod entity_sequence;

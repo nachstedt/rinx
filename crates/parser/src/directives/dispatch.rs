@@ -18,6 +18,7 @@ use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_typ
 use super::domains::{DirectiveSignatures, parse_domain_object};
 use super::dropdown::parse_dropdown;
 use super::entity::{EntityDirective, parse_entity};
+use super::entity_bar::parse_entity_bar;
 use super::entity_flow::parse_entity_flow;
 use super::entity_pie::parse_entity_pie;
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
@@ -575,6 +576,19 @@ fn try_parse_entity_view(
     // is drawn by the render action itself.
     if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityPieSource>() {
         return Some(parse_entity_pie(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
+    // This build's own bar chart, and sphinx-needs' spelling of it: the pie's
+    // question with a second dimension, drawn along an axis and — like the
+    // pie — never compiled.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityBarSource>() {
+        return Some(parse_entity_bar(
             source,
             argument,
             directive_span,
@@ -1272,6 +1286,10 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     // spelling of it.
     "entity-pie",
     "needpie",
+    // This build's own bar chart over the entity graph, and sphinx-needs'
+    // spelling of it.
+    "entity-bar",
+    "needbar",
     // This build's own project-wide field-mutation directive, and
     // sphinx-needs' spelling of it — see
     // `docs/decisions/019-entity-update.md`.

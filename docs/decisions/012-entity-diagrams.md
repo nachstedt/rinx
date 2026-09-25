@@ -235,7 +235,7 @@ group rather than a config flag.
   entities and hundreds of diagrams would want it hoisted per document; the
   untemplated case never builds one at all.
 - `needflow`, `needpie`, `needbar` and `needsequence` remain unimplemented.
-  (All but `needbar` have since been answered, by ADR-014, ADR-017 and
-  ADR-020.)
+  (All have since been answered, by ADR-014, ADR-017, ADR-020 and
+  ADR-021.)
   Each is the same question with a different presentation, and each can now
   reuse both the filter language and this expander.

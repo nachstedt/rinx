@@ -174,7 +174,7 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         // doc comment). An entity table's rows are not children either: they
         // are resolved from the project index while rendering, so there is
         // nothing in this document to walk, and neither are a flowchart's
-        // nodes and edges or a pie chart's wedges: they are generated from
+        // nodes and edges or a chart's wedges and bars: they are generated from
         // that same index. A `.. button-link::` is a leaf for the same reason
         // the substitution definition beside it is: its content is a *label*,
         // parsed as inline markup, so this walker has nothing to descend into
@@ -185,6 +185,7 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         | Directive::EntityFlow(_)
         | Directive::EntitySequence(_)
         | Directive::EntityPie(_)
+        | Directive::EntityBar(_)
         | Directive::Image(_)
         | Directive::DocTest(_)
         | Directive::CodeBlock(_)

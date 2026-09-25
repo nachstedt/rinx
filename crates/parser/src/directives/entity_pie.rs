@@ -22,18 +22,21 @@
 //! for exploded wedges and silently got none has no way to find out why.
 
 use rusty_sphinx_ast::{
-    ChartColor, Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, ImageAlign,
-    LengthOrPercentage, PieSlice, Span, TargetName,
+    Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, PieSlice, Span,
 };
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::indent::unindent_body_lines;
 
+use super::chart_options::{
+    ChartCodes, ChartOwner, FigureOption, FigureRead, read_color, read_colors, read_figure_option,
+    report_unsupported, report_unusable_scale, unsupported_advice,
+};
 use super::filter_option::{
     FilterCodes, FilterOwner, FilterSite, read_filter_option, read_filter_text,
 };
-use super::options::{OptionLine, parse_percentage, report_unknown_options, scan_option_lines};
+use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 
 /// The options sphinx-needs' `needpie` accepts that this build does not, each
 /// with what an author should reach for instead.
@@ -96,7 +99,7 @@ pub(super) fn parse_entity_pie(
     apply_labels(&mut pie, &option_lines, directive, diagnostics, ctx);
 
     if pie.has_unusable_scale() {
-        report_unusable_scale(&option_lines, directive, diagnostics, ctx);
+        report_unusable_scale(&option_lines, owner(directive), diagnostics, ctx);
     }
 
     Directive::EntityPie(Box::new(pie))
@@ -239,108 +242,23 @@ fn read_options<'a>(
             // and they do not exist yet.
             "labels" => {}
             "legend" => pie.legend = true,
-            "colors" => pie.colors = read_colors(line, directive, diagnostics, ctx),
+            "colors" => pie.colors = read_colors(line, owner(directive), diagnostics, ctx),
             "text_color" | "text-color" => {
-                pie.text_color = read_color(&line.value, line, directive, diagnostics, ctx);
+                pie.text_color = read_color(&line.value, line, owner(directive), diagnostics, ctx);
             }
-            "caption" => pie.caption = Some(line.value.clone()),
-            "align" => match ImageAlign::parse(&line.value) {
-                Some(align) => pie.align = Some(align),
-                None => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::EntityPieInvalidAlign,
-                    format!(
-                        "{directive}: :align: expects one of center, left, right, found '{}'",
-                        line.value
-                    ),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            "scale" => match parse_percentage(&line.value) {
-                Some(scale) => pie.scale = Some(scale),
-                None => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::EntityPieInvalidScale,
-                    format!(
-                        "{directive}: :scale: expects a non-negative percentage, found '{}'",
-                        line.value
-                    ),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            "width" => match LengthOrPercentage::new(&line.value) {
-                Ok(width) => pie.width = Some(width),
-                Err(problem) => diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::EntityPieInvalidWidth,
-                    format!("{directive}: :width: {problem}"),
-                    ctx.line_span(line.line_index, &line.raw),
-                )),
-            },
-            "class" => pie.classes = line.value.split_whitespace().map(str::to_string).collect(),
-            "name" => {
-                if line.value.is_empty() {
-                    report_empty_value(line, directive, diagnostics, ctx);
-                } else {
-                    pie.name = Some(TargetName::new(&line.value));
-                }
-            }
-            name => match unsupported_advice(name) {
-                Some(advice) => report_unsupported(line, advice, directive, diagnostics, ctx),
-                None => unrecognized.push(line),
+            name => match read_figure_option(line, owner(directive), diagnostics, ctx) {
+                FigureRead::Read(option) => store_figure_option(pie, option),
+                FigureRead::Reported => {}
+                FigureRead::Unclaimed => match unsupported_advice(&UNSUPPORTED_OPTIONS, name) {
+                    Some(advice) => {
+                        report_unsupported(line, advice, owner(directive), diagnostics, ctx);
+                    }
+                    None => unrecognized.push(line),
+                },
             },
         }
     }
     unrecognized
-}
-
-/// Reads `:colors:` — one colour per wedge, in order.
-///
-/// An entry this build cannot draw with is dropped and reported while the rest
-/// are kept, which is `:relations:`'s rule rather than `:columns:`'s: losing
-/// every colour over one misspelling would change a chart the author can see
-/// into one they cannot recognise. A dropped entry shifts the rest, so the
-/// diagnostic matters — it is the only sign the wedges are no longer the
-/// colours that were written.
-fn read_colors(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Vec<ChartColor> {
-    line.value
-        .split(',')
-        .map(str::trim)
-        .filter(|written| !written.is_empty())
-        .filter_map(|written| read_color(written, line, directive, diagnostics, ctx))
-        .collect()
-}
-
-/// Reads one colour, reporting it against the option line it was written on.
-fn read_color(
-    written: &str,
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) -> Option<ChartColor> {
-    match ChartColor::parse(written) {
-        Ok(color) => Some(color),
-        Err(problem) => {
-            diagnostics.push(Diagnostic::at(
-                DiagnosticCode::EntityPieInvalidColor,
-                format!("{directive}: :{}: {problem}", line.name),
-                ctx.line_span(line.line_index, &line.raw),
-            ));
-            None
-        }
-    }
-}
-
-/// What to tell an author who wrote an option this build does not implement,
-/// or `None` when the name is not one of sphinx-needs' at all.
-fn unsupported_advice(name: &str) -> Option<&'static str> {
-    UNSUPPORTED_OPTIONS
-        .iter()
-        .find(|(option, _)| *option == name)
-        .map(|(_, advice)| *advice)
 }
 
 /// The codes a pie chart reports its filters' failures under.
@@ -366,66 +284,36 @@ fn report_no_slices(directive: &str, directive_span: Option<Span>, diagnostics: 
     ));
 }
 
-/// Reports a `:scale:` that has no `:width:` to apply to.
-///
-/// Pointed at the `:scale:` line rather than at the directive, since that is
-/// the line the author would have to change — the choice `.. image::` and
-/// every other picture directive already make for their own version of this.
-fn report_unusable_scale(
-    option_lines: &[OptionLine],
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    let span = option_lines
-        .iter()
-        .rev()
-        .find(|line| line.name == "scale")
-        .and_then(|line| ctx.line_span(line.line_index, &line.raw));
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntityPieUnusableScale,
-        format!(
-            "{directive}: :scale: has no :width: to apply to, so it was ignored — the chart is \
-             drawn at a size this build chooses, so it has no size of its own to scale"
-        ),
-        span,
-    ));
+/// Stores a figure option where a pie keeps it.
+fn store_figure_option(pie: &mut EntityPie, option: FigureOption) {
+    match option {
+        FigureOption::Caption(caption) => pie.caption = Some(caption),
+        FigureOption::Align(align) => pie.align = Some(align),
+        FigureOption::Scale(scale) => pie.scale = Some(scale),
+        FigureOption::Width(width) => pie.width = Some(width),
+        FigureOption::Classes(classes) => pie.classes = classes,
+        FigureOption::Name(name) => pie.name = Some(name),
+    }
 }
 
-/// Reports an option this build does not implement, and what to write instead.
-fn report_unsupported(
-    line: &OptionLine,
-    advice: &str,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntityPieUnsupportedOption,
-        format!(
-            "{directive}: :{}: is not supported, so it was ignored — {advice}",
-            line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
+/// The pie as the owner of the options every chart shares.
+const fn owner(directive: &str) -> ChartOwner<'_> {
+    ChartOwner {
+        directive,
+        codes: CHART_CODES,
+    }
 }
 
-/// Reports an option whose value is required but was left empty.
-fn report_empty_value(
-    line: &OptionLine,
-    directive: &str,
-    diagnostics: &mut Diagnostics,
-    ctx: &ParseCtx<'_>,
-) {
-    diagnostics.push(Diagnostic::at(
-        DiagnosticCode::EntityPieEmptyOptionValue,
-        format!(
-            "{directive}: :{}: needs a value, so the option was ignored",
-            line.name
-        ),
-        ctx.line_span(line.line_index, &line.raw),
-    ));
-}
+/// The codes a pie chart reports the shared chart options' failures under.
+const CHART_CODES: ChartCodes = ChartCodes {
+    invalid_color: DiagnosticCode::EntityPieInvalidColor,
+    invalid_align: DiagnosticCode::EntityPieInvalidAlign,
+    invalid_scale: DiagnosticCode::EntityPieInvalidScale,
+    invalid_width: DiagnosticCode::EntityPieInvalidWidth,
+    unusable_scale: DiagnosticCode::EntityPieUnusableScale,
+    empty_option_value: DiagnosticCode::EntityPieEmptyOptionValue,
+    unsupported_option: DiagnosticCode::EntityPieUnsupportedOption,
+};
 
 #[cfg(test)]
 mod tests;

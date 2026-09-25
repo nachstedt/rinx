@@ -13,6 +13,7 @@
 
 mod blocks;
 mod broken_link;
+mod chart;
 pub mod config;
 mod embedded_assets;
 mod empty_listing_error;
@@ -23,7 +24,6 @@ mod math;
 mod nav;
 mod octicon;
 mod page;
-mod pie_chart;
 mod resolution;
 mod uml_error;
 

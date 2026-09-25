@@ -24,7 +24,7 @@ use rusty_sphinx_ast::{DiagnosticCode, Span};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EmptyListingError {
     /// The directive as the author spelled it — `entity-table` or `needtable`,
-    /// `entity-pie` or `needpie`.
+    /// `entity-pie` or `needpie`, `entity-bar` or `needbar`.
     pub directive: String,
     /// The code this reports under, which names the construct.
     pub code: DiagnosticCode,
@@ -52,6 +52,17 @@ impl EmptyListingError {
         Self {
             directive: directive.to_string(),
             code: DiagnosticCode::EntityPieEmptyResult,
+            subject: "chart has nothing to draw",
+            span,
+        }
+    }
+
+    /// An `.. entity-bar::` / `.. needbar::` whose every cell counted zero.
+    #[must_use]
+    pub fn bar(directive: &str, span: Option<Span>) -> Self {
+        Self {
+            directive: directive.to_string(),
+            code: DiagnosticCode::EntityBarEmptyResult,
             subject: "chart has nothing to draw",
             span,
         }
@@ -100,6 +111,19 @@ mod tests {
 
         // Then
         assert_eq!(code, DiagnosticCode::EntityPieEmptyResult);
+    }
+
+    #[test]
+    fn test_an_empty_bar_chart_reports_under_its_own_code() {
+        // Given
+        let error = EmptyListingError::bar("needbar", None);
+
+        // When
+        let code = error.code();
+
+        // Then
+        assert_eq!(code, DiagnosticCode::EntityBarEmptyResult);
+        assert!(error.message().starts_with("needbar:"));
     }
 
     #[test]

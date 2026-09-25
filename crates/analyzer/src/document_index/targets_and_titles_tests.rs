@@ -791,3 +791,30 @@ fn test_analyze_registers_a_sequence_diagrams_name_as_a_target() {
             .contains_key(&TargetName::new("startup-sequence"))
     );
 }
+
+#[test]
+fn test_analyze_registers_a_bar_charts_name_as_a_target() {
+    // Given — a `.. entity-bar::` with a `:name:` option
+    let doc = Document::new(
+        "report.rst".to_string(),
+        vec![Node::Directive(Directive::EntityBar(Box::new(
+            rusty_sphinx_ast::EntityBar {
+                name: Some(TargetName::new("authors-chart")),
+                ..rusty_sphinx_ast::EntityBar::new(
+                    rusty_sphinx_ast::EntityBarSource::NeedBar,
+                    rusty_sphinx_ast::BarGrid::default(),
+                )
+            },
+        )))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — a chart is a cross-reference target like any other picture
+    assert!(
+        index
+            .targets
+            .contains_key(&TargetName::new("authors-chart"))
+    );
+}
