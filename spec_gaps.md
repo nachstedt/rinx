@@ -27,7 +27,7 @@ Legend: ✅ implemented · 🔶 partial · ❌ not implemented
 | Bold (`**text**`) | ✅ | — |
 | Italic (`*text*`) | ✅ | — |
 | Inline code (`` `text` ``) | ✅ | — |
-| `` :ref:`label` `` cross-reference role | ✅ | — |
+| `` :ref:`label` `` cross-reference role | ✅ | A bare label shows the title of the heading it labels, as Sphinx does; a chain of labels above one heading all take its title, and a comment in between breaks the chain (docutils' `PropagateTargets`). A label above a figure, table or code block — or that element's own `:name:` — shows its caption instead; one with no caption shows the label, where Sphinx warns |
 | `` :term:`glossary term` `` cross-reference role | ✅ | — |
 | `` :program:`name` `` role | ✅ | Renders as highlighted text (`<strong class="program">`); not a cross-reference/lookup role |
 | Domain-object role target modifiers: `!target`, `~target`, `.target`, trailing `target()` | ✅ | — |
@@ -220,6 +220,14 @@ schemas like any built-in.
 | Cross-referencing domain objects (and targets/glossary terms) nested inside tables, lists, or admonition/version-change/seealso bodies | ✅ | — |
 | Automatic general-index entries for domain object definitions | ✅ | Entry text uses a simplified format (e.g. `"Greeter.greet (method)"`) rather than Sphinx's fuller `"coroutine() (in module types)"` phrasing |
 | `preview` subcommand default-domain awareness | 🔶 | `preview` accepts a `--default-domain` flag identical to `parse`'s, but the VS Code extension never queries the enclosing `rusty_sphinx_library`'s `default_domain` Bazel attribute or passes it through, so editor-driven previews always default to `py` |
+
+### Linking between sites (intersphinx)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Writing `objects.inv` (inventory version 2) | ✅ | Every `rusty_sphinx_site` writes one at its root, and exposes it in an `inventory` output group. Lists documents, labels (with the title a bare `:ref:` shows), glossary terms, options, Python and C objects and `genindex`; loads in Sphinx 9.1's own reader, and re-writing a real Sphinx inventory reproduces its body line for line. Two deliberate deviations: labels without a title are listed too (Sphinx lists only titled ones), so an entity or a named directive can be linked from elsewhere; and anchors are this build's own (`py:class:pkg.greeter`, not `pkg.Greeter`), which the inventory's URIs carry. See `docs/decisions/023-inventories.md` |
+| Reading inventories (`intersphinx_mapping`) | 🔶 | `rusty_sphinx_inventory` + `inventories` on `rusty_sphinx_site`; `:ref:`, `:term:`, `:option:` and every domain role fall back to the declared inventories, in declaration order, once no local target matches, and a `name:` target prefix picks one out as in Sphinx. One deliberate narrowing: an inventory is a pinned build input (vendored, `http_file` with `sha256`, or another site's output) — never fetched while building, so there is no `intersphinx_cache_limit`/`intersphinx_timeout`. Version 1 inventories are refused by name. No `:doc:`/`:any:` roles exist yet, so neither resolves externally. See `docs/intersphinx.md` |
+| `:external:` / `:external+name:` roles | ✅ | On `:ref:`, `:term:`, `:option:` and every domain role. `:external:` skips this site; `:external+name:` searches one inventory, and naming an undeclared one is `link.unknown-inventory` |
 
 ## General Index
 

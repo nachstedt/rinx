@@ -3,17 +3,21 @@
 use std::fmt::Write as _;
 
 use super::RefText;
-use rusty_sphinx_ast::TargetName;
+use rusty_sphinx_ast::{InventorySelector, TargetName};
 use rusty_sphinx_index::ProjectIndex;
 
+use super::external_link::write_external_link;
+use crate::resolution::{resolve_external, unresolved_kind};
 use crate::{BrokenLink, BrokenLinkKind};
 
 /// Renders a glossary term reference (`:term:`). Resolves the term via the project
-/// index and emits a relative link with the appropriate CSS classes, or a
-/// broken-link fallback if the term is not found in the index.
+/// index and emits a relative link with the appropriate CSS classes, then —
+/// if no glossary of this site defines it — through the other sites'
+/// inventories, and only then falls back to a broken link.
 pub(super) fn render_inline_term_reference(
     html: &mut String,
     reference: RefText<'_>,
+    inventory: &InventorySelector,
     index: &ProjectIndex,
     doc_path: &str,
     broken_links: &mut Vec<BrokenLink>,
@@ -25,7 +29,12 @@ pub(super) fn render_inline_term_reference(
     } = reference;
     let display_escaped = html_escape::encode_text(display);
     let term_name = TargetName::new(term);
-    if let Some(glossary_doc_path) = index.glossary_terms.get(&term_name) {
+    let local = if inventory.allows_local() {
+        index.glossary_terms.get(&term_name)
+    } else {
+        None
+    };
+    if let Some(glossary_doc_path) = local {
         let current_dir = std::path::Path::new(doc_path)
             .parent()
             .unwrap_or_else(|| std::path::Path::new(""));
@@ -39,13 +48,25 @@ pub(super) fn render_inline_term_reference(
             html,
             "<a class=\"reference internal\" href=\"{href_attr}\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
         );
+    } else if let Some(hit) = resolve_external(
+        &index.external_inventories,
+        &["std:term".to_string()],
+        term,
+        inventory,
+    ) {
+        let inner = format!("<span class=\"xref std std-term\">{display_escaped}</span>");
+        write_external_link(html, &hit, doc_path, &inner);
     } else {
         let _ = write!(
             html,
             "<a href=\"#\" class=\"broken-link\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
         );
         broken_links.push(BrokenLink {
-            kind: BrokenLinkKind::TermReference,
+            kind: unresolved_kind(
+                inventory,
+                &index.external_inventories,
+                BrokenLinkKind::TermReference,
+            ),
             target: term.to_string(),
             span,
         });
@@ -55,6 +76,37 @@ pub(super) fn render_inline_term_reference(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_render_inline_term_reference_links_a_term_another_site_defines() {
+        // Given
+        let index = crate::test_support::index_linking_into_python();
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+
+        // When
+        render_inline_term_reference(
+            &mut html,
+            RefText {
+                display: "bytecode",
+                target: "bytecode",
+                span: None,
+            },
+            &rusty_sphinx_ast::InventorySelector::Any,
+            &index,
+            "index.rst",
+            &mut broken_links,
+        );
+
+        // Then
+        assert_eq!(
+            html,
+            "<a class=\"reference external\" \
+             href=\"https://docs.python.org/3/glossary.html#term-bytecode\" \
+             title=\"(in Python v3.12)\"><span class=\"xref std std-term\">bytecode</span></a>"
+        );
+        assert!(broken_links.is_empty());
+    }
 
     #[test]
     fn test_render_inline_term_reference_resolved_with_css_classes() {
@@ -74,6 +126,7 @@ mod tests {
                 target: "widget",
                 span: None,
             },
+            &rusty_sphinx_ast::InventorySelector::Any,
             &index,
             "doc.rst",
             &mut broken_links,
@@ -101,6 +154,7 @@ mod tests {
                 target: "unknown",
                 span: None,
             },
+            &rusty_sphinx_ast::InventorySelector::Any,
             &index,
             "doc.rst",
             &mut broken_links,
@@ -138,6 +192,7 @@ mod tests {
                 target: "api",
                 span: None,
             },
+            &rusty_sphinx_ast::InventorySelector::Any,
             &index,
             "guide/intro.rst",
             &mut broken_links,
@@ -166,6 +221,7 @@ mod tests {
                 target: "environment",
                 span: None,
             },
+            &rusty_sphinx_ast::InventorySelector::Any,
             &index,
             "doc.rst",
             &mut broken_links,

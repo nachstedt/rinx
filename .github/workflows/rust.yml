@@ -49,6 +49,9 @@ jobs:
     - name: Build full site (all teams)
       run: bazel build //examples:site
 
+    - name: Build the sibling site linking into it (intersphinx)
+      run: bazel build //examples/intersphinx:sibling_site
+
     - name: Build team_a in isolation (partial build)
       run: bazel build //examples/team_a:docs
 
@@ -87,6 +90,9 @@ jobs:
 
     - name: Run diagram cache firewall test
       run: ./tests/test_diagram_cache_firewall.sh
+
+    - name: Run intersphinx test
+      run: ./tests/test_intersphinx.sh
 
   vscode_extension:
     runs-on: ubuntu-latest

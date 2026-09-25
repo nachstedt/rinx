@@ -87,6 +87,10 @@ If the user opens a project that has never been built, there is no `site.project
 - Showing a notification: *"No project index found. Run a full build for cross-references and navigation."*
 - Optionally triggering the initial `bazel build` in the background.
 
+### Caveat 6b: External Links Come From the Last Build's Index
+
+References into other sites (intersphinx, see `docs/intersphinx.md`) resolve in the preview without any extra input, because the declared inventories are stored in the global index the preview merges into. But the index keeps only the external targets some document referenced when it was built, so a reference to an external target nothing else names stays unresolved in the preview until the next build — the same eventual consistency as titles and cross-references.
+
 ### Caveat 7: `doc_path` Must Be Relative to the Sphinx Root
 
 The renderer uses `doc_path` (e.g., `library/os.rst`) to compute relative links for CSS, images, and cross-references. The extension must correctly compute this relative path from the workspace root or the Sphinx doc root — not use the absolute filesystem path.

@@ -144,6 +144,7 @@ mod tests {
                 display: "environment".to_string(),
                 term: "environment".to_string(),
                 span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }])],
         );
         let mut index = ProjectIndex::default();
@@ -168,6 +169,7 @@ mod tests {
                 display: "the env".to_string(),
                 term: "environment".to_string(),
                 span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }])],
         );
         let mut index = ProjectIndex::default();
@@ -191,6 +193,7 @@ mod tests {
                 display: "unknown".to_string(),
                 term: "unknown".to_string(),
                 span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }])],
         );
         let index = ProjectIndex::default(); // empty — no glossary terms
@@ -211,6 +214,7 @@ mod tests {
                 display: "foo".to_string(),
                 term: "foo".to_string(),
                 span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }])],
         );
         let mut index = ProjectIndex::default();

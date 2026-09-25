@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::image::ImageOptions;
+use crate::inventory_selector::InventorySelector;
 use crate::object_type::ObjectType;
 use crate::span::Span;
 use crate::target_search_order::TargetSearchOrder;
@@ -11,14 +12,21 @@ pub enum InlineNode {
     /// An inline cross-reference produced by the `:ref:` role, linking to a
     /// labeled location elsewhere in the site.
     ///
-    /// `display` and `target` differ when the role is written with an
-    /// explicit display-text override (the angle-bracket form), same as
-    /// [`TermReference`](Self::TermReference).
+    /// `display` is the explicit title of the angle-bracket form, and `None`
+    /// when the author wrote the bare label. The two are kept apart rather
+    /// than defaulting `display` to `target` while parsing, because the text a
+    /// bare `:ref:` shows is the *section title* the label points at — which
+    /// only the project index knows, so only the renderer can supply it.
     Reference {
-        display: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        display: Option<String>,
         target: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
+        /// Which inventories the target may come from — see
+        /// [`InventorySelector`]. Left out of a `.ast` file when ordinary.
+        #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
+        inventory: InventorySelector,
     },
     Hyperlink {
         text: String,
@@ -50,6 +58,10 @@ pub enum InlineNode {
         term: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
+        /// Which inventories the target may come from — see
+        /// [`InventorySelector`]. Left out of a `.ast` file when ordinary.
+        #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
+        inventory: InventorySelector,
     },
     /// An inline cross-reference produced by a domain role (e.g. `:func:`,
     /// `:py:func:`, `:c:func:`), linking to a `Directive::DomainObject`.
@@ -91,6 +103,10 @@ pub enum InlineNode {
         search_order: TargetSearchOrder,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
+        /// Which inventories the target may come from — see
+        /// [`InventorySelector`]. Left out of a `.ast` file when ordinary.
+        #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
+        inventory: InventorySelector,
     },
     /// An inline cross-reference produced by the `:option:` role, linking to
     /// a `.. option::`/`.. cmdoption::` definition.
@@ -110,6 +126,10 @@ pub enum InlineNode {
         target: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
+        /// Which inventories the target may come from — see
+        /// [`InventorySelector`]. Left out of a `.ast` file when ordinary.
+        #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
+        inventory: InventorySelector,
     },
     /// A reference to a project-declared entity, from a role the schema
     /// names — ``:req:`REQ_001` ``, ``:need:`REQ_001` ``, or the built-in
@@ -275,8 +295,12 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             InlineNode::Hyperlink { text, .. } | InlineNode::AnonymousHyperlink { text, .. } => {
                 text.as_str()
             }
-            InlineNode::Reference { display, .. }
-            | InlineNode::TermReference { display, .. }
+            // Without the index, a bare label's section title is unknown, so
+            // the label itself is the best plain text there is.
+            InlineNode::Reference {
+                display, target, ..
+            } => display.as_deref().unwrap_or(target),
+            InlineNode::TermReference { display, .. }
             | InlineNode::DomainObjectReference { display, .. }
             | InlineNode::OptionReference { display, .. }
             | InlineNode::EntityReference { display, .. } => display.as_str(),
@@ -308,9 +332,10 @@ mod tests {
         // Given — one node per variant the renderer sends to an `<a>`
         let links = vec![
             InlineNode::Reference {
-                display: "d".to_string(),
+                display: Some("d".to_string()),
                 target: "t".to_string(),
                 span: None,
+                inventory: crate::InventorySelector::Any,
             },
             InlineNode::Hyperlink {
                 text: "t".to_string(),
@@ -329,11 +354,13 @@ mod tests {
                 display: "d".to_string(),
                 term: "t".to_string(),
                 span: None,
+                inventory: crate::InventorySelector::Any,
             },
             InlineNode::OptionReference {
                 display: "d".to_string(),
                 target: "t".to_string(),
                 span: None,
+                inventory: crate::InventorySelector::Any,
             },
             InlineNode::EntityReference {
                 role: "req".to_string(),
@@ -379,6 +406,7 @@ mod tests {
             link: false,
             search_order: TargetSearchOrder::default(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         };
         let linked = InlineNode::DomainObjectReference {
             object_type: ObjectType::Py(PyObjectType::Function),
@@ -387,6 +415,7 @@ mod tests {
             link: true,
             search_order: TargetSearchOrder::default(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         };
 
         // When / Then
@@ -414,6 +443,7 @@ mod tests {
             display: "-O <dis --show-offsets>".to_string(),
             target: "dis --show-offsets".to_string(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         };
 
         // When
@@ -428,9 +458,10 @@ mod tests {
     fn test_reference_serialization_roundtrip() {
         // Given
         let node = InlineNode::Reference {
-            display: "GenericAlias".to_string(),
+            display: Some("GenericAlias".to_string()),
             target: "types-genericalias".to_string(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         };
 
         // When
@@ -442,26 +473,22 @@ mod tests {
     }
 
     #[test]
-    fn test_reference_display_equals_target_when_no_alias() {
-        // Given
-        let label = "home-index";
-
-        // When
+    fn test_reference_without_explicit_title_roundtrips_without_display() {
+        // Given — a bare `:ref:`, whose title only the index can supply
         let node = InlineNode::Reference {
-            display: label.to_string(),
-            target: label.to_string(),
+            display: None,
+            target: "home-index".to_string(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         };
 
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
         // Then
-        if let InlineNode::Reference {
-            display, target, ..
-        } = node
-        {
-            assert_eq!(display, target);
-        } else {
-            panic!("Expected Reference");
-        }
+        assert!(!json.contains("display"));
+        assert_eq!(node, deserialized);
     }
 
     #[test]
@@ -471,6 +498,7 @@ mod tests {
             display: "the environment".to_string(),
             term: "environment".to_string(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         };
 
         // When
@@ -491,6 +519,7 @@ mod tests {
             display: term_text.to_string(),
             term: term_text.to_string(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         };
 
         // Then
@@ -511,6 +540,7 @@ mod tests {
             link: true,
             search_order: TargetSearchOrder::MostQualifiedFirst,
             span: None,
+            inventory: crate::InventorySelector::Any,
         };
 
         // When
@@ -538,7 +568,8 @@ mod tests {
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: crate::InventorySelector::Any,
             }
         );
     }
@@ -562,9 +593,10 @@ mod tests {
     fn test_inline_plain_text_uses_display_for_reference() {
         // Given — an explicit-title `:ref:`
         let nodes = vec![InlineNode::Reference {
-            display: "GenericAlias".to_string(),
+            display: Some("GenericAlias".to_string()),
             target: "types-genericalias".to_string(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         }];
 
         // When
@@ -572,6 +604,23 @@ mod tests {
 
         // Then
         assert_eq!(text, "GenericAlias");
+    }
+
+    #[test]
+    fn test_inline_plain_text_falls_back_to_the_label_for_a_bare_reference() {
+        // Given — a bare `:ref:`; the section title is not known without an index
+        let nodes = vec![InlineNode::Reference {
+            display: None,
+            target: "types-genericalias".to_string(),
+            span: None,
+            inventory: crate::InventorySelector::Any,
+        }];
+
+        // When
+        let text = inline_plain_text(&nodes);
+
+        // Then
+        assert_eq!(text, "types-genericalias");
     }
 
     #[test]
@@ -584,6 +633,7 @@ mod tests {
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
+            inventory: crate::InventorySelector::Any,
         }];
 
         // When
@@ -600,6 +650,7 @@ mod tests {
             display: "the env".to_string(),
             term: "environment".to_string(),
             span: None,
+            inventory: crate::InventorySelector::Any,
         }];
 
         // When

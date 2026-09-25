@@ -39,6 +39,8 @@ Reference Role (``:ref:``)
 The ``:ref:`` role creates a cross-reference to a labeled location
 elsewhere in the site.
 
-* Basic reference: See :ref:`home-index` for the project overview.
+* Basic reference: See :ref:`home-index` for the project overview. With no
+  explicit title, the link shows the title of the section the label sits
+  above, as in Sphinx.
 * Custom display text: :ref:`the site home <home-index>` links back to
   the same page under different link text.

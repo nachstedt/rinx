@@ -35,8 +35,10 @@
 //!    each peel — stopping at the first hit.
 //! 4. Otherwise: unresolved.
 
-use rusty_sphinx_ast::{ObjectType, StdObjectType, TargetName};
-use rusty_sphinx_index::ProjectIndex;
+use rusty_sphinx_ast::{InventorySelector, ObjectType, StdObjectType, TargetName};
+use rusty_sphinx_index::{ExternalInventory, ProjectIndex};
+
+use super::{ExternalHit, resolve_external};
 
 /// The outcome of resolving one `:option:` reference.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,6 +47,9 @@ pub(crate) enum OptionResolution<'a> {
         qualified_name: String,
         doc_path: &'a str,
     },
+    /// No document of this site defines the option, but another site's
+    /// inventory lists it.
+    External(ExternalHit<'a>),
     NotFound,
 }
 
@@ -58,21 +63,45 @@ impl<'a> OptionResolver<'a> {
         Self { index }
     }
 
+    /// The other sites' inventories this resolver searches after its own
+    /// index — what a renderer needs to say why a reference failed.
+    pub(crate) fn external_inventories(&self) -> &'a [ExternalInventory] {
+        &self.index.external_inventories
+    }
+
     /// Resolves `target` (the role's text, minus any explicit-title
     /// override, which is handled at parse time) written under
     /// `ambient_program` — see the module doc comment for the search order.
+    /// This site's own options come first unless `selector` is an
+    /// `:external:` one; the other sites' inventories are searched after.
     pub(crate) fn resolve(
         &self,
         ambient_program: Option<&str>,
         target: &str,
+        selector: &InventorySelector,
     ) -> OptionResolution<'a> {
-        if let Some(resolution) = self.lookup(ambient_program, target) {
+        if selector.allows_local()
+            && let Some(resolution) = self.resolve_local(ambient_program, target)
+        {
             return resolution;
+        }
+        self.resolve_external(ambient_program, target, selector)
+            .map_or(OptionResolution::NotFound, OptionResolution::External)
+    }
+
+    /// The search against this site's own `.. option::` definitions.
+    fn resolve_local(
+        &self,
+        ambient_program: Option<&str>,
+        target: &str,
+    ) -> Option<OptionResolution<'a>> {
+        if let Some(resolution) = self.lookup(ambient_program, target) {
+            return Some(resolution);
         }
         if ambient_program.is_some()
             && let Some(resolution) = self.lookup(None, target)
         {
-            return resolution;
+            return Some(resolution);
         }
         if target.contains(char::is_whitespace) {
             let words: Vec<&str> = target.split_whitespace().collect();
@@ -84,11 +113,35 @@ impl<'a> OptionResolver<'a> {
                 accumulated.push_str(word);
                 let remainder = words[i + 1..].join(" ");
                 if let Some(resolution) = self.lookup(Some(&accumulated), &remainder) {
-                    return resolution;
+                    return Some(resolution);
                 }
             }
         }
-        OptionResolution::NotFound
+        None
+    }
+
+    /// Searches the other sites' inventories, which list a program's option
+    /// as `program.option` exactly as this index keys it — qualified by the
+    /// ambient program first, then bare, the same two steps a local lookup
+    /// takes.
+    fn resolve_external(
+        &self,
+        ambient_program: Option<&str>,
+        target: &str,
+        selector: &InventorySelector,
+    ) -> Option<ExternalHit<'a>> {
+        let entry_types = ["std:cmdoption".to_string()];
+        let inventories = &self.index.external_inventories;
+        ambient_program
+            .and_then(|program| {
+                resolve_external(
+                    inventories,
+                    &entry_types,
+                    &format!("{program}.{target}"),
+                    selector,
+                )
+            })
+            .or_else(|| resolve_external(inventories, &entry_types, target, selector))
     }
 
     /// Looks up one exact `(program, optname)` pair, qualified exactly like
@@ -127,13 +180,47 @@ mod tests {
     }
 
     #[test]
+    fn test_resolve_falls_back_to_another_sites_inventory() {
+        // Given — no document here defines `-O`, but Python's inventory does
+        let index = crate::test_support::index_linking_into_python();
+        let resolver = OptionResolver::new(&index);
+
+        // When
+        let resolution = resolver.resolve(
+            Some("python"),
+            "-O",
+            &rusty_sphinx_ast::InventorySelector::Any,
+        );
+
+        // Then
+        let OptionResolution::External(hit) = resolution else {
+            panic!("expected an external resolution, got {resolution:?}");
+        };
+        assert_eq!(hit.target.uri, "using/cmdline.html#cmdoption-O");
+    }
+
+    #[test]
+    fn test_resolve_prefers_a_local_option_over_an_external_one() {
+        // Given
+        let mut index = crate::test_support::index_linking_into_python();
+        index.insert_domain_object(ObjectType::Std(StdObjectType::Cmdoption), "-O", "cli.rst");
+        let resolver = OptionResolver::new(&index);
+
+        // When
+        let resolution = resolver.resolve(None, "-O", &rusty_sphinx_ast::InventorySelector::Any);
+
+        // Then
+        assert!(matches!(resolution, OptionResolution::Resolved { .. }));
+    }
+
+    #[test]
     fn test_resolve_finds_bare_option_with_no_ambient_program() {
         // Given
         let index = index_with_option("-x", "using/cmdline.rst");
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(None, "-x");
+        let resolution = resolver.resolve(None, "-x", &rusty_sphinx_ast::InventorySelector::Any);
 
         // Then
         assert_eq!(
@@ -152,7 +239,8 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(Some("dis"), "-O");
+        let resolution =
+            resolver.resolve(Some("dis"), "-O", &rusty_sphinx_ast::InventorySelector::Any);
 
         // Then — the returned `qualified_name` preserves the case the
         // reference was written with (`"dis.-O"`, not `"dis.-o"`); the index
@@ -178,7 +266,8 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(Some("dis"), "-X");
+        let resolution =
+            resolver.resolve(Some("dis"), "-X", &rusty_sphinx_ast::InventorySelector::Any);
 
         // Then — case preserved, same rationale as the test above.
         assert_eq!(
@@ -199,7 +288,11 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(None, "dis --show-offsets");
+        let resolution = resolver.resolve(
+            None,
+            "dis --show-offsets",
+            &rusty_sphinx_ast::InventorySelector::Any,
+        );
 
         // Then
         assert_eq!(
@@ -219,7 +312,11 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(None, "python -m py_compile --quiet");
+        let resolution = resolver.resolve(
+            None,
+            "python -m py_compile --quiet",
+            &rusty_sphinx_ast::InventorySelector::Any,
+        );
 
         // Then
         assert_eq!(
@@ -238,7 +335,8 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(Some("dis"), "-Z");
+        let resolution =
+            resolver.resolve(Some("dis"), "-Z", &rusty_sphinx_ast::InventorySelector::Any);
 
         // Then
         assert_eq!(resolution, OptionResolution::NotFound);
@@ -252,7 +350,11 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(None, "-nonexistent");
+        let resolution = resolver.resolve(
+            None,
+            "-nonexistent",
+            &rusty_sphinx_ast::InventorySelector::Any,
+        );
 
         // Then
         assert_eq!(resolution, OptionResolution::NotFound);
@@ -279,6 +381,7 @@ mod pipeline_tests {
                     display: "-O".to_string(),
                     target: "-O".to_string(),
                     span: None,
+                    inventory: rusty_sphinx_ast::InventorySelector::Any,
                 }]),
             ],
         );
@@ -307,6 +410,7 @@ mod pipeline_tests {
                 display: "-Z".to_string(),
                 target: "-Z".to_string(),
                 span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }])],
         );
         let index = ProjectIndex::default();

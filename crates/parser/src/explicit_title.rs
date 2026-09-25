@@ -35,9 +35,49 @@ pub(crate) fn split_display_and_target(content: &str) -> (String, String) {
     split_explicit_title(content).unwrap_or_else(|| (content.to_string(), content.to_string()))
 }
 
+/// Splits content on the optional explicit-title syntax, returning
+/// `(title, target)` with `title` absent when none was written.
+///
+/// The form a role wants when its link text for a bare target is not the
+/// target itself but something only a later phase can look up — `:ref:`,
+/// whose bare form shows the title of the section the label points at.
+pub(crate) fn split_optional_title(content: &str) -> (Option<String>, String) {
+    match split_explicit_title(content) {
+        Some((title, target)) => (Some(title), target),
+        None => (None, content.to_string()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_split_optional_title_keeps_a_written_title() {
+        // Given
+        let content = "Getting started <intro>";
+
+        // When
+        let split = split_optional_title(content);
+
+        // Then
+        assert_eq!(
+            split,
+            (Some("Getting started".to_string()), "intro".to_string())
+        );
+    }
+
+    #[test]
+    fn test_split_optional_title_reports_no_title_for_a_bare_target() {
+        // Given
+        let content = "intro";
+
+        // When
+        let split = split_optional_title(content);
+
+        // Then
+        assert_eq!(split, (None, "intro".to_string()));
+    }
 
     #[test]
     fn test_split_explicit_title_splits_display_from_target() {

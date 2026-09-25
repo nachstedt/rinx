@@ -1,0 +1,15 @@
+[package]
+name = "rusty_sphinx_inventory"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+flate2 = "1.1"
+regex = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1"
+
+[lints]
+workspace = true

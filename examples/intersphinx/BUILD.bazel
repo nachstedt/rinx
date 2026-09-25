@@ -1,0 +1,72 @@
+"""
+Intersphinx: linking into other documentation sites through their inventories.
+
+Both directions are shown, and neither touches the network while building:
+
+  * `python` is a subset of Python's real `objects.inv`, vendored in this
+    package (see README.md), which `//examples:site` links into.
+  * `sibling_site` is a second site that links into `//examples:site` through
+    the `objects.inv` that site writes.
+
+  bazel build //examples:site                          # links into Python
+  bazel build //examples/intersphinx:sibling_site      # links into the site
+"""
+
+load(
+    "@rusty_sphinx//:defs.bzl",
+    "rusty_sphinx_inventory",
+    "rusty_sphinx_library",
+    "rusty_sphinx_site",
+)
+
+# A pinned third-party inventory. A real project would more likely fetch it
+# with `http_file(..., sha256 = ...)` in MODULE.bazel and name that label here;
+# a vendored file keeps the example buildable offline. The base URL names the
+# same version the file was cut from, so every link lands on a page that has
+# the anchor.
+rusty_sphinx_inventory(
+    name = "python",
+    src = "python.inv",
+    base_url = "https://docs.python.org/3.13/",
+    visibility = ["//examples:__pkg__"],
+)
+
+rusty_sphinx_library(
+    name = "docs",
+    srcs = ["index.rst"],
+    visibility = ["//examples:__pkg__"],
+)
+
+# ── A second site, linking into the first ─────────────────────────────────────
+
+# The example site's own objects.inv, without building any of its pages: the
+# `inventory` output group carries that one file.
+filegroup(
+    name = "site_objects_inv",
+    srcs = ["//examples:site"],
+    output_group = "inventory",
+)
+
+rusty_sphinx_inventory(
+    name = "examples_site",
+    src = ":site_objects_inv",
+    # Relative to this site's root: in `bazel-bin` the two sites' output
+    # directories sit at `examples/intersphinx/sibling_site_site_out/` and
+    # `examples/site_site_out/`. Each page's link is made relative to that
+    # page, so the pair works wherever it is deployed side by side.
+    base_url = "../../site_site_out/",
+    # The name a document would write in `:external+examples:`.
+    inventory_name = "examples",
+)
+
+rusty_sphinx_library(
+    name = "sibling_docs",
+    srcs = ["sibling/index.rst"],
+)
+
+rusty_sphinx_site(
+    name = "sibling_site",
+    inventories = [":examples_site"],
+    strict_links = True,
+    deps = [":sibling_docs"],
+)

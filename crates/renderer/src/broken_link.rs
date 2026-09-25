@@ -2,7 +2,7 @@
 //! failed to resolve against the [`ProjectIndex`](rusty_sphinx_index::ProjectIndex),
 //! and references that resolved only through an object-type fallback.
 
-use rusty_sphinx_ast::{DiagnosticCode, ObjectType, Span};
+use rusty_sphinx_ast::{DiagnosticCode, InventoryName, ObjectType, Span};
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -46,6 +46,10 @@ pub enum BrokenLinkKind {
         /// The qualified names that matched, in index order.
         candidates: Vec<String>,
     },
+    /// An `:external+name:` role whose `name` the build declared no
+    /// inventory under — so nothing was searched, and the fix is the name or
+    /// the site's `inventories`, not the target.
+    UnknownInventory(InventoryName),
 }
 
 impl BrokenLinkKind {
@@ -64,6 +68,7 @@ impl BrokenLinkKind {
             Self::EntityTypeMismatch { .. } => DiagnosticCode::EntityRoleTypeMismatch,
             Self::DomainObjectReference(_) => DiagnosticCode::LinkBrokenObject,
             Self::AmbiguousDomainObjectReference { .. } => DiagnosticCode::LinkAmbiguousObject,
+            Self::UnknownInventory(_) => DiagnosticCode::LinkUnknownInventory,
         }
     }
 
@@ -81,6 +86,7 @@ impl BrokenLinkKind {
             Self::EntityTypeMismatch { .. } => "entity type mismatch",
             Self::DomainObjectReference(_) => "domain object",
             Self::AmbiguousDomainObjectReference { .. } => "ambiguous domain object",
+            Self::UnknownInventory(_) => "reference into an undeclared inventory",
         }
     }
 }
@@ -173,5 +179,15 @@ mod tests {
 
         // Then
         assert_eq!(label, "ambiguous domain object");
+    }
+
+    #[test]
+    fn test_unknown_inventory_has_its_own_code() {
+        // Given
+        let kind = BrokenLinkKind::UnknownInventory(InventoryName::new("nope").unwrap());
+
+        // When / Then
+        assert_eq!(kind.code(), DiagnosticCode::LinkUnknownInventory);
+        assert_eq!(kind.as_str(), "reference into an undeclared inventory");
     }
 }

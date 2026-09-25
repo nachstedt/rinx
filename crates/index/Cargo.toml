@@ -7,6 +7,7 @@ edition.workspace = true
 rusty_sphinx_ast = { path = "../ast" }
 rusty_sphinx_entity = { path = "../entity" }
 rusty_sphinx_filter = { path = "../filter" }
+rusty_sphinx_inventory = { path = "../inventory" }
 pathdiff = "0.2"
 serde = { version = "1", features = ["derive"] }
 

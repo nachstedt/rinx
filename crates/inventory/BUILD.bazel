@@ -1,0 +1,12 @@
+load("@crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_library")
+
+rust_library(
+    name = "rusty_sphinx_inventory",
+    srcs = glob(["src/**/*.rs"]),
+    edition = "2024",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+    ),
+)

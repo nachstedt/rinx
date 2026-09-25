@@ -106,6 +106,7 @@ fn test_analyze_extracts_h1_title_as_plain_text_when_heading_has_domain_object_r
                     link: true,
                     search_order: TargetSearchOrder::LeastQualifiedFirst,
                     span: None,
+                    inventory: rusty_sphinx_ast::InventorySelector::Any,
                 },
                 InlineNode::Text(" Module".to_string()),
             ],
@@ -817,4 +818,272 @@ fn test_analyze_registers_a_bar_charts_name_as_a_target() {
             .targets
             .contains_key(&TargetName::new("authors-chart"))
     );
+}
+
+/// A target node with no URI — the `.. _name:` form that labels what follows.
+fn label(name: &str) -> Node {
+    Node::Target {
+        name: TargetName::new(name),
+        uri: None,
+    }
+}
+
+fn heading(title: &str) -> Node {
+    Node::Heading {
+        level: 2,
+        text: vec![InlineNode::Text(title.to_string())],
+    }
+}
+
+#[test]
+fn test_analyze_records_the_title_of_the_heading_a_target_labels() {
+    // Given
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![label("install"), heading("Installing")],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("install")),
+        Some(&"Installing".to_string())
+    );
+}
+
+#[test]
+fn test_analyze_gives_every_chained_target_the_heading_title() {
+    // Given — two labels stacked above one heading, which docutils chains
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![label("install"), label("setup"), heading("Installing")],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("install")),
+        Some(&"Installing".to_string())
+    );
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("setup")),
+        Some(&"Installing".to_string())
+    );
+}
+
+#[test]
+fn test_analyze_records_no_title_for_a_target_labelling_a_paragraph() {
+    // Given
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![
+            label("note"),
+            Node::Paragraph(vec![InlineNode::Text("text".to_string())]),
+            heading("Later"),
+        ],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.target_titles.is_empty());
+}
+
+#[test]
+fn test_analyze_records_no_title_across_a_comment() {
+    // Given — a comment is invisible in docutils, so it ends the chain
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![label("install"), Node::Comment, heading("Installing")],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.target_titles.is_empty());
+}
+
+#[test]
+fn test_analyze_records_no_title_for_an_external_hyperlink_target() {
+    // Given — a target with a URI names a URL, not the heading after it
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![
+            Node::Target {
+                name: TargetName::new("python"),
+                uri: Some("https://python.org".to_string()),
+            },
+            heading("Installing"),
+        ],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.target_titles.is_empty());
+}
+
+#[test]
+fn test_analyze_records_the_title_of_a_heading_labelled_inside_a_directive_body() {
+    // Given — a target and heading inside an admonition body
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Directive(Directive::SeeAlso {
+            body: vec![label("inner"), heading("Inner")],
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("inner")),
+        Some(&"Inner".to_string())
+    );
+}
+
+fn figure(caption: Option<&str>, name: Option<&str>) -> Node {
+    let mut image =
+        rusty_sphinx_ast::ImageOptions::new(rusty_sphinx_ast::ImageUri::new("logo.png"));
+    image.name = name.map(TargetName::new);
+    let mut figure = rusty_sphinx_ast::Figure::new(image);
+    figure.caption = caption.map(|text| vec![InlineNode::Text(text.to_string())]);
+    Node::Directive(Directive::Figure(Box::new(figure)))
+}
+
+#[test]
+fn test_analyze_records_a_figure_caption_for_the_label_above_it() {
+    // Given — Sphinx shows a figure's caption for a `:ref:` to its label
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![label("logo"), figure(Some("The logo"), None)],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("logo")),
+        Some(&"The logo".to_string())
+    );
+}
+
+#[test]
+fn test_analyze_records_a_figure_caption_for_its_own_name() {
+    // Given
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![figure(Some("The logo"), Some("logo-figure"))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("logo-figure")),
+        Some(&"The logo".to_string())
+    );
+}
+
+#[test]
+fn test_analyze_records_no_title_for_a_figure_without_a_caption() {
+    // Given
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![label("logo"), figure(None, Some("logo-figure"))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.target_titles.is_empty());
+}
+
+#[test]
+fn test_analyze_records_a_table_title_for_its_label_and_name() {
+    // Given
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![
+            label("sizes"),
+            Node::Directive(Directive::Table {
+                title: Some("Sizes".to_string()),
+                widths: None,
+                width: None,
+                align: None,
+                classes: vec![],
+                name: Some(TargetName::new("sizes-table")),
+                header_rows: vec![],
+                body_rows: vec![],
+            }),
+        ],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("sizes")),
+        Some(&"Sizes".to_string())
+    );
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("sizes-table")),
+        Some(&"Sizes".to_string())
+    );
+}
+
+#[test]
+fn test_analyze_records_a_code_block_caption_for_its_name() {
+    // Given — Sphinx shows a code block's `:caption:` for a `:ref:` to it
+    let mut node = code_block_named(Some("my-code"));
+    if let Node::Directive(Directive::CodeBlock(block)) = &mut node {
+        block.caption = Some("example.py".to_string());
+    }
+    let doc = Document::new("test.rst".to_string(), vec![node]);
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.target_titles.get(&TargetName::new("my-code")),
+        Some(&"example.py".to_string())
+    );
+}
+
+#[test]
+fn test_analyze_records_an_entity_anchor_for_its_target() {
+    // Given — an entity renders at `entity-<id>`, not at its lowercased name
+    let body = rusty_sphinx_ast::EntityBody {
+        type_name: "req".to_string(),
+        id: rusty_sphinx_ast::EntityId::new("REQ_001").unwrap(),
+        attributes: std::collections::BTreeMap::new(),
+        relations: std::collections::BTreeMap::new(),
+        sections: vec![],
+        span: None,
+    };
+    let doc = Document::new(
+        "reqs.rst".to_string(),
+        vec![Node::Directive(Directive::Entity(Box::new(body)))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    let name = TargetName::new("REQ_001");
+    assert!(index.targets.contains_key(&name));
+    assert_eq!(index.target_anchor(&name), "entity-REQ_001");
 }

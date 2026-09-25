@@ -25,6 +25,8 @@ mod nav;
 mod octicon;
 mod page;
 mod resolution;
+#[cfg(test)]
+mod test_support;
 mod uml_error;
 
 pub use blocks::EntityTemplates;
@@ -488,6 +490,7 @@ mod tests {
                         link: true,
                         search_order: TargetSearchOrder::LeastQualifiedFirst,
                         span: None,
+                        inventory: rusty_sphinx_ast::InventorySelector::Any,
                     },
                     InlineNode::Text(" Module".to_string()),
                 ],
@@ -686,9 +689,10 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Paragraph(vec![
                 rusty_sphinx_ast::InlineNode::Reference {
-                    display: "other-section".to_string(),
+                    display: None,
                     target: "other-section".to_string(),
                     span: None,
+                    inventory: rusty_sphinx_ast::InventorySelector::Any,
                 },
             ])],
         );
@@ -714,9 +718,10 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Paragraph(vec![
                 rusty_sphinx_ast::InlineNode::Reference {
-                    display: "other-section".to_string(),
+                    display: None,
                     target: "other-section".to_string(),
                     span: None,
+                    inventory: rusty_sphinx_ast::InventorySelector::Any,
                 },
             ])],
         );
@@ -739,14 +744,16 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Paragraph(vec![
                 rusty_sphinx_ast::InlineNode::Reference {
-                    display: "missing-ref".to_string(),
+                    display: None,
                     target: "missing-ref".to_string(),
                     span: None,
+                    inventory: rusty_sphinx_ast::InventorySelector::Any,
                 },
                 rusty_sphinx_ast::InlineNode::TermReference {
                     display: "missing term".to_string(),
                     term: "missing-term".to_string(),
                     span: None,
+                    inventory: rusty_sphinx_ast::InventorySelector::Any,
                 },
             ])],
         );
@@ -779,9 +786,10 @@ mod tests {
             "examples/team_b/index.rst".to_string(),
             vec![Node::Paragraph(vec![
                 rusty_sphinx_ast::InlineNode::Reference {
-                    display: "target-in-a".to_string(),
+                    display: None,
                     target: "target-in-a".to_string(),
                     span: None,
+                    inventory: rusty_sphinx_ast::InventorySelector::Any,
                 },
             ])],
         );

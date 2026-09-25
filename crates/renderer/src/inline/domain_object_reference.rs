@@ -7,9 +7,10 @@ mod scope_tests;
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::ObjectType;
+use rusty_sphinx_ast::{InventorySelector, ObjectType};
 
-use crate::resolution::{DomainObjectResolution, DomainObjectResolver};
+use super::external_link::write_external_link;
+use crate::resolution::{DomainObjectResolution, DomainObjectResolver, unresolved_kind};
 use crate::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 
 /// The fields of `InlineNode::DomainObjectReference` needed to render it,
@@ -25,6 +26,8 @@ pub(super) struct DomainObjectRef<'a> {
     /// Where the role was written, carried through so a broken or ambiguous
     /// reference can name its own line rather than just the document.
     pub span: Option<rusty_sphinx_ast::Span>,
+    /// Which sites may define the object — see [`InventorySelector`].
+    pub inventory: &'a InventorySelector,
 }
 
 /// Mutable diagnostic sinks for [`render_inline_domain_object_reference`],
@@ -69,6 +72,7 @@ pub(super) fn render_inline_domain_object_reference(
         link,
         search_order,
         span,
+        inventory,
     } = obj_ref;
     let display_escaped = html_escape::encode_text(display);
     let domain_str = object_type.domain().as_str();
@@ -91,7 +95,7 @@ pub(super) fn render_inline_domain_object_reference(
         });
     };
 
-    match resolver.resolve(scope, object_type, name, search_order) {
+    match resolver.resolve(scope, object_type, name, search_order, inventory) {
         DomainObjectResolution::Resolved {
             object_type: matched_type,
             qualified_name,
@@ -119,6 +123,9 @@ pub(super) fn render_inline_domain_object_reference(
                 "<a class=\"reference internal\" href=\"{href_attr}\">{literal}</a>"
             );
         }
+        DomainObjectResolution::External(hit) => {
+            write_external_link(html, &hit, doc_path, &literal);
+        }
         DomainObjectResolution::Ambiguous { candidates } => {
             render_unresolved(BrokenLinkKind::AmbiguousDomainObjectReference {
                 object_type,
@@ -126,7 +133,11 @@ pub(super) fn render_inline_domain_object_reference(
             });
         }
         DomainObjectResolution::NotFound => {
-            render_unresolved(BrokenLinkKind::DomainObjectReference(object_type));
+            render_unresolved(unresolved_kind(
+                inventory,
+                resolver.external_inventories(),
+                BrokenLinkKind::DomainObjectReference(object_type),
+            ));
         }
     }
 }

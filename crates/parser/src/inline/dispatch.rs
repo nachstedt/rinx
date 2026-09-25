@@ -5,13 +5,13 @@
 //! one shares used to live here; it moved to [`crate::explicit_title`] once
 //! `.. toctree::` needed the same syntax on its entry lines.
 
-use rusty_sphinx_ast::{Domain, InlineNode};
+use rusty_sphinx_ast::{Domain, InlineNode, InventoryName, InventorySelector};
 
-use crate::explicit_title::split_display_and_target;
+use crate::explicit_title::{split_display_and_target, split_optional_title};
 
 use super::regexes::{
-    ANONYMOUS_PHRASED_REGEX, ANONYMOUS_SIMPLE_REGEX, EMBEDDED_URI_REGEX, PHRASED_LINK_REGEX,
-    PROGRAM_ROLE_REGEX, REF_REGEX, SIMPLE_LINK_REGEX, TERM_ROLE_REGEX,
+    ANONYMOUS_PHRASED_REGEX, ANONYMOUS_SIMPLE_REGEX, EMBEDDED_URI_REGEX, EXTERNAL_PREFIX_REGEX,
+    PHRASED_LINK_REGEX, PROGRAM_ROLE_REGEX, REF_REGEX, SIMPLE_LINK_REGEX, TERM_ROLE_REGEX,
 };
 use super::roles::c::macro_::handle_macro_match;
 use super::roles::c::struct_::handle_struct_match;
@@ -34,16 +34,105 @@ pub(super) fn handle_inline_match(
     default_domain: Domain,
     schema: &rusty_sphinx_entity::EntitySchema,
 ) -> InlineNode {
+    let node = build_inline_node(kind, m_str, node_opt, default_domain, schema);
+    apply_inventory_selector(node, inventory_selector(m_str))
+}
+
+/// What a role's `external:`/`external+name:` prefix asks for — every role
+/// that may carry one shares the one prefix pattern, so it is read here once
+/// rather than by each role's handler.
+fn inventory_selector(m_str: &str) -> InventorySelector {
+    match EXTERNAL_PREFIX_REGEX.captures(m_str) {
+        None => InventorySelector::Any,
+        Some(caps) => match caps.name("inventory") {
+            // The prefix pattern admits only what `InventoryName` accepts, so
+            // the fallback is unreachable; degrading to "any inventory" is
+            // still better than a panic in a parser that must not have one.
+            Some(name) => InventoryName::new(name.as_str())
+                .map_or(InventorySelector::ExternalOnly, InventorySelector::Named),
+            None => InventorySelector::ExternalOnly,
+        },
+    }
+}
+
+/// Records `selector` on a cross-reference node. Any other node — a role
+/// that fell back to plain text, say — is returned unchanged, since it has
+/// nothing to resolve.
+fn apply_inventory_selector(node: InlineNode, selector: InventorySelector) -> InlineNode {
+    match node {
+        InlineNode::Reference {
+            display,
+            target,
+            span,
+            ..
+        } => InlineNode::Reference {
+            display,
+            target,
+            span,
+            inventory: selector,
+        },
+        InlineNode::TermReference {
+            display,
+            term,
+            span,
+            ..
+        } => InlineNode::TermReference {
+            display,
+            term,
+            span,
+            inventory: selector,
+        },
+        InlineNode::OptionReference {
+            display,
+            target,
+            span,
+            ..
+        } => InlineNode::OptionReference {
+            display,
+            target,
+            span,
+            inventory: selector,
+        },
+        InlineNode::DomainObjectReference {
+            object_type,
+            name,
+            display,
+            link,
+            search_order,
+            span,
+            ..
+        } => InlineNode::DomainObjectReference {
+            object_type,
+            name,
+            display,
+            link,
+            search_order,
+            span,
+            inventory: selector,
+        },
+        other => other,
+    }
+}
+
+/// Builds the node for one matched role or link, dispatching on its `kind`.
+fn build_inline_node(
+    kind: &str,
+    m_str: &str,
+    node_opt: Option<InlineNode>,
+    default_domain: Domain,
+    schema: &rusty_sphinx_entity::EntitySchema,
+) -> InlineNode {
     match kind {
         "entity_role" => super::roles::entity::handle_entity_role_match(m_str, schema),
         "inline" => node_opt.expect("inline node should be present"),
         "ref" => {
             let caps = REF_REGEX.captures(m_str).unwrap();
-            let (display, target) = split_display_and_target(&caps["target"]);
+            let (display, target) = split_optional_title(&caps["target"]);
             InlineNode::Reference {
                 display,
                 target,
                 span: None,
+                inventory: InventorySelector::Any,
             }
         }
         "program" => {
@@ -68,6 +157,7 @@ pub(super) fn handle_inline_match(
                 display,
                 term,
                 span: None,
+                inventory: InventorySelector::Any,
             }
         }
         "option" => handle_option_match(m_str),
@@ -132,6 +222,65 @@ mod tests {
     use rusty_sphinx_entity::EntitySchema;
 
     #[test]
+    fn test_inventory_selector_is_any_without_a_prefix() {
+        // Given / When / Then
+        assert_eq!(inventory_selector(":ref:`x`"), InventorySelector::Any);
+    }
+
+    #[test]
+    fn test_inventory_selector_reads_a_bare_external_prefix() {
+        // Given / When / Then
+        assert_eq!(
+            inventory_selector(":external:ref:`x`"),
+            InventorySelector::ExternalOnly
+        );
+    }
+
+    #[test]
+    fn test_inventory_selector_reads_a_named_external_prefix() {
+        // Given / When / Then
+        assert_eq!(
+            inventory_selector(":external+numpy:py:class:`ndarray`"),
+            InventorySelector::Named(InventoryName::new("numpy").unwrap())
+        );
+    }
+
+    #[test]
+    fn test_apply_inventory_selector_sets_it_on_a_reference() {
+        // Given
+        let node = InlineNode::Reference {
+            display: None,
+            target: "x".to_string(),
+            span: None,
+            inventory: InventorySelector::Any,
+        };
+
+        // When
+        let node = apply_inventory_selector(node, InventorySelector::ExternalOnly);
+
+        // Then
+        assert!(matches!(
+            node,
+            InlineNode::Reference {
+                inventory: InventorySelector::ExternalOnly,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn test_apply_inventory_selector_leaves_other_nodes_alone() {
+        // Given — a role that fell back to plain text
+        let node = InlineNode::Text(":class:`Greeter`".to_string());
+
+        // When
+        let result = apply_inventory_selector(node.clone(), InventorySelector::ExternalOnly);
+
+        // Then
+        assert_eq!(result, node);
+    }
+
+    #[test]
     fn test_handle_inline_match_inline_variant() {
         // Given
         let node = InlineNode::Emphasis("text".to_string());
@@ -158,9 +307,10 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::Reference {
-                display: "target".to_string(),
+                display: None,
                 target: "target".to_string(),
-                span: None
+                span: None,
+                inventory: InventorySelector::Any,
             }
         );
     }
@@ -176,9 +326,10 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::Reference {
-                display: "GenericAlias".to_string(),
+                display: Some("GenericAlias".to_string()),
                 target: "types-genericalias".to_string(),
-                span: None
+                span: None,
+                inventory: InventorySelector::Any,
             }
         );
     }

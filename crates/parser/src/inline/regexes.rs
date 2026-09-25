@@ -5,41 +5,97 @@
 use regex::Regex;
 use std::sync::LazyLock;
 
+/// Sphinx's optional `external:` / `external+name:` role prefix, spliced in
+/// right after the leading colon of every role that can resolve through
+/// another site's inventory. Part of each role's own pattern — rather than a
+/// separate token — so the match starts at the prefix, which the earliest-match
+/// rule then prefers over the bare role inside it. Its meaning is read back by
+/// [`EXTERNAL_PREFIX_REGEX`]; the name excludes exactly what
+/// `rusty_sphinx_ast::InventoryName` refuses.
+const EXTERNAL_PREFIX: &str = r"(?:external(?:\+[^:`<>\s+]+)?:)?";
+
+/// Reads the prefix [`EXTERNAL_PREFIX`] let a role match with.
+pub(super) static EXTERNAL_PREFIX_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^:external(?:\+(?P<inventory>[^:`<>\s+]+))?:").unwrap());
 pub(super) static REF_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":ref:`(?P<target>[^`]+)`").unwrap());
+    LazyLock::new(|| Regex::new(&format!(r":{EXTERNAL_PREFIX}ref:`(?P<target>[^`]+)`")).unwrap());
 pub(super) static PROGRAM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":program:`(?P<name>[^`]+)`").unwrap());
 pub(super) static TERM_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":term:`(?P<content>[^`]+)`").unwrap());
-pub(super) static OPTION_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":option:`(?P<content>[^`]+)`").unwrap());
+    LazyLock::new(|| Regex::new(&format!(r":{EXTERNAL_PREFIX}term:`(?P<content>[^`]+)`")).unwrap());
+pub(super) static OPTION_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(r":{EXTERNAL_PREFIX}option:`(?P<content>[^`]+)`")).unwrap()
+});
 pub(super) static MATH_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":math:`(?P<latex>[^`]+)`").unwrap());
 pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
-pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py|c):)?func:`(?P<name>[^`]+)`").unwrap());
-pub(super) static MOD_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?mod:`(?P<name>[^`]+)`").unwrap());
-pub(super) static DATA_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r":(?:(?P<domain>py|c):)?(?P<role>data|const|var|member):`(?P<name>[^`]+)`").unwrap()
+pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>py|c):)?func:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
 });
-pub(super) static METH_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?meth:`(?P<name>[^`]+)`").unwrap());
-pub(super) static CLASS_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?class:`(?P<name>[^`]+)`").unwrap());
-pub(super) static ATTR_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?attr:`(?P<name>[^`]+)`").unwrap());
-pub(super) static EXC_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>py):)?exc:`(?P<name>[^`]+)`").unwrap());
-pub(super) static MACRO_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?macro:`(?P<name>[^`]+)`").unwrap());
-pub(super) static STRUCT_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?struct:`(?P<name>[^`]+)`").unwrap());
-pub(super) static UNION_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?union:`(?P<name>[^`]+)`").unwrap());
-pub(super) static TYPE_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?:(?P<domain>c):)?type:`(?P<name>[^`]+)`").unwrap());
+pub(super) static MOD_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>py):)?mod:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static DATA_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>py|c):)?(?P<role>data|const|var|member):`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static METH_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>py):)?meth:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static CLASS_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>py):)?class:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static ATTR_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>py):)?attr:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static EXC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>py):)?exc:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static MACRO_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>c):)?macro:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static STRUCT_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>c):)?struct:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static UNION_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>c):)?union:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
+pub(super) static TYPE_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":{EXTERNAL_PREFIX}(?:(?P<domain>c):)?type:`(?P<name>[^`]+)`"
+    ))
+    .unwrap()
+});
 pub(super) static PHRASED_LINK_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"`(?P<text>[^`]+)`_").unwrap());
 pub(super) static SIMPLE_LINK_REGEX: LazyLock<Regex> =

@@ -118,10 +118,14 @@ fn index_entity_and_its_sections(
     // An entity is also an ordinary link target, so `:ref:` reaches one without
     // any role being declared — which is what makes a schema's roles optional
     // sugar rather than an obligation.
-    index.targets.insert(
-        TargetName::new(entity.id.as_str()),
-        TargetLocation::Internal(doc_path.to_string()),
-    );
+    let name = TargetName::new(entity.id.as_str());
+    index
+        .targets
+        .insert(name.clone(), TargetLocation::Internal(doc_path.to_string()));
+    // Its anchor is not its name, so a `:ref:` must be told where it is.
+    index
+        .target_anchors
+        .insert(name, rusty_sphinx_index::entity_anchor(entity.id.as_str()));
     // Every section is body content and may hold definitions of its own — a
     // target, a nested entity, a glossary. Recursing keeps this walk mirroring
     // `render_nodes`, as the module doc requires.
@@ -158,6 +162,7 @@ pub(super) fn index_nodes(
     index: &mut ProjectIndex,
     scope: &mut Scope,
 ) {
+    record_target_titles(nodes, index);
     for node in nodes {
         match node {
             Node::Target { name, uri } => {
@@ -265,6 +270,57 @@ pub(super) fn index_nodes(
             Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
             _ => {}
         }
+    }
+}
+
+/// Records the title a `:ref:` with no explicit title shows for each target:
+/// the heading an internal target is written directly above, or the caption
+/// of a figure, table or code block — for the targets above it and for its
+/// own `:name:` alike, as Sphinx takes them.
+///
+/// Follows docutils' `PropagateTargets`: consecutive targets chain onto the
+/// same element, and anything else in between — including a comment, which
+/// docutils counts as invisible and so will not move a target onto — ends
+/// the chain. A target with a URI names a URL rather than what follows it,
+/// so it ends the chain too. An element with no title leaves its targets
+/// without one. Called once per node list by [`index_nodes`], which is what
+/// makes an element inside a directive body count as well.
+fn record_target_titles(nodes: &[Node], index: &mut ProjectIndex) {
+    let mut pending: Vec<&TargetName> = Vec::new();
+    for node in nodes {
+        if let Node::Target { name, uri: None } = node {
+            pending.push(name);
+            continue;
+        }
+        let (own_name, title) = element_title(node);
+        if let Some(title) = title {
+            for name in pending.drain(..).chain(own_name) {
+                index.target_titles.insert(name.clone(), title.clone());
+            }
+        }
+        pending.clear();
+    }
+}
+
+/// The title a `:ref:` to `node` shows, paired with the `:name:` the node
+/// makes a target of itself — `(None, None)` for anything with neither.
+fn element_title(node: &Node) -> (Option<&TargetName>, Option<String>) {
+    match node {
+        Node::Heading { text, .. } => (None, Some(rusty_sphinx_ast::inline_plain_text(text))),
+        Node::Directive(Directive::Figure(figure)) => (
+            figure.image.name.as_ref(),
+            figure
+                .caption
+                .as_deref()
+                .map(rusty_sphinx_ast::inline_plain_text),
+        ),
+        Node::Directive(
+            Directive::Table { title, name, .. } | Directive::DataTable { title, name, .. },
+        ) => (name.as_ref(), title.clone()),
+        Node::Directive(Directive::CodeBlock(block)) => {
+            (block.name.as_ref(), block.caption.clone())
+        }
+        _ => (None, None),
     }
 }
 

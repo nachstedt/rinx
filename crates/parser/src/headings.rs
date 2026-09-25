@@ -508,6 +508,7 @@ mod tests {
                             rusty_sphinx_ast::Position::new(1, 5),
                             rusty_sphinx_ast::Position::new(1, 21),
                         )),
+                        inventory: rusty_sphinx_ast::InventorySelector::Any,
                     },
                     InlineNode::Text(" Module".to_string()),
                 ]

@@ -39,7 +39,8 @@ fn test_parse_bare_func_role_resolves_via_default_domain() {
                 display: "greet".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -63,7 +64,8 @@ fn test_parse_prefixed_func_role_ignores_default_domain() {
                 display: "greet".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
         assert!(
@@ -73,7 +75,8 @@ fn test_parse_prefixed_func_role_ignores_default_domain() {
                 display: "add".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -98,7 +101,8 @@ fn test_parse_bare_mod_role_resolves_via_default_domain() {
                 display: "greetings".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -122,7 +126,8 @@ fn test_parse_prefixed_mod_role_ignores_default_domain() {
                 display: "greetings".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -146,7 +151,8 @@ fn test_parse_mod_role_with_bang_prefix_suppresses_link_end_to_end() {
                 display: "curses".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -171,7 +177,8 @@ fn test_parse_bare_data_role_resolves_via_default_domain() {
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -197,7 +204,8 @@ fn test_parse_prefixed_const_role_ignores_default_domain_and_matches_data_target
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -221,7 +229,8 @@ fn test_parse_data_role_with_bang_prefix_suppresses_link_end_to_end() {
                 display: "SECRET_KEY".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -246,7 +255,8 @@ fn test_parse_bare_meth_role_resolves_via_default_domain() {
                 display: "greet".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -270,7 +280,8 @@ fn test_parse_prefixed_meth_role_ignores_default_domain() {
                 display: "greet".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -294,7 +305,8 @@ fn test_parse_meth_role_with_bang_prefix_suppresses_link_end_to_end() {
                 display: "secret_method".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -319,7 +331,8 @@ fn test_parse_bare_class_role_resolves_via_default_domain() {
                 display: "Greeter".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -343,7 +356,8 @@ fn test_parse_prefixed_class_role_ignores_default_domain() {
                 display: "Greeter".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -368,7 +382,8 @@ fn test_parse_bare_attr_role_resolves_via_default_domain() {
                 display: "Greeter.name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -392,7 +407,8 @@ fn test_parse_prefixed_attr_role_ignores_default_domain() {
                 display: "Greeter.name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -434,7 +450,8 @@ fn test_parse_attr_role_with_bang_prefix_suppresses_link_end_to_end() {
                 display: "Greeter.secret".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -458,7 +475,8 @@ fn test_parse_func_role_with_tilde_prefix_shortens_display_end_to_end() {
                 display: "shout".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -482,7 +500,8 @@ fn test_parse_func_role_with_call_parens_resolves_the_bare_name_end_to_end() {
                 display: "Py_TYPE()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             })
         );
     } else {
