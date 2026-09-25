@@ -1,5 +1,5 @@
-use rusty_sphinx_ast::{AttributeValue, Directive, EntityBody, Node};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_ast::{AttributeValue, Directive, EntityBody, Node};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
 use crate::parse_with_ctx;
@@ -90,9 +90,9 @@ fn schema() -> EntitySchema {
 }
 
 /// Parses `rst` against the test schema, returning the whole document.
-fn parse(rst: &str) -> rusty_sphinx_ast::Document {
+fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).with_schema(&schema);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
     parse_with_ctx("specs/boot", rst, &ctx)
 }
 
@@ -379,7 +379,7 @@ fn test_an_unknown_option_diagnostic_lists_the_accepted_ones() {
     let message = &doc
         .diagnostics
         .iter()
-        .find(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityUnknownAttribute)
+        .find(|d| d.code == rinx_ast::DiagnosticCode::EntityUnknownAttribute)
         .unwrap()
         .message;
     assert!(message.contains(":status:"), "unhelpful message: {message}");
@@ -493,7 +493,7 @@ fn test_a_required_relation_with_no_target_is_diagnosed() {
           required = true
     "#;
     let schema = load_schema(schema_text, &NoReservedNames).unwrap();
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).with_schema(&schema);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
 
     // When
     let doc = parse_with_ctx("d", ".. req::\n", &ctx);
@@ -502,7 +502,7 @@ fn test_a_required_relation_with_no_target_is_diagnosed() {
     assert!(
         doc.diagnostics
             .iter()
-            .any(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityMissingRequiredRelation)
+            .any(|d| d.code == rinx_ast::DiagnosticCode::EntityMissingRequiredRelation)
     );
 }
 
@@ -566,7 +566,7 @@ fn test_a_diagnostic_points_at_the_option_line_that_caused_it() {
     let diagnostic = doc
         .diagnostics
         .iter()
-        .find(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityInvalidAttributeValue)
+        .find(|d| d.code == rinx_ast::DiagnosticCode::EntityInvalidAttributeValue)
         .unwrap();
     assert_eq!(diagnostic.span.unwrap().start.line, 3);
 }
@@ -584,7 +584,7 @@ fn test_an_explicit_id_outside_the_pattern_is_diagnosed_on_its_line_and_kept() {
     let diagnostic = doc
         .diagnostics
         .iter()
-        .find(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityIdPatternMismatch)
+        .find(|d| d.code == rinx_ast::DiagnosticCode::EntityIdPatternMismatch)
         .expect("the mismatch is reported");
     assert_eq!(diagnostic.span.unwrap().start.line, 3);
     assert_eq!(first_entity(&doc.nodes).unwrap().id.as_str(), "RISK_1");
@@ -602,7 +602,7 @@ fn test_a_generated_id_outside_the_pattern_is_diagnosed_on_the_directive() {
     let diagnostic = doc
         .diagnostics
         .iter()
-        .find(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityIdPatternMismatch)
+        .find(|d| d.code == rinx_ast::DiagnosticCode::EntityIdPatternMismatch)
         .expect("the mismatch is reported");
     assert_eq!(diagnostic.span.unwrap().start.line, 3);
 }
@@ -649,7 +649,7 @@ fn test_a_faulty_entity_still_parses_to_a_node() {
 #[test]
 fn test_an_unknown_directive_is_untouched_without_a_schema() {
     // Given — a project that declares no entities behaves exactly as before
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
 
     // When
     let doc = parse_with_ctx("d", ".. req:: Boot\n", &ctx);
@@ -663,8 +663,8 @@ fn test_an_unknown_directive_is_untouched_without_a_schema() {
         doc.diagnostics
             .iter()
             .map(|d| d.code)
-            .collect::<Vec<rusty_sphinx_ast::DiagnosticCode>>(),
-        vec![rusty_sphinx_ast::DiagnosticCode::DirectiveUnknown],
+            .collect::<Vec<rinx_ast::DiagnosticCode>>(),
+        vec![rinx_ast::DiagnosticCode::DirectiveUnknown],
     );
 }
 
@@ -714,10 +714,10 @@ fn test_a_section_inside_a_section_is_not_recognised() {
 }
 
 /// The first diagram in `rst`, wherever it was written.
-fn first_diagram(rst: &str) -> rusty_sphinx_ast::Uml {
+fn first_diagram(rst: &str) -> rinx_ast::Uml {
     let doc = parse(rst);
     let mut found = None;
-    rusty_sphinx_ast::walk_nodes(&doc.nodes, &mut |node| {
+    rinx_ast::walk_nodes(&doc.nodes, &mut |node| {
         if let Node::Directive(Directive::Uml(uml)) = node
             && found.is_none()
         {

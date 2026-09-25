@@ -10,7 +10,7 @@
 //! That is also why inclusion happens here, while parsing, rather than being
 //! left as a marker for a later phase to resolve. By the time the `.ast` is
 //! written there is nothing left to say that the text came from elsewhere,
-//! save the [`Span::file`](rusty_sphinx_ast::Span::file) every node inside it
+//! save the [`Span::file`](rinx_ast::Span::file) every node inside it
 //! carries — which is what lets a diagnostic name the fragment rather than the
 //! document, at parse time and at render time alike.
 //!
@@ -18,7 +18,7 @@
 //! genuinely part of the including document, so editing it must re-parse and
 //! re-render every page that includes it. That is correct rather than a gap.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     CodeBlock, CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, Directive, Node, Span,
 };
 
@@ -61,7 +61,7 @@ struct IncludeOptions {
 /// Parses a `.. include::`, returning the nodes its file contributed.
 ///
 /// Returns a single degraded [`Node::Directive`] holding
-/// [`rusty_sphinx_ast::Directive::Malformed`] when the file could not be read
+/// [`rinx_ast::Directive::Malformed`] when the file could not be read
 /// or the selection matched nothing, having reported why — the parser stays
 /// resilient, and the `parse` subcommand turns the loader's recorded failure
 /// into a failed build.
@@ -212,10 +212,7 @@ fn as_code_block(options: &IncludeOptions, content: &str, span: Option<Span>) ->
             .map_or(CodeLanguage::Inherit, CodeLanguage::parse),
         content: content.trim_end_matches('\n').to_string(),
         caption: None,
-        name: options
-            .name
-            .as_deref()
-            .map(rusty_sphinx_ast::TargetName::new),
+        name: options.name.as_deref().map(rinx_ast::TargetName::new),
         classes: options.classes.clone(),
         linenos: options.number_lines,
         lineno_start: None,
@@ -332,7 +329,7 @@ fn contributed_nothing(argument: &str, body_lines: &[&str]) -> Node {
 mod tests {
     use super::*;
     use crate::context::{LoadedFile, ParseFileLoader};
-    use rusty_sphinx_ast::{Domain, FileId, InlineNode};
+    use rinx_ast::{Domain, FileId, InlineNode};
     use std::collections::HashMap;
 
     /// An in-memory stand-in for the worker's filesystem loader.
@@ -367,13 +364,13 @@ mod tests {
 
     /// Parses a whole document through the public entry point, so the
     /// multi-node splice is exercised the way the block loop drives it.
-    fn parse_document(files: &[(&str, &str)], rst: &str) -> rusty_sphinx_ast::Document {
+    fn parse_document(files: &[(&str, &str)], rst: &str) -> rinx_ast::Document {
         let loader = FakeFiles::with(files);
         let ctx = ParseCtx::new(Domain::Py, &loader);
         crate::parse_with_ctx("guide.rst", rst, &ctx)
     }
 
-    fn codes(document: &rusty_sphinx_ast::Document) -> Vec<DiagnosticCode> {
+    fn codes(document: &rinx_ast::Document) -> Vec<DiagnosticCode> {
         document.diagnostics.iter().map(|d| d.code).collect()
     }
 

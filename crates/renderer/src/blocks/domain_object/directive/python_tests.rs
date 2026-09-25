@@ -3,8 +3,8 @@
 //! renders through; these tests just exercise it for the `py:*` shapes.
 //! Split from `super::domain_object_python_scoping_tests` purely for line count.
 
-use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, NonEmptyVector};
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{Directive, Document, InlineNode, Node, NonEmptyVector};
+use rinx_index::ProjectIndex;
 
 fn render_doc(doc: &Document) -> String {
     let index = ProjectIndex::default();
@@ -17,7 +17,7 @@ fn test_render_formats_py_function_domain_object() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyFunction {
+            rinx_ast::DomainObjectBody::PyFunction {
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -45,7 +45,7 @@ fn test_render_prefixes_decorator_signature_with_at_sign() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyFunction {
+            rinx_ast::DomainObjectBody::PyFunction {
                 module: None,
                 is_decorator: true,
                 signatures: NonEmptyVector::single("classmethod".to_string()),
@@ -69,7 +69,7 @@ fn test_render_prefixes_decoratormethod_signature_with_at_sign() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+            rinx_ast::DomainObjectBody::PyMethod {
                 module: None,
                 signatures: NonEmptyVector::single("register(cls)".to_string()),
                 is_classmethod: false,
@@ -95,7 +95,7 @@ fn test_render_omits_id_attribute_when_no_index_is_set() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::CMember {
+            rinx_ast::DomainObjectBody::CMember {
                 signatures: NonEmptyVector::single("int count".into()),
                 no_index: true,
                 no_index_entry: false,
@@ -119,7 +119,7 @@ fn test_render_formats_py_module_domain_object() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyModule {
+            rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
                 platform: None,
                 synopsis: None,
@@ -145,7 +145,7 @@ fn test_render_formats_py_method_domain_object() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+            rinx_ast::DomainObjectBody::PyMethod {
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -175,7 +175,7 @@ fn test_render_py_method_modifier_prefixes_in_canonical_order() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+            rinx_ast::DomainObjectBody::PyMethod {
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("create(cls)".to_string()),
@@ -207,7 +207,7 @@ fn test_render_formats_py_class_domain_object() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyClass {
+            rinx_ast::DomainObjectBody::PyClass {
                 module: None,
                 signatures: NonEmptyVector::single("greeter".to_string()),
                 is_final: false,
@@ -234,7 +234,7 @@ fn test_render_py_class_final_prefix_precedes_class_prefix() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyClass {
+            rinx_ast::DomainObjectBody::PyClass {
                 module: None,
                 signatures: NonEmptyVector::single("greeter".to_string()),
                 is_final: true,
@@ -258,7 +258,7 @@ fn test_render_formats_py_exception_domain_object() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyException {
+            rinx_ast::DomainObjectBody::PyException {
                 module: None,
                 signatures: NonEmptyVector::single("greetererror".to_string()),
                 is_final: false,
@@ -285,7 +285,7 @@ fn test_render_py_exception_final_prefix_precedes_exception_prefix() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyException {
+            rinx_ast::DomainObjectBody::PyException {
                 module: None,
                 signatures: NonEmptyVector::single("greetererror".to_string()),
                 is_final: true,
@@ -309,7 +309,7 @@ fn test_render_formats_py_data_domain_object() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyData {
+            rinx_ast::DomainObjectBody::PyData {
                 module: None,
                 signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
                 type_: None,
@@ -335,7 +335,7 @@ fn test_render_formats_py_data_type_and_value() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyData {
+            rinx_ast::DomainObjectBody::PyData {
                 module: None,
                 signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
                 type_: Some("int".to_string()),
@@ -358,7 +358,7 @@ fn test_render_formats_py_attribute_domain_object() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+            rinx_ast::DomainObjectBody::PyAttribute {
                 module: None,
                 signatures: NonEmptyVector::single("Greeter.name".to_string()),
                 type_: None,
@@ -385,7 +385,7 @@ fn test_render_formats_py_attribute_type_value_and_canonical() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+            rinx_ast::DomainObjectBody::PyAttribute {
                 module: None,
                 signatures: NonEmptyVector::single("Greeter.name".to_string()),
                 type_: Some("str".to_string()),
@@ -412,7 +412,7 @@ fn test_render_domain_object_resolves_nested_anonymous_hyperlink_in_body() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                rinx_ast::DomainObjectBody::PyFunction {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("greet(name)".to_string()),

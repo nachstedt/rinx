@@ -8,7 +8,7 @@
 
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, TargetName};
+use rinx_ast::{CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -165,7 +165,7 @@ pub(super) fn parse_language_argument(argument: &str) -> CodeLanguage {
 #[cfg(test)]
 mod tests {
     use super::super::test_support::{codes, parse, parse_as};
-    use rusty_sphinx_ast::{CodeBlockSource, DiagnosticCode, TargetName};
+    use rinx_ast::{CodeBlockSource, DiagnosticCode, TargetName};
     use std::num::NonZeroU32;
 
     #[test]

@@ -6,11 +6,9 @@
 /// (e.g. `abstractmethod`/`async`/`classmethod`/`staticmethod` for
 /// `py:method`, `final`/`class` for `py:class`) — independent of how the
 /// author wrote the option flags.
-pub(super) fn domain_object_prefix_labels(
-    obj: &rusty_sphinx_ast::DomainObjectBody,
-) -> Vec<&'static str> {
+pub(super) fn domain_object_prefix_labels(obj: &rinx_ast::DomainObjectBody) -> Vec<&'static str> {
     match obj {
-        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+        rinx_ast::DomainObjectBody::PyMethod {
             is_classmethod,
             is_staticmethod,
             is_abstractmethod,
@@ -25,10 +23,10 @@ pub(super) fn domain_object_prefix_labels(
         .into_iter()
         .filter_map(|(active, label)| active.then_some(label))
         .collect(),
-        rusty_sphinx_ast::DomainObjectBody::PyClass { is_final, .. } => {
+        rinx_ast::DomainObjectBody::PyClass { is_final, .. } => {
             class_like_prefix_labels(*is_final, "class")
         }
-        rusty_sphinx_ast::DomainObjectBody::PyException { is_final, .. } => {
+        rinx_ast::DomainObjectBody::PyException { is_final, .. } => {
             class_like_prefix_labels(*is_final, "exception")
         }
         _ => Vec::new(),
@@ -41,10 +39,10 @@ pub(super) fn domain_object_prefix_labels(
 /// distinct from the `<em class="property">` badges
 /// [`domain_object_prefix_labels`] renders for flag options like
 /// `classmethod`/`staticmethod`.
-pub(super) fn is_decorator_signature(obj: &rusty_sphinx_ast::DomainObjectBody) -> bool {
+pub(super) fn is_decorator_signature(obj: &rinx_ast::DomainObjectBody) -> bool {
     match obj {
-        rusty_sphinx_ast::DomainObjectBody::PyFunction { is_decorator, .. }
-        | rusty_sphinx_ast::DomainObjectBody::PyMethod { is_decorator, .. } => *is_decorator,
+        rinx_ast::DomainObjectBody::PyFunction { is_decorator, .. }
+        | rinx_ast::DomainObjectBody::PyMethod { is_decorator, .. } => *is_decorator,
         _ => false,
     }
 }
@@ -67,12 +65,12 @@ pub(super) fn class_like_prefix_labels(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::NonEmptyVector;
+    use rinx_ast::NonEmptyVector;
 
     #[test]
     fn test_domain_object_prefix_labels_orders_method_flags_independent_of_input_order() {
         // Given — flags set in a different order than the canonical output order
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyMethod {
+        let obj = rinx_ast::DomainObjectBody::PyMethod {
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("run()".to_string()),
@@ -95,7 +93,7 @@ mod tests {
     #[test]
     fn test_domain_object_prefix_labels_omits_inactive_method_flags() {
         // Given
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyMethod {
+        let obj = rinx_ast::DomainObjectBody::PyMethod {
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("run()".to_string()),
@@ -115,7 +113,7 @@ mod tests {
     #[test]
     fn test_domain_object_prefix_labels_includes_final_before_class_label() {
         // Given
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyClass {
+        let obj = rinx_ast::DomainObjectBody::PyClass {
             module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: true,
@@ -131,7 +129,7 @@ mod tests {
     #[test]
     fn test_domain_object_prefix_labels_includes_final_before_exception_label() {
         // Given
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyException {
+        let obj = rinx_ast::DomainObjectBody::PyException {
             module: None,
             signatures: NonEmptyVector::single("GreeterError".to_string()),
             is_final: true,
@@ -155,7 +153,7 @@ mod tests {
     #[test]
     fn test_domain_object_prefix_labels_is_empty_for_object_types_without_flags() {
         // Given
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyFunction {
+        let obj = rinx_ast::DomainObjectBody::PyFunction {
             module: None,
             is_decorator: false,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -171,7 +169,7 @@ mod tests {
     #[test]
     fn test_is_decorator_signature_true_for_decorator_function() {
         // Given
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyFunction {
+        let obj = rinx_ast::DomainObjectBody::PyFunction {
             module: None,
             signatures: NonEmptyVector::single("classmethod".to_string()),
             is_decorator: true,
@@ -184,7 +182,7 @@ mod tests {
     #[test]
     fn test_is_decorator_signature_true_for_decoratormethod() {
         // Given
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyMethod {
+        let obj = rinx_ast::DomainObjectBody::PyMethod {
             module: None,
             signatures: NonEmptyVector::single("register(cls)".to_string()),
             is_classmethod: false,
@@ -201,7 +199,7 @@ mod tests {
     #[test]
     fn test_is_decorator_signature_false_for_plain_function() {
         // Given
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyFunction {
+        let obj = rinx_ast::DomainObjectBody::PyFunction {
             module: None,
             signatures: NonEmptyVector::single("greet(name)".to_string()),
             is_decorator: false,
@@ -214,7 +212,7 @@ mod tests {
     #[test]
     fn test_is_decorator_signature_false_for_object_types_without_the_flag() {
         // Given — e.g. `py:class`, which has no `is_decorator` field at all.
-        let obj = rusty_sphinx_ast::DomainObjectBody::PyClass {
+        let obj = rinx_ast::DomainObjectBody::PyClass {
             module: None,
             signatures: NonEmptyVector::single("Greeter".to_string()),
             is_final: false,

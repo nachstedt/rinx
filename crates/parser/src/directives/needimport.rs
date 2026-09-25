@@ -48,15 +48,15 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     AttributeValue, Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, EntitySection,
     Node, Span,
 };
-use rusty_sphinx_entity::{
+use rinx_entity::{
     EntityType, NeedsVersion, RawNeed, field_is_list, field_is_null, field_text, is_internal_field,
     parse_attribute_value, read_needs_json, split_list,
 };
-use rusty_sphinx_filter::{Expr, FieldName, FieldValue, FilterSubject};
+use rinx_filter::{Expr, FieldName, FieldValue, FilterSubject};
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
@@ -89,7 +89,7 @@ const UNSUPPORTED_OPTIONS: [(&str, &str); 7] = [
     ),
     (
         "collapse",
-        "collapsing is a render-time setting in rusty_sphinx.toml, not a per-import one",
+        "collapsing is a render-time setting in rinx.toml, not a per-import one",
     ),
     (
         "layout",
@@ -146,7 +146,7 @@ struct Import<'a> {
     /// The `.. needimport::` line — the only position anything here has.
     span: Option<Span>,
     /// The project's meta-model, for the back-links it derives.
-    schema: &'a rusty_sphinx_entity::EntitySchema,
+    schema: &'a rinx_entity::EntitySchema,
 }
 
 /// Parses a `.. needimport::`, returning the entities its file contributed.
@@ -238,7 +238,7 @@ pub(in crate::directives) fn parse_needimport(
 struct NeedsSource {
     /// The resolved path, as a diagnostic should name it.
     id: String,
-    contents: rusty_sphinx_entity::NeedsFile,
+    contents: rinx_entity::NeedsFile,
 }
 
 /// Reads and deserializes the file, or says which of the two failed.

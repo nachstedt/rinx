@@ -1,7 +1,7 @@
 //! The `genindex` subcommand: renders the project-wide general index page.
 
 use anyhow::{Context, Result};
-use rusty_sphinx_renderer::{self as renderer, config};
+use rinx_renderer::{self as renderer, config};
 use std::fs;
 
 use super::cli_args::flag_value;
@@ -11,7 +11,7 @@ pub(super) fn process_genindex(
     config: &config::SiteConfig,
     template_str: &str,
 ) -> Result<String> {
-    let index: rusty_sphinx_index::ProjectIndex =
+    let index: rinx_index::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
     renderer::render_genindex(&index, config, template_str)
 }

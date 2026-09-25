@@ -2,7 +2,7 @@
 //! match among every role, link and markup candidate, and stripping escape
 //! markers off the nodes on the way out.
 
-use rusty_sphinx_ast::{Domain, InlineNode};
+use rinx_ast::{Domain, InlineNode};
 
 use super::dispatch::handle_inline_match;
 use super::escapes::{EscapedText, unescape, unescape_keeping_backslashes};

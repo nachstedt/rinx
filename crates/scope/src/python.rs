@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{Domain, TargetSearchOrder};
+use rinx_ast::{Domain, TargetSearchOrder};
 
 /// The `py`-domain's enclosing lexical scope while indexing/rendering: the
 /// most recently seen `py:module` (document-order, persists across siblings)
@@ -33,7 +33,7 @@ pub struct PythonScope {
 /// The result of [`PythonScope::qualify`]: the object's fully qualified name,
 /// plus the segments its own (possibly dotted) name contributes beyond the
 /// scope it was qualified against — the raw material
-/// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`] slices to
+/// [`rinx_ast::DomainObjectBody::deduce_local_scope`] slices to
 /// decide what a nested body should push onto the class stack.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Qualification {

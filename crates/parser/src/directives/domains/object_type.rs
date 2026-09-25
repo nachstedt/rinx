@@ -1,5 +1,5 @@
 use super::super::scope::split_domain_qualified_name;
-use rusty_sphinx_ast::Domain;
+use rinx_ast::Domain;
 
 /// The domain-object directive names the parser recognizes, resolved from a
 /// directive's `domain:objtype` (or bare, default-domain-resolved) name.
@@ -96,7 +96,7 @@ mod tests {
         let name = "c:function";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CFunction));
@@ -108,7 +108,7 @@ mod tests {
         let name = "function";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CFunction));
@@ -120,7 +120,7 @@ mod tests {
         let name = "c:struct";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CStruct));
@@ -132,7 +132,7 @@ mod tests {
         let name = "c:union";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CUnion));
@@ -144,7 +144,7 @@ mod tests {
         let name = "c:member";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CMember));
@@ -156,7 +156,7 @@ mod tests {
         let name = "c:var";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CMember));
@@ -169,11 +169,11 @@ mod tests {
 
         // When / Then
         assert_eq!(
-            resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py),
+            resolve_domain_object_type(name, rinx_ast::Domain::Py),
             Some(DirectiveObjectType::StdCmdoption)
         );
         assert_eq!(
-            resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C),
+            resolve_domain_object_type(name, rinx_ast::Domain::C),
             Some(DirectiveObjectType::StdCmdoption)
         );
     }
@@ -184,7 +184,7 @@ mod tests {
         let name = "cmdoption";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::StdCmdoption));
@@ -196,7 +196,7 @@ mod tests {
         let name = "c:type";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CType));
@@ -208,7 +208,7 @@ mod tests {
         let name = "type";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CType));
@@ -220,7 +220,7 @@ mod tests {
         let name = "member";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::CMember));
@@ -232,7 +232,7 @@ mod tests {
         let name = "rust:function";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, None);
@@ -244,7 +244,7 @@ mod tests {
         let name = "py:struct";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, None);
@@ -257,7 +257,7 @@ mod tests {
         let name = "classmethod";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::PyClassmethod));
@@ -269,7 +269,7 @@ mod tests {
         let name = "staticmethod";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::PyStaticmethod));
@@ -281,7 +281,7 @@ mod tests {
         let name = "py:classmethod";
 
         // When — resolved even when the default domain is `c`
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::PyClassmethod));
@@ -294,7 +294,7 @@ mod tests {
         let name = "classmethod";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(result, None);
@@ -307,7 +307,7 @@ mod tests {
         let name = "decorator";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::PyDecorator));
@@ -319,7 +319,7 @@ mod tests {
         let name = "decoratormethod";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::Py);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::PyDecoratorMethod));
@@ -331,7 +331,7 @@ mod tests {
         let name = "py:decorator";
 
         // When — resolved even when the default domain is `c`
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(result, Some(DirectiveObjectType::PyDecorator));
@@ -345,7 +345,7 @@ mod tests {
         let name = "decorator";
 
         // When
-        let result = resolve_domain_object_type(name, rusty_sphinx_ast::Domain::C);
+        let result = resolve_domain_object_type(name, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(result, None);

@@ -18,7 +18,7 @@
 //! An unreadable *option* never costs the button, the error-resilience every
 //! directive here follows.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     ButtonFlag, ButtonLink, ButtonTarget, Diagnostic, DiagnosticCode, Directive, InlineNode,
     SemanticColor, Span, TextAlign,
 };

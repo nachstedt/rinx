@@ -7,7 +7,7 @@
 //! take (see [`super::super::placed_text`]).
 
 use plotters::prelude::*;
-use rusty_sphinx_ast::{BarArrangement, BarOrientation, BarValueLabels, ChartColor};
+use rinx_ast::{BarArrangement, BarOrientation, BarValueLabels, ChartColor};
 
 use super::super::placed_text::{PlacedText, Side, rotated_extent, splice_into};
 use super::super::style::{

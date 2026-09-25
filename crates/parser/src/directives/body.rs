@@ -12,7 +12,7 @@
 
 use crate::context::ParseCtx;
 use crate::indent::{indent_width, strip_indent};
-use rusty_sphinx_ast::Span;
+use rinx_ast::Span;
 
 /// Collects the indented body belonging to a directive/comment whose own
 /// intro line has `min_indent` leading whitespace characters.
@@ -388,7 +388,7 @@ mod tests {
         // Given a body indented by three, in a context already shifted by that
         // indent — the shape every directive body parser is called with
         let body_lines = vec!["   Apple, Red"];
-        let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).nested(0, 3);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).nested(0, 3);
 
         // When
         let span = body_span(&body_lines, &ctx).expect("a placed context yields a span");
@@ -404,7 +404,7 @@ mod tests {
     fn test_body_span_takes_the_indent_from_the_first_non_blank_line() {
         // Given a body opening with a blank line
         let body_lines = vec!["", "   a = b"];
-        let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).nested(0, 3);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).nested(0, 3);
 
         // When
         let span = body_span(&body_lines, &ctx).expect("a placed context yields a span");
@@ -419,7 +419,7 @@ mod tests {
     fn test_body_span_handles_an_empty_body() {
         // Given no body at all, as in a directive whose content is its argument
         let body_lines: Vec<&str> = Vec::new();
-        let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).nested(0, 0);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).nested(0, 0);
 
         // When
         let span = body_span(&body_lines, &ctx).expect("a placed context yields a span");

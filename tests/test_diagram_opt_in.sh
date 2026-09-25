@@ -1,6 +1,6 @@
 #!/bin/bash
 # test_diagram_opt_in.sh
-# Verifies the `diagrams` attribute on rusty_sphinx_library is enforced.
+# Verifies the `diagrams` attribute on rinx_library is enforced.
 #
 # Diagram compilation is opt-in per library, so a project that draws nothing
 # pays nothing for it: Bazel cannot know before reading a document whether it

@@ -1,6 +1,6 @@
 //! What a listing directive reports when its question had no answer.
 
-use rusty_sphinx_ast::{DiagnosticCode, Span};
+use rinx_ast::{DiagnosticCode, Span};
 
 /// A directive whose filter selected nothing at all.
 ///

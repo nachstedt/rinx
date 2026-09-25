@@ -40,7 +40,7 @@ impl EnumeratorFormat {
     /// The HTML class the renderer puts on the `<ol>` for this format.
     ///
     /// Sphinx has no such class — it drops the prefix and suffix, so `(a)` and
-    /// `a.` render identically. rusty-sphinx keeps them, and this class is what
+    /// `a.` render identically. rinx keeps them, and this class is what
     /// the stylesheet hangs the counter rules off.
     #[must_use]
     pub const fn css_class(self) -> &'static str {

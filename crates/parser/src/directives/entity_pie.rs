@@ -21,9 +21,7 @@
 //! ones it does not are refused **by name**, not ignored: an author who asked
 //! for exploded wedges and silently got none has no way to find out why.
 
-use rusty_sphinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, PieSlice, Span,
-};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityPie, EntityPieSource, PieSlice, Span};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -115,7 +113,7 @@ pub(super) fn parse_entity_pie(
 /// Blank lines are skipped rather than becoming empty wedges, so the option
 /// block and the content may be separated the way every directive's are.
 ///
-/// [`Truthy`]: rusty_sphinx_filter::Expr::Truthy
+/// [`Truthy`]: rinx_filter::Expr::Truthy
 fn read_slices(
     unindented_lines: &[String],
     body_start: usize,
@@ -157,7 +155,7 @@ fn read_slice_filter(
     directive: &str,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Option<rusty_sphinx_filter::Expr> {
+) -> Option<rinx_filter::Expr> {
     let column = line.chars().count() - line.trim_start().chars().count();
     read_filter_text(
         written,

@@ -7,9 +7,9 @@
 //! (see [`super::filter_option::read_update_argument`]), and a field
 //! mutation's value can only be converted once the matched entity's declared
 //! type is known. Both are therefore kept here as *questions* — an
-//! [`rusty_sphinx_ast::UpdateTarget`] and a list of
-//! [`rusty_sphinx_ast::FieldMutation`]s carrying raw text — for
-//! `rusty_sphinx_analyzer::apply_entity_updates` to answer. What *is* checked
+//! [`rinx_ast::UpdateTarget`] and a list of
+//! [`rinx_ast::FieldMutation`]s carrying raw text — for
+//! `rinx_analyzer::apply_entity_updates` to answer. What *is* checked
 //! here is everything a single document's schema already settles: whether a
 //! field name is declared at all, and whether it is one of the identity
 //! fields or a section this directive refuses to touch.
@@ -17,11 +17,11 @@
 //! The body is ordinary RST prose — the justification for the change — parsed
 //! exactly as `.. dropdown::`'s is.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityUpdate, EntityUpdateSource, FieldMutation,
     FieldMutationMode, Span,
 };
-use rusty_sphinx_entity::{AttributeType, parse_attribute_value};
+use rinx_entity::{AttributeType, parse_attribute_value};
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
@@ -34,7 +34,7 @@ use super::filter_option::read_update_argument;
 use super::options::{OptionLine, scan_option_lines};
 
 /// Identity fields this directive refuses to mutate — exactly
-/// `rusty_sphinx_entity::field::BUILTIN_FIELDS`, spelled out rather than
+/// `rinx_entity::field::BUILTIN_FIELDS`, spelled out rather than
 /// imported: that constant lists every field *every* entity has for the
 /// filter language's purposes, and the point here is narrower and worth
 /// naming on its own terms. `title` is protected alongside the other four
@@ -171,7 +171,7 @@ fn split_mode(name: &str, value: &str) -> (String, FieldMutationMode) {
 }
 
 /// Whether `field` names a section any declared type carries — checked
-/// separately from [`rusty_sphinx_entity::EntitySchema::declares_field`],
+/// separately from [`rinx_entity::EntitySchema::declares_field`],
 /// which deliberately excludes sections (they are not index data at all), so
 /// a section name would otherwise fall through to the generic
 /// unknown-field diagnostic rather than the one explaining why.
@@ -191,7 +191,7 @@ fn read_strict(
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> bool {
-    if let Ok(rusty_sphinx_ast::AttributeValue::Bool(value)) =
+    if let Ok(rinx_ast::AttributeValue::Bool(value)) =
         parse_attribute_value(&AttributeType::Bool, &line.value)
     {
         return value;

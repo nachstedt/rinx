@@ -17,7 +17,7 @@
 //! sharper reason here — a diagram refused over a misspelled `:align:` is a
 //! page with a missing picture.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ImageAlign, LengthOrPercentage, Span, TargetName, Uml,
     UmlSource,
 };
@@ -268,7 +268,7 @@ fn report_empty_value(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Node, TargetName};
+    use rinx_ast::{Node, TargetName};
 
     /// Parses a whole document and returns its single diagram with the
     /// document's diagnostics — the dispatcher is what positions the parse
@@ -353,7 +353,7 @@ mod tests {
         let (uml, diagnostics) = parse_document(input);
 
         // Then
-        assert_eq!(uml.align, Some(rusty_sphinx_ast::ImageAlign::Center));
+        assert_eq!(uml.align, Some(rinx_ast::ImageAlign::Center));
         assert_eq!(
             uml.width,
             Some(LengthOrPercentage::new("400px").expect("a valid length"))

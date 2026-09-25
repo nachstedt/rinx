@@ -5,9 +5,9 @@ of sibling documents to expand against without matching the rest of the
 example site.
 """
 
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+load("@rinx//:defs.bzl", "rinx_library")
 
-rusty_sphinx_library(
+rinx_library(
     name = "docs",
     srcs = glob(["*.rst"]),
     deps = [],

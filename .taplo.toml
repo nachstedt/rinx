@@ -11,10 +11,10 @@
 # mean a schema that loads.
 #
 # Regenerate the schema after changing those types:
-#   cargo run -p rusty_sphinx_worker -- entity_json_schema > schemas/entities.schema.json
-# A test in `rusty_sphinx_entity` fails if it is stale.
+#   cargo run -p rinx_worker -- entity_json_schema > schemas/entities.schema.json
+# A test in `rinx_entity` fails if it is stale.
 
 [[rule]]
-name = "rusty-sphinx entity schema"
+name = "rinx entity schema"
 include = ["**/entities.toml"]
 schema.path = "schemas/entities.schema.json"

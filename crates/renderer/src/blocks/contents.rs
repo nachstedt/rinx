@@ -22,8 +22,8 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{Contents, ContentsBacklinks, Node, SectionId};
-use rusty_sphinx_index::OutlineSection;
+use rinx_ast::{Contents, ContentsBacklinks, Node, SectionId};
+use rinx_index::OutlineSection;
 
 use crate::RenderCtx;
 
@@ -257,8 +257,8 @@ pub(crate) fn render_contents_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{ContentsOptions, Directive, Document, InlineNode, TargetName};
-    use rusty_sphinx_index::{DocumentOutline, ProjectIndex};
+    use rinx_ast::{ContentsOptions, Directive, Document, InlineNode, TargetName};
+    use rinx_index::{DocumentOutline, ProjectIndex};
 
     fn heading(level: u8, title: &str) -> Node {
         Node::Heading {

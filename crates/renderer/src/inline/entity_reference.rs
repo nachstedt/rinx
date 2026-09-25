@@ -3,7 +3,7 @@
 use std::fmt::Write as _;
 
 use super::RefText;
-use rusty_sphinx_index::EntityRecord;
+use rinx_index::EntityRecord;
 
 use crate::resolution::{EntityResolution, EntityResolver};
 use crate::{BrokenLink, BrokenLinkKind};
@@ -80,8 +80,8 @@ pub(super) fn render_inline_entity_reference(
 ///
 /// Rebuilt rather than threaded through, because the resolver already proved
 /// it parses — a target that did not would have been `NotFound`.
-fn entity_id_of(target: &str) -> rusty_sphinx_ast::EntityId {
-    rusty_sphinx_ast::EntityId::new(target)
+fn entity_id_of(target: &str) -> rinx_ast::EntityId {
+    rinx_ast::EntityId::new(target)
         .expect("the resolver only returns a record for a target that parses")
 }
 
@@ -103,9 +103,9 @@ pub(crate) fn entity_href(record: &EntityRecord, doc_path: &str, target: &str) -
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::EntityId;
-    use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::EntityId;
+    use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+    use rinx_index::ProjectIndex;
     use std::collections::BTreeMap;
 
     fn schema() -> EntitySchema {

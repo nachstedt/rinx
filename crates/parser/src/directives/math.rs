@@ -5,7 +5,7 @@
 //! around it — which options were set, and where one equation ends and the
 //! next begins (a blank line, in RST, separates two equations in a single
 //! directive). Whether that LaTeX is valid is the renderer's question, since
-//! only it knows the math backend; see `rusty_sphinx_renderer`'s `math`.
+//! only it knows the math backend; see `rinx_renderer`'s `math`.
 //!
 //! `:nowrap:` is what makes the split worth recording in the AST rather than
 //! redoing downstream: under it the body is one opaque chunk the author has
@@ -13,7 +13,7 @@
 //! blank-line rule must *not* apply — a distinction that is invisible once the
 //! parts have been rejoined.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive, Span, TargetName};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span, TargetName};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -185,7 +185,7 @@ fn equation_span(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
         let mut diagnostics = Diagnostics::default();

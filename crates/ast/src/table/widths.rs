@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 /// impl of its own: resolving the explicit-integer-list form needs the
 /// table's actual column count (to diagnose a mismatch), which isn't
 /// available to a context-free `FromStr` call — so parsing is done by a
-/// dedicated helper in `rusty_sphinx_parser::directives::data_table::widths`
+/// dedicated helper in `rinx_parser::directives::data_table::widths`
 /// instead.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TableWidths {
     /// `:widths: auto` — let the renderer decide column widths.
     Auto,
     /// `:widths: grid` — size columns from the source's own layout (a
-    /// list-table's bullet-list indentation). rusty-sphinx has no such layout
+    /// list-table's bullet-list indentation). rinx has no such layout
     /// signal to measure, so this is accepted (to avoid rejecting valid
     /// Sphinx documents) and rendered identically to `Auto`.
     Grid,

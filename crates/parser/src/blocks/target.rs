@@ -2,7 +2,7 @@
 //! anonymous `.. __: uri` form, either of which may carry its URI on the
 //! following indented line instead of inline.
 
-use rusty_sphinx_ast::{Node, TargetName};
+use rinx_ast::{Node, TargetName};
 
 pub(super) fn try_parse_target(lines: &[&str], i: usize) -> Option<(usize, Node)> {
     let line = lines[i].trim();

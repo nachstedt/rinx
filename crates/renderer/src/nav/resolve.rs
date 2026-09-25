@@ -7,8 +7,8 @@
 //! the navigation node's own `title` field, so the same document could be
 //! labelled differently in the two places on one page.
 
-use rusty_sphinx_ast::SectionId;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::SectionId;
+use rinx_index::ProjectIndex;
 
 /// The `.html` href for `docname`, relative to the document being rendered,
 /// with `anchor` appended when one is given.

@@ -5,7 +5,7 @@
 //!
 //! | caller | universe | purpose |
 //! |---|---|---|
-//! | `rusty_sphinx_worker`'s `validate_toctree` | the Bazel `--allowed` deps | strict-deps enforcement |
+//! | `rinx_worker`'s `validate_toctree` | the Bazel `--allowed` deps | strict-deps enforcement |
 //! | [`crate::build_project_index`] | every document in the project | numbering, page order, diagnostics |
 //! | the renderer | the documents the index knows | rendering |
 //!
@@ -13,11 +13,11 @@
 //! it once, early, would leave the strict-deps check either reimplementing the
 //! matcher against its narrower list, or not checking globs at all.
 
-use rusty_sphinx_ast::{Span, TocEntry, Toctree, ToctreeFlag};
+use rinx_ast::{Span, TocEntry, Toctree, ToctreeFlag};
 use std::collections::BTreeSet;
 
 use super::glob::matching_docnames;
-use rusty_sphinx_ast::normalize_path;
+use rinx_ast::normalize_path;
 
 /// What one toctree entry turned out to name.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -188,7 +188,7 @@ pub fn expand_toctree(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::ToctreeOptions;
+    use rinx_ast::ToctreeOptions;
 
     fn universe(paths: &[&str]) -> BTreeSet<String> {
         paths.iter().map(|p| (*p).to_string()).collect()

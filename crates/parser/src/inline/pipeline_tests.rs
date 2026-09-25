@@ -6,7 +6,7 @@
 //! split-out sibling modules is a better home than this one.
 
 use crate::parse;
-use rusty_sphinx_ast::{InlineNode, Node, Position, Span};
+use rinx_ast::{InlineNode, Node, Position, Span};
 
 /// A single-line span from `start` to `end`, both 1-based columns.
 ///
@@ -30,7 +30,7 @@ fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
                 display: None,
                 target: "my-target".to_string(),
                 span: Some(at(1, 11, 27)),
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             },
             InlineNode::Text(" link.".to_string()),
         ])
@@ -558,7 +558,7 @@ fn test_parse_option_role_with_display_text() {
 fn test_parse_option_role_with_embedded_program_in_target() {
     // Given — the whole target is carried through verbatim; splitting it
     // into program + optname happens at render time (see
-    // `rusty_sphinx_renderer::resolution::option`).
+    // `rinx_renderer::resolution::option`).
     let input = "See :option:`-O <dis --show-offsets>` here.\n";
     let doc = parse("test.rst", input);
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
@@ -721,7 +721,7 @@ fn test_parse_leaves_an_ordinary_role_searching_every_site() {
     let InlineNode::Reference { inventory, .. } = node else {
         panic!("expected a reference, got {node:?}");
     };
-    assert_eq!(inventory, rusty_sphinx_ast::InventorySelector::Any);
+    assert_eq!(inventory, rinx_ast::InventorySelector::Any);
 }
 
 #[test]
@@ -737,7 +737,7 @@ fn test_parse_reads_an_external_prefix_on_a_domain_role() {
         panic!("expected a domain-object reference, got {node:?}");
     };
     assert_eq!(name, "dict");
-    assert_eq!(inventory, rusty_sphinx_ast::InventorySelector::ExternalOnly);
+    assert_eq!(inventory, rinx_ast::InventorySelector::ExternalOnly);
 }
 
 #[test]
@@ -759,9 +759,7 @@ fn test_parse_reads_a_named_external_prefix_on_a_ref() {
     assert_eq!(target, "tut-intro");
     assert_eq!(
         inventory,
-        rusty_sphinx_ast::InventorySelector::Named(
-            rusty_sphinx_ast::InventoryName::new("python").unwrap()
-        )
+        rinx_ast::InventorySelector::Named(rinx_ast::InventoryName::new("python").unwrap())
     );
 }
 
@@ -775,14 +773,14 @@ fn test_parse_reads_an_external_prefix_on_term_and_option_roles() {
     assert!(matches!(
         term,
         InlineNode::TermReference {
-            inventory: rusty_sphinx_ast::InventorySelector::ExternalOnly,
+            inventory: rinx_ast::InventorySelector::ExternalOnly,
             ..
         }
     ));
     assert!(matches!(
         option,
         InlineNode::OptionReference {
-            inventory: rusty_sphinx_ast::InventorySelector::Named(_),
+            inventory: rinx_ast::InventorySelector::Named(_),
             ..
         }
     ));
@@ -797,7 +795,7 @@ fn test_parse_reads_an_external_prefix_on_a_bare_domain_role() {
     assert!(matches!(
         node,
         InlineNode::DomainObjectReference {
-            inventory: rusty_sphinx_ast::InventorySelector::ExternalOnly,
+            inventory: rinx_ast::InventorySelector::ExternalOnly,
             ..
         }
     ));

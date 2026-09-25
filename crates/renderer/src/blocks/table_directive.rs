@@ -4,7 +4,7 @@
 //! helpers with [`super::data_table`] and cell rendering with
 //! [`super::tables`].
 
-use rusty_sphinx_ast::{TableAlign, TableRow, TableWidths, TargetName};
+use rinx_ast::{TableAlign, TableRow, TableWidths, TargetName};
 use std::fmt::Write as _;
 
 use super::table_shell::{
@@ -13,7 +13,7 @@ use super::table_shell::{
 use crate::RenderCtx;
 
 /// The fields `render_table_directive` needs, borrowed straight from
-/// [`rusty_sphinx_ast::Directive::Table`] — grouped into one struct (rather
+/// [`rinx_ast::Directive::Table`] — grouped into one struct (rather
 /// than eight separate parameters) purely to keep the function's arity
 /// reasonable, mirroring [`super::data_table::DataTableParams`].
 #[derive(Clone, Copy)]
@@ -74,7 +74,7 @@ pub(super) fn render_table_directive(
 mod tests {
     use super::*;
     use crate::blocks::table_test_support::{render_doc, table_row};
-    use rusty_sphinx_ast::{Directive, Document, Node};
+    use rinx_ast::{Directive, Document, Node};
 
     /// A minimal `.. table::` wrapping one header row and one body row, for
     /// the tests that care about nothing else.

@@ -3,8 +3,8 @@
 use std::fmt::Write as _;
 
 use super::RefText;
-use rusty_sphinx_ast::TargetName;
-use rusty_sphinx_index::{ProjectIndex, TargetLocation};
+use rinx_ast::TargetName;
+use rinx_index::{ProjectIndex, TargetLocation};
 
 use crate::{BrokenLink, BrokenLinkKind};
 

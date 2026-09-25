@@ -12,7 +12,7 @@
 //! has a grammar behind it is the renderer's question, since only it knows the
 //! highlighting backend.
 
-use rusty_sphinx_ast::{CodeBlock, CodeBlockSource, Directive};
+use rinx_ast::{CodeBlock, CodeBlockSource, Directive};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -23,7 +23,7 @@ use crate::indent::unindent_body_lines;
 use super::dedent::apply_dedent;
 use super::emphasize::resolve_emphasize_lines;
 use super::options::{parse_code_block_options, parse_language_argument};
-use rusty_sphinx_ast::DiagnosticCode;
+use rinx_ast::DiagnosticCode;
 
 /// Parses either code-block directive into a [`Directive::CodeBlock`].
 pub(in crate::directives) fn parse_code_block(
@@ -86,7 +86,7 @@ pub(in crate::directives) fn parse_code_block(
 #[cfg(test)]
 mod tests {
     use super::super::test_support::{parse, parse_as};
-    use rusty_sphinx_ast::{CodeBlockSource, CodeLanguage, LanguageName};
+    use rinx_ast::{CodeBlockSource, CodeLanguage, LanguageName};
 
     #[test]
     fn test_parse_code_block_keeps_the_body_verbatim() {

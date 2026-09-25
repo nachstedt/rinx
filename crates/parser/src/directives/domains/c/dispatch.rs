@@ -3,7 +3,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{
+use rinx_ast::{
     CSignature, Diagnostic, DiagnosticCode, DomainObjectBody, NameSource, NonEmptyVector, Span,
 };
 
@@ -133,8 +133,8 @@ pub(super) fn extract_common_object_description_options(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::Domain;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::Domain;
+    use rinx_ast::{Directive, Node};
 
     /// The raw texts of parsed `c`-domain signatures, for asserting on what
     /// was written rather than on the name derived from it.

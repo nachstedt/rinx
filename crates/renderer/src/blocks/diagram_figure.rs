@@ -15,7 +15,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{HashedContent, ImageAlign, LengthOrPercentage, TargetName};
+use rinx_ast::{HashedContent, ImageAlign, LengthOrPercentage, TargetName};
 
 use crate::RenderCtx;
 

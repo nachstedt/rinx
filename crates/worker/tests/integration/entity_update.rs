@@ -1,6 +1,6 @@
 //! `.. entity-update::` across the whole pipeline.
 //!
-//! The unit tests in `rusty_sphinx_parser` and `rusty_sphinx_analyzer` assert
+//! The unit tests in `rinx_parser` and `rinx_analyzer` assert
 //! on the node one directive produces and on `apply_entity_updates` in
 //! isolation. These assert the claim neither can reach on its own: applied
 //! across a *real, multi-document* build, an update's effect (1) never
@@ -13,12 +13,12 @@
 //! one diagnostic in *each* of them, not one arbitrarily attributed to
 //! either.
 
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_ast::{Domain, EntityId};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_parser::{self as parser, ParseCtx};
-use rusty_sphinx_renderer as renderer;
+use rinx_analyzer as analyzer;
+use rinx_ast as ast;
+use rinx_ast::{Domain, EntityId};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_parser::{self as parser, ParseCtx};
+use rinx_renderer as renderer;
 
 /// A schema with a `req` (`status`, a `links` relation) and a `spec`, small
 /// enough to read at a glance but real enough to exercise a mutation of both
@@ -146,10 +146,10 @@ fn test_e2e_the_update_is_visible_on_the_targets_own_rendered_page() {
         &requirements,
         &index,
         "requirements",
-        &rusty_sphinx_renderer::config::SiteConfig::default(),
-        &rusty_sphinx_renderer::EmbeddedAssets::new(),
+        &rinx_renderer::config::SiteConfig::default(),
+        &rinx_renderer::EmbeddedAssets::new(),
         &schema,
-        &rusty_sphinx_renderer::EntityTemplates::new(),
+        &rinx_renderer::EntityTemplates::new(),
     );
 
     // Then — the box built into REQ_001's own entity rendering shows the
@@ -174,10 +174,10 @@ fn test_e2e_the_directives_own_box_renders_its_justification() {
         &requirements,
         &index,
         "requirements",
-        &rusty_sphinx_renderer::config::SiteConfig::default(),
-        &rusty_sphinx_renderer::EmbeddedAssets::new(),
+        &rinx_renderer::config::SiteConfig::default(),
+        &rinx_renderer::EmbeddedAssets::new(),
         &schema,
-        &rusty_sphinx_renderer::EntityTemplates::new(),
+        &rinx_renderer::EntityTemplates::new(),
     );
 
     // Then — `show_entity_updates` defaults to true, so the directive draws
@@ -206,10 +206,10 @@ fn test_e2e_a_filter_selecting_the_entity_sees_the_updated_value() {
         &requirements,
         &index,
         "requirements",
-        &rusty_sphinx_renderer::config::SiteConfig::default(),
-        &rusty_sphinx_renderer::EmbeddedAssets::new(),
+        &rinx_renderer::config::SiteConfig::default(),
+        &rinx_renderer::EmbeddedAssets::new(),
         &schema,
-        &rusty_sphinx_renderer::EntityTemplates::new(),
+        &rinx_renderer::EntityTemplates::new(),
     );
 
     // Then — the table resolves rows against the index, which now reflects

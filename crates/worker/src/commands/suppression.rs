@@ -9,8 +9,8 @@
 //! different process from the parse that read the comment excusing it, and
 //! only the `.ast` in between carries both.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, Suppression};
-use rusty_sphinx_renderer::{
+use rinx_ast::{Diagnostic, DiagnosticCode, Span, Suppression};
+use rinx_renderer::{
     BrokenLink, DiagramError, EmptyListingError, HighlightError, ImageError, MathError,
     ObjectTypeMismatch,
 };
@@ -151,8 +151,8 @@ pub(super) fn retain_reportable_mismatches(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Position, SuppressionCodes};
-    use rusty_sphinx_renderer::BrokenLinkKind;
+    use rinx_ast::{Position, SuppressionCodes};
+    use rinx_renderer::BrokenLinkKind;
 
     fn span_on(line: u32) -> Span {
         Span::new(Position::new(line, 1), Position::new(line, 10))
@@ -292,10 +292,8 @@ mod tests {
         // Given a mismatch inside a block suppressing exactly that code
         let mismatches = [ObjectTypeMismatch {
             name: "Fault".to_string(),
-            requested_type: rusty_sphinx_ast::ObjectType::Py(
-                rusty_sphinx_ast::PyObjectType::Exception,
-            ),
-            resolved_type: rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            requested_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Exception),
+            resolved_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Class),
             span: Some(span_on(6)),
         }];
         let suppressions = [Suppression {

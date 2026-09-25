@@ -3,7 +3,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
+use rinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. c:type::` body — same common flags and shape as
 /// [`super::struct_::parse_c_struct`]/[`super::union::parse_c_union`]; real
@@ -43,7 +43,7 @@ pub(crate) fn parse_c_type(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::{Directive, Node};
 
     /// The raw texts of parsed `c`-domain signatures, for asserting on what
     /// was written rather than on the name derived from it.

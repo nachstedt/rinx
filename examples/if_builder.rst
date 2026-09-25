@@ -6,7 +6,7 @@ Conditional content by builder
 ``.. if-builder::`` comes from `sphinx-simplepdf
 <https://sphinx-simplepdf.readthedocs.io/en/latest/directives.html>`_. Its body
 is contributed only when the argument names the builder that is running.
-rusty-sphinx has exactly one builder, ``html``, so a block naming any other
+rinx has exactly one builder, ``html``, so a block naming any other
 builder is left out.
 
 The directive takes one argument and no options. The name is matched
@@ -41,7 +41,7 @@ rather than a mistake.
    .. some-pdf-only-directive::
 
       A non-matching body is never parsed at all, which is why this directive
-      that rusty-sphinx does not implement costs nothing here: no
+      that rinx does not implement costs nothing here: no
       ``directive.unknown`` report, and no error block on the page.
 
    .. toctree::

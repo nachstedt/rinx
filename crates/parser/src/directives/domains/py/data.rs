@@ -4,7 +4,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:data::` body: strips `:type:`/`:value:` option lines off
 /// the front before parsing the rest as the docstring body.
@@ -69,7 +69,7 @@ fn extract_data_options(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::{Directive, Node};
 
     #[test]
     fn test_extract_data_options_parses_both_options() {

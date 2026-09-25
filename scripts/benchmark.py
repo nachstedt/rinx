@@ -12,7 +12,7 @@ from benchmark_common import (
     write_frequency_summary,
 )
 
-TARGET_DIR = Path(tempfile.gettempdir()) / "rusty_sphinx_benchmark_cpython"
+TARGET_DIR = Path(tempfile.gettempdir()) / "rinx_benchmark_cpython"
 REPO_URL = "https://github.com/python/cpython.git"
 
 # The one place the benchmark's Python version is decided.
@@ -21,10 +21,10 @@ REPO_URL = "https://github.com/python/cpython.git"
 # release tag whose `Doc/` we build (`v3.14.2`), and the interpreter the
 # generated workspace resolves (`python.toolchain(python_version = ...)`).
 # Previously the script cloned `main` while the toolchain came from
-# rusty-sphinx's own MODULE.bazel, so the documentation described a
+# rinx's own MODULE.bazel, so the documentation described a
 # development version whose APIs the interpreter did not have — every doctest
 # using a newly added API failed for a reason that had nothing to do with
-# rusty-sphinx. Examples seen: `re.Pattern.prefixmatch`,
+# rinx. Examples seen: `re.Pattern.prefixmatch`,
 # `IPv4Network.next_network`, `PrettyPrinter(expand=...)`, `shlex.quote(force=...)`.
 #
 # Changing this requires a version that exists on *both* sides:
@@ -70,12 +70,12 @@ def generate_bazel_project(workspace_root: str, python_version: str):
     # documentation describing it can never disagree. `is_default = True` is
     # honoured only for the root module, and this generated workspace *is* the
     # root when the benchmark builds — so this pin wins over the 3.x toolchain
-    # rusty-sphinx registers for its own tests.
+    # rinx registers for its own tests.
     module_bazel = f"""module(name = "cpython_docs_bench")
 
-bazel_dep(name = "rusty_sphinx", version = "0.0.0")
+bazel_dep(name = "rinx", version = "0.0.0")
 local_path_override(
-    module_name = "rusty_sphinx",
+    module_name = "rinx",
     path = "{workspace_root}",
 )
 
@@ -99,7 +99,7 @@ python.toolchain(
     assets_dir.mkdir(exist_ok=True)
     (assets_dir / "BUILD.bazel").write_text("""alias(
     name = "default.css",
-    actual = "@rusty_sphinx//:assets/default.css",
+    actual = "@rinx//:assets/default.css",
     visibility = ["//visibility:public"],
 )
 """)
@@ -107,7 +107,7 @@ python.toolchain(
     doc_dir = TARGET_DIR / "Doc"
     
     # Create config
-    (doc_dir / "rusty_sphinx.toml").write_text('project = "CPython Benchmark"\n')
+    (doc_dir / "rinx.toml").write_text('project = "CPython Benchmark"\n')
     
     # Create template — use the project's default template for a nicely formatted output
     default_template_path = Path(workspace_root) / "templates" / "default.html"
@@ -115,9 +115,9 @@ python.toolchain(
     (doc_dir / "custom_template.html").write_text(template_content)
     
     # Create BUILD.bazel in Doc
-    build_bazel = """load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
+    build_bazel = """load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
 
-rusty_sphinx_library(
+rinx_library(
     name = "cpython_docs",
     srcs = glob(["**/*.rst"]),
     # CPython's documents show real pictures, and an image has to be declared
@@ -137,9 +137,9 @@ rusty_sphinx_library(
     ),
 )
 
-rusty_sphinx_site(
+rinx_site(
     name = "site",
-    config = "rusty_sphinx.toml",
+    config = "rinx.toml",
     template = "custom_template.html",
     css = "//assets:default.css",
     deps = [":cpython_docs"],
@@ -151,7 +151,7 @@ rusty_sphinx_site(
 
 
 def run_benchmark(clean: bool = False):
-    """Builds rusty-sphinx first, then times the CPython documentation build.
+    """Builds rinx first, then times the CPython documentation build.
 
     The two are separate `bazel build` invocations on purpose. What the
     benchmark is about is how long it takes to turn 500-odd `.rst` files into
@@ -168,7 +168,7 @@ def run_benchmark(clean: bool = False):
     else:
         benchmark_common.discard_stale_corpus_outputs(TARGET_DIR, CORPUS_PACKAGE)
 
-    print("Building rusty-sphinx and its toolchains (not timed as doc build)...")
+    print("Building rinx and its toolchains (not timed as doc build)...")
     deps_built, deps_duration = benchmark_common.timed_bazel_build(
         TARGET_DIR, f"//{WARMUP_PACKAGE}:site", "bazel_deps_build.log"
     )
@@ -187,7 +187,7 @@ def run_benchmark(clean: bool = False):
     if build_succeeded:
         print(f"Documentation build succeeded in {duration:.2f} seconds.")
         print(
-            f"(Excludes {deps_duration:.2f} seconds spent building rusty-sphinx itself.)"
+            f"(Excludes {deps_duration:.2f} seconds spent building rinx itself.)"
         )
 
     build_log = TARGET_DIR / "bazel_build.log"
@@ -363,7 +363,7 @@ def analyze_results(build_succeeded=False):
     # and show only a compact summary on screen.
     result_path = Path("benchmark_result.txt")
     with open(result_path, "w") as out:
-        print("=== rusty-sphinx benchmark: full report ===", file=out)
+        print("=== rinx benchmark: full report ===", file=out)
         write_frequency_summary(out, "Unsupported Directives Summary", unknown_directives)
         write_frequency_summary(out, "Malformed Directives Summary", malformed_directives)
         write_frequency_summary(
@@ -439,7 +439,7 @@ def main():
         
     # Ensure we run from the workspace root
     if not Path("WORKSPACE").exists() and not Path("MODULE.bazel").exists():
-        print("Please run this script from the root of the rusty-sphinx workspace.")
+        print("Please run this script from the root of the rinx workspace.")
         return
         
     print(f"Benchmarking against CPython {args.python_version}.")

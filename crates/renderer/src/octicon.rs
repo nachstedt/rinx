@@ -4,7 +4,7 @@
 //! [`crate::highlight`] and `math-core` in [`crate::math`]: the icon set is a
 //! *backend*, its vocabulary changes when the dependency is upgraded, and it
 //! must never reach a `.ast` file — which carries only the name an author
-//! wrote (`rusty_sphinx_ast::OcticonName`). The parser checks that name
+//! wrote (`rinx_ast::OcticonName`). The parser checks that name
 //! against the same set while reading the option, so by the time a page is
 //! drawn an unresolvable name has already been reported and is simply not
 //! drawn.

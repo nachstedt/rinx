@@ -17,7 +17,7 @@
 //! property, which is why `test_plan_ignores_presentation_only_differences`
 //! asserts byte equality rather than merely structural equality.
 
-use rusty_sphinx_ast::{self as ast, DocTestBlock, DocTestGroupSelector};
+use rinx_ast::{self as ast, DocTestBlock, DocTestGroupSelector};
 use serde::{Deserialize, Serialize};
 
 /// One document's doctest groups, in the order they first appear.

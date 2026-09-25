@@ -1,5 +1,5 @@
 //! Body rendering: the node dispatcher that turns a document's
-//! [`rusty_sphinx_ast::Node`]s into HTML, and one module per block construct.
+//! [`rinx_ast::Node`]s into HTML, and one module per block construct.
 //!
 //! [`dispatch`] owns the traversal and the entry points the crate root calls;
 //! every other module here is something it delegates to — [`admonitions`],

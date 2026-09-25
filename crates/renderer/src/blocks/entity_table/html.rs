@@ -2,8 +2,8 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::EntityTable;
-use rusty_sphinx_filter::FieldName;
+use rinx_ast::EntityTable;
+use rinx_filter::FieldName;
 
 use crate::RenderCtx;
 use crate::blocks::table_shell::{
@@ -100,7 +100,7 @@ fn column_label(column: &FieldName, ctx: &RenderCtx<'_>) -> String {
 /// The one place these are spelled in prose, since no schema declares them.
 /// `type` and `type_name` share a heading on purpose: to a reader both columns
 /// are "the type", and they differ only in whether the cell shows the
-/// directive name or the schema's label — see `rusty_sphinx_entity::field`.
+/// directive name or the schema's label — see `rinx_entity::field`.
 fn builtin_label(name: &str) -> Option<&'static str> {
     match name {
         "id" => Some("ID"),
@@ -148,7 +148,7 @@ enum LinkText {
 /// box already use, so no two phases can disagree about where a link points.
 /// An id naming no entity is shown as plain text rather than as a dead link.
 fn link_html(id: &str, shows: LinkText, ctx: &RenderCtx<'_>) -> String {
-    let Some((entity_id, record)) = rusty_sphinx_ast::EntityId::new(id).ok().and_then(|parsed| {
+    let Some((entity_id, record)) = rinx_ast::EntityId::new(id).ok().and_then(|parsed| {
         ctx.index
             .entities
             .get(&parsed)

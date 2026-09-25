@@ -8,13 +8,13 @@
 //! with `.. entity-flow::` so two pictures on one page cannot be told apart by
 //! how their text came about.
 //!
-//! The expansion goes through `rusty_sphinx_uml` rather than being done here,
+//! The expansion goes through `rinx_uml` rather than being done here,
 //! because the hash of the result *is* the compiled SVG's filename: a renderer
 //! with its own idea of the text would emit an `<img>` pointing at a file
 //! nothing compiled.
 
-use rusty_sphinx_ast::{HashedContent, Uml};
-use rusty_sphinx_uml::{UmlContext, expand};
+use rinx_ast::{HashedContent, Uml};
+use rinx_uml::{UmlContext, expand};
 
 use crate::RenderCtx;
 use crate::uml_error::DiagramError;
@@ -69,10 +69,8 @@ pub(super) fn render_uml_directive(html: &mut String, uml: &Uml, ctx: &mut Rende
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{
-        ImageAlign, LengthOrPercentage, ResolvedLanguage, TargetName, UmlSource,
-    };
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{ImageAlign, LengthOrPercentage, ResolvedLanguage, TargetName, UmlSource};
+    use rinx_index::ProjectIndex;
 
     use crate::EmbeddedAssets;
     use crate::blocks::render_test_support::with_ctx_for;
@@ -125,11 +123,7 @@ mod tests {
     /// exists to prevent.
     fn expected_hash(uml: &Uml) -> String {
         let index = ProjectIndex::default();
-        let ctx = UmlContext::new(
-            &index,
-            rusty_sphinx_entity::EntitySchema::empty_ref(),
-            "index.rst",
-        );
+        let ctx = UmlContext::new(&index, rinx_entity::EntitySchema::empty_ref(), "index.rst");
         expand(uml, &ctx)
             .expect("expansion succeeds")
             .hash()

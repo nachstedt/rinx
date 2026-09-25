@@ -5,7 +5,7 @@
 //! see. Shared with `.. literalinclude::`, whose `:dedent:` means the same
 //! thing over text read from a file.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode};
+use rinx_ast::{Diagnostic, DiagnosticCode};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -93,7 +93,7 @@ fn trim_blank_edges(lines: &[String]) -> String {
 mod tests {
     use super::super::test_support::{codes, parse};
     use super::*;
-    use rusty_sphinx_ast::DiagnosticCode;
+    use rinx_ast::DiagnosticCode;
 
     #[test]
     fn test_parse_code_block_dedents_by_an_explicit_column_count() {

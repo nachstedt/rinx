@@ -7,7 +7,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::LineBlockItem;
+use rinx_ast::LineBlockItem;
 
 use crate::RenderCtx;
 use crate::inline::render_inline;
@@ -39,8 +39,8 @@ pub(super) fn render_line_block(
 
 #[cfg(test)]
 mod tests {
-    use rusty_sphinx_ast::{Document, InlineNode, Node};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Document, InlineNode, Node};
+    use rinx_index::ProjectIndex;
 
     use super::*;
 

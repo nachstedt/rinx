@@ -48,7 +48,7 @@ being rewritten.
 
 ### 2. `ValuePattern`: compiled once, re-validated on load
 
-`rusty_sphinx_entity::ValuePattern` is the parse-don't-validate type for this.
+`rinx_entity::ValuePattern` is the parse-don't-validate type for this.
 The only way to build one is `ValuePattern::new`, which compiles the
 expression. It serializes as its source text, and its `Deserialize` compiles
 again, as `HashedContent` re-hashes. Equality is on the source. Because it

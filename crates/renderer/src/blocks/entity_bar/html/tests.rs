@@ -1,8 +1,8 @@
-use rusty_sphinx_ast::{
+use rinx_ast::{
     BarArrangement, BarGrid, ChartValue, DiagnosticCode, Directive, Document, EntityBar,
     EntityBarSource, LabelRotation, Node, TargetName,
 };
-use rusty_sphinx_filter::parse_filter;
+use rinx_filter::parse_filter;
 
 use crate::blocks::chart_test_support::{index, schema};
 use crate::{EmbeddedAssets, RenderOutput, blocks::EntityTemplates, config::SiteConfig};

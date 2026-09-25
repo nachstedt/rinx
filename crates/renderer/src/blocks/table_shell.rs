@@ -5,7 +5,7 @@
 //! None of this applies to a bare grid/simple `Node::Table`, which has no
 //! such options.
 
-use rusty_sphinx_ast::{TableAlign, TableWidths, TargetName};
+use rinx_ast::{TableAlign, TableWidths, TargetName};
 use std::fmt::Write as _;
 
 /// Emits a `:name:` anchor exactly like an explicit hyperlink target

@@ -38,7 +38,7 @@ which contradicts something the project already decided:
 - `templates/default.html` has no `<head>` injection hook, and adding one to
   ship a hardcoded CDN `<script>` would put a file path — the thing ADR-001
   deliberately keeps out of the config — into the template instead.
-- rusty-sphinx would never see the LaTeX fail. A malformed equation would be a
+- rinx would never see the LaTeX fail. A malformed equation would be a
   silent rendering failure in one reader's browser rather than a build warning,
   which is precisely the class of problem the diagnostics work in ADR-003 exists
   to eliminate.
@@ -63,14 +63,14 @@ must keep agreeing here; a future `math-core` bump may move both again.
 equation's source with the message as a tooltip, so a page with broken LaTeX
 still shows what its author wrote instead of dropping the content.
 
-### rusty-sphinx owns equation numbering, not `math-core`
+### rinx owns equation numbering, not `math-core`
 
 `math-core` has its own equation counter, reachable via
 `convert_with_global_state`. It is deliberately not used: it counts LaTeX
 `equation`/`align` environments per converter, while Sphinx numbers *labeled
 directives* per document, and letting both count would put two disagreeing sets
 of numbers on one page. `convert_with_local_state` is called instead, and
-`rusty_sphinx_analyzer`'s `number_equations` assigns the numbers, storing them
+`rinx_analyzer`'s `number_equations` assigns the numbers, storing them
 in `ProjectIndex::equations` so a cross-document `:eq:` can read them.
 
 One visible edge follows from converting each block independently: under
@@ -110,5 +110,5 @@ correct, readable equations — but the brackets will not stretch.
 Shipping a patched webfont (upstream provides one at
 [math-core-fonts](https://github.com/tmke8/math-core-fonts)) would remove that
 dependency, at the cost of ~500 KB per site and a second asset attribute on
-`rusty_sphinx_site`, which today can copy exactly one stylesheet. Deferred, not
+`rinx_site`, which today can copy exactly one stylesheet. Deferred, not
 rejected.

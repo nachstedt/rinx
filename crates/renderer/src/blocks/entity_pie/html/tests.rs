@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     AttributeValue, ChartColor, Directive, Document, EntityId, EntityPie, EntityPieSource,
     ImageAlign, LengthOrPercentage, Node, PieSlice, TargetName,
 };
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_filter::parse_filter;
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_filter::parse_filter;
+use rinx_index::{EntityRecord, ProjectIndex};
 
 use crate::{EmbeddedAssets, RenderOutput, blocks::EntityTemplates, config::SiteConfig};
 

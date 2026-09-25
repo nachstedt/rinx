@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-rusty-sphinx links a small number of third-party crates. Most carry permissive
+rinx links a small number of third-party crates. Most carry permissive
 licences requiring nothing beyond the usual attribution; the entries below have
 obligations worth stating explicitly.
 

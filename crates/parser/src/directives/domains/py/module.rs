@@ -3,7 +3,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::DomainObjectBody;
+use rinx_ast::DomainObjectBody;
 
 /// Parses a `.. py:module::` body: strips `:platform:`/`:synopsis:`/
 /// `:deprecated:` option lines off the front before parsing the rest as the
@@ -68,7 +68,7 @@ fn extract_module_options(lines: &[String]) -> (Option<String>, Option<String>, 
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::{Directive, Node};
 
     #[test]
     fn test_extract_module_options_parses_all_three_options() {

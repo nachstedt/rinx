@@ -5,7 +5,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
-use rusty_sphinx_ast::{Node, TableRow};
+use rinx_ast::{Node, TableRow};
 
 use super::borders::{is_simple_table_top, parse_column_spans};
 use super::layout::{HeadBodyRule, collect_simple_table_lines, find_head_body_rule};
@@ -80,7 +80,7 @@ pub(crate) fn try_parse_simple_table(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{InlineNode, TableCell};
+    use rinx_ast::{InlineNode, TableCell};
 
     /// Extracts the plain text of a cell whose content is a single paragraph.
     fn cell_text(cell: &TableCell) -> String {
@@ -334,7 +334,7 @@ After the table.";
             panic!("Expected Directive, got {:?}", doc.nodes[0]);
         };
         let body = match directive {
-            rusty_sphinx_ast::Directive::Admonition { body, .. } => body,
+            rinx_ast::Directive::Admonition { body, .. } => body,
             other => panic!("Expected Admonition, got {other:?}"),
         };
         assert!(matches!(body[0], Node::Table { .. }));

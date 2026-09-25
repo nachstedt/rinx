@@ -25,7 +25,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{ColumnPrefix, Grid, GridItem, SpacingKind};
+use rinx_ast::{ColumnPrefix, Grid, GridItem, SpacingKind};
 
 use crate::RenderCtx;
 
@@ -146,11 +146,11 @@ fn class_attribute(classes: &[String]) -> String {
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::render_directive_html;
-    use rusty_sphinx_ast::{
+    use rinx_ast::{
         ChildAlign, ChildDirection, ColumnSpec, Directive, Gutter, InlineNode, Node, Spacing,
         SpacingValue,
     };
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_index::ProjectIndex;
 
     fn grid_html(grid: Grid) -> String {
         render_directive_html(

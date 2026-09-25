@@ -1,7 +1,7 @@
 //! The `data:` URIs a page's `:loading: embed` images are rendered with.
 //!
 //! The renderer performs no I/O, so it cannot open an image file itself — the
-//! same rule that makes `rusty_sphinx_parser` read a `:file:` through an
+//! same rule that makes `rinx_parser` read a `:file:` through an
 //! injected loader. Here the answer is a lookup table rather than a loader,
 //! because the bytes are read once per document by a separate build step (the
 //! worker's `embed_assets` command) whose whole purpose is to be cached: an
@@ -10,7 +10,7 @@
 //! page re-renders. See `docs/decisions/007-image-assets.md`.
 //!
 //! Keys are the image's *resolved* project path — what
-//! [`rusty_sphinx_ast::ImageUri::resolve`] returns — never the URI as written,
+//! [`rinx_ast::ImageUri::resolve`] returns — never the URI as written,
 //! so `logo.png` and `./logo.png` in the same document find one entry.
 
 use std::collections::BTreeMap;

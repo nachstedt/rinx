@@ -5,7 +5,7 @@
 
 ## Context
 
-`.. code-block::` was rusty-sphinx's most conspicuous half-implementation. The
+`.. code-block::` was rinx's most conspicuous half-implementation. The
 parser read the language argument and nothing else: it never called
 `scan_option_lines`, so an author writing `:linenos:` or `:caption:` got those
 lines **rendered as code text**, with no diagnostic. The renderer emitted
@@ -73,7 +73,7 @@ syntect's own scope names under an `hl-` prefix lets the stylesheet be
 *generated* by `css_for_theme_with_class_style` **using the same `ClassStyle`
 the renderer emits with**, so the two cannot disagree about what a token is
 called. The cost is real and accepted: no third-party Sphinx theme's stylesheet
-applies to a rusty-sphinx site's code blocks.
+applies to a rinx site's code blocks.
 
 ## Consequences
 
@@ -89,7 +89,7 @@ A renderer that forgot to resolve one is a compile error rather than a bug.
 `LanguageName` is opaque, trimmed and lowercased by its smart constructor, so
 `Python` and `python ` cannot become two keys. The concrete name stays an open
 string deliberately: enumerating all 213 languages would put backend knowledge
-in `rusty_sphinx_ast`, inverting the crate dependency direction, and write the
+in `rinx_ast`, inverting the crate dependency direction, and write the
 backend's vocabulary into every serialized `.ast`.
 
 `none`, `text` and `plain` all parse to `None`. The latter two are Pygments'

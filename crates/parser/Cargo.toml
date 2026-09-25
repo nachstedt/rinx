@@ -1,13 +1,13 @@
 [package]
-name = "rusty_sphinx_parser"
+name = "rinx_parser"
 version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-rusty_sphinx_ast = { path = "../ast" }
-rusty_sphinx_filter = { path = "../filter" }
-rusty_sphinx_entity = { path = "../entity" }
-rusty_sphinx_template = { path = "../template" }
+rinx_ast = { path = "../ast" }
+rinx_filter = { path = "../filter" }
+rinx_entity = { path = "../entity" }
+rinx_template = { path = "../template" }
 csv = "1"
 octicons-pack = { version = "19.33", default-features = false }
 regex = "1.10"

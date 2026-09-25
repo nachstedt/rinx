@@ -1,6 +1,6 @@
 use crate::directives::body::collect_directive_body;
 use crate::indent::indent_width;
-use rusty_sphinx_ast::{DiagnosticCode, Node, SuppressionCodes};
+use rinx_ast::{DiagnosticCode, Node, SuppressionCodes};
 
 /// Tries to parse an RST comment starting at line `i`.
 ///
@@ -233,7 +233,7 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use crate::parse;
-    use rusty_sphinx_ast::{InlineNode, Node};
+    use rinx_ast::{InlineNode, Node};
 
     // --- Comment integration tests ---
 
@@ -389,7 +389,7 @@ mod integration_tests {
 mod noqa_tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Suppression, SuppressionCodes};
+    use rinx_ast::{Suppression, SuppressionCodes};
 
     /// The suppressions `input` yields, for the scope-resolution tests.
     fn suppressions(input: &str) -> Vec<Suppression> {

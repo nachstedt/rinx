@@ -2,7 +2,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, Node, Span, TableCell, TableRow, TableSource,
 };
 
@@ -132,7 +132,7 @@ pub(in crate::directives) fn parse_csv_table(
 /// Obtains the CSV text, from the directive body or from `:file:`.
 ///
 /// Reproduces docutils' two mutual-exclusion errors — data given both ways,
-/// or neither way — and adds one of its own for `:url:`, which rusty-sphinx
+/// or neither way — and adds one of its own for `:url:`, which rinx
 /// does not implement: fetching over the network inside a cached, sandboxed
 /// build action would make the build non-hermetic, so it is refused rather
 /// than silently ignored.
@@ -401,7 +401,7 @@ fn malformed_csv_table(argument: &str, body_lines: &[&str]) -> Directive {
 mod tests {
     use super::*;
     use crate::context::{LoadedFile, ParseFileLoader};
-    use rusty_sphinx_ast::{Domain, InlineNode, TableAlign, TableWidths, TargetName};
+    use rinx_ast::{Domain, InlineNode, TableAlign, TableWidths, TargetName};
     use std::collections::HashMap;
 
     /// An in-memory stand-in for the worker's filesystem loader, so `:file:`

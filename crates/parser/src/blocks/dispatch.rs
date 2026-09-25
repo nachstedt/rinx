@@ -7,7 +7,7 @@ use crate::diagnostics::Diagnostics;
 use crate::directives::try_parse_directive;
 use crate::headings::{Adornment, detect_adornment, try_parse_heading};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
-use rusty_sphinx_ast::{
+use rinx_ast::{
     CodeLanguage, Diagnostic, DiagnosticCode, Document, Domain, Node, Suppression, SuppressionCodes,
 };
 
@@ -342,7 +342,7 @@ fn parse_paragraph(lines: &[&str], i: usize, ctx: &ParseCtx<'_>) -> (usize, Vec<
 mod tests {
 
     use super::*;
-    use rusty_sphinx_ast::InlineNode;
+    use rinx_ast::InlineNode;
 
     #[test]
     fn test_parse_blocks_empty_input() {

@@ -1,14 +1,14 @@
 //! Where a template's text comes from.
 //!
 //! The crate performs no I/O of its own, for the reason
-//! `rusty_sphinx_parser`'s own file loader does not: the same rendering has to
+//! `rinx_parser`'s own file loader does not: the same rendering has to
 //! work in a live preview, where the document is an editor buffer, and in unit
 //! tests, which must not depend on a filesystem. The parser adapts its
 //! [`ParseFileLoader`] to this trait, so a Jinja `{% include %}` and an
 //! `.. include::` read through exactly one seam and a missing file is reported
 //! once, in one voice.
 //!
-//! [`ParseFileLoader`]: https://docs.rs/rusty_sphinx_parser
+//! [`ParseFileLoader`]: https://docs.rs/rinx_parser
 
 /// A template that was read, and the identity the caller knows it by.
 ///

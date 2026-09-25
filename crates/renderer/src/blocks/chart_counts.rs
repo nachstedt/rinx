@@ -9,10 +9,10 @@
 //! Flat under `blocks/` rather than inside either chart's directory because
 //! both of them call it.
 
-use rusty_sphinx_ast::ChartValue;
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_filter::Expr;
-use rusty_sphinx_index::{EntitySubject, ProjectIndex};
+use rinx_ast::ChartValue;
+use rinx_entity::EntitySchema;
+use rinx_filter::Expr;
+use rinx_index::{EntitySubject, ProjectIndex};
 
 /// Counts each value, in the order given, among the entities `scope` selects.
 ///
@@ -21,7 +21,7 @@ use rusty_sphinx_index::{EntitySubject, ProjectIndex};
 /// That matters because a chart is linear in the size of the project already,
 /// and a bar chart's grid can easily hold a dozen filters.
 ///
-/// [`EntitySubject`] is `rusty_sphinx_index`'s, the very type an
+/// [`EntitySubject`] is `rinx_index`'s, the very type an
 /// `.. entity-table::`'s rows and a diagram's `filter()` resolve names
 /// through, so a filter cannot mean one thing in a table and another in a
 /// chart.
@@ -77,7 +77,7 @@ fn matches_optional(filter: Option<&Expr>, subject: &EntitySubject<'_>) -> bool 
 
 #[cfg(test)]
 mod tests {
-    use rusty_sphinx_filter::parse_filter;
+    use rinx_filter::parse_filter;
 
     use super::*;
     use crate::blocks::chart_test_support::{index, schema};

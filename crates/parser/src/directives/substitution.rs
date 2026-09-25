@@ -5,7 +5,7 @@
 //! is split with [`split_substitution_marker`] before anything here runs.
 //! What is particular to each of the three modelled directives is parsed
 //! below; `date` and `raw` are deliberately unmodelled (see
-//! [`rusty_sphinx_ast::SubstitutionDefinition`]) and so fall back to
+//! [`rinx_ast::SubstitutionDefinition`]) and so fall back to
 //! [`Directive::Unknown`] like any other unrecognized directive name, via
 //! [`parse_substitution_definition`] returning `None`.
 //!
@@ -14,7 +14,7 @@
 //! (`crate::blocks::substitutions::resolve_substitutions`) that runs once
 //! parsing finishes, since a `|name|` may be written before its definition.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ImageUri, Span, SubstitutionDefinition,
     SubstitutionKind, TrimSides,
 };
@@ -244,7 +244,7 @@ fn parse_image_kind(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Domain, ImageAlign, InlineNode};
+    use rinx_ast::{Domain, ImageAlign, InlineNode};
 
     fn dispatch(name: &str, argument: &str, body: &[&str]) -> Option<(Directive, Diagnostics)> {
         let (sub_name, inner) = split_substitution_marker(name)?;

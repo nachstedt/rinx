@@ -1,11 +1,11 @@
 use crate::{CScope, ProgramScope, PythonScope};
-use rusty_sphinx_ast::{Domain, TargetSearchOrder};
+use rinx_ast::{Domain, TargetSearchOrder};
 
 /// The scope for every domain, owned as one unit and threaded through both
 /// the analyzer's indexing traversal (`index_nodes`/`index_domain_object`)
 /// and the renderer's matching render traversal (`render_domain_object`),
 /// as well as through reference resolution
-/// (`rusty_sphinx_renderer::resolution::domain_object::DomainObjectResolver::resolve`)
+/// (`rinx_renderer::resolution::domain_object::DomainObjectResolver::resolve`)
 /// — one scope argument/field regardless of how many domains exist, instead
 /// of growing one parameter per domain everywhere a scope is needed.
 ///
@@ -42,7 +42,7 @@ impl Scope {
     /// `Domain::Std` has no tiered scope search of its own — `:option:`
     /// resolution is a distinct ambient-program/global-fallback/embedded-
     /// program search over `ProjectIndex::domain_objects` directly (see
-    /// `rusty_sphinx_renderer::resolution::option::OptionResolver`), which
+    /// `rinx_renderer::resolution::option::OptionResolver`), which
     /// never calls this method. The arm below exists purely to keep this
     /// match exhaustive as `Domain` gains variants; it is not exercised by
     /// `:option:` reference resolution in practice.

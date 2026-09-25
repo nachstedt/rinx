@@ -12,8 +12,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use minijinja::{Environment, Value, context};
-use rusty_sphinx_ast::{EntityBody, EntityId, FieldMutationMode};
-use rusty_sphinx_index::{AppliedFieldUpdate, AppliedRelationUpdate};
+use rinx_ast::{EntityBody, EntityId, FieldMutationMode};
+use rinx_index::{AppliedFieldUpdate, AppliedRelationUpdate};
 
 use crate::RenderCtx;
 
@@ -279,7 +279,7 @@ fn justification_html(update_index: usize, ctx: &mut RenderCtx<'_>) -> String {
 /// Keyed the same way the value namespaces are, so `sections.foo_bar` and
 /// `labels.sections.foo_bar` always line up.
 fn declared_labels(
-    entity_type: Option<&rusty_sphinx_entity::EntityType>,
+    entity_type: Option<&rinx_entity::EntityType>,
     type_name: &str,
     ctx: &RenderCtx<'_>,
 ) -> Value {
@@ -320,7 +320,7 @@ fn declared_labels(
 
 /// Turns a map of relation name to ids into `{name: [{id, href}]}`.
 fn link_namespace(
-    relations: &BTreeMap<String, Vec<rusty_sphinx_ast::EntityId>>,
+    relations: &BTreeMap<String, Vec<rinx_ast::EntityId>>,
     ctx: &RenderCtx<'_>,
 ) -> BTreeMap<String, Vec<Value>> {
     relations
@@ -355,7 +355,7 @@ fn template_key(name: &str) -> String {
 }
 
 /// Renders body nodes to an HTML string.
-fn render_nodes_to_html(nodes: &[rusty_sphinx_ast::Node], ctx: &mut RenderCtx<'_>) -> String {
+fn render_nodes_to_html(nodes: &[rinx_ast::Node], ctx: &mut RenderCtx<'_>) -> String {
     let mut html = String::new();
     super::super::render_nodes(&mut html, nodes, ctx);
     html

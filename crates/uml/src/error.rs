@@ -2,13 +2,13 @@
 
 use std::fmt;
 
-use rusty_sphinx_ast::DiagnosticCode;
+use rinx_ast::DiagnosticCode;
 
 use crate::assemble::AssemblyError;
 
 /// A template that could not be expanded.
 ///
-/// Carries no [`Span`](rusty_sphinx_ast::Span): the caller holds the diagram
+/// Carries no [`Span`](rinx_ast::Span): the caller holds the diagram
 /// node and knows where it was written, and a template error's *own* line is
 /// relative to the template rather than to the document. Keeping the position
 /// with the caller is what lets the renderer report against the directive.
@@ -80,7 +80,7 @@ impl fmt::Display for UmlError {
             Self::UnknownConfig(name) => write!(
                 f,
                 "no PlantUML preamble named '{name}' is declared; add it under [uml_configs] in \
-                 the site's rusty_sphinx.toml"
+                 the site's rinx.toml"
             ),
             Self::EmptyDiagram => write!(
                 f,
@@ -155,7 +155,7 @@ impl fmt::Display for FlowError {
             Self::UnknownConfig(name) => write!(
                 f,
                 "no PlantUML preamble named '{name}' is declared; add it under [uml_configs] \
-                 in the site's rusty_sphinx.toml"
+                 in the site's rinx.toml"
             ),
         }
     }
@@ -221,7 +221,7 @@ impl fmt::Display for SequenceError {
             Self::UnknownConfig(name) => write!(
                 f,
                 "no PlantUML preamble named '{name}' is declared; add it under [uml_configs] \
-                 in the site's rusty_sphinx.toml"
+                 in the site's rinx.toml"
             ),
             Self::Truncated { shown, total } => write!(
                 f,

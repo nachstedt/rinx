@@ -2,7 +2,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, ListItem, Node, Span, TableCell, TableRow, TableSource,
     TableWidths,
 };
@@ -183,7 +183,7 @@ fn malformed_list_table(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Domain, InlineNode, TableAlign, TargetName};
+    use rinx_ast::{Domain, InlineNode, TableAlign, TargetName};
 
     fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
         let mut adornment_order = Vec::new();

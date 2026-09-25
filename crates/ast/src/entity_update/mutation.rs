@@ -27,7 +27,7 @@ pub enum FieldMutationMode {
 /// entity its target resolves to.
 ///
 /// The value is kept as raw, unconverted text (folded into [`FieldMutationMode`]):
-/// the matched entity's declared type — and so the [`rusty_sphinx_entity::AttributeType`]
+/// the matched entity's declared type — and so the [`rinx_entity::AttributeType`]
 /// the text must fit — is only known once a specific entity is matched, at
 /// apply time, and a filter target may match several types at once.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

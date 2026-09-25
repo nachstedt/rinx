@@ -2,10 +2,10 @@
 //! one process reading RST from stdin, for low-latency editor use.
 
 use anyhow::{Context, Result};
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_parser as parser;
-use rusty_sphinx_renderer::{self as renderer, config};
+use rinx_analyzer as analyzer;
+use rinx_ast as ast;
+use rinx_parser as parser;
+use rinx_renderer::{self as renderer, config};
 use std::fs;
 use std::io::{self, Read};
 
@@ -67,7 +67,7 @@ pub(super) fn process_preview(
     let mut index = if let Some(json) = index_json {
         serde_json::from_str(json).context("Failed to deserialize global index")?
     } else {
-        rusty_sphinx_index::ProjectIndex::default()
+        rinx_index::ProjectIndex::default()
     };
 
     let local_index = analyzer::analyze(&doc);
@@ -249,7 +249,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_entity::EntitySchema;
+    use rinx_entity::EntitySchema;
     use std::collections::BTreeMap;
 
     /// A loader rooted at a directory holding no CSV files, for the tests

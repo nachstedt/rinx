@@ -60,7 +60,7 @@ impl Diagnostic {
     /// A diagnostic at `span` when one is known, and an unpositioned one
     /// otherwise — the shape every parser call site has, since a nested parse
     /// of synthetic content yields `None` from
-    /// [`ParseCtx`](../../rusty_sphinx_parser/index.html)'s span helpers.
+    /// [`ParseCtx`](../../rinx_parser/index.html)'s span helpers.
     #[must_use]
     pub fn at(code: DiagnosticCode, message: impl Into<String>, span: Option<Span>) -> Self {
         Self {

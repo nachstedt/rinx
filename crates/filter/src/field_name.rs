@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 /// otherwise be unreachable from a filter.
 ///
 /// Deserialization re-validates, following the "parse, don't validate" pattern
-/// `rusty_sphinx_ast::HashedContent` sets: an [`Expr`](crate::Expr) is stored
+/// `rinx_ast::HashedContent` sets: an [`Expr`](crate::Expr) is stored
 /// in a `.ast` file, so a hand-edited one cannot smuggle in a name the parser
 /// would have rejected.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]

@@ -9,13 +9,11 @@
 
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, Node, walk_nodes,
-};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, Node, walk_nodes};
 
 use super::DocumentDiagnostics;
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_entity::EntitySchema;
+use rinx_index::{EntityRecord, ProjectIndex};
 
 /// Records one entity in the document-local index.
 pub(crate) fn index_entity(entity: &EntityBody, doc_path: &str, index: &mut ProjectIndex) {
@@ -211,7 +209,7 @@ pub(crate) fn collect_schema_mismatches(
             diagnostics: vec![entity_diagnostic(
                 DiagnosticCode::EntitySchemaMismatch,
                 format!(
-                    "document '{path}' was parsed against a different entity schema than this build is using; check that every rusty_sphinx_library and the site name the same entity_schema"
+                    "document '{path}' was parsed against a different entity schema than this build is using; check that every rinx_library and the site name the same entity_schema"
                 ),
             )],
         })

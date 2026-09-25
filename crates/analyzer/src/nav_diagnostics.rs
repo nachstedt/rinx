@@ -6,16 +6,16 @@
 //! by the `index` subcommand.
 //!
 //! Every diagnostic is attached to the document whose line caused it, carrying
-//! that line's span — which is why [`rusty_sphinx_ast::TocEntry`] keeps a span
+//! that line's span — which is why [`rinx_ast::TocEntry`] keeps a span
 //! all the way into the serialized index. Suppression is applied by the
 //! reporter, never here: this phase records everything it finds, exactly as
 //! `docs/decisions/003-diagnostics.md` requires.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Document};
-use rusty_sphinx_index::ProjectIndex;
-use rusty_sphinx_toctree::{TocTarget, UnmatchedKind, expand_toctree};
+use rinx_ast::{Diagnostic, DiagnosticCode, Document};
+use rinx_index::ProjectIndex;
+use rinx_toctree::{TocTarget, UnmatchedKind, expand_toctree};
 
 /// The Sphinx metadata field an author writes to say a document is
 /// deliberately unreachable.
@@ -140,7 +140,7 @@ fn is_orphan_warning_warranted(doc: &Document, index: &ProjectIndex) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Directive, Node, TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
+    use rinx_ast::{Directive, Node, TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
 
     fn toctree_node(entries: Vec<TocEntry>, glob: bool) -> Node {
         let mut options = ToctreeOptions::default();
@@ -160,11 +160,8 @@ mod tests {
 
     /// Builds the index for `docs` and collects their diagnostics.
     fn diagnose(docs: &[Document]) -> Vec<DocumentDiagnostics> {
-        let index = super::super::build_project_index(
-            docs,
-            "index",
-            &rusty_sphinx_entity::EntitySchema::empty(),
-        );
+        let index =
+            super::super::build_project_index(docs, "index", &rinx_entity::EntitySchema::empty());
         collect_nav_diagnostics(docs, &index)
     }
 

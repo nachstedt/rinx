@@ -4,7 +4,7 @@
 //! `super::inline_domain_roles_py`'s line count.
 
 use crate::{parse, parse_with_domain};
-use rusty_sphinx_ast::{
+use rinx_ast::{
     CObjectType, Domain, InlineNode, Node, ObjectType, PyObjectType, TargetSearchOrder,
 };
 
@@ -40,7 +40,7 @@ fn test_parse_bare_func_role_resolves_via_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -65,7 +65,7 @@ fn test_parse_prefixed_func_role_ignores_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
         assert!(
@@ -76,7 +76,7 @@ fn test_parse_prefixed_func_role_ignores_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -102,7 +102,7 @@ fn test_parse_bare_mod_role_resolves_via_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -127,7 +127,7 @@ fn test_parse_prefixed_mod_role_ignores_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -152,7 +152,7 @@ fn test_parse_mod_role_with_bang_prefix_suppresses_link_end_to_end() {
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -178,7 +178,7 @@ fn test_parse_bare_data_role_resolves_via_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -205,7 +205,7 @@ fn test_parse_prefixed_const_role_ignores_default_domain_and_matches_data_target
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -230,7 +230,7 @@ fn test_parse_data_role_with_bang_prefix_suppresses_link_end_to_end() {
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -256,7 +256,7 @@ fn test_parse_bare_meth_role_resolves_via_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -281,7 +281,7 @@ fn test_parse_prefixed_meth_role_ignores_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -306,7 +306,7 @@ fn test_parse_meth_role_with_bang_prefix_suppresses_link_end_to_end() {
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -332,7 +332,7 @@ fn test_parse_bare_class_role_resolves_via_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -357,7 +357,7 @@ fn test_parse_prefixed_class_role_ignores_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -383,7 +383,7 @@ fn test_parse_bare_attr_role_resolves_via_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     } else {
@@ -408,7 +408,7 @@ fn test_parse_prefixed_attr_role_ignores_default_domain() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -451,7 +451,7 @@ fn test_parse_attr_role_with_bang_prefix_suppresses_link_end_to_end() {
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -476,7 +476,7 @@ fn test_parse_func_role_with_tilde_prefix_shortens_display_end_to_end() {
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {
@@ -495,13 +495,13 @@ fn test_parse_func_role_with_call_parens_resolves_the_bare_name_end_to_end() {
     if let Node::Paragraph(inlines) = &doc.nodes[0] {
         assert!(
             without_spans(inlines).contains(&InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                object_type: ObjectType::C(rinx_ast::CObjectType::Function),
                 name: "Py_TYPE".to_string(),
                 display: "Py_TYPE()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             })
         );
     } else {

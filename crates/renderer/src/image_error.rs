@@ -9,7 +9,7 @@
 //! Modelled like [`crate::MathError`] and [`crate::HighlightError`], the other
 //! two render-time failures, so the worker formats all three the same way.
 
-use rusty_sphinx_ast::{DiagnosticCode, Span};
+use rinx_ast::{DiagnosticCode, Span};
 
 /// An image whose `:loading: embed` could not be honoured.
 #[derive(Debug, Clone, PartialEq, Eq)]

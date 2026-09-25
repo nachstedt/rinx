@@ -3,7 +3,7 @@
 //! domain or scope handling.
 
 use super::*;
-use rusty_sphinx_ast::{InlineNode, ObjectType, PyObjectType, TableSource, TargetSearchOrder};
+use rinx_ast::{InlineNode, ObjectType, PyObjectType, TableSource, TargetSearchOrder};
 
 #[test]
 fn test_analyze_returns_default_index_for_empty_document() {
@@ -106,7 +106,7 @@ fn test_analyze_extracts_h1_title_as_plain_text_when_heading_has_domain_object_r
                     link: true,
                     search_order: TargetSearchOrder::LeastQualifiedFirst,
                     span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
+                    inventory: rinx_ast::InventorySelector::Any,
                 },
                 InlineNode::Text(" Module".to_string()),
             ],
@@ -129,7 +129,7 @@ fn test_analyze_registers_glossary_terms() {
     let doc = Document::new(
         "glossary.rst".to_string(),
         vec![Node::Directive(Directive::Glossary {
-            entries: vec![rusty_sphinx_ast::GlossaryEntry {
+            entries: vec![rinx_ast::GlossaryEntry {
                 terms: vec!["environment".to_string()],
                 definition: vec![],
             }],
@@ -154,7 +154,7 @@ fn test_analyze_registers_all_terms_in_multi_term_entry() {
     let doc = Document::new(
         "glossary.rst".to_string(),
         vec![Node::Directive(Directive::Glossary {
-            entries: vec![rusty_sphinx_ast::GlossaryEntry {
+            entries: vec![rinx_ast::GlossaryEntry {
                 terms: vec!["term 1".to_string(), "term 2".to_string()],
                 definition: vec![],
             }],
@@ -186,8 +186,8 @@ fn test_analyze_registers_target_nested_in_table_cell() {
         "test.rst".to_string(),
         vec![Node::Table {
             header_rows: vec![],
-            body_rows: vec![rusty_sphinx_ast::TableRow {
-                cells: vec![rusty_sphinx_ast::TableCell {
+            body_rows: vec![rinx_ast::TableRow {
+                cells: vec![rinx_ast::TableCell {
                     colspan: 1,
                     rowspan: 1,
                     content: vec![Node::Target {
@@ -303,8 +303,8 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
             align: None,
             classes: vec![],
             name: None,
-            header_rows: vec![rusty_sphinx_ast::TableRow {
-                cells: vec![rusty_sphinx_ast::TableCell {
+            header_rows: vec![rinx_ast::TableRow {
+                cells: vec![rinx_ast::TableCell {
                     colspan: 1,
                     rowspan: 1,
                     content: vec![Node::Target {
@@ -313,8 +313,8 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
                     }],
                 }],
             }],
-            body_rows: vec![rusty_sphinx_ast::TableRow {
-                cells: vec![rusty_sphinx_ast::TableCell {
+            body_rows: vec![rinx_ast::TableRow {
+                cells: vec![rinx_ast::TableCell {
                     colspan: 1,
                     rowspan: 1,
                     content: vec![Node::Target {
@@ -342,9 +342,9 @@ fn test_analyze_descends_into_table_directive_header_and_body_cells() {
 
 /// A code block carrying `name`, with every other option left at its default.
 fn code_block_named(name: Option<&str>) -> Node {
-    Node::Directive(Directive::CodeBlock(rusty_sphinx_ast::CodeBlock {
-        source: rusty_sphinx_ast::CodeBlockSource::CodeBlock,
-        language: rusty_sphinx_ast::CodeLanguage::parse("python"),
+    Node::Directive(Directive::CodeBlock(rinx_ast::CodeBlock {
+        source: rinx_ast::CodeBlockSource::CodeBlock,
+        language: rinx_ast::CodeLanguage::parse("python"),
         content: "x = 1".to_string(),
         caption: None,
         name: name.map(TargetName::new),
@@ -390,18 +390,16 @@ fn test_analyze_code_block_without_name_registers_no_target() {
 /// An `.. image::` carrying `name`, with every other option left at its
 /// default.
 fn image_named(name: Option<&str>) -> Node {
-    let mut options =
-        rusty_sphinx_ast::ImageOptions::new(rusty_sphinx_ast::ImageUri::new("logo.png"));
+    let mut options = rinx_ast::ImageOptions::new(rinx_ast::ImageUri::new("logo.png"));
     options.name = name.map(TargetName::new);
     Node::Directive(Directive::Image(Box::new(options)))
 }
 
 /// A `.. figure::` carrying `name` on its image and `legend` as its body.
 fn figure_named(name: Option<&str>, legend: Vec<Node>) -> Node {
-    let mut options =
-        rusty_sphinx_ast::ImageOptions::new(rusty_sphinx_ast::ImageUri::new("logo.png"));
+    let mut options = rinx_ast::ImageOptions::new(rinx_ast::ImageUri::new("logo.png"));
     options.name = name.map(TargetName::new);
-    let mut figure = rusty_sphinx_ast::Figure::new(options);
+    let mut figure = rinx_ast::Figure::new(options);
     figure.legend = legend;
     Node::Directive(Directive::Figure(Box::new(figure)))
 }
@@ -478,25 +476,23 @@ fn test_analyze_indexes_targets_inside_a_figure_legend() {
 
 /// A `.. dropdown::` carrying `name` and `body`.
 fn dropdown_named(name: Option<&str>, body: Vec<Node>) -> Node {
-    Node::Directive(Directive::Dropdown(Box::new(rusty_sphinx_ast::Dropdown {
+    Node::Directive(Directive::Dropdown(Box::new(rinx_ast::Dropdown {
         name: name.map(TargetName::new),
         body,
-        ..rusty_sphinx_ast::Dropdown::new()
+        ..rinx_ast::Dropdown::new()
     })))
 }
 
 /// An `.. entity-table::` carrying `name`.
 fn entity_table_named(name: Option<&str>) -> Node {
-    let mut table =
-        rusty_sphinx_ast::EntityTable::new(rusty_sphinx_ast::EntityTableSource::EntityTable);
+    let mut table = rinx_ast::EntityTable::new(rinx_ast::EntityTableSource::EntityTable);
     table.name = name.map(TargetName::new);
     Node::Directive(Directive::EntityTable(Box::new(table)))
 }
 
 /// A diagram directive carrying `name`.
 fn diagram_named(name: Option<&str>) -> Node {
-    let mut uml =
-        rusty_sphinx_ast::Uml::new(rusty_sphinx_ast::UmlSource::PlantUml, "A -> B".to_string());
+    let mut uml = rinx_ast::Uml::new(rinx_ast::UmlSource::PlantUml, "A -> B".to_string());
     uml.name = name.map(TargetName::new);
     Node::Directive(Directive::Uml(Box::new(uml)))
 }
@@ -539,7 +535,7 @@ fn test_analyze_registers_a_diagram_name_nested_in_an_admonition() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::Admonition {
-            kind: rusty_sphinx_ast::AdmonitionKind::Note,
+            kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
             body: vec![diagram_named(Some("nested-flow"))],
@@ -631,11 +627,11 @@ fn test_analyze_indexes_targets_inside_a_dropdown_body() {
 }
 
 fn contents_named(name: Option<&str>) -> Node {
-    let options = rusty_sphinx_ast::ContentsOptions {
+    let options = rinx_ast::ContentsOptions {
         name: name.map(TargetName::new),
-        ..rusty_sphinx_ast::ContentsOptions::default()
+        ..rinx_ast::ContentsOptions::default()
     };
-    Node::Directive(Directive::Contents(rusty_sphinx_ast::Contents {
+    Node::Directive(Directive::Contents(rinx_ast::Contents {
         title: None,
         options,
     }))
@@ -674,9 +670,9 @@ fn test_analyze_contents_without_name_registers_no_target() {
 #[test]
 fn test_analyze_records_a_sectnum_directives_options() {
     // Given
-    let options = rusty_sphinx_ast::SectnumOptions {
+    let options = rinx_ast::SectnumOptions {
         prefix: "Appendix ".to_string(),
-        ..rusty_sphinx_ast::SectnumOptions::default()
+        ..rinx_ast::SectnumOptions::default()
     };
     let doc = Document::new(
         "test.rst".to_string(),
@@ -697,11 +693,11 @@ fn test_analyze_finds_a_sectnum_directive_nested_in_an_admonition_body() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::Admonition {
-            kind: rusty_sphinx_ast::AdmonitionKind::Note,
+            kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
             body: vec![Node::Directive(Directive::Sectnum(
-                rusty_sphinx_ast::SectnumOptions::default(),
+                rinx_ast::SectnumOptions::default(),
             ))],
         })],
     );
@@ -716,13 +712,13 @@ fn test_analyze_finds_a_sectnum_directive_nested_in_an_admonition_body() {
 #[test]
 fn test_analyze_keeps_the_last_sectnum_directive_when_a_document_writes_two() {
     // Given
-    let first = rusty_sphinx_ast::SectnumOptions {
+    let first = rinx_ast::SectnumOptions {
         prefix: "First ".to_string(),
-        ..rusty_sphinx_ast::SectnumOptions::default()
+        ..rinx_ast::SectnumOptions::default()
     };
-    let last = rusty_sphinx_ast::SectnumOptions {
+    let last = rinx_ast::SectnumOptions {
         prefix: "Last ".to_string(),
-        ..rusty_sphinx_ast::SectnumOptions::default()
+        ..rinx_ast::SectnumOptions::default()
     };
     let doc = Document::new(
         "test.rst".to_string(),
@@ -745,9 +741,9 @@ fn test_analyze_registers_a_flowcharts_name_as_a_target() {
     let doc = Document::new(
         "specs.rst".to_string(),
         vec![Node::Directive(Directive::EntityFlow(Box::new(
-            rusty_sphinx_ast::EntityFlow {
+            rinx_ast::EntityFlow {
                 name: Some(TargetName::new("requirement-flow")),
-                ..rusty_sphinx_ast::EntityFlow::new(rusty_sphinx_ast::EntityFlowSource::EntityFlow)
+                ..rinx_ast::EntityFlow::new(rinx_ast::EntityFlowSource::EntityFlow)
             },
         )))],
     );
@@ -769,14 +765,12 @@ fn test_analyze_registers_a_sequence_diagrams_name_as_a_target() {
     let doc = Document::new(
         "specs.rst".to_string(),
         vec![Node::Directive(Directive::EntitySequence(Box::new(
-            rusty_sphinx_ast::EntitySequence {
+            rinx_ast::EntitySequence {
                 name: Some(TargetName::new("startup-sequence")),
-                ..rusty_sphinx_ast::EntitySequence::new(
-                    rusty_sphinx_ast::EntitySequenceSource::EntitySequence,
-                    rusty_sphinx_ast::NonEmptyVector::single(
-                        rusty_sphinx_ast::EntityId::new("COMP_UI").unwrap(),
-                    ),
-                    rusty_sphinx_ast::NonEmptyVector::single("sends".to_string()),
+                ..rinx_ast::EntitySequence::new(
+                    rinx_ast::EntitySequenceSource::EntitySequence,
+                    rinx_ast::NonEmptyVector::single(rinx_ast::EntityId::new("COMP_UI").unwrap()),
+                    rinx_ast::NonEmptyVector::single("sends".to_string()),
                 )
             },
         )))],
@@ -799,11 +793,11 @@ fn test_analyze_registers_a_bar_charts_name_as_a_target() {
     let doc = Document::new(
         "report.rst".to_string(),
         vec![Node::Directive(Directive::EntityBar(Box::new(
-            rusty_sphinx_ast::EntityBar {
+            rinx_ast::EntityBar {
                 name: Some(TargetName::new("authors-chart")),
-                ..rusty_sphinx_ast::EntityBar::new(
-                    rusty_sphinx_ast::EntityBarSource::NeedBar,
-                    rusty_sphinx_ast::BarGrid::default(),
+                ..rinx_ast::EntityBar::new(
+                    rinx_ast::EntityBarSource::NeedBar,
+                    rinx_ast::BarGrid::default(),
                 )
             },
         )))],
@@ -951,10 +945,9 @@ fn test_analyze_records_the_title_of_a_heading_labelled_inside_a_directive_body(
 }
 
 fn figure(caption: Option<&str>, name: Option<&str>) -> Node {
-    let mut image =
-        rusty_sphinx_ast::ImageOptions::new(rusty_sphinx_ast::ImageUri::new("logo.png"));
+    let mut image = rinx_ast::ImageOptions::new(rinx_ast::ImageUri::new("logo.png"));
     image.name = name.map(TargetName::new);
-    let mut figure = rusty_sphinx_ast::Figure::new(image);
+    let mut figure = rinx_ast::Figure::new(image);
     figure.caption = caption.map(|text| vec![InlineNode::Text(text.to_string())]);
     Node::Directive(Directive::Figure(Box::new(figure)))
 }
@@ -1066,9 +1059,9 @@ fn test_analyze_records_a_code_block_caption_for_its_name() {
 #[test]
 fn test_analyze_records_an_entity_anchor_for_its_target() {
     // Given — an entity renders at `entity-<id>`, not at its lowercased name
-    let body = rusty_sphinx_ast::EntityBody {
+    let body = rinx_ast::EntityBody {
         type_name: "req".to_string(),
-        id: rusty_sphinx_ast::EntityId::new("REQ_001").unwrap(),
+        id: rinx_ast::EntityId::new("REQ_001").unwrap(),
         attributes: std::collections::BTreeMap::new(),
         relations: std::collections::BTreeMap::new(),
         sections: vec![],

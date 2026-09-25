@@ -1,13 +1,13 @@
 //! The filesystem side of every file a directive reads while parsing.
 //!
-//! `rusty_sphinx_parser` performs no I/O of its own, so it asks for a file's
+//! `rinx_parser` performs no I/O of its own, so it asks for a file's
 //! contents through a [`parser::ParseFileLoader`]. This is the implementation
 //! the CLI supplies: paths resolve against the directory of the file the
 //! directive was written in — the document itself, or, for a directive inside
 //! an included fragment, that fragment — exactly as docutils resolves them.
 //!
 //! Under Bazel that directory is inside the action's sandbox, so the file is
-//! only there if it was declared — `rusty_sphinx_library`'s `parse_data`
+//! only there if it was declared — `rinx_library`'s `parse_data`
 //! attribute is what puts it in the parse action's inputs.
 //!
 //! An unreadable file is recorded as well as diagnosed, because the parser
@@ -17,7 +17,7 @@
 //! [`DocumentRelativeFiles::failures`] is what lets the `parse` subcommand
 //! turn that into a failed build, the same way a missing diagram image does.
 
-use rusty_sphinx_parser::{self as parser, LoadedFile, ParseFileLoader};
+use rinx_parser::{self as parser, LoadedFile, ParseFileLoader};
 use std::cell::RefCell;
 use std::path::PathBuf;
 
@@ -56,7 +56,7 @@ impl ParseFileLoader for DocumentRelativeFiles {
         // fragment, so a fragment can name its neighbours without knowing
         // which document pulled it in.
         let anchor = relative_to.unwrap_or(&self.doc_path);
-        let resolved = rusty_sphinx_ast::resolve_from_document(path, anchor);
+        let resolved = rinx_ast::resolve_from_document(path, anchor);
         let id = resolved.to_string_lossy().into_owned();
         match std::fs::read_to_string(&resolved) {
             Ok(text) => Ok(LoadedFile { id, text }),
@@ -74,7 +74,7 @@ impl ParseFileLoader for DocumentRelativeFiles {
 
 /// A [`parser::ParseCtx`] for a document that can read the files it names.
 pub(super) fn parse_ctx(
-    default_domain: rusty_sphinx_ast::Domain,
+    default_domain: rinx_ast::Domain,
     files: &DocumentRelativeFiles,
 ) -> parser::ParseCtx<'_> {
     parser::ParseCtx::new(default_domain, files)
@@ -83,12 +83,12 @@ pub(super) fn parse_ctx(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     /// A scratch directory holding `files`, plus the source-root-relative
     /// document path to resolve against it.
     fn temp_document(name: &str, files: &[(&str, &str)]) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("rusty_sphinx_parse_files_{name}"));
+        let dir = std::env::temp_dir().join(format!("rinx_parse_files_{name}"));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("create temp dir");
         for (relative, contents) in files {

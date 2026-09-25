@@ -1,7 +1,7 @@
 //! Rendering `.. entity-sequence::` / `.. needsequence::` — a generated
 //! sequence diagram.
 //!
-//! The flowchart's shape exactly: `rusty_sphinx_uml::build_sequence` is called
+//! The flowchart's shape exactly: `rinx_uml::build_sequence` is called
 //! once per directive, its hash names the compiled SVG the page points at, and
 //! its text goes back on the render output for the same process to write as
 //! `<hash>.puml`. Everything visible is [`super::diagram_figure`], so a
@@ -14,8 +14,8 @@
 
 use std::fmt::Write;
 
-use rusty_sphinx_ast::EntitySequence;
-use rusty_sphinx_uml::{SequenceDrawing, UmlContext, build_sequence};
+use rinx_ast::EntitySequence;
+use rinx_uml::{SequenceDrawing, UmlContext, build_sequence};
 
 use crate::RenderCtx;
 use crate::uml_error::DiagramError;

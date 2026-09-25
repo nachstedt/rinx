@@ -2,7 +2,7 @@
 
 `sphinx-9.1.0.inv` is the `objects.inv` a real `sphinx-build -b html` 9.1.0
 wrote for the project in `sphinx-9.1.0-src/` (plus an empty `logo.png`). It is
-the compatibility bar for `rusty_sphinx_inventory`: the reader must load it and
+the compatibility bar for `rinx_inventory`: the reader must load it and
 the writer must produce what Sphinx's own reader accepts.
 
 Regenerate with:

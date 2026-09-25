@@ -7,7 +7,7 @@ mod scope_tests;
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{InventorySelector, ObjectType};
+use rinx_ast::{InventorySelector, ObjectType};
 
 use super::external_link::write_external_link;
 use crate::resolution::{DomainObjectResolution, DomainObjectResolver, unresolved_kind};
@@ -22,10 +22,10 @@ pub(super) struct DomainObjectRef<'a> {
     pub name: &'a str,
     pub display: &'a str,
     pub link: bool,
-    pub search_order: rusty_sphinx_ast::TargetSearchOrder,
+    pub search_order: rinx_ast::TargetSearchOrder,
     /// Where the role was written, carried through so a broken or ambiguous
     /// reference can name its own line rather than just the document.
-    pub span: Option<rusty_sphinx_ast::Span>,
+    pub span: Option<rinx_ast::Span>,
     /// Which sites may define the object — see [`InventorySelector`].
     pub inventory: &'a InventorySelector,
 }
@@ -63,7 +63,7 @@ pub(super) fn render_inline_domain_object_reference(
     resolver: &DomainObjectResolver<'_>,
     doc_path: &str,
     diagnostics: &mut DomainObjectDiagnostics<'_>,
-    scope: &rusty_sphinx_scope::Scope,
+    scope: &rinx_scope::Scope,
 ) {
     let DomainObjectRef {
         object_type,
@@ -109,7 +109,7 @@ pub(super) fn render_inline_domain_object_reference(
                     span,
                 });
             }
-            let anchor = rusty_sphinx_ast::build_domain_object_key(matched_type, &qualified_name);
+            let anchor = rinx_ast::build_domain_object_key(matched_type, &qualified_name);
             let current_dir = std::path::Path::new(doc_path)
                 .parent()
                 .unwrap_or_else(|| std::path::Path::new(""));

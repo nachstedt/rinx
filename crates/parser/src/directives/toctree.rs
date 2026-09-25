@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, NumberedDepth, TargetName, TocEntry, Toctree,
     ToctreeFlag, ToctreeOptions,
 };
@@ -116,7 +116,7 @@ fn parse_numbered(
 /// `glob` comes from the directive's own `:glob:` option, which is why this
 /// runs only after the options are parsed: without it, `api/*` is an ordinary
 /// (if oddly named) document path, exactly as Sphinx treats it.
-fn parse_entry(line: &str, glob: bool, span: Option<rusty_sphinx_ast::Span>) -> TocEntry {
+fn parse_entry(line: &str, glob: bool, span: Option<rinx_ast::Span>) -> TocEntry {
     let (title, target) = match split_explicit_title(line) {
         Some((display, target)) if !display.is_empty() => (Some(display), target),
         Some((_, target)) => (None, target),
@@ -194,7 +194,7 @@ pub(super) fn parse_toctree(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Domain, Node};
+    use rinx_ast::{Domain, Node};
 
     /// Parses a directive body directly, bypassing the block dispatcher, for
     /// tests about `parse_toctree` itself rather than about recognition.

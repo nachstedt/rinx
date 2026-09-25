@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::AttributeValue;
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::AttributeValue;
+use rinx_entity::EntitySchema;
+use rinx_index::ProjectIndex;
 
 use super::*;
 use crate::snapshot::tests::{index_with, requirement};
@@ -272,7 +272,7 @@ fn requirement_drawing(
     title: &str,
     key: &str,
     uml: &str,
-) -> rusty_sphinx_index::EntityRecord {
+) -> rinx_index::EntityRecord {
     let mut record = requirement(doc_path, Some(title));
     record.uml.insert(key.to_string(), uml.to_string());
     record
@@ -406,8 +406,8 @@ fn test_imports_pulls_in_the_diagrams_of_a_relations_targets() {
     system.outgoing.insert(
         "links".to_string(),
         vec![
-            rusty_sphinx_ast::EntityId::new("COMP_A").unwrap(),
-            rusty_sphinx_ast::EntityId::new("COMP_B").unwrap(),
+            rinx_ast::EntityId::new("COMP_A").unwrap(),
+            rinx_ast::EntityId::new("COMP_B").unwrap(),
         ],
     );
     let index = index_with(vec![

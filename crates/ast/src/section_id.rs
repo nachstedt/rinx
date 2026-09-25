@@ -6,7 +6,7 @@
 //! outline so a toctree entry can link to it; the renderer emits that id on
 //! the `<h2>` the link lands on. If the two derivations ever drifted, every
 //! section link in the site would break silently — the same hazard
-//! [`rusty_sphinx_scope`] exists to prevent for domain objects.
+//! [`rinx_scope`] exists to prevent for domain objects.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

@@ -1,7 +1,7 @@
 Inline Roles
 ============
 
-This page demonstrates the interpreted text roles supported by Rusty-Sphinx.
+This page demonstrates the interpreted text roles supported by Rinx.
 
 Supported Roles
 ---------------

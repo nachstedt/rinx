@@ -1,5 +1,5 @@
-use rusty_sphinx_ast::{Directive, Node};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_ast::{Directive, Node};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
 use crate::parse_with_ctx;
@@ -18,9 +18,9 @@ fn schema() -> EntitySchema {
     .unwrap()
 }
 
-fn parse(rst: &str) -> rusty_sphinx_ast::Document {
+fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).with_schema(&schema);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
     parse_with_ctx("d", rst, &ctx)
 }
 
@@ -54,7 +54,7 @@ fn test_a_section_outside_an_entity_is_reported_and_kept() {
     ));
     assert_eq!(
         doc.diagnostics[0].code,
-        rusty_sphinx_ast::DiagnosticCode::EntitySectionOutsideEntity
+        rinx_ast::DiagnosticCode::EntitySectionOutsideEntity
     );
 }
 
@@ -75,8 +75,8 @@ fn test_a_name_no_type_declares_is_left_to_the_ordinary_chain() {
         doc.diagnostics
             .iter()
             .map(|d| d.code)
-            .collect::<Vec<rusty_sphinx_ast::DiagnosticCode>>(),
-        vec![rusty_sphinx_ast::DiagnosticCode::DirectiveUnknown],
+            .collect::<Vec<rinx_ast::DiagnosticCode>>(),
+        vec![rinx_ast::DiagnosticCode::DirectiveUnknown],
     );
 }
 
@@ -92,14 +92,14 @@ fn test_an_argument_on_a_section_is_diagnosed() {
     assert!(
         doc.diagnostics
             .iter()
-            .any(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityMalformedArgument)
+            .any(|d| d.code == rinx_ast::DiagnosticCode::EntityMalformedArgument)
     );
 }
 
 #[test]
 fn test_a_section_name_is_inert_without_a_schema() {
     // Given
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
 
     // When
     let doc = parse_with_ctx("d", ".. rationale::\n\n   Because.\n", &ctx);
@@ -113,7 +113,7 @@ fn test_a_section_name_is_inert_without_a_schema() {
         doc.diagnostics
             .iter()
             .map(|d| d.code)
-            .collect::<Vec<rusty_sphinx_ast::DiagnosticCode>>(),
-        vec![rusty_sphinx_ast::DiagnosticCode::DirectiveUnknown],
+            .collect::<Vec<rinx_ast::DiagnosticCode>>(),
+        vec![rinx_ast::DiagnosticCode::DirectiveUnknown],
     );
 }

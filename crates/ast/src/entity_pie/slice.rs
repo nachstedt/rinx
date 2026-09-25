@@ -1,6 +1,6 @@
 //! One wedge of a pie chart: its label, and where its size comes from.
 
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::chart_value::ChartValue;
@@ -58,7 +58,7 @@ mod tests {
     #[test]
     fn test_a_filter_slice_carries_the_expression_it_counts() {
         // Given
-        let expr = rusty_sphinx_filter::parse_filter(r#"type == "req""#).unwrap();
+        let expr = rinx_filter::parse_filter(r#"type == "req""#).unwrap();
 
         // When
         let slice = PieSlice::from_filter(Some(expr.clone()));
@@ -123,8 +123,7 @@ mod tests {
     #[test]
     fn test_a_slice_survives_a_serialization_round_trip() {
         // Given — the node is written to a `.ast` and read back to render
-        let mut slice =
-            PieSlice::from_filter(Some(rusty_sphinx_filter::parse_filter("asil").unwrap()));
+        let mut slice = PieSlice::from_filter(Some(rinx_filter::parse_filter("asil").unwrap()));
         slice.label = Some("ASIL D".to_string());
 
         // When

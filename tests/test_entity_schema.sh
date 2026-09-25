@@ -4,11 +4,11 @@
 #
 # Two directions, because the schema reaches two different phases:
 #
-#   1. Removing it from `rusty_sphinx_library` must make `.. req::` an unknown
+#   1. Removing it from `rinx_library` must make `.. req::` an unknown
 #      directive again — the parser recognises an entity only through the
 #      schema. The example site sets `strict_links`, so the references to those
 #      entities then fail the build outright rather than degrading quietly.
-#   2. Removing it from `rusty_sphinx_site` while the library still declares it
+#   2. Removing it from `rinx_site` while the library still declares it
 #      must be *reported*, not silently accepted: the documents were parsed
 #      against a vocabulary the index is not using, which is what
 #      `entity.schema-mismatch` exists to catch.

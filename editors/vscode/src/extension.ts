@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { BazelScanner, DiscoveredConfig } from './bazel';
 
-const outputChannel = vscode.window.createOutputChannel('Rusty-Sphinx');
+const outputChannel = vscode.window.createOutputChannel('Rinx');
 
 function log(msg: string) {
     outputChannel.appendLine(`[${new Date().toISOString()}] ${msg}`);
@@ -13,7 +13,7 @@ function log(msg: string) {
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         outputChannel,
-        vscode.commands.registerCommand('rusty-sphinx.showPreview', () => {
+        vscode.commands.registerCommand('rinx.showPreview', () => {
             PreviewPanel.createOrShow(context.extensionUri);
         })
     );
@@ -78,8 +78,8 @@ class PreviewPanel {
         }
 
         const panel = vscode.window.createWebviewPanel(
-            'rustySphinxPreview',
-            'Rusty-Sphinx Preview',
+            'rinxPreview',
+            'Rinx Preview',
             column || vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -99,7 +99,7 @@ class PreviewPanel {
 
         vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document === vscode.window.activeTextEditor?.document) {
-                const config = vscode.workspace.getConfiguration('rusty-sphinx');
+                const config = vscode.workspace.getConfiguration('rinx');
                 if (config.get('previewMode') === 'onType') {
                     this._scheduleUpdate();
                 }
@@ -152,7 +152,7 @@ class PreviewPanel {
         templatePath: string,
         indexPath: string
     }> {
-        const settings = vscode.workspace.getConfiguration('rusty-sphinx');
+        const settings = vscode.workspace.getConfiguration('rinx');
         const autoDiscover = settings.get<boolean>('autoDiscover') ?? true;
 
         let discovered = PreviewPanel._configCache.get(workspaceRoot);
@@ -170,7 +170,7 @@ class PreviewPanel {
                 selectedTarget = targets[0];
             } else if (targets.length > 1) {
                 selectedTarget = await vscode.window.showQuickPick(targets, {
-                    placeHolder: 'Multiple Rusty-Sphinx sites found. Select one for preview:'
+                    placeHolder: 'Multiple Rinx sites found. Select one for preview:'
                 });
             }
 
@@ -196,14 +196,14 @@ class PreviewPanel {
                         indexPath
                     };
                     log(`Auto-discovery succeeded: ${selectedTarget}`);
-                    vscode.window.setStatusBarMessage(`Rusty-Sphinx: Using ${selectedTarget}`, 3000);
+                    vscode.window.setStatusBarMessage(`Rinx: Using ${selectedTarget}`, 3000);
                 } else {
                     log('Auto-discovery failed: one or more paths could not be resolved');
                     discovered = null;
                 }
             } else {
                 log(targets.length === 0
-                    ? 'Auto-discovery failed: no rusty_sphinx_site target found (is this a Bazel workspace?)'
+                    ? 'Auto-discovery failed: no rinx_site target found (is this a Bazel workspace?)'
                     : 'Auto-discovery cancelled: user dismissed site selection');
                 discovered = null;
             }
@@ -211,7 +211,7 @@ class PreviewPanel {
 
             if (discovered === null) {
                 const action = await vscode.window.showWarningMessage(
-                    'Rusty-Sphinx: Auto-discovery failed. Falling back to settings. Check the Output panel for details.',
+                    'Rinx: Auto-discovery failed. Falling back to settings. Check the Output panel for details.',
                     'Show Logs'
                 );
                 if (action === 'Show Logs') {
@@ -221,8 +221,8 @@ class PreviewPanel {
         }
 
         return {
-            binaryPath: discovered?.binaryPath || settings.get<string>('binaryPath') || 'rusty-sphinx',
-            configPath: discovered?.configPath || this._getAbsolutePath(settings.get<string>('configPath') || 'rusty_sphinx.toml', workspaceRoot),
+            binaryPath: discovered?.binaryPath || settings.get<string>('binaryPath') || 'rinx',
+            configPath: discovered?.configPath || this._getAbsolutePath(settings.get<string>('configPath') || 'rinx.toml', workspaceRoot),
             templatePath: discovered?.templatePath || this._getAbsolutePath(settings.get<string>('templatePath') || 'templates/default.html', workspaceRoot),
             indexPath: discovered?.indexPath || this._getAbsolutePath(settings.get<string>('indexPath') || 'bazel-bin/Doc/site.project.index', workspaceRoot)
         };
@@ -262,8 +262,8 @@ class PreviewPanel {
             spawnErrorOccurred = true;
             if ((err as any).code === 'ENOENT') {
                 this._panel.webview.html = `<h1>Binary Not Found</h1>
-                    <p>The <code>rusty-sphinx</code> binary was not found at <code>${binaryPath}</code>.</p>
-                    <p>Please ensure <code>rusty-sphinx</code> is in your PATH or set the <code>rusty-sphinx.binaryPath</code> setting to the absolute path of the binary.</p>
+                    <p>The <code>rinx</code> binary was not found at <code>${binaryPath}</code>.</p>
+                    <p>Please ensure <code>rinx</code> is in your PATH or set the <code>rinx.binaryPath</code> setting to the absolute path of the binary.</p>
                     <hr>
                     <p>Current Workspace Root: <code>${workspaceRoot}</code></p>`;
             } else {

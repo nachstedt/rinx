@@ -5,7 +5,7 @@
 //! or passed. That is what lets page rendering stay a pure, cacheable step while
 //! test execution lives in a separate, opt-in Bazel target.
 
-use rusty_sphinx_ast::{DocTestBlock, DocTestTrim, HashedContent, LanguageName, ResolvedLanguage};
+use rinx_ast::{DocTestBlock, DocTestTrim, HashedContent, LanguageName, ResolvedLanguage};
 
 use crate::RenderCtx;
 use crate::blocks::code_block::{CodeLayout, render_code};
@@ -178,7 +178,7 @@ fn find_flag_comment(line: &str) -> Option<usize> {
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::with_ctx;
-    use rusty_sphinx_ast::{DocTestGroupSelector, HashedContent, NonEmptyVector};
+    use rinx_ast::{DocTestGroupSelector, HashedContent, NonEmptyVector};
 
     /// A single-selector group list for the default group.
     fn default_groups() -> NonEmptyVector<DocTestGroupSelector> {

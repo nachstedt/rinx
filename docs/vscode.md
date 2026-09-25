@@ -1,31 +1,31 @@
-# VS Code Extension Architecture for Rusty-Sphinx
+# VS Code Extension Architecture for Rinx
 
-This document outlines the proposed architecture for a high-performance VS Code extension providing live previews for `rusty-sphinx` documentation.
+This document outlines the proposed architecture for a high-performance VS Code extension providing live previews for `rinx` documentation.
 
 ## Core Philosophy
 
-The extension prioritizes **instant feedback** (sub-100ms latency) by bypassing the full Bazel build graph during content editing. It leverages the modular design of the `rusty-sphinx` binary to perform "dirty" but fast renders.
+The extension prioritizes **instant feedback** (sub-100ms latency) by bypassing the full Bazel build graph during content editing. It leverages the modular design of the `rinx` binary to perform "dirty" but fast renders.
 
 ## Architecture Overview
 
-The extension acts as an orchestrator between the VS Code editor, the `rusty_sphinx` CLI, and the Bazel build artifacts.
+The extension acts as an orchestrator between the VS Code editor, the `rinx` CLI, and the Bazel build artifacts.
 
 ### 1. Configuration
 
 The extension provides the following settings:
 
-- `rusty-sphinx.binaryPath`: Absolute path to the `rusty_sphinx` binary.
-- `rusty-sphinx.configPath`: Path to the `rusty_sphinx.toml` config file (auto-detected from workspace).
-- `rusty-sphinx.templatePath`: Path to the HTML template used for rendering.
-- `rusty-sphinx.indexPath`: Path to the project index (default: auto-detected from `bazel-bin`).
-- `rusty-sphinx.previewMode`: `onSave` or `onType` (default: `onType`).
+- `rinx.binaryPath`: Absolute path to the `rinx` binary.
+- `rinx.configPath`: Path to the `rinx.toml` config file (auto-detected from workspace).
+- `rinx.templatePath`: Path to the HTML template used for rendering.
+- `rinx.indexPath`: Path to the project index (default: auto-detected from `bazel-bin`).
+- `rinx.previewMode`: `onSave` or `onType` (default: `onType`).
 
 ### 2. The Preview Pipeline (As-You-Type)
 
 When the user edits a `.rst` file, the extension executes the following pipeline:
 
-1. **Parse**: The current editor content is piped into `rusty-sphinx parse`.
-2. **Local Analysis**: The resulting AST is analyzed locally using `rusty-sphinx index` (on just this one file) to extract current targets and the document title.
+1. **Parse**: The current editor content is piped into `rinx parse`.
+2. **Local Analysis**: The resulting AST is analyzed locally using `rinx index` (on just this one file) to extract current targets and the document title.
 3. **Index Merging**: The local data is merged into the "stale" global index loaded from the `bazel-bin` directory. This ensures same-file references are always correct.
 4. **Render**: The AST is rendered into HTML using the merged index.
 5. **Webview Update**: The HTML is pushed to a VS Code Webview panel.
@@ -60,7 +60,7 @@ The document describes "merging" a local single-file index into the global index
 The `render` subcommand needs `--config <config.toml>` and `--template <template.html>`. The extension must know where these files live. In Bazel projects, their paths are specified in `BUILD.bazel` and may use default labels like `@@//:templates/default.html`.
 
 **Recommendation**: The extension should auto-detect the config and template by:
-1. Searching for `rusty_sphinx.toml` upward from the active file.
+1. Searching for `rinx.toml` upward from the active file.
 2. Falling back to reasonable defaults or prompting the user.
 3. Exposing `configPath` and `templatePath` as settings for manual override.
 
@@ -74,9 +74,9 @@ The preview pipeline skips the PlantUML compilation step (which requires a JVM).
 
 ### Caveat 5: Process Spawn Overhead on Every Keystroke
 
-Spawning a new `rusty_sphinx` process for every keystroke (even with debouncing) incurs OS-level overhead: fork, exec, dynamic linker, argument parsing.
+Spawning a new `rinx` process for every keystroke (even with debouncing) incurs OS-level overhead: fork, exec, dynamic linker, argument parsing.
 
-**Recommendation**: Consider a **long-running server mode** for the binary. The extension would start `rusty_sphinx serve` once, then communicate via stdin/stdout JSON-RPC or a local socket. This eliminates per-request spawn costs and allows the binary to keep the global index in memory. This can be deferred to a later iteration — simple process spawning with ~50ms debounce will likely be fast enough for v1.
+**Recommendation**: Consider a **long-running server mode** for the binary. The extension would start `rinx serve` once, then communicate via stdin/stdout JSON-RPC or a local socket. This eliminates per-request spawn costs and allows the binary to keep the global index in memory. This can be deferred to a later iteration — simple process spawning with ~50ms debounce will likely be fast enough for v1.
 
 ### Caveat 6: No Initial Index Without a Prior Bazel Build
 
@@ -95,7 +95,7 @@ References into other sites (intersphinx, see `docs/intersphinx.md`) resolve in 
 
 The renderer uses `doc_path` (e.g., `library/os.rst`) to compute relative links for CSS, images, and cross-references. The extension must correctly compute this relative path from the workspace root or the Sphinx doc root — not use the absolute filesystem path.
 
-**Recommendation**: Derive `doc_path` by stripping the detected doc root (e.g., the directory containing `rusty_sphinx.toml`) from the absolute file path.
+**Recommendation**: Derive `doc_path` by stripping the detected doc root (e.g., the directory containing `rinx.toml`) from the absolute file path.
 
 ## Benefits
 
@@ -106,9 +106,9 @@ The renderer uses `doc_path` (e.g., `library/os.rst`) to compute relative links 
 
 ## Future Enhancements
 
-- **Long-Running Server Mode**: A `rusty_sphinx serve` command that keeps the index in memory and accepts render requests over a local socket. This eliminates process spawn overhead and enables sub-10ms feedback.
+- **Long-Running Server Mode**: A `rinx serve` command that keeps the index in memory and accepts render requests over a local socket. This eliminates process spawn overhead and enables sub-10ms feedback.
 - **Scroll Sync**: Bidirectional scrolling between the `.rst` editor and the preview.
-- **Error Highlighting**: Surfacing diagnostic warnings from the `rusty-sphinx` parser directly in the VS Code "Problems" tab.
+- **Error Highlighting**: Surfacing diagnostic warnings from the `rinx` parser directly in the VS Code "Problems" tab.
 - **Diagram Preview**: Optional PlantUML rendering on save for users who want to see diagrams in the preview.
 
 ## Development and Local Testing
@@ -131,9 +131,9 @@ To develop and debug the extension without publishing:
 
 ### 4. Packaging and Local Installation
 To test the extension as a "production" build:
-1.  **Package the extension**: Run `vsce package` inside `editors/vscode`. This generates a `.vsix` file (e.g., `rusty-sphinx-0.0.1.vsix`).
-2.  **Install locally**: Run `code --install-extension rusty-sphinx-0.0.1.vsix`.
-3.  **Configure**: Set the `rusty-sphinx.binaryPath` in your global VS Code settings to point to your locally built Rust binary.
+1.  **Package the extension**: Run `vsce package` inside `editors/vscode`. This generates a `.vsix` file (e.g., `rinx-0.0.1.vsix`).
+2.  **Install locally**: Run `code --install-extension rinx-0.0.1.vsix`.
+3.  **Configure**: Set the `rinx.binaryPath` in your global VS Code settings to point to your locally built Rust binary.
 
 ### 5. Bazel Integration (Optional)
 While standard VS Code development tools are recommended, the final packaging step can be integrated into Bazel using a `genrule` that invokes `vsce package`, ensuring that the extension version matches the project version.

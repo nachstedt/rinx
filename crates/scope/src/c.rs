@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::TargetSearchOrder;
+use rinx_ast::TargetSearchOrder;
 
 /// The `c`-domain's current scope while indexing/rendering, modeled as a
 /// stack of scopes whose **last entry is the one currently in effect**.
@@ -70,7 +70,7 @@ impl Default for CScope {
 /// The result of [`CScope::qualify`]: the object's fully qualified name, plus
 /// the segments its own (possibly dotted) name contributes beyond the scope
 /// it was qualified against — the raw material
-/// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`] slices to
+/// [`rinx_ast::DomainObjectBody::deduce_local_scope`] slices to
 /// decide what a nested body should push onto the container stack.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CQualification {

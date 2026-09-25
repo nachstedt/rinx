@@ -14,7 +14,7 @@
 use std::fmt::Write as _;
 
 use math_core::MathDisplay;
-use rusty_sphinx_ast::{Span, TargetName};
+use rinx_ast::{Span, TargetName};
 
 use crate::RenderCtx;
 use crate::math::MathError;
@@ -225,8 +225,8 @@ mod tests {
 
 #[cfg(test)]
 mod render_tests {
-    use rusty_sphinx_ast::{Directive, Document, Node, TargetName};
-    use rusty_sphinx_index::{EquationLocation, ProjectIndex};
+    use rinx_ast::{Directive, Document, Node, TargetName};
+    use rinx_index::{EquationLocation, ProjectIndex};
 
     fn math_node(label: Option<&str>, nowrap: bool, classes: Vec<String>, parts: &[&str]) -> Node {
         Node::Directive(Directive::Math {

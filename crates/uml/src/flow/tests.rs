@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{EntityFlow, EntityFlowSource, EntityId, FlowDirection};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_ast::{EntityFlow, EntityFlowSource, EntityId, FlowDirection};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_index::{EntityRecord, ProjectIndex};
 
 use super::*;
 
@@ -88,7 +88,7 @@ fn draw(flow: &EntityFlow) -> String {
 /// A flowchart with `filter` as its selection.
 fn flow_filtered(filter: &str) -> EntityFlow {
     EntityFlow {
-        filter: Some(rusty_sphinx_filter::parse_filter(filter).expect("a valid filter")),
+        filter: Some(rinx_filter::parse_filter(filter).expect("a valid filter")),
         ..EntityFlow::new(EntityFlowSource::EntityFlow)
     }
 }

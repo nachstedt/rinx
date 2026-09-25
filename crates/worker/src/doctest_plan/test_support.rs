@@ -3,7 +3,7 @@
 //! unwrapping a [`DocTestCase`] to the variant a test expects.
 
 use super::*;
-use rusty_sphinx_parser::parse;
+use rinx_parser::parse;
 
 /// Parses `rst` and builds its plan, expecting success.
 pub(super) fn plan_of(rst: &str) -> DocTestPlan {

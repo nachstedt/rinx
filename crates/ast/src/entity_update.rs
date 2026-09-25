@@ -16,7 +16,7 @@
 //! `.ast` here is a *question with intended effects*, not authored data: the
 //! entities this directive touches are resolved, and its mutations applied,
 //! only once the whole project is merged — see
-//! `rusty_sphinx_analyzer::apply_entity_updates` and
+//! `rinx_analyzer::apply_entity_updates` and
 //! `docs/decisions/019-entity-update.md`.
 
 mod mutation;

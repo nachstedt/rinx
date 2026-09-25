@@ -1,6 +1,6 @@
-# Rusty-Sphinx: Architecture & Design Principles
+# Rinx: Architecture & Design Principles
 
-This document outlines the core architecture and key principles for `rusty-sphinx`, a high-performance, resilient, and Bazel-friendly re-implementation of the Sphinx documentation framework in Rust.
+This document outlines the core architecture and key principles for `rinx`, a high-performance, resilient, and Bazel-friendly re-implementation of the Sphinx documentation framework in Rust.
 
 ---
 
@@ -9,7 +9,7 @@ This document outlines the core architecture and key principles for `rusty-sphin
 1. **Performance-First**: Leverage Rust's zero-cost abstractions, efficient memory management (e.g., string interning or zero-copy parsing), and optimized data structures.
 2. **Deterministic and Modular**: To be truly Bazel-friendly, the generation process must be deterministic and split into granular, cacheable steps with explicit inputs and outputs.
 3. **Resilience and Error-Recovery**: For LSP and live-preview support, the parser must be fault-tolerant. Syntax errors should not abort the process; instead, they should produce "Error Nodes" in the Abstract Syntax Tree (AST), allowing the rest of the document to be parsed and rendered.
-4. **Library-First Design**: The core logic must be an API-agnostic rust library (`rusty_sphinx_core`). The Bazel worker and LSP are simply frontends wrapping this core.
+4. **Library-First Design**: The core logic must be an API-agnostic rust library (`rinx_core`). The Bazel worker and LSP are simply frontends wrapping this core.
 
 ---
 
@@ -17,12 +17,12 @@ This document outlines the core architecture and key principles for `rusty-sphin
 
 The system is divided into several crates/modules to ensure a clean separation of concerns:
 
-- `rusty_sphinx_parser`: Handles lexing and parsing of reStructuredText (RST) into an AST.
-- `rusty_sphinx_ast`: Defines the AST nodes, types, and representation.
-- `rusty_sphinx_analyzer`: Manages cross-references, indexing, TOC generation, and project-wide analysis.
-- `rusty_sphinx_renderer`: Converts the resolved AST into the final output formats (HTML).
-- `rusty_sphinx_worker`: A unified binary capable of acting as a **Bazel Persistent Worker**. Instead of spawning thousands of short-lived separate processes (`parse`, `index`, `render`), Bazel runs a single persistent background process. This allows `rusty-sphinx` to drastically cut OS process startup times and reuse memory allocations (e.g., string interning pools) across sequential parse actions, achieving massive performance gains.
-- `rusty_sphinx_lsp`: The Language Server implementing the LSP protocol for editor integration.
+- `rinx_parser`: Handles lexing and parsing of reStructuredText (RST) into an AST.
+- `rinx_ast`: Defines the AST nodes, types, and representation.
+- `rinx_analyzer`: Manages cross-references, indexing, TOC generation, and project-wide analysis.
+- `rinx_renderer`: Converts the resolved AST into the final output formats (HTML).
+- `rinx_worker`: A unified binary capable of acting as a **Bazel Persistent Worker**. Instead of spawning thousands of short-lived separate processes (`parse`, `index`, `render`), Bazel runs a single persistent background process. This allows `rinx` to drastically cut OS process startup times and reuse memory allocations (e.g., string interning pools) across sequential parse actions, achieving massive performance gains.
+- `rinx_lsp`: The Language Server implementing the LSP protocol for editor integration.
 
 ---
 
@@ -30,12 +30,12 @@ The system is divided into several crates/modules to ensure a clean separation o
 
 ### 3.1. Fast HTML Generation
 - **Parallelism Management**: Parsing and rendering individual files is embarrassingly parallel. 
-  - **In a Bazel context**: Parallelism is handled entirely by Bazel spawning multiple `rusty-sphinx-worker` processes. There is no standalone multi-threaded build orchestrator.
+  - **In a Bazel context**: Parallelism is handled entirely by Bazel spawning multiple `rinx-worker` processes. There is no standalone multi-threaded build orchestrator.
   - **In an LSP context**: `rayon` can be used to drastically speed up the initial workspace indexing of all `.rst` files.
 - **Zero-copy/Arena Allocation**: By using bump allocators (e.g., `bumpalo`) or lifetimes tied to the input source file, AST generation can avoid excessive heap allocations, making it blazingly fast.
 
 ### 3.2. Bazel Compatibility (Maximized Caching)
-To maximize Bazel\'s caching capabilities, the compilation pipeline must be broken down into discrete phases. A traditional Sphinx build is highly stateful; `rusty-sphinx` will use a **Multi-Phase Compilation Model**:
+To maximize Bazel\'s caching capabilities, the compilation pipeline must be broken down into discrete phases. A traditional Sphinx build is highly stateful; `rinx` will use a **Multi-Phase Compilation Model**:
 
 1. **Phase 1: Parse (1:1 Cacheable)**
    - **Input**: `page.rst`
@@ -53,7 +53,7 @@ To maximize Bazel\'s caching capabilities, the compilation pipeline must be brok
 ### 3.3. Live Preview & Fault Tolerance (VSCode)
 To support a live preview that renders even when the document is incomplete or contains errors:
 - **Error-Resilient Parser**: The parser should implement recovery strategies. If a directive is malformed, the parser captures the malformed text as an `ErrorNode` or `RawTextNode` and continues parsing the subsequent blocks.
-- **Incremental Rendering**: In a live preview, `rusty-sphinx` can skip the global indexing phase or use a stale index, simply converting the in-memory AST directly into HTML on every keystroke. This guarantees a sub-millisecond turn-around for visual updates.
+- **Incremental Rendering**: In a live preview, `rinx` can skip the global indexing phase or use a stale index, simply converting the in-memory AST directly into HTML on every keystroke. This guarantees a sub-millisecond turn-around for visual updates.
 
 ### 3.4. Language Server (LSP) Derivation
 A traditional compiler drops state after finishing. An LSP needs to maintain state and perform incremental updates. 
@@ -68,17 +68,17 @@ A traditional compiler drops state after finishing. An LSP needs to maintain sta
 ```mermaid
 graph TD;
     %% Phase 1: Local Parse
-    RstFile[File.rst] -->|rusty_sphinx_parser| AST[Local AST]
+    RstFile[File.rst] -->|rinx_parser| AST[Local AST]
     RstFile -->|Lexer Errors| Diag[Diagnostics]
     
     %% Phase 2: Global Assembly
-    AST -->|Extract targets/links| Indexer[ rusty_sphinx_analyzer ]
+    AST -->|Extract targets/links| Indexer[ rinx_analyzer ]
     OtherASTs[Other Local ASTs] --> Indexer
     Indexer --> GlobalIndex[Project Index]
     Indexer -->|Missing Link Errors| Diag
     
     %% Phase 3: Render
-    AST --> Renderer[rusty_sphinx_renderer]
+    AST --> Renderer[rinx_renderer]
     GlobalIndex --> Renderer
     Renderer --> HTML[Output.html]
     Renderer -->|Render Warnings| Diag
@@ -91,34 +91,34 @@ graph TD;
 
 ## 4.5. Bazel Rule Design (Library & Site Pattern)
 
-To natively support Massive Monorepo codebases where decentralized teams manage isolated documentation, `rusty-sphinx` relies strictly on a **Library & Site Pattern**, powered by Bazel's Action Graph and Providers. 
+To natively support Massive Monorepo codebases where decentralized teams manage isolated documentation, `rinx` relies strictly on a **Library & Site Pattern**, powered by Bazel's Action Graph and Providers. 
 
 This mirrors idiomatic targets like `cc_library` / `cc_binary`.
 
 ### Usage Example
 
-**1. Decentralized Libraries (`rusty_sphinx_library`)**
-Teams maintain their own `.rst` documentation in subfolders using `rusty_sphinx_library`. This rule parses localized documentation into `.ast` files. Crucially, the `deps` attribute is **strictly reserved for Toctree hierarchies and transclusion**. It is *not* used for standard cross-references/hyperlinks.
+**1. Decentralized Libraries (`rinx_library`)**
+Teams maintain their own `.rst` documentation in subfolders using `rinx_library`. This rule parses localized documentation into `.ast` files. Crucially, the `deps` attribute is **strictly reserved for Toctree hierarchies and transclusion**. It is *not* used for standard cross-references/hyperlinks.
 
 ```starlark
 # //team_a/BUILD.bazel
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+load("@rinx//:defs.bzl", "rinx_library")
 
-rusty_sphinx_library(
+rinx_library(
     name = "docs",
     srcs = glob(["**/*.rst"]),
     deps = ["//team_b/shared:docs"], # ONLY required if team_a has `.. toctree:: team_b`
 )
 ```
 
-**2. Centralized Site Assembler (`rusty_sphinx_site`)**
+**2. Centralized Site Assembler (`rinx_site`)**
 To build the complete global project documentation, a top-level rule collects all the localized libraries to generate a unified, cross-referenced web portal. 
 
 ```starlark
 # //docs_portal/BUILD.bazel
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_site")
+load("@rinx//:defs.bzl", "rinx_site")
 
-rusty_sphinx_site(
+rinx_site(
     name = "enterprise_docs",
     deps = [
         "//team_a:docs",
@@ -129,23 +129,23 @@ rusty_sphinx_site(
 
 ### The Hybrid Dependency Model
 
-To ensure site integrity while maintaining developer flexibility in a monorepo, `rusty-sphinx` uses a two-pronged dependency approach:
+To ensure site integrity while maintaining developer flexibility in a monorepo, `rinx` uses a two-pronged dependency approach:
 
-- **Strict Toctree Dependencies (`deps`)**: `rusty_sphinx_library` targets require explicit `deps` declarations for any external documents they include in a `.. toctree::`. Because Bazel strictly enforces a Directed Acyclic Graph (DAG) for `deps`, this naturally prevents infinite loops in navigation/table of contents across the entire codebase. It also provides the "Transitive Discovery" backbone so a top-level site can simply depend on the root document.
-- **Late Resolution (Free-Linking)**: Standard cross-references (hyperlinks) within text are *not* required in Bazel `deps`. They are stored as symbolic string markers in the Phase 1 AST. These links are resolved globally during Phase 2 Indexing at the `rusty_sphinx_site` level. This allows authors to freely link documents cyclically (Doc A links to Doc B, and Doc B links to Doc A) without triggering Bazel "cycle in dependency graph" errors.
+- **Strict Toctree Dependencies (`deps`)**: `rinx_library` targets require explicit `deps` declarations for any external documents they include in a `.. toctree::`. Because Bazel strictly enforces a Directed Acyclic Graph (DAG) for `deps`, this naturally prevents infinite loops in navigation/table of contents across the entire codebase. It also provides the "Transitive Discovery" backbone so a top-level site can simply depend on the root document.
+- **Late Resolution (Free-Linking)**: Standard cross-references (hyperlinks) within text are *not* required in Bazel `deps`. They are stored as symbolic string markers in the Phase 1 AST. These links are resolved globally during Phase 2 Indexing at the `rinx_site` level. This allows authors to freely link documents cyclically (Doc A links to Doc B, and Doc B links to Doc A) without triggering Bazel "cycle in dependency graph" errors.
 - **Site-Namespaced Rendering**: Because HTML content is a product of both the local AST and the global site index, HTML artifacts are owned by the `site`, not the `library`. Generated HTML files are namespaced under a site-specific directory to prevent Bazel Action Conflict errors when multiple site targets consume the same library.
 
 ### Implications for the Rule Implementations
 
 This strict separation requires the Starlark implementation to map the **Multi-Phase Compilation Model** across the Bazel target dependency graph:
 
-1. **Phase 1 Actions (`rusty_sphinx_library`)**:
+1. **Phase 1 Actions (`rinx_library`)**:
    For every `.rst` file in `srcs`, the local library rule declares an action running the worker in `parse` mode.
    - **Outputs**: `page.ast`
-   The rule returns a `RustySphinxInfo` provider containing its generated `.ast` files.
+   The rule returns a `RinxInfo` provider containing its generated `.ast` files.
 
-2. **Phase 2 & 3 Actions (`rusty_sphinx_site`)**:
-   The site assembler rule extracts the `RustySphinxInfo` provider from all its `deps` to collect *every single transitively compiled `.ast` file* across the entire monorepo.
+2. **Phase 2 & 3 Actions (`rinx_site`)**:
+   The site assembler rule extracts the `RinxInfo` provider from all its `deps` to collect *every single transitively compiled `.ast` file* across the entire monorepo.
    
    - **Phase 2 (Index Action)**: It declares exactly one action running the worker in `index` mode, passing the full collection of localized `.ast` files.
      - **Output**: A unified `project.index`.

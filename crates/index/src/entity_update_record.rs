@@ -4,13 +4,13 @@ use serde::{Deserialize, Serialize};
 /// knows it — per-document data, exactly like [`crate::DocumentToctree`],
 /// since the directive's own text is a fact about the document that wrote it.
 /// What it *does* is a project-wide operation, applied afterwards by
-/// `rusty_sphinx_analyzer::apply_entity_updates`; this only records intent.
+/// `rinx_analyzer::apply_entity_updates`; this only records intent.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EntityUpdateRecord {
     /// The document that wrote this directive — where a `.. noqa:` for one of
     /// its diagnostics would go.
     pub doc_path: String,
-    pub update: rusty_sphinx_ast::EntityUpdate,
+    pub update: rinx_ast::EntityUpdate,
 }
 
 #[cfg(test)]
@@ -20,10 +20,10 @@ mod tests {
     fn record() -> EntityUpdateRecord {
         EntityUpdateRecord {
             doc_path: "specs/boot.rst".to_string(),
-            update: rusty_sphinx_ast::EntityUpdate::new(
-                rusty_sphinx_ast::EntityUpdateSource::EntityUpdate,
-                rusty_sphinx_ast::UpdateTarget {
-                    candidate_id: rusty_sphinx_ast::EntityId::new("REQ_001").ok(),
+            update: rinx_ast::EntityUpdate::new(
+                rinx_ast::EntityUpdateSource::EntityUpdate,
+                rinx_ast::UpdateTarget {
+                    candidate_id: rinx_ast::EntityId::new("REQ_001").ok(),
                     filter: None,
                     raw: "REQ_001".to_string(),
                 },

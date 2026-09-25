@@ -4,17 +4,17 @@ use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive};
 
 pub(super) fn parse_admonition(
-    kind: rusty_sphinx_ast::AdmonitionKind,
+    kind: rinx_ast::AdmonitionKind,
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Directive {
-    let title = if kind == rusty_sphinx_ast::AdmonitionKind::Admonition {
+    let title = if kind == rinx_ast::AdmonitionKind::Admonition {
         if argument.is_empty() {
             diagnostics.push(Diagnostic::at(
                 DiagnosticCode::DirectiveTitleArgumentMissing,
@@ -82,7 +82,7 @@ pub(super) fn parse_admonition(
 }
 
 pub(super) fn parse_version_change(
-    kind: rusty_sphinx_ast::VersionChangeKind,
+    kind: rinx_ast::VersionChangeKind,
     argument: String,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
@@ -142,13 +142,13 @@ pub(super) fn parse_seealso(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::Domain;
-    use rusty_sphinx_ast::Node;
+    use rinx_ast::Domain;
+    use rinx_ast::Node;
 
     #[test]
     fn test_parse_admonition_basic() {
         // Given
-        let kind = rusty_sphinx_ast::AdmonitionKind::Note;
+        let kind = rinx_ast::AdmonitionKind::Note;
         let argument = String::new();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
@@ -169,7 +169,7 @@ mod tests {
             kind, title, body, ..
         } = directive
         {
-            assert_eq!(kind, rusty_sphinx_ast::AdmonitionKind::Note);
+            assert_eq!(kind, rinx_ast::AdmonitionKind::Note);
             assert_eq!(title, None);
             assert_eq!(body.len(), 1);
         } else {
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn test_parse_admonition_generic_with_title() {
         // Given
-        let kind = rusty_sphinx_ast::AdmonitionKind::Admonition;
+        let kind = rinx_ast::AdmonitionKind::Admonition;
         let argument = "Custom Title".to_string();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
@@ -198,7 +198,7 @@ mod tests {
 
         // Then
         if let Directive::Admonition { kind, title, .. } = directive {
-            assert_eq!(kind, rusty_sphinx_ast::AdmonitionKind::Admonition);
+            assert_eq!(kind, rinx_ast::AdmonitionKind::Admonition);
             assert_eq!(title, Some("Custom Title".to_string()));
         } else {
             panic!("Expected Admonition directive");
@@ -208,7 +208,7 @@ mod tests {
     #[test]
     fn test_parse_admonition_collapsible() {
         // Given
-        let kind = rusty_sphinx_ast::AdmonitionKind::Warning;
+        let kind = rinx_ast::AdmonitionKind::Warning;
         let argument = String::new();
         let body_lines = vec!["   :collapsible: open", "", "   Content"];
         let mut adornment_order = Vec::new();
@@ -235,7 +235,7 @@ mod tests {
     #[test]
     fn test_parse_admonition_generic_requires_title_diagnostic() {
         // Given
-        let kind = rusty_sphinx_ast::AdmonitionKind::Admonition;
+        let kind = rinx_ast::AdmonitionKind::Admonition;
         let argument = String::new();
         let body_lines = vec!["   Body line"];
         let mut adornment_order = Vec::new();
@@ -261,7 +261,7 @@ mod tests {
         // Given a body whose first line has a 3-space indent and a second,
         // less-indented line containing a multi-byte character at the byte
         // offset the old byte-index slicing would have panicked on
-        let kind = rusty_sphinx_ast::AdmonitionKind::Note;
+        let kind = rinx_ast::AdmonitionKind::Note;
         let argument = String::new();
         let body_lines = vec!["   First line normal indent.", "  éfoo"];
         let mut adornment_order = Vec::new();
@@ -297,7 +297,7 @@ mod tests {
             body,
         }) = &doc.nodes[0]
         {
-            assert_eq!(*kind, rusty_sphinx_ast::VersionChangeKind::Changed);
+            assert_eq!(*kind, rinx_ast::VersionChangeKind::Changed);
             assert_eq!(version, "2.3");
             assert_eq!(body.len(), 1);
         } else {
@@ -321,7 +321,7 @@ mod tests {
             body,
         }) = &doc.nodes[0]
         {
-            assert_eq!(*kind, rusty_sphinx_ast::VersionChangeKind::Added);
+            assert_eq!(*kind, rinx_ast::VersionChangeKind::Added);
             assert_eq!(version, "1.0");
             assert_eq!(body.len(), 1);
         } else {
@@ -345,7 +345,7 @@ mod tests {
             body,
         }) = &doc.nodes[0]
         {
-            assert_eq!(*kind, rusty_sphinx_ast::VersionChangeKind::Deprecated);
+            assert_eq!(*kind, rinx_ast::VersionChangeKind::Deprecated);
             assert_eq!(version, "3.0");
             assert_eq!(body.len(), 1);
         } else {
@@ -373,7 +373,7 @@ mod tests {
             body,
         }) = &doc.nodes[0]
         {
-            assert_eq!(*kind, rusty_sphinx_ast::VersionChangeKind::Changed);
+            assert_eq!(*kind, rinx_ast::VersionChangeKind::Changed);
             assert_eq!(version, "unknown");
             assert_eq!(body.len(), 1);
         } else {
@@ -386,7 +386,7 @@ mod tests {
         // Given a body whose first line has a 3-space indent and a second,
         // less-indented line containing a multi-byte character at the byte
         // offset the old byte-index slicing would have panicked on
-        let kind = rusty_sphinx_ast::VersionChangeKind::Changed;
+        let kind = rinx_ast::VersionChangeKind::Changed;
         let argument = "2.3".to_string();
         let body_lines = vec!["   First line normal indent.", "  éfoo"];
         let mut adornment_order = Vec::new();
@@ -488,11 +488,11 @@ mod tests {
                 assert_eq!(items.len(), 3);
                 assert!(matches!(
                     items[0].term[1],
-                    rusty_sphinx_ast::InlineNode::DomainObjectReference { .. }
+                    rinx_ast::InlineNode::DomainObjectReference { .. }
                 ));
                 assert!(matches!(
                     items[2].term[0],
-                    rusty_sphinx_ast::InlineNode::Reference { .. }
+                    rinx_ast::InlineNode::Reference { .. }
                 ));
             } else {
                 panic!("Expected DefinitionList, got {:?}", body[0]);

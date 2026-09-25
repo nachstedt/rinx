@@ -902,6 +902,173 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
+name = "rinx_analyzer"
+version = "0.1.0"
+dependencies = [
+ "rinx_ast",
+ "rinx_entity",
+ "rinx_filter",
+ "rinx_index",
+ "rinx_scope",
+ "rinx_toctree",
+ "serde_json",
+]
+
+[[package]]
+name = "rinx_ast"
+version = "0.1.0"
+dependencies = [
+ "rinx_cdecl",
+ "rinx_filter",
+ "rinx_inventory",
+ "serde",
+ "serde_json",
+ "sha2",
+ "unicode-normalization",
+]
+
+[[package]]
+name = "rinx_cdecl"
+version = "0.1.0"
+
+[[package]]
+name = "rinx_entity"
+version = "0.1.0"
+dependencies = [
+ "jsonschema",
+ "regex",
+ "rinx_ast",
+ "schemars",
+ "serde",
+ "serde_json",
+ "sha2",
+ "toml",
+]
+
+[[package]]
+name = "rinx_filter"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rinx_index"
+version = "0.1.0"
+dependencies = [
+ "pathdiff",
+ "rinx_ast",
+ "rinx_entity",
+ "rinx_filter",
+ "rinx_inventory",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rinx_inventory"
+version = "0.1.0"
+dependencies = [
+ "flate2",
+ "regex",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rinx_parser"
+version = "0.1.0"
+dependencies = [
+ "csv",
+ "octicons-pack",
+ "regex",
+ "rinx_ast",
+ "rinx_entity",
+ "rinx_filter",
+ "rinx_template",
+ "unicode-width",
+]
+
+[[package]]
+name = "rinx_renderer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "html-escape",
+ "math-core",
+ "minijinja",
+ "octicons-pack",
+ "pathdiff",
+ "plotters",
+ "rinx_ast",
+ "rinx_entity",
+ "rinx_filter",
+ "rinx_index",
+ "rinx_inventory",
+ "rinx_scope",
+ "rinx_toctree",
+ "rinx_uml",
+ "serde",
+ "serde_json",
+ "syntect",
+ "toml",
+ "two-face",
+]
+
+[[package]]
+name = "rinx_scope"
+version = "0.1.0"
+dependencies = [
+ "rinx_ast",
+]
+
+[[package]]
+name = "rinx_template"
+version = "0.1.0"
+dependencies = [
+ "minijinja",
+]
+
+[[package]]
+name = "rinx_toctree"
+version = "0.1.0"
+dependencies = [
+ "globset",
+ "rinx_ast",
+]
+
+[[package]]
+name = "rinx_uml"
+version = "0.1.0"
+dependencies = [
+ "minijinja",
+ "rinx_ast",
+ "rinx_entity",
+ "rinx_filter",
+ "rinx_index",
+]
+
+[[package]]
+name = "rinx_worker"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "rinx_analyzer",
+ "rinx_ast",
+ "rinx_entity",
+ "rinx_index",
+ "rinx_inventory",
+ "rinx_parser",
+ "rinx_renderer",
+ "rinx_toctree",
+ "serde",
+ "serde_json",
+ "toml",
+]
+
+[[package]]
 name = "rustc-hash"
 version = "2.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -912,173 +1079,6 @@ name = "rustversion"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
-
-[[package]]
-name = "rusty_sphinx_analyzer"
-version = "0.1.0"
-dependencies = [
- "rusty_sphinx_ast",
- "rusty_sphinx_entity",
- "rusty_sphinx_filter",
- "rusty_sphinx_index",
- "rusty_sphinx_scope",
- "rusty_sphinx_toctree",
- "serde_json",
-]
-
-[[package]]
-name = "rusty_sphinx_ast"
-version = "0.1.0"
-dependencies = [
- "rusty_sphinx_cdecl",
- "rusty_sphinx_filter",
- "rusty_sphinx_inventory",
- "serde",
- "serde_json",
- "sha2",
- "unicode-normalization",
-]
-
-[[package]]
-name = "rusty_sphinx_cdecl"
-version = "0.1.0"
-
-[[package]]
-name = "rusty_sphinx_entity"
-version = "0.1.0"
-dependencies = [
- "jsonschema",
- "regex",
- "rusty_sphinx_ast",
- "schemars",
- "serde",
- "serde_json",
- "sha2",
- "toml",
-]
-
-[[package]]
-name = "rusty_sphinx_filter"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "rusty_sphinx_index"
-version = "0.1.0"
-dependencies = [
- "pathdiff",
- "rusty_sphinx_ast",
- "rusty_sphinx_entity",
- "rusty_sphinx_filter",
- "rusty_sphinx_inventory",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "rusty_sphinx_inventory"
-version = "0.1.0"
-dependencies = [
- "flate2",
- "regex",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "rusty_sphinx_parser"
-version = "0.1.0"
-dependencies = [
- "csv",
- "octicons-pack",
- "regex",
- "rusty_sphinx_ast",
- "rusty_sphinx_entity",
- "rusty_sphinx_filter",
- "rusty_sphinx_template",
- "unicode-width",
-]
-
-[[package]]
-name = "rusty_sphinx_renderer"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "html-escape",
- "math-core",
- "minijinja",
- "octicons-pack",
- "pathdiff",
- "plotters",
- "rusty_sphinx_ast",
- "rusty_sphinx_entity",
- "rusty_sphinx_filter",
- "rusty_sphinx_index",
- "rusty_sphinx_inventory",
- "rusty_sphinx_scope",
- "rusty_sphinx_toctree",
- "rusty_sphinx_uml",
- "serde",
- "serde_json",
- "syntect",
- "toml",
- "two-face",
-]
-
-[[package]]
-name = "rusty_sphinx_scope"
-version = "0.1.0"
-dependencies = [
- "rusty_sphinx_ast",
-]
-
-[[package]]
-name = "rusty_sphinx_template"
-version = "0.1.0"
-dependencies = [
- "minijinja",
-]
-
-[[package]]
-name = "rusty_sphinx_toctree"
-version = "0.1.0"
-dependencies = [
- "globset",
- "rusty_sphinx_ast",
-]
-
-[[package]]
-name = "rusty_sphinx_uml"
-version = "0.1.0"
-dependencies = [
- "minijinja",
- "rusty_sphinx_ast",
- "rusty_sphinx_entity",
- "rusty_sphinx_filter",
- "rusty_sphinx_index",
-]
-
-[[package]]
-name = "rusty_sphinx_worker"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "rusty_sphinx_analyzer",
- "rusty_sphinx_ast",
- "rusty_sphinx_entity",
- "rusty_sphinx_index",
- "rusty_sphinx_inventory",
- "rusty_sphinx_parser",
- "rusty_sphinx_renderer",
- "rusty_sphinx_toctree",
- "serde",
- "serde_json",
- "toml",
-]
 
 [[package]]
 name = "ryu"

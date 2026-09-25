@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 
 use crate::{EntityRecord, ProjectIndex};
-use rusty_sphinx_ast::{AttributeValue, EntityId};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_filter::{FieldName, FieldValue, FilterSubject};
+use rinx_ast::{AttributeValue, EntityId};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_filter::{FieldName, FieldValue, FilterSubject};
 
 use super::EntitySubject;
 

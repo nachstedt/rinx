@@ -1,5 +1,5 @@
 [package]
-name = "rusty_sphinx_inventory"
+name = "rinx_inventory"
 version = "0.1.0"
 edition.workspace = true
 

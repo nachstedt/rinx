@@ -3,8 +3,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rusty_sphinx_ast::TargetName;
-use rusty_sphinx_inventory::{EntryType, Inventory, InventoryName};
+use rinx_ast::TargetName;
+use rinx_inventory::{EntryType, Inventory, InventoryName};
 use serde::{Deserialize, Serialize};
 
 /// An inventory this site links into — Sphinx's `intersphinx_mapping` entry.
@@ -178,7 +178,7 @@ fn is_absolute(base: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_inventory::InventoryEntry;
+    use rinx_inventory::InventoryEntry;
 
     fn inventory(entries: &[(&str, &str, &str, Option<&str>)]) -> Inventory {
         Inventory {

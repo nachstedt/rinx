@@ -5,7 +5,7 @@
 //! Unlike `.. list-table::`/`.. csv-table::` (see [`super::data_table`]),
 //! this directive's content isn't data to lower into rows itself — it's
 //! ordinary block content that must parse down to exactly one
-//! [`rusty_sphinx_ast::Node::Table`], produced by the same grid- or
+//! [`rinx_ast::Node::Table`], produced by the same grid- or
 //! simple-table parsing every other table in the document goes through.
 
 use crate::blocks::parse_blocks;
@@ -18,7 +18,7 @@ use crate::directives::table_options::parse_common_table_options;
 use crate::directives::table_widths::parse_widths_option;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{DiagnosticCode, Directive, Node};
+use rinx_ast::{DiagnosticCode, Directive, Node};
 
 /// The directive name, used throughout this module's diagnostics.
 const DIRECTIVE: &str = "table";
@@ -107,7 +107,7 @@ fn malformed_table_directive(
     argument: &str,
     body_lines: &[&str],
     diagnostics: &mut Diagnostics,
-    span: Option<rusty_sphinx_ast::Span>,
+    span: Option<rinx_ast::Span>,
 ) -> Directive {
     let (code, message) = match node_count {
         0 => (
@@ -139,7 +139,7 @@ fn malformed_table_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Domain, TableAlign, TableWidths, TargetName};
+    use rinx_ast::{Domain, TableAlign, TableWidths, TargetName};
 
     fn parse(body_lines: &[&str]) -> (Directive, Diagnostics) {
         parse_with("", body_lines)
@@ -404,7 +404,7 @@ mod tests {
                 body_rows[0].cells[0].content
             );
         };
-        let [rusty_sphinx_ast::InlineNode::Reference { span, .. }] = inlines.as_slice() else {
+        let [rinx_ast::InlineNode::Reference { span, .. }] = inlines.as_slice() else {
             panic!("Expected a single Reference inline node, got {inlines:?}");
         };
         let span = span.expect("a :ref: role parsed from real source must carry a span");

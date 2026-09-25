@@ -4,7 +4,7 @@ use crate::blocks::table::{NormalizedCell, normalize_cell_lines};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableCell, TableRow};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span, TableCell, TableRow};
 
 /// The immutable table geometry plus the mutable parse state that recursive
 /// cell-content parsing needs. Mirrors [`super::table`]'s `GridCtx`.
@@ -282,7 +282,7 @@ pub(super) fn build_rows(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     // --- row-level helpers, through a built context ---
 

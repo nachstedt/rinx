@@ -3,9 +3,9 @@
 //! Split from the markup for the reason the pie's `series.rs` is: selecting is
 //! where every decision is, and it is testable without reading a byte of SVG.
 
-use rusty_sphinx_ast::{ChartValue, EntityBar};
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{ChartValue, EntityBar};
+use rinx_entity::EntitySchema;
+use rinx_index::ProjectIndex;
 
 use crate::blocks::chart_counts::count_values;
 

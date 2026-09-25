@@ -8,13 +8,13 @@
 use std::fmt::Write as _;
 
 use math_core::MathDisplay;
-use rusty_sphinx_ast::Span;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::Span;
+use rinx_index::ProjectIndex;
 
 use crate::blocks::equation_anchor_id;
 use crate::math::{MathError, MathRenderer};
 use crate::{BrokenLink, BrokenLinkKind};
-use rusty_sphinx_index::relative_doc_href;
+use rinx_index::relative_doc_href;
 
 /// Renders a `:math:` role.
 ///
@@ -57,7 +57,7 @@ pub(super) fn render_equation_reference(
     doc_path: &str,
     broken_links: &mut Vec<BrokenLink>,
 ) {
-    let target_name = rusty_sphinx_ast::TargetName::new(label);
+    let target_name = rinx_ast::TargetName::new(label);
     if let Some(location) = index.equations.get(&target_name) {
         let href = format!(
             "{}#{}",
@@ -89,13 +89,13 @@ pub(super) fn render_equation_reference(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Position;
-    use rusty_sphinx_index::EquationLocation;
+    use rinx_ast::Position;
+    use rinx_index::EquationLocation;
 
     fn index_with(label: &str, doc_path: &str, number: usize) -> ProjectIndex {
         let mut index = ProjectIndex::default();
         index.equations.insert(
-            rusty_sphinx_ast::TargetName::new(label),
+            rinx_ast::TargetName::new(label),
             EquationLocation::new(doc_path, number),
         );
         index

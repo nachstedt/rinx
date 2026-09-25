@@ -215,11 +215,11 @@ class GenerateWarmupPackageTest(unittest.TestCase):
             self.assertEqual(list(warmup.glob("*.rst")), [warmup / "index.rst"])
             build = (warmup / "BUILD.bazel").read_text()
             self.assertIn('srcs = ["index.rst"]', build)
-            self.assertIn("rusty_sphinx_site(", build)
+            self.assertIn("rinx_site(", build)
             self.assertIn('deps = [":warmup_docs"]', build)
 
             # And it carries its own config and a copy of the template
-            self.assertIn("project =", (warmup / "rusty_sphinx.toml").read_text())
+            self.assertIn("project =", (warmup / "rinx.toml").read_text())
             self.assertEqual(
                 (warmup / "custom_template.html").read_text(), "<html>{{ body }}</html>"
             )

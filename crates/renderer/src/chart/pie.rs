@@ -5,7 +5,7 @@
 //! (the font, the palette, the colour conversion) is [`super::style`]'s.
 
 use plotters::prelude::*;
-use rusty_sphinx_ast::ChartColor;
+use rinx_ast::ChartColor;
 
 use super::style::{as_size, ensure_font_registered, series_color, to_rgb};
 

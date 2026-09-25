@@ -21,7 +21,7 @@
 //! Two properties are load-bearing rather than nice. **Determinism**: every
 //! iteration is over a `BTreeMap`, so the same project produces the same
 //! bytes, and the bytes are hashed into the filename of the SVG the build
-//! compiles. **Shared meaning**: `filter()` is `rusty_sphinx_filter` and
+//! compiles. **Shared meaning**: `filter()` is `rinx_filter` and
 //! nothing else, and `flow()`/`ref()` build their hrefs with the functions the
 //! renderer builds a page's own links with — a filter or a link that meant one
 //! thing in a table and another in a diagram would be a bug neither crate's
@@ -180,7 +180,7 @@ fn add_filter(env: &mut Environment<'_>, snapshot: &Arc<Snapshot>, failure: &Fir
     let snapshot = Arc::clone(snapshot);
     let failure = Arc::clone(failure);
     env.add_function("filter", move |expression: String| {
-        let parsed = rusty_sphinx_filter::parse_filter(&expression).map_err(|error| {
+        let parsed = rinx_filter::parse_filter(&expression).map_err(|error| {
             record(
                 &failure,
                 UmlError::InvalidFilter {

@@ -1,5 +1,5 @@
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Node};
+use rinx_ast::{Diagnostic, DiagnosticCode, Node};
 
 use crate::context::ParseCtx;
 
@@ -11,7 +11,7 @@ use crate::context::ParseCtx;
 ///
 /// The RST spec also says a transition should not begin or end the document, nor
 /// immediately follow another transition; violations are reported as diagnostics
-/// rather than rejected, since rusty-sphinx's parser is error-resilient.
+/// rather than rejected, since rinx's parser is error-resilient.
 pub(super) fn try_parse_transition(
     lines: &[&str],
     i: usize,
@@ -60,7 +60,7 @@ pub(super) fn try_parse_transition(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     #[test]
     fn test_try_parse_transition_matches_hyphens() {
@@ -294,7 +294,7 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use crate::parse;
-    use rusty_sphinx_ast::{InlineNode, Node};
+    use rinx_ast::{InlineNode, Node};
 
     // --- Transition integration tests ---
 

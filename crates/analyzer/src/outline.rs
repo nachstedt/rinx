@@ -12,8 +12,8 @@
 //! section inside a directive body, so a heading nested in one is ordinary
 //! content — it is neither given an id nor listed in an outline.
 
-use rusty_sphinx_ast::{Node, SectionId, allocate_section_ids, inline_plain_text};
-use rusty_sphinx_index::{DocumentOutline, OutlineSection};
+use rinx_ast::{Node, SectionId, allocate_section_ids, inline_plain_text};
+use rinx_index::{DocumentOutline, OutlineSection};
 
 /// Builds the outline of `nodes`, a document's top-level node list.
 ///
@@ -68,7 +68,7 @@ pub(super) fn build_document_outline(nodes: &[Node]) -> DocumentAnalysis {
             // splices them into the document's own section tree. Recording the
             // enclosing section here is what lets the renderer reproduce that
             // without a second traversal.
-            Node::Directive(rusty_sphinx_ast::Directive::Toctree(_)) => {
+            Node::Directive(rinx_ast::Directive::Toctree(_)) => {
                 toctree_sections.push(stack.last().map(|(_, section)| section.id.clone()));
             }
             _ => {}
@@ -163,7 +163,7 @@ fn unwrap_single_title(roots: Vec<OutlineSection>) -> Vec<OutlineSection> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::InlineNode;
+    use rinx_ast::InlineNode;
 
     fn heading(level: u8, title: &str) -> Node {
         Node::Heading {
@@ -193,9 +193,7 @@ mod tests {
     }
 
     fn toctree_node() -> Node {
-        Node::Directive(rusty_sphinx_ast::Directive::Toctree(
-            rusty_sphinx_ast::Toctree::default(),
-        ))
+        Node::Directive(rinx_ast::Directive::Toctree(rinx_ast::Toctree::default()))
     }
 
     #[test]
@@ -222,7 +220,7 @@ mod tests {
         // Then
         assert_eq!(
             analysis.toctree_sections,
-            vec![Some(rusty_sphinx_ast::SectionId::from_title("Advanced"))]
+            vec![Some(rinx_ast::SectionId::from_title("Advanced"))]
         );
     }
 
@@ -242,7 +240,7 @@ mod tests {
         // Then
         assert_eq!(
             analysis.toctree_sections,
-            vec![Some(rusty_sphinx_ast::SectionId::from_title("Tuning"))]
+            vec![Some(rinx_ast::SectionId::from_title("Tuning"))]
         );
     }
 
@@ -275,10 +273,7 @@ mod tests {
         // Then
         assert_eq!(
             analysis.toctree_sections,
-            vec![
-                None,
-                Some(rusty_sphinx_ast::SectionId::from_title("Advanced"))
-            ]
+            vec![None, Some(rinx_ast::SectionId::from_title("Advanced"))]
         );
     }
 
@@ -445,7 +440,7 @@ mod tests {
         let nodes = vec![
             heading(1, "Guide"),
             heading(2, "Install"),
-            Node::Directive(rusty_sphinx_ast::Directive::SeeAlso {
+            Node::Directive(rinx_ast::Directive::SeeAlso {
                 body: vec![heading(2, "Not A Section")],
             }),
         ];

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-use rusty_sphinx_ast::{AttributeValue, EntityId, EntityIdError};
+use rinx_ast::{AttributeValue, EntityId, EntityIdError};
 use serde::{Deserialize, Serialize};
 
 use crate::pattern::ValuePattern;

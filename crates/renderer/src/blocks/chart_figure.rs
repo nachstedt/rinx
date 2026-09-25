@@ -12,7 +12,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{ImageAlign, LengthOrPercentage, TargetName};
+use rinx_ast::{ImageAlign, LengthOrPercentage, TargetName};
 
 /// Everything about a chart's placement, borrowed from its node.
 pub(super) struct ChartFigure<'a> {

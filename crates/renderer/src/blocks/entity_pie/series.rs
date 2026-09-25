@@ -6,9 +6,9 @@
 //! `.. entity-bar::`'s cells; this module only pairs each count with its
 //! wedge's label.
 
-use rusty_sphinx_ast::{ChartValue, EntityPie};
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{ChartValue, EntityPie};
+use rinx_entity::EntitySchema;
+use rinx_index::ProjectIndex;
 
 use crate::blocks::chart_counts::count_values;
 use crate::chart::PieWedge;

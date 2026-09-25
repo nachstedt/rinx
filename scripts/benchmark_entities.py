@@ -2,7 +2,7 @@
 
 `benchmark.py` measures general RST coverage against CPython. This one measures
 *entity* coverage against the useblocks sphinx-needs demo: it converts that
-project's own sphinx-needs configuration into a rusty-sphinx entity schema
+project's own sphinx-needs configuration into a rinx entity schema
 (`needs_schema.py`), builds its documents against that schema, and reports
 everything the pipeline did not understand.
 
@@ -33,7 +33,7 @@ import benchmark_common
 import needs_schema
 from benchmark_common import WARMUP_PACKAGE, write_frequency_summary
 
-TARGET_DIR = Path(tempfile.gettempdir()) / "rusty_sphinx_benchmark_needs"
+TARGET_DIR = Path(tempfile.gettempdir()) / "rinx_benchmark_needs"
 REPO_URL = "https://github.com/useblocks/sphinx-needs-demo.git"
 
 # The one place the corpus version is decided.
@@ -52,7 +52,7 @@ DEMO_VERSION = "0.1.5"
 # The clone's Sphinx source directory, which becomes the *Bazel workspace root*
 # of the generated project rather than a package inside one.
 #
-# That is forced, not a preference: rusty-sphinx resolves a source-root-relative
+# That is forced, not a preference: rinx resolves a source-root-relative
 # path (`/_images/logo.png`, and the `--doc-path` every phase keys off) against
 # the workspace root, so a corpus whose `srcdir` is a subdirectory would have
 # every absolute image path miss by that prefix. Making the two roots the same
@@ -74,7 +74,7 @@ GENERATED_PACKAGES = ("assets", WARMUP_PACKAGE)
 # the action that writes it, and the image bundling then fails with a `cp` of a
 # path Bazel cannot materialize. It stays hidden while that action is an
 # action-cache hit and appears the moment anything re-keys it — such as a change
-# to the rusty-sphinx binary, which is the one thing this benchmark exists to
+# to the rinx binary, which is the one thing this benchmark exists to
 # measure. `discard_stale_corpus_outputs` below cannot be relied on to prevent
 # it: Bazel leaves its output directories read-only, so removing them is
 # best-effort.
@@ -230,17 +230,17 @@ def corpus_workspace() -> Path:
     return TARGET_DIR / CORPUS_SRCDIR
 
 
-def generate_bazel_project(rusty_sphinx_root: str):
+def generate_bazel_project(rinx_root: str):
     """Turn the clone's source directory into a Bazel workspace of its own."""
     print("Generating a Bazel project around the clone...")
     workspace = corpus_workspace()
 
     (workspace / "MODULE.bazel").write_text(f"""module(name = "sphinx_needs_demo_bench")
 
-bazel_dep(name = "rusty_sphinx", version = "0.0.0")
+bazel_dep(name = "rinx", version = "0.0.0")
 local_path_override(
-    module_name = "rusty_sphinx",
-    path = "{rusty_sphinx_root}",
+    module_name = "rinx",
+    path = "{rinx_root}",
 )
 """)
 
@@ -248,13 +248,13 @@ local_path_override(
     assets_dir.mkdir(exist_ok=True)
     (assets_dir / "BUILD.bazel").write_text("""alias(
     name = "default.css",
-    actual = "@rusty_sphinx//:assets/default.css",
+    actual = "@rinx//:assets/default.css",
     visibility = ["//visibility:public"],
 )
 """)
 
-    (workspace / "rusty_sphinx.toml").write_text('project = "Sphinx-Needs Demo Benchmark"\n')
-    default_template = Path(rusty_sphinx_root) / "templates" / "default.html"
+    (workspace / "rinx.toml").write_text('project = "Sphinx-Needs Demo Benchmark"\n')
+    default_template = Path(rinx_root) / "templates" / "default.html"
     (workspace / "custom_template.html").write_text(default_template.read_text())
 
     included_rst, outside = transclusion_targets(workspace)
@@ -263,7 +263,7 @@ local_path_override(
         render_corpus_build_file(included_rst, [destination for destination, _ in outside])
     )
 
-    benchmark_common.generate_warmup_package(workspace, rusty_sphinx_root)
+    benchmark_common.generate_warmup_package(workspace, rinx_root)
 
 
 def copy_outside_sources(workspace: Path, outside):
@@ -299,9 +299,9 @@ def render_corpus_build_file(included_rst, spliced_from_outside):
         f"        {json.dumps(path)},\n"
         for path in sorted(set(included_rst) | set(spliced_from_outside))
     )
-    return f'''load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
+    return f'''load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
 
-rusty_sphinx_library(
+rinx_library(
     name = "demo_docs",
     srcs = glob(
         ["**/*.rst"],
@@ -353,9 +353,9 @@ rusty_sphinx_library(
 {spliced}    ],
 )
 
-rusty_sphinx_site(
+rinx_site(
     name = "site",
-    config = "rusty_sphinx.toml",
+    config = "rinx.toml",
     template = "custom_template.html",
     css = "//assets:default.css",
     # Declared again here: the index action derives back-links from it and the
@@ -377,7 +377,7 @@ def discard_stale_corpus_outputs(workspace: Path):
     `.ast` glob and inflate every count. `benchmark_common`'s version takes a
     package name; the corpus here *is* the root package, so what is kept is
     named instead: `external` (the fetched repositories and the compiled
-    rusty-sphinx binary, which stay warm) and the generated packages."""
+    rinx binary, which stay warm) and the generated packages."""
     info = subprocess.run(
         ["bazel", "info", *benchmark_common.BUILD_CONFIG_FLAGS, "bazel-bin"],
         cwd=str(workspace),
@@ -411,7 +411,7 @@ def run_benchmark(clean: bool = False):
     else:
         discard_stale_corpus_outputs(workspace)
 
-    print("Building rusty-sphinx and its toolchains (not timed as doc build)...")
+    print("Building rinx and its toolchains (not timed as doc build)...")
     deps_built, deps_duration = benchmark_common.timed_bazel_build(
         workspace, f"//{WARMUP_PACKAGE}:site", "bazel_deps_build.log"
     )
@@ -542,7 +542,7 @@ def analyze_results(build_succeeded, schema_report):
 
     result_path = Path("benchmark_entities_result.txt")
     with open(result_path, "w") as out:
-        print("=== rusty-sphinx entity benchmark: full report ===", file=out)
+        print("=== rinx entity benchmark: full report ===", file=out)
         write_frequency_summary(out, "Entities Parsed By Type", entities)
         write_frequency_summary(out, "Unsupported Directives Summary", unknown_directives)
         write_schema_report(out, schema_report)
@@ -618,17 +618,17 @@ def main():
     )
     args = parser.parse_args()
 
-    rusty_sphinx_root = os.environ.get("BUILD_WORKSPACE_DIRECTORY", os.getcwd())
-    os.chdir(rusty_sphinx_root)
+    rinx_root = os.environ.get("BUILD_WORKSPACE_DIRECTORY", os.getcwd())
+    os.chdir(rinx_root)
 
     if not Path("WORKSPACE").exists() and not Path("MODULE.bazel").exists():
-        print("Please run this script from the root of the rusty-sphinx workspace.")
+        print("Please run this script from the root of the rinx workspace.")
         return
 
     print(f"Benchmarking the entity model against sphinx-needs-demo {args.demo_version}.")
     clone_repo(args.demo_version)
     schema_report = convert_schema(corpus_workspace())
-    generate_bazel_project(rusty_sphinx_root)
+    generate_bazel_project(rinx_root)
     build_succeeded = run_benchmark(clean=args.clean)
     analyze_results(build_succeeded, schema_report)
 

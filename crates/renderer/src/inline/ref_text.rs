@@ -1,6 +1,6 @@
 //! The three things every cross-reference role carries into its renderer.
 
-use rusty_sphinx_ast::Span;
+use rinx_ast::Span;
 
 /// A cross-reference as the author wrote it: what the reader sees, what to
 /// resolve, and where it was written.

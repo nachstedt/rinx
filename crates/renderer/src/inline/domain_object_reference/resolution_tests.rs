@@ -3,15 +3,15 @@
 //! cases live in [`super::scope_tests`].
 
 use super::*;
-use rusty_sphinx_ast::TargetSearchOrder;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::TargetSearchOrder;
+use rinx_index::ProjectIndex;
 
 #[test]
 fn test_render_inline_domain_object_reference_resolved_py_domain() {
     // Given
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+        ObjectType::Py(rinx_ast::PyObjectType::Function),
         "greet",
         "api.rst",
     );
@@ -23,13 +23,13 @@ fn test_render_inline_domain_object_reference_resolved_py_domain() {
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
             name: "greet",
             display: "greet",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -37,7 +37,7 @@ fn test_render_inline_domain_object_reference_resolved_py_domain() {
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -52,7 +52,7 @@ fn test_render_inline_domain_object_reference_resolved_c_domain() {
     // Given
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+        ObjectType::C(rinx_ast::CObjectType::Function),
         "add",
         "api.rst",
     );
@@ -64,13 +64,13 @@ fn test_render_inline_domain_object_reference_resolved_c_domain() {
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+            object_type: ObjectType::C(rinx_ast::CObjectType::Function),
             name: "add",
             display: "add",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -78,7 +78,7 @@ fn test_render_inline_domain_object_reference_resolved_c_domain() {
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -93,7 +93,7 @@ fn test_render_inline_domain_object_reference_keeps_call_parens_in_the_text_only
     // to key the lookup by, and a `display` that still reads as a call.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+        ObjectType::C(rinx_ast::CObjectType::Function),
         "Py_TYPE",
         "c-api/object.rst",
     );
@@ -105,13 +105,13 @@ fn test_render_inline_domain_object_reference_keeps_call_parens_in_the_text_only
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+            object_type: ObjectType::C(rinx_ast::CObjectType::Function),
             name: "Py_TYPE",
             display: "Py_TYPE()",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "c-api/refcounting.rst",
@@ -119,7 +119,7 @@ fn test_render_inline_domain_object_reference_keeps_call_parens_in_the_text_only
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then — the anchor is built from the resolved, paren-free name,
@@ -134,7 +134,7 @@ fn test_render_inline_domain_object_reference_resolved_c_macro() {
     // Given
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+        ObjectType::C(rinx_ast::CObjectType::Macro),
         "MAX",
         "api.rst",
     );
@@ -146,13 +146,13 @@ fn test_render_inline_domain_object_reference_resolved_c_macro() {
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+            object_type: ObjectType::C(rinx_ast::CObjectType::Macro),
             name: "MAX",
             display: "MAX",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -160,7 +160,7 @@ fn test_render_inline_domain_object_reference_resolved_c_macro() {
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -174,7 +174,7 @@ fn test_render_inline_domain_object_reference_resolves_exc_role_to_class_definit
     // `.. class::` but references it via `:exc:`.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+        ObjectType::Py(rinx_ast::PyObjectType::Class),
         "Fault",
         "xmlrpc.client.rst",
     );
@@ -186,13 +186,13 @@ fn test_render_inline_domain_object_reference_resolves_exc_role_to_class_definit
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Exception),
             name: "Fault",
             display: "Fault",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -200,7 +200,7 @@ fn test_render_inline_domain_object_reference_resolves_exc_role_to_class_definit
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then — resolved, and the anchor matches the actual definition's
@@ -216,7 +216,7 @@ fn test_render_inline_domain_object_reference_resolves_c_func_role_to_macro_defi
     // macro `Py_VISIT` via `.. c:macro::` but references it via `:c:func:`.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+        ObjectType::C(rinx_ast::CObjectType::Macro),
         "Py_VISIT",
         "gcsupport.rst",
     );
@@ -228,13 +228,13 @@ fn test_render_inline_domain_object_reference_resolves_c_func_role_to_macro_defi
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+            object_type: ObjectType::C(rinx_ast::CObjectType::Function),
             name: "Py_VISIT",
             display: "Py_VISIT",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -242,7 +242,7 @@ fn test_render_inline_domain_object_reference_resolves_c_func_role_to_macro_defi
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then — resolved, anchored on the definition's own object type, and
@@ -252,11 +252,11 @@ fn test_render_inline_domain_object_reference_resolves_c_func_role_to_macro_defi
     assert_eq!(object_type_mismatches.len(), 1);
     assert_eq!(
         object_type_mismatches[0].requested_type,
-        ObjectType::C(rusty_sphinx_ast::CObjectType::Function)
+        ObjectType::C(rinx_ast::CObjectType::Function)
     );
     assert_eq!(
         object_type_mismatches[0].resolved_type,
-        ObjectType::C(rusty_sphinx_ast::CObjectType::Macro)
+        ObjectType::C(rinx_ast::CObjectType::Macro)
     );
 }
 
@@ -267,7 +267,7 @@ fn test_render_inline_domain_object_reference_resolves_c_macro_role_to_function_
     // `:c:macro:` from `c-api/structures.rst`.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+        ObjectType::C(rinx_ast::CObjectType::Function),
         "Py_REFCNT",
         "refcounting.rst",
     );
@@ -279,13 +279,13 @@ fn test_render_inline_domain_object_reference_resolves_c_macro_role_to_function_
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+            object_type: ObjectType::C(rinx_ast::CObjectType::Macro),
             name: "Py_REFCNT",
             display: "Py_REFCNT",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -293,7 +293,7 @@ fn test_render_inline_domain_object_reference_resolves_c_macro_role_to_function_
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -308,7 +308,7 @@ fn test_render_inline_domain_object_reference_does_not_alias_unrelated_object_ty
     // role-alias relationship with `py:exception`.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+        ObjectType::Py(rinx_ast::PyObjectType::Function),
         "Fault",
         "api.rst",
     );
@@ -320,13 +320,13 @@ fn test_render_inline_domain_object_reference_does_not_alias_unrelated_object_ty
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Exception),
             name: "Fault",
             display: "Fault",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -334,7 +334,7 @@ fn test_render_inline_domain_object_reference_does_not_alias_unrelated_object_ty
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -354,13 +354,13 @@ fn test_render_inline_domain_object_reference_broken_link_for_c_macro() {
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Macro),
+            object_type: ObjectType::C(rinx_ast::CObjectType::Macro),
             name: "MISSING",
             display: "MISSING",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -368,7 +368,7 @@ fn test_render_inline_domain_object_reference_broken_link_for_c_macro() {
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -378,7 +378,7 @@ fn test_render_inline_domain_object_reference_broken_link_for_c_macro() {
         broken_links,
         vec![BrokenLink {
             kind: BrokenLinkKind::DomainObjectReference(ObjectType::C(
-                rusty_sphinx_ast::CObjectType::Macro
+                rinx_ast::CObjectType::Macro
             )),
             target: "MISSING".to_string(),
             span: None,
@@ -391,7 +391,7 @@ fn test_render_inline_domain_object_reference_resolved_py_module() {
     // Given
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+        ObjectType::Py(rinx_ast::PyObjectType::Module),
         "greetings",
         "api.rst",
     );
@@ -403,13 +403,13 @@ fn test_render_inline_domain_object_reference_resolved_py_module() {
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Module),
             name: "greetings",
             display: "greetings",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -417,7 +417,7 @@ fn test_render_inline_domain_object_reference_resolved_py_module() {
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -433,7 +433,7 @@ fn test_render_inline_domain_object_reference_resolved_py_data_via_data_and_cons
     // canonical `ObjectType::Py(PyObjectType::Data)` key.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+        ObjectType::Py(rinx_ast::PyObjectType::Data),
         "DEFAULT_TIMEOUT",
         "api.rst",
     );
@@ -446,13 +446,13 @@ fn test_render_inline_domain_object_reference_resolved_py_data_via_data_and_cons
     render_inline_domain_object_reference(
         &mut data_html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Data),
             name: "DEFAULT_TIMEOUT",
             display: "DEFAULT_TIMEOUT",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -460,19 +460,19 @@ fn test_render_inline_domain_object_reference_resolved_py_data_via_data_and_cons
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
     let mut const_html = String::new();
     render_inline_domain_object_reference(
         &mut const_html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Data),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Data),
             name: "DEFAULT_TIMEOUT",
             display: "DEFAULT_TIMEOUT",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -480,7 +480,7 @@ fn test_render_inline_domain_object_reference_resolved_py_data_via_data_and_cons
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -502,13 +502,13 @@ fn test_render_inline_domain_object_reference_broken_link_when_missing() {
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
             name: "missing",
             display: "missing",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -516,7 +516,7 @@ fn test_render_inline_domain_object_reference_broken_link_when_missing() {
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -526,7 +526,7 @@ fn test_render_inline_domain_object_reference_broken_link_when_missing() {
         broken_links,
         vec![BrokenLink {
             kind: BrokenLinkKind::DomainObjectReference(ObjectType::Py(
-                rusty_sphinx_ast::PyObjectType::Function
+                rinx_ast::PyObjectType::Function
             )),
             target: "missing".to_string(),
             span: None,

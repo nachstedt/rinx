@@ -3,7 +3,7 @@
 
 use std::num::NonZeroU32;
 
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::EntityId;
@@ -181,7 +181,7 @@ mod tests {
     fn test_a_sequence_survives_a_serialization_round_trip() {
         // Given — the node is written to a `.ast` and read back to render
         let mut sequence = sequence();
-        sequence.filter = Some(rusty_sphinx_filter::parse_filter(r#"type == "comp""#).unwrap());
+        sequence.filter = Some(rinx_filter::parse_filter(r#"type == "comp""#).unwrap());
         sequence.max_items = NonZeroU32::new(3);
         sequence.caption = Some("Startup".to_string());
 

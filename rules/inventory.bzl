@@ -1,21 +1,21 @@
 """
-rusty_sphinx_inventory rule.
+rinx_inventory rule.
 
 Declares another documentation site's `objects.inv` as a pinned input a
-rusty_sphinx_site links into — Sphinx's `intersphinx_mapping`, minus the
+rinx_site links into — Sphinx's `intersphinx_mapping`, minus the
 fetch. Sphinx downloads an inventory while building; a sandboxed action may
 not, so the file is an ordinary label instead: vendored, fetched by the
 module system with a checksum (`http_file` with `sha256`), or another
-rusty_sphinx_site's `inventory` output group. Updating the pin is then an
+rinx_site's `inventory` output group. Updating the pin is then an
 explicit change to the build rather than something that happens to it.
 """
 
-load("//:providers.bzl", "RustySphinxInventoryInfo")
+load("//:providers.bzl", "RinxInventoryInfo")
 
-def _rusty_sphinx_inventory_impl(ctx):
+def _rinx_inventory_impl(ctx):
     name = ctx.attr.inventory_name or ctx.label.name
     return [
-        RustySphinxInventoryInfo(
+        RinxInventoryInfo(
             name = name,
             base_url = ctx.attr.base_url,
             file = ctx.file.src,
@@ -23,13 +23,13 @@ def _rusty_sphinx_inventory_impl(ctx):
         DefaultInfo(files = depset([ctx.file.src])),
     ]
 
-rusty_sphinx_inventory = rule(
-    implementation = _rusty_sphinx_inventory_impl,
+rinx_inventory = rule(
+    implementation = _rinx_inventory_impl,
     attrs = {
         "src": attr.label(
             allow_single_file = True,
             mandatory = True,
-            doc = "The objects.inv file: a vendored copy, an `http_file` pinned by `sha256`, or a filegroup over another rusty_sphinx_site's `inventory` output group.",
+            doc = "The objects.inv file: a vendored copy, an `http_file` pinned by `sha256`, or a filegroup over another rinx_site's `inventory` output group.",
         ),
         "base_url": attr.string(
             mandatory = True,
@@ -40,7 +40,7 @@ rusty_sphinx_inventory = rule(
         ),
     },
     doc = """
-Declares a Sphinx inventory (`objects.inv`) a rusty_sphinx_site may link into.
+Declares a Sphinx inventory (`objects.inv`) a rinx_site may link into.
 
 List it in the site's `inventories`; the site's index action reads it, and a
 reference no document of the site defines is then resolved against it.

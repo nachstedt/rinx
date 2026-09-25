@@ -15,7 +15,7 @@
 //!   must have been declared in its library's `images` attribute.
 
 use anyhow::{Context, Result, anyhow};
-use rusty_sphinx_ast as ast;
+use rinx_ast as ast;
 use std::fs;
 use std::path::Path;
 

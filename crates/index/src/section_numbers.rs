@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::SectionId;
+use rinx_ast::SectionId;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 

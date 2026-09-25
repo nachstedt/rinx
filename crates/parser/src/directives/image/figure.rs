@@ -7,9 +7,7 @@
 //! caption writes an empty comment (`..`) first, which is the one piece of
 //! markup this parser consumes rather than parses.
 
-use rusty_sphinx_ast::{
-    DiagnosticCode, Directive, Figure, FigureWidth, ImageUri, InlineNode, Node, Span,
-};
+use rinx_ast::{DiagnosticCode, Directive, Figure, FigureWidth, ImageUri, InlineNode, Node, Span};
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
@@ -198,7 +196,7 @@ pub(in crate::directives) fn parse_figure_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Domain, ImageAlign, inline_plain_text};
+    use rinx_ast::{Domain, ImageAlign, inline_plain_text};
 
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
         let mut diagnostics = Diagnostics::default();

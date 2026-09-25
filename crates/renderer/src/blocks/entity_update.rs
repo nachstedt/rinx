@@ -6,13 +6,13 @@
 //! non-destructive design is the audit trail it leaves, and an audit trail
 //! nobody can see on the page is not much of one. The mutation's *effect* —
 //! what the entity it targets ends up showing — is a separate matter, handled
-//! entirely by `rusty_sphinx_analyzer::apply_entity_updates` before this ever
+//! entirely by `rinx_analyzer::apply_entity_updates` before this ever
 //! renders; this module only draws the directive's own record of what it
 //! asked for and why.
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{EntityUpdate, FieldMutation, FieldMutationMode};
+use rinx_ast::{EntityUpdate, FieldMutation, FieldMutationMode};
 
 use crate::RenderCtx;
 

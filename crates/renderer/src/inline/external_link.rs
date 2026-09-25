@@ -36,7 +36,7 @@ mod tests {
             &index.external_inventories,
             &["py:class".to_string()],
             "dict",
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         )
         .unwrap();
         let mut html = String::new();

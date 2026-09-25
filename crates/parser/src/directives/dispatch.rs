@@ -41,7 +41,7 @@ use super::substitution::{parse_substitution_definition, split_substitution_mark
 use super::table::parse_table_directive;
 use super::toctree::parse_toctree;
 use super::uml::parse_uml;
-use rusty_sphinx_ast::{CodeBlockSource, Directive, Node};
+use rinx_ast::{CodeBlockSource, Directive, Node};
 
 /// The indentation every directive-body parser strips before parsing, so a
 /// `ParseCtx` can be shifted by the same amount.
@@ -194,7 +194,7 @@ pub(crate) fn try_parse_directive(
 fn try_parse_splicing_directive(
     name: &str,
     argument: &str,
-    directive_span: Option<rusty_sphinx_ast::Span>,
+    directive_span: Option<rinx_ast::Span>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -248,7 +248,7 @@ fn try_parse_splicing_directive(
 fn try_parse_substitution_definition(
     name: &str,
     argument: &str,
-    directive_span: Option<rusty_sphinx_ast::Span>,
+    directive_span: Option<rinx_ast::Span>,
     body_lines: &[&str],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
@@ -364,7 +364,7 @@ fn try_parse_entity_directive(
 fn parse_body_directive(
     name: String,
     argument: String,
-    directive_span: Option<rusty_sphinx_ast::Span>,
+    directive_span: Option<rinx_ast::Span>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -415,7 +415,7 @@ fn parse_body_directive(
 fn parse_remaining_body_directive(
     name: String,
     argument: String,
-    directive_span: Option<rusty_sphinx_ast::Span>,
+    directive_span: Option<rinx_ast::Span>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -427,7 +427,7 @@ fn parse_remaining_body_directive(
     if let Some(directive) = parse_code_family(&name, &argument, body_lines, diagnostics, ctx) {
         return Node::Directive(directive);
     }
-    if let Ok(kind) = name.parse::<rusty_sphinx_ast::VersionChangeKind>() {
+    if let Ok(kind) = name.parse::<rinx_ast::VersionChangeKind>() {
         let directive = parse_version_change(
             kind,
             argument,
@@ -453,7 +453,7 @@ fn parse_remaining_body_directive(
         let directive = parse_seealso(body_lines, adornment_order, diagnostics, ctx);
         return Node::Directive(directive);
     }
-    if let Ok(kind) = name.parse::<rusty_sphinx_ast::AdmonitionKind>() {
+    if let Ok(kind) = name.parse::<rinx_ast::AdmonitionKind>() {
         let directive = parse_admonition(
             kind,
             argument,
@@ -528,13 +528,13 @@ fn parse_remaining_body_directive(
 fn try_parse_entity_view(
     name: &str,
     argument: &str,
-    directive_span: Option<rusty_sphinx_ast::Span>,
+    directive_span: Option<rinx_ast::Span>,
     body_lines: &[&str],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Option<Directive> {
     // This build's own listing directive, and sphinx-needs' spelling of it.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityTableSource>() {
+    if let Ok(source) = name.parse::<rinx_ast::EntityTableSource>() {
         return Some(parse_entity_table(
             source,
             argument,
@@ -547,7 +547,7 @@ fn try_parse_entity_view(
     // This build's own flowchart, and sphinx-needs' spelling of it. A sibling
     // of the listing directive above rather than of the diagram below: it
     // carries a question, not a template, and its picture is generated.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityFlowSource>() {
+    if let Ok(source) = name.parse::<rinx_ast::EntityFlowSource>() {
         return Some(parse_entity_flow(
             source,
             argument,
@@ -560,7 +560,7 @@ fn try_parse_entity_view(
     // This build's own sequence diagram, and sphinx-needs' spelling of it —
     // the flowchart's sibling: a question walked through the entity graph and
     // drawn as generated PlantUML.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntitySequenceSource>() {
+    if let Ok(source) = name.parse::<rinx_ast::EntitySequenceSource>() {
         return Some(parse_entity_sequence(
             source,
             argument,
@@ -574,7 +574,7 @@ fn try_parse_entity_view(
     // presentation of the listing directive's question — rows, a graph, or
     // proportions — and the only picture here that is never compiled: its SVG
     // is drawn by the render action itself.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityPieSource>() {
+    if let Ok(source) = name.parse::<rinx_ast::EntityPieSource>() {
         return Some(parse_entity_pie(
             source,
             argument,
@@ -587,7 +587,7 @@ fn try_parse_entity_view(
     // This build's own bar chart, and sphinx-needs' spelling of it: the pie's
     // question with a second dimension, drawn along an axis and — like the
     // pie — never compiled.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityBarSource>() {
+    if let Ok(source) = name.parse::<rinx_ast::EntityBarSource>() {
         return Some(parse_entity_bar(
             source,
             argument,
@@ -611,7 +611,7 @@ fn try_parse_entity_view(
 fn try_parse_extension_directive(
     name: &str,
     argument: &str,
-    directive_span: Option<rusty_sphinx_ast::Span>,
+    directive_span: Option<rinx_ast::Span>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -674,7 +674,7 @@ fn try_parse_extension_directive(
     // sphinx-needs' spelling of it. Unlike its three siblings above, it
     // carries a body — ordinary RST prose justifying the mutation — so it
     // takes `adornment_order` exactly as `.. dropdown::` does.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityUpdateSource>() {
+    if let Ok(source) = name.parse::<rinx_ast::EntityUpdateSource>() {
         return Some(parse_entity_update(
             source,
             argument,
@@ -701,7 +701,7 @@ fn try_parse_extension_directive(
     // nobody's extension in the sense the others are, but it belongs to the
     // same construct, and splitting the six across two dispatch sites is
     // exactly how the compiled set and the rendered set drift apart.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::UmlSource>() {
+    if let Ok(source) = name.parse::<rinx_ast::UmlSource>() {
         return Some(parse_uml(
             source,
             directive_span,
@@ -731,7 +731,7 @@ const fn object_type_supports_multiple_signatures(object_type: DirectiveObjectTy
 fn parse_image_family(
     name: &str,
     argument: &str,
-    directive_span: Option<rusty_sphinx_ast::Span>,
+    directive_span: Option<rinx_ast::Span>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
@@ -810,20 +810,20 @@ fn code_block_source(name: &str) -> Option<CodeBlockSource> {
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::CodeLanguage;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::CodeLanguage;
+    use rinx_ast::Domain;
 
     /// A plain toctree document entry spanning the whole of source line
     /// `line`, which is the shape `parse_toctree` produces for an unindented
     /// entry written under a top-level directive.
-    fn toc_document_entry(docname: &str, line: u32) -> rusty_sphinx_ast::TocEntry {
+    fn toc_document_entry(docname: &str, line: u32) -> rinx_ast::TocEntry {
         let column_end = u32::try_from(docname.chars().count()).unwrap_or(0) + 4;
-        rusty_sphinx_ast::TocEntry::Document {
+        rinx_ast::TocEntry::Document {
             title: None,
             docname: docname.to_string(),
-            span: Some(rusty_sphinx_ast::Span::new(
-                rusty_sphinx_ast::Position::new(line, 4),
-                rusty_sphinx_ast::Position::new(line, column_end),
+            span: Some(rinx_ast::Span::new(
+                rinx_ast::Position::new(line, 4),
+                rinx_ast::Position::new(line, column_end),
             )),
         }
     }
@@ -916,10 +916,7 @@ mod tests {
         }
         let (found, _, _) = diagnostics.into_parts();
         assert_eq!(found.len(), 1);
-        assert_eq!(
-            found[0].code,
-            rusty_sphinx_ast::DiagnosticCode::DirectiveUnknown
-        );
+        assert_eq!(found[0].code, rinx_ast::DiagnosticCode::DirectiveUnknown);
         assert_eq!(
             found[0].message,
             "unknown directive type 'not-a-real-directive'"
@@ -940,7 +937,7 @@ mod tests {
         let codes: Vec<_> = found.iter().map(|d| d.code).collect();
         assert_eq!(
             codes,
-            [rusty_sphinx_ast::DiagnosticCode::EntitySequenceUnknownRelation]
+            [rinx_ast::DiagnosticCode::EntitySequenceUnknownRelation]
         );
     }
 
@@ -961,7 +958,7 @@ mod tests {
         assert_eq!(found.len(), 1);
         assert_eq!(
             found[0].code,
-            rusty_sphinx_ast::DiagnosticCode::NeedServiceUnsupported
+            rinx_ast::DiagnosticCode::NeedServiceUnsupported
         );
     }
 
@@ -991,7 +988,7 @@ mod tests {
             kind, title, body, ..
         }) = &doc.nodes[0]
         {
-            assert_eq!(kind, &rusty_sphinx_ast::AdmonitionKind::Note);
+            assert_eq!(kind, &rinx_ast::AdmonitionKind::Note);
             assert_eq!(title, &None);
             assert_eq!(body.len(), 1);
         } else {
@@ -1010,7 +1007,7 @@ mod tests {
         // Then
         assert_eq!(doc.nodes.len(), 1);
         if let Node::Directive(Directive::Admonition { kind, title, .. }) = &doc.nodes[0] {
-            assert_eq!(kind, &rusty_sphinx_ast::AdmonitionKind::Admonition);
+            assert_eq!(kind, &rinx_ast::AdmonitionKind::Admonition);
             assert_eq!(title, &Some("My Title".to_string()));
         } else {
             panic!("Expected Admonition directive");
@@ -1063,19 +1060,17 @@ mod tests {
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(
             doc.nodes[0],
-            Node::Directive(Directive::Toctree(rusty_sphinx_ast::Toctree {
+            Node::Directive(Directive::Toctree(rinx_ast::Toctree {
                 entries: vec![
                     toc_document_entry("team_a/index", 3),
                     toc_document_entry("team_b/index", 4),
                 ],
-                options: rusty_sphinx_ast::ToctreeOptions::default(),
+                options: rinx_ast::ToctreeOptions::default(),
             }))
         );
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
-                "Next Para".to_string()
-            )])
+            Node::Paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
         );
     }
 
@@ -1092,22 +1087,20 @@ mod tests {
         assert_eq!(doc.nodes.len(), 2);
         assert_eq!(
             doc.nodes[0],
-            Node::Directive(Directive::Toctree(rusty_sphinx_ast::Toctree {
+            Node::Directive(Directive::Toctree(rinx_ast::Toctree {
                 entries: vec![
                     toc_document_entry("team_a/index", 4),
                     toc_document_entry("team_b/index", 5),
                 ],
-                options: rusty_sphinx_ast::ToctreeOptions {
+                options: rinx_ast::ToctreeOptions {
                     maxdepth: std::num::NonZeroUsize::new(2),
-                    ..rusty_sphinx_ast::ToctreeOptions::default()
+                    ..rinx_ast::ToctreeOptions::default()
                 },
             }))
         );
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
-                "Next Para".to_string()
-            )])
+            Node::Paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
         );
     }
 
@@ -1159,13 +1152,11 @@ mod tests {
         let Node::Directive(Directive::Uml(uml)) = &doc.nodes[0] else {
             panic!("expected a diagram, found {:?}", doc.nodes[0]);
         };
-        assert_eq!(uml.source, rusty_sphinx_ast::UmlSource::PlantUml);
+        assert_eq!(uml.source, rinx_ast::UmlSource::PlantUml);
         assert_eq!(uml.template, "A -> B\nB -> C");
         assert_eq!(
             doc.nodes[1],
-            Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
-                "Next Para".to_string()
-            )])
+            Node::Paragraph(vec![rinx_ast::InlineNode::Text("Next Para".to_string())])
         );
     }
 
@@ -1216,7 +1207,7 @@ mod tests {
 /// a name added there without being added here would let a project declare an
 /// entity section that silently shadows it. `is_builtin_directive_name` is the
 /// only consumer — the entity schema loader asks it through the worker, rather
-/// than `rusty_sphinx_entity` keeping a copy that could drift.
+/// than `rinx_entity` keeping a copy that could drift.
 ///
 /// Domain-object and scope directive names are included: they are resolved by
 /// [`resolve_domain_object_type`] and [`try_parse_scope_directive`] rather than
@@ -1378,7 +1369,7 @@ mod builtin_name_tests {
         // When / Then
         for name in names {
             assert!(
-                name.parse::<rusty_sphinx_ast::AdmonitionKind>().is_ok(),
+                name.parse::<rinx_ast::AdmonitionKind>().is_ok(),
                 "`{name}` is no longer an admonition; this list is stale"
             );
             assert!(
@@ -1396,7 +1387,7 @@ mod builtin_name_tests {
         // When / Then
         for name in names {
             assert!(
-                name.parse::<rusty_sphinx_ast::VersionChangeKind>().is_ok(),
+                name.parse::<rinx_ast::VersionChangeKind>().is_ok(),
                 "`{name}` is no longer a version change; this list is stale"
             );
             assert!(
@@ -1433,7 +1424,7 @@ mod builtin_name_tests {
     #[test]
     fn test_every_domain_object_directive_name_is_reserved() {
         // Given — both domains, since a bare name resolves through either
-        let domains = [rusty_sphinx_ast::Domain::Py, rusty_sphinx_ast::Domain::C];
+        let domains = [rinx_ast::Domain::Py, rinx_ast::Domain::C];
 
         // When / Then
         for domain in domains {

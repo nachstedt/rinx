@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{Domain, InlineNode, ObjectType};
+use rinx_ast::{Domain, InlineNode, ObjectType};
 
 use crate::inline::regexes::FUNC_ROLE_REGEX;
 
@@ -22,8 +22,8 @@ pub(crate) fn handle_func_match(m_str: &str, default_domain: Domain) -> InlineNo
 mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
-    use rusty_sphinx_ast::TargetSearchOrder;
-    use rusty_sphinx_entity::EntitySchema;
+    use rinx_ast::TargetSearchOrder;
+    use rinx_entity::EntitySchema;
 
     /// Escapes `raw` the way `parse_inline_text` does before any of the
     /// helpers below see it, so a unit test exercises the form those helpers
@@ -40,13 +40,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                object_type: ObjectType::C(rinx_ast::CObjectType::Function),
                 name: "foo".to_string(),
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -62,13 +62,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                object_type: ObjectType::C(rinx_ast::CObjectType::Function),
                 name: "foo".to_string(),
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -84,13 +84,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
                 name: "foo".to_string(),
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -106,13 +106,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                object_type: ObjectType::C(rinx_ast::CObjectType::Function),
                 name: "add".to_string(),
                 display: "add".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -128,13 +128,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
                 name: "foo".to_string(),
                 display: "foo".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -150,13 +150,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
                 name: "pkg.mod.foo".to_string(),
                 display: "foo".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -176,13 +176,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
                 name: "spawnl".to_string(),
                 display: "spawn*".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -195,13 +195,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                object_type: ObjectType::C(rinx_ast::CObjectType::Function),
                 name: "Py_TYPE".to_string(),
                 display: "Py_TYPE()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -214,13 +214,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
                 name: "sys.getrecursionlimit".to_string(),
                 display: "sys.getrecursionlimit()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -240,13 +240,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::C(rusty_sphinx_ast::CObjectType::Function),
+                object_type: ObjectType::C(rinx_ast::CObjectType::Function),
                 name: "Py_SIZE".to_string(),
                 display: "Py_SIZE()".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }

@@ -39,7 +39,7 @@ pub enum Directive {
     /// `.. sectnum::` / `.. section-numbering::` — numbers every section in
     /// the document it's written in, wherever it's written, unless an
     /// ancestor `:numbered:` toctree already numbers that document (see
-    /// `rusty_sphinx_analyzer::section_numbering`, which resolves that
+    /// `rinx_analyzer::section_numbering`, which resolves that
     /// precedence). Produces no output of its own, like [`Self::Highlight`]:
     /// its effect is entirely in the numbers looked up while rendering
     /// headings.
@@ -183,7 +183,7 @@ pub enum Directive {
     ///
     /// Unlike its three siblings above, this directive produces no
     /// presentation of its own by default — its effect is entirely in what
-    /// `rusty_sphinx_analyzer::apply_entity_updates` writes into a derived,
+    /// `rinx_analyzer::apply_entity_updates` writes into a derived,
     /// non-destructive history beside `ProjectIndex::entities` before
     /// anything renders (see `docs/decisions/019-entity-update.md`). Its
     /// `body` is ordinary block content, exactly as [`Self::Dropdown`]'s is,
@@ -203,7 +203,7 @@ pub enum Directive {
     },
     /// A `.. index::` directive. `id` is the anchor the genindex page links
     /// back to — assigned by a post-parse pass (unique within this document
-    /// only, see `rusty_sphinx_parser`'s `assign_index_ids`), not at
+    /// only, see `rinx_parser`'s `assign_index_ids`), not at
     /// construction time, since there's no content-derived identity for a
     /// directive that marks a bare location.
     Index {

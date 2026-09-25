@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{SectionId, Toctree};
+use rinx_ast::{SectionId, Toctree};
 use serde::{Deserialize, Serialize};
 
 /// One document's heading hierarchy, as a `.. toctree::` needs to see it.
@@ -33,7 +33,7 @@ pub struct OutlineSection {
     /// The heading's plain text, with inline markup already flattened.
     pub title: String,
     /// The anchor the heading renders with, from the same
-    /// `rusty_sphinx_ast::allocate_section_ids` call the renderer uses — so a
+    /// `rinx_ast::allocate_section_ids` call the renderer uses — so a
     /// link built from this can never miss the heading it points at.
     pub id: SectionId,
     pub children: Vec<Self>,

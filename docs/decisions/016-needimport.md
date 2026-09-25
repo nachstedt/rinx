@@ -91,7 +91,7 @@ relations that type declares.
 That last rule cannot be applied naively, because a real `needs.json` carries a
 great deal of sphinx-needs' own bookkeeping beside the project's data —
 `docname`, `lineno`, `is_need`, `type_color`, `parent_needs`, `sections` and
-some thirty more. `rusty_sphinx_entity::needs_json`'s `INTERNAL_FIELDS`
+some thirty more. `rinx_entity::needs_json`'s `INTERNAL_FIELDS`
 enumerates them explicitly and `is_internal_field` matches the `type_*` family
 by prefix. **Ignoring every unrecognised field instead was rejected**: the
 common fault is a project attribute the schema has not declared yet, and
@@ -186,7 +186,7 @@ a top-level `[import_keys]` table in **`entities.toml`**.
 The first framing of this decision claimed configuration must not reach the
 parser. That was wrong, and the correction is worth recording: `entities.toml`
 *is* a parse-time config file — it is what makes `.. req::` a directive.
-`rusty_sphinx.toml` happens to be site-only, but that is a fact about that one
+`rinx.toml` happens to be site-only, but that is a fact about that one
 file, not a principle. ADR-001's rule is about **paths in configuration**, and
 its rationale is relocation, which does not bite here: a source-root-relative
 path survives a sandbox move fine. The real constraint is narrower — **Bazel
@@ -208,7 +208,7 @@ in this build follows: relative to the file that wrote it, or to the source
 root with a leading `/`. Anchoring at the `entities.toml` keeps a schema
 relocatable together with the data files beside it, and takes sphinx-needs' own
 `/needs_import.json` spelling verbatim, so the benchmark's converter copies the
-value across untouched. `rusty_sphinx_entity` keeps the values **as written**
+value across untouched. `rinx_entity` keeps the values **as written**
 and the worker resolves them once — only it knows where the schema file is.
 
 `[import_keys]` is deliberately **excluded from the schema fingerprint**. That
@@ -220,7 +220,7 @@ observe. `crates/entity/src/schema.rs`'s tests pin both halves.
 ## Consequences
 
 - **Every tier-1 diagnostic, by ADR-010's test.** Each of the sixteen
-  `needimport.*` codes is emitted by `rusty_sphinx_parser` and is something
+  `needimport.*` codes is emitted by `rinx_parser` and is something
   the parse cannot proceed without — which is the line ADR-010 drew, and it
   lands on the same crate boundary. Nothing about importing moves a check
   into tier 3.
@@ -253,10 +253,10 @@ observe. `crates/entity/src/schema.rs`'s tests pin both halves.
   nowhere to put and is still `needimport.invalid-value`. The `bool` exception
   that reads an empty option as *true* is RST option syntax and deliberately
   does **not** apply to an imported value.
-- **`rusty_sphinx_ast` gained `impl From<&AttributeValue> for FieldValue`.**
-  `rusty_sphinx_index`'s `EntitySubject` and the import's own filter subject
+- **`rinx_ast` gained `impl From<&AttributeValue> for FieldValue`.**
+  `rinx_index`'s `EntitySubject` and the import's own filter subject
   both needed it and may not depend on each other; `ast` already depends on
-  `rusty_sphinx_filter`, so the mapping lives there and the duplicate that
+  `rinx_filter`, so the mapping lives there and the duplicate that
   existed in `entity_subject.rs` was deleted rather than copied.
 
 ## Narrowings

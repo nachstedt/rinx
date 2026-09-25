@@ -15,8 +15,8 @@
 
 use std::collections::BTreeSet;
 
-use rusty_sphinx_ast::{SectionId, Toctree, ToctreeFlag};
-use rusty_sphinx_index::{OutlineSection, ProjectIndex};
+use rinx_ast::{SectionId, Toctree, ToctreeFlag};
+use rinx_index::{OutlineSection, ProjectIndex};
 
 use super::entry::ResolvedNavEntry;
 use super::resolve::{document_href, document_title};
@@ -94,17 +94,15 @@ fn expand_one(
         return Vec::new();
     }
 
-    let (targets, _) = rusty_sphinx_toctree::expand_toctree(toctree, owner, &walk.universe);
+    let (targets, _) = rinx_toctree::expand_toctree(toctree, owner, &walk.universe);
     targets
         .into_iter()
         .map(|target| match target {
-            rusty_sphinx_toctree::TocTarget::External { url, title, .. } => {
-                ResolvedNavEntry::External {
-                    title: title.unwrap_or_else(|| url.clone()),
-                    href: minijinja::Value::from_safe_string(url),
-                }
-            }
-            rusty_sphinx_toctree::TocTarget::Document {
+            rinx_toctree::TocTarget::External { url, title, .. } => ResolvedNavEntry::External {
+                title: title.unwrap_or_else(|| url.clone()),
+                href: minijinja::Value::from_safe_string(url),
+            },
+            rinx_toctree::TocTarget::Document {
                 docname,
                 title,
                 span: _,
@@ -279,8 +277,8 @@ pub(crate) fn sidebar_entries(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{TocEntry, ToctreeOptions};
-    use rusty_sphinx_index::{DocumentOutline, DocumentToctree, OutlineSection};
+    use rinx_ast::{TocEntry, ToctreeOptions};
+    use rinx_index::{DocumentOutline, DocumentToctree, OutlineSection};
 
     fn toctree(docnames: &[&str]) -> Toctree {
         Toctree {

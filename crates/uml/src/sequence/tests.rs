@@ -1,9 +1,9 @@
 use std::collections::BTreeMap;
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{EntityId, EntitySequence, EntitySequenceSource, NonEmptyVector};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_ast::{EntityId, EntitySequence, EntitySequenceSource, NonEmptyVector};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_index::{EntityRecord, ProjectIndex};
 
 use super::*;
 
@@ -281,7 +281,7 @@ fn test_the_filter_drops_a_receiver_and_everything_only_it_reaches() {
     // Given — the temperature controller is filtered out
     let mut sequence = sequence(&["COMP_UI"], &["sends"]);
     sequence.filter =
-        Some(rusty_sphinx_filter::parse_filter(r#"id != "COMP_TEMP""#).expect("a valid filter"));
+        Some(rinx_filter::parse_filter(r#"id != "COMP_TEMP""#).expect("a valid filter"));
 
     // When
     let text = text(&sequence);
@@ -296,7 +296,7 @@ fn test_the_filter_never_drops_a_start() {
     // Given — a filter the start itself would fail
     let mut sequence = sequence(&["COMP_UI"], &["sends"]);
     sequence.filter =
-        Some(rusty_sphinx_filter::parse_filter(r#"id != "COMP_UI""#).expect("a valid filter"));
+        Some(rinx_filter::parse_filter(r#"id != "COMP_UI""#).expect("a valid filter"));
 
     // When
     let text = text(&sequence);

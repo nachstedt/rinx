@@ -19,12 +19,10 @@
 use std::collections::BTreeMap;
 
 use minijinja::Value;
-use rusty_sphinx_ast::EntityId;
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_filter::{FieldName, FieldValue, FilterSubject};
-use rusty_sphinx_index::{
-    EntityRecord, EntitySubject, ProjectIndex, entity_anchor, relative_doc_href,
-};
+use rinx_ast::EntityId;
+use rinx_entity::EntitySchema;
+use rinx_filter::{FieldName, FieldValue, FilterSubject};
+use rinx_index::{EntityRecord, EntitySubject, ProjectIndex, entity_anchor, relative_doc_href};
 
 /// One entity's fields, resolved once and owned.
 ///
@@ -162,7 +160,7 @@ impl Snapshot {
     ///
     /// Order is not tidiness here: it decides the order nodes appear in the
     /// generated `PlantUML`, and so the bytes that get hashed.
-    pub(crate) fn matching(&self, filter: &rusty_sphinx_filter::Expr) -> Vec<&String> {
+    pub(crate) fn matching(&self, filter: &rinx_filter::Expr) -> Vec<&String> {
         self.entities
             .iter()
             .filter(|(_, facts)| filter.matches(*facts))
@@ -172,7 +170,7 @@ impl Snapshot {
 
     /// Whether the entity `id` exists and `filter` selects it — the one-entity
     /// form of [`Self::matching`], for a walk that meets entities one at a time.
-    pub(crate) fn matches(&self, id: &str, filter: &rusty_sphinx_filter::Expr) -> bool {
+    pub(crate) fn matches(&self, id: &str, filter: &rinx_filter::Expr) -> bool {
         self.entities
             .get(id)
             .is_some_and(|facts| filter.matches(facts))

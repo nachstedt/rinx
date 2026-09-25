@@ -2,7 +2,7 @@
 //!
 //! Real Sphinx projects template their `.rst` files with a `conf.py` hook on
 //! the `source-read` event; this build cannot run one, so the same transform
-//! is a declared, opt-in step instead — `rusty_sphinx_template` performs it
+//! is a declared, opt-in step instead — `rinx_template` performs it
 //! and that crate's documentation explains why it exists and what it refuses.
 //!
 //! What lives here is the part that belongs to *parsing*: turning the crate's
@@ -12,8 +12,8 @@
 //! template costs the page its expansion and nothing else — the same
 //! error-resilience the rest of this crate is written for.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, FileId, Span};
-use rusty_sphinx_template::{
+use rinx_ast::{Diagnostic, DiagnosticCode, FileId, Span};
+use rinx_template::{
     LoadedTemplate, RenderedSource, TemplateError, TemplateErrorKind, TemplateLoader, render_source,
 };
 
@@ -195,7 +195,7 @@ impl TemplateLoader for ParseFileTemplates<'_, '_> {
 mod tests {
     use std::collections::HashMap;
 
-    use rusty_sphinx_ast::{Document, Domain, InlineNode, Node};
+    use rinx_ast::{Document, Domain, InlineNode, Node};
 
     use super::*;
     use crate::context::ParseCtx;

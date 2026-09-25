@@ -276,7 +276,7 @@ class DiscardStaleCorpusOutputsTest(unittest.TestCase):
 
             # Then the corpus outputs are gone — a document dropped from the
             # corpus must not keep being counted — while the compiled
-            # rusty-sphinx binary under `external` stays warm
+            # rinx binary under `external` stays warm
             self.assertFalse((bazel_bin / "coffee").exists())
             self.assertFalse((bazel_bin / "index.ast").exists())
             self.assertTrue((bazel_bin / "external").exists())

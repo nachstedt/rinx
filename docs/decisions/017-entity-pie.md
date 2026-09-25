@@ -140,7 +140,7 @@ an unparseable filter selects *everything* — left the wedge counting the whole
 project. A chart of eight identical wedges is not partial support; it is a
 wrong answer drawn convincingly.
 
-So `rusty_sphinx_filter` admits `field.startswith("…")` and
+So `rinx_filter` admits `field.startswith("…")` and
 `field.endswith("…")`, as one `Expr::TextAffix` variant, and **nothing else
 past a `.`**. A bare attribute access keeps the message it always had; any
 other method is refused by name as `` `.lower()` is not supported here; only

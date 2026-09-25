@@ -1,7 +1,7 @@
-use rusty_sphinx_ast::{
+use rinx_ast::{
     ButtonFlag, ButtonLink, ButtonTarget, Directive, InlineNode, SemanticColor, TextAlign,
 };
-use rusty_sphinx_index::{ProjectIndex, TargetLocation};
+use rinx_index::{ProjectIndex, TargetLocation};
 
 use crate::blocks::render_test_support::render_directive_html;
 
@@ -189,7 +189,7 @@ fn test_a_reference_in_the_label_is_flattened_to_its_text() {
     // and not a broken link
     let mut index = ProjectIndex::default();
     index.targets.insert(
-        rusty_sphinx_ast::TargetName::new("the-guide"),
+        rinx_ast::TargetName::new("the-guide"),
         TargetLocation::Internal("guide.rst".to_string()),
     );
     let mut link = button();
@@ -199,7 +199,7 @@ fn test_a_reference_in_the_label_is_flattened_to_its_text() {
             display: Some("the guide".to_string()),
             target: "the-guide".to_string(),
             span: None,
-            inventory: rusty_sphinx_ast::InventorySelector::Any,
+            inventory: rinx_ast::InventorySelector::Any,
         },
     ];
 

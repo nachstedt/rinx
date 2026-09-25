@@ -69,7 +69,7 @@ kept byte-identical across two processes or a page would point at an SVG
 nothing compiled.
 
 So the render action does both. It already loads the index and walks the
-document, so `rusty_sphinx_uml::expand` is called once per diagram, the
+document, so `rinx_uml::expand` is called once per diagram, the
 `<img>` is built from the result's hash, and the text goes back in
 `RenderOutput::diagram_sources` for `cmd_render` to write as `<hash>.puml`. The
 renderer crate still performs no I/O. The page and the file it names come from
@@ -92,8 +92,8 @@ a stale index — the same distinction an empty `.. entity-table::` already make
 
 ### 4. Diagrams are opt-in per library, and compiled by the site
 
-`rusty_sphinx_library` gained `diagrams`, **off by default**. Only documents of a
-library that sets it get diagram actions; `RustySphinxInfo.diagram_ast_files`
+`rinx_library` gained `diagrams`, **off by default**. Only documents of a
+library that sets it get diagram actions; `RinxInfo.diagram_ast_files`
 tells the site which ones. For each, the render declares a `<doc>` puml
 directory and a per-document `PlantUMLCompile` consumes it.
 
@@ -164,16 +164,16 @@ price of one hash population.
 
 Nothing here is a second implementation of something the build already had:
 
-- `filter()` is `rusty_sphinx_filter`, the same crate and the same refusals a
+- `filter()` is `rinx_filter`, the same crate and the same refusals a
   listing directive's `:filter:` goes through. It is parsed at *render* time
   rather than parse time only because the text does not exist until the
   template runs.
 - `flow()` and `ref()` build hrefs from `relative_doc_href` and
   `entity_anchor`, so a clickable node lands exactly where a `:ref:` to the
-  same entity would. Both moved from the renderer into `rusty_sphinx_index` to
+  same entity would. Both moved from the renderer into `rinx_index` to
   make that possible.
 - `EntitySubject` — what a field *name* is worth — likewise moved into
-  `rusty_sphinx_index`. A filter meaning one thing in a table and another in a
+  `rinx_index`. A filter meaning one thing in a table and another in a
   diagram would be a bug neither crate's tests could see.
 
 `imports()` takes an explicit id where sphinx-needs' takes only relation names
@@ -222,13 +222,13 @@ group rather than a config flag.
 
 ## Consequences
 
-- A `rusty_sphinx_site` now needs the PlantUML tool; a `rusty_sphinx_library`
+- A `rinx_site` now needs the PlantUML tool; a `rinx_library`
   no longer does.
 - A library with diagrams must set `diagrams = True`. This is the one change an
   existing `.. plantuml::` user has to make, and the parse error says so.
 - `validate_images` takes the puml directories (`--diagram-dirs`) rather than
   re-deriving diagrams from the index.
-- `uml_configs` is a new `rusty_sphinx.toml` table. It holds preamble *text*,
+- `uml_configs` is a new `rinx.toml` table. It holds preamble *text*,
   not a path, so it respects ADR-001.
 - The snapshot a template is expanded against is built per templated diagram
   and is linear in the size of the project. A project with thousands of

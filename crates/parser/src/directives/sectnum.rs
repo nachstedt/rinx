@@ -1,6 +1,6 @@
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive, SectnumOptions};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, SectnumOptions};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -153,7 +153,7 @@ pub(super) fn parse_sectnum(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Domain, Node};
+    use rinx_ast::{Domain, Node};
     use std::num::NonZeroUsize;
 
     /// Parses a directive body directly, bypassing the block dispatcher, for
@@ -424,7 +424,7 @@ mod tests {
         let docutils_spelling = parse("test.rst", ".. section-numbering::\n   :depth: 1\n");
 
         // When
-        let find = |doc: &rusty_sphinx_ast::Document| {
+        let find = |doc: &rinx_ast::Document| {
             doc.nodes
                 .iter()
                 .find_map(|node| match node {

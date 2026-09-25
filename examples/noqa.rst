@@ -3,7 +3,7 @@
 Suppressing diagnostics
 =======================
 
-Every warning rusty-sphinx reports carries a code, and a ``.. noqa:`` comment
+Every warning rinx reports carries a code, and a ``.. noqa:`` comment
 silences the codes it names for the block that follows it.
 
 The comment is ordinary reStructuredText — Sphinx itself sees a comment and

@@ -1,7 +1,7 @@
 use super::error_node::malformed_directive;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{DiagnosticCode, Directive, Domain, Span};
+use rinx_ast::{DiagnosticCode, Directive, Domain, Span};
 
 /// Tries to parse `name`/`argument` as one of the *scope* directives: the
 /// content-less, domain-qualified directives that document nothing and only
@@ -135,7 +135,7 @@ fn parse_program_argument(argument: &str) -> Option<String> {
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::Node;
+    use rinx_ast::Node;
 
     #[test]
     fn test_parse_creates_py_current_module_directive_from_bare_form() {
@@ -194,7 +194,7 @@ mod tests {
         let input = ".. currentmodule:: enum";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rusty_sphinx_ast::Domain::C);
+        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
 
         // Then
         assert!(matches!(
@@ -241,7 +241,7 @@ mod tests {
         let input = ".. namespace:: A.B";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rusty_sphinx_ast::Domain::C);
+        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(
@@ -327,8 +327,9 @@ mod tests {
             Node::Directive(Directive::Malformed { name, .. }) if name == "c:namespace-push"
         ));
         assert!(
-            doc.diagnostics.iter().any(|d| d.code
-                == rusty_sphinx_ast::DiagnosticCode::DirectiveNamespacePushArgumentMissing)
+            doc.diagnostics
+                .iter()
+                .any(|d| d.code == rinx_ast::DiagnosticCode::DirectiveNamespacePushArgumentMissing)
         );
     }
 
@@ -387,7 +388,7 @@ mod tests {
         let input = ".. program:: dis";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rusty_sphinx_ast::Domain::C);
+        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
 
         // Then
         assert_eq!(

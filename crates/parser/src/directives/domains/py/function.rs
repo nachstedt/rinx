@@ -4,7 +4,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:function::` body: strips a leading `:module:` option line
 /// off the front before parsing the rest as the docstring body — the only
@@ -71,7 +71,7 @@ fn extract_function_options(lines: &[String]) -> (Option<String>, usize) {
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::{Directive, Node};
 
     #[test]
     fn test_parse_decorator_alias_directive_forces_is_decorator_flag() {

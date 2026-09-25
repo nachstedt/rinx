@@ -1,6 +1,6 @@
 use crate::explicit_title::split_explicit_title;
 use crate::inline::escapes::unescape;
-use rusty_sphinx_ast::{Domain, InlineNode, ObjectType, TargetSearchOrder};
+use rinx_ast::{Domain, InlineNode, ObjectType, TargetSearchOrder};
 
 /// The name/display/link-behavior of a domain-object role target, after
 /// stripping the optional `!` (suppress link), `~` (shorten display to the
@@ -24,7 +24,7 @@ impl DomainObjectTarget {
             link: self.link,
             search_order: self.search_order,
             span: None,
-            inventory: rusty_sphinx_ast::InventorySelector::Any,
+            inventory: rinx_ast::InventorySelector::Any,
         }
     }
 }
@@ -173,7 +173,7 @@ pub(super) fn strip_trailing_call_parens(name: &str, domain: Domain) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::TargetSearchOrder;
+    use rinx_ast::TargetSearchOrder;
 
     /// Escapes `raw` the way `parse_inline_text` does before any of the
     /// helpers below see it, so a unit test exercises the form those helpers

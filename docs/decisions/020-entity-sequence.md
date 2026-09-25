@@ -40,7 +40,7 @@ the question — a flowchart *filters* the graph, a sequence diagram *walks* it.
 ### 1. `.. entity-sequence::` is a question, generated like a flowchart
 
 The directive parses to `Directive::EntitySequence`, a sibling of
-`Directive::EntityFlow`, and `rusty_sphinx_uml::build_sequence` generates its
+`Directive::EntityFlow`, and `rinx_uml::build_sequence` generates its
 PlantUML while rendering. Everything after the text exists — `assemble.rs`'s
 wrapping, `:config:` preamble and hash, the `.puml` file, the compile action,
 `validate_images`, `diagram_figure.rs`'s markup — is shared, for ADR-014 §3's

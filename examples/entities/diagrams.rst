@@ -129,7 +129,7 @@ Named PlantUML preambles
 ------------------------
 
 ``:config:`` names a preamble declared under ``[uml_configs]`` in the site's
-``rusty_sphinx.toml`` — the preamble's *text*, never a path to a file holding
+``rinx.toml`` — the preamble's *text*, never a path to a file holding
 it, so it survives a sandboxed build relocating files. The preamble is inserted
 directly after ``@startuml``, which is the only place PlantUML reads a
 ``skinparam`` from. Naming one that is not declared is

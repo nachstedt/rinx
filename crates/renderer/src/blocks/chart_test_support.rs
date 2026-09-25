@@ -8,9 +8,9 @@
 
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{AttributeValue, EntityId};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_ast::{AttributeValue, EntityId};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_index::{EntityRecord, ProjectIndex};
 
 /// Two types — `req` with a `status`, and `test` verifying it.
 pub(super) fn schema() -> EntitySchema {

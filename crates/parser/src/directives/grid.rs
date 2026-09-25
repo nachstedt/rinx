@@ -19,7 +19,7 @@
 //! that is not a grid-item, and a grid-item written outside a grid, both warn
 //! and both still render.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     ChildAlign, ChildDirection, ColumnSpec, Diagnostic, DiagnosticCode, Directive, Grid, GridItem,
     Gutter, Node, Spacing, SpacingKind, Span,
 };
@@ -380,7 +380,7 @@ fn report_empty_value(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{InlineNode, SpacingValue, Uml, walk_nodes};
+    use rinx_ast::{InlineNode, SpacingValue, Uml, walk_nodes};
 
     /// Parses a whole document and returns its single `.. grid::` with the
     /// document's diagnostics — the dispatcher is what positions the parse

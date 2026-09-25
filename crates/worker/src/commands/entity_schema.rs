@@ -7,8 +7,8 @@
 //! what a missing `--entity-schema` means.
 
 use anyhow::{Context, Result, anyhow};
-use rusty_sphinx_entity::{EntitySchema, ReservedDirectiveNames, load_schema};
-use rusty_sphinx_renderer::EntityTemplates;
+use rinx_entity::{EntitySchema, ReservedDirectiveNames, load_schema};
+use rinx_renderer::EntityTemplates;
 use std::collections::BTreeMap;
 use std::fs;
 
@@ -17,13 +17,13 @@ use super::cli_args::{flag_value_opt, flag_values_opt};
 /// Answers the schema loader's shadowing question by asking the parser.
 ///
 /// The parser owns the directive vocabulary, so this is the one place the two
-/// crates are joined: `rusty_sphinx_entity` deliberately holds no list of
+/// crates are joined: `rinx_entity` deliberately holds no list of
 /// built-in directive names, which would drift the moment a new one is added.
 struct ParserDirectiveNames;
 
 impl ReservedDirectiveNames for ParserDirectiveNames {
     fn is_reserved(&self, name: &str) -> bool {
-        rusty_sphinx_parser::is_builtin_directive_name(name)
+        rinx_parser::is_builtin_directive_name(name)
     }
 }
 
@@ -77,7 +77,7 @@ pub(super) fn import_keys_from_args(
 ///
 /// Two transformations, both of which need to happen exactly once and in a
 /// phase that knows where the schema file sits — which is why they are here
-/// and not in `rusty_sphinx_entity`, whose schema keeps the values as written:
+/// and not in `rinx_entity`, whose schema keeps the values as written:
 ///
 /// 1. **Anchored at the schema file**, by the rule every other written path in
 ///    this build follows (`resolve_from_document`): a leading `/` means the
@@ -85,9 +85,9 @@ pub(super) fn import_keys_from_args(
 ///    keeps a schema relocatable together with the data files beside it, and
 ///    takes sphinx-needs' own `/needs_import.json` spelling verbatim.
 /// 2. **Prefixed with `/`** afterwards, so the parser can hand it to
-///    [`ParseFileLoader`](rusty_sphinx_parser::ParseFileLoader) with no anchor
+///    [`ParseFileLoader`](rinx_parser::ParseFileLoader) with no anchor
 ///    of its own and get source-root resolution — the same trick
-///    `rusty_sphinx_parser`'s Jinja template loader uses, and for the same
+///    `rinx_parser`'s Jinja template loader uses, and for the same
 ///    reason: a project-level config names a file from the project's root, not
 ///    from whichever document happens to mention it.
 pub(super) fn resolve_import_keys(
@@ -98,7 +98,7 @@ pub(super) fn resolve_import_keys(
         .import_keys()
         .iter()
         .map(|(alias, written)| {
-            let resolved = rusty_sphinx_ast::resolve_from_document(written, schema_path);
+            let resolved = rinx_ast::resolve_from_document(written, schema_path);
             (alias.clone(), format!("/{}", resolved.to_string_lossy()))
         })
         .collect()

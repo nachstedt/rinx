@@ -1,8 +1,8 @@
-use rusty_sphinx_ast::{Directive, Document, IndexEntry, Node, TableRow, TargetName};
-use rusty_sphinx_index::{
+use rinx_ast::{Directive, Document, IndexEntry, Node, TableRow, TargetName};
+use rinx_index::{
     EntityUpdateRecord, EquationLocation, GenIndexEntry, ProjectIndex, TargetLocation,
 };
-use rusty_sphinx_scope::Scope;
+use rinx_scope::Scope;
 
 use super::domain_object_index::index_domain_object;
 use super::equation_numbering::number_equations;
@@ -21,7 +21,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
         if !found_title && let Node::Heading { level: 1, text } = node {
             index
                 .document_titles
-                .insert(doc.path.clone(), rusty_sphinx_ast::inline_plain_text(text));
+                .insert(doc.path.clone(), rinx_ast::inline_plain_text(text));
             found_title = true;
         }
     }
@@ -35,7 +35,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     // Each toctree is paired with the section it was written inside, which the
     // outline pass computed in the same walk — the renderer needs both to put
     // a toctree's entries where the author wrote the directive.
-    let toctrees: Vec<rusty_sphinx_index::DocumentToctree> = doc
+    let toctrees: Vec<rinx_index::DocumentToctree> = doc
         .nodes
         .iter()
         .filter_map(|node| match node {
@@ -48,7 +48,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
                 .into_iter()
                 .chain(std::iter::repeat(None)),
         )
-        .map(|(toctree, section)| rusty_sphinx_index::DocumentToctree { toctree, section })
+        .map(|(toctree, section)| rinx_index::DocumentToctree { toctree, section })
         .collect();
     if !toctrees.is_empty() {
         index.toctrees.insert(doc.path.clone(), toctrees);
@@ -95,7 +95,7 @@ fn index_genindex_entries(
 /// ordinary content belonging to this document — a target or entity written
 /// in the justification is reached exactly as a dropdown's body is.
 fn index_entity_update(
-    update: &rusty_sphinx_ast::EntityUpdate,
+    update: &rinx_ast::EntityUpdate,
     doc_path: &str,
     index: &mut ProjectIndex,
     scope: &mut Scope,
@@ -109,7 +109,7 @@ fn index_entity_update(
 
 /// Records one entity, its link target, and everything inside its sections.
 fn index_entity_and_its_sections(
-    entity: &rusty_sphinx_ast::EntityBody,
+    entity: &rinx_ast::EntityBody,
     doc_path: &str,
     index: &mut ProjectIndex,
     scope: &mut Scope,
@@ -125,7 +125,7 @@ fn index_entity_and_its_sections(
     // Its anchor is not its name, so a `:ref:` must be told where it is.
     index
         .target_anchors
-        .insert(name, rusty_sphinx_index::entity_anchor(entity.id.as_str()));
+        .insert(name, rinx_index::entity_anchor(entity.id.as_str()));
     // Every section is body content and may hold definitions of its own — a
     // target, a nested entity, a glossary. Recursing keeps this walk mirroring
     // `render_nodes`, as the module doc requires.
@@ -144,7 +144,7 @@ fn index_entity_and_its_sections(
 ///
 /// `scope.python` carries the enclosing `py:class`/`py:exception` stack
 /// (lexical, pushed/popped around a nested body — see
-/// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`], shared with
+/// [`rinx_ast::DomainObjectBody::deduce_local_scope`], shared with
 /// the renderer so index keys and anchor `id`s can't drift apart) and the
 /// most recently seen `py:module` (document-order state, not lexical
 /// nesting — real Sphinx docs write `py:module` and the functions/classes it
@@ -153,7 +153,7 @@ fn index_entity_and_its_sections(
 /// of the document until another `py:module`, or `py:currentmodule`,
 /// changes it). `scope.c` is the same idea for the `c` domain's
 /// `c:struct`/`c:union` nesting — a wholly separate stack (see
-/// [`rusty_sphinx_scope::CScope`]'s doc comment for why it isn't a variant of
+/// [`rinx_scope::CScope`]'s doc comment for why it isn't a variant of
 /// `PythonScope`); `c:function`/`c:macro` never touch it and keep qualifying
 /// via `scope.python` exactly as before it existed.
 pub(super) fn index_nodes(
@@ -306,13 +306,10 @@ fn record_target_titles(nodes: &[Node], index: &mut ProjectIndex) {
 /// makes a target of itself — `(None, None)` for anything with neither.
 fn element_title(node: &Node) -> (Option<&TargetName>, Option<String>) {
     match node {
-        Node::Heading { text, .. } => (None, Some(rusty_sphinx_ast::inline_plain_text(text))),
+        Node::Heading { text, .. } => (None, Some(rinx_ast::inline_plain_text(text))),
         Node::Directive(Directive::Figure(figure)) => (
             figure.image.name.as_ref(),
-            figure
-                .caption
-                .as_deref()
-                .map(rusty_sphinx_ast::inline_plain_text),
+            figure.caption.as_deref().map(rinx_ast::inline_plain_text),
         ),
         Node::Directive(
             Directive::Table { title, name, .. } | Directive::DataTable { title, name, .. },
@@ -387,7 +384,7 @@ fn apply_scope_directive(directive: &Directive, scope: &mut Scope) {
 /// can reach them by.
 ///
 /// Split out of [`index_nodes`] for the same reason
-/// [`rusty_sphinx_ast::walk_nodes`] splits its directive arm out: three
+/// [`rinx_ast::walk_nodes`] splits its directive arm out: three
 /// near-identical arms make the node match harder to read than the one thing
 /// they have in common. A figure and a dropdown additionally carry a body — a
 /// legend and a dropdown's content are ordinary content, so anything
@@ -477,11 +474,7 @@ fn index_name_bearing_directive(
 /// document-wide switch, not a positional marker. When a document writes more
 /// than one, the last visited (document order) wins, simply from
 /// `BTreeMap::insert` overwriting the earlier one.
-fn index_sectnum(
-    options: &rusty_sphinx_ast::SectnumOptions,
-    doc_path: &str,
-    index: &mut ProjectIndex,
-) {
+fn index_sectnum(options: &rinx_ast::SectnumOptions, doc_path: &str, index: &mut ProjectIndex) {
     index.sectnum.insert(doc_path.to_string(), options.clone());
 }
 

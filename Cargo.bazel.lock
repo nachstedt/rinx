@@ -1,5 +1,5 @@
 {
-  "checksum": "4f8f501f7e05308a1da3db3b529a63a7824aa84b395d7cce229d55427fa7add6",
+  "checksum": "fcf0a41c3272468b57290c4396d4415e687ea93b6b6083547e3704e441dfd971",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4271,6 +4271,458 @@
       ],
       "version": "0.8.11"
     },
+    "rinx_analyzer 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_analyzer",
+      "name": "rinx_analyzer",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_analyzer",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_ast 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          },
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          },
+          {
+            "id": "sha2 0.11.0",
+            "target": "sha2"
+          },
+          {
+            "id": "unicode-normalization 0.1.25",
+            "target": "unicode_normalization"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_ast",
+      "name": "rinx_ast",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_ast",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_cdecl 0.1.0": {
+      "common_attrs": {
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_cdecl",
+      "name": "rinx_cdecl",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_cdecl",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_entity 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "regex 1.12.4",
+            "target": "regex"
+          },
+          {
+            "id": "schemars 1.2.2",
+            "target": "schemars"
+          },
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          },
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          },
+          {
+            "id": "sha2 0.11.0",
+            "target": "sha2"
+          },
+          {
+            "id": "toml 0.8.23",
+            "target": "toml"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "jsonschema 0.54.0",
+            "target": "jsonschema"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_entity",
+      "name": "rinx_entity",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_entity",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_filter 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_filter",
+      "name": "rinx_filter",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_filter",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_index 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "pathdiff 0.2.3",
+            "target": "pathdiff"
+          },
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_index",
+      "name": "rinx_index",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_index",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_inventory 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "flate2 1.1.10",
+            "target": "flate2"
+          },
+          {
+            "id": "regex 1.12.4",
+            "target": "regex"
+          },
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_inventory",
+      "name": "rinx_inventory",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_inventory",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_parser 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "csv 1.4.0",
+            "target": "csv"
+          },
+          {
+            "id": "octicons-pack 19.33.0",
+            "target": "octicons_pack"
+          },
+          {
+            "id": "regex 1.12.4",
+            "target": "regex"
+          },
+          {
+            "id": "unicode-width 0.2.2",
+            "target": "unicode_width"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_parser",
+      "name": "rinx_parser",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_parser",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_renderer 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "anyhow 1.0.103",
+            "target": "anyhow"
+          },
+          {
+            "id": "html-escape 0.2.14",
+            "target": "html_escape"
+          },
+          {
+            "id": "math-core 0.8.1",
+            "target": "math_core"
+          },
+          {
+            "id": "minijinja 2.21.0",
+            "target": "minijinja"
+          },
+          {
+            "id": "octicons-pack 19.33.0",
+            "target": "octicons_pack"
+          },
+          {
+            "id": "pathdiff 0.2.3",
+            "target": "pathdiff"
+          },
+          {
+            "id": "plotters 0.3.7",
+            "target": "plotters"
+          },
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          },
+          {
+            "id": "syntect 5.3.0",
+            "target": "syntect"
+          },
+          {
+            "id": "two-face 0.5.2+bat-0.26.1",
+            "target": "two_face"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          },
+          {
+            "id": "toml 0.8.23",
+            "target": "toml"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_renderer",
+      "name": "rinx_renderer",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_renderer",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_scope 0.1.0": {
+      "common_attrs": {
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_scope",
+      "name": "rinx_scope",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_scope",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_template 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "minijinja 2.21.0",
+            "target": "minijinja"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_template",
+      "name": "rinx_template",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_template",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_toctree 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "globset 0.4.19",
+            "target": "globset"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_toctree",
+      "name": "rinx_toctree",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_toctree",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_uml 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "minijinja 2.21.0",
+            "target": "minijinja"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_uml",
+      "name": "rinx_uml",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_uml",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rinx_worker 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "anyhow 1.0.103",
+            "target": "anyhow"
+          },
+          {
+            "id": "base64 0.22.1",
+            "target": "base64"
+          },
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          },
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          },
+          {
+            "id": "toml 0.8.23",
+            "target": "toml"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx_worker",
+      "name": "rinx_worker",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx_worker",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
     "rustc-hash 2.1.3": {
       "common_attrs": {
         "edition": "2021"
@@ -4338,458 +4790,6 @@
         }
       ],
       "version": "1.0.23"
-    },
-    "rusty_sphinx_analyzer 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_analyzer",
-      "name": "rusty_sphinx_analyzer",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_analyzer",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_ast 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "serde 1.0.228",
-            "target": "serde"
-          },
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          },
-          {
-            "id": "sha2 0.11.0",
-            "target": "sha2"
-          },
-          {
-            "id": "unicode-normalization 0.1.25",
-            "target": "unicode_normalization"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_ast",
-      "name": "rusty_sphinx_ast",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_ast",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_cdecl 0.1.0": {
-      "common_attrs": {
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_cdecl",
-      "name": "rusty_sphinx_cdecl",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_cdecl",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_entity 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "regex 1.12.4",
-            "target": "regex"
-          },
-          {
-            "id": "schemars 1.2.2",
-            "target": "schemars"
-          },
-          {
-            "id": "serde 1.0.228",
-            "target": "serde"
-          },
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          },
-          {
-            "id": "sha2 0.11.0",
-            "target": "sha2"
-          },
-          {
-            "id": "toml 0.8.23",
-            "target": "toml"
-          }
-        ],
-        "deps_dev": [
-          {
-            "id": "jsonschema 0.54.0",
-            "target": "jsonschema"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_entity",
-      "name": "rusty_sphinx_entity",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_entity",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_filter 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "serde 1.0.228",
-            "target": "serde"
-          }
-        ],
-        "deps_dev": [
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_filter",
-      "name": "rusty_sphinx_filter",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_filter",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_index 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "pathdiff 0.2.3",
-            "target": "pathdiff"
-          },
-          {
-            "id": "serde 1.0.228",
-            "target": "serde"
-          }
-        ],
-        "deps_dev": [
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_index",
-      "name": "rusty_sphinx_index",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_index",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_inventory 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "flate2 1.1.10",
-            "target": "flate2"
-          },
-          {
-            "id": "regex 1.12.4",
-            "target": "regex"
-          },
-          {
-            "id": "serde 1.0.228",
-            "target": "serde"
-          }
-        ],
-        "deps_dev": [
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_inventory",
-      "name": "rusty_sphinx_inventory",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_inventory",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_parser 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "csv 1.4.0",
-            "target": "csv"
-          },
-          {
-            "id": "octicons-pack 19.33.0",
-            "target": "octicons_pack"
-          },
-          {
-            "id": "regex 1.12.4",
-            "target": "regex"
-          },
-          {
-            "id": "unicode-width 0.2.2",
-            "target": "unicode_width"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_parser",
-      "name": "rusty_sphinx_parser",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_parser",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_renderer 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "anyhow 1.0.103",
-            "target": "anyhow"
-          },
-          {
-            "id": "html-escape 0.2.14",
-            "target": "html_escape"
-          },
-          {
-            "id": "math-core 0.8.1",
-            "target": "math_core"
-          },
-          {
-            "id": "minijinja 2.21.0",
-            "target": "minijinja"
-          },
-          {
-            "id": "octicons-pack 19.33.0",
-            "target": "octicons_pack"
-          },
-          {
-            "id": "pathdiff 0.2.3",
-            "target": "pathdiff"
-          },
-          {
-            "id": "plotters 0.3.7",
-            "target": "plotters"
-          },
-          {
-            "id": "serde 1.0.228",
-            "target": "serde"
-          },
-          {
-            "id": "syntect 5.3.0",
-            "target": "syntect"
-          },
-          {
-            "id": "two-face 0.5.2+bat-0.26.1",
-            "target": "two_face"
-          }
-        ],
-        "deps_dev": [
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          },
-          {
-            "id": "toml 0.8.23",
-            "target": "toml"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_renderer",
-      "name": "rusty_sphinx_renderer",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_renderer",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_scope 0.1.0": {
-      "common_attrs": {
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_scope",
-      "name": "rusty_sphinx_scope",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_scope",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_template 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "minijinja 2.21.0",
-            "target": "minijinja"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_template",
-      "name": "rusty_sphinx_template",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_template",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_toctree 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "globset 0.4.19",
-            "target": "globset"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_toctree",
-      "name": "rusty_sphinx_toctree",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_toctree",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_uml 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "minijinja 2.21.0",
-            "target": "minijinja"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_uml",
-      "name": "rusty_sphinx_uml",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_uml",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rusty_sphinx_worker 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "anyhow 1.0.103",
-            "target": "anyhow"
-          },
-          {
-            "id": "base64 0.22.1",
-            "target": "base64"
-          },
-          {
-            "id": "serde 1.0.228",
-            "target": "serde"
-          },
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          },
-          {
-            "id": "toml 0.8.23",
-            "target": "toml"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rusty_sphinx_worker",
-      "name": "rusty_sphinx_worker",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rusty_sphinx_worker",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
     },
     "ryu 1.0.23": {
       "common_attrs": {
@@ -7251,19 +7251,19 @@
     "jsonschema 0.54.0"
   ],
   "workspace_members": {
-    "rusty_sphinx_analyzer 0.1.0": "crates/analyzer",
-    "rusty_sphinx_ast 0.1.0": "crates/ast",
-    "rusty_sphinx_cdecl 0.1.0": "crates/cdecl",
-    "rusty_sphinx_entity 0.1.0": "crates/entity",
-    "rusty_sphinx_filter 0.1.0": "crates/filter",
-    "rusty_sphinx_index 0.1.0": "crates/index",
-    "rusty_sphinx_inventory 0.1.0": "crates/inventory",
-    "rusty_sphinx_parser 0.1.0": "crates/parser",
-    "rusty_sphinx_renderer 0.1.0": "crates/renderer",
-    "rusty_sphinx_scope 0.1.0": "crates/scope",
-    "rusty_sphinx_template 0.1.0": "crates/template",
-    "rusty_sphinx_toctree 0.1.0": "crates/toctree",
-    "rusty_sphinx_uml 0.1.0": "crates/uml",
-    "rusty_sphinx_worker 0.1.0": "crates/worker"
+    "rinx_analyzer 0.1.0": "crates/analyzer",
+    "rinx_ast 0.1.0": "crates/ast",
+    "rinx_cdecl 0.1.0": "crates/cdecl",
+    "rinx_entity 0.1.0": "crates/entity",
+    "rinx_filter 0.1.0": "crates/filter",
+    "rinx_index 0.1.0": "crates/index",
+    "rinx_inventory 0.1.0": "crates/inventory",
+    "rinx_parser 0.1.0": "crates/parser",
+    "rinx_renderer 0.1.0": "crates/renderer",
+    "rinx_scope 0.1.0": "crates/scope",
+    "rinx_template 0.1.0": "crates/template",
+    "rinx_toctree 0.1.0": "crates/toctree",
+    "rinx_uml 0.1.0": "crates/uml",
+    "rinx_worker 0.1.0": "crates/worker"
   }
 }

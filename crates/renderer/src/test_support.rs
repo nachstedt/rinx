@@ -2,8 +2,8 @@
 //! resolvers under `resolution/` and the role renderers under `inline/` both
 //! need a project index that links into another site.
 
-use rusty_sphinx_index::{ExternalInventory, ProjectIndex};
-use rusty_sphinx_inventory::{EntryType, Inventory, InventoryEntry, InventoryName};
+use rinx_index::{ExternalInventory, ProjectIndex};
+use rinx_inventory::{EntryType, Inventory, InventoryEntry, InventoryName};
 
 /// An index with no documents of its own and one declared inventory,
 /// `python`, published at `https://docs.python.org/3/` and listing one

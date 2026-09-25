@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
-use rusty_sphinx_ast::{
-    AttributeValue, DiagnosticCode, Directive, Document, Domain, EntityBody, Node,
-};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_ast::{AttributeValue, DiagnosticCode, Directive, Document, Domain, EntityBody, Node};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::{LoadedFile, ParseCtx, ParseFileLoader};
 
@@ -237,7 +235,7 @@ fn an_imported_entity_carries_the_same_body_a_written_one_does() {
     let links: Vec<&str> = entity
         .relation_targets("links")
         .iter()
-        .map(rusty_sphinx_ast::EntityId::as_str)
+        .map(rinx_ast::EntityId::as_str)
         .collect();
     assert_eq!(links, ["REQ_2"]);
     assert_eq!(entity.content().len(), 1);
@@ -475,7 +473,7 @@ fn id_prefix_rewrites_a_link_into_the_same_import() {
     let links: Vec<&str> = entity
         .relation_targets("links")
         .iter()
-        .map(rusty_sphinx_ast::EntityId::as_str)
+        .map(rinx_ast::EntityId::as_str)
         .collect();
     assert_eq!(links, ["EXT_REQ_2"]);
 }
@@ -497,7 +495,7 @@ fn id_prefix_leaves_a_link_out_of_the_import_alone() {
     let links: Vec<&str> = entity
         .relation_targets("links")
         .iter()
-        .map(rusty_sphinx_ast::EntityId::as_str)
+        .map(rinx_ast::EntityId::as_str)
         .collect();
     assert_eq!(links, ["PROJECT_OWNED"]);
 }

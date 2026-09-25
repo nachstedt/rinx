@@ -6,7 +6,7 @@ suite('BazelConfigCache Test Suite', () => {
         const cache = new BazelConfigCache();
         const config = {
             siteTarget: '//Doc:site',
-            binaryPath: '/bin/rusty-sphinx',
+            binaryPath: '/bin/rinx',
             configPath: '/path/to/config',
             templatePath: '/path/to/template',
             indexPath: '/path/to/index'

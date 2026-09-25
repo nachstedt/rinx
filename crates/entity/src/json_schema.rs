@@ -75,7 +75,9 @@ mod tests {
             "schemas/entities.schema.json"
         );
         std::fs::read_to_string(path).unwrap_or_else(|error| {
-            panic!("{path} could not be read ({error}); regenerate it with `cargo test -p rusty_sphinx_entity`")
+            panic!(
+                "{path} could not be read ({error}); regenerate it with `cargo test -p rinx_entity`"
+            )
         })
     }
 
@@ -92,7 +94,7 @@ mod tests {
         assert_eq!(
             generated, stored,
             "schemas/entities.schema.json is stale. Regenerate it:\n  \
-             cargo run -p rusty_sphinx_worker -- entity_json_schema > schemas/entities.schema.json"
+             cargo run -p rinx_worker -- entity_json_schema > schemas/entities.schema.json"
         );
     }
 

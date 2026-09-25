@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// `"PyUnicode_FromString"`.
 ///
 /// This is **only** the fallback for [`CSignature::parse`], used when
-/// `rusty_sphinx_cdecl` cannot parse a signature at all. It is not real C
+/// `rinx_cdecl` cannot parse a signature at all. It is not real C
 /// declarator parsing and gets whole shapes wrong — most visibly
 /// function-pointer typedefs, where the name lives inside a `(*name)` group
 /// the heuristic never looks at. Prefer the parser; this exists so that an
@@ -35,7 +35,7 @@ pub fn extract_c_object_name(signature: &str) -> String {
 /// coverage gets measured.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum NameSource {
-    /// `rusty_sphinx_cdecl` parsed the declaration and returned its name.
+    /// `rinx_cdecl` parsed the declaration and returned its name.
     Parsed,
     /// The declaration did not parse; [`extract_c_object_name`] guessed.
     Fallback,
@@ -69,7 +69,7 @@ impl CSignature {
     /// would turn an imperfect anchor into a broken one.
     #[must_use]
     pub fn parse(text: String) -> Self {
-        let Ok(name) = rusty_sphinx_cdecl::declared_name(&text) else {
+        let Ok(name) = rinx_cdecl::declared_name(&text) else {
             let name = extract_c_object_name(&text);
             return Self {
                 text,
@@ -419,7 +419,7 @@ mod tests {
 
     #[test]
     fn test_extract_c_object_name_misextracts_function_pointer_typedef() {
-        // Given — the limitation that motivated `rusty_sphinx_cdecl`: the
+        // Given — the limitation that motivated `rinx_cdecl`: the
         // name lives inside the first parenthesized group, which this
         // heuristic never looks past. Pinned here because the heuristic is
         // still reachable as the fallback — `CSignature::parse` no longer

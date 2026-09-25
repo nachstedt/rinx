@@ -6,7 +6,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, DocTestFlag, DocTestFlagName, DocTestTrim, PyVersionSpec, Span,
 };
 
@@ -203,7 +203,7 @@ fn parse_flag_list(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Directive, DocTestBlock, DocTestTrim};
+    use rinx_ast::{Directive, DocTestBlock, DocTestTrim};
 
     use super::super::block::tests::{block_of, parse};
 

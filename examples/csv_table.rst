@@ -127,7 +127,7 @@ class the directive always carries:
 --------------------------------
 
 Gives the table a hyperlink target, referenceable via ``:ref:``. As with any
-other internal target in rusty-sphinx today, the link resolves to this
+other internal target in rinx today, the link resolves to this
 *document*, not precisely to the table itself.
 
 .. csv-table::

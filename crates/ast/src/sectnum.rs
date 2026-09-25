@@ -30,7 +30,7 @@ pub struct SectnumOptions {
     /// `:suffix:` — literal text appended to every number this directive
     /// renders. Docutils' own default is a non-breaking space; this build's
     /// renderer already appends its own separating space after a rendered
-    /// section number (see `rusty_sphinx_renderer`'s heading rendering), so an
+    /// section number (see `rinx_renderer`'s heading rendering), so an
     /// unset `:suffix:` here is the empty string rather than replicating that
     /// default and doubling the gap.
     #[serde(default)]

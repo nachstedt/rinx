@@ -1,6 +1,6 @@
 //! Which inventories a cross-reference may resolve through.
 
-use rusty_sphinx_inventory::InventoryName;
+use rinx_inventory::InventoryName;
 use serde::{Deserialize, Serialize};
 
 /// Where a cross-reference role may find its target, as its spelling says.

@@ -3,7 +3,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::indent_width;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableCell};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span, TableCell};
 
 pub(super) fn is_border_line(line: &str, allow_equals: bool) -> bool {
     let chars: Vec<char> = line.chars().collect();

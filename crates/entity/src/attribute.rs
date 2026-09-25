@@ -1,6 +1,6 @@
 use std::fmt;
 
-use rusty_sphinx_ast::AttributeValue;
+use rinx_ast::AttributeValue;
 use serde::{Deserialize, Serialize};
 
 use crate::pattern::ValuePattern;

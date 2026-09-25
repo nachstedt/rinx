@@ -107,7 +107,7 @@ Adds CSS class names to the rendered equation's wrapper, for a theme to style:
 
 Normally the directive wraps its body in an alignment environment as needed.
 ``:nowrap:`` turns that off, so the author supplies the environment
-themselves. An equation written this way is never numbered by rusty-sphinx —
+themselves. An equation written this way is never numbered by rinx —
 the numbering is the author's to write too, and an environment like ``align``
 numbers its own rows. That count restarts in every ``:nowrap:`` directive,
 because each one is converted on its own:

@@ -10,7 +10,7 @@
 //! one shared vocabulary across sibling directives, extras per directive, and
 //! wording that never offers an author an option their directive lacks.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri,
     Length, LengthOrPercentage, TargetName, is_vertical_name,
 };
@@ -200,7 +200,7 @@ pub(in crate::directives) fn parse_common_image_options<'a>(
 pub(in crate::directives) fn report_invalid_length(
     line: &OptionLine,
     directive: &str,
-    problem: &rusty_sphinx_ast::InvalidLength,
+    problem: &rinx_ast::InvalidLength,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) {
@@ -277,7 +277,7 @@ fn report_name_not_allowed(
 mod tests {
     use super::*;
     use crate::directives::options::scan_option_lines;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     const DIRECTIVE: &str = "image";
 

@@ -11,10 +11,8 @@
 //! An unreadable option is dropped and reported, leaving the table itself
 //! intact, which is the error-resilience every directive here follows.
 
-use rusty_sphinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource, Span,
-};
-use rusty_sphinx_filter::FieldName;
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityTable, EntityTableSource, Span};
+use rinx_filter::FieldName;
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -125,7 +123,7 @@ fn read_filter(
     directive: &str,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Option<rusty_sphinx_filter::Expr> {
+) -> Option<rinx_filter::Expr> {
     read_filter_option(line, source_line, directive, FILTER_CODES, diagnostics, ctx)
 }
 
@@ -228,7 +226,7 @@ fn read_widths(
     directive: &str,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> Option<rusty_sphinx_ast::TableWidths> {
+) -> Option<rinx_ast::TableWidths> {
     let raw = match (widths_raw, colwidths) {
         (Some(_), Some(line)) => {
             diagnostics.push(Diagnostic::at(

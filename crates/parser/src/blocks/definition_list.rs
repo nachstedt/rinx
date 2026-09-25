@@ -4,7 +4,7 @@ use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
-use rusty_sphinx_ast::{DefinitionListItem, Node};
+use rinx_ast::{DefinitionListItem, Node};
 
 /// Detects whether `lines[i]` is the term of a definition-list entry: a
 /// non-blank line immediately followed (no blank line in between) by a
@@ -115,7 +115,7 @@ pub(super) fn try_parse_definition_list(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::InlineNode;
+    use rinx_ast::InlineNode;
 
     #[test]
     fn test_parse_definition_list_single_item() {

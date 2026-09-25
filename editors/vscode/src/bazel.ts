@@ -12,7 +12,7 @@ const BAZEL_BUILD_TIMEOUT_MS = 120_000;
 
 export interface DiscoveredConfig {
     siteTarget: string;      // e.g. "//Doc:site"
-    binaryPath: string;      // absolute filesystem path to the rusty-sphinx binary
+    binaryPath: string;      // absolute filesystem path to the rinx binary
     configPath: string;      // absolute filesystem path to config.toml
     templatePath: string;    // absolute filesystem path to template.html
     indexPath: string;       // absolute filesystem path to site.project.index
@@ -44,7 +44,7 @@ export class BazelScanner {
 
     async findSiteTargets(workspaceRoot: string): Promise<string[]> {
         try {
-            const query = `kind("rusty_sphinx_site", //...)`;
+            const query = `kind("rinx_site", //...)`;
             const result = await this.bazelExec(`bazel query '${query}'`, workspaceRoot);
             return result.split('\n').filter(line => line.length > 0);
         } catch (error: any) {
@@ -102,7 +102,7 @@ export class BazelScanner {
     }
 
     async deriveBinaryPath(siteTarget: string, workspaceRoot: string): Promise<string | undefined> {
-        const workerLabel = '@rusty_sphinx//:rusty_sphinx_worker';
+        const workerLabel = '@rinx//:rinx_worker';
 
         try {
             // 1. Try to find the output path via cquery

@@ -1,4 +1,4 @@
-//! Rusty Sphinx Support Library
+//! Rinx Support Library
 //!
 //! This module provides the foundational pieces for building a high-performance,
 //! Bazel-compatible re-implementation of the Sphinx documentation framework.
@@ -11,9 +11,9 @@ pub mod validator;
 /// and outputs an HTML string.
 #[must_use]
 pub fn process_rst(path: &str, input: &str) -> String {
-    let doc = rusty_sphinx_parser::parse(path, input);
-    let index = rusty_sphinx_analyzer::analyze(&doc);
-    rusty_sphinx_renderer::render(&doc, &index, path).html
+    let doc = rinx_parser::parse(path, input);
+    let index = rinx_analyzer::analyze(&doc);
+    rinx_renderer::render(&doc, &index, path).html
 }
 
 #[cfg(test)]

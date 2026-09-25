@@ -3,7 +3,7 @@ Hyperlinks and Targets
 ########################
 
 This page demonstrates the various hyperlink and target features now supported
-by Rusty-Sphinx.
+by Rinx.
 
 External Targets
 ================

@@ -1,5 +1,5 @@
-use rusty_sphinx_ast::{ChartColor, ChartValue, Directive, EntityPie, ImageAlign, Node};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_ast::{ChartColor, ChartValue, Directive, EntityPie, ImageAlign, Node};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
 use crate::parse_with_ctx;
@@ -36,9 +36,9 @@ fn schema() -> EntitySchema {
     .expect("the test schema should load")
 }
 
-fn parse(rst: &str) -> rusty_sphinx_ast::Document {
+fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).with_schema(&schema);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
     parse_with_ctx("specs/boot", rst, &ctx)
 }
 
@@ -315,7 +315,7 @@ fn test_the_presentation_options_are_read() {
     );
     assert_eq!(pie.classes, ["wide", "framed"]);
     assert_eq!(
-        pie.name.as_ref().map(rusty_sphinx_ast::TargetName::as_str),
+        pie.name.as_ref().map(rinx_ast::TargetName::as_str),
         Some("type-split")
     );
     assert!(codes(rst).is_empty(), "{:?}", codes(rst));

@@ -2,8 +2,8 @@
 
 use std::fmt;
 
-use rusty_sphinx_ast::{DiagnosticCode, Span};
-use rusty_sphinx_uml::{FlowError, SequenceError, UmlError};
+use rinx_ast::{DiagnosticCode, Span};
+use rinx_uml::{FlowError, SequenceError, UmlError};
 
 /// A diagram directive that produced no picture, or — for a sequence
 /// diagram — one that drew a picture with something worth reporting about it.
@@ -14,7 +14,7 @@ use rusty_sphinx_uml::{FlowError, SequenceError, UmlError};
 /// depends on every document in the project. The parser, which sees one, cannot
 /// know.
 ///
-/// The failure itself is [`DiagramFailure`], produced by `rusty_sphinx_uml`.
+/// The failure itself is [`DiagramFailure`], produced by `rinx_uml`.
 /// What this type adds
 /// is the two things only the renderer holds — where the directive was
 /// written, and what the author spelled it — so the warning can point at a

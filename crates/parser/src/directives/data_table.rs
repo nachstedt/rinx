@@ -1,7 +1,7 @@
 //! The two *data* table directives — `.. list-table::` and `.. csv-table::`.
 //!
 //! Both spell a table out as data plus options rather than as character art,
-//! and both lower to the same [`rusty_sphinx_ast::Directive::DataTable`]. Only
+//! and both lower to the same [`rinx_ast::Directive::DataTable`]. Only
 //! the way their rows are written differs, so the tree splits along exactly
 //! that line:
 //!

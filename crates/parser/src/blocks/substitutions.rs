@@ -8,7 +8,7 @@
 //! near the bottom of a shared prelude, and used throughout).
 //!
 //! Two passes: [`collect_definitions`] (read-only, so it reuses
-//! [`rusty_sphinx_ast::walk_nodes`] — this is exactly the "collect matching
+//! [`rinx_ast::walk_nodes`] — this is exactly the "collect matching
 //! nodes anywhere in the tree" case that walker exists for) builds the name
 //! table first, then [`resolve_substitutions`] walks the tree a second time,
 //! mutably, splicing every reference's resolved content into place. The
@@ -19,7 +19,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, InlineNode, Node, Span, SubstitutionKind, TrimSides,
     walk_nodes,
 };
@@ -242,7 +242,7 @@ fn resolve_list(
 
 /// Walks every block-level container the document tree can hold, resolving
 /// every `Vec<InlineNode>` it finds — the mutable, inline-content-reaching
-/// counterpart of [`rusty_sphinx_ast::walk_nodes`], which deliberately does
+/// counterpart of [`rinx_ast::walk_nodes`], which deliberately does
 /// neither. Exhaustive rather than a `_` catch-all, so a variant added later
 /// that carries inline content is a compile error here rather than a
 /// silently unresolved subtree.
@@ -312,7 +312,7 @@ fn resolve_nodes(
 }
 
 fn resolve_line_block_items(
-    items: &mut [rusty_sphinx_ast::LineBlockItem],
+    items: &mut [rinx_ast::LineBlockItem],
     defs: &Definitions,
     cache: &mut HashMap<String, Vec<InlineNode>>,
     visiting: &mut HashSet<String>,
@@ -320,10 +320,10 @@ fn resolve_line_block_items(
 ) {
     for item in items {
         match item {
-            rusty_sphinx_ast::LineBlockItem::Line(inlines) => {
+            rinx_ast::LineBlockItem::Line(inlines) => {
                 resolve_list(inlines, defs, cache, visiting, diagnostics);
             }
-            rusty_sphinx_ast::LineBlockItem::Nested(nested) => {
+            rinx_ast::LineBlockItem::Nested(nested) => {
                 resolve_line_block_items(nested, defs, cache, visiting, diagnostics);
             }
         }
@@ -332,7 +332,7 @@ fn resolve_line_block_items(
 
 /// Descends into the block-level/inline children a [`Directive`] carries.
 /// Split out of [`resolve_nodes`] for the same reason
-/// [`rusty_sphinx_ast::visit::walk_directive`] is: it is by far the most
+/// [`rinx_ast::visit::walk_directive`] is: it is by far the most
 /// branch-heavy arm.
 fn resolve_directive(
     directive: &mut Directive,
@@ -447,7 +447,7 @@ fn resolve_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{ImageOptions, ImageUri, SubstitutionDefinition};
+    use rinx_ast::{ImageOptions, ImageUri, SubstitutionDefinition};
 
     fn replace_def(name: &str, content: Vec<InlineNode>) -> Node {
         Node::Directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
@@ -791,7 +791,7 @@ mod tests {
     fn test_resolves_a_definition_nested_inside_an_admonition() {
         // Given — a definition need not be top-level
         let mut nodes = vec![Node::Directive(Directive::Admonition {
-            kind: rusty_sphinx_ast::AdmonitionKind::Note,
+            kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
             body: vec![

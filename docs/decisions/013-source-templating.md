@@ -20,7 +20,7 @@ builds — opens 24 of its 31 documents with exactly two lines:
 {% include "demo_page_header.rst" with context %}
 ```
 
-rusty-sphinx cannot run a `conf.py`, and will not: a documentation build whose
+rinx cannot run a `conf.py`, and will not: a documentation build whose
 inputs are arbitrary Python is not a build Bazel can cache. Before this change
 the two lines were not recognised as anything, so they parsed as the prose they
 literally are and shipped as a stray `{% ... %}` paragraph at the top of 24
@@ -30,7 +30,7 @@ pages, with the shared header they exist to pull in appearing on none of them.
 
 ### The transform is a declared feature, and it is opt-in
 
-`rusty_sphinx_library` gains `jinja = True` and a `jinja_context` string dict,
+`rinx_library` gains `jinja = True` and a `jinja_context` string dict,
 which is the `html_context` a Sphinx project passes to the same render. The
 flags reach `parse` and `preview` as `--jinja` and `--jinja-context k=v ...`,
 through the `ParseInputs` both already share.
@@ -87,7 +87,7 @@ process all run through those numbers. ADR 8's rule applies unchanged —
 confidently wrong is worse than positionless — but positionless would cost 24
 pages every line number they have.
 
-So `rusty_sphinx_template` injects a `(template, line)` marker at the start of
+So `rinx_template` injects a `(template, line)` marker at the start of
 every line that does not begin inside a tag, renders, and reads the markers
 back off the output. Two rules decide the rest:
 
@@ -124,10 +124,10 @@ failure, and `cmd_parse` refuses to write an `.ast` when it did.
 
 ## Consequences
 
-- `rusty_sphinx_template` is a new leaf crate, a peer of `rusty_sphinx_cdecl`
-  and `rusty_sphinx_filter`: a text-to-text step that depends on nothing of
+- `rinx_template` is a new leaf crate, a peer of `rinx_cdecl`
+  and `rinx_filter`: a text-to-text step that depends on nothing of
   ours and learns what it cannot do itself through an injected
-  `TemplateLoader`, which `rusty_sphinx_parser` implements over the file loader
+  `TemplateLoader`, which `rinx_parser` implements over the file loader
   an `.. include::` already reads through.
 - The live preview gets the feature for free, since it shares `ParseInputs` —
   though the VS Code extension cannot yet *discover* that a site's library sets

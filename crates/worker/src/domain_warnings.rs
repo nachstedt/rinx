@@ -2,9 +2,9 @@
 //! subcommand's optional `--warnings-output` sidecar.
 //!
 //! The renderer reports domain-object cross-reference problems as two
-//! non-serializable diagnostic types — [`rusty_sphinx_renderer::BrokenLink`]
-//! (only its [`rusty_sphinx_renderer::BrokenLinkKind::DomainObjectReference`]
-//! variant is relevant here) and [`rusty_sphinx_renderer::ObjectTypeMismatch`].
+//! non-serializable diagnostic types — [`rinx_renderer::BrokenLink`]
+//! (only its [`rinx_renderer::BrokenLinkKind::DomainObjectReference`]
+//! variant is relevant here) and [`rinx_renderer::ObjectTypeMismatch`].
 //! This module folds those into a single JSON-serializable
 //! [`DomainWarningReport`] so an external, developer-only tool
 //! (`scripts/benchmark.py`) can diff them against a whitelist of accepted
@@ -14,8 +14,8 @@
 //! rather than in the renderer crate: the renderer's diagnostic types stay
 //! plain in-memory values, and only the worker knows about the on-disk shape.
 
-use rusty_sphinx_ast::{ObjectType, Span};
-use rusty_sphinx_renderer::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
+use rinx_ast::{ObjectType, Span};
+use rinx_renderer::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 use serde::{Deserialize, Serialize};
 
 /// The kind of domain-object problem a [`DomainWarning`] records.
@@ -137,7 +137,7 @@ pub fn build_domain_warning_report(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::PyObjectType;
+    use rinx_ast::PyObjectType;
 
     fn py(t: PyObjectType) -> ObjectType {
         ObjectType::Py(t)
@@ -370,8 +370,8 @@ mod tests {
     fn test_a_warning_carries_the_span_of_the_role_that_produced_it() {
         // Given a broken domain-object reference the parser could place
         let span = Span::new(
-            rusty_sphinx_ast::Position::new(42, 18),
-            rusty_sphinx_ast::Position::new(42, 35),
+            rinx_ast::Position::new(42, 18),
+            rinx_ast::Position::new(42, 35),
         );
         let links = [BrokenLink {
             kind: BrokenLinkKind::DomainObjectReference(py(PyObjectType::Function)),

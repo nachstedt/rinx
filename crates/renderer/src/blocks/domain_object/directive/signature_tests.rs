@@ -4,8 +4,8 @@
 //! [`super::python_tests`] and [`super::python_scoping_tests`].
 
 use super::*;
-use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, NonEmptyVector};
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{Directive, Document, InlineNode, Node, NonEmptyVector};
+use rinx_index::ProjectIndex;
 
 fn render_doc(doc: &Document) -> String {
     let index = ProjectIndex::default();
@@ -19,7 +19,7 @@ fn test_render_domain_object_repeats_prefix_labels_on_every_dt() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+            rinx_ast::DomainObjectBody::PyMethod {
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::new(
@@ -53,7 +53,7 @@ fn test_render_domain_object_emits_one_dt_per_declared_name() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyData {
+            rinx_ast::DomainObjectBody::PyData {
                 module: None,
                 signatures: NonEmptyVector::new(
                     "AF_UNIX".to_string(),
@@ -88,7 +88,7 @@ fn test_render_domain_object_shows_each_signature_as_its_own_dt_text() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyFunction {
+            rinx_ast::DomainObjectBody::PyFunction {
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::new(
@@ -117,7 +117,7 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "socket".to_string(),
                     platform: None,
                     synopsis: None,
@@ -126,7 +126,7 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyData {
+                rinx_ast::DomainObjectBody::PyData {
                     module: None,
                     signatures: NonEmptyVector::new(
                         "AF_UNIX".to_string(),
@@ -156,7 +156,7 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
                     platform: None,
                     synopsis: None,
@@ -165,12 +165,12 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                rinx_ast::DomainObjectBody::PyClass {
                     module: Some("multiprocessing.managers".to_string()),
                     signatures: NonEmptyVector::single("SharedMemoryManager".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                        rinx_ast::DomainObjectBody::PyMethod {
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single("get_server()".to_string()),
@@ -184,7 +184,7 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                rinx_ast::DomainObjectBody::PyFunction {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("track(size)".to_string()),
@@ -211,7 +211,7 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
 #[test]
 fn test_render_domain_object_options_renders_nothing_for_py_function() {
     // Given
-    let obj = rusty_sphinx_ast::DomainObjectBody::PyFunction {
+    let obj = rinx_ast::DomainObjectBody::PyFunction {
         module: None,
         is_decorator: false,
         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -228,7 +228,7 @@ fn test_render_domain_object_options_renders_nothing_for_py_function() {
 #[test]
 fn test_render_domain_object_options_renders_nothing_for_py_exception() {
     // Given
-    let obj = rusty_sphinx_ast::DomainObjectBody::PyException {
+    let obj = rinx_ast::DomainObjectBody::PyException {
         module: None,
         signatures: NonEmptyVector::single("GreeterError".to_string()),
         is_final: false,

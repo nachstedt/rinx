@@ -5,7 +5,7 @@
 //! same dozen lines of context setup.
 #![cfg(test)]
 
-use rusty_sphinx_ast::{CodeBlock, CodeBlockSource, DiagnosticCode, Directive, Domain};
+use rinx_ast::{CodeBlock, CodeBlockSource, DiagnosticCode, Directive, Domain};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;

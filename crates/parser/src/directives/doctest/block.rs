@@ -5,7 +5,7 @@
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, DocTestBlock, DocTestGroupSelector, HashedContent,
     NonEmptyVector, Span,
 };
@@ -160,7 +160,7 @@ pub(super) mod tests {
     ///
     /// `pub(super)` because [`super::super::options`]'s own test module also
     /// drives directive parsing through this same helper.
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     pub(in crate::directives::doctest) fn parse(
         kind: DocTestDirectiveKind,

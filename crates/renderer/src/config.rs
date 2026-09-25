@@ -1,12 +1,12 @@
-//! Site configuration for rusty-sphinx.
+//! Site configuration for rinx.
 //!
-//! All site-level settings are specified in a single `rusty_sphinx.toml`
+//! All site-level settings are specified in a single `rinx.toml`
 //! file. This file contains only metadata (project name, version) — not
 //! file paths. File paths (template, CSS) are passed as separate CLI
 //! flags so that build systems like Bazel can resolve them correctly
 //! in sandboxed environments.
 
-use rusty_sphinx_ast::ResolvedLanguage;
+use rinx_ast::ResolvedLanguage;
 use serde::Deserialize;
 
 /// Site-level configuration loaded from a TOML file.
@@ -241,7 +241,7 @@ version = "1.0"
     #[test]
     fn test_deserialize_benchmark_generated_format() {
         // Given
-        // Regression: this is the exact string benchmark.py writes to rusty_sphinx.toml.
+        // Regression: this is the exact string benchmark.py writes to rinx.toml.
         // If this test breaks, the benchmark config generation must be updated to match.
         let toml_str = "project = \"CPython Benchmark\"\n";
 

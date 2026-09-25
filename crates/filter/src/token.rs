@@ -66,7 +66,7 @@ pub(crate) struct Token {
 
 /// Splits a filter expression into tokens.
 ///
-/// Unlike `rusty_sphinx_cdecl`'s tokenizer, this one is fallible, and
+/// Unlike `rinx_cdecl`'s tokenizer, this one is fallible, and
 /// deliberately so: sphinx-needs filters are Python, so the input frequently
 /// contains constructs that are perfectly good Python and outside this
 /// language. Recognising them *here* is what lets `len(x) > 0` be reported as

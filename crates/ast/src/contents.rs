@@ -80,7 +80,7 @@ pub struct ContentsOptions {
 /// Unlike [`crate::Toctree`] this carries no entries of its own — its
 /// argument is a title, not a list of documents — because everything it
 /// lists is derived, at render time, from the document's own heading
-/// structure (see `rusty_sphinx_renderer`'s contents block).
+/// structure (see `rinx_renderer`'s contents block).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Contents {
     /// The directive's argument line, if given. `None` means the default

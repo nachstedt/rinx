@@ -1,9 +1,9 @@
 //! The `render` subcommand: one AST + the global index to a final HTML page.
 
 use anyhow::{Context, Result};
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_renderer::{self as renderer, config};
-use rusty_sphinx_worker::domain_warnings;
+use rinx_ast as ast;
+use rinx_renderer::{self as renderer, config};
+use rinx_worker::domain_warnings;
 use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
@@ -53,7 +53,7 @@ pub(super) struct RenderedPage {
 /// nothing else: the schema supplies the vocabulary and the labels, and the
 /// templates supply the presentation a type may ask for by name.
 pub(super) struct EntityInputs<'a> {
-    pub schema: &'a rusty_sphinx_entity::EntitySchema,
+    pub schema: &'a rinx_entity::EntitySchema,
     pub templates: &'a renderer::EntityTemplates,
 }
 
@@ -68,7 +68,7 @@ pub(super) fn process_render(
 ) -> Result<RenderedPage> {
     let doc: ast::Document =
         serde_json::from_str(ast_json).context("Failed to deserialize AST document")?;
-    let index: rusty_sphinx_index::ProjectIndex =
+    let index: rinx_index::ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
 
     let render_output = renderer::render_with_assets(
@@ -284,7 +284,7 @@ fn write_diagram_sources(sources: &[ast::HashedContent], outdir: &str) -> Result
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_entity::EntitySchema;
+    use rinx_entity::EntitySchema;
 
     /// A fresh, empty directory unique to this test run.
     fn temp_dir(name: &str) -> std::path::PathBuf {

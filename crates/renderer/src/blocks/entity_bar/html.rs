@@ -1,7 +1,7 @@
 //! Rendering a bar chart into the page: counting, drawing, and placing it in
 //! the figure every chart shares ([`crate::blocks::chart_figure`]).
 
-use rusty_sphinx_ast::{EntityBar, LabelRotation};
+use rinx_ast::{EntityBar, LabelRotation};
 
 use crate::RenderCtx;
 use crate::blocks::chart_figure::{ChartFigure, write_chart_figure};

@@ -17,15 +17,15 @@
 //! and only that page then re-renders.
 //!
 //! Keys are the image's *resolved* project path rather than the URI as
-//! written, because [`rusty_sphinx_ast::ImageUri::resolve`] is the one
+//! written, because [`rinx_ast::ImageUri::resolve`] is the one
 //! function the renderer resolves with too. Two phases deriving the same key
 //! two ways is exactly the drift that function exists to prevent.
 
 use anyhow::{Context, Result};
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_renderer::EmbeddedAssets;
+use rinx_ast as ast;
+use rinx_renderer::EmbeddedAssets;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -178,7 +178,7 @@ pub(crate) fn cmd_embed_assets(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Directive, Figure, ImageLoading, ImageOptions, ImageUri, Node};
+    use rinx_ast::{Directive, Figure, ImageLoading, ImageOptions, ImageUri, Node};
 
     /// A document at `doc_path` holding one image directive.
     fn document_with(doc_path: &str, options: ImageOptions) -> ast::Document {
@@ -196,8 +196,7 @@ mod tests {
 
     /// Writes `bytes` to `name` inside a fresh temporary directory.
     fn temp_dir_with(name: &str, bytes: &[u8]) -> PathBuf {
-        let dir =
-            std::env::temp_dir().join(format!("rusty-sphinx-embed-{}-{name}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("rinx-embed-{}-{name}", std::process::id()));
         let path = dir.join(name);
         fs::create_dir_all(path.parent().expect("has a parent")).expect("should create dir");
         fs::write(&path, bytes).expect("should write fixture");
@@ -342,11 +341,9 @@ mod tests {
         let doc = ast::Document::new(
             "index.rst".to_string(),
             vec![Node::Directive(Directive::SubstitutionDefinition(
-                rusty_sphinx_ast::SubstitutionDefinition {
+                rinx_ast::SubstitutionDefinition {
                     name: "logo".to_string(),
-                    kind: rusty_sphinx_ast::SubstitutionKind::Image(Box::new(embedding(
-                        "logo.svg",
-                    ))),
+                    kind: rinx_ast::SubstitutionKind::Image(Box::new(embedding("logo.svg"))),
                     span: None,
                 },
             ))],
@@ -365,7 +362,7 @@ mod tests {
         let doc = ast::Document::new(
             "index.rst".to_string(),
             vec![Node::Directive(Directive::Admonition {
-                kind: rusty_sphinx_ast::AdmonitionKind::Note,
+                kind: rinx_ast::AdmonitionKind::Note,
                 title: None,
                 collapsible: None,
                 body: vec![Node::Directive(Directive::Image(Box::new(embedding(

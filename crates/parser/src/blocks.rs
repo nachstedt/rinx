@@ -1,5 +1,5 @@
 //! Block-level parsing: the dispatch chain that turns a document's lines
-//! into [`rusty_sphinx_ast::Node`]s, and one module per block construct.
+//! into [`rinx_ast::Node`]s, and one module per block construct.
 //!
 //! [`dispatch`] owns the loop and the `parse` entry points; each construct
 //! module is tried in turn and either claims some lines or declines.

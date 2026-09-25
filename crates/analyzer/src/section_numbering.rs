@@ -40,10 +40,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rusty_sphinx_ast::{NumberedDepth, SectnumOptions};
-use rusty_sphinx_index::{DocumentNumbers, OutlineSection, ProjectIndex};
+use rinx_ast::{NumberedDepth, SectnumOptions};
+use rinx_index::{DocumentNumbers, OutlineSection, ProjectIndex};
 
-use rusty_sphinx_toctree::{TocTarget, expand_toctree};
+use rinx_toctree::{TocTarget, expand_toctree};
 
 /// The section numbers for every document the project's `:numbered:` toctrees
 /// reach.
@@ -251,8 +251,8 @@ fn number_section(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{SectionId, TocEntry, Toctree, ToctreeOptions};
-    use rusty_sphinx_index::{DocumentOutline, DocumentToctree};
+    use rinx_ast::{SectionId, TocEntry, Toctree, ToctreeOptions};
+    use rinx_index::{DocumentOutline, DocumentToctree};
     use std::num::NonZeroUsize;
 
     fn toctree(docnames: &[&str], numbered: Option<NumberedDepth>) -> Toctree {

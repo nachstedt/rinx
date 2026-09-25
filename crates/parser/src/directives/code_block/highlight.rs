@@ -3,11 +3,11 @@
 //!
 //! Not a code block itself: it writes no content and renders to nothing. It
 //! lives beside the block parsers because it shares their option vocabulary
-//! and is the other half of [`rusty_sphinx_ast::CodeLanguage::Inherit`] — a
+//! and is the other half of [`rinx_ast::CodeLanguage::Inherit`] — a
 //! block with no language of its own resolves against whichever of these was
 //! last in force.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive, ResolvedLanguage};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, ResolvedLanguage};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -81,7 +81,7 @@ pub(in crate::directives) fn parse_highlight(
 #[cfg(test)]
 mod tests {
     use super::super::test_support::{codes, highlight};
-    use rusty_sphinx_ast::{DiagnosticCode, Directive, LanguageName, ResolvedLanguage};
+    use rinx_ast::{DiagnosticCode, Directive, LanguageName, ResolvedLanguage};
     use std::num::NonZeroU32;
 
     #[test]

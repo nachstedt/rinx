@@ -399,7 +399,7 @@ fn check_declared_types(
 /// A project's entity meta-model, as the schema file spells it.
 #[derive(Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "rusty-sphinx entity schema")]
+#[schemars(title = "rinx entity schema")]
 pub(crate) struct RawSchema {
     /// Names a `.. needimport::` may write instead of a path, each mapped to
     /// the file it stands for — sphinx-needs' `needs_import_keys`.

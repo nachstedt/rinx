@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 /// what a human reading `guide.rst:12:30` expects to count to.
 ///
 /// The Language Server Protocol, by contrast, defaults to UTF-16 code units
-/// (`PositionEncodingKind`), so the future `rusty_sphinx_lsp` crate must
+/// (`PositionEncodingKind`), so the future `rinx_lsp` crate must
 /// convert at its boundary rather than either side being "fixed" to match the
 /// other — see `docs/decisions/003-diagnostics.md`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

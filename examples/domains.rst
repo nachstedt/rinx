@@ -1,7 +1,7 @@
 Domains
 =======
 
-Rusty-Sphinx supports Sphinx-style domains for namespacing directives and
+Rinx supports Sphinx-style domains for namespacing directives and
 cross-reference roles by language, mirroring real Sphinx. This page uses
 ``py`` and ``c`` as the first two domains: ``c`` has a ``function`` object
 type, and ``py`` additionally has ``module``, ``data``, ``method``,
@@ -73,7 +73,7 @@ when cross-referenced, exactly like real Sphinx.
       class body qualifies its cross-reference name to ``Greeter.name``,
       exactly like the nested methods below. The ``:canonical:`` option
       records where the attribute is really defined when documented via a
-      re-export; rusty-sphinx renders it as metadata only, with no
+      re-export; rinx renders it as metadata only, with no
       alias/redirect behavior in cross-reference resolution.
 
    .. py:method:: greet(self, name)
@@ -162,7 +162,7 @@ defines none), and additionally prefix the rendered signature with a literal
    :final:
 
    A ``:final:`` class, rendered with a ``final`` prefix label before
-   ``class`` (not enforced by rusty-sphinx, just documented via the label,
+   ``class`` (not enforced by rinx, just documented via the label,
    like real Sphinx).
 
    .. py:class:: Options
@@ -577,7 +577,7 @@ type — it only resolves against ``.. c:type::`` definitions.
 :c:type:`Py_tracefunc`, :c:type:`unaryfunc` and :c:type:`callbacks` reference
 the three declarator-shaped definitions above by the name their declarators
 bind, none of which is the leading token of the signature. Each is parsed by
-``rusty_sphinx_cdecl``; a signature whose grammar it cannot handle still
+``rinx_cdecl``; a signature whose grammar it cannot handle still
 yields a target via a name heuristic, and reports a parser diagnostic rather
 than being dropped.
 

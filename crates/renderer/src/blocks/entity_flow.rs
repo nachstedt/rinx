@@ -1,7 +1,7 @@
 //! Rendering `.. entity-flow::` / `.. needflow::` — a generated flowchart.
 //!
 //! The directive carries a question, so the picture cannot exist until the
-//! project index does. Generating it is `rusty_sphinx_uml::build_flow`, which
+//! project index does. Generating it is `rinx_uml::build_flow`, which
 //! this module calls exactly once per directive: the resulting hash names the
 //! compiled SVG the page points at, and the text itself goes back on the render
 //! output for the same process to write as `<hash>.puml`. The page and the file
@@ -11,8 +11,8 @@
 //! Everything visible on the page is [`super::diagram_figure`], shared with the
 //! written diagrams: a flowchart is a diagram, and should look like one.
 
-use rusty_sphinx_ast::{EntityFlow, HashedContent};
-use rusty_sphinx_uml::{UmlContext, build_flow};
+use rinx_ast::{EntityFlow, HashedContent};
+use rinx_uml::{UmlContext, build_flow};
 
 use crate::RenderCtx;
 use crate::uml_error::DiagramError;

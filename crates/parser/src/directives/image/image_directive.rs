@@ -4,9 +4,7 @@
 //! the directive's two structural rules: the argument is required, and there
 //! is no body.
 
-use rusty_sphinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, ImageLoading, ImageOptions, ImageUri, Span,
-};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, ImageLoading, ImageOptions, ImageUri, Span};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -155,7 +153,7 @@ pub(in crate::directives) fn report_unusable_scale(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Domain, ImageAlign, ImageLoading, ImageUri, TargetName};
+    use rinx_ast::{Domain, ImageAlign, ImageLoading, ImageUri, TargetName};
 
     /// Parses a directive body given as already-indented source lines.
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
@@ -165,7 +163,7 @@ mod tests {
         (directive, diagnostics)
     }
 
-    fn image_of(directive: &Directive) -> &rusty_sphinx_ast::ImageOptions {
+    fn image_of(directive: &Directive) -> &rinx_ast::ImageOptions {
         match directive {
             Directive::Image(options) => options,
             other => panic!("expected an image directive, got {other:?}"),
@@ -368,7 +366,7 @@ mod tests {
         let doc = crate::parse("test.rst", input);
 
         // Then
-        let rusty_sphinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
+        let rinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         let span = image_of(directive)
@@ -391,7 +389,7 @@ mod tests {
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
-        let rusty_sphinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
+        let rinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         let options = image_of(directive);
@@ -419,7 +417,7 @@ mod tests {
         let doc = crate::parse("test.rst", input);
 
         // Then
-        let rusty_sphinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
+        let rinx_ast::Node::Directive(directive) = &doc.nodes[0] else {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         assert_eq!(

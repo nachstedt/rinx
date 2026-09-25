@@ -4,7 +4,7 @@
 
 use super::super::document_index::analyze;
 use super::*;
-use rusty_sphinx_ast::{Directive, Document, Domain, Node, NonEmptyVector, ObjectType, TargetName};
+use rinx_ast::{Directive, Document, Domain, Node, NonEmptyVector, ObjectType, TargetName};
 
 /// Looks up a domain object by the pre-refactor flat `"domain:objtype:name"`
 /// key shape (e.g. `"py:function:greet"`), so test expectations can stay
@@ -116,7 +116,7 @@ fn test_analyze_c_function_nested_in_c_struct_is_qualified_by_it() {
     // longer wrongly picks up the enclosing Python module+class — but
     // `CScope`'s container stack is shared by every `c`-domain object, so
     // nesting under `c:struct`/`c:union`/`c:type` now qualifies
-    // `c:function`/`c:macro` too, unlike before. rusty-sphinx doesn't
+    // `c:function`/`c:macro` too, unlike before. rinx doesn't
     // implement `.. c:namespace::`, which is what real Sphinx would use
     // to reset this back to a bare name, so this is a known, accepted
     // trade-off — see `known_bugs.md`'s entry for it.
@@ -301,7 +301,7 @@ fn test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it() {
         "api.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "greeter_module".to_string(),
                     platform: None,
                     synopsis: None,
@@ -310,7 +310,7 @@ fn test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                rinx_ast::DomainObjectBody::PyClass {
                     module: None,
                     signatures: NonEmptyVector::single("Greeter".to_string()),
                     is_final: false,

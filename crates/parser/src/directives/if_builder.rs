@@ -17,7 +17,7 @@
 //! Which is also why this build does **not** reproduce the
 //! `<div class="docutils container">` that upstream's `nodes.container()`
 //! emits around the included body. A container node here would make
-//! [`rusty_sphinx_analyzer`]'s outline builder stop at the block — it does not
+//! [`rinx_analyzer`]'s outline builder stop at the block — it does not
 //! descend into directive bodies, since reStructuredText has no section inside
 //! one — so the headings the directive exists to admit would silently stop
 //! being sections. The wrapper carries nothing the source expressed; the
@@ -29,7 +29,7 @@
 //! no unknown-directive reports, no targets, no toctree entries, and so no
 //! Bazel `deps` entry for documents only the PDF build would reach.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Node, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, Node, Span};
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
@@ -43,7 +43,7 @@ const DIRECTIVE: &str = "if-builder";
 
 /// The builder this program is.
 ///
-/// The one place rusty-sphinx names its own builder: it produces HTML and
+/// The one place rinx names its own builder: it produces HTML and
 /// nothing else, so a second builder would start here rather than by
 /// scattering the string.
 const BUILDER_NAME: &str = "html";
@@ -161,7 +161,7 @@ fn is_known_builder(builder: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Directive, Document, Domain, InlineNode};
+    use rinx_ast::{Directive, Document, Domain, InlineNode};
     use std::collections::HashSet;
 
     /// Parses a whole document through the public entry point, so the

@@ -6,8 +6,8 @@
 //! worse than no numbering at all — so neither computes anything, they only
 //! look it up.
 
-use rusty_sphinx_ast::SectionId;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::SectionId;
+use rinx_index::ProjectIndex;
 
 /// The section number for `docname`, or for one of its sections when `anchor`
 /// is given. `None` when nothing numbers it.
@@ -28,7 +28,7 @@ pub(crate) fn secnumber_for(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_index::DocumentNumbers;
+    use rinx_index::DocumentNumbers;
 
     fn index_with_numbers() -> ProjectIndex {
         let mut numbers = DocumentNumbers::default();

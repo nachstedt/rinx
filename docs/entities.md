@@ -6,7 +6,7 @@ from prose and can point at other such things.
 That shape is not new. A sphinx-needs requirement is one. CPython's
 `.. audit-event::` is one. A Python class, as far as the documentation build is
 concerned, is one. What differs between them is vocabulary, not structure — so
-rusty-sphinx lets a project declare its own vocabulary in a schema file and
+rinx lets a project declare its own vocabulary in a schema file and
 treats the result as a first-class construct: parsed, validated, indexed
 project-wide, cross-referenceable, and rendered.
 
@@ -373,7 +373,7 @@ template = "entity_audit_event.html"
 The schema names the file; the site supplies it:
 
 ```python
-rusty_sphinx_site(
+rinx_site(
     entity_templates = ["//examples/entities:entity_audit_event.html"],
 )
 ```
@@ -426,13 +426,13 @@ rather than an unknown name. So it is declared on every library whose documents
 use it, *and* on the site that assembles them.
 
 ```python
-rusty_sphinx_library(
+rinx_library(
     name = "docs",
     srcs = glob(["*.rst"]),
     entity_schema = "entities.toml",
 )
 
-rusty_sphinx_site(
+rinx_site(
     name = "site",
     entity_schema = "//examples/entities:entities.toml",
     deps = [":docs"],
@@ -492,7 +492,7 @@ The schema is **generated** from the types the loader deserializes into, and
 checked in. After changing them:
 
 ```bash
-cargo run -p rusty_sphinx_worker -- entity_json_schema > schemas/entities.schema.json
+cargo run -p rinx_worker -- entity_json_schema > schemas/entities.schema.json
 ```
 
 A test regenerates and compares, so a stale file fails the build; another
@@ -960,7 +960,7 @@ a `:ref:` target. `:extra:` binds comma-separated `name: value` pairs into the
 template. `:debug:` shows the expanded PlantUML below the picture — the text
 that was actually compiled, which is what you need when a diagram comes out
 wrong. `:config:` names a preamble declared under `[uml_configs]` in the site's
-`rusty_sphinx.toml`, or one of the two sphinx-needs ships — `lefttoright` and
+`rinx.toml`, or one of the two sphinx-needs ships — `lefttoright` and
 `toptobottom` — which need nothing declared anywhere; a site entry of the same
 name redefines one.
 
@@ -980,7 +980,7 @@ Diagrams are **opt-in per library**: a library whose documents draw anything
 sets `diagrams = True`, and one that does not pays nothing for the feature.
 
 ```python
-rusty_sphinx_library(
+rinx_library(
     name = "docs",
     srcs = glob(["*.rst"], exclude = ["diagrams.rst"]),
     entity_schema = "entities.toml",
@@ -988,7 +988,7 @@ rusty_sphinx_library(
 )
 
 # The diagram documents, in a library of their own so the cost stays on them.
-rusty_sphinx_library(
+rinx_library(
     name = "diagram_docs",
     srcs = ["diagrams.rst"],
     entity_schema = "entities.toml",
@@ -1004,7 +1004,7 @@ attribute to set.
 
 A diagram's text depends on the whole entity graph, so it cannot be expanded
 until every document has been indexed. Compilation therefore belongs to
-`rusty_sphinx_site`, not to any `rusty_sphinx_library` — including for a plain
+`rinx_site`, not to any `rinx_library` — including for a plain
 `.. plantuml::`, which goes the same way so that the set of diagrams the build
 compiles and the set it validates cannot drift apart. The render action writes
 each diagram's expanded source, and a per-document compile turns it into an
@@ -1139,7 +1139,7 @@ what a name means, but only the build system can put the file in the parse
 action's sandbox.
 
 ```python
-rusty_sphinx_library(
+rinx_library(
     name = "docs",
     srcs = glob(["*.rst"]),
     entity_schema = "entities.toml",

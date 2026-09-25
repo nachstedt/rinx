@@ -1,6 +1,6 @@
-use rusty_sphinx_ast::{EntityPie, EntityPieSource, PieSlice};
-use rusty_sphinx_filter::parse_filter;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{EntityPie, EntityPieSource, PieSlice};
+use rinx_filter::parse_filter;
+use rinx_index::ProjectIndex;
 
 use super::count_wedges;
 use crate::blocks::chart_test_support::{index, schema};

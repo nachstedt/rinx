@@ -33,7 +33,7 @@ This is that increment.
 
 ### 1. The filter language is ours, hand-rolled, in its own crate
 
-`rusty_sphinx_filter` is a leaf crate depending on nothing of ours, because two
+`rinx_filter` is a leaf crate depending on nothing of ours, because two
 phases that may not depend on each other both need it: the **parser** parses a
 filter and the **renderer** evaluates one. What it knows about the thing being
 filtered arrives through an injected `FilterSubject` trait — the same seam
@@ -62,7 +62,7 @@ Three families of library were considered and declined:
   on crates.io is a placeholder.)
 
 So the front end is a hand-written tokenizer and recursive descent, as
-`rusty_sphinx_cdecl` already is for a *harder* grammar, with no dependency at
+`rinx_cdecl` already is for a *harder* grammar, with no dependency at
 all beyond `serde`.
 
 ### 2. Unsupported Python is refused by name, not as "syntax error"
@@ -128,7 +128,7 @@ Consequences, all deliberate:
 ### 5. Which fields exist is schema knowledge; what they are worth is index knowledge
 
 The vocabulary is split across two crates on purpose, because two phases must
-agree about it exactly. `rusty_sphinx_entity::field` owns *which* names resolve
+agree about it exactly. `rinx_entity::field` owns *which* names resolve
 — the five built-ins plus every attribute, relation and derived back-link any
 type declares — because the parser must check a column without an index in
 hand. `renderer`'s `entity_table/subject.rs` owns what each is *worth*, because

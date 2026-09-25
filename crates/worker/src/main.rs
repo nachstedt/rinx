@@ -1,4 +1,4 @@
-//! Rusty Sphinx Application Entry Point
+//! Rinx Application Entry Point
 //!
 //! Supports a subcommand-based CLI for Bazel phase integration as well as a
 //! legacy single-file mode for quick manual testing.
@@ -6,27 +6,27 @@
 //! # Subcommands (Bazel phases)
 //!
 //! ```text
-//! rusty-sphinx parse  --input <file.rst>  --output <file.ast>  [--default-domain <py|c>]
-//! rusty-sphinx validate_toctree --input <file.ast>  [--allowed <path>...]
-//! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
-//! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links] [--warnings-output <file.warnings.json>]
-//! rusty-sphinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>
-//! rusty-sphinx inventory --index <project.index> --output <objects.inv> --config <config.toml>
-//! rusty-sphinx extract_doctests --input <file.ast> --output <file.doctests.json>
-//! rusty-sphinx embed_assets --input <file.ast> --output <file.embeds.json>
-//! rusty-sphinx validate_images --image-dir <dir> [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]
+//! rinx parse  --input <file.rst>  --output <file.ast>  [--default-domain <py|c>]
+//! rinx validate_toctree --input <file.ast>  [--allowed <path>...]
+//! rinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
+//! rinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links] [--warnings-output <file.warnings.json>]
+//! rinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>
+//! rinx inventory --index <project.index> --output <objects.inv> --config <config.toml>
+//! rinx extract_doctests --input <file.ast> --output <file.doctests.json>
+//! rinx embed_assets --input <file.ast> --output <file.embeds.json>
+//! rinx validate_images --image-dir <dir> [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]
 //! ```
 //!
 //! # Legacy mode (quick preview)
 //!
 //! ```text
-//! rusty-sphinx <file.rst>    # prints HTML to stdout
+//! rinx <file.rst>    # prints HTML to stdout
 //! ```
 
 mod commands;
 
 use anyhow::{Context, Result, anyhow};
-use rusty_sphinx_worker::process_rst;
+use rinx_worker::process_rst;
 use std::env;
 use std::fs;
 
@@ -62,7 +62,7 @@ fn run(args: &[String]) -> Result<()> {
         }
         Some(path) if !path.starts_with('-') => cmd_legacy(path),
         _ => {
-            let program = args.first().map_or("rusty-sphinx", String::as_str);
+            let program = args.first().map_or("rinx", String::as_str);
             let msg = format!(
                 "Usage:\n\
                    {program} <file.rst>                                   (legacy preview)\n\

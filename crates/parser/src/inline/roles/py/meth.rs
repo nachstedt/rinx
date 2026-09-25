@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{Domain, InlineNode, ObjectType};
+use rinx_ast::{Domain, InlineNode, ObjectType};
 
 use crate::inline::regexes::METH_ROLE_REGEX;
 
@@ -24,7 +24,7 @@ pub(crate) fn handle_meth_match(m_str: &str, default_domain: Domain) -> InlineNo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::TargetSearchOrder;
+    use rinx_ast::TargetSearchOrder;
 
     #[test]
     fn test_handle_meth_match_resolves_meth_role() {
@@ -32,13 +32,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Method),
                 name: "greet".to_string(),
                 display: "greet".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }

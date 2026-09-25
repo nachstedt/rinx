@@ -2,8 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_entity::EntitySchema;
+use rinx_index::ProjectIndex;
 
 /// Everything [`expand`](crate::expand) resolves a template's questions with.
 ///
@@ -30,7 +30,7 @@ pub struct UmlContext<'a> {
 }
 
 // The entity a diagram sits inside is deliberately *not* a field here. It
-// travels on the [`Uml`](rusty_sphinx_ast::Uml) node instead, recorded by the
+// travels on the [`Uml`](rinx_ast::Uml) node instead, recorded by the
 // parser — the only phase that still knows it — so no later caller has to
 // rediscover it by walking outwards from the node, and none can get it wrong.
 

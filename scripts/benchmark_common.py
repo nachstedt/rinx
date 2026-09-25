@@ -25,7 +25,7 @@ from pathlib import Path
 BUILD_CONFIG_FLAGS = ["-c", "opt", "--host_compilation_mode=opt"]
 
 # Package holding the throwaway one-document site whose build is what compiles
-# the rusty-sphinx binary, so its cost lands outside the timed corpus build.
+# the rinx binary, so its cost lands outside the timed corpus build.
 WARMUP_PACKAGE = "bench_warmup"
 
 
@@ -55,13 +55,13 @@ def clone_repo(repo_url: str, tag: str, target_dir: Path):
 
 
 def generate_warmup_package(target_dir: Path, workspace_root: str):
-    """Writes a one-document site used to build rusty-sphinx before timing.
+    """Writes a one-document site used to build rinx before timing.
 
     The measurement we want is the documentation build alone, but a fresh
-    workspace has to compile the `rusty-sphinx` binary (and resolve the Rust,
+    workspace has to compile the `rinx` binary (and resolve the Rust,
     Java and Python toolchains) first, and that dwarfs it. Those tools are
     built in Bazel's *exec* configuration, so `bazel build
-    @rusty_sphinx//:rusty_sphinx_worker` would warm a differently-configured
+    @rinx//:rinx_worker` would warm a differently-configured
     binary and leave the real one to be compiled inside the timed step.
 
     Building a trivial site instead warms exactly the configurations the corpus
@@ -75,22 +75,22 @@ def generate_warmup_package(target_dir: Path, workspace_root: str):
     (warmup_dir / "index.rst").write_text("""Warmup
 ======
 
-A single paragraph, built only to compile the rusty-sphinx binary.
+A single paragraph, built only to compile the rinx binary.
 """)
-    (warmup_dir / "rusty_sphinx.toml").write_text('project = "Warmup"\n')
+    (warmup_dir / "rinx.toml").write_text('project = "Warmup"\n')
     default_template_path = Path(workspace_root) / "templates" / "default.html"
     (warmup_dir / "custom_template.html").write_text(default_template_path.read_text())
 
-    (warmup_dir / "BUILD.bazel").write_text("""load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
+    (warmup_dir / "BUILD.bazel").write_text("""load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
 
-rusty_sphinx_library(
+rinx_library(
     name = "warmup_docs",
     srcs = ["index.rst"],
 )
 
-rusty_sphinx_site(
+rinx_site(
     name = "site",
-    config = "rusty_sphinx.toml",
+    config = "rinx.toml",
     template = "custom_template.html",
     css = "//assets:default.css",
     deps = [":warmup_docs"],

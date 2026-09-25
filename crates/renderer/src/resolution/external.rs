@@ -20,8 +20,8 @@
 //! the one type other sites publish that this build never defines (see
 //! [`external_entry_types`]).
 
-use rusty_sphinx_ast::{InventorySelector, ObjectType, PyObjectType};
-use rusty_sphinx_index::{ExternalInventory, ExternalTarget};
+use rinx_ast::{InventorySelector, ObjectType, PyObjectType};
+use rinx_index::{ExternalInventory, ExternalTarget};
 
 use crate::BrokenLinkKind;
 
@@ -137,8 +137,8 @@ pub(crate) fn external_entry_types(object_type: ObjectType) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::CObjectType;
-    use rusty_sphinx_inventory::{EntryType, Inventory, InventoryEntry, InventoryName};
+    use rinx_ast::CObjectType;
+    use rinx_inventory::{EntryType, Inventory, InventoryEntry, InventoryName};
 
     fn inventory(name: &str, entries: &[(&str, &str, &str)]) -> ExternalInventory {
         ExternalInventory::new(

@@ -21,13 +21,13 @@
 use super::options::OptionLine;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, TableAlign, TargetName};
+use rinx_ast::{Diagnostic, DiagnosticCode, TableAlign, TargetName};
 
 /// The five presentation options every option-bearing table directive shares:
 /// `.. list-table::`, `.. csv-table::` and `.. table::` alike.
 ///
 /// `widths` is kept as its raw string (not yet resolved to a
-/// [`rusty_sphinx_ast::TableWidths`]) because validating it needs the table's
+/// [`rinx_ast::TableWidths`]) because validating it needs the table's
 /// column count, which isn't known until the rows have been built.
 pub(in crate::directives) struct CommonTableOptions {
     pub widths_raw: Option<String>,
@@ -92,7 +92,7 @@ pub(in crate::directives) fn parse_common_table_options<'a>(
 mod tests {
     use super::*;
     use crate::directives::options::scan_option_lines;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     fn lines(raw: &[&str]) -> Vec<String> {
         raw.iter().map(|s| (*s).to_string()).collect()

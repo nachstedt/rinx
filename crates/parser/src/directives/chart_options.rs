@@ -13,7 +13,7 @@
 //! written into a node, because the two nodes are different types; each
 //! caller stores the value where its own node keeps it.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     ChartColor, Diagnostic, DiagnosticCode, ImageAlign, LengthOrPercentage, TargetName,
 };
 

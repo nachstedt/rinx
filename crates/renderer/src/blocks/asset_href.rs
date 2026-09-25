@@ -24,7 +24,7 @@ pub(super) const ASSET_DIR: &str = "_images";
 ///
 /// Falls back to the un-relativized path when no relative route exists, which
 /// keeps the `src` pointing somewhere plausible rather than dropping it —
-/// the same fallback `rusty_sphinx_index::relative_doc_href` makes, for the same
+/// the same fallback `rinx_index::relative_doc_href` makes, for the same
 /// reason.
 pub(super) fn relative_asset_href(asset_path: &Path, doc_path: &str) -> String {
     let current_dir = Path::new(doc_path)

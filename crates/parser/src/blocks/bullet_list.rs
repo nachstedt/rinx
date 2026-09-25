@@ -3,7 +3,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::strip_indent;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Node};
+use rinx_ast::{Diagnostic, DiagnosticCode, Node};
 
 pub(super) fn detect_bullet_item(line: &str) -> Option<(char, usize, usize)> {
     let mut chars = line.chars();
@@ -122,7 +122,7 @@ pub(super) fn try_parse_bullet_list(
             let item_ctx = ctx.nested(item_start, body_indent);
             let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, &item_ctx);
 
-            items.push(rusty_sphinx_ast::ListItem { nodes: body_nodes });
+            items.push(rinx_ast::ListItem { nodes: body_nodes });
         } else {
             break;
         }
@@ -145,7 +145,7 @@ pub(super) fn try_parse_bullet_list(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::InlineNode;
+    use rinx_ast::InlineNode;
 
     #[test]
     fn test_parse_bullet_list_simple() {

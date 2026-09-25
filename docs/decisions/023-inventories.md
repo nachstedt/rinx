@@ -13,7 +13,7 @@ other sites in `intersphinx_mapping`, Sphinx downloads their inventories while
 building, and a reference no document defines resolves into them. It is how
 nearly every Python project's documentation links to `dict`, and it was the
 largest reason a real project could not build here: a `:py:class:` naming a
-standard-library type was a broken link, and a rusty-sphinx site was a link
+standard-library type was a broken link, and a rinx site was a link
 target nobody else could reach.
 
 Three things here differ from Sphinx and needed deciding: where an inventory
@@ -29,22 +29,22 @@ exactly what Bazel's cache cannot see. So an inventory is an ordinary label,
 declared by a new rule:
 
 ```python
-rusty_sphinx_inventory(
+rinx_inventory(
     name = "python",
     src = "@python_objects_inv//file",   # http_file with sha256, or vendored
     base_url = "https://docs.python.org/3.13/",
 )
 
-rusty_sphinx_site(..., inventories = [":python"])
+rinx_site(..., inventories = [":python"])
 ```
 
 `src` is any file: a vendored copy, an `http_file` pinned by `sha256`, or —
-the case this also opens — another `rusty_sphinx_site`'s `inventory` output
+the case this also opens — another `rinx_site`'s `inventory` output
 group. Updating a pin is an explicit change to the build. This is the stance
 `.. needimport::` takes on URLs (ADR-016 §5), for the same reason.
 
 `base_url` is metadata about the file, so it lives on the rule rather than in
-`rusty_sphinx.toml` (ADR-001: the path goes on the command line, the name and
+`rinx.toml` (ADR-001: the path goes on the command line, the name and
 its meaning travel with it). It may be absolute, or relative to the consuming
 site's root for sites deployed side by side, in which case each page's link is
 made relative to that page, as an internal link is.
@@ -126,7 +126,7 @@ An external link carries Sphinx's `reference external` classes and its
 
 ### 5. Every site writes an `objects.inv`, projected from the index
 
-`rusty_sphinx_site` always runs an `inventory` action next to `genindex`,
+`rinx_site` always runs an `inventory` action next to `genindex`,
 writing `_site_out/objects.inv` and exposing it in an `inventory` output group
 so another site can depend on the one file. It is a projection of
 `ProjectIndex`: documents (`std:doc`), labels (`std:label`, with the title a
@@ -149,7 +149,7 @@ Writing it forced two fixes that are not about inventories:
 and wrong for publishing: Sphinx resolves Python names case-sensitively. The
 definition's spelling is kept beside the key in `domain_object_spellings`.
 
-The format itself lives in the leaf crate `rusty_sphinx_inventory`, since the
+The format itself lives in the leaf crate `rinx_inventory`, since the
 worker writes one, the index holds one and the AST names one. A real
 `sphinx-build` 9.1.0 output is checked in as its compatibility fixture: the
 reader loads it, and re-writing it reproduces Sphinx's body line for line.
@@ -157,8 +157,8 @@ reader loads it, and re-writing it reproduces Sphinx's body line for line.
 ## Consequences
 
 - A reference into the standard library, or any declared project, resolves,
-  and a rusty-sphinx site is linkable from Sphinx projects and from other
-  rusty-sphinx sites.
+  and a rinx site is linkable from Sphinx projects and from other
+  rinx sites.
 - `.ast` files carry an optional `inventory` selector on four inline nodes; an
   ordinary role serializes exactly as before.
 - Editing an inventory re-runs the index and every render, as any index input
@@ -169,7 +169,7 @@ reader loads it, and re-writing it reproduces Sphinx's body line for line.
 
 - **Anchors differ from Sphinx's.** A Python object's anchor here is
   `py:class:pkg.greeter`, not `pkg.Greeter`. Harmless, since the inventory
-  carries the real URI, but a hand-written link into a rusty-sphinx page copied
+  carries the real URI, but a hand-written link into a rinx page copied
   from a Sphinx one will miss.
 - **Untitled labels are listed.** Sphinx lists only labels with a title; this
   build lists every internal target (showing its name), since an entity or a

@@ -12,13 +12,13 @@
 //! `std::fs::read_to_string` call because this crate performs no I/O of its
 //! own: it is also the live-preview path, where a document is parsed straight
 //! from an editor buffer, and it is exercised by unit tests that must not
-//! depend on the filesystem. `rusty_sphinx_worker` supplies the real
+//! depend on the filesystem. `rinx_worker` supplies the real
 //! filesystem-backed loader.
 
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{Domain, EntityId, FileId, Position, Span};
-use rusty_sphinx_entity::{EntitySchema, EntityType};
+use rinx_ast::{Domain, EntityId, FileId, Position, Span};
+use rinx_entity::{EntitySchema, EntityType};
 
 use crate::templating::TemplateMap;
 

@@ -3,10 +3,10 @@
 //! "fall back to a suffix match" tiers, plus the ambiguous case where no
 //! tier can pick a single winner.
 
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_parser as parser;
-use rusty_sphinx_renderer as renderer;
+use rinx_analyzer as analyzer;
+use rinx_ast as ast;
+use rinx_parser as parser;
+use rinx_renderer as renderer;
 
 #[test]
 fn test_e2e_dot_prefixed_reference_prefers_the_enclosing_module() {

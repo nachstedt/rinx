@@ -1,10 +1,10 @@
 [package]
-name = "rusty_sphinx_toctree"
+name = "rinx_toctree"
 version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-rusty_sphinx_ast = { path = "../ast" }
+rinx_ast = { path = "../ast" }
 globset = "0.4"
 
 [lints]

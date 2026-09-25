@@ -6,7 +6,7 @@
 //! format* (version 2: a four-line plain-text header followed by a
 //! zlib-compressed body): it knows nothing about a `ProjectIndex` or about
 //! resolving a reference, which are the index's and the renderer's business.
-//! It is a leaf crate like `rusty_sphinx_cdecl` and `rusty_sphinx_filter`,
+//! It is a leaf crate like `rinx_cdecl` and `rinx_filter`,
 //! and for the same reason: the worker writes an inventory, the index action
 //! reads one and the AST names one, and those phases may not depend on each
 //! other.

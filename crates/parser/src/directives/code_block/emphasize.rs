@@ -7,7 +7,7 @@
 
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode};
+use rinx_ast::{Diagnostic, DiagnosticCode};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -80,7 +80,7 @@ fn parse_line_range(part: &str) -> Option<Vec<NonZeroU32>> {
 mod tests {
     use super::super::test_support::{codes, parse};
     use super::*;
-    use rusty_sphinx_ast::DiagnosticCode;
+    use rinx_ast::DiagnosticCode;
 
     #[test]
     fn test_parse_code_block_expands_an_emphasize_lines_range() {

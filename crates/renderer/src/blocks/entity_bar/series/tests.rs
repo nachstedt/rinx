@@ -1,5 +1,5 @@
-use rusty_sphinx_ast::{BarGrid, ChartValue, EntityBar, EntityBarSource};
-use rusty_sphinx_filter::parse_filter;
+use rinx_ast::{BarGrid, ChartValue, EntityBar, EntityBarSource};
+use rinx_filter::parse_filter;
 
 use super::count_grid;
 use crate::blocks::chart_test_support::{index, schema};

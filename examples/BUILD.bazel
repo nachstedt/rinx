@@ -7,9 +7,9 @@ Assembles the documentation from team_a and team_b into a single HTML site.
   bazel build //examples/team_a:docs   # build team_a in isolation
 """
 
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_doctest_tests", "rusty_sphinx_library", "rusty_sphinx_site")
+load("@rinx//:defs.bzl", "rinx_doctest_tests", "rinx_library", "rinx_site")
 
-rusty_sphinx_library(
+rinx_library(
     name = "root_docs",
     srcs = [
         "index.rst",
@@ -89,21 +89,21 @@ rusty_sphinx_library(
 # library so it is the only one a `bazel test` re-runs. Doctests are tested per
 # library, so splitting the library is how you narrow what a code edit
 # invalidates.
-rusty_sphinx_library(
+rinx_library(
     name = "doctest_docs",
     srcs = ["doctests.rst"],
 )
 
 # Building the site never reaches this target, so no Python toolchain is needed
 # to produce HTML.
-rusty_sphinx_doctest_tests(
+rinx_doctest_tests(
     name = "doctest_docs_doctests",
     lib = ":doctest_docs",
 )
 
-rusty_sphinx_site(
+rinx_site(
     name = "site",
-    config = "rusty_sphinx.toml",
+    config = "rinx.toml",
     # The same schema `//examples/entities:docs` was parsed against: the index
     # action derives back-links from its relations, and each render action
     # reads its labels.
@@ -119,7 +119,7 @@ rusty_sphinx_site(
     # objects.inv it writes.
     visibility = ["//examples/intersphinx:__pkg__"],
     # Only the root library. Every other library reaches the site transitively
-    # through `root_docs`'s toctree deps — `RustySphinxInfo.ast_files` is a
+    # through `root_docs`'s toctree deps — `RinxInfo.ast_files` is a
     # depset that carries its deps' ASTs along.
     deps = [":root_docs"],
 )

@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     AttributeValue, Directive, Document, EntityBody, EntityId, EntitySection, InlineNode, Node,
 };
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_index::{EntityRecord, ProjectIndex};
 
 use super::*;
 use crate::EmbeddedAssets;
@@ -295,10 +295,10 @@ fn test_render_attributes_prefers_the_update_history_current_value() {
     index
         .entities
         .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
-    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    let mut history = rinx_index::EntityFieldHistory::default();
     history.attributes.insert(
         "status".to_string(),
-        rusty_sphinx_index::AttributeFieldHistory {
+        rinx_index::AttributeFieldHistory {
             original: Some(AttributeValue::String("open".to_string())),
             applied: Vec::new(),
             current: Some(AttributeValue::String("closed".to_string())),
@@ -326,16 +326,16 @@ fn test_render_attributes_marks_a_conflicting_value() {
     index
         .entities
         .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
-    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    let mut history = rinx_index::EntityFieldHistory::default();
     history.attributes.insert(
         "status".to_string(),
-        rusty_sphinx_index::AttributeFieldHistory {
+        rinx_index::AttributeFieldHistory {
             original: Some(AttributeValue::String("open".to_string())),
-            applied: vec![rusty_sphinx_index::AppliedFieldUpdate {
+            applied: vec![rinx_index::AppliedFieldUpdate {
                 update_index: 1,
                 doc_path: "specs/other".to_string(),
                 span: None,
-                mode: rusty_sphinx_ast::FieldMutationMode::Set("in_progress".to_string()),
+                mode: rinx_ast::FieldMutationMode::Set("in_progress".to_string()),
                 resulting_value: Some(AttributeValue::String("in_progress".to_string())),
                 conflicts_with: Some(0),
             }],
@@ -361,16 +361,16 @@ fn test_render_attributes_does_not_mark_an_undisputed_value() {
     index
         .entities
         .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
-    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    let mut history = rinx_index::EntityFieldHistory::default();
     history.attributes.insert(
         "status".to_string(),
-        rusty_sphinx_index::AttributeFieldHistory {
+        rinx_index::AttributeFieldHistory {
             original: Some(AttributeValue::String("open".to_string())),
-            applied: vec![rusty_sphinx_index::AppliedFieldUpdate {
+            applied: vec![rinx_index::AppliedFieldUpdate {
                 update_index: 0,
                 doc_path: "specs/boot".to_string(),
                 span: None,
-                mode: rusty_sphinx_ast::FieldMutationMode::Set("closed".to_string()),
+                mode: rinx_ast::FieldMutationMode::Set("closed".to_string()),
                 resulting_value: Some(AttributeValue::String("closed".to_string())),
                 conflicts_with: None,
             }],
@@ -395,16 +395,16 @@ fn test_render_links_marks_a_conflicting_relation() {
     index
         .entities
         .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
-    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    let mut history = rinx_index::EntityFieldHistory::default();
     history.relations.insert(
         "links".to_string(),
-        rusty_sphinx_index::RelationFieldHistory {
+        rinx_index::RelationFieldHistory {
             original: vec![EntityId::new("SPEC_003").unwrap()],
-            applied: vec![rusty_sphinx_index::AppliedRelationUpdate {
+            applied: vec![rinx_index::AppliedRelationUpdate {
                 update_index: 1,
                 doc_path: "specs/other".to_string(),
                 span: None,
-                mode: rusty_sphinx_ast::FieldMutationMode::Set("SPEC_999".to_string()),
+                mode: rinx_ast::FieldMutationMode::Set("SPEC_999".to_string()),
                 resulting_targets: vec![EntityId::new("SPEC_999").unwrap()],
                 conflicts_with: Some(0),
             }],
@@ -440,10 +440,10 @@ fn test_render_links_prefers_the_update_history_current_targets() {
     index
         .entities
         .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
-    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    let mut history = rinx_index::EntityFieldHistory::default();
     history.relations.insert(
         "links".to_string(),
-        rusty_sphinx_index::RelationFieldHistory {
+        rinx_index::RelationFieldHistory {
             original: vec![EntityId::new("SPEC_003").unwrap()],
             applied: Vec::new(),
             current: vec![
@@ -508,7 +508,7 @@ fn test_a_section_body_is_real_rendered_content_not_text() {
     entity.sections = vec![EntitySection::named(
         "verification-criteria".to_string(),
         vec![Node::Directive(Directive::Admonition {
-            kind: rusty_sphinx_ast::AdmonitionKind::Note,
+            kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
             body: vec![paragraph("Careful.")],
@@ -754,10 +754,10 @@ fn test_a_template_reads_the_effective_outgoing_targets() {
     index
         .entities
         .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
-    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    let mut history = rinx_index::EntityFieldHistory::default();
     history.relations.insert(
         "links".to_string(),
-        rusty_sphinx_index::RelationFieldHistory {
+        rinx_index::RelationFieldHistory {
             original: vec![EntityId::new("SPEC_003").unwrap()],
             applied: Vec::new(),
             current: vec![
@@ -791,16 +791,16 @@ fn test_a_template_reads_the_update_history() {
     index
         .entities
         .insert(EntityId::new("REQ_001").unwrap(), requirement_record());
-    let mut history = rusty_sphinx_index::EntityFieldHistory::default();
+    let mut history = rinx_index::EntityFieldHistory::default();
     history.attributes.insert(
         "status".to_string(),
-        rusty_sphinx_index::AttributeFieldHistory {
+        rinx_index::AttributeFieldHistory {
             original: Some(AttributeValue::String("open".to_string())),
-            applied: vec![rusty_sphinx_index::AppliedFieldUpdate {
+            applied: vec![rinx_index::AppliedFieldUpdate {
                 update_index: 0,
                 doc_path: "specs/review.rst".to_string(),
                 span: None,
-                mode: rusty_sphinx_ast::FieldMutationMode::Set("closed".to_string()),
+                mode: rinx_ast::FieldMutationMode::Set("closed".to_string()),
                 resulting_value: Some(AttributeValue::String("closed".to_string())),
                 conflicts_with: None,
             }],

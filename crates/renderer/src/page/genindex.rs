@@ -1,12 +1,12 @@
 //! Renders the site-wide general index (`genindex.html`): every
-//! [`rusty_sphinx_index::GenIndexEntry`] grouped alphabetically by primary
+//! [`rinx_index::GenIndexEntry`] grouped alphabetically by primary
 //! term, with subentries nested underneath and a letter jump-nav at the top —
-//! mirroring Sphinx's `genindex.html`, using rusty-sphinx's own template/CSS
+//! mirroring Sphinx's `genindex.html`, using rinx's own template/CSS
 //! system rather than literal DOM/CSS parity with Sphinx's theme.
 
 use crate::config::SiteConfig;
 use anyhow::Result;
-use rusty_sphinx_index::{GenIndexEntry, ProjectIndex};
+use rinx_index::{GenIndexEntry, ProjectIndex};
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 

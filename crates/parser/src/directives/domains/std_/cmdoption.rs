@@ -2,7 +2,7 @@ use super::super::body::parse_body;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVector, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVector, Span};
 
 /// Parses a `.. option::`/`.. cmdoption::` body. Unlike every other domain
 /// object type, `StdCmdoption` has no directive-specific option lines to strip
@@ -12,10 +12,10 @@ use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, DomainObjectBody, NonEmptyVec
 ///
 /// The only extra work here is a diagnostic pass over each raw signature
 /// line's comma-separated specs (see
-/// [`rusty_sphinx_ast::split_option_line_specs`]/
-/// [`rusty_sphinx_ast::extract_option_name`]), flagging any spec that
+/// [`rinx_ast::split_option_line_specs`]/
+/// [`rinx_ast::extract_option_name`]), flagging any spec that
 /// doesn't match Sphinx's `option_desc_re` shape. The spec itself is never
-/// dropped — [`extract_option_name`](rusty_sphinx_ast::extract_option_name)
+/// dropped — [`extract_option_name`](rinx_ast::extract_option_name)
 /// falls back to the whole spec rather than losing it — only its
 /// malformedness is surfaced here; the actual split+extract that drives
 /// indexing/rendering is cheap enough to safely redo later, directly from
@@ -30,7 +30,7 @@ pub(crate) fn parse_cmdoption(
     span: Option<Span>,
 ) -> DomainObjectBody {
     for line in signatures.as_slice() {
-        for spec in rusty_sphinx_ast::split_option_line_specs(line) {
+        for spec in rinx_ast::split_option_line_specs(line) {
             if !looks_like_option_spec(&spec) {
                 diagnostics.push(Diagnostic::at(
                     DiagnosticCode::OptionMalformedSpec,
@@ -52,7 +52,7 @@ pub(crate) fn parse_cmdoption(
 /// Whether `spec` matches Sphinx's `option_desc_re` shape (a `-`/`--`/`/`/`+`
 /// sigil followed by at least one non-whitespace, non-`=` character) — used
 /// only to decide whether [`parse_cmdoption`] should emit a diagnostic.
-/// [`rusty_sphinx_ast::extract_option_name`] is still what derives the
+/// [`rinx_ast::extract_option_name`] is still what derives the
 /// actual name used for indexing/rendering, malformed or not; this is a
 /// separate, cheap-to-recompute check rather than a shared "did it fall
 /// back" flag, since duplicating a five-line scan is simpler than plumbing
@@ -76,7 +76,7 @@ fn looks_like_option_spec(spec: &str) -> bool {
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::{Directive, Node};
 
     #[test]
     fn test_looks_like_option_spec_accepts_short_and_long_flags() {
@@ -163,7 +163,7 @@ mod tests {
         let input = ".. option:: -h";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rusty_sphinx_ast::Domain::C);
+        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::C);
 
         // Then
         assert!(matches!(

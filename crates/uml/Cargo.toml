@@ -1,13 +1,13 @@
 [package]
-name = "rusty_sphinx_uml"
+name = "rinx_uml"
 version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-rusty_sphinx_ast = { path = "../ast" }
-rusty_sphinx_entity = { path = "../entity" }
-rusty_sphinx_filter = { path = "../filter" }
-rusty_sphinx_index = { path = "../index" }
+rinx_ast = { path = "../ast" }
+rinx_entity = { path = "../entity" }
+rinx_filter = { path = "../filter" }
+rinx_index = { path = "../index" }
 minijinja = "2"
 
 [lints]

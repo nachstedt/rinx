@@ -8,11 +8,11 @@
 //! `MathML` is rendered by browsers natively, which is why this is a build-time
 //! conversion at all rather than a client-side script: a page carries its own
 //! equations, needs no network to display them, and invalid LaTeX becomes a
-//! rusty-sphinx diagnostic instead of a silent failure in someone's browser.
+//! rinx diagnostic instead of a silent failure in someone's browser.
 //! See `docs/decisions/004-math-rendering.md`.
 
 use math_core::{LatexToMathML, MathCoreConfig, MathDisplay};
-use rusty_sphinx_ast::{DiagnosticCode, Span};
+use rinx_ast::{DiagnosticCode, Span};
 
 /// LaTeX the math backend rejected, reported while rendering.
 ///
@@ -78,9 +78,9 @@ impl MathRenderer {
     /// rendering plus a message on failure.
     ///
     /// Uses `math-core`'s *local* state deliberately: its global state exists
-    /// to number `\begin{equation}` environments across calls, but rusty-sphinx
+    /// to number `\begin{equation}` environments across calls, but rinx
     /// numbers equations itself, per document and from the project index (see
-    /// `rusty_sphinx_analyzer`'s `number_equations`). Letting both count would
+    /// `rinx_analyzer`'s `number_equations`). Letting both count would
     /// produce two disagreeing sets of numbers on one page.
     pub(crate) fn to_html(&self, latex: &str, display: MathDisplay) -> Result<String, MathFailure> {
         match self.converter.convert_with_local_state(latex, display) {

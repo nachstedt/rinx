@@ -7,15 +7,15 @@ execution on opposite sides of Bazel's build/test line — a broken example must
 not stop the documentation from being published.
 """
 
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_doctest_tests", "rusty_sphinx_library", "rusty_sphinx_site")
+load("@rinx//:defs.bzl", "rinx_doctest_tests", "rinx_library", "rinx_site")
 
-rusty_sphinx_library(
+rinx_library(
     name = "docs",
     srcs = ["failing.rst"],
     visibility = ["//visibility:public"],
 )
 
-rusty_sphinx_doctest_tests(
+rinx_doctest_tests(
     name = "doctests",
     lib = ":docs",
     # Kept out of `bazel test //...`, which must stay green.
@@ -23,7 +23,7 @@ rusty_sphinx_doctest_tests(
 )
 
 # Proves the failing document still renders.
-rusty_sphinx_site(
+rinx_site(
     name = "site",
     deps = [":docs"],
 )

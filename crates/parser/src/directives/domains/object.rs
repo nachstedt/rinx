@@ -3,7 +3,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector, Span};
+use rinx_ast::{DomainObjectBody, NonEmptyVector, Span};
 
 use crate::headings::Adornment;
 
@@ -81,8 +81,8 @@ pub(crate) fn parse_domain_object(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::Domain;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::Domain;
+    use rinx_ast::{Directive, Node};
 
     #[test]
     fn test_parse_domain_object_with_paragraph_body() {
@@ -212,7 +212,7 @@ mod tests {
             if let Node::Paragraph(inlines) = &body[0] {
                 assert_eq!(
                     inlines[0],
-                    rusty_sphinx_ast::InlineNode::Text("Indented more than needed.".to_string())
+                    rinx_ast::InlineNode::Text("Indented more than needed.".to_string())
                 );
             } else {
                 panic!("Expected Paragraph, got {:?}", body[0]);

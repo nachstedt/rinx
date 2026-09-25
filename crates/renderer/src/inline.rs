@@ -1,5 +1,5 @@
 //! Inline markup rendering: everything that turns a paragraph's
-//! [`rusty_sphinx_ast::InlineNode`]s into HTML.
+//! [`rinx_ast::InlineNode`]s into HTML.
 //!
 //! [`dispatch`] owns the entry point and matches on the node kind; each
 //! remaining module renders one cross-reference role — [`reference`] for

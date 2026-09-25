@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{
+use rinx_ast::{
     ButtonFlag, ButtonLink, ButtonTarget, Diagnostic, DiagnosticCode, Directive, InlineNode, Node,
     SemanticColor, TextAlign, walk_nodes,
 };

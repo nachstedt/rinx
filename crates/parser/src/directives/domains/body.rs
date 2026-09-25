@@ -7,7 +7,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::Node;
+use rinx_ast::Node;
 
 /// Strips the body's common leading indentation and parses the remaining
 /// lines as block-level nodes.
