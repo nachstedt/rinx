@@ -422,6 +422,7 @@ fn resolve_directive(
         | Directive::EntityFlow(_)
         | Directive::EntitySequence(_)
         | Directive::EntityPie(_)
+        | Directive::EntityBar(_)
         | Directive::Image(_)
         | Directive::DocTest(_)
         | Directive::CodeBlock(_)

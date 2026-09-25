@@ -116,7 +116,8 @@ as on every diagram here.
 ## Consequences
 
 - `needsequence` joins `needtable`, `needflow`, `needpie`, `needuml` and
-  `needarch` as supported; `needbar` is the last unimplemented view.
+  `needarch` as supported; `needbar` is the last unimplemented view. (It has
+  since been answered by ADR-021, `entity-bar`.)
 - The benchmark corpus's two sequence diagrams draw without change to their
   documents: both use only `:start:` and `:link_types:`, and both walk a single
   start.

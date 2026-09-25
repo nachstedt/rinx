@@ -44,6 +44,7 @@ mod admonitions;
 // explicit-markup construct and its body ends by exactly the same rule.
 pub(crate) mod body;
 mod button_link;
+mod chart_options;
 mod code_block;
 mod contents;
 mod data_table;
@@ -52,6 +53,7 @@ mod doctest;
 mod domains;
 mod dropdown;
 mod entity;
+mod entity_bar;
 mod entity_fields;
 mod entity_flow;
 mod entity_pie;

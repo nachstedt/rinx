@@ -581,11 +581,11 @@ no longer matches than a deliberate statement. The live preview stays quiet
 about it when no project index is available, since every table would be empty
 through no fault of the author.
 
-`needflow`, `needsequence` and `needpie` *are* implemented — see "Flowcharts
-of the graph", "Sequence diagrams of the graph" and "Charting the graph" below,
-which ask about this same graph and draw the answer instead of tabulating it. `needlist` and `needbar` are not. They are the same
-question again with a different presentation, and would reuse this filter
-language unchanged — `needbar` would reuse the counting a chart already does.
+`needflow`, `needsequence`, `needpie` and `needbar` *are* implemented — see
+"Flowcharts of the graph", "Sequence diagrams of the graph" and "Charting the
+graph" below, which ask about this same graph and draw the answer instead of
+tabulating it. `needlist` is not. It is the same question again with a
+different presentation, and would reuse this filter language unchanged.
 
 ---
 
@@ -786,6 +786,53 @@ sphinx-needs' `:explode:`, `:shadow:`, `:style:` and `:filter-func:` are each
 reported by name as `entity-pie.unsupported-option`, with what to write
 instead. See `docs/decisions/017-entity-pie.md`.
 
+### Bar charts
+
+`.. entity-bar::` — sphinx-needs spells it `.. needbar::` — asks the same
+question in two dimensions. Each body line is one **series** (a legend entry,
+drawn in one colour), split on `:separator:` into one cell per **category**
+along the axis. A cell is a filter whose count is the bar's height, or a number
+written outright.
+
+```rst
+.. entity-bar:: Work done and left to do
+   :xlabels: FROM_DATA
+   :ylabels: FROM_DATA
+   :stacked:
+   :show_top_sum:
+   :legend:
+
+   , Still to do, Done
+   Requirements, type == "req" and status != "closed", type == "req" and status == "closed"
+   Specifications, type == "spec" and status == "draft", type == "spec" and status == "approved"
+```
+
+| option | what it does |
+|---|---|
+| `:xlabels:` | the category names, comma-separated — or `FROM_DATA` to take them from the body's first line |
+| `:ylabels:` | the series names, comma-separated — or `FROM_DATA` to take them from each line's first cell |
+| `:separator:` | what a body line is split on (default `,`); for a filter that holds a comma |
+| `:transpose:` | swap series and categories, labels included |
+| `:stacked:` | pile a category's series on top of each other rather than side by side |
+| `:horizontal:` | bars run rightwards, the first category at the top |
+| `:show_sum:` | write each bar's value in its middle |
+| `:show_top_sum:` | write each bar's value past its end — stacked, the stack's total |
+| `:x_axis_title:` `:y_axis_title:` | name the axes |
+| `:xlabels_rotation:` `:ylabels_rotation:` `:sum_rotation:` | turn the axes' labels or the written values by any whole number of degrees |
+| `:filter:` `:legend:` `:colors:` `:text_color:` | as on a pie — but a short `:colors:` list is *continued by the palette* rather than repeated, as in sphinx-needs |
+| `:caption:` `:align:` `:width:` `:scale:` `:class:` `:name:` | as on every picture |
+
+Like a pie, a bar chart is drawn while rendering and needs no
+`diagrams = True`. Where sphinx-needs fails the build, this one reports and
+draws: a short row is padded with zeros (`entity-bar.ragged-row`), a label list
+of the wrong length keeps the data (`entity-bar.label-count-mismatch`), and a
+rotation that is not whole degrees is `entity-bar.invalid-rotation` rather than
+silently ignored. A body with no values is `entity-bar.no-data`, a chart whose
+every cell counts zero `entity-bar.empty-result`, and `:style:` and the legacy
+`:status:`/`:tags:`/`:types:`/`:cypher:` are each
+`entity-bar.unsupported-option`, with the `:filter:` to write instead. See
+`docs/decisions/021-entity-bar.md`.
+
 ---
 
 ## Diagramming entities
@@ -938,10 +985,10 @@ Deliberately **not** supported:
   typed filter language rather than a Python interpreter. It covers the
   operators real filters use and diagnoses everything else by name, so a filter
   calling `len()` is reported rather than silently matching nothing.
-- **The remaining listing directives** (`needlist`, `needbar`) — a later
-  increment. They reuse the same filter language, and now the counting a chart
-  already does. `needtable`, `needflow`, `needsequence`, `needpie`, `needuml`
-  and `needarch` *are* supported; see "Listing entities", "Flowcharts of the
+- **The remaining listing directive** (`needlist`) — a later increment. It
+  would reuse the same filter language. `needtable`, `needflow`,
+  `needsequence`, `needpie`, `needbar`, `needuml` and `needarch` *are*
+  supported; see "Listing entities", "Flowcharts of the
   graph", "Sequence diagrams of the graph", "Charting the graph" and
   "Diagramming entities".
 - **Dynamic functions** (`[[copy('id')]]`) and `needservice`. The latter is

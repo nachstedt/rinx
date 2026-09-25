@@ -151,6 +151,7 @@ diagnostic_codes! {
     DirectiveEntityFlowUnknownOption => "directive.entity-flow-unknown-option",
     DirectiveEntitySequenceUnknownOption => "directive.entity-sequence-unknown-option",
     DirectiveEntityPieUnknownOption => "directive.entity-pie-unknown-option",
+    DirectiveEntityBarUnknownOption => "directive.entity-bar-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
     DirectiveTitleArgumentMissing => "directive.title-argument-missing",
@@ -683,6 +684,56 @@ diagnostic_codes! {
     /// and only the renderer can raise it: whether a filter selects anything
     /// depends on every document in the project.
     EntityPieEmptyResult => "entity-pie.empty-result",
+
+    // --- `.. entity-bar::` / `.. needbar::` --------------------------------
+    //
+    // One family for both spellings, and its own rather than `entity-pie.*`'s
+    // although most codes mirror it: a code names the construct. Like a pie,
+    // a bar chart is drawn by the render action and never compiled, so there
+    // is no `diagrams-disabled` here either.
+    /// A cell's filter, or the chart's own `:filter:`, that this build's
+    /// filter language cannot evaluate. The cell still counts, selecting
+    /// everything, for `entity-pie.invalid-filter`'s reason.
+    EntityBarInvalidFilter => "entity-bar.invalid-filter",
+    /// A filter naming a field no entity type declares and that is none of the
+    /// built-in ones. Reported while parsing, where the schema is in hand.
+    EntityBarUnknownField => "entity-bar.unknown-field",
+    /// A chart whose body holds no values at all once label rows and columns
+    /// are taken out. Reported while parsing, because the body is this
+    /// document's own text.
+    EntityBarNoData => "entity-bar.no-data",
+    /// A content line with a different number of cells from the first. The
+    /// grid is widened to its longest row with zero cells, rather than
+    /// refused as sphinx-needs does, so the data written is still drawn.
+    EntityBarRaggedRow => "entity-bar.ragged-row",
+    /// More or fewer `:xlabels:`/`:ylabels:` than the grid has columns/rows.
+    /// They pair by position, so at least one bar is named wrongly; the bars
+    /// are still drawn and the surplus labels dropped.
+    EntityBarLabelCountMismatch => "entity-bar.label-count-mismatch",
+    /// A `:colors:` or `:text_color:` entry that is not a colour this build
+    /// can draw with.
+    EntityBarInvalidColor => "entity-bar.invalid-color",
+    /// A `:xlabels_rotation:`, `:ylabels_rotation:` or `:sum_rotation:` that
+    /// is not a whole number of degrees. sphinx-needs silently ignores one;
+    /// here the text is drawn unrotated and the line reported.
+    EntityBarInvalidRotation => "entity-bar.invalid-rotation",
+    /// An `:align:` that is not one of docutils' three.
+    EntityBarInvalidAlign => "entity-bar.invalid-align",
+    /// A `:scale:` that is not a non-negative percentage.
+    EntityBarInvalidScale => "entity-bar.invalid-scale",
+    /// A `:width:` that is not a length or a percentage.
+    EntityBarInvalidWidth => "entity-bar.invalid-width",
+    /// A `:scale:` with no `:width:` to apply to.
+    EntityBarUnusableScale => "entity-bar.unusable-scale",
+    /// An option whose value is required but was left empty.
+    EntityBarEmptyOptionValue => "entity-bar.empty-option-value",
+    /// An option sphinx-needs' `needbar` has that this build does not
+    /// implement, reported by name with what to write instead.
+    EntityBarUnsupportedOption => "entity-bar.unsupported-option",
+    /// A chart every one of whose cells counted zero, so there are no bars to
+    /// draw. Only the renderer can raise it, for `entity-pie.empty-result`'s
+    /// reason.
+    EntityBarEmptyResult => "entity-bar.empty-result",
 
     // --- `.. entity-update::` / `.. needextend::` --------------------------
     //

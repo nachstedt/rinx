@@ -259,6 +259,7 @@ pub(super) fn index_nodes(
                 | Directive::EntityFlow(_)
                 | Directive::EntitySequence(_)
                 | Directive::EntityPie(_)
+                | Directive::EntityBar(_)
                 | Directive::Uml(_)),
             ) => index_name_bearing_directive(directive, doc_path, index, scope),
             Node::Directive(Directive::Sectnum(options)) => index_sectnum(options, doc_path, index),
@@ -387,6 +388,11 @@ fn index_name_bearing_directive(
         // involved at all — the chart is drawn in the render itself.
         Directive::EntityPie(pie) => {
             register_directive_name(pie.name.as_ref(), doc_path, index);
+        }
+        // A bar chart likewise: its cells are counted from this index while
+        // rendering, and nothing is compiled.
+        Directive::EntityBar(bar) => {
+            register_directive_name(bar.name.as_ref(), doc_path, index);
         }
         // A dropdown carries both: a `:name:` of its own, and a body whose
         // targets, sections and entities belong to this document exactly as

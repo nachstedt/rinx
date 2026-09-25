@@ -3,29 +3,7 @@
 use rusty_sphinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
-/// What decides how large a wedge is.
-///
-/// Two cases because sphinx-needs' `needpie` admits two kinds of content line,
-/// and refusing the second would break documents that mix them: a line is
-/// either a filter over the entity graph, or a number written outright.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum SliceSource {
-    /// A filter whose *count* of matching entities is the wedge's size.
-    ///
-    /// `None` selects every entity, which is the encoding
-    /// [`EntityTable::filter`](crate::EntityTable) and
-    /// [`EntityFlow::filter`](crate::EntityFlow) already use and the rule the
-    /// parser's shared filter reader already documents: a filter that could
-    /// not be parsed leaves the directive selecting everything, because the
-    /// diagnostic beside it says what is wrong and an empty result on top of
-    /// that would hide what the author was reaching for. The slice is kept
-    /// either way, so the labels still line up with the lines they were
-    /// written against.
-    Filter(Option<Expr>),
-    /// A number written in the body instead of a filter, for a chart whose
-    /// data does not come from the graph at all.
-    Count(u64),
-}
+use crate::chart_value::ChartValue;
 
 /// One wedge: what it is called, and what makes it that size.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -38,7 +16,7 @@ pub struct PieSlice {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     /// Where the wedge's size comes from.
-    pub source: SliceSource,
+    pub source: ChartValue,
 }
 
 impl PieSlice {
@@ -47,7 +25,7 @@ impl PieSlice {
     pub fn from_filter(filter: Option<Expr>) -> Self {
         Self {
             label: None,
-            source: SliceSource::Filter(filter),
+            source: ChartValue::Filter(filter),
         }
     }
 
@@ -56,7 +34,7 @@ impl PieSlice {
     pub const fn from_count(count: u64) -> Self {
         Self {
             label: None,
-            source: SliceSource::Count(count),
+            source: ChartValue::Count(count),
         }
     }
 
@@ -86,7 +64,7 @@ mod tests {
         let slice = PieSlice::from_filter(Some(expr.clone()));
 
         // Then
-        assert_eq!(slice.source, SliceSource::Filter(Some(expr)));
+        assert_eq!(slice.source, ChartValue::Filter(Some(expr)));
         assert_eq!(slice.label, None);
     }
 
@@ -102,7 +80,7 @@ mod tests {
         let source = slice.source;
 
         // Then
-        assert_eq!(source, SliceSource::Filter(None));
+        assert_eq!(source, ChartValue::Filter(None));
     }
 
     #[test]
@@ -114,7 +92,7 @@ mod tests {
         let slice = PieSlice::from_count(written);
 
         // Then
-        assert_eq!(slice.source, SliceSource::Count(12));
+        assert_eq!(slice.source, ChartValue::Count(12));
     }
 
     #[test]

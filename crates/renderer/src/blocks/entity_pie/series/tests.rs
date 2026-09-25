@@ -1,76 +1,9 @@
-use std::collections::BTreeMap;
-
-use rusty_sphinx_ast::{AttributeValue, EntityId, EntityPie, EntityPieSource, PieSlice};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rusty_sphinx_ast::{EntityPie, EntityPieSource, PieSlice};
 use rusty_sphinx_filter::parse_filter;
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rusty_sphinx_index::ProjectIndex;
 
 use super::count_wedges;
-
-fn schema() -> EntitySchema {
-    load_schema(
-        r#"
-        [[entity_type]]
-        name = "req"
-          [[entity_type.attribute]]
-          name = "status"
-          type = "string"
-
-        [[entity_type]]
-        name = "test"
-          [[entity_type.relation]]
-          name = "verifies"
-          to = ["req"]
-          incoming = "verified_by"
-        "#,
-        &NoReservedNames,
-    )
-    .expect("the test schema should load")
-}
-
-fn id(raw: &str) -> EntityId {
-    EntityId::new(raw).unwrap()
-}
-
-fn requirement(status: &str, doc: &str) -> EntityRecord {
-    EntityRecord {
-        type_name: "req".to_string(),
-        doc_path: doc.to_string(),
-        title: Some("A requirement".to_string()),
-        attributes: BTreeMap::from([(
-            "status".to_string(),
-            AttributeValue::String(status.to_string()),
-        )]),
-        outgoing: BTreeMap::new(),
-        uml: BTreeMap::new(),
-    }
-}
-
-/// Three requirements — two open, one closed — and one test.
-fn index() -> ProjectIndex {
-    let mut index = ProjectIndex::default();
-    index
-        .entities
-        .insert(id("REQ_1"), requirement("open", "specs/boot"));
-    index
-        .entities
-        .insert(id("REQ_2"), requirement("open", "specs/boot"));
-    index
-        .entities
-        .insert(id("REQ_3"), requirement("closed", "other/power"));
-    index.entities.insert(
-        id("TEST_1"),
-        EntityRecord {
-            type_name: "test".to_string(),
-            doc_path: "tests/boot".to_string(),
-            title: None,
-            attributes: BTreeMap::new(),
-            outgoing: BTreeMap::from([("verifies".to_string(), vec![id("REQ_1")])]),
-            uml: BTreeMap::new(),
-        },
-    );
-    index
-}
+use crate::blocks::chart_test_support::{index, schema};
 
 /// A chart whose wedges are `filters`, narrowed by an optional `:filter:`.
 fn pie(filters: &[&str], prefilter: Option<&str>) -> EntityPie {

@@ -9,6 +9,7 @@ use crate::doctest::DocTestBlock;
 use crate::domain_object_body::DomainObjectBody;
 use crate::dropdown::Dropdown;
 use crate::entity::EntityBody;
+use crate::entity_bar::EntityBar;
 use crate::entity_flow::EntityFlow;
 use crate::entity_pie::EntityPie;
 use crate::entity_sequence::EntitySequence;
@@ -165,6 +166,14 @@ pub enum Directive {
     /// compiled — the chart is SVG produced by the render action itself, so a
     /// library holding one needs no `diagrams = True`.
     EntityPie(Box<EntityPie>),
+    /// `.. entity-bar::`, and its sphinx-needs spelling `.. needbar::` — a bar
+    /// chart of how many entities each cell of a grid of filters selects.
+    ///
+    /// The fourth presentation of [`Self::EntityTable`]'s question, and
+    /// [`Self::EntityPie`]'s sibling in everything but shape: its body is a
+    /// grid rather than a list, and it is drawn along an axis. Boxed for the
+    /// reason every entity view is, and never compiled for the pie's reason.
+    EntityBar(Box<EntityBar>),
     /// `.. entity-update::`, and its sphinx-needs spelling `.. needextend::` —
     /// a project-wide mutation of one or many entities' fields.
     ///

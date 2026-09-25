@@ -222,3 +222,5 @@ entry under the heading it belongs to, as a single short sentence.
 - In a container, report a misplaced child and keep it rather than dropping it, just as an unreadable option must never cost the content written inside; both failures trade a visible warning for invisible content loss.
 - Adding a block-level container means adding an arm to *every* traversal that walks block content, not only the renderer's; grep for an existing container's variant and follow it everywhere it appears.
 - Keep a CSS width or layout rule at the specificity the upstream framework gives it; raising it (`> .sd-col` for `> *`) silently prevents the more specific override the framework expects to win.
+- When a backend library cannot express a commonly used option (text at any angle) but the missing piece is small and self-contained, write that piece yourself rather than narrowing the option; narrowing is for gaps too large to own.
+- Keep sibling directives on one selection language: refuse a legacy selection option by name with the `:filter:` to write instead, rather than translating it for one sibling alone.
