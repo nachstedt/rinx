@@ -62,6 +62,19 @@ pub enum SchemaError {
         attribute: String,
         value_type: String,
     },
+    /// A `pattern` is not a regular expression the build can compile.
+    InvalidPattern {
+        type_name: String,
+        /// What declares it: `the id` or ``attribute `name` ``.
+        declared_on: String,
+        message: String,
+    },
+    /// A `pattern` was given for an attribute whose values are not text.
+    PatternOnNonTextType {
+        type_name: String,
+        attribute: String,
+        value_type: String,
+    },
     /// An attribute is both required and defaulted, which cannot both apply.
     RequiredAttributeHasDefault {
         type_name: String,
@@ -140,6 +153,22 @@ impl fmt::Display for SchemaError {
             } => write!(
                 f,
                 "attribute `{attribute}` of entity type `{type_name}` has type `{value_type}`, which does not match the presence of `values`"
+            ),
+            Self::InvalidPattern {
+                type_name,
+                declared_on,
+                message,
+            } => write!(
+                f,
+                "the pattern on {declared_on} of entity type `{type_name}` is not a valid regular expression: {message}"
+            ),
+            Self::PatternOnNonTextType {
+                type_name,
+                attribute,
+                value_type,
+            } => write!(
+                f,
+                "attribute `{attribute}` of entity type `{type_name}` has type `{value_type}`, which cannot take a `pattern`; only `string`, `text` and `list<string>` can"
             ),
             Self::RequiredAttributeHasDefault {
                 type_name,
@@ -223,6 +252,33 @@ mod tests {
             message,
             "entity type `req` declares a section named `safety` more than once"
         );
+    }
+
+    #[test]
+    fn test_pattern_errors_name_the_type_and_what_declares_the_pattern() {
+        // Given
+        let invalid = SchemaError::InvalidPattern {
+            type_name: "req".to_string(),
+            declared_on: "the id".to_string(),
+            message: "unclosed group".to_string(),
+        };
+        let misplaced = SchemaError::PatternOnNonTextType {
+            type_name: "req".to_string(),
+            attribute: "priority".to_string(),
+            value_type: "int".to_string(),
+        };
+
+        // When
+        let invalid = invalid.to_string();
+        let misplaced = misplaced.to_string();
+
+        // Then
+        assert_eq!(
+            invalid,
+            "the pattern on the id of entity type `req` is not a valid regular expression: unclosed group"
+        );
+        assert!(misplaced.contains("`priority`"));
+        assert!(misplaced.contains("`int`"));
     }
 
     #[test]

@@ -59,6 +59,15 @@ fn schema() -> EntitySchema {
           name = "owner"
           type = "string"
           required = true
+
+        [[entity_type]]
+        name = "risk"
+        id = { pattern = "^HAZ_" }
+
+          [[entity_type.attribute]]
+          name = "code"
+          type = "string"
+          pattern = "^H[0-9]+$"
         "#,
         &NoReservedNames,
     )
@@ -287,6 +296,39 @@ fn reports_a_required_attribute_the_imported_need_omits() {
         codes(&document),
         [DiagnosticCode::EntityMissingRequiredAttribute]
     );
+}
+
+#[test]
+fn reports_an_imported_id_outside_its_types_pattern_and_keeps_it() {
+    // Given a risk whose id breaks the type's naming convention
+    let json = r#"{"versions": {"1": {"needs": {
+        "RISK_1": {"id": "RISK_1", "type": "risk"}}}}}"#;
+
+    // When it is imported
+    let document = parse_with(&[("needs.json", json)], ".. needimport:: needs.json\n");
+
+    // Then the same diagnostic a written `.. risk::` would get is reported,
+    // and the need keeps the id every link in the file points at
+    assert_eq!(codes(&document), [DiagnosticCode::EntityIdPatternMismatch]);
+    assert!(messages(&document).contains("RISK_1"));
+    assert_eq!(ids(&document), ["RISK_1"]);
+}
+
+#[test]
+fn reports_an_imported_value_outside_its_attributes_pattern() {
+    // Given a risk whose code breaks the attribute's pattern
+    let json = r#"{"versions": {"1": {"needs": {
+        "HAZ_1": {"id": "HAZ_1", "type": "risk", "code": "X9"}}}}}"#;
+
+    // When it is imported
+    let document = parse_with(&[("needs.json", json)], ".. needimport:: needs.json\n");
+
+    // Then the value is refused exactly as a written one would be
+    assert_eq!(
+        codes(&document),
+        [DiagnosticCode::EntityInvalidAttributeValue]
+    );
+    assert!(!entities(&document)[0].attributes.contains_key("code"));
 }
 
 // ── Choosing a version ──────────────────────────────────────────────

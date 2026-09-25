@@ -74,6 +74,15 @@ fn schema() -> EntitySchema {
           [[entity_type.attribute]]
           name = "version"
           type = "string"
+
+        [[entity_type]]
+        name = "hazard"
+        id = { prefix = "HAZ_", pattern = "^HAZ_[0-9]+$" }
+
+          [[entity_type.attribute]]
+          name = "code"
+          type = "string"
+          pattern = "^H[0-9]+$"
         "#,
         &NoReservedNames,
     )
@@ -560,6 +569,66 @@ fn test_a_diagnostic_points_at_the_option_line_that_caused_it() {
         .find(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityInvalidAttributeValue)
         .unwrap();
     assert_eq!(diagnostic.span.unwrap().start.line, 3);
+}
+
+#[test]
+fn test_an_explicit_id_outside_the_pattern_is_diagnosed_on_its_line_and_kept() {
+    // Given
+    let rst = ".. hazard::\n   :code: H1\n   :id: RISK_1\n";
+
+    // When
+    let doc = parse(rst);
+
+    // Then — reported where it was written, and the entity keeps its id,
+    // since links to it resolve regardless of the naming convention
+    let diagnostic = doc
+        .diagnostics
+        .iter()
+        .find(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityIdPatternMismatch)
+        .expect("the mismatch is reported");
+    assert_eq!(diagnostic.span.unwrap().start.line, 3);
+    assert_eq!(first_entity(&doc.nodes).unwrap().id.as_str(), "RISK_1");
+}
+
+#[test]
+fn test_a_generated_id_outside_the_pattern_is_diagnosed_on_the_directive() {
+    // Given — the prefix applies, but a generated body is never all digits
+    let rst = "Intro.\n\n.. hazard::\n   :code: H1\n";
+
+    // When
+    let doc = parse(rst);
+
+    // Then — there is no `:id:` line, so the directive is what is named
+    let diagnostic = doc
+        .diagnostics
+        .iter()
+        .find(|d| d.code == rusty_sphinx_ast::DiagnosticCode::EntityIdPatternMismatch)
+        .expect("the mismatch is reported");
+    assert_eq!(diagnostic.span.unwrap().start.line, 3);
+}
+
+#[test]
+fn test_a_matching_id_and_value_report_nothing() {
+    // Given
+    let rst = ".. hazard::\n   :code: H1\n   :id: HAZ_1\n";
+
+    // When
+    let reported = codes(rst);
+
+    // Then
+    assert!(reported.is_empty(), "{reported:?}");
+}
+
+#[test]
+fn test_a_value_outside_its_pattern_is_diagnosed() {
+    // Given
+    let rst = ".. hazard::\n   :code: X1\n   :id: HAZ_1\n";
+
+    // When
+    let reported = codes(rst);
+
+    // Then
+    assert_eq!(reported, ["entity.invalid-attribute-value"]);
 }
 
 #[test]

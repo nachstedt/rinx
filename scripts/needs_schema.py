@@ -61,13 +61,15 @@ def convert(ubproject, schemas=None):
     needs = ubproject.get("needs", {})
     report = []
 
-    required = required_options_by_type(schemas or {}, report)
+    constraints = constraints_by_type(schemas or {}, report)
     fields = global_fields(needs)
     relations = relations_from_links(needs, report)
 
     types = []
     for raw_type in needs.get("types", []):
-        types.append(entity_type(raw_type, needs, fields, relations, required))
+        types.append(
+            entity_type(raw_type, needs, fields, relations, constraints, report)
+        )
 
     report.extend(unsupported_constructs(needs))
     return render_schema(types, roles(types), import_keys(needs)), report
@@ -75,14 +77,16 @@ def convert(ubproject, schemas=None):
 
 # ── Entity types ──────────────────────────────────────────────────────────────
 
-def entity_type(raw_type, needs, fields, relations, required):
+def entity_type(raw_type, needs, fields, relations, constraints, report):
     """Build one entity type from a `[[needs.types]]` entry.
 
     sphinx-needs scopes neither fields nor links to a type, so every type gets
     every one of them; `schemas.json` is the only thing that can narrow a name
-    down to `required` on a single type."""
+    down to one type — `required`, a pattern, or an enum on it alone. A
+    narrowing naming something this type cannot carry it on is reported."""
     name = raw_type["directive"]
-    required_here = required.get(name, set())
+    here = constraints.get(name) or new_constraints()
+    required_here = here["required"]
 
     attributes = [{"name": "title", "label": "Title", "type": "string"}]
     for field_name, attribute in fields.items():
@@ -103,6 +107,31 @@ def entity_type(raw_type, needs, fields, relations, required):
             relation["required"] = True
         scoped_relations.append(relation)
 
+    attributes = [
+        narrow_attribute(attribute, here, report) for attribute in attributes
+    ]
+    relation_names = {relation["name"] for relation in scoped_relations}
+    attribute_names = {attribute["name"] for attribute in attributes}
+    for field_name, rule_id in sorted(here["sources"].items()):
+        if field_name in attribute_names:
+            continue
+        if field_name in relation_names:
+            report.append(
+                (
+                    "value schema rule",
+                    f"{rule_id}: constrains the value of link `{field_name}`, "
+                    "whose values are entity ids rather than text",
+                )
+            )
+        else:
+            report.append(
+                (
+                    "value schema rule",
+                    f"{rule_id}: constrains `{field_name}`, which `{name}` "
+                    "does not declare",
+                )
+            )
+
     entity = {
         "name": name,
         "label": raw_type.get("title", name),
@@ -115,9 +144,51 @@ def entity_type(raw_type, needs, fields, relations, required):
         id_spec["prefix"] = raw_type["prefix"]
     if needs.get("id_required"):
         id_spec["required"] = True
+    if here["id_pattern"]:
+        id_spec["pattern"] = here["id_pattern"]
     if id_spec:
         entity["id"] = id_spec
     return entity
+
+
+def narrow_attribute(attribute, constraints, report):
+    """Apply one type's value narrowings from `schemas.json` to an attribute.
+
+    Returns the attribute, marked or retyped as the rules say. A pattern goes
+    only onto a `string`, the one type both models read as a single piece of
+    text; an enum turns a `string` into an `enum`, or narrows an existing one.
+    Anything else is reported rather than carried over half-honoured."""
+    name = attribute["name"]
+    pattern = constraints["patterns"].get(name)
+    values = constraints["enums"].get(name)
+    if pattern is None and values is None:
+        return attribute
+    rule_id = constraints["sources"][name]
+    attribute = dict(attribute)
+    if pattern is not None:
+        if attribute["type"] == "string":
+            attribute["pattern"] = pattern
+        else:
+            report.append(
+                (
+                    "value schema rule",
+                    f"{rule_id}: a pattern on `{name}`, whose type is "
+                    f"`{attribute['type']}` rather than text",
+                )
+            )
+    if values is not None:
+        if attribute["type"] in ("string", "enum"):
+            attribute["type"] = "enum"
+            attribute["values"] = values
+        else:
+            report.append(
+                (
+                    "value schema rule",
+                    f"{rule_id}: an enum on `{name}`, whose type is "
+                    f"`{attribute['type']}`",
+                )
+            )
+    return attribute
 
 
 def global_fields(needs):
@@ -220,14 +291,32 @@ def roles(types):
 TYPE_REF = re.compile(r"^#/\$defs/type-(?P<name>[A-Za-z0-9_]+)$")
 
 
-def required_options_by_type(schemas, report):
-    """Read `schemas.json` for the one thing our model can express: an option
-    that is unconditionally required on one need type.
+def new_constraints():
+    """What `schemas.json` can narrow onto one need type."""
+    return {
+        # Option names that must be given.
+        "required": set(),
+        # The pattern every id of the type must match.
+        "id_pattern": None,
+        # Option name -> the pattern its value must match.
+        "patterns": {},
+        # Option name -> the values it is restricted to.
+        "enums": {},
+        # Option name -> the rule that constrained its value, for the report
+        # when the type turns out to have nothing to put the constraint on.
+        "sources": {},
+    }
 
-    Every other rule — a conditional `allOf` select, an id pattern, a
-    `network` (cross-entity) constraint — lands in the report instead. Our
-    schema has no vocabulary for them, and silently honouring the `required`
-    half of a conditional rule would be worse than not honouring it at all."""
+
+def constraints_by_type(schemas, report):
+    """Read `schemas.json` for the rules our model can express: those selecting
+    exactly one need type, requiring an option on it or constraining an
+    option's value.
+
+    Every other rule — a conditional `allOf` select, a `network` (cross-entity)
+    constraint — lands in the report instead. Our schema has no vocabulary for
+    them, and silently honouring the `required` half of a conditional rule
+    would be worse than not honouring it at all."""
     by_type = {}
     for rule in schemas.get("schemas", []):
         rule_id = rule.get("id", "<unnamed>")
@@ -245,13 +334,68 @@ def required_options_by_type(schemas, report):
             report.append(
                 ("network schema rule", f"{rule_id}: constrains linked entities")
             )
-        if local.get("properties"):
-            report.append(
-                ("value schema rule", f"{rule_id}: constrains option values (pattern/enum)")
-            )
+        constraints = by_type.setdefault(match.group("name"), new_constraints())
+        for name, fragment in (local.get("properties") or {}).items():
+            translate_property(rule_id, name, fragment, constraints, report)
         for name in local.get("required", []):
-            by_type.setdefault(match.group("name"), set()).add(name)
+            constraints["required"].add(name)
     return by_type
+
+
+# JSON-Schema keywords whose meaning the entity model already enforces, and so
+# need nothing emitted: a field's declared type already fixes `type`, and a
+# value of `""` or `[]` is treated as unset — in sphinx-needs' own validation
+# as much as here, since its `reduce_need` strips both before checking — so a
+# minimum of one is either implied by `required` or has no effect without it.
+ALREADY_ENFORCED = {
+    "type": ("string", "array"),
+    "minLength": (1,),
+    "minItems": (1,),
+}
+
+
+def translate_property(rule_id, name, fragment, constraints, report):
+    """Carry one `properties.<name>` fragment of a type-scoped rule over onto
+    that type's constraints, reporting each keyword that has no equivalent.
+
+    `{}` constrains nothing and yields nothing. The report names the keyword
+    rather than the rule alone, so it says what is actually missing."""
+    if not isinstance(fragment, dict):
+        report.append(
+            ("value schema rule", f"{rule_id}: `{name}` is not a JSON-Schema object")
+        )
+        return
+    leftover = {}
+    for keyword, value in fragment.items():
+        if value in ALREADY_ENFORCED.get(keyword, ()):
+            continue
+        if keyword == "pattern" and name == "id":
+            if constraints["id_pattern"] not in (None, value):
+                report.append(
+                    (
+                        "value schema rule",
+                        f"{rule_id}: a second id pattern for one type; "
+                        f"`{constraints['id_pattern']}` is kept",
+                    )
+                )
+            else:
+                constraints["id_pattern"] = value
+        elif keyword == "pattern":
+            constraints["patterns"][name] = value
+            constraints["sources"][name] = rule_id
+        elif keyword == "enum" and name != "id":
+            constraints["enums"][name] = [str(item) for item in value]
+            constraints["sources"][name] = rule_id
+        else:
+            leftover[keyword] = value
+    for keyword, value in leftover.items():
+        report.append(
+            (
+                "value schema rule",
+                f"{rule_id}: `{name}` uses `{keyword}: {json.dumps(value)}`, "
+                "which the entity model cannot express",
+            )
+        )
 
 
 # ── Constructs with no equivalent ─────────────────────────────────────────────

@@ -101,7 +101,7 @@ mod tests {
             attributes: vec![AttributeSchema {
                 name: "status".to_string(),
                 label: None,
-                value_type: AttributeType::String,
+                value_type: AttributeType::string(),
                 required: false,
                 default: None,
             }],

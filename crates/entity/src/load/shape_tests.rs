@@ -4,6 +4,7 @@
 use super::*;
 use crate::argument::ArgumentSplit;
 use crate::attribute::AttributeType;
+use crate::pattern::ValuePattern;
 
 /// Loads a schema that is expected to be valid, reserving no directive names.
 pub(super) fn load(text: &str) -> EntitySchema {
@@ -427,7 +428,7 @@ fn test_resolve_attribute_type_pairs_each_spelling_with_its_values() {
     // `RawAttributeType` is a typed enum, so deserialization refuses one first
     assert_eq!(
         resolve_attribute_type(RawAttributeType::String, None),
-        Ok(AttributeType::String)
+        Ok(AttributeType::string())
     );
     assert_eq!(
         resolve_attribute_type(RawAttributeType::Enum, Some(vec!["a".to_string()])),
@@ -443,6 +444,95 @@ fn test_resolve_attribute_type_pairs_each_spelling_with_its_values() {
         resolve_attribute_type(RawAttributeType::String, Some(vec!["a".to_string()])),
         Err(())
     );
+}
+
+#[test]
+fn test_load_reads_an_id_pattern() {
+    // Given
+    let text = r#"
+        [[entity_type]]
+        name = "req"
+        id = { required = true, pattern = "^REQ_[0-9]+$" }
+    "#;
+
+    // When
+    let schema = load(text);
+
+    // Then
+    let id = &schema.entity_type("req").unwrap().id;
+    assert_eq!(
+        id.pattern.as_ref().map(ValuePattern::as_str),
+        Some("^REQ_[0-9]+$")
+    );
+}
+
+#[test]
+fn test_load_attaches_a_pattern_to_each_text_attribute_type() {
+    // Given
+    let text = r#"
+        [[entity_type]]
+        name = "person"
+
+          [[entity_type.attribute]]
+          name = "handle"
+          type = "string"
+          pattern = "^@"
+
+          [[entity_type.attribute]]
+          name = "bio"
+          type = "text"
+          pattern = "."
+
+          [[entity_type.attribute]]
+          name = "teams"
+          type = "list<string>"
+          pattern = "^T_"
+    "#;
+
+    // When
+    let schema = load(text);
+
+    // Then
+    let person = schema.entity_type("person").unwrap();
+    let patterns: Vec<Option<&str>> = person
+        .attributes
+        .iter()
+        .map(|a| a.value_type.pattern().map(ValuePattern::as_str))
+        .collect();
+    assert_eq!(patterns, [Some("^@"), Some("."), Some("^T_")]);
+    assert!(person.attributes[2].value_type.is_list());
+}
+
+#[test]
+fn test_attach_pattern_keeps_the_type_when_the_pattern_does_not_compile() {
+    // Given
+    let mut errors = Vec::new();
+
+    // When
+    let value_type = attach_pattern(AttributeType::string(), "(", "req", "title", &mut errors);
+
+    // Then — the attribute survives, so the rest of the schema is checked too
+    assert_eq!(value_type, AttributeType::string());
+    assert!(matches!(
+        errors.as_slice(),
+        [SchemaError::InvalidPattern { declared_on, .. }] if declared_on == "attribute `title`"
+    ));
+}
+
+#[test]
+fn test_compile_pattern_yields_the_compiled_pattern() {
+    // Given
+    let mut errors = Vec::new();
+
+    // When
+    let pattern = compile_pattern("^A$", "req", "the id", &mut errors);
+
+    // Then
+    assert_eq!(
+        pattern.map(|p| p.as_str().to_string()),
+        Some("^A$".to_string())
+    );
+    assert!(errors.is_empty());
 }
 
 #[test]

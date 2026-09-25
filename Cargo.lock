@@ -947,6 +947,7 @@ name = "rusty_sphinx_entity"
 version = "0.1.0"
 dependencies = [
  "jsonschema",
+ "regex",
  "rusty_sphinx_ast",
  "schemars",
  "serde",

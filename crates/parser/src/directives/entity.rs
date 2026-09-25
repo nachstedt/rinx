@@ -21,8 +21,8 @@ use rusty_sphinx_ast::{
 use rusty_sphinx_entity::{EntityType, ID_OPTION, IdContext};
 
 use super::entity_fields::{
-    apply_defaults, collect_relation_targets, describe_options, report_missing_attributes,
-    report_relation_cardinality, store_attribute,
+    apply_defaults, collect_relation_targets, describe_options, report_id_pattern,
+    report_missing_attributes, report_relation_cardinality, store_attribute,
 };
 use super::options::{OptionLine, scan_option_lines};
 use crate::blocks::parse_blocks;
@@ -100,6 +100,15 @@ pub(in crate::directives) fn parse_entity(
         directive_span,
         diagnostics,
     );
+    // An explicit id is pointed at where it was written; a composed or
+    // generated one exists only as the directive, so that is what is named.
+    let id_span = option_lines
+        .iter()
+        .find(|line| line.name == ID_OPTION)
+        .map_or(directive_span, |line| {
+            ctx.line_span(line.line_index, &line.raw)
+        });
+    report_id_pattern(entity_type, &id, id_span, diagnostics);
 
     let sections = parse_sections(
         &EnclosingEntity {

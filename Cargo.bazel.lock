@@ -1,5 +1,5 @@
 {
-  "checksum": "21bbf6fa8607ff81944e6040438b9ed2609087247da290818873e804930971f7",
+  "checksum": "d24c9879d84b83c5627947c36e858af714d22d2533905da58b1cf65ddb89b80c",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4417,6 +4417,10 @@
     "rusty_sphinx_entity 0.1.0": {
       "common_attrs": {
         "deps": [
+          {
+            "id": "regex 1.12.4",
+            "target": "regex"
+          },
           {
             "id": "schemars 1.2.2",
             "target": "schemars"

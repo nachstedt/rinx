@@ -474,6 +474,11 @@ diagnostic_codes! {
     /// An `:id:` that is not a legal entity id, or one that could not be
     /// derived because a source attribute had no value.
     EntityInvalidId => "entity.invalid-id",
+    /// A legal id that does not match its type's declared `id.pattern`. Kept
+    /// apart from `entity.invalid-id` because the entity keeps this id and
+    /// links to it resolve: what is broken is a naming convention, which a
+    /// migrating project may want to silence on its own.
+    EntityIdPatternMismatch => "entity.id-pattern-mismatch",
     /// Two entities in the project claiming one id. Found by the index phase,
     /// which is the first to see every document.
     EntityDuplicateId => "entity.duplicate-id",

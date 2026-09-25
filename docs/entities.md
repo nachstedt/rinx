@@ -108,6 +108,25 @@ ordinary RST spelling of a flag. A list is comma-separated. Giving `values` for
 a non-enum type, or omitting it for an enum one, is refused when the schema
 loads: both spellings look like they constrain the value and only one does.
 
+The three text types — `string`, `text` and `list<string>` — also take a
+`pattern`, a regular expression the value must match (for a list, each item
+must):
+
+```toml
+[[entity_type.attribute]]
+name    = "ticket"
+type    = "string"
+pattern = "^JIRA-[0-9]+$"
+```
+
+A value that does not match is reported as `entity.invalid-attribute-value` and
+left unset, exactly like a value outside an enum's `values` — whether it was
+written as an option, imported from a `needs.json` or set by an
+`.. entity-update::`. The pattern is *searched for*, as JSON Schema's `pattern`
+keyword is, so write `^…$` to constrain the whole value. See "Patterns" under
+"Identity" for the dialect. A `pattern` on any other type is refused when the
+schema loads.
+
 ### The `title` convention
 
 Nothing in the schema privileges any attribute name. The *rendering* convention
@@ -158,6 +177,29 @@ a build-system output cached on its inputs. The trade-off is that inserting a
 line above an entity changes its generated id. That only affects entities whose
 ids were never shown to anyone — give an entity an explicit `:id:` if you mean
 to link to it.
+
+### Patterns
+
+`id = { pattern = "^REQ_[0-9]+$" }` declares the naming convention a type's ids
+should follow — sphinx-needs expresses the same thing as an `id` property in a
+`schemas.json` rule. It is checked against the **final** id, however it was
+determined: explicit, derived, generated or imported, prefix included. A
+generated id is a hash and will rarely match a convention, so a type declaring
+a pattern usually wants `required = true` as well.
+
+A mismatch is `entity.id-pattern-mismatch`, reported on the `:id:` line when
+there is one and on the directive otherwise. Unlike `entity.invalid-id`, the
+entity **keeps** its id: it is still a legal one and every link to it still
+resolves — what is broken is the convention, and the fix is a rename only the
+author can make. The separate code also lets a project migrating a large corpus
+silence the convention on its own with a `.. noqa:`, as sphinx-needs lets such a
+rule be `severity = "info"`.
+
+Patterns, here and on attributes, are compiled when the schema loads, in the
+dialect of Rust's `regex` crate. That is JSON Schema's ECMA-262 syntax for
+everything a naming convention needs — anchors, classes, alternation,
+repetition — but **not** lookaround or backreferences; a pattern using them is
+refused when the schema loads rather than silently matching nothing.
 
 ---
 
@@ -1143,6 +1185,7 @@ name.
 | `entity.missing-required-attribute` | a `required` attribute left unset |
 | `entity.malformed-argument` | an argument a type takes none of, or too many comma parts |
 | `entity.invalid-id` | an illegal `:id:`, or one that could not be derived |
+| `entity.id-pattern-mismatch` | a legal id outside its type's `id.pattern`; the entity keeps it |
 | `entity.unknown-section` | a sub-directive this type does not declare |
 | `entity.section-outside-entity` | a section directive written outside any entity |
 | `entity.duplicate-section` | a section repeated without `multiple` |

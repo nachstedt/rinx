@@ -266,6 +266,14 @@ touching the code:
   everything. A library parsed against a different schema than the site indexes
   with is reported as `entity.schema-mismatch`, in both directions.
 
+A schema may also constrain values with a `pattern` (`docs/decisions/022-value-patterns.md`):
+on `id`, checked after the id is determined and reported as
+`entity.id-pattern-mismatch` with the id **kept**; and on a text attribute,
+where it lives *inside* the `AttributeType` variant so `parse_attribute_value`
+enforces it on every route a value arrives by (written option, `needimport`,
+`entity-update`). Both are `rusty_sphinx_entity::ValuePattern`, compiled once
+when the schema loads.
+
 `schemas/entities.schema.json` is generated from the loader's `Raw*` types
 (`cargo run -p rusty_sphinx_worker -- entity_json_schema`) and checked in, with a
 test that regenerates and compares; it gives editors completion over an

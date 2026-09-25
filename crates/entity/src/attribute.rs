@@ -3,18 +3,22 @@ use std::fmt;
 use rusty_sphinx_ast::AttributeValue;
 use serde::{Deserialize, Serialize};
 
+use crate::pattern::ValuePattern;
+
 /// The type an attribute's value is parsed and validated against.
 ///
 /// Each kind carries only the data it needs — the enum kinds their permitted
-/// values, the others nothing — rather than one struct holding the union of
-/// every kind's options, most of them meaningless on most attributes.
+/// values, the three text kinds an optional pattern, the others nothing —
+/// rather than one struct holding the union of every kind's options, most of
+/// them meaningless on most attributes. A pattern on an `int` therefore cannot
+/// be represented at all.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AttributeType {
     /// A single line of plain text.
-    String,
+    String { pattern: Option<ValuePattern> },
     /// Free text, which may span several lines. Still never parsed as RST —
     /// that is what a section is for.
-    Text,
+    Text { pattern: Option<ValuePattern> },
     /// A whole number.
     Int,
     /// A flag. Written `:deprecated:` with no value, or with an explicit
@@ -22,13 +26,44 @@ pub enum AttributeType {
     Bool,
     /// One of a fixed set of values.
     Enum { values: Vec<String> },
-    /// A comma-separated list of plain strings.
-    StringList,
+    /// A comma-separated list of plain strings, each matching `pattern` when
+    /// one is declared.
+    StringList { pattern: Option<ValuePattern> },
     /// A comma-separated list drawn from a fixed set of values.
     EnumList { values: Vec<String> },
 }
 
 impl AttributeType {
+    /// A single line of text with no pattern to match.
+    #[must_use]
+    pub const fn string() -> Self {
+        Self::String { pattern: None }
+    }
+
+    /// Free text with no pattern to match.
+    #[must_use]
+    pub const fn text() -> Self {
+        Self::Text { pattern: None }
+    }
+
+    /// A list of plain strings with no pattern to match.
+    #[must_use]
+    pub const fn string_list() -> Self {
+        Self::StringList { pattern: None }
+    }
+
+    /// Returns the pattern a value must match, for the three text kinds that
+    /// may declare one.
+    #[must_use]
+    pub fn pattern(&self) -> Option<&ValuePattern> {
+        match self {
+            Self::String { pattern } | Self::Text { pattern } | Self::StringList { pattern } => {
+                pattern.as_ref()
+            }
+            _ => None,
+        }
+    }
+
     /// Returns the permitted values, for the two kinds that constrain them.
     #[must_use]
     pub fn permitted_values(&self) -> Option<&[String]> {
@@ -41,19 +76,19 @@ impl AttributeType {
     /// Reports whether a value of this type is a list of items.
     #[must_use]
     pub fn is_list(&self) -> bool {
-        matches!(self, Self::StringList | Self::EnumList { .. })
+        matches!(self, Self::StringList { .. } | Self::EnumList { .. })
     }
 
     /// The spelling used in a schema file's `type = "..."` key.
     #[must_use]
     pub fn as_str(&self) -> &'static str {
         match self {
-            Self::String => "string",
-            Self::Text => "text",
+            Self::String { .. } => "string",
+            Self::Text { .. } => "text",
             Self::Int => "int",
             Self::Bool => "bool",
             Self::Enum { .. } => "enum",
-            Self::StringList => "list<string>",
+            Self::StringList { .. } => "list<string>",
             Self::EnumList { .. } => "list<enum>",
         }
     }
@@ -95,6 +130,8 @@ pub enum AttributeParseError {
         text: String,
         permitted: Vec<String>,
     },
+    /// The text did not match the pattern the attribute declares.
+    PatternMismatch { text: String, pattern: String },
     /// An empty value was given for a type that needs one.
     Missing,
 }
@@ -111,6 +148,9 @@ impl fmt::Display for AttributeParseError {
                 "{text:?} is not one of the permitted values: {}",
                 permitted.join(", ")
             ),
+            Self::PatternMismatch { text, pattern } => {
+                write!(f, "{text:?} does not match the pattern `{pattern}`")
+            }
             Self::Missing => write!(f, "a value is required"),
         }
     }
@@ -129,12 +169,12 @@ pub fn parse_attribute_value(
 ) -> Result<AttributeValue, AttributeParseError> {
     let text = raw.trim();
     match value_type {
-        AttributeType::String | AttributeType::Text => {
+        AttributeType::String { pattern } | AttributeType::Text { pattern } => {
             if text.is_empty() {
-                Err(AttributeParseError::Missing)
-            } else {
-                Ok(AttributeValue::String(text.to_string()))
+                return Err(AttributeParseError::Missing);
             }
+            check_pattern(pattern.as_ref(), text)?;
+            Ok(AttributeValue::String(text.to_string()))
         }
         AttributeType::Int => text.parse::<i64>().map(AttributeValue::Int).map_err(|_| {
             AttributeParseError::NotAnInteger {
@@ -163,7 +203,13 @@ pub fn parse_attribute_value(
                 })
             }
         }
-        AttributeType::StringList => Ok(AttributeValue::List(split_list(text))),
+        AttributeType::StringList { pattern } => {
+            let items = split_list(text);
+            for item in &items {
+                check_pattern(pattern.as_ref(), item)?;
+            }
+            Ok(AttributeValue::List(items))
+        }
         AttributeType::EnumList { values } => {
             let items = split_list(text);
             if let Some(bad) = items.iter().find(|item| !values.contains(item)) {
@@ -174,6 +220,17 @@ pub fn parse_attribute_value(
             }
             Ok(AttributeValue::List(items))
         }
+    }
+}
+
+/// Refuses `text` when a pattern is declared and does not occur in it.
+fn check_pattern(pattern: Option<&ValuePattern>, text: &str) -> Result<(), AttributeParseError> {
+    match pattern {
+        Some(pattern) if !pattern.is_match(text) => Err(AttributeParseError::PatternMismatch {
+            text: text.to_string(),
+            pattern: pattern.as_str().to_string(),
+        }),
+        _ => Ok(()),
     }
 }
 
@@ -202,7 +259,7 @@ mod tests {
     #[test]
     fn test_parse_attribute_value_reads_a_string() {
         // Given
-        let value_type = AttributeType::String;
+        let value_type = AttributeType::string();
 
         // When
         let value = parse_attribute_value(&value_type, "  hello  ").unwrap();
@@ -214,7 +271,7 @@ mod tests {
     #[test]
     fn test_parse_attribute_value_rejects_an_empty_string() {
         // Given
-        let value_type = AttributeType::String;
+        let value_type = AttributeType::string();
 
         // When
         let result = parse_attribute_value(&value_type, "   ");
@@ -328,7 +385,7 @@ mod tests {
     #[test]
     fn test_parse_attribute_value_splits_a_string_list() {
         // Given
-        let value_type = AttributeType::StringList;
+        let value_type = AttributeType::string_list();
 
         // When
         let value = parse_attribute_value(&value_type, "boot, kernel").unwrap();
@@ -363,13 +420,118 @@ mod tests {
     #[test]
     fn test_parse_attribute_value_reads_an_empty_list_as_empty() {
         // Given
-        let value_type = AttributeType::StringList;
+        let value_type = AttributeType::string_list();
 
         // When
         let value = parse_attribute_value(&value_type, "").unwrap();
 
         // Then
         assert_eq!(value, AttributeValue::List(Vec::new()));
+    }
+
+    fn pattern(source: &str) -> ValuePattern {
+        ValuePattern::new(source).unwrap()
+    }
+
+    #[test]
+    fn test_parse_attribute_value_accepts_a_string_matching_its_pattern() {
+        // Given
+        let value_type = AttributeType::String {
+            pattern: Some(pattern("^[a-z]+$")),
+        };
+
+        // When
+        let value = parse_attribute_value(&value_type, " lead ").unwrap();
+
+        // Then — the pattern sees the trimmed text, as the value is stored
+        assert_eq!(value, AttributeValue::String("lead".to_string()));
+    }
+
+    #[test]
+    fn test_parse_attribute_value_refuses_a_string_outside_its_pattern() {
+        // Given
+        let value_type = AttributeType::String {
+            pattern: Some(pattern("^[a-z]+$")),
+        };
+
+        // When
+        let result = parse_attribute_value(&value_type, "Lead");
+
+        // Then
+        assert_eq!(
+            result,
+            Err(AttributeParseError::PatternMismatch {
+                text: "Lead".to_string(),
+                pattern: "^[a-z]+$".to_string(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_attribute_value_checks_a_text_value_against_its_pattern() {
+        // Given
+        let value_type = AttributeType::Text {
+            pattern: Some(pattern("TODO")),
+        };
+
+        // When
+        let found = parse_attribute_value(&value_type, "one\nTODO later");
+        let missing = parse_attribute_value(&value_type, "done");
+
+        // Then — unanchored: the pattern may occur anywhere in the text
+        assert!(found.is_ok());
+        assert!(matches!(
+            missing,
+            Err(AttributeParseError::PatternMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn test_parse_attribute_value_reports_an_empty_string_as_missing_before_its_pattern() {
+        // Given — a pattern that would also refuse the empty text
+        let value_type = AttributeType::String {
+            pattern: Some(pattern("^x$")),
+        };
+
+        // When
+        let result = parse_attribute_value(&value_type, "  ");
+
+        // Then — the more useful message wins
+        assert_eq!(result, Err(AttributeParseError::Missing));
+    }
+
+    #[test]
+    fn test_parse_attribute_value_names_the_list_item_outside_its_pattern() {
+        // Given
+        let value_type = AttributeType::StringList {
+            pattern: Some(pattern("^P_")),
+        };
+
+        // When
+        let result = parse_attribute_value(&value_type, "P_ALICE, bob");
+
+        // Then — the item, not the whole list
+        assert_eq!(
+            result,
+            Err(AttributeParseError::PatternMismatch {
+                text: "bob".to_string(),
+                pattern: "^P_".to_string(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_attribute_type_reports_its_pattern_only_for_the_text_kinds() {
+        // Given
+        let constrained = AttributeType::StringList {
+            pattern: Some(pattern("^P_")),
+        };
+
+        // When / Then
+        assert_eq!(constrained.pattern().map(ValuePattern::as_str), Some("^P_"));
+        assert_eq!(AttributeType::string().pattern(), None);
+        assert_eq!(AttributeType::Int.pattern(), None);
+        assert_eq!(status_enum().pattern(), None);
     }
 
     #[test]
@@ -388,7 +550,7 @@ mod tests {
     fn test_attribute_type_reports_its_permitted_values() {
         // Given
         let constrained = status_enum();
-        let unconstrained = AttributeType::String;
+        let unconstrained = AttributeType::string();
 
         // When
         let some = constrained.permitted_values();
@@ -403,12 +565,12 @@ mod tests {
     fn test_attribute_type_reports_which_kinds_are_lists() {
         // Given
         let kinds = [
-            (AttributeType::String, false),
-            (AttributeType::Text, false),
+            (AttributeType::string(), false),
+            (AttributeType::text(), false),
             (AttributeType::Int, false),
             (AttributeType::Bool, false),
             (status_enum(), false),
-            (AttributeType::StringList, true),
+            (AttributeType::string_list(), true),
             (AttributeType::EnumList { values: Vec::new() }, true),
         ];
 
@@ -421,12 +583,12 @@ mod tests {
     #[test]
     fn test_attribute_type_spells_each_kind_as_the_schema_writes_it() {
         // Given / When / Then
-        assert_eq!(AttributeType::String.as_str(), "string");
-        assert_eq!(AttributeType::Text.as_str(), "text");
+        assert_eq!(AttributeType::string().as_str(), "string");
+        assert_eq!(AttributeType::text().as_str(), "text");
         assert_eq!(AttributeType::Int.as_str(), "int");
         assert_eq!(AttributeType::Bool.as_str(), "bool");
         assert_eq!(status_enum().as_str(), "enum");
-        assert_eq!(AttributeType::StringList.as_str(), "list<string>");
+        assert_eq!(AttributeType::string_list().as_str(), "list<string>");
         assert_eq!(
             AttributeType::EnumList { values: Vec::new() }.as_str(),
             "list<enum>"
@@ -439,7 +601,7 @@ mod tests {
         let unlabelled = AttributeSchema {
             name: "status".to_string(),
             label: None,
-            value_type: AttributeType::String,
+            value_type: AttributeType::string(),
             required: false,
             default: None,
         };
@@ -467,8 +629,12 @@ mod tests {
                 text: "pending".to_string(),
                 permitted: vec!["open".to_string()],
             },
+            AttributeParseError::PatternMismatch {
+                text: "Lead".to_string(),
+                pattern: "^[a-z]+$".to_string(),
+            },
         ];
-        let expected_fragments = ["3.5", "yes", "pending"];
+        let expected_fragments = ["3.5", "yes", "pending", "^[a-z]+$"];
 
         // When / Then
         for (error, fragment) in errors.iter().zip(expected_fragments) {

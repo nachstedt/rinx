@@ -65,8 +65,8 @@ use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 
 use super::entity_fields::{
-    apply_defaults, collect_relation_targets, describe_options, report_missing_attributes,
-    report_relation_cardinality, store_attribute,
+    apply_defaults, collect_relation_targets, describe_options, report_id_pattern,
+    report_missing_attributes, report_relation_cardinality, store_attribute,
 };
 use super::error_node::malformed_directive;
 use super::filter_option::{FilterCodes, read_filter_option};
@@ -535,6 +535,7 @@ fn build_entity(
     };
 
     let id = import_id(key, need, import, diagnostics)?;
+    report_id_pattern(entity_type, &id, span, diagnostics);
 
     let mut attributes = BTreeMap::new();
     let relations = collect_fields(entity_type, key, need, import, &mut attributes, diagnostics);
