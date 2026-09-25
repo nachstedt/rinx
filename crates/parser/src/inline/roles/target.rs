@@ -24,6 +24,7 @@ impl DomainObjectTarget {
             link: self.link,
             search_order: self.search_order,
             span: None,
+            inventory: rusty_sphinx_ast::InventorySelector::Any,
         }
     }
 }

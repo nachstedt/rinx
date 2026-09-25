@@ -983,6 +983,7 @@ mod tests {
                             link: true,
                             search_order: TargetSearchOrder::LeastQualifiedFirst,
                             span: None,
+                            inventory: rusty_sphinx_ast::InventorySelector::Any,
                         },
                     ],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(

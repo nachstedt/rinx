@@ -28,9 +28,11 @@
 //! checked that hazard is gone — so `` :mod:`minidom` `` written under
 //! `.. module:: xml.dom` is allowed to find `xml.dom.minidom`.
 
-use rusty_sphinx_ast::{ObjectType, TargetName, TargetSearchOrder};
-use rusty_sphinx_index::ProjectIndex;
+use rusty_sphinx_ast::{InventorySelector, ObjectType, TargetName, TargetSearchOrder};
+use rusty_sphinx_index::{ExternalInventory, ProjectIndex};
 use rusty_sphinx_scope::Scope;
+
+use super::{ExternalHit, external_entry_types, resolve_external};
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
 
@@ -52,6 +54,10 @@ pub(crate) enum DomainObjectResolution<'a> {
     /// reference does not name one thing. Candidates are qualified names, in
     /// index order.
     Ambiguous { candidates: Vec<String> },
+    /// No document of this site defines the object, but another site's
+    /// inventory lists it — reached only after every local tier, the suffix
+    /// search included, has missed.
+    External(ExternalHit<'a>),
     /// Nothing matched.
     NotFound,
 }
@@ -76,9 +82,47 @@ impl<'a> DomainObjectResolver<'a> {
         }
     }
 
+    /// The other sites' inventories this resolver searches after its own
+    /// index — what a renderer needs to say why a reference failed.
+    pub(crate) fn external_inventories(&self) -> &'a [ExternalInventory] {
+        &self.index.external_inventories
+    }
+
     /// Resolves a reference to `name` of type `object_type`, written inside
-    /// `scope`, using the search order the role's target asked for.
+    /// `scope`, using the search order the role's target asked for — against
+    /// this site's own objects unless `selector` is an `:external:` one, then
+    /// against the other sites' inventories.
     pub(crate) fn resolve(
+        &self,
+        scope: &Scope,
+        object_type: ObjectType,
+        name: &str,
+        order: TargetSearchOrder,
+        selector: &InventorySelector,
+    ) -> DomainObjectResolution<'a> {
+        let local = if selector.allows_local() {
+            self.resolve_local(scope, object_type, name, order)
+        } else {
+            DomainObjectResolution::NotFound
+        };
+        match local {
+            DomainObjectResolution::NotFound => resolve_external(
+                &self.index.external_inventories,
+                &external_entry_types(object_type),
+                name,
+                selector,
+            )
+            .map_or(
+                DomainObjectResolution::NotFound,
+                DomainObjectResolution::External,
+            ),
+            resolved_or_ambiguous => resolved_or_ambiguous,
+        }
+    }
+
+    /// The search against this site's own objects: every exact tier, then
+    /// the suffix search a dot-prefixed target allows.
+    fn resolve_local(
         &self,
         scope: &Scope,
         object_type: ObjectType,
@@ -199,6 +243,70 @@ mod tests {
     use super::*;
     use rusty_sphinx_ast::{CObjectType, PyObjectType};
 
+    #[test]
+    fn test_resolve_falls_back_to_another_sites_inventory() {
+        // Given
+        let index = crate::test_support::index_linking_into_python();
+        let resolver = DomainObjectResolver::new(&index);
+
+        // When — `:exc:` accepts the `py:exception` entry
+        let resolution = resolver.resolve(
+            &Scope::default(),
+            ObjectType::Py(PyObjectType::Exception),
+            "ValueError",
+            TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
+        );
+
+        // Then
+        let DomainObjectResolution::External(hit) = resolution else {
+            panic!("expected an external resolution, got {resolution:?}");
+        };
+        assert_eq!(hit.inventory.name.as_str(), "python");
+    }
+
+    #[test]
+    fn test_resolve_prefers_a_local_object_over_an_external_one() {
+        // Given
+        let mut index = crate::test_support::index_linking_into_python();
+        index.insert_domain_object(ObjectType::Py(PyObjectType::Class), "dict", "types.rst");
+        let resolver = DomainObjectResolver::new(&index);
+
+        // When
+        let resolution = resolver.resolve(
+            &Scope::default(),
+            ObjectType::Py(PyObjectType::Class),
+            "dict",
+            TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
+        );
+
+        // Then
+        assert!(matches!(
+            resolution,
+            DomainObjectResolution::Resolved { .. }
+        ));
+    }
+
+    #[test]
+    fn test_resolve_does_not_search_inventories_for_an_object_of_the_wrong_type() {
+        // Given — `dict` is a class, and a `:func:` asks for a function
+        let index = crate::test_support::index_linking_into_python();
+        let resolver = DomainObjectResolver::new(&index);
+
+        // When
+        let resolution = resolver.resolve(
+            &Scope::default(),
+            ObjectType::Py(PyObjectType::Function),
+            "dict",
+            TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
+        );
+
+        // Then
+        assert_eq!(resolution, DomainObjectResolution::NotFound);
+    }
+
     fn py(object_type: PyObjectType) -> ObjectType {
         ObjectType::Py(object_type)
     }
@@ -267,6 +375,7 @@ mod tests {
             py(PyObjectType::Class),
             "datetime",
             TargetSearchOrder::MostQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -293,6 +402,7 @@ mod tests {
             py(PyObjectType::Module),
             "datetime",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -320,6 +430,7 @@ mod tests {
             py(PyObjectType::Attribute),
             "tzinfo",
             TargetSearchOrder::MostQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -347,6 +458,7 @@ mod tests {
             py(PyObjectType::Class),
             "datetime",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then — resolution falls through to the module-qualified class.
@@ -374,6 +486,7 @@ mod tests {
             py(PyObjectType::Exception),
             "fault",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then — resolved, reporting the type the *definition* has.
@@ -406,6 +519,7 @@ mod tests {
             ObjectType::C(CObjectType::Function),
             "Py_VISIT",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then — resolved, reporting the type the *definition* has.
@@ -438,6 +552,7 @@ mod tests {
             ObjectType::C(CObjectType::Macro),
             "Py_REFCNT",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -466,6 +581,7 @@ mod tests {
             ObjectType::C(CObjectType::Macro),
             "MAX",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then — the `c:macro` definition, not the aliased `c:function` one.
@@ -497,6 +613,7 @@ mod tests {
             py(PyObjectType::Method),
             "TarFile.close",
             TargetSearchOrder::MostQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -530,6 +647,7 @@ mod tests {
             ObjectType::C(CObjectType::Member),
             "count",
             TargetSearchOrder::MostQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then — `TargetName` normalizes to lowercase, like every other
@@ -568,6 +686,7 @@ mod tests {
             ObjectType::C(CObjectType::Member),
             "digits",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -601,6 +720,7 @@ mod tests {
             ObjectType::C(CObjectType::Macro),
             "CONSTANT",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -636,6 +756,7 @@ mod tests {
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then — nothing is linked, and the author is told what to choose
@@ -673,6 +794,7 @@ mod tests {
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then — the attribute is not a candidate, so this is not ambiguous.
@@ -703,6 +825,7 @@ mod tests {
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -727,6 +850,7 @@ mod tests {
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -751,6 +875,7 @@ mod tests {
             ObjectType::C(CObjectType::Function),
             "PyList_Append",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -776,6 +901,7 @@ mod tests {
             py(PyObjectType::Function),
             "nonexistent",
             TargetSearchOrder::LeastQualifiedFirst,
+            &rusty_sphinx_ast::InventorySelector::Any,
         );
 
         // Then

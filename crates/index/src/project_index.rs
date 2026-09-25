@@ -1,6 +1,6 @@
 use crate::{
     DocumentNumbers, DocumentOutline, DocumentToctree, EntityFieldHistory, EntityRecord,
-    EntityUpdateRecord, EquationLocation, GenIndexEntry, TargetLocation,
+    EntityUpdateRecord, EquationLocation, ExternalInventory, GenIndexEntry, TargetLocation,
 };
 use rusty_sphinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
@@ -11,6 +11,22 @@ use std::collections::BTreeMap;
 pub struct ProjectIndex {
     /// Maps target names to document paths.
     pub targets: BTreeMap<TargetName, TargetLocation>,
+    /// Maps an internal target to the title of the section it labels — the
+    /// text a `:ref:` written without an explicit title shows, as in Sphinx.
+    ///
+    /// Only a target written directly above a heading has one; any other
+    /// target is absent, and a bare `:ref:` to it falls back to the label.
+    /// Per-document data, so it merges like `targets`.
+    #[serde(default)]
+    pub target_titles: BTreeMap<TargetName, String>,
+    /// The anchor a target renders with, for the targets whose anchor is not
+    /// simply their name — an entity's is `entity-<id>`, in the id's own case.
+    ///
+    /// Read through [`Self::target_anchor`], never directly: that is the one
+    /// place a `:ref:` link and a written `objects.inv` entry learn where a
+    /// target is, so they cannot disagree. Per-document data, so it merges.
+    #[serde(default)]
+    pub target_anchors: BTreeMap<TargetName, String>,
     /// Maps document paths to their top-level title.
     pub document_titles: BTreeMap<String, String>,
     /// Each document's `.. toctree::` directives, in document order, with
@@ -61,6 +77,16 @@ pub struct ProjectIndex {
     /// `Fault` via `.. class::` but references it via `:exc:`.
     #[serde(default)]
     pub domain_objects: BTreeMap<TargetName, BTreeMap<ObjectType, String>>,
+    /// Each `domain_objects` key as its definition spelled it.
+    ///
+    /// The key is a [`TargetName`], which lowercases, and that is right for
+    /// resolving a reference but wrong for anything *publishing* the name: a
+    /// written `objects.inv` must say `pkg.Greeter`, since Sphinx resolves a
+    /// Python name case-sensitively against it. Written by
+    /// [`Self::insert_domain_object`] alone, so the two maps cannot disagree
+    /// about which names exist.
+    #[serde(default)]
+    pub domain_object_spellings: BTreeMap<TargetName, String>,
     /// Entries for the site-wide general index page, accumulated (not
     /// deduplicated) across every document — the same term legitimately
     /// appearing from multiple locations is expected, not an error.
@@ -119,6 +145,16 @@ pub struct ProjectIndex {
     /// update's effect will be invisible to you.
     #[serde(default)]
     pub entity_update_history: BTreeMap<EntityId, EntityFieldHistory>,
+    /// The other sites' inventories this one links into, in the order the
+    /// build declared them — which is the order a reference with no
+    /// inventory named searches them in, so the first listing a target wins.
+    ///
+    /// A build input rather than anything a document says, so it is neither
+    /// per-document nor derived: set once when the index is built and never
+    /// merged, which leaves a stale index's inventories in place when the
+    /// live preview merges a fresh document into it.
+    #[serde(default)]
+    pub external_inventories: Vec<ExternalInventory>,
 }
 
 impl ProjectIndex {
@@ -133,10 +169,32 @@ impl ProjectIndex {
         qualified_name: &str,
         doc_path: impl Into<String>,
     ) {
+        let key = TargetName::new(qualified_name);
+        self.domain_object_spellings
+            .insert(key.clone(), qualified_name.to_string());
         self.domain_objects
-            .entry(TargetName::new(qualified_name))
+            .entry(key)
             .or_default()
             .insert(object_type, doc_path.into());
+    }
+
+    /// The fragment a link to the internal target `name` uses: the anchor
+    /// recorded for it, or else the normalized name itself, which is what
+    /// every ordinary label renders its `id` as.
+    #[must_use]
+    pub fn target_anchor<'a>(&'a self, name: &'a TargetName) -> &'a str {
+        self.target_anchors
+            .get(name)
+            .map_or(name.as_str(), String::as_str)
+    }
+
+    /// A domain object's name as its definition spelled it, falling back to
+    /// the normalized key for an index written before spellings were kept.
+    #[must_use]
+    pub fn domain_object_spelling<'a>(&'a self, key: &'a TargetName) -> &'a str {
+        self.domain_object_spellings
+            .get(key)
+            .map_or(key.as_str(), String::as_str)
     }
 
     /// The current value of one attribute on one entity, after every applied
@@ -183,6 +241,8 @@ impl ProjectIndex {
     /// (case-insensitive duplicate detection). Last-writer-wins for the mapping value.
     pub fn merge(&mut self, other: Self) -> MergeConflicts {
         self.targets.extend(other.targets);
+        self.target_titles.extend(other.target_titles);
+        self.target_anchors.extend(other.target_anchors);
         self.document_titles.extend(other.document_titles);
         self.document_outlines.extend(other.document_outlines);
         self.toctrees.extend(other.toctrees);
@@ -192,6 +252,8 @@ impl ProjectIndex {
                 .or_default()
                 .extend(object_types);
         }
+        self.domain_object_spellings
+            .extend(other.domain_object_spellings);
         self.genindex_entries.extend(other.genindex_entries);
         self.equations.extend(other.equations);
         self.sectnum.extend(other.sectnum);
@@ -200,7 +262,8 @@ impl ProjectIndex {
         self.entity_updates.extend(other.entity_updates);
         // root_documents, page_order, section_numbers, entity_backlinks and
         // entity_update_history are built globally from the whole graph, so
-        // they are recomputed rather than merged
+        // they are recomputed rather than merged; external_inventories is a
+        // build input no document contributes to, so it is kept as it is
         let mut conflicts = MergeConflicts::default();
         for (id, record) in other.entities {
             if let Some(existing) = self.entities.get(&id) {
@@ -387,6 +450,49 @@ mod tests {
     }
 
     #[test]
+    fn test_merge_carries_target_titles_from_the_other_index() {
+        // Given — a fresh analysis whose heading title changed
+        let mut stale = ProjectIndex::default();
+        stale
+            .target_titles
+            .insert(TargetName::new("intro"), "Old title".to_string());
+        let mut fresh = ProjectIndex::default();
+        fresh
+            .target_titles
+            .insert(TargetName::new("intro"), "New title".to_string());
+
+        // When
+        stale.merge(fresh);
+
+        // Then
+        assert_eq!(
+            stale.target_titles.get(&TargetName::new("intro")),
+            Some(&"New title".to_string())
+        );
+    }
+
+    #[test]
+    fn test_merge_keeps_the_external_inventories_of_the_base_index() {
+        // Given — a stale index that knows an inventory, and a fresh
+        // single-document analysis that never does
+        let mut stale = ProjectIndex {
+            external_inventories: vec![ExternalInventory::new(
+                rusty_sphinx_inventory::InventoryName::new("python").unwrap(),
+                "https://docs.python.org/3/".to_string(),
+                rusty_sphinx_inventory::Inventory::default(),
+            )],
+            ..ProjectIndex::default()
+        };
+        let fresh = ProjectIndex::default();
+
+        // When
+        stale.merge(fresh);
+
+        // Then
+        assert_eq!(stale.external_inventories.len(), 1);
+    }
+
+    #[test]
     fn test_merge_combines_indices_without_error() {
         // Given
         let mut idx1 = ProjectIndex::default();
@@ -444,6 +550,97 @@ mod tests {
         assert_eq!(
             idx1.glossary_terms.get(&TargetName::new("environment")),
             Some(&"other.rst".to_string())
+        );
+    }
+
+    #[test]
+    fn test_target_anchor_is_the_name_for_an_ordinary_label() {
+        // Given
+        let index = ProjectIndex::default();
+        let name = TargetName::new("Install");
+
+        // When / Then
+        assert_eq!(index.target_anchor(&name), "install");
+    }
+
+    #[test]
+    fn test_target_anchor_prefers_a_recorded_anchor() {
+        // Given — an entity, whose anchor is not its name
+        let mut index = ProjectIndex::default();
+        let name = TargetName::new("REQ_001");
+        index
+            .target_anchors
+            .insert(name.clone(), "entity-REQ_001".to_string());
+
+        // When / Then
+        assert_eq!(index.target_anchor(&name), "entity-REQ_001");
+    }
+
+    #[test]
+    fn test_merge_carries_target_anchors() {
+        // Given
+        let mut stale = ProjectIndex::default();
+        let mut fresh = ProjectIndex::default();
+        fresh
+            .target_anchors
+            .insert(TargetName::new("REQ_001"), "entity-REQ_001".to_string());
+
+        // When
+        stale.merge(fresh);
+
+        // Then
+        assert_eq!(
+            stale.target_anchor(&TargetName::new("req_001")),
+            "entity-REQ_001"
+        );
+    }
+
+    #[test]
+    fn test_insert_domain_object_keeps_the_written_spelling() {
+        // Given
+        let mut index = ProjectIndex::default();
+
+        // When
+        index.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            "pkg.Greeter",
+            "api.rst",
+        );
+
+        // Then
+        let key = TargetName::new("pkg.Greeter");
+        assert!(index.domain_objects.contains_key(&key));
+        assert_eq!(index.domain_object_spelling(&key), "pkg.Greeter");
+    }
+
+    #[test]
+    fn test_domain_object_spelling_falls_back_to_the_key() {
+        // Given — an index deserialized from before spellings were kept
+        let index = ProjectIndex::default();
+        let key = TargetName::new("pkg.Greeter");
+
+        // When / Then
+        assert_eq!(index.domain_object_spelling(&key), "pkg.greeter");
+    }
+
+    #[test]
+    fn test_merge_carries_domain_object_spellings() {
+        // Given
+        let mut stale = ProjectIndex::default();
+        let mut fresh = ProjectIndex::default();
+        fresh.insert_domain_object(
+            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            "pkg.Helper",
+            "api.rst",
+        );
+
+        // When
+        stale.merge(fresh);
+
+        // Then
+        assert_eq!(
+            stale.domain_object_spelling(&TargetName::new("pkg.helper")),
+            "pkg.Helper"
         );
     }
 

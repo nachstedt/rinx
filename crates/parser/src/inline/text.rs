@@ -116,10 +116,12 @@ fn unescape_node(node: InlineNode) -> InlineNode {
             display,
             target,
             span,
+            inventory,
         } => InlineNode::Reference {
-            display: unescape(&display),
+            display: display.map(|display| unescape(&display)),
             target: unescape(&target),
             span,
+            inventory,
         },
         InlineNode::EntityReference {
             role,
@@ -145,19 +147,23 @@ fn unescape_node(node: InlineNode) -> InlineNode {
             display,
             term,
             span,
+            inventory,
         } => InlineNode::TermReference {
             display: unescape(&display),
             term: unescape(&term),
             span,
+            inventory,
         },
         InlineNode::OptionReference {
             display,
             target,
             span,
+            inventory,
         } => InlineNode::OptionReference {
             display: unescape(&display),
             target: unescape(&target),
             span,
+            inventory,
         },
         InlineNode::DomainObjectReference {
             object_type,
@@ -166,6 +172,7 @@ fn unescape_node(node: InlineNode) -> InlineNode {
             link,
             search_order,
             span,
+            inventory,
         } => InlineNode::DomainObjectReference {
             object_type,
             name: unescape(&name),
@@ -173,6 +180,7 @@ fn unescape_node(node: InlineNode) -> InlineNode {
             link,
             search_order,
             span,
+            inventory,
         },
         // LaTeX is a verbatim context, like `InlineNode::Literal`: its
         // backslashes are content (`\alpha`, `\\`), so the markers turn back

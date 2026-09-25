@@ -50,9 +50,79 @@ pub(super) fn flag_values_opt(args: &[String], flag: &str) -> Vec<String> {
         .unwrap_or_default()
 }
 
+/// Returns the `arity` values after *every* occurrence of `flag`, one group
+/// per occurrence — for a flag a build passes once per declared item, whose
+/// values belong together (`--inventory <name> <base-url> <path>`).
+///
+/// # Errors
+///
+/// When an occurrence is followed by fewer than `arity` values.
+pub(super) fn flag_groups(args: &[String], flag: &str, arity: usize) -> Result<Vec<Vec<String>>> {
+    args.iter()
+        .enumerate()
+        .filter(|(_, arg)| *arg == flag)
+        .map(|(position, _)| {
+            args.get(position + 1..=position + arity)
+                .map(<[String]>::to_vec)
+                .ok_or_else(|| anyhow!("Flag {flag} needs {arity} values"))
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn strings(values: &[&str]) -> Vec<String> {
+        values.iter().map(|value| (*value).to_string()).collect()
+    }
+
+    #[test]
+    fn test_flag_groups_collects_every_occurrence() {
+        // Given
+        let args = strings(&[
+            "--inventory",
+            "a",
+            "https://a/",
+            "a.inv",
+            "--output",
+            "x",
+            "--inventory",
+            "b",
+            "../b/",
+            "b.inv",
+        ]);
+
+        // When
+        let groups = flag_groups(&args, "--inventory", 3).unwrap();
+
+        // Then
+        assert_eq!(
+            groups,
+            vec![
+                strings(&["a", "https://a/", "a.inv"]),
+                strings(&["b", "../b/", "b.inv"])
+            ]
+        );
+    }
+
+    #[test]
+    fn test_flag_groups_is_empty_without_the_flag() {
+        // Given
+        let args = strings(&["--output", "x"]);
+
+        // When / Then
+        assert!(flag_groups(&args, "--inventory", 3).unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_flag_groups_refuses_a_short_group() {
+        // Given
+        let args = strings(&["--inventory", "a", "https://a/"]);
+
+        // When / Then
+        assert!(flag_groups(&args, "--inventory", 3).is_err());
+    }
 
     #[test]
     fn test_flag_value_returns_value_when_flag_exists() {

@@ -932,6 +932,7 @@ version = "0.1.0"
 dependencies = [
  "rusty_sphinx_cdecl",
  "rusty_sphinx_filter",
+ "rusty_sphinx_inventory",
  "serde",
  "serde_json",
  "sha2",
@@ -972,6 +973,17 @@ dependencies = [
  "rusty_sphinx_ast",
  "rusty_sphinx_entity",
  "rusty_sphinx_filter",
+ "rusty_sphinx_inventory",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rusty_sphinx_inventory"
+version = "0.1.0"
+dependencies = [
+ "flate2",
+ "regex",
  "serde",
  "serde_json",
 ]
@@ -1005,6 +1017,7 @@ dependencies = [
  "rusty_sphinx_entity",
  "rusty_sphinx_filter",
  "rusty_sphinx_index",
+ "rusty_sphinx_inventory",
  "rusty_sphinx_scope",
  "rusty_sphinx_toctree",
  "rusty_sphinx_uml",
@@ -1058,6 +1071,7 @@ dependencies = [
  "rusty_sphinx_ast",
  "rusty_sphinx_entity",
  "rusty_sphinx_index",
+ "rusty_sphinx_inventory",
  "rusty_sphinx_parser",
  "rusty_sphinx_renderer",
  "rusty_sphinx_toctree",

@@ -51,6 +51,7 @@ Welcome to the Rusty-Sphinx example.
    grid/index
    button_link/index
    jinja/index
+   intersphinx/index
    team_a/index
    team_b/index
 

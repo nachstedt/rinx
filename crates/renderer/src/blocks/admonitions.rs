@@ -297,6 +297,7 @@ mod tests {
                                     link: true,
                                     search_order: TargetSearchOrder::LeastQualifiedFirst,
                                     span: None,
+                                    inventory: rusty_sphinx_ast::InventorySelector::Any,
                                 },
                             ],
                             definition: vec![Node::Paragraph(vec![InlineNode::Text(
@@ -305,9 +306,10 @@ mod tests {
                         },
                         rusty_sphinx_ast::DefinitionListItem {
                             term: vec![InlineNode::Reference {
-                                display: "curses-howto".to_string(),
+                                display: None,
                                 target: "curses-howto".to_string(),
                                 span: None,
+                                inventory: rusty_sphinx_ast::InventorySelector::Any,
                             }],
                             definition: vec![Node::Paragraph(vec![InlineNode::Text(
                                 "Tutorial material.".to_string(),

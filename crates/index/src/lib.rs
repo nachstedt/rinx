@@ -1,7 +1,8 @@
 //! The project-wide index: a global symbol table (`ProjectIndex`) built from
 //! all documents in a project — cross-reference targets, document titles, the
 //! toctree graph and each document's section outline, glossary terms, domain objects,
-//! numbered equations, and general-index entries. Pure data, no indexing/traversal logic — see
+//! numbered equations, general-index entries, and the other sites' inventories
+//! it links into. Pure data, no indexing/traversal logic — see
 //! `rusty_sphinx_analyzer` for how a `ProjectIndex` gets built.
 
 mod document_outline;
@@ -10,6 +11,7 @@ mod entity_subject;
 mod entity_update_history;
 mod entity_update_record;
 mod equation_location;
+mod external_inventory;
 mod gen_index_entry;
 mod href;
 mod project_index;
@@ -25,6 +27,7 @@ pub use entity_update_history::{
 };
 pub use entity_update_record::EntityUpdateRecord;
 pub use equation_location::EquationLocation;
+pub use external_inventory::{ExternalInventory, ExternalTarget};
 pub use gen_index_entry::GenIndexEntry;
 pub use href::{entity_anchor, relative_doc_href};
 pub use project_index::{DuplicateEntityId, MergeConflicts, ProjectIndex};

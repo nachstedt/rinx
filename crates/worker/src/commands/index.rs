@@ -1,13 +1,17 @@
 //! The `index` subcommand: merges every document's local analysis into one
 //! global `rusty_sphinx_index::ProjectIndex`.
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use rusty_sphinx_analyzer as analyzer;
 use rusty_sphinx_ast as ast;
 use rusty_sphinx_renderer::config;
+use std::collections::BTreeSet;
 use std::fs;
 
-use super::cli_args::{flag_value, flag_value_opt, flag_values};
+use rusty_sphinx_index::ExternalInventory;
+use rusty_sphinx_inventory::{InventoryName, MalformedLine, read_inventory};
+
+use super::cli_args::{flag_groups, flag_value, flag_value_opt, flag_values};
 use super::diagnostics::{WarningOrigin, format_diagnostic};
 use super::entity_schema::load_entity_schema;
 use super::suppression::retain_reportable;
@@ -27,13 +31,22 @@ pub(super) fn process_index(
     ast_jsons: &[String],
     root_doc: &str,
     schema: &rusty_sphinx_entity::EntitySchema,
+    external_inventories: Vec<ExternalInventory>,
 ) -> Result<IndexedProject> {
     let docs: Vec<ast::Document> = ast_jsons
         .iter()
         .map(|json| serde_json::from_str(json).context("Failed to deserialize AST"))
         .collect::<Result<_>>()?;
 
-    let build = analyzer::build_project_index_reporting(&docs, root_doc, schema);
+    let mut build = analyzer::build_project_index_reporting(&docs, root_doc, schema);
+    let written = written_reference_targets(ast_jsons)?;
+    build.index.external_inventories = external_inventories
+        .into_iter()
+        .map(|mut inventory| {
+            inventory.retain_referenced(&written);
+            inventory
+        })
+        .collect();
 
     // Each document's suppressions travel with its own AST, so a `.. noqa:`
     // written in the document holding the toctree silences the warning about
@@ -96,12 +109,137 @@ pub(crate) fn cmd_index(args: &[String]) -> Result<()> {
         .collect::<Result<_>>()?;
 
     let schema = load_entity_schema(args)?;
-    let indexed = process_index(&files, &site_config.root_doc, &schema)?;
+    let declared = flag_groups(args, "--inventory", 3)?
+        .into_iter()
+        .map(|group| {
+            let [name, base_url, path] = <[String; 3]>::try_from(group)
+                .expect("flag_groups returns groups of the requested arity");
+            let bytes =
+                fs::read(&path).with_context(|| format!("Error reading inventory '{path}'"))?;
+            Ok(DeclaredInventory {
+                name,
+                base_url,
+                path,
+                bytes,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let (external_inventories, inventory_warnings) = read_external_inventories(declared)?;
+    for warning in &inventory_warnings {
+        eprintln!("{warning}");
+    }
+
+    let indexed = process_index(&files, &site_config.root_doc, &schema, external_inventories)?;
     for warning in &indexed.warnings {
         eprintln!("{warning}");
     }
     fs::write(&output, indexed.json).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
+}
+
+/// An inventory the build declared, read but not yet parsed.
+pub(super) struct DeclaredInventory {
+    pub name: String,
+    pub base_url: String,
+    /// Where it was read from, for naming it in a message.
+    pub path: String,
+    pub bytes: Vec<u8>,
+}
+
+/// Parses every declared inventory, in declaration order, and returns them
+/// with a warning for each body line Sphinx itself would have skipped.
+///
+/// Everything wrong with an inventory *as a whole* — an invalid or repeated
+/// name, a file that is not an inventory — is an error rather than a
+/// warning: it is a fault in the build's configuration, not in any document,
+/// so no `.. noqa:` should be able to silence it, and every reference into
+/// the inventory would otherwise break at once for a reason the page cannot
+/// show.
+pub(super) fn read_external_inventories(
+    declared: Vec<DeclaredInventory>,
+) -> Result<(Vec<ExternalInventory>, Vec<String>)> {
+    let mut inventories: Vec<ExternalInventory> = Vec::new();
+    let mut warnings = Vec::new();
+    for DeclaredInventory {
+        name,
+        base_url,
+        path,
+        bytes,
+    } in declared
+    {
+        let name = InventoryName::new(&name)
+            .with_context(|| format!("Invalid name for inventory '{path}'"))?;
+        if inventories.iter().any(|existing| existing.name == name) {
+            bail!("Inventory name '{name}' is declared twice; every inventory needs its own name");
+        }
+        let read =
+            read_inventory(&bytes).with_context(|| format!("Error reading inventory '{path}'"))?;
+        warnings.extend(
+            read.malformed_lines
+                .iter()
+                .map(|malformed| malformed_line_warning(&path, malformed)),
+        );
+        inventories.push(ExternalInventory::new(name, base_url, read.inventory));
+    }
+    Ok((inventories, warnings))
+}
+
+/// Every target a cross-reference role in any document names, as an external
+/// lookup would search for it: as written, and — for a `name:`-prefixed one —
+/// without the prefix too.
+///
+/// Read off each AST's JSON rather than its typed tree on purpose. Inline
+/// content lives in paragraphs, headings, table cells, captions, list terms
+/// and more, and no walker over all of them exists; a generic walk over the
+/// serialized form reaches every one by construction, so a container added
+/// later cannot silently hide its references from the inventory pruning.
+fn written_reference_targets(ast_jsons: &[String]) -> Result<BTreeSet<String>> {
+    fn collect(value: &serde_json::Value, written: &mut BTreeSet<String>) {
+        match value {
+            serde_json::Value::Object(fields) => {
+                for (key, inner) in fields {
+                    let target_field = match key.as_str() {
+                        "Reference" | "OptionReference" => Some("target"),
+                        "TermReference" => Some("term"),
+                        "DomainObjectReference" => Some("name"),
+                        _ => None,
+                    };
+                    if let Some(target) = target_field
+                        .and_then(|field| inner.get(field))
+                        .and_then(serde_json::Value::as_str)
+                    {
+                        written.insert(target.to_string());
+                        if let Some((_, rest)) = target.split_once(':') {
+                            written.insert(rest.to_string());
+                        }
+                    }
+                    collect(inner, written);
+                }
+            }
+            serde_json::Value::Array(items) => {
+                for item in items {
+                    collect(item, written);
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut written = BTreeSet::new();
+    for json in ast_jsons {
+        let value: serde_json::Value =
+            serde_json::from_str(json).context("Failed to deserialize AST")?;
+        collect(&value, &mut written);
+    }
+    Ok(written)
+}
+
+/// The warning for one inventory line Sphinx would have skipped, in the
+/// `warning: path:line: message` shape every other warning here takes.
+fn malformed_line_warning(path: &str, malformed: &MalformedLine) -> String {
+    format!(
+        "warning: {path}:{}: {}: `{}`",
+        malformed.line, malformed.reason, malformed.text
+    )
 }
 
 #[cfg(test)]
@@ -127,7 +265,7 @@ mod tests {
         let docs = vec![ast_json("index.rst", &toctree_json("missing"))];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty()).unwrap();
+        let indexed = process_index(&docs, "index", &EntitySchema::empty(), Vec::new()).unwrap();
 
         // Then
         assert_eq!(indexed.warnings.len(), 1, "{:?}", indexed.warnings);
@@ -150,7 +288,7 @@ mod tests {
         )];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty()).unwrap();
+        let indexed = process_index(&docs, "index", &EntitySchema::empty(), Vec::new()).unwrap();
 
         // Then
         assert!(indexed.warnings.is_empty(), "{:?}", indexed.warnings);
@@ -166,7 +304,7 @@ mod tests {
         ];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty()).unwrap();
+        let indexed = process_index(&docs, "index", &EntitySchema::empty(), Vec::new()).unwrap();
 
         // Then
         assert_eq!(indexed.warnings.len(), 1, "{:?}", indexed.warnings);
@@ -183,7 +321,7 @@ mod tests {
         ];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty()).unwrap();
+        let indexed = process_index(&docs, "index", &EntitySchema::empty(), Vec::new()).unwrap();
 
         // Then
         assert!(indexed.warnings.is_empty(), "{:?}", indexed.warnings);
@@ -198,14 +336,163 @@ mod tests {
         ];
 
         // When
-        let index = process_index(&docs, "index", &EntitySchema::empty())
+        let index = process_index(&docs, "index", &EntitySchema::empty(), Vec::new())
             .unwrap()
             .json;
 
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"document_titles":{"test.rst":"Title"},"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"genindex_entries":[],"equations":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{}}"#
+            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"genindex_entries":[],"equations":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[]}"#
+        );
+    }
+
+    /// An inventory file listing one Python class.
+    fn declared(name: &str) -> DeclaredInventory {
+        let inventory = rusty_sphinx_inventory::Inventory {
+            project: "Python".to_string(),
+            version: "3.12".to_string(),
+            entries: vec![rusty_sphinx_inventory::InventoryEntry {
+                name: "dict".to_string(),
+                entry_type: rusty_sphinx_inventory::EntryType::new("py:class").unwrap(),
+                priority: 1,
+                uri: "library/stdtypes.html#dict".to_string(),
+                display_name: None,
+            }],
+        };
+        DeclaredInventory {
+            name: name.to_string(),
+            base_url: "https://docs.python.org/3/".to_string(),
+            path: format!("{name}.inv"),
+            bytes: rusty_sphinx_inventory::write_inventory(&inventory),
+        }
+    }
+
+    #[test]
+    fn test_read_external_inventories_keeps_declaration_order() {
+        // Given
+        let declared = vec![declared("python"), declared("numpy")];
+
+        // When
+        let (inventories, warnings) = read_external_inventories(declared).unwrap();
+
+        // Then
+        let names: Vec<&str> = inventories.iter().map(|i| i.name.as_str()).collect();
+        assert_eq!(names, ["python", "numpy"]);
+        assert!(inventories[0].lookup("py:class", "dict").is_some());
+        assert!(warnings.is_empty());
+    }
+
+    #[test]
+    fn test_read_external_inventories_refuses_a_repeated_name() {
+        // Given
+        let declared = vec![declared("python"), declared("python")];
+
+        // When
+        let result = read_external_inventories(declared);
+
+        // Then
+        let message = format!("{:#}", result.unwrap_err());
+        assert!(message.contains("'python' is declared twice"), "{message}");
+    }
+
+    #[test]
+    fn test_read_external_inventories_refuses_an_invalid_name() {
+        // Given
+        let declared = vec![declared("py:thon")];
+
+        // When
+        let result = read_external_inventories(declared);
+
+        // Then
+        let message = format!("{:#}", result.unwrap_err());
+        assert!(message.contains("py:thon.inv"), "{message}");
+    }
+
+    #[test]
+    fn test_read_external_inventories_refuses_a_file_that_is_no_inventory() {
+        // Given
+        let mut not_an_inventory = declared("python");
+        not_an_inventory.bytes = b"<html>404</html>\n".to_vec();
+
+        // When
+        let result = read_external_inventories(vec![not_an_inventory]);
+
+        // Then
+        let message = format!("{:#}", result.unwrap_err());
+        assert!(message.contains("python.inv"), "{message}");
+        assert!(message.contains("not a Sphinx inventory"), "{message}");
+    }
+
+    #[test]
+    fn test_malformed_line_warning_names_file_line_and_text() {
+        // Given
+        let malformed = MalformedLine {
+            line: 6,
+            text: "garbage".to_string(),
+            reason: "not five fields",
+        };
+
+        // When
+        let warning = malformed_line_warning("python.inv", &malformed);
+
+        // Then
+        assert_eq!(warning, "warning: python.inv:6: not five fields: `garbage`");
+    }
+
+    #[test]
+    fn test_process_index_stores_the_external_inventories() {
+        // Given
+        let (inventories, _) = read_external_inventories(vec![declared("python")]).unwrap();
+
+        // When
+        let indexed = process_index(&[], "index", &EntitySchema::empty(), inventories).unwrap();
+
+        // Then
+        let index: rusty_sphinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
+        assert_eq!(index.external_inventories.len(), 1);
+    }
+
+    #[test]
+    fn test_written_reference_targets_finds_every_role_however_deeply_nested() {
+        // Given — a `:ref:` inside a bullet list, a `:term:`, an `:option:`
+        // and a domain role, each as the parser serializes it
+        let doc = r#"{"path":"a.rst","nodes":[
+            {"BulletList":{"bullet":"*","items":[{"nodes":[
+                {"Paragraph":[{"Reference":{"target":"python:tut-intro"}}]}]}]}},
+            {"Paragraph":[
+                {"TermReference":{"display":"b","term":"bytecode"}},
+                {"OptionReference":{"display":"-O","target":"-O"}},
+                {"DomainObjectReference":{"object_type":"py:class","name":"dict","display":"dict","link":true}}
+            ]}]}"#;
+
+        // When
+        let written = written_reference_targets(&[doc.to_string()]).unwrap();
+
+        // Then — the prefixed target also yields its unprefixed part
+        let expected: BTreeSet<String> =
+            ["python:tut-intro", "tut-intro", "bytecode", "-O", "dict"]
+                .iter()
+                .map(|name| (*name).to_string())
+                .collect();
+        assert_eq!(written, expected);
+    }
+
+    #[test]
+    fn test_process_index_keeps_only_the_external_targets_a_document_names() {
+        // Given — an inventory listing `dict`, and a document naming nothing
+        let (inventories, _) = read_external_inventories(vec![declared("python")]).unwrap();
+        let docs = vec![ast_json("a.rst", "")];
+
+        // When
+        let indexed = process_index(&docs, "index", &EntitySchema::empty(), inventories).unwrap();
+
+        // Then
+        let index: rusty_sphinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
+        assert!(
+            index.external_inventories[0]
+                .lookup("py:class", "dict")
+                .is_none()
         );
     }
 }

@@ -83,6 +83,8 @@ diagnostic_codes! {
     /// A domain-object role that resolved only via an object-type alias — the
     /// definition's own type differs from the one the role asked for.
     LinkTypeMismatch => "link.type-mismatch",
+    /// An `:external+name:` role naming an inventory the build never declared.
+    LinkUnknownInventory => "link.unknown-inventory",
 
     // --- Headings ----------------------------------------------------------
     /// A section adornment shorter than the title's display width, which

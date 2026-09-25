@@ -1,5 +1,5 @@
 {
-  "checksum": "d24c9879d84b83c5627947c36e858af714d22d2533905da58b1cf65ddb89b80c",
+  "checksum": "4f8f501f7e05308a1da3db3b529a63a7824aa84b395d7cce229d55427fa7add6",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4525,6 +4525,43 @@
       ],
       "version": "0.1.0"
     },
+    "rusty_sphinx_inventory 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "flate2 1.1.10",
+            "target": "flate2"
+          },
+          {
+            "id": "regex 1.12.4",
+            "target": "regex"
+          },
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rusty_sphinx_inventory",
+      "name": "rusty_sphinx_inventory",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rusty_sphinx_inventory",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
     "rusty_sphinx_parser 0.1.0": {
       "common_attrs": {
         "deps": [
@@ -7191,6 +7228,7 @@
     "anyhow 1.0.103",
     "base64 0.22.1",
     "csv 1.4.0",
+    "flate2 1.1.10",
     "globset 0.4.19",
     "html-escape 0.2.14",
     "math-core 0.8.1",
@@ -7219,6 +7257,7 @@
     "rusty_sphinx_entity 0.1.0": "crates/entity",
     "rusty_sphinx_filter 0.1.0": "crates/filter",
     "rusty_sphinx_index 0.1.0": "crates/index",
+    "rusty_sphinx_inventory 0.1.0": "crates/inventory",
     "rusty_sphinx_parser 0.1.0": "crates/parser",
     "rusty_sphinx_renderer 0.1.0": "crates/renderer",
     "rusty_sphinx_scope 0.1.0": "crates/scope",

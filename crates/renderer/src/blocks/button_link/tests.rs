@@ -196,9 +196,10 @@ fn test_a_reference_in_the_label_is_flattened_to_its_text() {
     link.label = vec![
         InlineNode::Text("See ".to_string()),
         InlineNode::Reference {
-            display: "the guide".to_string(),
+            display: Some("the guide".to_string()),
             target: "the-guide".to_string(),
             span: None,
+            inventory: rusty_sphinx_ast::InventorySelector::Any,
         },
     ];
 

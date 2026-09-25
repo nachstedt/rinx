@@ -15,3 +15,12 @@ RustySphinxInfo = provider(
         "embed_sidecars": "A depset of per-document .embeds.json File objects, mapping each `:loading: embed` image to its data: URI. Consumed by the render action of the document it belongs to.",
     },
 )
+
+RustySphinxInventoryInfo = provider(
+    doc = "Carries one Sphinx inventory (`objects.inv`) a rusty_sphinx_site links into, declared by rusty_sphinx_inventory.",
+    fields = {
+        "name": "The name a document writes to pick this inventory out (`python` in :external+python:ref:`tut`) — Sphinx's `intersphinx_mapping` key.",
+        "base_url": "Where the inventory's pages are published: an absolute URL, or a path relative to the consuming site's root for a sibling site deployed next to it.",
+        "file": "The objects.inv File itself.",
+    },
+)

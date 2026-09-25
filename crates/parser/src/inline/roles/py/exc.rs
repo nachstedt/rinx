@@ -39,7 +39,8 @@ mod tests {
                 display: "GreeterError".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -59,7 +60,8 @@ mod tests {
                 display: "GreeterError".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -74,7 +76,8 @@ mod tests {
                 display: "GreeterError".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -95,7 +98,8 @@ mod tests {
                 display: "GreeterError".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -116,7 +120,8 @@ mod tests {
                 display: "GreeterError".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }

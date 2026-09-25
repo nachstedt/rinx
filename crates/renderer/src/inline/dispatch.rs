@@ -14,7 +14,7 @@ use super::domain_object_reference::{
 use super::hyperlink::render_inline_hyperlink;
 use super::math::{render_equation_reference, render_inline_math};
 use super::option_reference::render_inline_option_reference;
-use super::reference::render_inline_reference;
+use super::reference::{LabelRef, render_inline_reference};
 use super::term_reference::render_inline_term_reference;
 
 use super::RefText;
@@ -126,13 +126,15 @@ fn render_cross_reference(
             display,
             target,
             span,
+            inventory,
         } => {
             render_inline_reference(
                 html,
-                RefText {
-                    display,
+                LabelRef {
+                    title: display.as_deref(),
                     target,
                     span: *span,
+                    inventory,
                 },
                 ctx.index,
                 ctx.doc_path,
@@ -202,6 +204,7 @@ fn render_indexed_cross_reference(
             display,
             term,
             span,
+            inventory,
         } => {
             render_inline_term_reference(
                 html,
@@ -210,6 +213,7 @@ fn render_indexed_cross_reference(
                     target: term,
                     span: *span,
                 },
+                inventory,
                 ctx.index,
                 ctx.doc_path,
                 ctx.broken_links,
@@ -219,6 +223,7 @@ fn render_indexed_cross_reference(
             display,
             target,
             span,
+            inventory,
         } => {
             render_inline_option_reference(
                 html,
@@ -227,6 +232,7 @@ fn render_indexed_cross_reference(
                     target,
                     span: *span,
                 },
+                inventory,
                 ctx.option_resolver,
                 ctx.scope.program.current(),
                 ctx.doc_path,
@@ -285,6 +291,7 @@ fn render_domain_object(
         link,
         search_order,
         span,
+        inventory,
     } = inline
     else {
         unreachable!("render_cross_reference routes only domain-object roles here")
@@ -298,6 +305,7 @@ fn render_domain_object(
             link: *link,
             search_order: *search_order,
             span: *span,
+            inventory,
         },
         ctx.domain_resolver,
         ctx.doc_path,

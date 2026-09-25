@@ -5,7 +5,7 @@ Collects all .ast files from its deps (Phase 2: index) then renders each
 one to HTML (Phase 3: render) using the rusty-sphinx worker binary.
 """
 
-load("//:providers.bzl", "RustySphinxInfo")
+load("//:providers.bzl", "RustySphinxInfo", "RustySphinxInventoryInfo")
 
 def _compile_diagrams(ctx, plantuml, puml_dir, doc_path):
     """Compiles one document's diagram sources to SVG, returning the SVG dir.
@@ -76,13 +76,28 @@ def _rusty_sphinx_site_impl(ctx):
     index_args.add("--config", config_file.path)
     if entity_schema:
         index_args.add("--entity-schema", entity_schema.path)
+
+    # Other sites' inventories, in declaration order — the order a reference
+    # naming no inventory searches them in. A repeated name is refused here,
+    # while analyzing, since no document could be blamed for it; the worker
+    # refuses it too, for a caller that is not this rule.
+    inventories = [dep[RustySphinxInventoryInfo] for dep in ctx.attr.inventories]
+    seen_inventory_names = {}
+    for inventory in inventories:
+        if inventory.name in seen_inventory_names:
+            fail("inventory name '%s' is declared twice in %s's `inventories`" % (inventory.name, ctx.label))
+        seen_inventory_names[inventory.name] = True
+        index_args.add("--inventory")
+        index_args.add(inventory.name)
+        index_args.add(inventory.base_url)
+        index_args.add(inventory.file.path)
     index_args.add("--inputs")
     index_args.add_all(ast_list)
 
     ctx.actions.run(
         executable = worker,
         arguments = [index_args],
-        inputs = ast_list + [config_file] + schema_inputs,
+        inputs = ast_list + [config_file] + schema_inputs + [inventory.file for inventory in inventories],
         outputs = [index_out],
         mnemonic = "RustySphinxIndex",
         progress_message = "Indexing %s docs" % len(ast_list),
@@ -107,6 +122,27 @@ def _rusty_sphinx_site_impl(ctx):
         outputs = [genindex_out],
         mnemonic = "RustySphinxGenIndex",
         progress_message = "Generating genindex.html for %s" % ctx.label.name,
+    )
+
+    # ── Phase 2.6: objects.inv ───────────────────────────────────────────────
+    # The site's Sphinx inventory, so other documentation — Sphinx projects
+    # through intersphinx, other rusty_sphinx_site targets through
+    # rusty_sphinx_inventory — can link into it. Always written, as Sphinx
+    # always writes one, and like genindex it needs only the project index.
+    inventory_out = ctx.actions.declare_file(ctx.label.name + "_site_out/objects.inv")
+    inventory_args = ctx.actions.args()
+    inventory_args.add("inventory")
+    inventory_args.add("--index", index_out.path)
+    inventory_args.add("--output", inventory_out.path)
+    inventory_args.add("--config", config_file.path)
+
+    ctx.actions.run(
+        executable = worker,
+        arguments = [inventory_args],
+        inputs = [index_out, config_file],
+        outputs = [inventory_out],
+        mnemonic = "RustySphinxInventory",
+        progress_message = "Writing objects.inv for %s" % ctx.label.name,
     )
 
     # Documents whose library set `diagrams = True`. Only these get a diagram
@@ -227,7 +263,7 @@ def _rusty_sphinx_site_impl(ctx):
         transitive = [dep[RustySphinxInfo].image_files for dep in ctx.attr.deps],
     ).to_list()
 
-    final_outputs = html_files + [genindex_out]
+    final_outputs = html_files + [genindex_out, inventory_out]
 
     if all_svg_dirs or all_image_files:
         images_out = ctx.actions.declare_directory(ctx.label.name + "_site_out/_images")
@@ -331,6 +367,10 @@ done
             # a sandboxed action may only write files declared at analysis
             # time, and the path in a `:save:` is written inside the document.
             diagram_sources = depset(puml_dirs),
+            # The site's objects.inv on its own, so another site can declare
+            # it as a `rusty_sphinx_inventory` source without depending on
+            # every page: a filegroup with `output_group = "inventory"`.
+            inventory = depset([inventory_out]),
         ),
     ]
 
@@ -363,6 +403,10 @@ rusty_sphinx_site = rule(
             allow_single_file = [".css"],
             default = Label("//:assets/default.css"),
             doc = "The CSS stylesheet to include in the site output.",
+        ),
+        "inventories": attr.label_list(
+            providers = [RustySphinxInventoryInfo],
+            doc = "rusty_sphinx_inventory targets: other sites' objects.inv files this site links into (Sphinx's intersphinx). A reference no document defines is resolved against them, in the order listed; `:external+name:` and a `name:` prefix pick one out. Read by the index action alone, so editing one re-runs the index and every render, as any index input does.",
         ),
         "strict_links": attr.bool(
             default = False,

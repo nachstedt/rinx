@@ -15,6 +15,7 @@ pub(crate) fn handle_option_match(m_str: &str) -> InlineNode {
         display,
         target,
         span: None,
+        inventory: rusty_sphinx_ast::InventorySelector::Any,
     }
 }
 
@@ -30,7 +31,8 @@ mod tests {
             InlineNode::OptionReference {
                 display: "-m".to_string(),
                 target: "-m".to_string(),
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -42,7 +44,8 @@ mod tests {
             InlineNode::OptionReference {
                 display: "the module flag".to_string(),
                 target: "-m".to_string(),
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }

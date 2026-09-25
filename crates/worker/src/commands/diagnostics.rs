@@ -148,6 +148,9 @@ pub(super) fn format_broken_link_warning(
             object_type.domain_qualified_str(),
             candidates.join(", ")
         ),
+        renderer::BrokenLinkKind::UnknownInventory(name) => {
+            format!(" (no inventory is declared as '{name}')")
+        }
         _ => String::new(),
     };
     format!(
@@ -323,6 +326,29 @@ mod tests {
         assert_eq!(
             message,
             "warning: guide/intro.rst:42:18: link.broken-ref: broken ref 'missing-section'"
+        );
+    }
+
+    #[test]
+    fn test_format_broken_link_warning_names_an_undeclared_inventory() {
+        // Given an `:external+numpy:` role in a site that declared no `numpy`
+        let link = renderer::BrokenLink {
+            kind: renderer::BrokenLinkKind::UnknownInventory(
+                rusty_sphinx_ast::InventoryName::new("numpy").unwrap(),
+            ),
+            target: "ndarray".to_string(),
+            span: Some(a_span()),
+        };
+
+        // When
+        let message =
+            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
+
+        // Then
+        assert_eq!(
+            message,
+            "warning: guide/intro.rst:42:18: link.unknown-inventory: broken reference into an \
+             undeclared inventory 'ndarray' (no inventory is declared as 'numpy')"
         );
     }
 

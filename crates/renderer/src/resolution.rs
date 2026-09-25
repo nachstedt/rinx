@@ -9,8 +9,10 @@
 
 mod domain_object;
 mod entity;
+mod external;
 mod option;
 
 pub(crate) use domain_object::{DomainObjectResolution, DomainObjectResolver};
 pub(crate) use entity::{EntityResolution, EntityResolver};
+pub(crate) use external::{ExternalHit, external_entry_types, resolve_external, unresolved_kind};
 pub(crate) use option::{OptionResolution, OptionResolver};

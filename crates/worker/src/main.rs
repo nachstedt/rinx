@@ -11,6 +11,7 @@
 //! rusty-sphinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
 //! rusty-sphinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links] [--warnings-output <file.warnings.json>]
 //! rusty-sphinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>
+//! rusty-sphinx inventory --index <project.index> --output <objects.inv> --config <config.toml>
 //! rusty-sphinx extract_doctests --input <file.ast> --output <file.doctests.json>
 //! rusty-sphinx embed_assets --input <file.ast> --output <file.embeds.json>
 //! rusty-sphinx validate_images --image-dir <dir> [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]
@@ -31,7 +32,7 @@ use std::fs;
 
 use commands::{
     cmd_embed_assets, cmd_entity_json_schema, cmd_extract_doctests, cmd_genindex, cmd_index,
-    cmd_parse, cmd_preview, cmd_render, cmd_validate_images, cmd_validate_toctree,
+    cmd_inventory, cmd_parse, cmd_preview, cmd_render, cmd_validate_images, cmd_validate_toctree,
 };
 
 fn cmd_legacy(path: &str) -> Result<()> {
@@ -51,6 +52,7 @@ fn run(args: &[String]) -> Result<()> {
         Some("index") => cmd_index(&args[2..]),
         Some("render") => cmd_render(&args[2..]),
         Some("genindex") => cmd_genindex(&args[2..]),
+        Some("inventory") => cmd_inventory(&args[2..]),
         Some("preview") => cmd_preview(&args[2..]),
         // Developer tooling, not a pipeline phase: regenerates the checked-in
         // JSON Schema that editors validate an `entities.toml` against.
@@ -71,6 +73,7 @@ fn run(args: &[String]) -> Result<()> {
                    {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
                    {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--embeds <file.embeds.json>] [--diagram-outdir <puml_dir>] [--strict-links] [--warnings-output <file.warnings.json>]\n\
                    {program} genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>\n\
+                   {program} inventory --index <project.index> --output <objects.inv> --config <config.toml>\n\
                    {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
                    {program} validate_images --image-dir <dir> [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]"
             );

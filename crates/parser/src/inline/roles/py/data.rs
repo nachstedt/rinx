@@ -47,7 +47,8 @@ mod tests {
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -72,7 +73,8 @@ mod tests {
                 display: "Py_mod_exec".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -134,7 +136,8 @@ mod tests {
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -155,7 +158,8 @@ mod tests {
                 display: "DEFAULT_TIMEOUT".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -176,7 +180,8 @@ mod tests {
                 display: "SECRET_KEY".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -197,7 +202,8 @@ mod tests {
                 display: "CONST".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -237,7 +243,8 @@ mod tests {
                 display: "Py_mod_exec".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -258,7 +265,8 @@ mod tests {
                 display: "errno".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -279,7 +287,8 @@ mod tests {
                 display: "Py_tp_bases".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }

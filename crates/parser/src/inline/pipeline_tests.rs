@@ -27,9 +27,10 @@ fn test_parse_creates_inline_text_and_reference_nodes_for_paragraph() {
         Node::Paragraph(vec![
             InlineNode::Text("Here is a ".to_string()),
             InlineNode::Reference {
-                display: "my-target".to_string(),
+                display: None,
                 target: "my-target".to_string(),
-                span: Some(at(1, 11, 27))
+                span: Some(at(1, 11, 27)),
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             },
             InlineNode::Text(" link.".to_string()),
         ])
@@ -603,7 +604,7 @@ fn test_parse_ref_role_with_display_text() {
             display, target, ..
         }) = reference
         {
-            assert_eq!(display, "GenericAlias");
+            assert_eq!(display.as_deref(), Some("GenericAlias"));
             assert_eq!(target, "types-genericalias");
         }
     } else {
@@ -699,4 +700,105 @@ fn test_parse_paragraph_does_not_apply_smart_typography_inside_inline_literal() 
     } else {
         panic!("Expected Paragraph, got {:?}", doc.nodes[0]);
     }
+}
+
+/// The single inline node `input` parses to, for a paragraph holding one role.
+fn only_inline(input: &str) -> InlineNode {
+    let doc = parse("test.rst", input);
+    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+        panic!("expected a paragraph, got {:?}", doc.nodes[0]);
+    };
+    assert_eq!(inlines.len(), 1, "{inlines:?}");
+    inlines[0].clone()
+}
+
+#[test]
+fn test_parse_leaves_an_ordinary_role_searching_every_site() {
+    // Given / When
+    let node = only_inline(":ref:`tut-intro`");
+
+    // Then
+    let InlineNode::Reference { inventory, .. } = node else {
+        panic!("expected a reference, got {node:?}");
+    };
+    assert_eq!(inventory, rusty_sphinx_ast::InventorySelector::Any);
+}
+
+#[test]
+fn test_parse_reads_an_external_prefix_on_a_domain_role() {
+    // Given / When
+    let node = only_inline(":external:py:class:`dict`");
+
+    // Then — the prefix is markup: gone from the name, recorded as intent
+    let InlineNode::DomainObjectReference {
+        name, inventory, ..
+    } = node
+    else {
+        panic!("expected a domain-object reference, got {node:?}");
+    };
+    assert_eq!(name, "dict");
+    assert_eq!(inventory, rusty_sphinx_ast::InventorySelector::ExternalOnly);
+}
+
+#[test]
+fn test_parse_reads_a_named_external_prefix_on_a_ref() {
+    // Given / When
+    let node = only_inline(":external+python:ref:`the tutorial <tut-intro>`");
+
+    // Then
+    let InlineNode::Reference {
+        display,
+        target,
+        inventory,
+        ..
+    } = node
+    else {
+        panic!("expected a reference, got {node:?}");
+    };
+    assert_eq!(display.as_deref(), Some("the tutorial"));
+    assert_eq!(target, "tut-intro");
+    assert_eq!(
+        inventory,
+        rusty_sphinx_ast::InventorySelector::Named(
+            rusty_sphinx_ast::InventoryName::new("python").unwrap()
+        )
+    );
+}
+
+#[test]
+fn test_parse_reads_an_external_prefix_on_term_and_option_roles() {
+    // Given / When
+    let term = only_inline(":external:term:`bytecode`");
+    let option = only_inline(":external+python:option:`-O`");
+
+    // Then
+    assert!(matches!(
+        term,
+        InlineNode::TermReference {
+            inventory: rusty_sphinx_ast::InventorySelector::ExternalOnly,
+            ..
+        }
+    ));
+    assert!(matches!(
+        option,
+        InlineNode::OptionReference {
+            inventory: rusty_sphinx_ast::InventorySelector::Named(_),
+            ..
+        }
+    ));
+}
+
+#[test]
+fn test_parse_reads_an_external_prefix_on_a_bare_domain_role() {
+    // Given / When — no `py:`, so the file's default domain applies
+    let node = only_inline(":external:func:`len`");
+
+    // Then
+    assert!(matches!(
+        node,
+        InlineNode::DomainObjectReference {
+            inventory: rusty_sphinx_ast::InventorySelector::ExternalOnly,
+            ..
+        }
+    ));
 }

@@ -39,7 +39,8 @@ mod tests {
                 display: "Greeter.name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -54,7 +55,8 @@ mod tests {
                 display: "the name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -80,7 +82,8 @@ mod tests {
                 display: "Greeter.name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -101,7 +104,8 @@ mod tests {
                 display: "Greeter.secret".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -122,7 +126,8 @@ mod tests {
                 display: "name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
-                span: None
+                span: None,
+                inventory: rusty_sphinx_ast::InventorySelector::Any,
             }
         );
     }
