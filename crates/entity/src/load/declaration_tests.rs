@@ -351,6 +351,66 @@ fn test_load_refuses_an_id_source_that_is_not_an_attribute() {
 }
 
 #[test]
+fn test_load_refuses_an_id_pattern_that_does_not_compile() {
+    // Given — a lookahead, which JSON Schema allows and this build cannot run
+    let text = r#"
+        [[entity_type]]
+        name = "req"
+        id = { pattern = "^(?=REQ)" }
+    "#;
+
+    // When
+    let errors = load_errors(text);
+
+    // Then
+    assert!(matches!(
+        errors.as_slice(),
+        [SchemaError::InvalidPattern { type_name, declared_on, .. }]
+            if type_name == "req" && declared_on == "the id"
+    ));
+}
+
+#[test]
+fn test_load_refuses_a_pattern_on_an_attribute_that_is_not_text() {
+    // Given — each looks constrained, and nothing would ever check it
+    let text = r#"
+        [[entity_type]]
+        name = "req"
+
+          [[entity_type.attribute]]
+          name = "priority"
+          type = "int"
+          pattern = "^[0-9]$"
+
+          [[entity_type.attribute]]
+          name = "status"
+          type = "enum"
+          values = ["open"]
+          pattern = "^o"
+    "#;
+
+    // When
+    let errors = load_errors(text);
+
+    // Then
+    assert_eq!(
+        errors,
+        [
+            SchemaError::PatternOnNonTextType {
+                type_name: "req".to_string(),
+                attribute: "priority".to_string(),
+                value_type: "int".to_string(),
+            },
+            SchemaError::PatternOnNonTextType {
+                type_name: "req".to_string(),
+                attribute: "status".to_string(),
+                value_type: "enum".to_string(),
+            },
+        ]
+    );
+}
+
+#[test]
 fn test_load_refuses_an_attribute_that_is_both_required_and_defaulted() {
     // Given — it could never be missing, so one of the two is a mistake
     let text = r#"

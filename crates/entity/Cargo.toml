@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 rusty_sphinx_ast = { path = "../ast" }
+regex = "1.10"
 schemars = "1.2.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

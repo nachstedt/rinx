@@ -4,6 +4,8 @@ use std::fmt;
 use rusty_sphinx_ast::{AttributeValue, EntityId, EntityIdError};
 use serde::{Deserialize, Serialize};
 
+use crate::pattern::ValuePattern;
+
 /// How an entity type's ids are determined.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct IdSpec {
@@ -13,6 +15,9 @@ pub struct IdSpec {
     pub required: bool,
     /// Attributes whose values compose the id, joined with `_`.
     pub from: Option<Vec<String>>,
+    /// A pattern every id of this type should match, however it was
+    /// determined — explicit, composed or generated, prefix included.
+    pub pattern: Option<ValuePattern>,
 }
 
 /// Everything [`IdSpec::derive`] needs to determine one entity's id.
@@ -64,6 +69,31 @@ impl fmt::Display for IdDerivationError {
 
 impl std::error::Error for IdDerivationError {}
 
+/// An id that does not match its type's declared pattern.
+///
+/// Separate from [`IdDerivationError`] because the id it describes is still a
+/// legal one: links to it resolve, and the entity keeps it. What is wrong is
+/// the project's naming convention, not the entity's identity.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IdPatternMismatch {
+    /// The id as determined.
+    pub id: String,
+    /// The pattern it failed, as the schema wrote it.
+    pub pattern: String,
+}
+
+impl fmt::Display for IdPatternMismatch {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "id {:?} does not match the pattern `{}`",
+            self.id, self.pattern
+        )
+    }
+}
+
+impl std::error::Error for IdPatternMismatch {}
+
 impl IdSpec {
     /// Determines an entity's id.
     ///
@@ -96,6 +126,26 @@ impl IdSpec {
             None => body,
         };
         EntityId::new(&prefixed).map_err(IdDerivationError::Illegal)
+    }
+
+    /// Checks a determined id against the type's pattern, if it declares one.
+    ///
+    /// Kept apart from [`IdSpec::derive`] so a caller holding an id that did
+    /// not come from `derive` — one imported from a `needs.json` — checks it
+    /// the same way.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`IdPatternMismatch`] when a pattern is declared and the id
+    /// does not match it.
+    pub fn check_pattern(&self, id: &EntityId) -> Result<(), IdPatternMismatch> {
+        match &self.pattern {
+            Some(pattern) if !pattern.is_match(id.as_str()) => Err(IdPatternMismatch {
+                id: id.as_str().to_string(),
+                pattern: pattern.as_str().to_string(),
+            }),
+            _ => Ok(()),
+        }
     }
 
     /// Joins the values of the `from` attributes into an id body.
@@ -168,6 +218,7 @@ mod tests {
             prefix: Some("REQ_".to_string()),
             required: false,
             from: None,
+            pattern: None,
         };
         let attrs = attributes(&[]);
 
@@ -203,6 +254,7 @@ mod tests {
             prefix: None,
             required: true,
             from: None,
+            pattern: None,
         };
         let attrs = attributes(&[]);
 
@@ -220,6 +272,7 @@ mod tests {
             prefix: None,
             required: false,
             from: Some(vec!["name".to_string()]),
+            pattern: None,
         };
         let attrs = attributes(&[("name", "os.system")]);
 
@@ -237,6 +290,7 @@ mod tests {
             prefix: None,
             required: false,
             from: Some(vec!["name".to_string(), "version".to_string()]),
+            pattern: None,
         };
         let attrs = attributes(&[("name", "os.system"), ("version", "3.8")]);
 
@@ -254,6 +308,7 @@ mod tests {
             prefix: None,
             required: false,
             from: Some(vec!["title".to_string()]),
+            pattern: None,
         };
         let attrs = attributes(&[("title", "The system shall boot")]);
 
@@ -271,6 +326,7 @@ mod tests {
             prefix: None,
             required: false,
             from: Some(vec!["name".to_string()]),
+            pattern: None,
         };
         let attrs = attributes(&[]);
 
@@ -293,6 +349,7 @@ mod tests {
             prefix: Some("REQ_".to_string()),
             required: false,
             from: None,
+            pattern: None,
         };
         let attrs = attributes(&[]);
 
@@ -360,5 +417,75 @@ mod tests {
         assert!(required.to_string().contains("`:id:`"));
         assert!(missing.to_string().contains("name"));
         assert_eq!(illegal.to_string(), "entity id is empty");
+    }
+
+    fn patterned(source: &str) -> IdSpec {
+        IdSpec {
+            pattern: Some(ValuePattern::new(source).unwrap()),
+            ..IdSpec::default()
+        }
+    }
+
+    #[test]
+    fn test_check_pattern_accepts_an_id_matching_the_pattern() {
+        // Given
+        let spec = patterned("^REQ_[0-9]+$");
+        let id = EntityId::new("REQ_001").unwrap();
+
+        // When
+        let result = spec.check_pattern(&id);
+
+        // Then
+        assert_eq!(result, Ok(()));
+    }
+
+    #[test]
+    fn test_check_pattern_reports_an_id_outside_the_pattern() {
+        // Given
+        let spec = patterned("^REQ_[0-9]+$");
+        let id = EntityId::new("SPEC_001").unwrap();
+
+        // When
+        let result = spec.check_pattern(&id);
+
+        // Then
+        assert_eq!(
+            result,
+            Err(IdPatternMismatch {
+                id: "SPEC_001".to_string(),
+                pattern: "^REQ_[0-9]+$".to_string(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_check_pattern_accepts_any_id_when_no_pattern_is_declared() {
+        // Given
+        let spec = IdSpec::default();
+        let id = EntityId::new("anything-at-all").unwrap();
+
+        // When
+        let result = spec.check_pattern(&id);
+
+        // Then
+        assert_eq!(result, Ok(()));
+    }
+
+    #[test]
+    fn test_id_pattern_mismatch_message_names_the_id_and_the_pattern() {
+        // Given
+        let mismatch = IdPatternMismatch {
+            id: "SPEC_001".to_string(),
+            pattern: "^REQ_".to_string(),
+        };
+
+        // When
+        let message = mismatch.to_string();
+
+        // Then
+        assert_eq!(
+            message,
+            "id \"SPEC_001\" does not match the pattern `^REQ_`"
+        );
     }
 }

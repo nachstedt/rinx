@@ -69,6 +69,13 @@
           "description": "The option spelling, e.g. `status` for `:status:`.",
           "type": "string"
         },
+        "pattern": {
+          "description": "A regular expression the value must match; for `list<string>`, each\nitem must. Searched for, as JSON Schema's `pattern` is: write `^…$` to\nmatch the whole value. Only the three text types take one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "required": {
           "description": "Whether the option must be given.",
           "type": "boolean",
@@ -191,6 +198,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "pattern": {
+          "description": "A regular expression every id of this type should match — explicit,\ncomposed or generated, prefix included. Searched for, as JSON Schema's\n`pattern` is: write `^…$` to match the whole id. A mismatch is reported\nas `entity.id-pattern-mismatch`, and the entity keeps its id.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "prefix": {
           "description": "Prepended to derived and generated ids, never to an explicit `:id:`.",

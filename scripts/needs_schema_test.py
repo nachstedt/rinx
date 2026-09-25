@@ -226,10 +226,10 @@ class SchemaNarrowingTest(unittest.TestCase):
         }
 
         # When
-        required = needs_schema.required_options_by_type(schemas, [])
+        constraints = needs_schema.constraints_by_type(schemas, [])
 
         # Then
-        self.assertEqual(required, {"person": {"role"}})
+        self.assertEqual(constraints["person"]["required"], {"role"})
 
     def test_narrowing_marks_the_attribute_required_on_that_type_alone(self):
         # Given two types and a rule scoped to one of them
@@ -272,22 +272,17 @@ class SchemaNarrowingTest(unittest.TestCase):
         report = []
 
         # When
-        required = needs_schema.required_options_by_type(schemas, report)
+        constraints = needs_schema.constraints_by_type(schemas, report)
 
         # Then nothing is narrowed — honouring half of a conditional rule would
         # be worse than not honouring it — and the rule is reported
-        self.assertEqual(required, {})
+        self.assertEqual(constraints, {})
         self.assertIn("conditional schema rule", report_categories(report))
 
-    def test_value_and_network_rules_are_reported(self):
-        # Given an id pattern and a cross-entity constraint
+    def test_a_network_rule_is_reported(self):
+        # Given a cross-entity constraint
         schemas = {
             "schemas": [
-                {
-                    "id": "req-id-pattern",
-                    "select": {"$ref": "#/$defs/type-req"},
-                    "validate": {"local": {"properties": {"id": {"pattern": "^R_"}}}},
-                },
                 {
                     "id": "spec-links-to-req",
                     "select": {"$ref": "#/$defs/type-spec"},
@@ -298,12 +293,218 @@ class SchemaNarrowingTest(unittest.TestCase):
         report = []
 
         # When
-        needs_schema.required_options_by_type(schemas, report)
+        needs_schema.constraints_by_type(schemas, report)
 
         # Then
-        self.assertEqual(
-            report_categories(report), {"value schema rule", "network schema rule"}
+        self.assertEqual(report_categories(report), {"network schema rule"})
+
+
+def value_rules(report):
+    """The report's value-rule entries alone, without the unrelated ones every
+    conversion carries (such as the generic `.. need::` directive)."""
+    return [entry for entry in report if entry[0] == "value schema rule"]
+
+
+def type_rule(rule_id, type_name, local):
+    """A `schemas.json` holding one rule selecting exactly `type_name`."""
+    return {
+        "schemas": [
+            {
+                "id": rule_id,
+                "select": {"$ref": f"#/$defs/type-{type_name}"},
+                "validate": {"local": local},
+            }
+        ]
+    }
+
+
+class ValueRuleTest(unittest.TestCase):
+    def test_an_id_pattern_becomes_the_types_id_pattern(self):
+        # Given the shape of the demo corpus' eleven `*-id-pattern` rules
+        needs = {"types": [{"directive": "req", "prefix": "R_"}]}
+        schemas = type_rule(
+            "req-id-pattern", "req", {"properties": {"id": {"pattern": "^R_[0-9]+$"}}}
         )
+
+        # When
+        text, report = convert(needs, schemas)
+
+        # Then the pattern is carried over onto the id, and
+        # nothing is left to report
+        self.assertIn('id = { prefix = "R_", pattern = "^R_[0-9]+$" }', text)
+        self.assertEqual(value_rules(report), [])
+
+    def test_a_pattern_escapes_its_backslashes_for_toml(self):
+        # Given
+        needs = {"types": [{"directive": "req"}]}
+        schemas = type_rule(
+            "req-id-pattern", "req", {"properties": {"id": {"pattern": r"^R_\d+$"}}}
+        )
+
+        # When
+        text, _report = convert(needs, schemas)
+
+        # Then the TOML string decodes back to the regex as written
+        self.assertIn(r'id = { pattern = "^R_\\d+$" }', text)
+
+    def test_a_pattern_on_a_string_field_becomes_the_attributes_pattern(self):
+        # Given
+        needs = {"types": [{"directive": "person"}], "fields": {"email": {}}}
+        schemas = type_rule(
+            "person-email", "person", {"properties": {"email": {"pattern": "@"}}}
+        )
+
+        # When
+        text, report = convert(needs, schemas)
+
+        # Then
+        self.assertIn('name = "email"\nlabel = "Email"\ntype = "string"\npattern = "@"', text)
+        self.assertEqual(value_rules(report), [])
+
+    def test_an_enum_on_a_string_field_turns_it_into_an_enum(self):
+        # Given
+        needs = {"types": [{"directive": "hazard"}], "fields": {"asil": {}}}
+        schemas = type_rule(
+            "hazard-asil", "hazard", {"properties": {"asil": {"enum": ["QM", "A"]}}}
+        )
+
+        # When
+        text, report = convert(needs, schemas)
+
+        # Then
+        self.assertIn('type = "enum"\nvalues = ["QM", "A"]', text)
+        self.assertEqual(value_rules(report), [])
+
+    def test_the_narrowing_applies_to_the_selected_type_alone(self):
+        # Given two types and a pattern scoped to one of them
+        needs = {
+            "types": [{"directive": "person"}, {"directive": "team"}],
+            "fields": {"email": {}},
+        }
+        schemas = type_rule(
+            "person-email", "person", {"properties": {"email": {"pattern": "@"}}}
+        )
+
+        # When
+        text, _report = convert(needs, schemas)
+
+        # Then
+        _preamble, person, team = text.split("[[entity_type]]")
+        self.assertIn('pattern = "@"', person)
+        self.assertNotIn("pattern", team)
+
+    def test_minimums_of_one_and_empty_fragments_need_nothing_emitted(self):
+        # Given the demo corpus' `person-has-role`, `team-has-persons`,
+        # `impl-has-implements-links` and `test-has-spec-or-impl` shapes
+        needs = {
+            "types": [{"directive": "person"}],
+            "fields": {"role": {}},
+            "links": {"persons": {}, "links": {}},
+        }
+        schemas = type_rule(
+            "person-rules",
+            "person",
+            {
+                "properties": {
+                    "role": {"type": "string", "minLength": 1},
+                    "persons": {"type": "array", "minItems": 1},
+                    "links": {},
+                },
+                "required": ["role"],
+            },
+        )
+
+        # When
+        text, report = convert(needs, schemas)
+
+        # Then `required` still applies, and nothing is reported as missing
+        self.assertIn("required = true", text)
+        self.assertEqual(value_rules(report), [])
+
+    def test_an_inexpressible_keyword_is_reported_by_name(self):
+        # Given a minimum our model has no vocabulary for
+        schemas = type_rule(
+            "person-long-role",
+            "person",
+            {"properties": {"role": {"minLength": 3, "pattern": "."}}},
+        )
+        report = []
+
+        # When
+        constraints = needs_schema.constraints_by_type(schemas, report)
+
+        # Then the pattern is still taken, and only the keyword is reported
+        self.assertEqual(constraints["person"]["patterns"], {"role": "."})
+        self.assertEqual(
+            report,
+            [
+                (
+                    "value schema rule",
+                    "person-long-role: `role` uses `minLength: 3`, which the "
+                    "entity model cannot express",
+                )
+            ],
+        )
+
+    def test_a_second_id_pattern_for_one_type_is_reported(self):
+        # Given two rules each constraining `req`'s id differently
+        first = type_rule("a", "req", {"properties": {"id": {"pattern": "^A"}}})
+        second = type_rule("b", "req", {"properties": {"id": {"pattern": "^B"}}})
+        schemas = {"schemas": first["schemas"] + second["schemas"]}
+        report = []
+
+        # When
+        constraints = needs_schema.constraints_by_type(schemas, report)
+
+        # Then the first is kept, and the conflict is reported
+        self.assertEqual(constraints["req"]["id_pattern"], "^A")
+        self.assertEqual(report_categories(report), {"value schema rule"})
+
+    def test_a_pattern_on_a_link_is_reported(self):
+        # Given a pattern on a link, whose values are entity ids
+        needs = {"types": [{"directive": "spec"}], "links": {"reqs": {}}}
+        schemas = type_rule(
+            "spec-reqs", "spec", {"properties": {"reqs": {"pattern": "^R_"}}}
+        )
+
+        # When
+        _text, report = convert(needs, schemas)
+
+        # Then
+        [(_category, detail)] = value_rules(report)
+        self.assertIn("link `reqs`", detail)
+
+    def test_a_pattern_on_a_non_text_field_is_reported(self):
+        # Given a pattern on an integer field
+        needs = {
+            "types": [{"directive": "req"}],
+            "fields": {"effort": {"schema": {"type": "integer"}}},
+        }
+        schemas = type_rule(
+            "req-effort", "req", {"properties": {"effort": {"pattern": "^[0-9]$"}}}
+        )
+
+        # When
+        text, report = convert(needs, schemas)
+
+        # Then nothing is emitted, and the rule is reported
+        self.assertNotIn("pattern", text)
+        [(_category, detail)] = value_rules(report)
+        self.assertIn("`int`", detail)
+
+    def test_a_constraint_on_an_undeclared_field_is_reported(self):
+        # Given a rule naming a field the project never declares
+        needs = {"types": [{"directive": "req"}]}
+        schemas = type_rule(
+            "req-ghost", "req", {"properties": {"ghost": {"pattern": "."}}}
+        )
+
+        # When
+        _text, report = convert(needs, schemas)
+
+        # Then
+        [(_category, detail)] = value_rules(report)
+        self.assertIn("does not declare", detail)
 
 
 class OptionNameClashTest(unittest.TestCase):

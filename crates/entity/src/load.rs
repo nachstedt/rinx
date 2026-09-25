@@ -6,6 +6,7 @@ use crate::attribute::{AttributeSchema, AttributeType};
 use crate::entity_type::EntityType;
 use crate::error::{DeclarationKind, SchemaError, SchemaErrors};
 use crate::id::IdSpec;
+use crate::pattern::ValuePattern;
 use crate::relation::RelationSpec;
 use crate::role::RoleSpec;
 use crate::schema::EntitySchema;
@@ -189,7 +190,7 @@ fn convert_type(
     let argument = raw.argument.unwrap_or_default().into_spec();
     check_argument(&argument, &type_name, &attributes, errors);
 
-    let id = raw.id.unwrap_or_default().into_spec();
+    let id = raw.id.unwrap_or_default().into_spec(&type_name, errors);
     if let Some(sources) = &id.from {
         for source in sources {
             if !attributes.iter().any(|a| &a.name == source) {
@@ -250,8 +251,12 @@ fn convert_attribute(
             attribute: raw.name.clone(),
             value_type: raw.value_type.as_str().to_string(),
         });
-        AttributeType::String
+        AttributeType::string()
     });
+    let value_type = match raw.pattern {
+        Some(source) => attach_pattern(value_type, &source, type_name, &raw.name, errors),
+        None => value_type,
+    };
     if raw.required && raw.default.is_some() {
         errors.push(SchemaError::RequiredAttributeHasDefault {
             type_name: type_name.to_string(),
@@ -267,6 +272,66 @@ fn convert_attribute(
     }
 }
 
+/// Compiles an attribute's `pattern` and attaches it to its type.
+///
+/// Refused on any type that is not text: a pattern on an `int` or an `enum`
+/// looks like it constrains the value, and nothing would ever check it. A
+/// faulty pattern still yields the type without one, so the rest of the
+/// schema is checked in the same pass.
+fn attach_pattern(
+    value_type: AttributeType,
+    source: &str,
+    type_name: &str,
+    attribute: &str,
+    errors: &mut Vec<SchemaError>,
+) -> AttributeType {
+    let Some(pattern) = compile_pattern(
+        source,
+        type_name,
+        &format!("attribute `{attribute}`"),
+        errors,
+    ) else {
+        return value_type;
+    };
+    match value_type {
+        AttributeType::String { .. } => AttributeType::String {
+            pattern: Some(pattern),
+        },
+        AttributeType::Text { .. } => AttributeType::Text {
+            pattern: Some(pattern),
+        },
+        AttributeType::StringList { .. } => AttributeType::StringList {
+            pattern: Some(pattern),
+        },
+        other => {
+            errors.push(SchemaError::PatternOnNonTextType {
+                type_name: type_name.to_string(),
+                attribute: attribute.to_string(),
+                value_type: other.as_str().to_string(),
+            });
+            other
+        }
+    }
+}
+
+/// Compiles a schema-written pattern, recording why it could not be.
+fn compile_pattern(
+    source: &str,
+    type_name: &str,
+    declared_on: &str,
+    errors: &mut Vec<SchemaError>,
+) -> Option<ValuePattern> {
+    ValuePattern::new(source)
+        .map_err(|error| {
+            errors.push(SchemaError::InvalidPattern {
+                type_name: type_name.to_string(),
+                declared_on: declared_on.to_string(),
+                message: error.to_string(),
+            });
+        })
+        .ok()
+}
+
 /// Pairs a `type = "..."` spelling with its `values`, rejecting a mismatch.
 ///
 /// `values` on a non-enum attribute, or an enum without them, is a mistake
@@ -277,11 +342,11 @@ fn resolve_attribute_type(
     values: Option<Vec<String>>,
 ) -> Result<AttributeType, ()> {
     match (spelling, values) {
-        (RawAttributeType::String, None) => Ok(AttributeType::String),
-        (RawAttributeType::Text, None) => Ok(AttributeType::Text),
+        (RawAttributeType::String, None) => Ok(AttributeType::string()),
+        (RawAttributeType::Text, None) => Ok(AttributeType::text()),
         (RawAttributeType::Int, None) => Ok(AttributeType::Int),
         (RawAttributeType::Bool, None) => Ok(AttributeType::Bool),
-        (RawAttributeType::StringList, None) => Ok(AttributeType::StringList),
+        (RawAttributeType::StringList, None) => Ok(AttributeType::string_list()),
         (RawAttributeType::Enum, Some(values)) => Ok(AttributeType::Enum { values }),
         (RawAttributeType::EnumList, Some(values)) => Ok(AttributeType::EnumList { values }),
         _ => Err(()),
@@ -430,14 +495,23 @@ struct RawId {
     /// Attributes whose values compose the id, joined with `_`. Each must be an
     /// attribute the type declares.
     from: Option<Vec<String>>,
+    /// A regular expression every id of this type should match — explicit,
+    /// composed or generated, prefix included. Searched for, as JSON Schema's
+    /// `pattern` is: write `^…$` to match the whole id. A mismatch is reported
+    /// as `entity.id-pattern-mismatch`, and the entity keeps its id.
+    pattern: Option<String>,
 }
 
 impl RawId {
-    fn into_spec(self) -> IdSpec {
+    fn into_spec(self, type_name: &str, errors: &mut Vec<SchemaError>) -> IdSpec {
+        let pattern = self
+            .pattern
+            .and_then(|source| compile_pattern(&source, type_name, "the id", errors));
         IdSpec {
             prefix: self.prefix,
             required: self.required,
             from: self.from,
+            pattern,
         }
     }
 }
@@ -455,6 +529,10 @@ struct RawAttribute {
     /// every other — both spellings look like they constrain the value, and
     /// only one does.
     values: Option<Vec<String>>,
+    /// A regular expression the value must match; for `list<string>`, each
+    /// item must. Searched for, as JSON Schema's `pattern` is: write `^…$` to
+    /// match the whole value. Only the three text types take one.
+    pattern: Option<String>,
     /// Whether the option must be given.
     #[serde(default)]
     required: bool,

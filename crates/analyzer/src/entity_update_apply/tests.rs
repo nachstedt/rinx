@@ -9,8 +9,8 @@ use rusty_sphinx_index::{EntityRecord, EntityUpdateRecord, ProjectIndex};
 
 use super::*;
 
-/// A schema with one attribute type each way (scalar `status`, list `tags`)
-/// and a `multiple` relation to another type.
+/// A schema with one attribute type each way (scalar `status`, list `tags`
+/// whose items must be lowercase) and a `multiple` relation to another type.
 fn schema() -> EntitySchema {
     load_schema(
         r#"
@@ -25,6 +25,7 @@ fn schema() -> EntitySchema {
           [[entity_type.attribute]]
           name = "tags"
           type = "list<string>"
+          pattern = "^[a-z-]+$"
 
           [[entity_type.relation]]
           name = "links"
@@ -391,6 +392,36 @@ fn test_an_out_of_range_enum_value_is_reported_invalid_value() {
     assert_eq!(
         codes(&diagnostics),
         vec![DiagnosticCode::EntityUpdateInvalidValue]
+    );
+}
+
+#[test]
+fn test_appending_an_item_outside_the_attributes_pattern_is_reported_and_not_applied() {
+    // Given — the pattern is part of the attribute's type, so an update is
+    // held to it exactly as the entity's own `:tags:` line was
+    let mut index = ProjectIndex::default();
+    index
+        .entities
+        .insert(id("REQ_001"), requirement("open", &["boot"], &[]));
+    index.entity_updates.push(update_record(
+        "a.rst",
+        1,
+        "REQ_001",
+        vec![("tags", FieldMutationMode::Append("Kernel".to_string()))],
+        true,
+    ));
+
+    // When
+    let diagnostics = apply_entity_updates(&mut index, &schema());
+
+    // Then
+    assert_eq!(
+        codes(&diagnostics),
+        vec![DiagnosticCode::EntityUpdateInvalidValue]
+    );
+    assert_eq!(
+        index.effective_attribute(&id("REQ_001"), "tags"),
+        Some(&AttributeValue::List(vec!["boot".to_string()]))
     );
 }
 

@@ -342,7 +342,7 @@ mod tests {
         spec.attributes = vec![AttributeSchema {
             name: "status".to_string(),
             label: None,
-            value_type: AttributeType::String,
+            value_type: AttributeType::string(),
             required: false,
             default: None,
         }];
@@ -479,7 +479,7 @@ mod tests {
         entity_type.attributes = vec![AttributeSchema {
             name: "status".to_string(),
             label: None,
-            value_type: AttributeType::String,
+            value_type: AttributeType::string(),
             required: false,
             default: None,
         }];

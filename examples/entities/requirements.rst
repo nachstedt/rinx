@@ -57,6 +57,11 @@ Specifications and implementations
 
       Ordering the probe phases lets the slowest one overlap with I/O.
 
+An implementation's id and ``:module:`` follow the naming conventions its
+type declares as patterns — ``IMPL_`` and three digits, and a dotted module
+path. An ``:id: IMPL_1`` would be reported, and a ``:module: Boot/Loader``
+refused.
+
 .. impl:: Staged boot loader
    :id: IMPL_001
    :module: boot.loader

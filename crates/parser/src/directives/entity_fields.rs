@@ -133,6 +133,26 @@ pub(in crate::directives) fn report_relation_cardinality(
     }
 }
 
+/// Reports an id that does not match its type's declared pattern.
+///
+/// The id is only reported, never replaced: it is still legal, links to it
+/// resolve, and the author's fix is to rename it rather than to have the
+/// build do so behind their back.
+pub(in crate::directives) fn report_id_pattern(
+    entity_type: &EntityType,
+    id: &EntityId,
+    span: Option<Span>,
+    diagnostics: &mut Diagnostics,
+) {
+    if let Err(mismatch) = entity_type.id.check_pattern(id) {
+        diagnostics.push(Diagnostic::at(
+            DiagnosticCode::EntityIdPatternMismatch,
+            format!("`.. {}::`: {mismatch}", entity_type.name),
+            span,
+        ));
+    }
+}
+
 /// Lists a type's option vocabulary for an unknown-option diagnostic.
 pub(in crate::directives) fn describe_options(entity_type: &EntityType) -> String {
     let names = entity_type.option_names();
@@ -157,6 +177,7 @@ mod tests {
             [[entity_type]]
             name = "req"
             argument = { fields = ["title"] }
+            id = { pattern = "^REQ_" }
 
               [[entity_type.attribute]]
               name = "title"
@@ -171,6 +192,11 @@ mod tests {
               [[entity_type.attribute]]
               name = "priority"
               type = "int"
+
+              [[entity_type.attribute]]
+              name = "ticket"
+              type = "string"
+              pattern = "^JIRA-[0-9]+$"
 
               [[entity_type.attribute]]
               name = "owner"
@@ -432,6 +458,68 @@ mod tests {
 
         // Then nothing is reported
         assert!(diagnostics.entries().is_empty());
+    }
+
+    #[test]
+    fn store_attribute_reports_a_value_outside_its_pattern_and_drops_it() {
+        // Given
+        let schema = schema();
+        let ticket = req(&schema).attribute("ticket").unwrap();
+        let mut attributes = BTreeMap::new();
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        store_attribute(
+            ticket,
+            "ticket",
+            "BUG-7",
+            None,
+            &mut attributes,
+            &mut diagnostics,
+        );
+
+        // Then — handled exactly like a value outside an enum
+        assert!(attributes.is_empty());
+        assert_eq!(
+            codes(&diagnostics),
+            [DiagnosticCode::EntityInvalidAttributeValue]
+        );
+        assert!(diagnostics.entries()[0].message.contains("^JIRA-[0-9]+$"));
+    }
+
+    #[test]
+    fn report_id_pattern_reports_an_id_outside_the_pattern() {
+        // Given
+        let schema = schema();
+        let id = EntityId::new("SPEC_1").unwrap();
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_id_pattern(req(&schema), &id, None, &mut diagnostics);
+
+        // Then
+        assert_eq!(
+            codes(&diagnostics),
+            [DiagnosticCode::EntityIdPatternMismatch]
+        );
+        assert_eq!(
+            diagnostics.entries()[0].message,
+            "`.. req::`: id \"SPEC_1\" does not match the pattern `^REQ_`"
+        );
+    }
+
+    #[test]
+    fn report_id_pattern_stays_quiet_for_a_matching_id() {
+        // Given
+        let schema = schema();
+        let id = EntityId::new("REQ_1").unwrap();
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_id_pattern(req(&schema), &id, None, &mut diagnostics);
+
+        // Then
+        assert!(codes(&diagnostics).is_empty());
     }
 
     #[test]

@@ -123,11 +123,16 @@ incoming_label = "Implements"
 
 # ── Implementations ─────────────────────────────────────────────────
 
+# An implementation's id and module follow naming conventions, declared as
+# patterns — what a sphinx-needs project writes as `schemas.json` rules. A
+# mismatching id is reported as `entity.id-pattern-mismatch` and kept; a
+# mismatching module is refused like a value outside an enum. A pattern is
+# searched for, so both are anchored with `^…$`.
 [[entity_type]]
 name = "impl"
 label = "Implementation"
 argument = { fields = ["title"] }
-id = { prefix = "IMPL_" }
+id = { prefix = "IMPL_", pattern = "^IMPL_[0-9]{3}$" }
 
 
 # `title` is an ordinary attribute; nothing about the name is privileged in
@@ -137,10 +142,13 @@ id = { prefix = "IMPL_" }
 name = "title"
 label = "Title"
 type = "string"
+# A dotted Python module path. A TOML literal string, so the regex needs no
+# second layer of escaping.
 [[entity_type.attribute]]
 name = "module"
 label = "Module"
 type = "string"
+pattern = '^[a-z_]+(\.[a-z_]+)*$'
 
 # ── Tests ───────────────────────────────────────────────────────────
 
