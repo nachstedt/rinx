@@ -761,3 +761,33 @@ fn test_analyze_registers_a_flowcharts_name_as_a_target() {
             .contains_key(&TargetName::new("requirement-flow"))
     );
 }
+
+#[test]
+fn test_analyze_registers_a_sequence_diagrams_name_as_a_target() {
+    // Given — a `.. entity-sequence::` with a `:name:` option
+    let doc = Document::new(
+        "specs.rst".to_string(),
+        vec![Node::Directive(Directive::EntitySequence(Box::new(
+            rusty_sphinx_ast::EntitySequence {
+                name: Some(TargetName::new("startup-sequence")),
+                ..rusty_sphinx_ast::EntitySequence::new(
+                    rusty_sphinx_ast::EntitySequenceSource::EntitySequence,
+                    rusty_sphinx_ast::NonEmptyVector::single(
+                        rusty_sphinx_ast::EntityId::new("COMP_UI").unwrap(),
+                    ),
+                    rusty_sphinx_ast::NonEmptyVector::single("sends".to_string()),
+                )
+            },
+        )))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — a picture is a cross-reference target like any other
+    assert!(
+        index
+            .targets
+            .contains_key(&TargetName::new("startup-sequence"))
+    );
+}

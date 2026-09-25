@@ -32,10 +32,12 @@ mod error;
 mod expand;
 mod flow;
 mod node;
+mod sequence;
 mod snapshot;
 mod template;
 
 pub use context::UmlContext;
-pub use error::{FlowError, UmlError};
+pub use error::{FlowError, SequenceError, UmlError};
 pub use expand::expand;
 pub use flow::build_flow;
+pub use sequence::{SequenceDrawing, build_sequence};

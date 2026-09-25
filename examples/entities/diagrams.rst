@@ -197,3 +197,113 @@ fail with a syntax error naming a generated file nobody wrote.
 .. entity-flow::
    :filter: status == "withdrawn"
    :caption: Withdrawn requirements — there are none, so nothing is drawn
+
+Sequence diagrams of the graph
+------------------------------
+
+``.. entity-sequence::`` — sphinx-needs spells it ``.. needsequence::`` — walks
+the graph instead of filtering it. From each ``:start:`` entity, a relation
+named in ``:relations:`` leads to a *message*, and the same relations lead on
+from the message to its *receivers*; every hop is an arrow labelled with the
+message's title, and every receiver not yet seen is walked in turn.
+
+The components and messages below are ordinary entities, declared inside a
+dropdown the way the sphinx-needs demo corpus declares its own.
+
+.. dropdown:: The coffee machine's components and messages
+
+   .. component:: User interface
+      :id: COMP_UI
+      :calls: MSG_INIT, MSG_ARM
+
+   .. component:: Hardware abstraction layer
+      :id: COMP_HAL
+      :calls: MSG_INIT_OK, MSG_READING
+      :stops: MSG_HALT
+
+   .. component:: Safety monitor
+      :id: COMP_SAFETY
+      :calls: MSG_POLL, MSG_START_HEATER, MSG_READY
+
+   .. component:: Heater
+      :id: COMP_HEATER
+      :calls: MSG_HEATER_UP
+
+   .. message:: init()
+      :id: MSG_INIT
+      :calls: COMP_HAL
+
+   .. message:: init_ok
+      :id: MSG_INIT_OK
+      :calls: COMP_UI
+
+   .. message:: arm()
+      :id: MSG_ARM
+      :calls: COMP_SAFETY
+
+   .. message:: poll_sensors()
+      :id: MSG_POLL
+      :calls: COMP_HAL
+
+   .. message:: temp=22°C
+      :id: MSG_READING
+      :calls: COMP_SAFETY
+
+   .. message:: start()
+      :id: MSG_START_HEATER
+      :calls: COMP_HEATER
+
+   .. message:: heating
+      :id: MSG_HEATER_UP
+      :calls: COMP_SAFETY
+
+   .. message:: ready
+      :id: MSG_READY
+      :calls: COMP_UI
+
+   .. message:: emergency_stop
+      :id: MSG_HALT
+      :stops: COMP_HEATER, COMP_UI
+
+.. entity-sequence:: Startup
+   :start: COMP_UI
+   :relations: calls
+   :name: startup-sequence
+
+The argument is the caption, as in sphinx-needs, and ``:name:`` registers the
+picture as a cross-reference target: :ref:`startup-sequence`.
+
+``:relations:`` is mandatory — sphinx-needs defaults it to ``links``, but
+neither that nor "every relation" says which edges are messages. Several
+starts share one walk, so a component the first start already reached is not
+drawn twice:
+
+.. needsequence:: Shutdown
+   :start: COMP_HAL; COMP_UI
+   :link_types: stops
+   :align: center
+
+Selecting receivers, and capping the picture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``:filter:`` keeps only the receivers it selects — a receiver it rejects gets
+no arrow and is not walked on from. ``:max-items:`` draws only the first
+messages and says so beneath the picture; the build warns as well, as
+``entity-sequence.truncated``, which a deliberate cap silences.
+
+.. entity-sequence::
+   :start: COMP_UI
+   :relations: calls
+   :filter: id != "COMP_HEATER"
+   :caption: Startup without the heater
+   :width: 500px
+
+.. noqa: entity-sequence.truncated
+
+.. entity-sequence::
+   :start: COMP_UI
+   :relations: calls
+   :max-items: 3
+   :config: monochrome
+   :debug:
+   :caption: The first three messages of the startup, in monochrome

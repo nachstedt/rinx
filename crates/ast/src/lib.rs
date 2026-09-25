@@ -51,6 +51,7 @@ mod dropdown;
 mod entity;
 mod entity_flow;
 mod entity_pie;
+mod entity_sequence;
 mod entity_table;
 mod entity_update;
 mod enumerator;
@@ -104,6 +105,7 @@ pub use dropdown::{Animation, Chevron, Dropdown, InvalidOcticonName, OcticonName
 pub use entity::{AttributeValue, EntityBody, EntityId, EntityIdError, EntitySection, SectionKind};
 pub use entity_flow::{EntityFlow, EntityFlowSource, FlowDirection, InvalidFlowDirection};
 pub use entity_pie::{EntityPie, EntityPieSource, PieSlice, SliceSource};
+pub use entity_sequence::{EntitySequence, EntitySequenceSource};
 pub use entity_table::{EntityTable, EntityTableSource};
 pub use entity_update::{
     EntityUpdate, EntityUpdateSource, FieldMutation, FieldMutationMode, UpdateTarget,

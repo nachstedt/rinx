@@ -133,7 +133,8 @@ flowchart's.
 
 - `needflow` joins `needtable`, `needuml` and `needarch` as supported;
   `needpie`, `needbar` and `needsequence` remain unimplemented, and each is now
-  a presentation problem alone.
+  a presentation problem alone. (`needpie` and `needsequence` have since been
+  answered by ADR-017 and ADR-020.)
 - A flowchart is linear in the size of the project per directive, since it
   builds a `Snapshot` like every templated diagram does. A project with
   thousands of entities and many flowcharts would want that snapshot hoisted

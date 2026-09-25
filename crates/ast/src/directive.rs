@@ -11,6 +11,7 @@ use crate::dropdown::Dropdown;
 use crate::entity::EntityBody;
 use crate::entity_flow::EntityFlow;
 use crate::entity_pie::EntityPie;
+use crate::entity_sequence::EntitySequence;
 use crate::entity_table::EntityTable;
 use crate::entity_update::EntityUpdate;
 use crate::glossary_entry::GlossaryEntry;
@@ -145,6 +146,14 @@ pub enum Directive {
     /// [`Self::Uml`] with a template. There is no template here; nothing the
     /// author wrote reaches `PlantUML` at all.
     EntityFlow(Box<EntityFlow>),
+    /// `.. entity-sequence::`, and its sphinx-needs spelling
+    /// `.. needsequence::` — a sequence diagram walked from start entities
+    /// along the relations that carry messages.
+    ///
+    /// Boxed like [`Self::EntityFlow`] and carrying a question for its reason:
+    /// the participants and messages live in other documents, so the
+    /// `PlantUML` is generated while rendering and compiled like any diagram.
+    EntitySequence(Box<EntitySequence>),
     /// `.. entity-pie::`, and its sphinx-needs spelling `.. needpie::` — a pie
     /// chart of how many entities each of several filters selects.
     ///

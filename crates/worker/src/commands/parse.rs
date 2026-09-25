@@ -61,6 +61,13 @@ pub(super) fn find_disabled_diagrams(doc: &ast::Document) -> Vec<ast::Diagnostic
                 ast::DiagnosticCode::EntityFlowDiagramsDisabled,
                 flow.span,
             ),
+            // A sequence diagram is generated like a flowchart, and needs the
+            // opt-in for the flowchart's reason.
+            ast::Node::Directive(ast::Directive::EntitySequence(sequence)) => (
+                sequence.source.as_str(),
+                ast::DiagnosticCode::EntitySequenceDiagramsDisabled,
+                sequence.span,
+            ),
             _ => return,
         };
         found.push(ast::Diagnostic::at(
@@ -358,6 +365,34 @@ mod tests {
             "a flowchart in a library without the opt-in must fail the parse"
         );
         assert!(parse_with_diagrams(rst, DiagramSupport::Enabled).is_ok());
+    }
+
+    #[test]
+    fn test_a_sequence_diagram_needs_the_same_opt_in_under_its_own_code() {
+        // Given — built directly: parsing one needs a schema declaring the
+        // relation it walks, which is beside the point here
+        let sequence = ast::EntitySequence::new(
+            ast::EntitySequenceSource::NeedSequence,
+            ast::NonEmptyVector::single(ast::EntityId::new("COMP_UI").unwrap()),
+            ast::NonEmptyVector::single("sends".to_string()),
+        );
+        let doc = ast::Document::new(
+            "index.rst".to_string(),
+            vec![ast::Node::Directive(ast::Directive::EntitySequence(
+                Box::new(sequence),
+            ))],
+        );
+
+        // When
+        let found = find_disabled_diagrams(&doc);
+
+        // Then
+        assert_eq!(found.len(), 1);
+        assert_eq!(
+            found[0].code,
+            ast::DiagnosticCode::EntitySequenceDiagramsDisabled
+        );
+        assert!(found[0].message.starts_with("needsequence:"), "{found:?}");
     }
 
     #[test]

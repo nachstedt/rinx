@@ -170,6 +170,14 @@ impl Snapshot {
             .collect()
     }
 
+    /// Whether the entity `id` exists and `filter` selects it — the one-entity
+    /// form of [`Self::matching`], for a walk that meets entities one at a time.
+    pub(crate) fn matches(&self, id: &str, filter: &rusty_sphinx_filter::Expr) -> bool {
+        self.entities
+            .get(id)
+            .is_some_and(|facts| filter.matches(facts))
+    }
+
     /// The text an entity is shown by — its title, falling back to its id.
     pub(crate) fn title<'a>(&'a self, id: &'a str) -> &'a str {
         self.entities.get(id).map_or(id, EntityFacts::display_text)

@@ -12,7 +12,8 @@
 # fails to build, naming the attribute; with it, the build succeeds. It then
 # asserts the same for a *generated* picture — a `.. entity-flow::` is compiled
 # by the very same action, so it needs the very same opt-in, and reports it
-# under its own `entity-flow.*` code.
+# under its own `entity-flow.*` code — and likewise a `.. entity-sequence::`,
+# under `entity-sequence.*`.
 
 set -euo pipefail
 
@@ -78,6 +79,16 @@ if grep -q "entity-flow.diagrams-disabled" <<<"$build_output" \
     echo "SUCCESS: A flowchart without the opt-in failed under its own code."
 else
     echo "ERROR: The build failed, but not with the flowchart's opt-in error."
+    echo "$build_output" | tail -20
+    exit 1
+fi
+
+echo "=== Testing that a generated sequence diagram needs the same opt-in ==="
+# The same failed build: entities/diagrams.rst draws both kinds of picture.
+if grep -q "entity-sequence.diagrams-disabled" <<<"$build_output"; then
+    echo "SUCCESS: A sequence diagram without the opt-in failed under its own code."
+else
+    echo "ERROR: The build failed, but not with the sequence diagram's opt-in error."
     echo "$build_output" | tail -20
     exit 1
 fi

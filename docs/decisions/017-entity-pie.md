@@ -214,4 +214,5 @@ the larger failure.
   a table or a figure.
 - `needbar` and `needsequence` remain unimplemented. `needbar` is now a
   presentation problem alone: it reuses this increment's counting module, and
-  what it adds is a second dimension and an axis.
+  what it adds is a second dimension and an axis. (`needsequence` has since
+  been answered by ADR-020, `entity-sequence`.)

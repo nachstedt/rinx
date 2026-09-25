@@ -149,6 +149,7 @@ diagnostic_codes! {
     DirectiveButtonLinkUnknownOption => "directive.button-link-unknown-option",
     DirectiveEntityTableUnknownOption => "directive.entity-table-unknown-option",
     DirectiveEntityFlowUnknownOption => "directive.entity-flow-unknown-option",
+    DirectiveEntitySequenceUnknownOption => "directive.entity-sequence-unknown-option",
     DirectiveEntityPieUnknownOption => "directive.entity-pie-unknown-option",
     DirectiveUnknownOption => "directive.unknown-option",
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
@@ -576,6 +577,64 @@ diagnostic_codes! {
     /// Fails the parse, as `uml.diagrams-disabled` does and for the same
     /// reason: the picture would silently never be compiled.
     EntityFlowDiagramsDisabled => "entity-flow.diagrams-disabled",
+
+    // --- `.. entity-sequence::` / `.. needsequence::` ----------------------
+    //
+    // One family for both spellings, and its own rather than `entity-flow.*`
+    // for the reason that one is not `uml.*`: a code names the construct, and a
+    // sequence diagram's question — a walk from start entities along message
+    // relations — is not a flowchart's.
+    /// A sequence diagram with no `:start:`, or one listing no entity. There is
+    /// nowhere to begin the walk, so the directive degrades to an error block.
+    EntitySequenceMissingStart => "entity-sequence.missing-start",
+    /// A `:start:` entry that is not a well-formed entity id. The remaining
+    /// entries are still walked.
+    EntitySequenceInvalidStart => "entity-sequence.invalid-start",
+    /// A sequence diagram with no `:relations:`/`:link_types:`. Mandatory,
+    /// unlike sphinx-needs' default of `links`: neither that name nor "every
+    /// relation the schema declares" describes which edges are messages.
+    EntitySequenceMissingRelations => "entity-sequence.missing-relations",
+    /// A `:relations:` entry naming a relation no entity type declares. The
+    /// remaining entries are still walked.
+    EntitySequenceUnknownRelation => "entity-sequence.unknown-relation",
+    /// A `:filter:` this build's filter language cannot evaluate. The diagram
+    /// still draws, keeping every receiver.
+    EntitySequenceInvalidFilter => "entity-sequence.invalid-filter",
+    /// A `:filter:` naming a field no entity type declares and that is none of
+    /// the built-in ones.
+    EntitySequenceUnknownField => "entity-sequence.unknown-field",
+    /// A `:max-items:` that is not a non-negative whole number.
+    EntitySequenceInvalidMaxItems => "entity-sequence.invalid-max-items",
+    /// An `:align:` that is not one of docutils' three.
+    EntitySequenceInvalidAlign => "entity-sequence.invalid-align",
+    /// A `:scale:` that is not a non-negative percentage.
+    EntitySequenceInvalidScale => "entity-sequence.invalid-scale",
+    /// A `:width:` that is not a length or a percentage.
+    EntitySequenceInvalidWidth => "entity-sequence.invalid-width",
+    /// A `:scale:` with no `:width:` to apply to, for `uml.unusable-scale`'s
+    /// reason.
+    EntitySequenceUnusableScale => "entity-sequence.unusable-scale",
+    /// An option whose value is required but was left empty.
+    EntitySequenceEmptyOptionValue => "entity-sequence.empty-option-value",
+    /// An option sphinx-needs' `needsequence` has that this build does not
+    /// implement, reported by name rather than ignored.
+    EntitySequenceUnsupportedOption => "entity-sequence.unsupported-option",
+    /// A `:start:` entry naming no entity in the project. The other starts are
+    /// still walked — sphinx-needs aborts the whole build here instead.
+    EntitySequenceUnknownStart => "entity-sequence.unknown-start",
+    /// A walk that found no message at all, so there was nothing to draw.
+    /// `PlantUML` would otherwise be handed a picture of lone lifelines.
+    EntitySequenceEmptyResult => "entity-sequence.empty-result",
+    /// A `:config:` naming a preamble the site config does not declare.
+    EntitySequenceUnknownConfig => "entity-sequence.unknown-config",
+    /// A walk that found more messages than `:max-items:` allows, so the
+    /// picture shows only the first ones. Reported as well as noted on the
+    /// page, as sphinx-needs does, so whoever runs the build learns of it
+    /// without reading every page; a deliberate cap is silenced with `.. noqa:`.
+    EntitySequenceTruncated => "entity-sequence.truncated",
+    /// A sequence diagram written in a library that did not opt in to
+    /// diagrams, for `entity-flow.diagrams-disabled`'s reason.
+    EntitySequenceDiagramsDisabled => "entity-sequence.diagrams-disabled",
 
     // --- `.. entity-pie::` / `.. needpie::` --------------------------------
     //

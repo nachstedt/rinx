@@ -3,9 +3,10 @@
 use std::fmt;
 
 use rusty_sphinx_ast::{DiagnosticCode, Span};
-use rusty_sphinx_uml::{FlowError, UmlError};
+use rusty_sphinx_uml::{FlowError, SequenceError, UmlError};
 
-/// A diagram directive that produced no picture.
+/// A diagram directive that produced no picture, or — for a sequence
+/// diagram — one that drew a picture with something worth reporting about it.
 ///
 /// Only reportable here, like [`crate::EmptyListingError`], and for the same
 /// reason: a diagram asks the entity graph questions — whether written as a
@@ -31,8 +32,8 @@ pub struct DiagramError {
 
 /// Why a diagram directive produced no picture.
 ///
-/// Two kinds, because there are two ways a diagram comes about: a template
-/// that was expanded, and a flowchart that was generated. They are kept apart
+/// One kind per way a diagram comes about: a template that was expanded, a
+/// flowchart that was generated, and a sequence diagram that was walked. They are kept apart
 /// rather than merged into one error type because a diagnostic code names the
 /// construct the author wrote — a flowchart that drew nothing is
 /// `entity-flow.empty-result`, not `uml.empty-result` — while everything the
@@ -44,6 +45,10 @@ pub enum DiagramFailure {
     Uml(UmlError),
     /// A flowchart that could not be drawn.
     Flow(FlowError),
+    /// A sequence diagram's walk reporting a problem. Unlike the other two,
+    /// not every one of these means the picture is missing: an unknown start
+    /// or a truncated walk still draws everything else.
+    Sequence(SequenceError),
 }
 
 impl DiagramFailure {
@@ -53,6 +58,7 @@ impl DiagramFailure {
         match self {
             Self::Uml(error) => error.code(),
             Self::Flow(error) => error.code(),
+            Self::Sequence(error) => error.code(),
         }
     }
 
@@ -61,12 +67,8 @@ impl DiagramFailure {
     pub const fn depends_on_the_project(&self) -> bool {
         match self {
             Self::Uml(error) => uml_depends_on_the_project(error),
-            // A flowchart's two failures split the same way a diagram's do: an
-            // empty result may be nothing but a stale preview index, while a
-            // `:config:` naming no preamble is a fault in the site config,
-            // which a preview reads for real.
-            Self::Flow(FlowError::EmptyResult) => true,
-            Self::Flow(FlowError::UnknownConfig(_)) => false,
+            Self::Flow(error) => flow_depends_on_the_project(error),
+            Self::Sequence(error) => sequence_depends_on_the_project(error),
         }
     }
 }
@@ -76,6 +78,7 @@ impl fmt::Display for DiagramFailure {
         match self {
             Self::Uml(error) => error.fmt(f),
             Self::Flow(error) => error.fmt(f),
+            Self::Sequence(error) => error.fmt(f),
         }
     }
 }
@@ -86,9 +89,40 @@ impl From<UmlError> for DiagramFailure {
     }
 }
 
+impl From<SequenceError> for DiagramFailure {
+    fn from(error: SequenceError) -> Self {
+        Self::Sequence(error)
+    }
+}
+
 impl From<FlowError> for DiagramFailure {
     fn from(error: FlowError) -> Self {
         Self::Flow(error)
+    }
+}
+
+/// Whether a flowchart failure depends on knowing the whole project.
+///
+/// The split a diagram's failures make: an empty result may be nothing but a
+/// stale preview index, while a `:config:` naming no preamble is a fault in
+/// the site config, which a preview reads for real.
+const fn flow_depends_on_the_project(error: &FlowError) -> bool {
+    match error {
+        FlowError::EmptyResult => true,
+        FlowError::UnknownConfig(_) => false,
+    }
+}
+
+/// Whether a sequence diagram's finding depends on knowing the whole project.
+///
+/// The same split again: which entities exist, and which messages they send,
+/// is exactly what a stale preview index gets wrong.
+const fn sequence_depends_on_the_project(error: &SequenceError) -> bool {
+    match error {
+        SequenceError::UnknownStart(_)
+        | SequenceError::EmptyResult
+        | SequenceError::Truncated { .. } => true,
+        SequenceError::UnknownConfig(_) => false,
     }
 }
 
@@ -248,5 +282,41 @@ mod tests {
 
         // Then
         assert!(message.starts_with("needflow:"), "{message}");
+    }
+
+    /// The same, for a sequence diagram's walk.
+    fn sequence_error_for(error: SequenceError) -> DiagramError {
+        DiagramError {
+            directive: "needsequence".to_string(),
+            error: error.into(),
+            span: None,
+        }
+    }
+
+    #[test]
+    fn test_a_sequence_diagram_reports_under_its_own_family() {
+        // Given — a code names the construct the author wrote
+        let error = sequence_error_for(SequenceError::EmptyResult);
+
+        // When / Then
+        assert_eq!(error.code(), DiagnosticCode::EntitySequenceEmptyResult);
+        assert!(error.message().starts_with("needsequence:"));
+    }
+
+    #[test]
+    fn test_only_a_sequence_diagrams_config_fault_is_independent_of_the_project() {
+        // Given
+        let graph = [
+            SequenceError::UnknownStart("COMP_404".to_string()),
+            SequenceError::EmptyResult,
+            SequenceError::Truncated { shown: 1, total: 2 },
+        ];
+        let config = sequence_error_for(SequenceError::UnknownConfig("mono".to_string()));
+
+        // When / Then — a stale preview index may explain the first three
+        for error in graph {
+            assert!(sequence_error_for(error).depends_on_the_project());
+        }
+        assert!(!config.depends_on_the_project());
     }
 }
