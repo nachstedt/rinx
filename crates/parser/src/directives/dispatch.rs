@@ -21,6 +21,7 @@ use super::entity::{EntityDirective, parse_entity};
 use super::entity_flow::parse_entity_flow;
 use super::entity_pie::parse_entity_pie;
 use super::entity_section::{EntitySectionSite, try_parse_entity_section};
+use super::entity_sequence::parse_entity_sequence;
 use super::entity_table::parse_entity_table;
 use super::entity_update::parse_entity_update;
 use super::error_node::unknown_directive;
@@ -516,6 +517,75 @@ fn parse_remaining_body_directive(
     Node::Directive(directive)
 }
 
+/// Parses the directives presenting one question asked of the entity graph —
+/// which entities, and how they relate — each in its own way.
+///
+/// Grouped apart from the other extension directives because they share more
+/// than their origin: none takes a body of document content, every one carries
+/// a question the project index answers while rendering, and each is spelled
+/// both this build's way and sphinx-needs'.
+fn try_parse_entity_view(
+    name: &str,
+    argument: &str,
+    directive_span: Option<rusty_sphinx_ast::Span>,
+    body_lines: &[&str],
+    diagnostics: &mut Diagnostics,
+    ctx: &ParseCtx<'_>,
+) -> Option<Directive> {
+    // This build's own listing directive, and sphinx-needs' spelling of it.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityTableSource>() {
+        return Some(parse_entity_table(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
+    // This build's own flowchart, and sphinx-needs' spelling of it. A sibling
+    // of the listing directive above rather than of the diagram below: it
+    // carries a question, not a template, and its picture is generated.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityFlowSource>() {
+        return Some(parse_entity_flow(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
+    // This build's own sequence diagram, and sphinx-needs' spelling of it —
+    // the flowchart's sibling: a question walked through the entity graph and
+    // drawn as generated PlantUML.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntitySequenceSource>() {
+        return Some(parse_entity_sequence(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
+    // This build's own pie chart, and sphinx-needs' spelling of it. The third
+    // presentation of the listing directive's question — rows, a graph, or
+    // proportions — and the only picture here that is never compiled: its SVG
+    // is drawn by the render action itself.
+    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityPieSource>() {
+        return Some(parse_entity_pie(
+            source,
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        ));
+    }
+    None
+}
+
 /// Parses the directives that come from a *Sphinx extension* rather than from
 /// docutils or Sphinx itself.
 ///
@@ -579,43 +649,12 @@ fn try_parse_extension_directive(
             ctx,
         ));
     }
-    // This build's own listing directive, and sphinx-needs' spelling of it.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityTableSource>() {
-        return Some(parse_entity_table(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // This build's own flowchart, and sphinx-needs' spelling of it. A sibling
-    // of the listing directive above rather than of the diagram below: it
-    // carries a question, not a template, and its picture is generated.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityFlowSource>() {
-        return Some(parse_entity_flow(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
-    }
-    // This build's own pie chart, and sphinx-needs' spelling of it. The third
-    // presentation of the listing directive's question — rows, a graph, or
-    // proportions — and the only picture here that is never compiled: its SVG
-    // is drawn by the render action itself.
-    if let Ok(source) = name.parse::<rusty_sphinx_ast::EntityPieSource>() {
-        return Some(parse_entity_pie(
-            source,
-            argument,
-            directive_span,
-            body_lines,
-            diagnostics,
-            ctx,
-        ));
+    // The views over the entity graph — rows, a flowchart, a sequence
+    // diagram, a pie chart — each in this build's spelling and sphinx-needs'.
+    if let Some(view) =
+        try_parse_entity_view(name, argument, directive_span, body_lines, diagnostics, ctx)
+    {
+        return Some(view);
     }
     // This build's own project-wide field-mutation directive, and
     // sphinx-needs' spelling of it. Unlike its three siblings above, it
@@ -870,6 +909,24 @@ mod tests {
         assert_eq!(
             found[0].message,
             "unknown directive type 'not-a-real-directive'"
+        );
+    }
+
+    #[test]
+    fn test_parse_body_directive_routes_needsequence_to_the_sequence_parser() {
+        // Given — no schema is in hand here, so the relation is unknown and the
+        // diagram degrades; what matters is which parser said so
+        let body = ["   :start: COMP_UI", "   :link_types: sends"];
+
+        // When
+        let (_, diagnostics) = dispatch("needsequence", "Startup", &body);
+
+        // Then
+        let (found, _, _) = diagnostics.into_parts();
+        let codes: Vec<_> = found.iter().map(|d| d.code).collect();
+        assert_eq!(
+            codes,
+            [rusty_sphinx_ast::DiagnosticCode::EntitySequenceUnknownRelation]
         );
     }
 
@@ -1207,6 +1264,10 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     // spelling of it.
     "entity-flow",
     "needflow",
+    // This build's own sequence diagram over the entity graph, and
+    // sphinx-needs' spelling of it.
+    "entity-sequence",
+    "needsequence",
     // This build's own pie chart over the entity graph, and sphinx-needs'
     // spelling of it.
     "entity-pie",
@@ -1420,5 +1481,12 @@ mod builtin_name_tests {
         // Given / When / Then — a section named `needservice` would otherwise
         // turn a refused construct into a silently accepted one
         assert!(is_builtin_directive_name("needservice"));
+    }
+
+    #[test]
+    fn test_both_spellings_of_the_sequence_diagram_are_reserved() {
+        // Given / When / Then
+        assert!(is_builtin_directive_name("entity-sequence"));
+        assert!(is_builtin_directive_name("needsequence"));
     }
 }

@@ -56,6 +56,7 @@ mod entity_fields;
 mod entity_flow;
 mod entity_pie;
 mod entity_section;
+mod entity_sequence;
 mod entity_table;
 mod entity_update;
 mod error_node;

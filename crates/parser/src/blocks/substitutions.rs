@@ -420,6 +420,7 @@ fn resolve_directive(
         // not inline-parsed either.
         Directive::EntityTable(_)
         | Directive::EntityFlow(_)
+        | Directive::EntitySequence(_)
         | Directive::EntityPie(_)
         | Directive::Image(_)
         | Directive::DocTest(_)

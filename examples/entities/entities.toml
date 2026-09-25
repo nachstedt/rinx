@@ -173,6 +173,59 @@ multiple = true
 incoming = "verified_by"
 incoming_label = "Verified by"
 
+# ── Runtime components and the messages between them ────────────────
+#
+# The shape a sequence diagram walks: a component *calls* a message, and the
+# message *calls* the component that receives it. The same relation name on
+# both types is what lets `.. entity-sequence::` follow sender → message →
+# receiver along one `:relations:` entry.
+
+[[entity_type]]
+name = "component"
+label = "Component"
+argument = { fields = ["title"] }
+id = { prefix = "COMP_" }
+
+[[entity_type.attribute]]
+name = "title"
+label = "Title"
+type = "string"
+
+[[entity_type.relation]]
+name = "calls"
+label = "Sends"
+to = ["message"]
+multiple = true
+
+[[entity_type.relation]]
+name = "stops"
+label = "Sends on shutdown"
+to = ["message"]
+multiple = true
+
+[[entity_type]]
+name = "message"
+label = "Message"
+argument = { fields = ["title"] }
+id = { prefix = "MSG_" }
+
+[[entity_type.attribute]]
+name = "title"
+label = "Title"
+type = "string"
+
+[[entity_type.relation]]
+name = "calls"
+label = "Received by"
+to = ["component"]
+multiple = true
+
+[[entity_type.relation]]
+name = "stops"
+label = "Received on shutdown by"
+to = ["component"]
+multiple = true
+
 # ── CPython's audit events ──────────────────────────────────────────
 
 [[entity_type]]

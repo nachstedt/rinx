@@ -34,6 +34,7 @@ mod dropdown;
 mod entity;
 mod entity_flow;
 mod entity_pie;
+mod entity_sequence;
 mod entity_table;
 mod entity_update;
 mod figure;

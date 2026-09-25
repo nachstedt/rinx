@@ -217,6 +217,30 @@ fn test_matching_uses_the_same_field_meanings_a_table_filter_does() {
 }
 
 #[test]
+fn test_matches_agrees_with_matching_one_entity_at_a_time() {
+    // Given
+    let index = index_with(vec![("REQ_001", requirement("reqs.rst", Some("First")))]);
+    let snapshot = snapshot_of(&index, "index.rst");
+    let selecting = rusty_sphinx_filter::parse_filter("type == \"req\"").expect("a valid filter");
+    let rejecting = rusty_sphinx_filter::parse_filter("type == \"test\"").expect("a valid filter");
+
+    // When / Then
+    assert!(snapshot.matches("REQ_001", &selecting));
+    assert!(!snapshot.matches("REQ_001", &rejecting));
+}
+
+#[test]
+fn test_matches_is_false_for_an_unknown_entity() {
+    // Given
+    let index = index_with(vec![]);
+    let snapshot = snapshot_of(&index, "index.rst");
+    let filter = rusty_sphinx_filter::parse_filter("type == \"req\"").expect("a valid filter");
+
+    // When / Then
+    assert!(!snapshot.matches("REQ_404", &filter));
+}
+
+#[test]
 fn test_all_holds_every_entity_by_id() {
     // Given
     let index = index_with(vec![

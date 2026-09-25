@@ -161,9 +161,114 @@ impl fmt::Display for FlowError {
     }
 }
 
+/// Something a sequence diagram's walk has to report.
+///
+/// Its own type for [`FlowError`]'s reason — a code names the construct — and
+/// unlike either of the others, not every variant is fatal: an unknown start
+/// or a truncated walk still draws a picture, which is why the walk returns a
+/// list of these beside its content rather than one in place of it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SequenceError {
+    /// A `:start:` entry naming no entity in the project. The other starts are
+    /// still walked.
+    UnknownStart(String),
+    /// The walk found no message at all, so there was nothing to draw.
+    EmptyResult,
+    /// A `:config:` naming a preamble the site config does not declare.
+    UnknownConfig(String),
+    /// `:max-items:` cut the walk short: `shown` of `total` messages are drawn.
+    Truncated { shown: usize, total: usize },
+}
+
+impl SequenceError {
+    /// The diagnostic code a caller reports this under.
+    #[must_use]
+    pub const fn code(&self) -> DiagnosticCode {
+        match self {
+            Self::UnknownStart(_) => DiagnosticCode::EntitySequenceUnknownStart,
+            Self::EmptyResult => DiagnosticCode::EntitySequenceEmptyResult,
+            Self::UnknownConfig(_) => DiagnosticCode::EntitySequenceUnknownConfig,
+            Self::Truncated { .. } => DiagnosticCode::EntitySequenceTruncated,
+        }
+    }
+}
+
+impl From<AssemblyError> for SequenceError {
+    fn from(error: AssemblyError) -> Self {
+        match error {
+            // The walk refuses an empty picture itself, before assembling, so
+            // this is only reachable for text of whitespace alone — which is
+            // what "no message" means all the same.
+            AssemblyError::DrewNothing => Self::EmptyResult,
+            AssemblyError::UnknownConfig(name) => Self::UnknownConfig(name),
+        }
+    }
+}
+
+impl fmt::Display for SequenceError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnknownStart(id) => write!(
+                f,
+                ":start: names '{id}', which no document declares, so the walk did not begin \
+                 there"
+            ),
+            Self::EmptyResult => write!(
+                f,
+                "the walk found no message, so there was nothing to draw — check that the start \
+                 entities send along the :relations: named"
+            ),
+            Self::UnknownConfig(name) => write!(
+                f,
+                "no PlantUML preamble named '{name}' is declared; add it under [uml_configs] \
+                 in the site's rusty_sphinx.toml"
+            ),
+            Self::Truncated { shown, total } => write!(
+                f,
+                "showing the first {shown} of {total} messages, due to :max-items:"
+            ),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_each_sequence_problem_names_its_own_code() {
+        // Given one of each
+        let errors = [
+            SequenceError::UnknownStart("COMP_404".to_string()),
+            SequenceError::EmptyResult,
+            SequenceError::UnknownConfig("monochrome".to_string()),
+            SequenceError::Truncated { shown: 1, total: 2 },
+        ];
+
+        // When
+        let mut codes: Vec<&str> = errors.iter().map(|error| error.code().as_str()).collect();
+
+        // Then
+        codes.dedup();
+        assert_eq!(codes.len(), errors.len());
+        assert!(
+            codes
+                .iter()
+                .all(|code| code.starts_with("entity-sequence."))
+        );
+    }
+
+    #[test]
+    fn test_a_truncation_says_how_many_of_how_many_were_drawn() {
+        // Given
+        let error = SequenceError::Truncated { shown: 3, total: 7 };
+
+        // When
+        let message = error.to_string();
+
+        // Then
+        assert!(message.contains("first 3 of 7 messages"), "{message}");
+    }
 
     #[test]
     fn test_each_failure_names_its_own_code() {

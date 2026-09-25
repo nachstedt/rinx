@@ -14,6 +14,7 @@ use super::doctest::{render_bare_doctest_block, render_doctest_block};
 use super::domain_object::render_domain_object;
 use super::entity_flow::render_entity_flow;
 use super::entity_pie::render_entity_pie;
+use super::entity_sequence::render_entity_sequence;
 use super::figure::render_figure_directive;
 use super::glossary::{render_glossary, render_index_anchor};
 use super::image::render_image_directive;
@@ -487,6 +488,7 @@ fn render_directive(
         // A generated picture rather than a written one, but a picture all the
         // same: the markup below it is the diagrams' own.
         Directive::EntityFlow(flow) => render_entity_flow(html, flow, ctx),
+        Directive::EntitySequence(sequence) => render_entity_sequence(html, sequence, ctx),
         Directive::EntityPie(pie) => render_entity_pie(html, pie, ctx),
         Directive::EntityUpdate(update) => {
             if ctx.show_entity_updates.is_visible() {

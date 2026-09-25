@@ -257,6 +257,7 @@ pub(super) fn index_nodes(
                 | Directive::Dropdown(_)
                 | Directive::EntityTable(_)
                 | Directive::EntityFlow(_)
+                | Directive::EntitySequence(_)
                 | Directive::EntityPie(_)
                 | Directive::Uml(_)),
             ) => index_name_bearing_directive(directive, doc_path, index, scope),
@@ -373,6 +374,12 @@ fn index_name_bearing_directive(
         // picture a build action compiles.
         Directive::EntityFlow(flow) => {
             register_directive_name(flow.name.as_ref(), doc_path, index);
+        }
+        // A sequence diagram contributes its `:name:` and nothing else, for the
+        // flowchart's reason: its participants and messages are walked from
+        // this very index while rendering.
+        Directive::EntitySequence(sequence) => {
+            register_directive_name(sequence.name.as_ref(), doc_path, index);
         }
         // A pie chart contributes its `:name:` and nothing else, for the
         // listing directive's reason: its wedges are counted from this very

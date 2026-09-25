@@ -581,9 +581,9 @@ no longer matches than a deliberate statement. The live preview stays quiet
 about it when no project index is available, since every table would be empty
 through no fault of the author.
 
-`needflow` and `needpie` *are* implemented — see "Flowcharts of the graph" and
-"Charting the graph" below, which ask this same question and draw the answer
-instead of tabulating it. `needlist` and `needbar` are not. They are the same
+`needflow`, `needsequence` and `needpie` *are* implemented — see "Flowcharts
+of the graph", "Sequence diagrams of the graph" and "Charting the graph" below,
+which ask about this same graph and draw the answer instead of tabulating it. `needlist` and `needbar` are not. They are the same
 question again with a different presentation, and would reuse this filter
 language unchanged — `needbar` would reuse the counting a chart already does.
 
@@ -644,6 +644,86 @@ silently doing nothing.
 A flowchart is a diagram, so its library needs `diagrams = True` exactly as the
 written ones do — see the build wiring under "Diagramming entities" below. See
 `docs/decisions/014-entity-flow.md`.
+
+---
+
+## Sequence diagrams of the graph
+
+`.. entity-sequence::` — sphinx-needs spells it `.. needsequence::` — draws the
+messages entities send each other. Where a flowchart *filters* the graph, a
+sequence diagram *walks* it: from each `:start:` entity, a relation named in
+`:relations:` leads to a **message** entity, and the same relations lead on from
+the message to its **receivers**. Every hop is an arrow labelled with the
+message's title, and every receiver not yet seen is walked in turn, depth
+first — so the arrows read in the order the walk reaches them, as they do in
+sphinx-needs.
+
+A schema declares the shape by giving both types the same relation:
+
+```toml
+[[entity_type]]
+name = "component"
+  [[entity_type.relation]]
+  name = "calls"
+  to = ["message"]
+
+[[entity_type]]
+name = "message"
+  [[entity_type.relation]]
+  name = "calls"
+  to = ["component"]
+```
+
+```rst
+.. entity-sequence:: Startup
+   :start: COMP_UI
+   :relations: calls
+```
+
+| option | what it does |
+|---|---|
+| argument | the caption, as in sphinx-needs; `:caption:` overrides it |
+| `:start:` | **required** — the entities the walk begins at, separated by `,` or `;` |
+| `:relations:` | **required** — the relations that carry messages; sphinx-needs spells it `:link_types:` |
+| `:filter:` | which *receivers* to keep; one it rejects gets no arrow and is not walked on from |
+| `:max-items:` | the most messages to draw (`0` for all); sphinx-needs spells it `:max_items:` |
+| `:config:` | a `PlantUML` preamble, as on every diagram |
+| `:debug:` | also show the generated source, below the picture |
+| `:align:` `:width:` `:scale:` `:class:` `:name:` | as on every diagram |
+
+Each lifeline links to its entity's anchor, as a flowchart's node does.
+
+Where this departs from sphinx-needs:
+
+- **`:relations:` is mandatory.** sphinx-needs defaults it to `links`, a name a
+  schema here need not have; and unlike a flowchart's, "every relation the
+  schema declares" is no sensible default for a walk, since it would follow
+  edges that are no message at all. A diagram without it is an error block
+  whose diagnostic lists the relations the schema does declare.
+- **Several starts share one walk.** sphinx-needs walks each `:start:` entry
+  afresh, so a participant the first start already reached is declared again
+  and its messages are drawn twice. Here a later start continues where the
+  earlier ones left off.
+- **Every lifeline carries its title.** sphinx-needs declares only senders, so
+  a receiver that never sends — or the receiver of the last message
+  `:max-items:` allowed — appears under its raw id.
+- **Nothing aborts the build.** An unknown start is reported as
+  `entity-sequence.unknown-start` and the other starts are still drawn.
+
+A walk that draws no message is `entity-sequence.empty-result` and no picture
+is compiled. A walk `:max-items:` cut short still draws, notes beneath the
+picture how many of how many messages it shows, and reports
+`entity-sequence.truncated` so the build log says so too — silence it with a
+`.. noqa:` when the cap is deliberate.
+
+sphinx-needs' `:show_filters:`, `:show_legend:`, `:show_link_names:`,
+`:highlight:`, `:filter-func:`, `:sort_by:`, `:export_id:`,
+`:filter_warning:`, `:height:`, `:engine:` and the legacy
+`:tags:`/`:status:`/`:types:` filters are each reported by name as
+`entity-sequence.unsupported-option`, with what to write instead.
+
+Like a flowchart, a sequence diagram is compiled, so its library needs
+`diagrams = True`. See `docs/decisions/020-entity-sequence.md`.
 
 ---
 
@@ -829,7 +909,8 @@ rusty_sphinx_library(
 
 Forgetting the attribute is not silent: a diagram in a library without it
 fails the parse as `uml.diagrams-disabled` — a flowchart as
-`entity-flow.diagrams-disabled` — on the directive's own line, naming the
+`entity-flow.diagrams-disabled`, a sequence diagram as
+`entity-sequence.diagrams-disabled` — on the directive's own line, naming the
 attribute to set.
 
 A diagram's text depends on the whole entity graph, so it cannot be expanded
@@ -859,9 +940,10 @@ Deliberately **not** supported:
   calling `len()` is reported rather than silently matching nothing.
 - **The remaining listing directives** (`needlist`, `needbar`) — a later
   increment. They reuse the same filter language, and now the counting a chart
-  already does. `needtable`, `needflow`, `needpie`, `needuml` and `needarch`
-  *are* supported; see "Listing entities", "Flowcharts of the graph",
-  "Charting the graph" and "Diagramming entities".
+  already does. `needtable`, `needflow`, `needsequence`, `needpie`, `needuml`
+  and `needarch` *are* supported; see "Listing entities", "Flowcharts of the
+  graph", "Sequence diagrams of the graph", "Charting the graph" and
+  "Diagramming entities".
 - **Dynamic functions** (`[[copy('id')]]`) and `needservice`. The latter is
   refused by name as `needservice.unsupported` rather than reported as an
   unknown directive: it queries an external service while building, which a
@@ -1044,6 +1126,20 @@ a `needs.json` has no line of its own to name:
 | `needimport.no-tags-attribute` | `:tags:` on a type declaring no list attribute `tags` |
 | `needimport.empty-result` | an import that selected no need at all |
 
+And, for an `.. entity-sequence::`, against the offending option line — or the
+directive's own line for a missing option:
+
+| code | when |
+|---|---|
+| `entity-sequence.missing-start` | no `:start:`, or one listing nothing; the directive becomes an error block |
+| `entity-sequence.missing-relations` | no `:relations:`/`:link_types:`; the message lists the declared ones |
+| `entity-sequence.invalid-start` | a `:start:` entry that is not an entity id |
+| `entity-sequence.unknown-relation` | a `:relations:` entry no type declares |
+| `entity-sequence.invalid-filter` | a `:filter:` the filter language cannot parse |
+| `entity-sequence.unknown-field` | a `:filter:` naming an undeclared field |
+| `entity-sequence.invalid-max-items` | a `:max-items:` that is not a non-negative whole number |
+| `entity-sequence.unsupported-option` | one of sphinx-needs' options this build refuses |
+
 A `.. needservice::` is refused outright, reported against its own line:
 
 | code | when |
@@ -1067,6 +1163,10 @@ entity:
 | `entity.role-type-mismatch` | a role resolving to a type it does not accept |
 | `entity-flow.empty-result` | a flowchart whose filter matched no entity |
 | `entity-flow.unknown-config` | a `:config:` naming no declared preamble |
+| `entity-sequence.unknown-start` | a `:start:` entry naming no entity; the others are still walked |
+| `entity-sequence.empty-result` | a walk that found no message |
+| `entity-sequence.truncated` | a walk `:max-items:` cut short; the picture is still drawn |
+| `entity-sequence.unknown-config` | a `:config:` naming no declared preamble |
 
 A faulty schema is not a diagnostic but a hard error: it is the vocabulary the
 parser works from, so continuing would report a cascade of unknown-directive
