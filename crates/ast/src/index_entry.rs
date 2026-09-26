@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// are kept as their own variants — despite the name, they are unrelated to
 /// `Directive::SeeAlso` (the `.. seealso::` admonition box); these redirect
 /// the reader to another entry rather than linking to content, so they are
-/// not resolved into `genindex_entries` yet (see `spec_gaps.md`).
+/// not resolved into `genindex_entries` yet (see `docs/dev/spec_gaps.md`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum IndexEntry {
     /// A directly linkable entry, optionally nested under `subentry`.

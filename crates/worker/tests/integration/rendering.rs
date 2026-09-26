@@ -215,7 +215,7 @@ fn test_e2e_csv_table_cell_content_is_reparsed_as_rst() {
 
 #[test]
 fn test_e2e_list_table_known_bug_regression_nested_domain_object_resolves() {
-    // Given — the known_bugs.md `reference/datamodel.rst` scenario: a
+    // Given — the docs/dev/known_bugs.md `reference/datamodel.rst` scenario: a
     // domain-object definition nested inside a list-table cell, referenced
     // elsewhere in the same document. Before `list-table` was implemented,
     // `.. py:attribute::` here was swallowed as opaque directive-body text

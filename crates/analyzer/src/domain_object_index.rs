@@ -48,7 +48,7 @@ pub(super) fn index_domain_object(
     // current before.
     let is_module = matches!(obj, rinx_ast::DomainObjectBody::PyModule { .. });
     // Every `c`-domain object nests under `CScope` instead of `PythonScope`
-    // (`known_bugs.md` #2: `c:function`/`c:macro` used to keep qualifying via
+    // (`docs/dev/known_bugs.md` #2: `c:function`/`c:macro` used to keep qualifying via
     // `PythonScope`'s module+class stack, so nesting one inside a
     // `py:class`/`py:exception` body wrongly prefixed it — real Sphinx's C
     // domain has no concept of an enclosing Python class at all). `c:type`

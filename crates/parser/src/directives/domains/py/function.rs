@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn test_parse_decorator_alias_directive_forces_is_decorator_flag() {
-        // Given — the `known_bugs.md` #1 repro: `.. decorator::` under the
+        // Given — the `docs/dev/known_bugs.md` #1 repro: `.. decorator::` under the
         // default `py` domain, a bare name (as CPython's
         // `Doc/reference/datamodel` writes `classmethod`/`staticmethod`)
         let input = ".. decorator:: classmethod\n\n   Transform a method into a class method.";

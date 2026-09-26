@@ -162,7 +162,7 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_func_variant_explicit_title() {
-        // Given / When — the confirmed known_bugs.md example, with the role
+        // Given / When — the confirmed docs/dev/known_bugs.md example, with the role
         // markup escaped as `parse_inline_text` would hand it over.
         let result = handle_inline_match(
             "func",

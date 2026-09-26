@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `rinx` is a Rust re-implementation of (a subset of) the Sphinx documentation generator, designed to be fast and to integrate natively with Bazel as a first-class, cache-friendly build step (not a wrapped external tool). It parses reStructuredText (`.rst`) into HTML documentation sites, with cross-file references, toctree-based navigation, and PlantUML diagram rendering.
 
-Read `requirements.md` and `architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rinx_ast`, `rinx_scope`, `rinx_index`, `rinx_cdecl`, `rinx_toctree`, `rinx_entity`, `rinx_filter`, `rinx_inventory`, `rinx_uml`, `rinx_template`, `rinx_parser`, `rinx_analyzer`, `rinx_renderer`, `rinx_worker`); `rinx_scope`, `rinx_index`, `rinx_cdecl`, `rinx_toctree`, `rinx_entity`, `rinx_filter`, `rinx_inventory`, `rinx_uml` and `rinx_template` aren't part of architecture.md's crate split (that doc is aspirational and predates all nine), the other five match it. The `rinx_lsp` crate architecture.md also describes is not yet built.
+Read `docs/dev/requirements.md` and `docs/dev/architecture.md` for the full design rationale — the paragraphs below only cover what differs from those aspirational docs, or what's needed to be productive immediately. The codebase is a Cargo workspace under `crates/` (`rinx_ast`, `rinx_scope`, `rinx_index`, `rinx_cdecl`, `rinx_toctree`, `rinx_entity`, `rinx_filter`, `rinx_inventory`, `rinx_uml`, `rinx_template`, `rinx_parser`, `rinx_analyzer`, `rinx_renderer`, `rinx_worker`); `rinx_scope`, `rinx_index`, `rinx_cdecl`, `rinx_toctree`, `rinx_entity`, `rinx_filter`, `rinx_inventory`, `rinx_uml` and `rinx_template` aren't part of the architecture doc's crate split (that doc is aspirational and predates all nine), the other five match it. The `rinx_lsp` crate the architecture doc also describes is not yet built.
 
 ## Commands
 
@@ -523,7 +523,7 @@ Templates are rendered with MiniJinja (chosen over compile-time Rust templates o
 
 ### Spec coverage
 
-`spec_gaps.md` tracks which RST/Sphinx features are implemented vs. missing (field lists and several block types are still unimplemented, for instance). It's a living checklist — update it when you add or fix parser/renderer coverage for a construct, and don't trust it blindly if it looks stale relative to recent commits.
+`docs/dev/spec_gaps.md` tracks which RST/Sphinx features are implemented vs. missing (field lists and several block types are still unimplemented, for instance). It's a living checklist — update it when you add or fix parser/renderer coverage for a construct, and don't trust it blindly if it looks stale relative to recent commits.
 
 ## Working conventions
 

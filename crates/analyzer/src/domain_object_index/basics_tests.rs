@@ -473,7 +473,7 @@ fn test_analyze_registers_domain_object_nested_in_table_cell() {
 #[test]
 fn test_analyze_registers_domain_object_nested_in_list_table_cell() {
     // Given — a `.. py:attribute::` nested inside a list-table cell,
-    // mirroring the known_bugs.md `reference/datamodel.rst` scenario
+    // mirroring the docs/dev/known_bugs.md `reference/datamodel.rst` scenario
     let doc = Document::new(
         "datamodel.rst".to_string(),
         vec![Node::Directive(Directive::DataTable {

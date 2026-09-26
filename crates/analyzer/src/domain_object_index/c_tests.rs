@@ -111,7 +111,7 @@ fn test_analyze_registers_flat_dotted_c_member_without_enclosing_struct() {
 #[test]
 fn test_analyze_c_function_nested_in_c_struct_is_qualified_by_it() {
     // Given — an (unrealistic) `c:function` written inside a `c:struct`
-    // body. `c:function`/`c:macro` joined `uses_c_scope` (`known_bugs.md`
+    // body. `c:function`/`c:macro` joined `uses_c_scope` (`docs/dev/known_bugs.md`
     // #2) so that nesting one inside a `py:class`/`py:exception` body no
     // longer wrongly picks up the enclosing Python module+class — but
     // `CScope`'s container stack is shared by every `c`-domain object, so
@@ -119,7 +119,7 @@ fn test_analyze_c_function_nested_in_c_struct_is_qualified_by_it() {
     // `c:function`/`c:macro` too, unlike before. rinx doesn't
     // implement `.. c:namespace::`, which is what real Sphinx would use
     // to reset this back to a bare name, so this is a known, accepted
-    // trade-off — see `known_bugs.md`'s entry for it.
+    // trade-off — see `docs/dev/known_bugs.md`'s entry for it.
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
@@ -290,7 +290,7 @@ fn test_analyze_c_namespace_pop_undoes_a_whole_multi_segment_push() {
 }
 #[test]
 fn test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it() {
-    // Given — `known_bugs.md` #2's own reproducer: a `c:function`
+    // Given — `docs/dev/known_bugs.md` #2's own reproducer: a `c:function`
     // (structurally) nested inside a `py:class` body. Real Sphinx's C
     // domain has no concept of an enclosing Python class at all, so this
     // must register under its own bare name, not

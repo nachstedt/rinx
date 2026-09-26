@@ -149,7 +149,7 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
 }
 #[test]
 fn test_render_domain_object_module_option_overrides_the_anchor_id() {
-    // Given — the exact `known_bugs.md` shape: the anchor `id` must use
+    // Given — the exact `docs/dev/known_bugs.md` shape: the anchor `id` must use
     // the `:module:` override, matching the analyzer's index key so the
     // cross-reference actually resolves to this anchor.
     let doc = Document::new(

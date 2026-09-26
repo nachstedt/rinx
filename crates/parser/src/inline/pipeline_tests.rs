@@ -395,7 +395,7 @@ fn test_parse_paragraph_rejects_invalid_boundary_markup() {
 fn test_parse_paragraph_with_many_unclosed_emphasis_markers_stays_fast() {
     // Given: many isolated, never-validly-closed single-star tokens (each
     // "*" is followed by a space before the next one, so none can close
-    // any other) — the exact pathological shape from rust_review.md
+    // any other) — the exact pathological shape from docs/dev/rust_review.md
     // finding #3, which previously made find_inline_markup/
     // try_match_inline rescan the remaining text from every failed
     // candidate, causing O(n^2) parse time.

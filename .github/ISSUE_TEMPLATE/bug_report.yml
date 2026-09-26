@@ -1,0 +1,42 @@
+name: Bug report
+description: rinx does something wrong, crashes, or disagrees with Sphinx.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What rinx did, including any warning or error output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What should have happened instead. If Sphinx handles the same input differently, say what it does.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal reproducer
+      description: The smallest `.rst` document (and, if relevant, the `BUILD.bazel` around it) that shows the problem.
+      render: rst
+    validations:
+      required: true
+  - type: input
+    id: rinx-version
+    attributes:
+      label: rinx version
+      description: A release version or a commit SHA.
+    validations:
+      required: true
+  - type: input
+    id: bazel-version
+    attributes:
+      label: Bazel version
+      description: Output of `bazel --version`, if you build through Bazel.
+  - type: input
+    id: os
+    attributes:
+      label: Operating system

@@ -71,7 +71,7 @@ impl FileId {
 /// A range rather than a single point because the reason positions exist at
 /// all is to be shown to an author, and the eventual language server has to
 /// *underline* a mistake rather than put a caret before it (see
-/// `architecture.md`'s diagnostics section). Producing the end costs nothing:
+/// `docs/dev/architecture.md`'s diagnostics section). Producing the end costs nothing:
 /// the inline scan already knows where every construct stops, and a
 /// block-level parser has the offending line's text in hand.
 ///

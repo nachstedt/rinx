@@ -225,7 +225,7 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_data_variant_explicit_c_domain() {
-        // Given — the confirmed known_bugs.md regression: `:c:data:` must
+        // Given — the confirmed docs/dev/known_bugs.md regression: `:c:data:` must
         // resolve with `domain = Some("c")`, not fall through to a truncated
         // bare `:data:` match with `domain = None`.
         let result = handle_inline_match(

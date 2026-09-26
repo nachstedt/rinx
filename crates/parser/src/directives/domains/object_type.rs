@@ -303,7 +303,7 @@ mod tests {
     #[test]
     fn test_resolve_domain_object_type_bare_decorator_resolves_in_py_domain() {
         // Given — a bare `decorator` directive name under the `py` default
-        // domain (the legacy `py:function` alias; see `known_bugs.md` #1)
+        // domain (the legacy `py:function` alias; see `docs/dev/known_bugs.md` #1)
         let name = "decorator";
 
         // When

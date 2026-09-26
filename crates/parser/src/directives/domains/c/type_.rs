@@ -12,7 +12,7 @@ use rinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 /// members of its own, but its body is still parsed as full block content
 /// (rather than left opaque) so that nested definitions (e.g. enum-style
 /// `.. c:macro::` constants) are indexed instead of silently dropped — see
-/// `known_bugs.md`'s former `c:type` entry.
+/// `docs/dev/known_bugs.md`'s former `c:type` entry.
 pub(crate) fn parse_c_type(
     signatures: NonEmptyVector<CSignature>,
     body_lines: &[&str],
@@ -119,7 +119,7 @@ mod tests {
     }
     #[test]
     fn test_parse_nested_c_macro_under_c_type_is_recursively_parsed() {
-        // Given — the real CPython `c-api/memory.rst` shape (`known_bugs.md`):
+        // Given — the real CPython `c-api/memory.rst` shape (`docs/dev/known_bugs.md`):
         // a `.. c:type::` body nesting `.. c:macro::` constants, previously
         // swallowed as opaque `Directive::Unknown` text.
         let input = ".. c:type:: PyMemAllocatorDomain\n\n   .. c:macro:: PYMEM_DOMAIN_RAW\n\n      The raw domain.";

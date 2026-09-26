@@ -44,7 +44,7 @@ pub(crate) fn render_domain_object(
     // Every `c`-domain object qualifies against `ctx.scope.c` instead of
     // `ctx.scope.python` — mirrors the analyzer's `index_domain_object`
     // exactly, so anchor `id`s never drift from the index keys. See that
-    // function's doc comment (`known_bugs.md` #2) for why `c:function`/
+    // function's doc comment (`docs/dev/known_bugs.md` #2) for why `c:function`/
     // `c:macro` joined this set.
     let uses_c_scope = matches!(
         obj,
