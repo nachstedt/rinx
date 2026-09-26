@@ -123,7 +123,7 @@ mod tests {
     }
     #[test]
     fn test_extract_data_options_parses_module_option_alongside_others() {
-        // Given — the `known_bugs.md` shape: `ctypes.util`'s constants
+        // Given — the `docs/dev/known_bugs.md` shape: `ctypes.util`'s constants
         // documented under a different module than the enclosing `.. module::`.
         let lines = vec![
             ":type: int".to_string(),

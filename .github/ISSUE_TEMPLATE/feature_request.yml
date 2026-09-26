@@ -1,0 +1,22 @@
+name: Feature request
+description: Support a reStructuredText or Sphinx construct, or add something new.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you want to do
+      description: The documentation you are trying to write or build, and what stops you today.
+    validations:
+      required: true
+  - type: textarea
+    id: sphinx
+    attributes:
+      label: Sphinx equivalent
+      description: If this is a Sphinx or Sphinx-extension feature, name it and link its documentation.
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: A short `.rst` snippet using the feature.
+      render: rst

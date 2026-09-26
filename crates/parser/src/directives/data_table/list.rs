@@ -543,7 +543,7 @@ mod tests {
 
     #[test]
     fn test_parse_list_table_nested_domain_object_in_cell_is_fully_parsed() {
-        // Given — regression case for the known_bugs.md list-table gap: a
+        // Given — regression case for the docs/dev/known_bugs.md list-table gap: a
         // cell nesting a domain-object definition must be reparsed as a
         // real node, not swallowed as opaque text.
         let body_lines = vec![

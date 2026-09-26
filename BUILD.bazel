@@ -1,7 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary", "java_import")
 
 # The worker binary itself now lives at //crates/worker, split out into a
-# Cargo workspace mirroring architecture.md's crate layout. This alias keeps
+# Cargo workspace mirroring docs/dev/architecture.md's crate layout. This alias keeps
 # the label stable for rules/library.bzl and rules/site.bzl, which reference
 # it as a black-box CLI executable.
 alias(

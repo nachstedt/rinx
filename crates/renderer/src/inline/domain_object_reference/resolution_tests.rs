@@ -89,7 +89,7 @@ fn test_render_inline_domain_object_reference_resolved_c_domain() {
 #[test]
 fn test_render_inline_domain_object_reference_keeps_call_parens_in_the_text_only() {
     // Given — the two halves the parser split apart for
-    // `known_bugs.md` #1's `` :c:func:`Py_TYPE()` ``: a paren-free `name`
+    // `docs/dev/known_bugs.md` #1's `` :c:func:`Py_TYPE()` ``: a paren-free `name`
     // to key the lookup by, and a `display` that still reads as a call.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(

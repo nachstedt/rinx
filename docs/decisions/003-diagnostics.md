@@ -24,7 +24,7 @@ Neither carried a position, and there was nothing they shared to hang one on. Th
 
 Separately, a document's author had no way to say "yes, I know". The only filter that existed was `scripts/domain_warnings_whitelist.json`: developer-owned, out-of-band, and keyed by `(doc_path, kind, target)` rather than by anything in the document.
 
-`architecture.md` already promised better ("functions will return `(Output, Vec<Diagnostic>)` … so the LSP can underline multiple errors"), and `requirements.md` §4 lists LSP syntax diagnostics as a goal. Underlining needs a range, so this was an unmet requirement rather than a nicety.
+`docs/dev/architecture.md` already promised better ("functions will return `(Output, Vec<Diagnostic>)` … so the LSP can underline multiple errors"), and `docs/dev/requirements.md` §4 lists LSP syntax diagnostics as a goal. Underlining needs a range, so this was an unmet requirement rather than a nicety.
 
 ## Decisions
 

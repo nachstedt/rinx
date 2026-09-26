@@ -152,7 +152,7 @@ like it should apply to all of it.
 - **Caching granularity.** A tier-1 diagnostic is attributed to one document and
   cached with its `.ast`; edit one file and only that file re-reports. Moving
   those to a whole-project validator would trade per-file caching — the thesis
-  of `architecture.md` — for uniformity.
+  of `docs/dev/architecture.md` — for uniformity.
 - **Live preview.** `process_preview` merges a fresh local analysis into a stale
   global index on every keystroke, which is what makes tiers 1 and 2 available
   in the editor for free. Tier 3 never will be, and should not be: an

@@ -664,7 +664,7 @@ mod tests {
 
     #[test]
     fn test_resolve_finds_unqualified_c_member_via_enclosing_c_scope() {
-        // Given — the bug's own reproducer (`known_bugs.md` #1): a
+        // Given — the bug's own reproducer (`docs/dev/known_bugs.md` #1): a
         // `c:member` referenced *without* a leading dot from inside its own
         // enclosing `.. c:type:: PyLongExport` body. Before `CScope` was
         // threaded into resolution, this only worked with a dot prefix (see

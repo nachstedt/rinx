@@ -291,7 +291,7 @@ mod tests {
     }
     #[test]
     fn test_parse_domain_object_target_explicit_title_unescapes_display() {
-        // Given / When — the confirmed known_bugs.md example:
+        // Given / When — the confirmed docs/dev/known_bugs.md example:
         // `:func:`spawn\* <spawnl>`` displays "spawn*", resolves "spawnl".
         // The role content arrives escaped, as it does from `parse_inline_text`.
         let target = parse_domain_object_target(&escaped(r"spawn\* <spawnl>"), Domain::Py);

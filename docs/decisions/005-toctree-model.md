@@ -148,7 +148,7 @@ suppressing `toctree.missing-document`.
 
 ### 7. `:orphan:` gets the minimum field-list support, not a general one
 
-Field lists are unimplemented (`spec_gaps.md`), and `:orphan:` is a file-wide
+Field lists are unimplemented (`docs/dev/spec_gaps.md`), and `:orphan:` is a file-wide
 metadata field. Rather than build half a field-list implementation, only a
 contiguous run of `:name: value` lines at the very top of a document is read,
 into `Document.metadata`, as raw strings, rendering nothing. That is exactly

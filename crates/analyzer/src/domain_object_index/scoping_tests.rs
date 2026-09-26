@@ -472,7 +472,7 @@ fn test_analyze_qualifies_genindex_entry_for_method_nested_in_class() {
 }
 #[test]
 fn test_analyze_module_option_overrides_the_enclosing_module() {
-    // Given — the exact `known_bugs.md` shape:
+    // Given — the exact `docs/dev/known_bugs.md` shape:
     // `Doc/library/multiprocessing.shared_memory.rst` documents
     // `SharedMemoryManager` under a different module via `:module:`.
     let doc = Document::new(

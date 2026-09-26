@@ -134,7 +134,7 @@ mod tests {
     }
     #[test]
     fn test_extract_class_options_parses_module_option_alongside_final_flag() {
-        // Given — the `known_bugs.md` motivating shape: CPython's
+        // Given — the `docs/dev/known_bugs.md` motivating shape: CPython's
         // `multiprocessing.shared_memory.rst` documents `SharedMemoryManager`
         // under a different module via `:module:`.
         let lines = vec![
@@ -216,7 +216,7 @@ mod tests {
     }
     #[test]
     fn test_parse_py_class_with_module_option_reproduces_known_bugs_shape() {
-        // Given — the exact `known_bugs.md` shape:
+        // Given — the exact `docs/dev/known_bugs.md` shape:
         // `Doc/library/multiprocessing.shared_memory.rst` documents
         // `SharedMemoryManager` under a different module than the enclosing
         // `.. module::` via `:module:`.
@@ -240,7 +240,7 @@ mod tests {
             );
             assert!(!is_final);
             assert_eq!(module.as_deref(), Some("multiprocessing.managers"));
-            // Symptom #2 from `known_bugs.md`: the `:module:` option line
+            // Symptom #2 from `docs/dev/known_bugs.md`: the `:module:` option line
             // must be stripped as an option, not fall through to become the
             // docstring's first paragraph.
             assert_eq!(

@@ -115,7 +115,7 @@ Invalidate the cache via :meth:`ZoneInfo.clear_cache`.
 
 #[test]
 fn test_e2e_decorator_directive_is_indexed_and_resolves() {
-    // Given — `known_bugs.md`'s bug #1: CPython's `Doc/reference/datamodel`
+    // Given — `docs/dev/known_bugs.md`'s bug #1: CPython's `Doc/reference/datamodel`
     // documents `classmethod` via `.. decorator::` and references it with
     // `:func:` (real Sphinx registers a decorator exactly as a `py:function`
     // — `PyDecoratorFunction.run()` forces `self.name = 'py:function'` before

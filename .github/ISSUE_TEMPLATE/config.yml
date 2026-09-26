@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/nachstedt/rinx/discussions
+    about: Ask a question or discuss an idea that is not yet a concrete request.
+  - name: Security vulnerability
+    url: https://github.com/nachstedt/rinx/security/advisories/new
+    about: Report a vulnerability privately rather than in a public issue.

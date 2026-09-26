@@ -42,7 +42,7 @@ use rinx_ast::TargetSearchOrder;
 /// so this is `PythonScope`'s `classes` stack and its `qualify`/`absorb`
 /// algorithm on their own, with nothing module-shaped grafted on. Every
 /// `c`-domain object type qualifies against this type, including
-/// `c:function`/`c:macro` (`known_bugs.md` #2: they used to keep qualifying
+/// `c:function`/`c:macro` (`docs/dev/known_bugs.md` #2: they used to keep qualifying
 /// via `PythonScope`, so a `c:function`/`c:macro` nested inside a
 /// `py:class`/`py:exception` body was wrongly prefixed with the enclosing
 /// Python module+class — real Sphinx's C domain has no concept of an

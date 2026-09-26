@@ -83,7 +83,7 @@ in every directive. Sphinx's MathJax would continue it across the page.
 render-time diagnostic until now came from an `InlineNode`, which is why only
 those carried positions. A math block's content can fail *after* parsing
 succeeded, so without a span its diagnostic would have nowhere to point. It is
-the body's first line, not the offending character — see `spec_gaps.md`.
+the body's first line, not the offending character — see `docs/dev/spec_gaps.md`.
 
 ### `split` becomes `aligned`
 

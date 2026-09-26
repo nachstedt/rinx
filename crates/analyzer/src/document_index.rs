@@ -86,7 +86,7 @@ fn index_genindex_entries(
             });
         }
         // IndexEntry::See/SeeAlso redirect rather than link to content and are
-        // not surfaced in genindex_entries yet (see spec_gaps.md).
+        // not surfaced in genindex_entries yet (see docs/dev/spec_gaps.md).
     }
 }
 

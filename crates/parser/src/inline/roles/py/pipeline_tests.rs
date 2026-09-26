@@ -485,7 +485,7 @@ fn test_parse_func_role_with_tilde_prefix_shortens_display_end_to_end() {
 }
 #[test]
 fn test_parse_func_role_with_call_parens_resolves_the_bare_name_end_to_end() {
-    // Given — `known_bugs.md` #1's reproducer sentence.
+    // Given — `docs/dev/known_bugs.md` #1's reproducer sentence.
     let input = "Use :c:func:`Py_TYPE()` to inspect an object's type.";
 
     // When

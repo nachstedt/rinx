@@ -205,10 +205,10 @@ mod tests {
     }
     #[test]
     fn test_render_formats_c_type_domain_object_with_nested_macro() {
-        // Given — the real CPython `c-api/memory.rst` shape (`known_bugs.md`):
+        // Given — the real CPython `c-api/memory.rst` shape (`docs/dev/known_bugs.md`):
         // enum-style `.. c:macro::` constants nested inside `.. c:type::`.
         // `c:macro` now consults `CScope` like every other `c`-domain object
-        // (`known_bugs.md` #2's fix), so the nested macro renders qualified
+        // (`docs/dev/known_bugs.md` #2's fix), so the nested macro renders qualified
         // by the enclosing type — a known, accepted mismatch against
         // CPython's actual bare-rendered constants, since rinx
         // doesn't implement the `.. c:namespace:: NULL` reset real Sphinx
@@ -242,7 +242,7 @@ mod tests {
     }
     #[test]
     fn test_render_formats_c_function_nested_in_py_class_is_not_qualified_by_it() {
-        // Given — `known_bugs.md` #2's own reproducer: a `c:function`
+        // Given — `docs/dev/known_bugs.md` #2's own reproducer: a `c:function`
         // (structurally) nested inside a `py:class` body must render under
         // its own bare name, not qualified by the enclosing Python
         // module+class — real Sphinx's C domain has no concept of an

@@ -86,7 +86,7 @@ fn test_an_argument_does_not_continue_onto_the_next_line() {
     // directive declares `final_argument_whitespace`. This build continues no
     // directive argument across lines except a domain object's signatures, so
     // the line is read as the label instead — visible to the author rather
-    // than silently dropped. See `spec_gaps.md`.
+    // than silently dropped. See `docs/dev/spec_gaps.md`.
     let input = ".. button-link:: https://example.com/a/very/\n   long/path\n";
 
     // When

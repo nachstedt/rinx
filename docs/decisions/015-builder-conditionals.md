@@ -136,7 +136,7 @@ sphinx-simplepdf's two other directives, `.. ifinclude::` and
 `.. pdfinclude::`, are still unknown names. Both are PDF-oriented and would be
 close to no-ops on an HTML-only build, so they would mostly be reserving names.
 
-Sphinx's own `.. only::` remains unimplemented (`spec_gaps.md`). It solves the
+Sphinx's own `.. only::` remains unimplemented (`docs/dev/spec_gaps.md`). It solves the
 same problem with a boolean expression over build *tags*, which needs a small
 expression language and a project-wide way to declare tags; sphinx-simplepdf's
 documentation recommends `if-builder` over it on the structural grounds above.

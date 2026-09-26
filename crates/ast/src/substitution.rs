@@ -8,7 +8,7 @@
 //! exactly the hermeticity `docs/decisions/007-image-assets.md` refuses a
 //! `:loading: embed` of an external URL for. `raw` is left out because the
 //! standalone `.. raw::` directive it would share its content model with is
-//! itself unimplemented (see `spec_gaps.md`). Both fall back to
+//! itself unimplemented (see `docs/dev/spec_gaps.md`). Both fall back to
 //! [`crate::Directive::Unknown`] like any other unrecognized directive name.
 
 use serde::{Deserialize, Serialize};

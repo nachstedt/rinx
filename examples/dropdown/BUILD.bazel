@@ -6,7 +6,7 @@ group gets a small page of its own rather than one page trying to show them
 all at once.
 
 The first third-party *extension* directive this build supports — see
-`spec_gaps.md`'s "Third-party extension directives" section.
+`docs/dev/spec_gaps.md`'s "Third-party extension directives" section.
 """
 
 load("@rinx//:defs.bzl", "rinx_library")

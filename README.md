@@ -1,5 +1,8 @@
 # rinx
 
+[![CI](https://github.com/nachstedt/rinx/actions/workflows/rust.yml/badge.svg)](https://github.com/nachstedt/rinx/actions/workflows/rust.yml)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+
 **rinx** is a Rust re-implementation of (a subset of) the
 [Sphinx](https://www.sphinx-doc.org/) documentation generator, built to be a
 first-class [Bazel](https://bazel.build/) build step rather than an external
@@ -9,8 +12,8 @@ and it models requirements and other project-specific constructs the way
 [sphinx-needs](https://sphinx-needs.com/) does.
 
 > **Status:** early and pre-1.0. The rule and CLI interfaces may still change.
-> [`spec_gaps.md`](spec_gaps.md) tracks which reStructuredText and Sphinx
-> features are implemented and which are missing.
+> [`docs/dev/spec_gaps.md`](docs/dev/spec_gaps.md) tracks which
+> reStructuredText and Sphinx features are implemented and which are missing.
 
 ## Why
 
@@ -89,8 +92,9 @@ uses every feature. Build it with `bazel build //examples:site`.
 
 ## Documentation
 
-- [`architecture.md`](architecture.md) and [`requirements.md`](requirements.md):
-  the design and its goals.
+- [`docs/dev/architecture.md`](docs/dev/architecture.md) and
+  [`docs/dev/requirements.md`](docs/dev/requirements.md): the design and its
+  goals.
 - [`docs/entities.md`](docs/entities.md): the entity model (requirements,
   specifications, ...).
 - [`docs/intersphinx.md`](docs/intersphinx.md): linking between sites.
@@ -115,8 +119,9 @@ bash tests/test_strict_deps.sh     # one of the build-level tests in tests/
 ```
 
 Changing a Cargo dependency requires `CARGO_BAZEL_REPIN=1` on the next Bazel
-build. [`CLAUDE.md`](CLAUDE.md) and [`guidelines.md`](guidelines.md) describe
-the code layout and conventions in detail.
+build. [`CONTRIBUTING.md`](CONTRIBUTING.md) explains how to propose a change;
+[`CLAUDE.md`](CLAUDE.md) and [`guidelines.md`](guidelines.md) describe the code
+layout and conventions in detail.
 
 ## License
 
