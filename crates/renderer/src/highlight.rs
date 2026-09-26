@@ -24,7 +24,7 @@
 
 use std::sync::OnceLock;
 
-use rusty_sphinx_ast::{DiagnosticCode, ResolvedLanguage, Span};
+use rinx_ast::{DiagnosticCode, ResolvedLanguage, Span};
 use syntect::html::{ClassStyle, line_tokens_to_classed_spans};
 use syntect::parsing::{ParseState, ScopeStack, SyntaxSet};
 
@@ -284,7 +284,7 @@ pub(crate) fn language_class(language: &ResolvedLanguage) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::LanguageName;
+    use rinx_ast::LanguageName;
 
     fn named(name: &str) -> ResolvedLanguage {
         ResolvedLanguage::Named(LanguageName::new(name).unwrap())
@@ -570,7 +570,7 @@ mod css_drift_test {
 #[cfg(test)]
 mod alias_tests {
     use super::*;
-    use rusty_sphinx_ast::LanguageName;
+    use rinx_ast::LanguageName;
 
     fn named(name: &str) -> ResolvedLanguage {
         ResolvedLanguage::Named(LanguageName::new(name).unwrap())

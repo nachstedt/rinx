@@ -16,14 +16,14 @@
 
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{AttributeValue, Diagnostic, DiagnosticCode, EntityId, Span};
-use rusty_sphinx_entity::{EntityType, parse_attribute_value, split_list};
+use rinx_ast::{AttributeValue, Diagnostic, DiagnosticCode, EntityId, Span};
+use rinx_entity::{EntityType, parse_attribute_value, split_list};
 
 use crate::diagnostics::Diagnostics;
 
 /// Parses one attribute's text and records it, or diagnoses why it could not.
 pub(in crate::directives) fn store_attribute(
-    schema: &rusty_sphinx_entity::AttributeSchema,
+    schema: &rinx_entity::AttributeSchema,
     name: &str,
     text: &str,
     span: Option<Span>,
@@ -167,7 +167,7 @@ pub(in crate::directives) fn describe_options(entity_type: &EntityType) -> Strin
 mod tests {
     use super::*;
 
-    use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+    use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
     /// A type declaring one attribute of each shape these helpers care about,
     /// plus the two relation cardinalities.

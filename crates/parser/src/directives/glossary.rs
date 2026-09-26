@@ -5,7 +5,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, unindent_body_lines};
-use rusty_sphinx_ast::{Directive, Node};
+use rinx_ast::{Directive, Node};
 
 /// Dedents one accumulated definition body and parses it, rebasing `ctx` by
 /// both the lines skipped to reach it and its own indentation.
@@ -75,7 +75,7 @@ pub(super) fn parse_glossary(
     // Parse definition-list entries from the remaining lines.
     // A line with NO leading whitespace (after base-indent stripping) is a term.
     // A line WITH leading whitespace is part of the definition.
-    let mut entries: Vec<rusty_sphinx_ast::GlossaryEntry> = Vec::new();
+    let mut entries: Vec<rinx_ast::GlossaryEntry> = Vec::new();
     let mut current_terms: Vec<String> = Vec::new();
     let mut definition_lines: Vec<String> = Vec::new();
     let mut in_definition = false;
@@ -120,7 +120,7 @@ pub(super) fn parse_glossary(
                     diagnostics,
                     ctx,
                 );
-                entries.push(rusty_sphinx_ast::GlossaryEntry {
+                entries.push(rinx_ast::GlossaryEntry {
                     terms: std::mem::take(&mut current_terms),
                     definition: def_nodes,
                 });
@@ -141,7 +141,7 @@ pub(super) fn parse_glossary(
             diagnostics,
             ctx,
         );
-        entries.push(rusty_sphinx_ast::GlossaryEntry {
+        entries.push(rinx_ast::GlossaryEntry {
             terms: current_terms,
             definition: def_nodes,
         });
@@ -170,7 +170,7 @@ pub(super) fn parse_glossary(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     #[test]
     fn test_parse_glossary_parses_a_single_term_and_definition() {

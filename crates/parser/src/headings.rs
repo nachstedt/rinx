@@ -2,7 +2,7 @@ use super::inline::{SourceMap, parse_inline_text_mapped};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::width::column_width;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Node};
+use rinx_ast::{Diagnostic, DiagnosticCode, Node};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum AdornmentStyle {
@@ -191,7 +191,7 @@ pub(super) fn try_parse_heading(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{InlineNode, TargetSearchOrder};
+    use rinx_ast::{InlineNode, TargetSearchOrder};
 
     #[test]
     fn test_is_section_adornment_accepts_single_repeated_char() {
@@ -484,7 +484,7 @@ mod tests {
         let input = "The :mod:`greetings` Module\n============================";
 
         // When
-        let doc = crate::parse_with_domain("test.rst", input, rusty_sphinx_ast::Domain::Py);
+        let doc = crate::parse_with_domain("test.rst", input, rinx_ast::Domain::Py);
 
         // Then
         assert_eq!(doc.nodes.len(), 1);
@@ -495,20 +495,18 @@ mod tests {
                 text: vec![
                     InlineNode::Text("The ".to_string()),
                     InlineNode::DomainObjectReference {
-                        object_type: rusty_sphinx_ast::ObjectType::Py(
-                            rusty_sphinx_ast::PyObjectType::Module
-                        ),
+                        object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Module),
                         name: "greetings".to_string(),
                         display: "greetings".to_string(),
                         link: true,
                         search_order: TargetSearchOrder::LeastQualifiedFirst,
                         // `The ` is four characters, and the role is sixteen —
                         // a heading's text is mapped like any other line.
-                        span: Some(rusty_sphinx_ast::Span::new(
-                            rusty_sphinx_ast::Position::new(1, 5),
-                            rusty_sphinx_ast::Position::new(1, 21),
+                        span: Some(rinx_ast::Span::new(
+                            rinx_ast::Position::new(1, 5),
+                            rinx_ast::Position::new(1, 21),
                         )),
-                        inventory: rusty_sphinx_ast::InventorySelector::Any,
+                        inventory: rinx_ast::InventorySelector::Any,
                     },
                     InlineNode::Text(" Module".to_string()),
                 ]
@@ -540,7 +538,7 @@ mod tests {
     }
 
     /// The codes every diagnostic the parse reported carries, in order.
-    fn diagnostic_codes(doc: &rusty_sphinx_ast::Document) -> Vec<DiagnosticCode> {
+    fn diagnostic_codes(doc: &rinx_ast::Document) -> Vec<DiagnosticCode> {
         doc.diagnostics.iter().map(|d| d.code).collect()
     }
 

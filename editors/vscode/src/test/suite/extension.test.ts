@@ -3,6 +3,6 @@ import * as vscode from 'vscode';
 
 suite('Extension Test Suite', () => {
 	test('Extension should be present', () => {
-		assert.ok(vscode.extensions.getExtension('nachstedt.rusty-sphinx'));
+		assert.ok(vscode.extensions.getExtension('nachstedt.rinx'));
 	});
 });

@@ -21,7 +21,7 @@
 //! chart over one mistake would be the larger failure. The options it cannot
 //! honour are refused **by name**, as the pie's are.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     BarArrangement, BarGrid, BarOrientation, ChartValue, Diagnostic, DiagnosticCode, Directive,
     EntityBar, EntityBarSource, LabelRotation, Span,
 };

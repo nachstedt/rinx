@@ -2,7 +2,7 @@
 //!
 //! Kept apart from [`super::domain_object`] even though both ultimately
 //! read `ProjectIndex::domain_objects`: that resolver's whole design is built
-//! around `rusty_sphinx_scope::Scope`'s per-domain tiered candidate lists
+//! around `rinx_scope::Scope`'s per-domain tiered candidate lists
 //! (`Scope::reference_candidates`) and `ObjectType::role_alias_candidates`,
 //! neither of which `:option:` uses. `:option:` resolution is instead a
 //! distinct ambient-program/global-fallback/embedded-program search over
@@ -35,8 +35,8 @@
 //!    each peel — stopping at the first hit.
 //! 4. Otherwise: unresolved.
 
-use rusty_sphinx_ast::{InventorySelector, ObjectType, StdObjectType, TargetName};
-use rusty_sphinx_index::{ExternalInventory, ProjectIndex};
+use rinx_ast::{InventorySelector, ObjectType, StdObjectType, TargetName};
+use rinx_index::{ExternalInventory, ProjectIndex};
 
 use super::{ExternalHit, resolve_external};
 
@@ -145,7 +145,7 @@ impl<'a> OptionResolver<'a> {
     }
 
     /// Looks up one exact `(program, optname)` pair, qualified exactly like
-    /// [`rusty_sphinx_scope::ProgramScope::qualify`] so a lookup here and a
+    /// [`rinx_scope::ProgramScope::qualify`] so a lookup here and a
     /// definition's index key can never disagree about the key shape.
     fn lookup(&self, program: Option<&str>, optname: &str) -> Option<OptionResolution<'a>> {
         let qualified_name = match program {
@@ -186,11 +186,7 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(
-            Some("python"),
-            "-O",
-            &rusty_sphinx_ast::InventorySelector::Any,
-        );
+        let resolution = resolver.resolve(Some("python"), "-O", &rinx_ast::InventorySelector::Any);
 
         // Then
         let OptionResolution::External(hit) = resolution else {
@@ -207,7 +203,7 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(None, "-O", &rusty_sphinx_ast::InventorySelector::Any);
+        let resolution = resolver.resolve(None, "-O", &rinx_ast::InventorySelector::Any);
 
         // Then
         assert!(matches!(resolution, OptionResolution::Resolved { .. }));
@@ -220,7 +216,7 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(None, "-x", &rusty_sphinx_ast::InventorySelector::Any);
+        let resolution = resolver.resolve(None, "-x", &rinx_ast::InventorySelector::Any);
 
         // Then
         assert_eq!(
@@ -239,8 +235,7 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution =
-            resolver.resolve(Some("dis"), "-O", &rusty_sphinx_ast::InventorySelector::Any);
+        let resolution = resolver.resolve(Some("dis"), "-O", &rinx_ast::InventorySelector::Any);
 
         // Then — the returned `qualified_name` preserves the case the
         // reference was written with (`"dis.-O"`, not `"dis.-o"`); the index
@@ -266,8 +261,7 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution =
-            resolver.resolve(Some("dis"), "-X", &rusty_sphinx_ast::InventorySelector::Any);
+        let resolution = resolver.resolve(Some("dis"), "-X", &rinx_ast::InventorySelector::Any);
 
         // Then — case preserved, same rationale as the test above.
         assert_eq!(
@@ -291,7 +285,7 @@ mod tests {
         let resolution = resolver.resolve(
             None,
             "dis --show-offsets",
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -315,7 +309,7 @@ mod tests {
         let resolution = resolver.resolve(
             None,
             "python -m py_compile --quiet",
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -335,8 +329,7 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution =
-            resolver.resolve(Some("dis"), "-Z", &rusty_sphinx_ast::InventorySelector::Any);
+        let resolution = resolver.resolve(Some("dis"), "-Z", &rinx_ast::InventorySelector::Any);
 
         // Then
         assert_eq!(resolution, OptionResolution::NotFound);
@@ -350,11 +343,7 @@ mod tests {
         let resolver = OptionResolver::new(&index);
 
         // When
-        let resolution = resolver.resolve(
-            None,
-            "-nonexistent",
-            &rusty_sphinx_ast::InventorySelector::Any,
-        );
+        let resolution = resolver.resolve(None, "-nonexistent", &rinx_ast::InventorySelector::Any);
 
         // Then
         assert_eq!(resolution, OptionResolution::NotFound);
@@ -364,8 +353,8 @@ mod tests {
 #[cfg(test)]
 mod pipeline_tests {
     use crate::{BrokenLinkKind, render};
-    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Directive, Document, InlineNode, Node};
+    use rinx_index::ProjectIndex;
 
     #[test]
     fn test_render_option_reference_resolves_to_link() {
@@ -381,13 +370,13 @@ mod pipeline_tests {
                     display: "-O".to_string(),
                     target: "-O".to_string(),
                     span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
+                    inventory: rinx_ast::InventorySelector::Any,
                 }]),
             ],
         );
         let mut index = ProjectIndex::default();
         index.insert_domain_object(
-            rusty_sphinx_ast::ObjectType::Std(rusty_sphinx_ast::StdObjectType::Cmdoption),
+            rinx_ast::ObjectType::Std(rinx_ast::StdObjectType::Cmdoption),
             "dis.-o",
             "library/dis.rst",
         );
@@ -410,7 +399,7 @@ mod pipeline_tests {
                 display: "-Z".to_string(),
                 target: "-Z".to_string(),
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }])],
         );
         let index = ProjectIndex::default();

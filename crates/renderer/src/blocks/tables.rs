@@ -1,13 +1,13 @@
 //! Grid-table row/cell rendering, shared with `list_table` for the
 //! actual `<td>`/`<th>` output.
 
-use rusty_sphinx_ast::TableRow;
+use rinx_ast::TableRow;
 use std::fmt::Write as _;
 
 use super::render_nodes;
 use crate::RenderCtx;
 
-/// Renders a bare grid or simple table — [`rusty_sphinx_ast::Node::Table`],
+/// Renders a bare grid or simple table — [`rinx_ast::Node::Table`],
 /// as opposed to the `.. table::`-wrapped or `list-table`/`csv-table` forms,
 /// which have their own presentation shells and call [`render_table_row`]
 /// directly instead.
@@ -56,7 +56,7 @@ pub(crate) fn render_table_row(
 /// when present.
 pub(crate) fn render_table_cell(
     html: &mut String,
-    cell: &rusty_sphinx_ast::TableCell,
+    cell: &rinx_ast::TableCell,
     tag: &str,
     scope: Option<&str>,
     ctx: &mut RenderCtx<'_>,
@@ -79,8 +79,8 @@ pub(crate) fn render_table_cell(
 #[cfg(test)]
 mod tests {
     use crate::render;
-    use rusty_sphinx_ast::{Document, InlineNode, Node};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Document, InlineNode, Node};
+    use rinx_index::ProjectIndex;
 
     #[test]
     fn test_render_table_with_header() {
@@ -88,30 +88,30 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Table {
-                header_rows: vec![rusty_sphinx_ast::TableRow {
+                header_rows: vec![rinx_ast::TableRow {
                     cells: vec![
-                        rusty_sphinx_ast::TableCell {
+                        rinx_ast::TableCell {
                             colspan: 1,
                             rowspan: 1,
                             content: vec![Node::Paragraph(vec![InlineNode::Text("A".to_string())])],
                         },
-                        rusty_sphinx_ast::TableCell {
+                        rinx_ast::TableCell {
                             colspan: 1,
                             rowspan: 1,
                             content: vec![Node::Paragraph(vec![InlineNode::Text("B".to_string())])],
                         },
                     ],
                 }],
-                body_rows: vec![rusty_sphinx_ast::TableRow {
+                body_rows: vec![rinx_ast::TableRow {
                     cells: vec![
-                        rusty_sphinx_ast::TableCell {
+                        rinx_ast::TableCell {
                             colspan: 1,
                             rowspan: 1,
                             content: vec![Node::Paragraph(vec![InlineNode::Text(
                                 "a1".to_string(),
                             )])],
                         },
-                        rusty_sphinx_ast::TableCell {
+                        rinx_ast::TableCell {
                             colspan: 1,
                             rowspan: 1,
                             content: vec![Node::Paragraph(vec![InlineNode::Text(
@@ -143,8 +143,8 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Table {
                 header_rows: vec![],
-                body_rows: vec![rusty_sphinx_ast::TableRow {
-                    cells: vec![rusty_sphinx_ast::TableCell {
+                body_rows: vec![rinx_ast::TableRow {
+                    cells: vec![rinx_ast::TableCell {
                         colspan: 1,
                         rowspan: 1,
                         content: vec![Node::Paragraph(vec![InlineNode::Text("only".to_string())])],
@@ -171,8 +171,8 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::Table {
                 header_rows: vec![],
-                body_rows: vec![rusty_sphinx_ast::TableRow {
-                    cells: vec![rusty_sphinx_ast::TableCell {
+                body_rows: vec![rinx_ast::TableRow {
+                    cells: vec![rinx_ast::TableCell {
                         colspan: 2,
                         rowspan: 3,
                         content: vec![Node::Paragraph(vec![InlineNode::Text(

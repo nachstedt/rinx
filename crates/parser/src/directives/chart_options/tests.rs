@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Domain, ImageAlign};
+use rinx_ast::{Diagnostic, DiagnosticCode, Domain, ImageAlign};
 
 use super::*;
 

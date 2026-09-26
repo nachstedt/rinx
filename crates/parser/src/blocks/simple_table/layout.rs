@@ -2,7 +2,7 @@ use super::borders::is_equals_border;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::indent::{indent_width, strip_indent};
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode};
+use rinx_ast::{Diagnostic, DiagnosticCode};
 
 /// Collects the table's physical lines, from the top border at `start_i`
 /// through the bottom border, with the top border's indentation stripped off
@@ -140,7 +140,7 @@ pub(super) fn find_head_body_rule(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     // --- collect_simple_table_lines ---
 

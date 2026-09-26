@@ -10,7 +10,7 @@
 use std::fmt::Write as _;
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{CodeBlock, ResolvedLanguage};
+use rinx_ast::{CodeBlock, ResolvedLanguage};
 
 use crate::RenderCtx;
 use crate::highlight::language_class;
@@ -91,7 +91,7 @@ pub(crate) fn render_code(
     language: &ResolvedLanguage,
     layout: &CodeLayout<'_>,
     force: bool,
-    span: Option<rusty_sphinx_ast::Span>,
+    span: Option<rinx_ast::Span>,
     ctx: &mut RenderCtx,
 ) {
     let highlighted = match ctx.highlighter.highlight(content, language) {
@@ -194,10 +194,8 @@ fn render_caption(html: &mut String, caption: Option<&str>) {
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::{with_ctx, with_highlight_language};
-    use rusty_sphinx_ast::{
-        CodeBlockSource, CodeLanguage, Document, LanguageName, Node, TargetName,
-    };
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{CodeBlockSource, CodeLanguage, Document, LanguageName, Node, TargetName};
+    use rinx_index::ProjectIndex;
 
     fn block(language: &str, content: &str) -> CodeBlock {
         CodeBlock {
@@ -434,7 +432,7 @@ mod tests {
         assert_eq!(errors.len(), 1, "{errors:?}");
         assert_eq!(
             errors[0].code(),
-            rusty_sphinx_ast::DiagnosticCode::CodeBlockUnknownLanguage
+            rinx_ast::DiagnosticCode::CodeBlockUnknownLanguage
         );
     }
 
@@ -471,10 +469,8 @@ mod tests {
     fn test_render_code_block_reports_an_unknown_language_against_its_span() {
         // Given — a block whose parser recorded where it was written
         let mut code = block("nonesuch-language", "x = 1");
-        let span = rusty_sphinx_ast::Span::new(
-            rusty_sphinx_ast::Position::new(7, 1),
-            rusty_sphinx_ast::Position::new(7, 5),
-        );
+        let span =
+            rinx_ast::Span::new(rinx_ast::Position::new(7, 1), rinx_ast::Position::new(7, 5));
         code.span = Some(span);
 
         // When

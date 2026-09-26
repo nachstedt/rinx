@@ -1,11 +1,11 @@
 """
-rusty_sphinx_site rule.
+rinx_site rule.
 
 Collects all .ast files from its deps (Phase 2: index) then renders each
-one to HTML (Phase 3: render) using the rusty-sphinx worker binary.
+one to HTML (Phase 3: render) using the rinx worker binary.
 """
 
-load("//:providers.bzl", "RustySphinxInfo", "RustySphinxInventoryInfo")
+load("//:providers.bzl", "RinxInfo", "RinxInventoryInfo")
 
 def _compile_diagrams(ctx, plantuml, puml_dir, doc_path):
     """Compiles one document's diagram sources to SVG, returning the SVG dir.
@@ -40,13 +40,13 @@ fi
     )
     return svg_dir
 
-def _rusty_sphinx_site_impl(ctx):
+def _rinx_site_impl(ctx):
     worker = ctx.executable._worker
 
     # ── Phase 2: index ────────────────────────────────────────────────────────
     # Collect every .ast file transitively from all deps.
     all_ast_files = depset(
-        transitive = [dep[RustySphinxInfo].ast_files for dep in ctx.attr.deps],
+        transitive = [dep[RinxInfo].ast_files for dep in ctx.attr.deps],
     )
     ast_list = all_ast_files.to_list()
 
@@ -81,7 +81,7 @@ def _rusty_sphinx_site_impl(ctx):
     # naming no inventory searches them in. A repeated name is refused here,
     # while analyzing, since no document could be blamed for it; the worker
     # refuses it too, for a caller that is not this rule.
-    inventories = [dep[RustySphinxInventoryInfo] for dep in ctx.attr.inventories]
+    inventories = [dep[RinxInventoryInfo] for dep in ctx.attr.inventories]
     seen_inventory_names = {}
     for inventory in inventories:
         if inventory.name in seen_inventory_names:
@@ -99,7 +99,7 @@ def _rusty_sphinx_site_impl(ctx):
         arguments = [index_args],
         inputs = ast_list + [config_file] + schema_inputs + [inventory.file for inventory in inventories],
         outputs = [index_out],
-        mnemonic = "RustySphinxIndex",
+        mnemonic = "RinxIndex",
         progress_message = "Indexing %s docs" % len(ast_list),
     )
 
@@ -120,14 +120,14 @@ def _rusty_sphinx_site_impl(ctx):
         arguments = [genindex_args],
         inputs = [index_out, template_file, config_file],
         outputs = [genindex_out],
-        mnemonic = "RustySphinxGenIndex",
+        mnemonic = "RinxGenIndex",
         progress_message = "Generating genindex.html for %s" % ctx.label.name,
     )
 
     # ── Phase 2.6: objects.inv ───────────────────────────────────────────────
     # The site's Sphinx inventory, so other documentation — Sphinx projects
-    # through intersphinx, other rusty_sphinx_site targets through
-    # rusty_sphinx_inventory — can link into it. Always written, as Sphinx
+    # through intersphinx, other rinx_site targets through
+    # rinx_inventory — can link into it. Always written, as Sphinx
     # always writes one, and like genindex it needs only the project index.
     inventory_out = ctx.actions.declare_file(ctx.label.name + "_site_out/objects.inv")
     inventory_args = ctx.actions.args()
@@ -141,7 +141,7 @@ def _rusty_sphinx_site_impl(ctx):
         arguments = [inventory_args],
         inputs = [index_out, config_file],
         outputs = [inventory_out],
-        mnemonic = "RustySphinxInventory",
+        mnemonic = "RinxInventory",
         progress_message = "Writing objects.inv for %s" % ctx.label.name,
     )
 
@@ -153,7 +153,7 @@ def _rusty_sphinx_site_impl(ctx):
     diagram_asts = {
         f: True
         for f in depset(
-            transitive = [dep[RustySphinxInfo].diagram_ast_files for dep in ctx.attr.deps],
+            transitive = [dep[RinxInfo].diagram_ast_files for dep in ctx.attr.deps],
         ).to_list()
     }
     plantuml = ctx.executable._plantuml
@@ -167,7 +167,7 @@ def _rusty_sphinx_site_impl(ctx):
     embeds_by_doc = {
         sidecar.short_path.removesuffix(".embeds.json"): sidecar
         for sidecar in depset(
-            transitive = [dep[RustySphinxInfo].embed_sidecars for dep in ctx.attr.deps],
+            transitive = [dep[RinxInfo].embed_sidecars for dep in ctx.attr.deps],
         ).to_list()
     }
 
@@ -237,7 +237,7 @@ def _rusty_sphinx_site_impl(ctx):
             arguments = render_args,
             inputs = render_inputs,
             outputs = render_outputs,
-            mnemonic = "RustySphinxRender",
+            mnemonic = "RinxRender",
             progress_message = "Rendering %s" % ast_file.short_path,
         )
         html_files.append(html_out)
@@ -260,7 +260,7 @@ def _rusty_sphinx_site_impl(ctx):
     # keeping the path makes collisions impossible without any global pass.
     # See docs/decisions/007-image-assets.md.
     all_image_files = depset(
-        transitive = [dep[RustySphinxInfo].image_files for dep in ctx.attr.deps],
+        transitive = [dep[RinxInfo].image_files for dep in ctx.attr.deps],
     ).to_list()
 
     final_outputs = html_files + [genindex_out, inventory_out]
@@ -302,7 +302,7 @@ done
             arguments = [args],
             inputs = all_svg_dirs + all_image_files,
             outputs = [images_out],
-            mnemonic = "RustySphinxBundleImages",
+            mnemonic = "RinxBundleImages",
             progress_message = "Bundling Site Images",
         )
         final_outputs.append(images_out)
@@ -336,7 +336,7 @@ done
             arguments = [val_args],
             inputs = ast_list + [images_out] + puml_dirs,
             outputs = [validation_sentinel],
-            mnemonic = "RustySphinxValidateImages",
+            mnemonic = "RinxValidateImages",
             progress_message = "Validating diagram images for %s" % ctx.label.name,
         )
         final_outputs.append(validation_sentinel)
@@ -348,7 +348,7 @@ done
         arguments = [css_file.path, css_out.path],
         inputs = [css_file],
         outputs = [css_out],
-        mnemonic = "RustySphinxCopyCSS",
+        mnemonic = "RinxCopyCSS",
         progress_message = "Copying default.css",
     )
     final_outputs.append(css_out)
@@ -368,18 +368,18 @@ done
             # time, and the path in a `:save:` is written inside the document.
             diagram_sources = depset(puml_dirs),
             # The site's objects.inv on its own, so another site can declare
-            # it as a `rusty_sphinx_inventory` source without depending on
+            # it as a `rinx_inventory` source without depending on
             # every page: a filegroup with `output_group = "inventory"`.
             inventory = depset([inventory_out]),
         ),
     ]
 
-rusty_sphinx_site = rule(
-    implementation = _rusty_sphinx_site_impl,
+rinx_site = rule(
+    implementation = _rinx_site_impl,
     attrs = {
         "deps": attr.label_list(
-            providers = [RustySphinxInfo],
-            doc = "rusty_sphinx_library targets to include in this site.",
+            providers = [RinxInfo],
+            doc = "rinx_library targets to include in this site.",
         ),
         "template": attr.label(
             allow_single_file = [".html"],
@@ -392,12 +392,12 @@ rusty_sphinx_site = rule(
         ),
         "entity_schema": attr.label(
             allow_single_file = [".toml"],
-            doc = "The project's entity meta-model. Must be the same file every `rusty_sphinx_library` in `deps` names, since the documents were parsed against it; a mismatch is reported as `entity.schema-mismatch` while the index is built. Read here by the index action, which derives back-links from the declared relations, and by each render action, which reads the labels and presentation.",
+            doc = "The project's entity meta-model. Must be the same file every `rinx_library` in `deps` names, since the documents were parsed against it; a mismatch is reported as `entity.schema-mismatch` while the index is built. Read here by the index action, which derives back-links from the declared relations, and by each render action, which reads the labels and presentation.",
         ),
         "config": attr.label(
             allow_single_file = [".toml"],
             default = Label("//:templates/default_config.toml"),
-            doc = "The rusty_sphinx.toml configuration file for the site.",
+            doc = "The rinx.toml configuration file for the site.",
         ),
         "css": attr.label(
             allow_single_file = [".css"],
@@ -405,8 +405,8 @@ rusty_sphinx_site = rule(
             doc = "The CSS stylesheet to include in the site output.",
         ),
         "inventories": attr.label_list(
-            providers = [RustySphinxInventoryInfo],
-            doc = "rusty_sphinx_inventory targets: other sites' objects.inv files this site links into (Sphinx's intersphinx). A reference no document defines is resolved against them, in the order listed; `:external+name:` and a `name:` prefix pick one out. Read by the index action alone, so editing one re-runs the index and every render, as any index input does.",
+            providers = [RinxInventoryInfo],
+            doc = "rinx_inventory targets: other sites' objects.inv files this site links into (Sphinx's intersphinx). A reference no document defines is resolved against them, in the order listed; `:external+name:` and a `name:` prefix pick one out. Read by the index action alone, so editing one re-runs the index and every render, as any index input does.",
         ),
         "strict_links": attr.bool(
             default = False,
@@ -415,20 +415,20 @@ rusty_sphinx_site = rule(
                   "warning. Off by default so existing sites are unaffected.",
         ),
         "_worker": attr.label(
-            default = Label("//:rusty_sphinx_worker"),
+            default = Label("//:rinx_worker"),
             executable = True,
             cfg = "exec",
-            doc = "The rusty-sphinx binary.",
+            doc = "The rinx binary.",
         ),
         "_plantuml": attr.label(
             default = Label("//:plantuml_tool"),
             executable = True,
             cfg = "exec",
-            doc = "The PlantUML executable or wrapper. On the site rather than on rusty_sphinx_library, because a diagram's text is not known until the project index exists.",
+            doc = "The PlantUML executable or wrapper. On the site rather than on rinx_library, because a diagram's text is not known until the project index exists.",
         ),
     },
     doc = """
-Assembles a complete documentation site from rusty_sphinx_library deps.
+Assembles a complete documentation site from rinx_library deps.
 
 Performs Phase 2 (global index, one action) and Phase 3 (per-file HTML
 render, one action per .ast file).  All actions are individually cacheable

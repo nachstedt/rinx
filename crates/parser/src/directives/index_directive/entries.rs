@@ -1,10 +1,10 @@
 //! Turning an `.. index::` directive's argument and body lines into
-//! [`rusty_sphinx_ast::IndexEntry`]s, one physical line at a time.
+//! [`rinx_ast::IndexEntry`]s, one physical line at a time.
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{IndexEntry, Span};
+use rinx_ast::{IndexEntry, Span};
 
 use super::value_parsing::{is_known_entry_type, parse_typed_entry, strip_main_prefix};
 
@@ -87,8 +87,8 @@ pub(crate) fn parse_index_directive(
     body_lines: &[&str],
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
-) -> rusty_sphinx_ast::Directive {
-    rusty_sphinx_ast::Directive::Index {
+) -> rinx_ast::Directive {
+    rinx_ast::Directive::Index {
         entries: parse_index_entries(argument, body_lines, diagnostics, ctx),
         id: String::new(),
     }
@@ -97,7 +97,7 @@ pub(crate) fn parse_index_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     #[test]
     fn test_parse_index_line_dispatches_typed_entry() {
@@ -560,7 +560,7 @@ mod tests {
         );
 
         // Then
-        if let rusty_sphinx_ast::Directive::Index { entries, id } = directive {
+        if let rinx_ast::Directive::Index { entries, id } = directive {
             assert_eq!(entries.len(), 1);
             assert_eq!(id, "");
         } else {

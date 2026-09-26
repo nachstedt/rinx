@@ -2,16 +2,16 @@ load("@crates//:defs.bzl", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 
 rust_library(
-    name = "rusty_sphinx_uml",
+    name = "rinx_uml",
     srcs = glob(["src/**/*.rs"]),
     edition = "2024",
     visibility = ["//visibility:public"],
     deps = all_crate_deps(
         normal = True,
     ) + [
-        "//crates/ast:rusty_sphinx_ast",
-        "//crates/entity:rusty_sphinx_entity",
-        "//crates/filter:rusty_sphinx_filter",
-        "//crates/index:rusty_sphinx_index",
+        "//crates/ast:rinx_ast",
+        "//crates/entity:rinx_entity",
+        "//crates/filter:rinx_filter",
+        "//crates/index:rinx_index",
     ],
 )

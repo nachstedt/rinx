@@ -1,6 +1,6 @@
 use std::fmt;
 
-use rusty_sphinx_filter::FieldValue;
+use rinx_filter::FieldValue;
 use serde::{Deserialize, Serialize};
 
 /// A validated attribute value, as stored in the AST and the project index.
@@ -49,7 +49,7 @@ impl fmt::Display for AttributeValue {
 /// What an attribute is worth to a filter.
 ///
 /// Here rather than beside either caller because there are two, in crates that
-/// may not depend on each other: `rusty_sphinx_index`'s `EntitySubject`
+/// may not depend on each other: `rinx_index`'s `EntitySubject`
 /// answers a filter over an entity already in the index, and the parser's
 /// `.. needimport::` answers one over a need it is about to build. Two copies
 /// of this mapping would let a filter select differently depending on where

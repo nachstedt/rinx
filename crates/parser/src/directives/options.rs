@@ -17,7 +17,7 @@ use std::num::NonZeroUsize;
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode};
+use rinx_ast::{Diagnostic, DiagnosticCode};
 
 /// One `:name: value` line, with the source text kept so a diagnostic can
 /// quote the line exactly as the author wrote it.
@@ -181,7 +181,7 @@ pub(in crate::directives) fn parse_percentage(raw: &str) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     fn lines(raw: &[&str]) -> Vec<String> {
         raw.iter().map(|s| (*s).to_string()).collect()

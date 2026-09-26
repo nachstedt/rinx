@@ -1,10 +1,10 @@
 [package]
-name = "rusty_sphinx_entity"
+name = "rinx_entity"
 version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-rusty_sphinx_ast = { path = "../ast" }
+rinx_ast = { path = "../ast" }
 regex = "1.10"
 schemars = "1.2.2"
 serde = { version = "1", features = ["derive"] }

@@ -2,39 +2,39 @@ load("@crates//:defs.bzl", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 
 rust_library(
-    name = "rusty_sphinx_worker_lib",
+    name = "rinx_worker_lib",
     srcs = glob(["src/**/*.rs"]),
-    crate_name = "rusty_sphinx_worker",
+    crate_name = "rinx_worker",
     edition = "2024",
     deps = all_crate_deps(
         normal = True,
     ) + [
-        "//crates/analyzer:rusty_sphinx_analyzer",
-        "//crates/ast:rusty_sphinx_ast",
-        "//crates/entity:rusty_sphinx_entity",
-        "//crates/inventory:rusty_sphinx_inventory",
-        "//crates/toctree:rusty_sphinx_toctree",
-        "//crates/parser:rusty_sphinx_parser",
-        "//crates/renderer:rusty_sphinx_renderer",
+        "//crates/analyzer:rinx_analyzer",
+        "//crates/ast:rinx_ast",
+        "//crates/entity:rinx_entity",
+        "//crates/inventory:rinx_inventory",
+        "//crates/toctree:rinx_toctree",
+        "//crates/parser:rinx_parser",
+        "//crates/renderer:rinx_renderer",
     ],
 )
 
 rust_binary(
-    name = "rusty_sphinx_worker",
+    name = "rinx_worker",
     srcs = glob(["src/**/*.rs"]),
     edition = "2024",
     visibility = ["//visibility:public"],
     deps = all_crate_deps(
         normal = True,
     ) + [
-        ":rusty_sphinx_worker_lib",
-        "//crates/analyzer:rusty_sphinx_analyzer",
-        "//crates/ast:rusty_sphinx_ast",
-        "//crates/entity:rusty_sphinx_entity",
-        "//crates/toctree:rusty_sphinx_toctree",
-        "//crates/index:rusty_sphinx_index",
-        "//crates/inventory:rusty_sphinx_inventory",
-        "//crates/parser:rusty_sphinx_parser",
-        "//crates/renderer:rusty_sphinx_renderer",
+        ":rinx_worker_lib",
+        "//crates/analyzer:rinx_analyzer",
+        "//crates/ast:rinx_ast",
+        "//crates/entity:rinx_entity",
+        "//crates/toctree:rinx_toctree",
+        "//crates/index:rinx_index",
+        "//crates/inventory:rinx_inventory",
+        "//crates/parser:rinx_parser",
+        "//crates/renderer:rinx_renderer",
     ],
 )

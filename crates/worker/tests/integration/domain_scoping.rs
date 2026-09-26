@@ -3,9 +3,9 @@
 //! enclosing scope rather than requiring the author to spell out the
 //! fully qualified name.
 
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_parser as parser;
-use rusty_sphinx_renderer as renderer;
+use rinx_analyzer as analyzer;
+use rinx_parser as parser;
+use rinx_renderer as renderer;
 
 #[test]
 fn test_e2e_module_qualifies_sibling_function_for_cross_reference() {

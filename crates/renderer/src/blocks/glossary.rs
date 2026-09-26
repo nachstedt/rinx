@@ -7,14 +7,14 @@ use crate::RenderCtx;
 /// Renders a `glossary` directive as a definition list (`<dl>`).
 pub(super) fn render_glossary(
     html: &mut String,
-    entries: &[rusty_sphinx_ast::GlossaryEntry],
+    entries: &[rinx_ast::GlossaryEntry],
     ctx: &mut RenderCtx<'_>,
 ) {
     let _ = writeln!(html, "<dl class=\"glossary\">");
     for entry in entries {
         for term in &entry.terms {
             let term_escaped = html_escape::encode_text(term);
-            let id = rusty_sphinx_ast::term_id(term);
+            let id = rinx_ast::term_id(term);
             let id_attr = html_escape::encode_double_quoted_attribute(&id);
             let _ = writeln!(html, "  <dt id=\"{id_attr}\">{term_escaped}</dt>");
         }
@@ -35,8 +35,8 @@ pub(super) fn render_index_anchor(html: &mut String, id: &str) {
 
 #[cfg(test)]
 mod tests {
-    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, TargetName};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Directive, Document, InlineNode, Node, TargetName};
+    use rinx_index::ProjectIndex;
 
     fn render_doc(doc: &Document) -> String {
         let index = ProjectIndex::default();
@@ -49,7 +49,7 @@ mod tests {
         let doc = Document::new(
             "guide.rst".to_string(),
             vec![Node::Directive(Directive::Index {
-                entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+                entries: vec![rinx_ast::IndexEntry::Term {
                     primary: "execution".to_string(),
                     subentry: None,
                     main: false,
@@ -70,7 +70,7 @@ mod tests {
         let doc = Document::new(
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
-                entries: vec![rusty_sphinx_ast::GlossaryEntry {
+                entries: vec![rinx_ast::GlossaryEntry {
                     terms: vec!["environment".to_string()],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(
                         "A structure.".to_string(),
@@ -96,7 +96,7 @@ mod tests {
         let doc = Document::new(
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
-                entries: vec![rusty_sphinx_ast::GlossaryEntry {
+                entries: vec![rinx_ast::GlossaryEntry {
                     terms: vec!["term 1".to_string(), "term 2".to_string()],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Shared.".to_string(),
@@ -120,7 +120,7 @@ mod tests {
         let doc = Document::new(
             "glossary.rst".to_string(),
             vec![Node::Directive(Directive::Glossary {
-                entries: vec![rusty_sphinx_ast::GlossaryEntry {
+                entries: vec![rinx_ast::GlossaryEntry {
                     terms: vec!["a < b".to_string()],
                     definition: vec![],
                 }],
@@ -144,7 +144,7 @@ mod tests {
                 display: "environment".to_string(),
                 term: "environment".to_string(),
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }])],
         );
         let mut index = ProjectIndex::default();
@@ -169,7 +169,7 @@ mod tests {
                 display: "the env".to_string(),
                 term: "environment".to_string(),
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }])],
         );
         let mut index = ProjectIndex::default();
@@ -193,7 +193,7 @@ mod tests {
                 display: "unknown".to_string(),
                 term: "unknown".to_string(),
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }])],
         );
         let index = ProjectIndex::default(); // empty — no glossary terms
@@ -214,7 +214,7 @@ mod tests {
                 display: "foo".to_string(),
                 term: "foo".to_string(),
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }])],
         );
         let mut index = ProjectIndex::default();

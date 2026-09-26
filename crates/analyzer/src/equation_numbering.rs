@@ -11,9 +11,9 @@
 //!
 //! Only labeled equations are numbered, and the count restarts in every
 //! document — Sphinx's behaviour with `math_number_all` and `math_numfig`
-//! both off, which are the only settings rusty-sphinx supports.
+//! both off, which are the only settings rinx supports.
 
-use rusty_sphinx_ast::{Directive, Document, Node, TargetName, walk_nodes};
+use rinx_ast::{Directive, Document, Node, TargetName, walk_nodes};
 
 /// Numbers the labeled `.. math::` blocks of `doc`, in document order,
 /// starting at 1.
@@ -49,7 +49,7 @@ pub(super) fn number_equations(doc: &Document) -> Vec<(TargetName, usize)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{AdmonitionKind, InlineNode};
+    use rinx_ast::{AdmonitionKind, InlineNode};
 
     fn math(label: Option<&str>, nowrap: bool) -> Node {
         Node::Directive(Directive::Math {

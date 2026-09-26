@@ -5,10 +5,10 @@
 //! search to fall back on. What this adds over a bare map lookup is the type
 //! check — the thing a declared role exists for.
 
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_entity::EntitySchema;
+use rinx_index::{EntityRecord, ProjectIndex};
 
-use rusty_sphinx_ast::EntityId;
+use rinx_ast::EntityId;
 
 /// What looking up an entity role produced.
 #[derive(Debug, PartialEq, Eq)]
@@ -61,7 +61,7 @@ impl<'a> EntityResolver<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_entity::{NoReservedNames, load_schema};
+    use rinx_entity::{NoReservedNames, load_schema};
     use std::collections::BTreeMap;
 
     fn schema() -> EntitySchema {

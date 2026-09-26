@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::InlineNode;
+use rinx_ast::InlineNode;
 
 use crate::explicit_title::split_display_and_target;
 use crate::inline::regexes::OPTION_ROLE_REGEX;
@@ -15,7 +15,7 @@ pub(crate) fn handle_option_match(m_str: &str) -> InlineNode {
         display,
         target,
         span: None,
-        inventory: rusty_sphinx_ast::InventorySelector::Any,
+        inventory: rinx_ast::InventorySelector::Any,
     }
 }
 
@@ -32,7 +32,7 @@ mod tests {
                 display: "-m".to_string(),
                 target: "-m".to_string(),
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -45,7 +45,7 @@ mod tests {
                 display: "the module flag".to_string(),
                 target: "-m".to_string(),
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }

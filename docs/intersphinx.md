@@ -1,6 +1,6 @@
 # Linking between documentation sites
 
-Every `rusty_sphinx_site` writes an `objects.inv`, Sphinx's inventory of the
+Every `rinx_site` writes an `objects.inv`, Sphinx's inventory of the
 targets it defines, and can link into other sites through theirs — Sphinx's
 intersphinx, with one difference: an inventory is a **pinned build input**,
 never downloaded while building. See `docs/decisions/023-inventories.md` for
@@ -11,15 +11,15 @@ why.
 Declare the inventory, then list it on the site:
 
 ```python
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_inventory", "rusty_sphinx_site")
+load("@rinx//:defs.bzl", "rinx_inventory", "rinx_site")
 
-rusty_sphinx_inventory(
+rinx_inventory(
     name = "python",
     src = "@python_objects_inv//file",
     base_url = "https://docs.python.org/3.13/",
 )
 
-rusty_sphinx_site(
+rinx_site(
     name = "site",
     deps = [":docs"],
     inventories = [":python"],
@@ -82,7 +82,7 @@ have caused it.
 
 Nothing to configure: `objects.inv` is written at the site's root. A Sphinx
 project lists it in `intersphinx_mapping` like any other. Another
-`rusty_sphinx_site` can depend on it without building the pages, through the
+`rinx_site` can depend on it without building the pages, through the
 `inventory` output group:
 
 ```python
@@ -92,7 +92,7 @@ filegroup(
     output_group = "inventory",
 )
 
-rusty_sphinx_inventory(
+rinx_inventory(
     name = "docs",
     src = ":docs_objects_inv",
     base_url = "../docs/",   # relative to this site's root when deployed side by side

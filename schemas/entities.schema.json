@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "rusty-sphinx entity schema",
+  "title": "rinx entity schema",
   "description": "A project's entity meta-model, as the schema file spells it.",
   "type": "object",
   "properties": {

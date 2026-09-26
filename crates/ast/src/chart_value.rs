@@ -7,7 +7,7 @@
 //! same two kinds of content, so the two charts differ in presentation only —
 //! which is the whole shape of `docs/decisions/017-entity-pie.md`.
 
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
 /// What decides one value of a chart.
@@ -77,9 +77,7 @@ mod tests {
     fn test_a_value_survives_a_serialization_round_trip() {
         // Given — the node is written to a `.ast` and read back to render
         let values = [
-            ChartValue::Filter(Some(
-                rusty_sphinx_filter::parse_filter(r#"type == "req""#).unwrap(),
-            )),
+            ChartValue::Filter(Some(rinx_filter::parse_filter(r#"type == "req""#).unwrap())),
             ChartValue::Filter(None),
             ChartValue::Count(12),
         ];

@@ -3,7 +3,7 @@
 //! separate from [`super::list`]'s own unit tests purely for file size.
 
 use crate::parse;
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Document, Enumerator, EnumeratorFormat, EnumeratorSequence, ListItem, Node, inline_plain_text,
 };
 

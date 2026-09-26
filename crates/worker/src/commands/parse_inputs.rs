@@ -10,9 +10,9 @@
 //! setting should not have to touch every signature again.
 
 use anyhow::{Result, anyhow};
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_parser::ParseCtx;
+use rinx_ast as ast;
+use rinx_entity::EntitySchema;
+use rinx_parser::ParseCtx;
 use std::collections::BTreeMap;
 
 use super::cli_args::flag_values_opt;
@@ -61,7 +61,7 @@ impl<'a> ParseInputs<'a> {
 }
 
 /// Reads the `--jinja` opt-in and the `--jinja-context k=v ...` bindings that
-/// `rusty_sphinx_library`'s `jinja` and `jinja_context` attributes pass.
+/// `rinx_library`'s `jinja` and `jinja_context` attributes pass.
 ///
 /// `None` unless `--jinja` was given: a document is free to contain `{{` and
 /// `{%` as text, and most projects mean nothing by them.
@@ -100,9 +100,9 @@ mod tests {
     fn test_the_context_carries_the_declared_domain_and_schema() {
         // Given
         let files = no_files();
-        let schema = rusty_sphinx_entity::load_schema(
+        let schema = rinx_entity::load_schema(
             "[[entity_type]]\nname = \"req\"\n",
-            &rusty_sphinx_entity::NoReservedNames,
+            &rinx_entity::NoReservedNames,
         )
         .unwrap();
         let inputs = ParseInputs {
@@ -145,9 +145,9 @@ mod tests {
     fn test_a_project_with_entities_stamps_its_schemas_hash() {
         // Given
         let files = no_files();
-        let schema = rusty_sphinx_entity::load_schema(
+        let schema = rinx_entity::load_schema(
             "[[entity_type]]\nname = \"req\"\n",
-            &rusty_sphinx_entity::NoReservedNames,
+            &rinx_entity::NoReservedNames,
         )
         .unwrap();
         let inputs = ParseInputs {

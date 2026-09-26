@@ -23,7 +23,7 @@ use crate::span::Span;
 /// [`crate::Directive::Highlight`], it exists purely to be resolved
 /// elsewhere: every [`InlineNode::SubstitutionReference`] naming it is
 /// spliced with [`Self::kind`]'s resolved content by a whole-document pass
-/// that runs once parsing finishes (`rusty_sphinx_parser`'s
+/// that runs once parsing finishes (`rinx_parser`'s
 /// `resolve_substitutions`), since a reference may be written before its
 /// definition in source order.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

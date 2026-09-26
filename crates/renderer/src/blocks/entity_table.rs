@@ -14,7 +14,7 @@
 //!   directive uses.
 //!
 //! How a field *name* resolves against one entity is
-//! `rusty_sphinx_index::EntitySubject`, which used to live here. It moved when
+//! `rinx_index::EntitySubject`, which used to live here. It moved when
 //! a diagram template's `filter()` started resolving the same names: a filter
 //! must mean one thing across the whole build, and two copies of these rules
 //! is the only way it could come to mean two.

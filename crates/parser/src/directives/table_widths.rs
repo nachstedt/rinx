@@ -2,7 +2,7 @@
 //! `.. list-table::`, `.. csv-table::` and `.. table::` alike.
 
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableWidths};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span, TableWidths};
 
 /// Resolves a `:widths:` option's raw string into a [`TableWidths`],
 /// validating an explicit integer list against the table's actual column

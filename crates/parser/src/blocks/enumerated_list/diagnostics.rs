@@ -1,7 +1,7 @@
 use super::format::{EnumeratorMatch, detect_enumerator};
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Enumerator};
+use rinx_ast::{Diagnostic, DiagnosticCode, Enumerator};
 
 /// Why two adjacent enumerators do not form one list.
 ///
@@ -133,8 +133,8 @@ pub(super) fn diagnose_unrecognised_list(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::Domain;
-    use rusty_sphinx_ast::{EnumeratorFormat, EnumeratorSequence};
+    use rinx_ast::Domain;
+    use rinx_ast::{EnumeratorFormat, EnumeratorSequence};
 
     /// Parses `input` and returns only the "not recognised" diagnostics.
     fn unrecognised_diagnostics(input: &str) -> Vec<String> {

@@ -17,7 +17,7 @@ body. Both are ordinary reStructuredText.
 The title is parsed as inline markup, which no other directive caption in this
 build does:
 
-.. dropdown:: See ``rusty_sphinx.toml`` for the *full* list
+.. dropdown:: See ``rinx.toml`` for the *full* list
 
    A literal and an emphasis, both inside the summary bar.
 

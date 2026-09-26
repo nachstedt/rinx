@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Contents, ContentsBacklinks, ContentsOptions, Diagnostic, DiagnosticCode, Directive, TargetName,
 };
 
@@ -123,7 +123,7 @@ pub(super) fn parse_contents(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Domain, Node};
+    use rinx_ast::{Domain, Node};
 
     /// Parses a directive body directly, bypassing the block dispatcher, for
     /// tests about `parse_contents` itself rather than about recognition.

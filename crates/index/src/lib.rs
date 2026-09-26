@@ -3,7 +3,7 @@
 //! toctree graph and each document's section outline, glossary terms, domain objects,
 //! numbered equations, general-index entries, and the other sites' inventories
 //! it links into. Pure data, no indexing/traversal logic — see
-//! `rusty_sphinx_analyzer` for how a `ProjectIndex` gets built.
+//! `rinx_analyzer` for how a `ProjectIndex` gets built.
 
 mod document_outline;
 mod entity_record;

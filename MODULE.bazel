@@ -1,19 +1,19 @@
 """
-Root Bazel workspace for rusty-sphinx.
+Root Bazel workspace for rinx.
 
 This workspace:
- - Builds the rusty-sphinx binary from src/ via rules_rust.
- - Loads the rusty_sphinx Starlark rules from the local bazel/ subdirectory.
+ - Builds the rinx binary from src/ via rules_rust.
+ - Loads the rinx Starlark rules from the local bazel/ subdirectory.
  - Provides example documentation targets under examples/.
 
 Quick start:
-  bazel build //:rusty_sphinx_worker          # build the binary
+  bazel build //:rinx_worker                  # build the binary
   bazel build //examples:site                 # build the full example site
   bazel build //examples/team_a:docs          # build team_a in isolation
 """
 
 module(
-    name = "rusty_sphinx",
+    name = "rinx",
     version = "0.0.0",
 )
 
@@ -38,7 +38,7 @@ crate.from_cargo(
     cargo_lockfile = "//:Cargo.lock",
     # The crate_universe resolver's own lockfile, distinct from Cargo.lock
     # above. It is required — not merely an optimization — whenever
-    # rusty-sphinx is consumed as a *non-root* module: rules_rust refuses to
+    # rinx is consumed as a *non-root* module: rules_rust refuses to
     # repin across a module boundary, since the producer's lockfile normally
     # sits in a read-only bzlmod cache. `scripts/benchmark.py` builds the
     # CPython corpus in exactly that shape, via `local_path_override`, so

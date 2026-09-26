@@ -16,11 +16,11 @@
 //! sharper reason a diagram has for it: a picture refused over a misspelled
 //! `:align:` is a page with a hole in it.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityFlow, EntityFlowSource, FlowDirection, ImageAlign,
     LengthOrPercentage, Span, TargetName,
 };
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;

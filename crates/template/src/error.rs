@@ -5,10 +5,10 @@ use std::fmt;
 /// A template that could not be rendered.
 ///
 /// Carries *where* rather than *what to call it*: the diagnostic code lives
-/// with the caller, as it does for [`rusty_sphinx_filter`]'s errors, because
+/// with the caller, as it does for [`rinx_filter`]'s errors, because
 /// this crate does not depend on the vocabulary those codes are declared in.
 ///
-/// [`rusty_sphinx_filter`]: https://docs.rs/rusty_sphinx_filter
+/// [`rinx_filter`]: https://docs.rs/rinx_filter
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TemplateError {
     /// What went wrong.

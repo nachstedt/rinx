@@ -11,8 +11,8 @@ opening the file and measuring it.
 
 ## Decision 1 — images are declared build inputs, in their own attribute
 
-`rusty_sphinx_library` gains an `images` attribute; the files ride to the site
-rule on `RustySphinxInfo.image_files`, and `validate_images` fails the build for
+`rinx_library` gains an `images` attribute; the files ride to the site
+rule on `RinxInfo.image_files`, and `validate_images` fails the build for
 any referenced project file missing from the bundle.
 
 This is a third, separate mechanism from the two that already exist, and the
@@ -37,7 +37,7 @@ with a global counter (`logo1.png`). That pass is order-dependent across
 libraries and hostile to per-action caching: adding an image to one team's
 library can silently renumber another team's.
 
-rusty-sphinx instead copies `examples/data/logo.svg` to
+rinx instead copies `examples/data/logo.svg` to
 `_images/examples/data/logo.svg`. Collisions become impossible by construction,
 no global pass is needed, and the path a page links to depends only on the file
 itself. `crates/renderer/src/blocks/asset_href.rs` computes the relative href
@@ -53,8 +53,8 @@ docutils' `:loading:` has three values, and `embed` means what it says: the
 file's bytes go into the HTML as a `data:` URI. Three existing constraints meet
 here.
 
-- `rusty_sphinx_renderer` performs no I/O, by design — the same rule that makes
-  `rusty_sphinx_parser` read a `:file:` through an injected loader.
+- `rinx_renderer` performs no I/O, by design — the same rule that makes
+  `rinx_parser` read a `:file:` through an injected loader.
 - A `.ast` must stay small: it is a cache unit, and the live preview ships one
   per keystroke. Base64 image data must not be baked into it at parse time.
 - A render action must not take the whole site's images as inputs, or every

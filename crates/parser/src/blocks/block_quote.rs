@@ -13,7 +13,7 @@ use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent, unindent_body_lines};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, InlineNode, Node};
+use rinx_ast::{Diagnostic, DiagnosticCode, InlineNode, Node};
 
 /// Where an attribution paragraph sits within one indented run, and how much
 /// of each of its lines is markup rather than display text.
@@ -299,7 +299,7 @@ mod tests {
     use super::*;
     use crate::diagnostics::Diagnostics;
     use crate::headings::Adornment;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     fn ctx() -> ParseCtx<'static> {
         ParseCtx::with_domain(Domain::Py)

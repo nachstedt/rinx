@@ -15,7 +15,7 @@ This page demonstrates the ``.. glossary::`` directive and the ``:term:`` role.
 
    configuration directory
    configuration folder
-      The directory containing the ``conf.py`` (or ``rusty_sphinx.toml``)
+      The directory containing the ``conf.py`` (or ``rinx.toml``)
       file. Multiple terms can share the same definition.
 
 Sorted Glossary
@@ -32,8 +32,8 @@ of the order they appear in the source.
 
    Rust
       A systems programming language focused on safety, speed, and
-      concurrency. Rusty-Sphinx is implemented in Rust.
+      concurrency. Rinx is implemented in Rust.
 
    reStructuredText
-      The markup language used as input by Sphinx and Rusty-Sphinx,
+      The markup language used as input by Sphinx and Rinx,
       commonly abbreviated as RST.

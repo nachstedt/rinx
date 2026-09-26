@@ -1,8 +1,8 @@
 //! The visible block a directive this build could not turn into content is
 //! drawn as.
 //!
-//! Both [`rusty_sphinx_ast::Directive::Unknown`] and
-//! [`rusty_sphinx_ast::Directive::Malformed`] render through here, because the
+//! Both [`rinx_ast::Directive::Unknown`] and
+//! [`rinx_ast::Directive::Malformed`] render through here, because the
 //! reason they exist is the same one: a directive that produced nothing at all
 //! took every word written inside it off the page with it, and a reader had no
 //! way to tell. Quoting the source back is what makes the loss visible, the way
@@ -12,7 +12,7 @@
 //! while a malformed directive prints the message its parse-time diagnostic
 //! reported, so the page and the build log give one explanation.
 
-use rusty_sphinx_ast::Directive;
+use rinx_ast::Directive;
 
 /// Renders the error block for `Unknown`/`Malformed`, or nothing for any other
 /// directive.

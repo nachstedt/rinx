@@ -20,7 +20,7 @@
 //!   is reachable by `:ref:` regardless, and a role adds a type check plus the
 //!   spelling an existing project already writes.
 //!
-//! Its own crate, parallel to `rusty_sphinx_scope` and `rusty_sphinx_toctree`,
+//! Its own crate, parallel to `rinx_scope` and `rinx_toctree`,
 //! because the phases that need it are forbidden to depend on each other: the
 //! parser reads the vocabulary, the analyzer indexes against it, the renderer
 //! presents it, and the worker loads it. The renderer's `SiteConfig` could not
@@ -30,7 +30,7 @@
 //! [`EntitySchema::empty`], so a schema in hand has already been checked.
 //!
 //! The *instance* types an entity turns into — `EntityId`, `AttributeValue`,
-//! `EntityBody`, `EntitySection` — live in `rusty_sphinx_ast` instead, and are
+//! `EntityBody`, `EntitySection` — live in `rinx_ast` instead, and are
 //! deliberately not re-exported here: they are written in an `.rst` file and
 //! survive into a `.ast` file, so the AST owns them. This crate owns only what
 //! the schema declares.

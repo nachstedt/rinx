@@ -40,15 +40,15 @@ pub use nav::{PageLink, ResolvedNavEntry};
 pub use page::{PageMeta, css_relative_path, render_genindex, render_page};
 pub use uml_error::{DiagramError, DiagramFailure};
 
-use rusty_sphinx_ast::HashedContent;
+use rinx_ast::HashedContent;
 
 use blocks::{EntityUpdateVisibility, collect_anonymous_targets, render_nodes};
 use highlight::Highlighter;
 use math::MathRenderer;
 use resolution::{DomainObjectResolver, OptionResolver};
-use rusty_sphinx_ast::{Document, ResolvedLanguage};
-use rusty_sphinx_index::ProjectIndex;
-use rusty_sphinx_scope::Scope;
+use rinx_ast::{Document, ResolvedLanguage};
+use rinx_index::ProjectIndex;
+use rinx_scope::Scope;
 
 /// The result of rendering a document: the body HTML, any cross-references
 /// that failed to resolve against the [`ProjectIndex`], any domain-object
@@ -98,7 +98,7 @@ pub(crate) struct RenderCtx<'a> {
     pub entity_resolver: &'a crate::resolution::EntityResolver<'a>,
     /// The project's entity meta-model, for the labels and the relation
     /// vocabulary the default rendering reads.
-    pub schema: &'a rusty_sphinx_entity::EntitySchema,
+    pub schema: &'a rinx_entity::EntitySchema,
     /// Per-type entity templates the site supplied, keyed by the name a type
     /// refers to. Empty for a site that supplies none, which is when every
     /// entity uses the built-in rendering.
@@ -161,10 +161,10 @@ pub(crate) struct RenderCtx<'a> {
     /// highlighting diagnostics for every block inheriting it.
     pub highlight_force: bool,
     /// The `id` of each top-level heading, keyed by its index in the
-    /// document's node list, from [`rusty_sphinx_ast::allocate_section_ids`].
+    /// document's node list, from [`rinx_ast::allocate_section_ids`].
     /// The analyzer builds its document outline from that same function, so a
     /// section link in the navigation and the anchor it lands on cannot drift.
-    pub section_ids: &'a std::collections::BTreeMap<usize, rusty_sphinx_ast::SectionId>,
+    pub section_ids: &'a std::collections::BTreeMap<usize, rinx_ast::SectionId>,
     /// Whether the node list being rendered is the document's own top level.
     /// Only there is a heading a *section* with an id; a heading nested in a
     /// directive body is not one. `render_nodes` clears this for the duration
@@ -179,7 +179,7 @@ pub(crate) struct RenderCtx<'a> {
     /// before the sections it lists — a `.. contents::` placed after its own
     /// sections will not backlink them, a deliberate document-order
     /// limitation of this single left-to-right rendering pass.
-    pub contents_backlinks: &'a mut std::collections::HashMap<rusty_sphinx_ast::SectionId, String>,
+    pub contents_backlinks: &'a mut std::collections::HashMap<rinx_ast::SectionId, String>,
     /// Hands out a self-anchor id to a `.. contents::` with no explicit
     /// `:name:`.
     ///
@@ -189,13 +189,13 @@ pub(crate) struct RenderCtx<'a> {
     /// one per directive, so two un-named `.. contents::` blocks (both
     /// defaulting to the title "Contents") are disambiguated against each
     /// other too, exactly as docutils' single shared id registry would.
-    pub contents_id_allocator: &'a mut rusty_sphinx_ast::SectionIdAllocator,
+    pub contents_id_allocator: &'a mut rinx_ast::SectionIdAllocator,
     /// The enclosing scope for both domains, mirroring the analyzer's
     /// `index_nodes`/`index_domain_object` scope so a domain object's anchor
     /// `id` always matches the qualified key the analyzer indexed it under.
     /// `.python` carries the enclosing `py:class`/`py:exception` stack and
     /// current `py:module`; `.c` carries the enclosing `c:struct`/`c:union`
-    /// stack — see [`rusty_sphinx_scope::Scope`]'s doc comment for why they
+    /// stack — see [`rinx_scope::Scope`]'s doc comment for why they
     /// stay separate fields rather than being unified further. Both are
     /// pushed/popped by `render_domain_object` around a nested body; the
     /// module component of `.python` is document-order state, never popped.
@@ -210,7 +210,7 @@ pub fn render(doc: &Document, index: &ProjectIndex, doc_path: &str) -> RenderOut
 
 /// Renders a document under a fully specified [`config::SiteConfig`] — the
 /// entry point for callers that have one, which is every caller that reads a
-/// `rusty_sphinx.toml`.
+/// `rinx.toml`.
 ///
 /// [`render`] is a thin wrapper defaulting the config, kept because most of
 /// this crate's own tests have no site configuration to speak of and only the
@@ -228,7 +228,7 @@ pub fn render_with_config(
         doc_path,
         config,
         &EmbeddedAssets::new(),
-        rusty_sphinx_entity::EntitySchema::empty_ref(),
+        rinx_entity::EntitySchema::empty_ref(),
         &blocks::EntityTemplates::new(),
     )
 }
@@ -247,7 +247,7 @@ pub fn render_with_assets(
     doc_path: &str,
     config: &config::SiteConfig,
     embedded_assets: &EmbeddedAssets,
-    schema: &rusty_sphinx_entity::EntitySchema,
+    schema: &rinx_entity::EntitySchema,
     entity_templates: &blocks::EntityTemplates,
 ) -> RenderOutput {
     let mut html = String::new();
@@ -272,8 +272,8 @@ pub fn render_with_assets(
     let mut entity_template_errors = Vec::new();
     let math = MathRenderer::new();
     let highlighter = Highlighter::new();
-    let section_ids = rusty_sphinx_ast::allocate_section_ids(&doc.nodes);
-    let mut contents_id_allocator = rusty_sphinx_ast::SectionIdAllocator::new();
+    let section_ids = rinx_ast::allocate_section_ids(&doc.nodes);
+    let mut contents_id_allocator = rinx_ast::SectionIdAllocator::new();
     for id in section_ids.values() {
         contents_id_allocator.seed(id);
     }
@@ -332,7 +332,7 @@ pub fn render_with_assets(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{
+    use rinx_ast::{
         Directive, Enumerator, EnumeratorFormat, EnumeratorSequence, InlineNode, ListItem, Node,
         TargetName, TargetSearchOrder, Uml, UmlSource,
     };
@@ -353,12 +353,9 @@ mod tests {
                 },
             ],
         );
-        let mut numbers = rusty_sphinx_index::DocumentNumbers::default();
+        let mut numbers = rinx_index::DocumentNumbers::default();
         numbers.set_document(vec![2]);
-        numbers.set_section(
-            &rusty_sphinx_ast::SectionId::from_title("Install"),
-            vec![2, 1],
-        );
+        numbers.set_section(&rinx_ast::SectionId::from_title("Install"), vec![2, 1]);
         let mut index = ProjectIndex::default();
         index
             .section_numbers
@@ -391,8 +388,8 @@ mod tests {
                 text: vec![InlineNode::Text("Install".to_string())],
             }],
         );
-        let mut numbers = rusty_sphinx_index::DocumentNumbers::default();
-        numbers.set_section(&rusty_sphinx_ast::SectionId::from_title("Install"), vec![1]);
+        let mut numbers = rinx_index::DocumentNumbers::default();
+        numbers.set_section(&rinx_ast::SectionId::from_title("Install"), vec![1]);
         numbers.set_format("Appendix ".to_string(), ".".to_string());
         let mut index = ProjectIndex::default();
         index
@@ -452,9 +449,7 @@ mod tests {
                     level: 1,
                     text: vec![InlineNode::Text("Title".to_string())],
                 },
-                Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
-                    "Paragraph".to_string(),
-                )]),
+                Node::Paragraph(vec![rinx_ast::InlineNode::Text("Paragraph".to_string())]),
                 Node::Heading {
                     level: 1,
                     text: vec![InlineNode::Text("Another Heading".to_string())],
@@ -482,15 +477,13 @@ mod tests {
                 text: vec![
                     InlineNode::Text("The ".to_string()),
                     InlineNode::DomainObjectReference {
-                        object_type: rusty_sphinx_ast::ObjectType::Py(
-                            rusty_sphinx_ast::PyObjectType::Module,
-                        ),
+                        object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Module),
                         name: "greetings".to_string(),
                         display: "greetings".to_string(),
                         link: true,
                         search_order: TargetSearchOrder::LeastQualifiedFirst,
                         span: None,
-                        inventory: rusty_sphinx_ast::InventorySelector::Any,
+                        inventory: rinx_ast::InventorySelector::Any,
                     },
                     InlineNode::Text(" Module".to_string()),
                 ],
@@ -498,7 +491,7 @@ mod tests {
         );
         let mut index = ProjectIndex::default();
         index.insert_domain_object(
-            rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+            rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Module),
             "greetings",
             "api.rst",
         );
@@ -524,9 +517,7 @@ mod tests {
                     level: 1,
                     text: vec![InlineNode::Text("Title <script>".to_string())],
                 },
-                Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
-                    "A & B > C".to_string(),
-                )]),
+                Node::Paragraph(vec![rinx_ast::InlineNode::Text("A & B > C".to_string())]),
             ],
         );
         let index = ProjectIndex::default();
@@ -687,19 +678,17 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Reference {
-                    display: None,
-                    target: "other-section".to_string(),
-                    span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
-                },
-            ])],
+            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Reference {
+                display: None,
+                target: "other-section".to_string(),
+                span: None,
+                inventory: rinx_ast::InventorySelector::Any,
+            }])],
         );
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("other-section"),
-            rusty_sphinx_index::TargetLocation::Internal("other_file.rst".to_string()),
+            rinx_index::TargetLocation::Internal("other_file.rst".to_string()),
         );
 
         // When
@@ -716,19 +705,17 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Reference {
-                    display: None,
-                    target: "other-section".to_string(),
-                    span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
-                },
-            ])],
+            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Reference {
+                display: None,
+                target: "other-section".to_string(),
+                span: None,
+                inventory: rinx_ast::InventorySelector::Any,
+            }])],
         );
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("other-section"),
-            rusty_sphinx_index::TargetLocation::Internal("other_file.rst".to_string()),
+            rinx_index::TargetLocation::Internal("other_file.rst".to_string()),
         );
 
         // When
@@ -743,17 +730,17 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Reference {
+                rinx_ast::InlineNode::Reference {
                     display: None,
                     target: "missing-ref".to_string(),
                     span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
+                    inventory: rinx_ast::InventorySelector::Any,
                 },
-                rusty_sphinx_ast::InlineNode::TermReference {
+                rinx_ast::InlineNode::TermReference {
                     display: "missing term".to_string(),
                     term: "missing-term".to_string(),
                     span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
+                    inventory: rinx_ast::InventorySelector::Any,
                 },
             ])],
         );
@@ -784,20 +771,18 @@ mod tests {
         // Given a document in a subdirectory
         let doc = Document::new(
             "examples/team_b/index.rst".to_string(),
-            vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Reference {
-                    display: None,
-                    target: "target-in-a".to_string(),
-                    span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
-                },
-            ])],
+            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Reference {
+                display: None,
+                target: "target-in-a".to_string(),
+                span: None,
+                inventory: rinx_ast::InventorySelector::Any,
+            }])],
         );
 
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("target-in-a"),
-            rusty_sphinx_index::TargetLocation::Internal("examples/team_a/index.rst".to_string()),
+            rinx_index::TargetLocation::Internal("examples/team_a/index.rst".to_string()),
         );
 
         // When
@@ -814,18 +799,16 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Hyperlink {
-                    text: "Python".to_string(),
-                    target: "Python".to_string(),
-                    span: None,
-                },
-            ])],
+            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
+                text: "Python".to_string(),
+                target: "Python".to_string(),
+                span: None,
+            }])],
         );
         let mut index = ProjectIndex::default();
         index.targets.insert(
             TargetName::new("Python"),
-            rusty_sphinx_index::TargetLocation::External("https://python.org".to_string()),
+            rinx_index::TargetLocation::External("https://python.org".to_string()),
         );
 
         // When
@@ -839,13 +822,11 @@ mod tests {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
-            vec![Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Hyperlink {
-                    text: "Google".to_string(),
-                    target: "https://google.com".to_string(),
-                    span: None,
-                },
-            ])],
+            vec![Node::Paragraph(vec![rinx_ast::InlineNode::Hyperlink {
+                text: "Google".to_string(),
+                target: "https://google.com".to_string(),
+                span: None,
+            }])],
         );
         let index = ProjectIndex::default();
 
@@ -859,11 +840,11 @@ mod tests {
     fn test_render_formats_plantuml_with_relative_path() {
         // Given a document in a subdirectory
         let uml = Uml::new(UmlSource::PlantUml, "A -> B".to_string());
-        let expected_hash = rusty_sphinx_uml::expand(
+        let expected_hash = rinx_uml::expand(
             &uml,
-            &rusty_sphinx_uml::UmlContext::new(
+            &rinx_uml::UmlContext::new(
                 &ProjectIndex::default(),
-                rusty_sphinx_entity::EntitySchema::empty_ref(),
+                rinx_entity::EntitySchema::empty_ref(),
                 "examples/team_b/index.rst",
             ),
         )

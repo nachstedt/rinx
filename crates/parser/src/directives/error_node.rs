@@ -16,7 +16,7 @@
 
 use crate::diagnostics::Diagnostics;
 use crate::indent::strip_common_indent;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Span};
 
 /// Degrades a directive whose name this build does not recognize.
 ///

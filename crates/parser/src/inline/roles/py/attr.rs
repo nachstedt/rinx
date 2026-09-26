@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{Domain, InlineNode, ObjectType};
+use rinx_ast::{Domain, InlineNode, ObjectType};
 
 use crate::inline::regexes::ATTR_ROLE_REGEX;
 
@@ -25,8 +25,8 @@ pub(crate) fn handle_attr_match(m_str: &str, default_domain: Domain) -> InlineNo
 mod tests {
     use super::*;
     use crate::inline::dispatch::handle_inline_match;
-    use rusty_sphinx_ast::TargetSearchOrder;
-    use rusty_sphinx_entity::EntitySchema;
+    use rinx_ast::TargetSearchOrder;
+    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_attr_match_resolves_when_domain_defines_attr_role() {
@@ -34,13 +34,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Attribute),
                 name: "Greeter.name".to_string(),
                 display: "Greeter.name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -50,13 +50,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Attribute),
                 name: "Greeter.name".to_string(),
                 display: "the name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -77,13 +77,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Attribute),
                 name: "Greeter.name".to_string(),
                 display: "Greeter.name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -99,13 +99,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Attribute),
                 name: "Greeter.secret".to_string(),
                 display: "Greeter.secret".to_string(),
                 link: false,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }
@@ -121,13 +121,13 @@ mod tests {
         assert_eq!(
             result,
             InlineNode::DomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Attribute),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Attribute),
                 name: "Greeter.name".to_string(),
                 display: "name".to_string(),
                 link: true,
                 search_order: TargetSearchOrder::LeastQualifiedFirst,
                 span: None,
-                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                inventory: rinx_ast::InventorySelector::Any,
             }
         );
     }

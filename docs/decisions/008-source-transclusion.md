@@ -20,7 +20,7 @@ declaration of what a build action reads.
 
 ### Inclusion happens while parsing
 
-Both directives read their file in `rusty_sphinx_parser`, through the injected
+Both directives read their file in `rinx_parser`, through the injected
 `ParseFileLoader` seam on `ParseCtx` that `.. csv-table::`'s `:file:` already
 used. The parser still performs no I/O of its own;
 `crates/worker/src/commands/parse_files.rs` supplies the filesystem, and the

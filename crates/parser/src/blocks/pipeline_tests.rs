@@ -4,8 +4,8 @@
 //! for file size.
 
 use crate::parse;
-use rusty_sphinx_ast::TargetName;
-use rusty_sphinx_ast::{CodeLanguage, InlineNode, Node};
+use rinx_ast::TargetName;
+use rinx_ast::{CodeLanguage, InlineNode, Node};
 
 #[test]
 fn test_parse_returns_empty_document_for_empty_input() {
@@ -305,7 +305,7 @@ fn test_parse_finds_a_doctest_block_nested_in_an_admonition() {
 
     // Then
     let mut found = false;
-    rusty_sphinx_ast::walk_nodes(&doc.nodes, &mut |node| {
+    rinx_ast::walk_nodes(&doc.nodes, &mut |node| {
         if matches!(node, Node::DoctestBlock(_)) {
             found = true;
         }
@@ -436,8 +436,7 @@ fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_followin
     let doc = parse("test.rst", input);
     // Then
     assert_eq!(doc.nodes.len(), 1);
-    let Node::Directive(rusty_sphinx_ast::Directive::Glossary { entries, .. }) = &doc.nodes[0]
-    else {
+    let Node::Directive(rinx_ast::Directive::Glossary { entries, .. }) = &doc.nodes[0] else {
         panic!("Expected Glossary directive, got {:?}", doc.nodes[0]);
     };
     assert_eq!(entries.len(), 1);
@@ -448,7 +447,7 @@ fn test_parse_bodyless_index_directive_inside_glossary_does_not_swallow_followin
     assert_eq!(entries[0].definition.len(), 2);
     assert!(matches!(
         entries[0].definition[0],
-        Node::Directive(rusty_sphinx_ast::Directive::Index { .. })
+        Node::Directive(rinx_ast::Directive::Index { .. })
     ));
     assert_eq!(
         entries[0].definition[1],
@@ -473,7 +472,7 @@ fn test_parse_reads_a_math_directive_with_a_label() {
     let doc = parse("test.rst", input);
 
     // Then
-    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Math {
+    let rinx_ast::Node::Directive(rinx_ast::Directive::Math {
         parts,
         label,
         nowrap,
@@ -559,14 +558,11 @@ fn test_parse_places_a_math_directive_nested_in_an_admonition() {
     let doc = parse("test.rst", input);
 
     // Then the span points at the nested directive's real line (3), not line 1
-    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Admonition { body, .. }) =
-        &doc.nodes[0]
+    let rinx_ast::Node::Directive(rinx_ast::Directive::Admonition { body, .. }) = &doc.nodes[0]
     else {
         panic!("expected an admonition, got {:?}", doc.nodes[0]);
     };
-    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Math { span, .. }) =
-        &body[0]
-    else {
+    let rinx_ast::Node::Directive(rinx_ast::Directive::Math { span, .. }) = &body[0] else {
         panic!("expected a nested math directive, got {:?}", body[0]);
     };
     assert_eq!(
@@ -588,9 +584,7 @@ fn test_parse_points_a_math_directive_span_past_its_option_lines() {
 
     // Then the span names the equation's line, not the option line above it —
     // a LaTeX error is about the LaTeX
-    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Math { span, .. }) =
-        &doc.nodes[1]
-    else {
+    let rinx_ast::Node::Directive(rinx_ast::Directive::Math { span, .. }) = &doc.nodes[1] else {
         panic!("expected a math directive, got {:?}", doc.nodes[1]);
     };
     let span = span.expect("a math directive should carry a span");
@@ -609,9 +603,7 @@ fn test_parse_points_a_math_directive_span_at_the_first_of_several_equations() {
     let doc = parse("test.rst", input);
 
     // Then the span names the first equation's line
-    let rusty_sphinx_ast::Node::Directive(rusty_sphinx_ast::Directive::Math { span, .. }) =
-        &doc.nodes[0]
-    else {
+    let rinx_ast::Node::Directive(rinx_ast::Directive::Math { span, .. }) = &doc.nodes[0] else {
         panic!("expected a math directive");
     };
     assert_eq!(
@@ -657,6 +649,6 @@ fn test_parse_reports_an_undefined_substitution_reference() {
     // Then
     assert_eq!(
         doc.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(),
-        vec![rusty_sphinx_ast::DiagnosticCode::SubstitutionUndefined]
+        vec![rinx_ast::DiagnosticCode::SubstitutionUndefined]
     );
 }

@@ -1,7 +1,7 @@
 //! Admonition-family directive rendering: `note`/`warning`/etc.,
 //! `versionadded`/`versionchanged`/`deprecated`, and `seealso`.
 
-use rusty_sphinx_ast::Node;
+use rinx_ast::Node;
 use std::fmt::Write as _;
 
 use crate::RenderCtx;
@@ -9,7 +9,7 @@ use crate::RenderCtx;
 /// Renders an admonition directive (note, warning, hint, etc.) as HTML.
 pub(super) fn render_admonition(
     html: &mut String,
-    kind: rusty_sphinx_ast::AdmonitionKind,
+    kind: rinx_ast::AdmonitionKind,
     title: Option<&str>,
     collapsible: Option<bool>,
     body: &[Node],
@@ -52,7 +52,7 @@ pub(super) fn render_admonition(
 /// Renders a versionadded / versionchanged / deprecated directive as HTML.
 pub(super) fn render_version_change(
     html: &mut String,
-    kind: rusty_sphinx_ast::VersionChangeKind,
+    kind: rinx_ast::VersionChangeKind,
     version: &str,
     body: &[Node],
     ctx: &mut RenderCtx<'_>,
@@ -61,19 +61,19 @@ pub(super) fn render_version_change(
     let version_escaped = html_escape::encode_text(version);
 
     let label = match kind {
-        rusty_sphinx_ast::VersionChangeKind::Added => format!("New in version {version_escaped}:"),
-        rusty_sphinx_ast::VersionChangeKind::Changed => {
+        rinx_ast::VersionChangeKind::Added => format!("New in version {version_escaped}:"),
+        rinx_ast::VersionChangeKind::Changed => {
             format!("Changed in version {version_escaped}:")
         }
-        rusty_sphinx_ast::VersionChangeKind::Deprecated => {
+        rinx_ast::VersionChangeKind::Deprecated => {
             format!("Deprecated since version {version_escaped}:")
         }
     };
 
     let inner_class = match kind {
-        rusty_sphinx_ast::VersionChangeKind::Added => "added",
-        rusty_sphinx_ast::VersionChangeKind::Changed => "changed",
-        rusty_sphinx_ast::VersionChangeKind::Deprecated => "deprecated",
+        rinx_ast::VersionChangeKind::Added => "added",
+        rinx_ast::VersionChangeKind::Changed => "changed",
+        rinx_ast::VersionChangeKind::Deprecated => "deprecated",
     };
 
     let _ = writeln!(html, "<div class=\"{kind_str}\">");
@@ -103,8 +103,8 @@ pub(super) fn render_seealso(html: &mut String, body: &[Node], ctx: &mut RenderC
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::with_ctx;
-    use rusty_sphinx_ast::{Directive, Document, InlineNode, TargetSearchOrder};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Directive, Document, InlineNode, TargetSearchOrder};
+    use rinx_index::ProjectIndex;
 
     fn render_doc(doc: &Document) -> String {
         let index = ProjectIndex::default();
@@ -117,7 +117,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::Admonition {
-                kind: rusty_sphinx_ast::AdmonitionKind::Note,
+                kind: rinx_ast::AdmonitionKind::Note,
                 title: None,
                 collapsible: None,
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
@@ -140,7 +140,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::Admonition {
-                kind: rusty_sphinx_ast::AdmonitionKind::Warning,
+                kind: rinx_ast::AdmonitionKind::Warning,
                 title: Some("Custom Warning".to_string()),
                 collapsible: Some(false),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
@@ -161,7 +161,7 @@ mod tests {
     fn test_render_admonition_static() {
         // Given
         let mut html = String::new();
-        let kind = rusty_sphinx_ast::AdmonitionKind::Note;
+        let kind = rinx_ast::AdmonitionKind::Note;
         let title: Option<String> = None;
         let collapsible: Option<bool> = None;
         let body = vec![Node::Paragraph(vec![InlineNode::Text("Body".to_string())])];
@@ -180,7 +180,7 @@ mod tests {
     fn test_render_admonition_collapsible_open() {
         // Given
         let mut html = String::new();
-        let kind = rusty_sphinx_ast::AdmonitionKind::Warning;
+        let kind = rinx_ast::AdmonitionKind::Warning;
         let title = Some("Custom Title".to_string());
         let collapsible = Some(true);
         let body = vec![];
@@ -200,7 +200,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::VersionChange {
-                kind: rusty_sphinx_ast::VersionChangeKind::Added,
+                kind: rinx_ast::VersionChangeKind::Added,
                 version: "1.0".to_string(),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
                     "Initial release.".to_string(),
@@ -221,7 +221,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::VersionChange {
-                kind: rusty_sphinx_ast::VersionChangeKind::Deprecated,
+                kind: rinx_ast::VersionChangeKind::Deprecated,
                 version: "3.0".to_string(),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
                     "Use new API.".to_string(),
@@ -242,7 +242,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::VersionChange {
-                kind: rusty_sphinx_ast::VersionChangeKind::Changed,
+                kind: rinx_ast::VersionChangeKind::Changed,
                 version: "2.0".to_string(),
                 body: vec![],
             })],
@@ -285,31 +285,31 @@ mod tests {
             vec![Node::Directive(Directive::SeeAlso {
                 body: vec![Node::DefinitionList {
                     items: vec![
-                        rusty_sphinx_ast::DefinitionListItem {
+                        rinx_ast::DefinitionListItem {
                             term: vec![
                                 InlineNode::Text("Module ".to_string()),
                                 InlineNode::DomainObjectReference {
-                                    object_type: rusty_sphinx_ast::ObjectType::Py(
-                                        rusty_sphinx_ast::PyObjectType::Module,
+                                    object_type: rinx_ast::ObjectType::Py(
+                                        rinx_ast::PyObjectType::Module,
                                     ),
                                     name: "curses.ascii".to_string(),
                                     display: "curses.ascii".to_string(),
                                     link: true,
                                     search_order: TargetSearchOrder::LeastQualifiedFirst,
                                     span: None,
-                                    inventory: rusty_sphinx_ast::InventorySelector::Any,
+                                    inventory: rinx_ast::InventorySelector::Any,
                                 },
                             ],
                             definition: vec![Node::Paragraph(vec![InlineNode::Text(
                                 "Utilities for working with ASCII characters.".to_string(),
                             )])],
                         },
-                        rusty_sphinx_ast::DefinitionListItem {
+                        rinx_ast::DefinitionListItem {
                             term: vec![InlineNode::Reference {
                                 display: None,
                                 target: "curses-howto".to_string(),
                                 span: None,
-                                inventory: rusty_sphinx_ast::InventorySelector::Any,
+                                inventory: rinx_ast::InventorySelector::Any,
                             }],
                             definition: vec![Node::Paragraph(vec![InlineNode::Text(
                                 "Tutorial material.".to_string(),
@@ -354,7 +354,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "greetings".to_string(),
                     platform: Some("Unix, Windows".to_string()),
                     synopsis: Some("Greeting utilities.".to_string()),

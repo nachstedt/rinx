@@ -1,5 +1,5 @@
 //! The `inventory` subcommand: writes the site's `objects.inv`, so other
-//! documentation sites — Sphinx or rusty-sphinx — can link into it.
+//! documentation sites — Sphinx or rinx — can link into it.
 //!
 //! The inventory is a projection of the [`ProjectIndex`] and nothing more:
 //! every entry's URI is built by the very function the renderer uses for a
@@ -10,10 +10,10 @@
 use std::fs;
 
 use anyhow::{Context, Result};
-use rusty_sphinx_ast::{ObjectType, PyObjectType};
-use rusty_sphinx_index::{ProjectIndex, TargetLocation, relative_doc_href};
-use rusty_sphinx_inventory::{EntryType, Inventory, InventoryEntry, write_inventory};
-use rusty_sphinx_renderer::config;
+use rinx_ast::{ObjectType, PyObjectType};
+use rinx_index::{ProjectIndex, TargetLocation, relative_doc_href};
+use rinx_inventory::{EntryType, Inventory, InventoryEntry, write_inventory};
+use rinx_renderer::config;
 
 use super::cli_args::flag_value;
 
@@ -122,7 +122,7 @@ fn term_entries(index: &ProjectIndex) -> Vec<InventoryEntry> {
             uri: format!(
                 "{}#{}",
                 page_uri(doc_path),
-                rusty_sphinx_ast::term_id(term.as_str())
+                rinx_ast::term_id(term.as_str())
             ),
             display_name: None,
         })
@@ -146,7 +146,7 @@ fn domain_object_entries(index: &ProjectIndex) -> Vec<InventoryEntry> {
                     uri: format!(
                         "{}#{}",
                         page_uri(doc_path),
-                        rusty_sphinx_ast::build_domain_object_key(*object_type, name).as_str()
+                        rinx_ast::build_domain_object_key(*object_type, name).as_str()
                     ),
                     display_name: None,
                 })
@@ -196,8 +196,8 @@ fn entry_type(raw: &str) -> EntryType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{CObjectType, StdObjectType, TargetName};
-    use rusty_sphinx_inventory::read_inventory;
+    use rinx_ast::{CObjectType, StdObjectType, TargetName};
+    use rinx_inventory::read_inventory;
 
     fn find<'a>(inventory: &'a Inventory, entry_type: &str, name: &str) -> &'a InventoryEntry {
         inventory

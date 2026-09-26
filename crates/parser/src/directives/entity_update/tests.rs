@@ -1,7 +1,5 @@
-use rusty_sphinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, EntityUpdate, FieldMutationMode, Node,
-};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, EntityUpdate, FieldMutationMode, Node};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
 use crate::parse_with_ctx;
@@ -43,9 +41,9 @@ fn schema() -> EntitySchema {
 }
 
 /// Parses `rst` against the test schema, returning the whole document.
-fn parse(rst: &str) -> rusty_sphinx_ast::Document {
+fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).with_schema(&schema);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
     parse_with_ctx("specs/boot", rst, &ctx)
 }
 
@@ -89,7 +87,7 @@ fn test_a_bare_id_target_reads_as_a_candidate_id() {
             .target
             .candidate_id
             .as_ref()
-            .map(rusty_sphinx_ast::EntityId::as_str),
+            .map(rinx_ast::EntityId::as_str),
         Some("REQ_001")
     );
     assert!(diagnostics.is_empty());
@@ -135,10 +133,7 @@ fn test_needextend_dispatches_to_the_same_node() {
 
     // Then
     let update = update_of(&directive);
-    assert_eq!(
-        update.source,
-        rusty_sphinx_ast::EntityUpdateSource::NeedExtend
-    );
+    assert_eq!(update.source, rinx_ast::EntityUpdateSource::NeedExtend);
     assert!(diagnostics.is_empty());
 }
 
@@ -154,7 +149,7 @@ fn test_a_plain_option_is_a_set_mutation() {
     let update = update_of(&directive);
     assert_eq!(
         update.fields,
-        vec![rusty_sphinx_ast::FieldMutation {
+        vec![rinx_ast::FieldMutation {
             field: "status".to_string(),
             mode: FieldMutationMode::Set("closed".to_string()),
             span: update.fields[0].span,
@@ -326,7 +321,7 @@ fn test_the_body_parses_as_ordinary_block_content() {
     let update = update_of(&directive);
     assert_eq!(
         update.body,
-        vec![Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
+        vec![Node::Paragraph(vec![rinx_ast::InlineNode::Text(
             "Closed after review.".to_string()
         )])]
     );

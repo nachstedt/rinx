@@ -28,7 +28,7 @@
 
 use std::collections::BTreeSet;
 
-use rusty_sphinx_ast::{EntitySequence, HashedContent};
+use rinx_ast::{EntitySequence, HashedContent};
 
 use crate::assemble::finished;
 use crate::context::UmlContext;

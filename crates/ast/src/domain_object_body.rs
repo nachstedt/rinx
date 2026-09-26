@@ -95,7 +95,7 @@ pub enum DomainObjectBody {
         /// cross-reference target is still created.
         no_index_entry: bool,
         /// Excludes this object from a local contents/TOC listing. Parsed
-        /// and stored for round-tripping, but rusty-sphinx has no such
+        /// and stored for round-tripping, but rinx has no such
         /// listing for domain objects yet, so it has no rendering effect.
         no_contents_entry: bool,
         body: Vec<Node>,
@@ -297,7 +297,7 @@ impl DomainObjectBody {
 
     /// The class segments, if any, that this object's own nested body
     /// content should have pushed onto the enclosing `PythonScope` (in the
-    /// `rusty_sphinx_scope` crate, which depends on this one, not the other
+    /// `rinx_scope` crate, which depends on this one, not the other
     /// way around, so it can't be linked from here) — the "class context" a
     /// bare cross-reference written inside that body resolves against
     /// first, and the qualifier a domain object *defined* inside it is
@@ -489,7 +489,7 @@ impl DomainObjectBody {
 
     /// Whether this object is excluded from a local contents/TOC listing.
     /// Parsed and stored for the three object types that model it, but
-    /// rusty-sphinx has no such listing for domain objects yet, so this has
+    /// rinx has no such listing for domain objects yet, so this has
     /// no rendering effect today.
     #[must_use]
     pub const fn no_contents_entry(&self) -> bool {

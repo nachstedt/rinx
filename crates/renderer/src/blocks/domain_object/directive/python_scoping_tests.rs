@@ -2,8 +2,8 @@
 //! method nesting, module-qualified ids). Split from
 //! `super::domain_object_python` purely for line count.
 
-use rusty_sphinx_ast::{Directive, Document, Node, NonEmptyVector};
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{Directive, Document, Node, NonEmptyVector};
+use rinx_index::ProjectIndex;
 
 fn render_doc(doc: &Document) -> String {
     let index = ProjectIndex::default();
@@ -16,12 +16,12 @@ fn test_render_qualifies_method_nested_in_class_id() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyClass {
+            rinx_ast::DomainObjectBody::PyClass {
                 module: None,
                 signatures: NonEmptyVector::single("greeter".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                    rinx_ast::DomainObjectBody::PyMethod {
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(self, name)".to_string()),
@@ -50,17 +50,17 @@ fn test_render_qualifies_nested_classes_two_levels_deep() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyClass {
+            rinx_ast::DomainObjectBody::PyClass {
                 module: None,
                 signatures: NonEmptyVector::single("outer".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    rinx_ast::DomainObjectBody::PyClass {
                         module: None,
                         signatures: NonEmptyVector::single("inner".to_string()),
                         is_final: false,
                         body: vec![Node::Directive(Directive::DomainObject(
-                            rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                            rinx_ast::DomainObjectBody::PyMethod {
                                 module: None,
                                 is_decorator: false,
                                 signatures: NonEmptyVector::single("method(self)".to_string()),
@@ -92,7 +92,7 @@ fn test_render_qualifies_sibling_function_after_module_id() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "types".to_string(),
                     platform: None,
                     synopsis: None,
@@ -101,7 +101,7 @@ fn test_render_qualifies_sibling_function_after_module_id() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                rinx_ast::DomainObjectBody::PyFunction {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("coroutine(gen_func)".to_string()),
@@ -132,7 +132,7 @@ fn test_render_does_not_dedup_module_prefix_in_flat_sibling_signature_id() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "datetime".to_string(),
                     platform: None,
                     synopsis: None,
@@ -141,7 +141,7 @@ fn test_render_does_not_dedup_module_prefix_in_flat_sibling_signature_id() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                rinx_ast::DomainObjectBody::PyMethod {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single(
@@ -172,7 +172,7 @@ fn test_render_composes_module_and_class_qualifiers_in_id() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "types".to_string(),
                     platform: None,
                     synopsis: None,
@@ -181,12 +181,12 @@ fn test_render_composes_module_and_class_qualifiers_in_id() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                rinx_ast::DomainObjectBody::PyClass {
                     module: None,
                     signatures: NonEmptyVector::single("DynamicClassAttribute".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                        rinx_ast::DomainObjectBody::PyMethod {
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single(
@@ -217,12 +217,12 @@ fn test_render_qualifies_method_nested_in_exception_id() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyException {
+            rinx_ast::DomainObjectBody::PyException {
                 module: None,
                 signatures: NonEmptyVector::single("greetererror".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                    rinx_ast::DomainObjectBody::PyMethod {
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("reason(self)".to_string()),
@@ -253,12 +253,12 @@ fn test_render_does_not_double_qualify_already_qualified_nested_attribute() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyException {
+            rinx_ast::DomainObjectBody::PyException {
                 module: None,
                 signatures: NonEmptyVector::single("StopIteration".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                    rinx_ast::DomainObjectBody::PyAttribute {
                         module: None,
                         signatures: NonEmptyVector::single("StopIteration.value".to_string()),
                         type_: None,
@@ -287,12 +287,12 @@ fn test_render_class_stack_does_not_leak_across_sibling_classes() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                rinx_ast::DomainObjectBody::PyClass {
                     module: None,
                     signatures: NonEmptyVector::single("first".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                        rinx_ast::DomainObjectBody::PyMethod {
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single("run(self)".to_string()),
@@ -306,12 +306,12 @@ fn test_render_class_stack_does_not_leak_across_sibling_classes() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                rinx_ast::DomainObjectBody::PyClass {
                     module: None,
                     signatures: NonEmptyVector::single("second".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                        rinx_ast::DomainObjectBody::PyMethod {
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single("run(self)".to_string()),
@@ -345,7 +345,7 @@ fn test_render_dotted_method_scopes_its_body_without_leaking_to_siblings() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                rinx_ast::DomainObjectBody::PyMethod {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("ZipFile.open(name)".to_string()),
@@ -354,7 +354,7 @@ fn test_render_dotted_method_scopes_its_body_without_leaking_to_siblings() {
                     is_abstractmethod: false,
                     is_async: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                        rinx_ast::DomainObjectBody::PyAttribute {
                             module: None,
                             signatures: NonEmptyVector::single("mode".to_string()),
                             type_: None,
@@ -366,7 +366,7 @@ fn test_render_dotted_method_scopes_its_body_without_leaking_to_siblings() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                rinx_ast::DomainObjectBody::PyFunction {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("is_zipfile(filename)".to_string()),

@@ -3,7 +3,7 @@
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
 use crate::headings::Adornment;
 

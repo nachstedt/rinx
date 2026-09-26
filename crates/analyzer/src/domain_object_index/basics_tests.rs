@@ -5,7 +5,7 @@
 
 use super::super::document_index::analyze;
 use super::*;
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Directive, Document, Domain, InlineNode, Node, NonEmptyVector, ObjectType, TableSource,
     TargetName,
 };
@@ -32,7 +32,7 @@ fn test_analyze_registers_domain_object() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyFunction {
+            rinx_ast::DomainObjectBody::PyFunction {
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -57,7 +57,7 @@ fn test_analyze_registers_module_domain_object() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyModule {
+            rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
                 platform: None,
                 synopsis: None,
@@ -83,7 +83,7 @@ fn test_analyze_registers_data_domain_object() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyData {
+            rinx_ast::DomainObjectBody::PyData {
                 module: None,
                 signatures: NonEmptyVector::single("DEFAULT_TIMEOUT".to_string()),
                 type_: Some("int".to_string()),
@@ -110,7 +110,7 @@ fn test_analyze_registers_cmdoption_domain_object_without_program() {
     let doc = Document::new(
         "cmdline.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+            rinx_ast::DomainObjectBody::StdCmdoption {
                 signatures: NonEmptyVector::single("-m <module-name>".to_string()),
                 body: vec![],
             },
@@ -137,7 +137,7 @@ fn test_analyze_registers_cmdoption_domain_object_qualified_by_program() {
                 name: Some("dis".to_string()),
             }),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                rinx_ast::DomainObjectBody::StdCmdoption {
                     signatures: NonEmptyVector::single("-O".to_string()),
                     body: vec![],
                 },
@@ -161,7 +161,7 @@ fn test_analyze_registers_each_flag_of_a_comma_separated_cmdoption_spec() {
     let doc = Document::new(
         "zipapp.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+            rinx_ast::DomainObjectBody::StdCmdoption {
                 signatures: NonEmptyVector::single("-c, --compress".to_string()),
                 body: vec![],
             },
@@ -188,7 +188,7 @@ fn test_analyze_registers_each_flag_of_a_continuation_line_cmdoption() {
     let doc = Document::new(
         "mimetypes.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+            rinx_ast::DomainObjectBody::StdCmdoption {
                 signatures: NonEmptyVector::new("-h".to_string(), vec!["--help".to_string()]),
                 body: vec![],
             },
@@ -215,7 +215,7 @@ fn test_analyze_registers_genindex_entry_for_each_cmdoption_flag() {
     let doc = Document::new(
         "zipapp.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+            rinx_ast::DomainObjectBody::StdCmdoption {
                 signatures: NonEmptyVector::single("-c, --compress".to_string()),
                 body: vec![],
             },
@@ -237,10 +237,10 @@ fn test_analyze_indexes_a_cmdoptions_body_once_shared_across_flags() {
     let doc = Document::new(
         "zipapp.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+            rinx_ast::DomainObjectBody::StdCmdoption {
                 signatures: NonEmptyVector::single("-c, --compress".to_string()),
                 body: vec![Node::Directive(Directive::Glossary {
-                    entries: vec![rusty_sphinx_ast::GlossaryEntry {
+                    entries: vec![rinx_ast::GlossaryEntry {
                         terms: vec!["compression".to_string()],
                         definition: vec![],
                     }],
@@ -266,7 +266,7 @@ fn test_analyze_registers_exception_domain_object() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyException {
+            rinx_ast::DomainObjectBody::PyException {
                 module: None,
                 signatures: NonEmptyVector::single("GreeterError".to_string()),
                 is_final: false,
@@ -292,7 +292,7 @@ fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
         "api.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                rinx_ast::DomainObjectBody::PyFunction {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("add(a, b)".to_string()),
@@ -300,7 +300,7 @@ fn test_analyze_registers_distinct_keys_for_same_name_in_different_domains() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CFunction {
+                rinx_ast::DomainObjectBody::CFunction {
                     signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                     body: vec![],
                 },
@@ -414,7 +414,7 @@ fn test_analyze_registers_genindex_entry_for_domain_object() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyFunction {
+            rinx_ast::DomainObjectBody::PyFunction {
                 module: None,
                 is_decorator: false,
                 signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -443,12 +443,12 @@ fn test_analyze_registers_domain_object_nested_in_table_cell() {
         "curses.rst".to_string(),
         vec![Node::Table {
             header_rows: vec![],
-            body_rows: vec![rusty_sphinx_ast::TableRow {
-                cells: vec![rusty_sphinx_ast::TableCell {
+            body_rows: vec![rinx_ast::TableRow {
+                cells: vec![rinx_ast::TableCell {
                     colspan: 1,
                     rowspan: 1,
                     content: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::PyData {
+                        rinx_ast::DomainObjectBody::PyData {
                             module: None,
                             signatures: NonEmptyVector::single("A_NORMAL".to_string()),
                             type_: None,
@@ -486,12 +486,12 @@ fn test_analyze_registers_domain_object_nested_in_list_table_cell() {
             align: None,
             classes: vec![],
             name: None,
-            rows: vec![rusty_sphinx_ast::TableRow {
-                cells: vec![rusty_sphinx_ast::TableCell {
+            rows: vec![rinx_ast::TableRow {
+                cells: vec![rinx_ast::TableCell {
                     colspan: 1,
                     rowspan: 1,
                     content: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                        rinx_ast::DomainObjectBody::PyAttribute {
                             module: None,
                             signatures: NonEmptyVector::single("method.__self__".to_string()),
                             type_: None,
@@ -521,9 +521,9 @@ fn test_analyze_registers_domain_object_nested_in_bullet_list() {
         "test.rst".to_string(),
         vec![Node::BulletList {
             bullet: '-',
-            items: vec![rusty_sphinx_ast::ListItem {
+            items: vec![rinx_ast::ListItem {
                 nodes: vec![Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                    rinx_ast::DomainObjectBody::PyFunction {
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -549,10 +549,10 @@ fn test_analyze_registers_domain_object_nested_in_definition_list() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::DefinitionList {
-            items: vec![rusty_sphinx_ast::DefinitionListItem {
+            items: vec![rinx_ast::DefinitionListItem {
                 term: vec![InlineNode::Text("term".to_string())],
                 definition: vec![Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                    rinx_ast::DomainObjectBody::PyFunction {
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -578,11 +578,11 @@ fn test_analyze_registers_domain_object_nested_in_admonition_body() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::Admonition {
-            kind: rusty_sphinx_ast::AdmonitionKind::Note,
+            kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
             body: vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                rinx_ast::DomainObjectBody::PyFunction {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -607,13 +607,13 @@ fn test_analyze_registers_domain_object_nested_in_another_domain_objects_body() 
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyModule {
+            rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
                 platform: None,
                 synopsis: None,
                 deprecated: false,
                 body: vec![Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                    rinx_ast::DomainObjectBody::PyFunction {
                         module: None,
                         is_decorator: false,
                         signatures: NonEmptyVector::single("greet(name)".to_string()),

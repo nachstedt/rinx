@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     EntityFlow, EntityFlowSource, EntityId, ImageAlign, LengthOrPercentage, ResolvedLanguage,
     TargetName,
 };
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_index::{EntityRecord, ProjectIndex};
 
 use crate::EmbeddedAssets;
 use crate::blocks::render_test_support::with_ctx_for;
@@ -202,7 +202,7 @@ fn test_a_flowchart_that_drew_nothing_renders_no_picture_and_is_reported() {
     assert_eq!(errors.len(), 1);
     assert_eq!(
         errors[0].code(),
-        rusty_sphinx_ast::DiagnosticCode::EntityFlowEmptyResult
+        rinx_ast::DiagnosticCode::EntityFlowEmptyResult
     );
 }
 
@@ -225,9 +225,9 @@ fn test_a_failure_carries_the_directives_own_position() {
     // Given — the renderer is the only phase that knows both the failure and
     // where the directive was written
     let index = ProjectIndex::default();
-    let span = rusty_sphinx_ast::Span::new(
-        rusty_sphinx_ast::Position { line: 7, column: 1 },
-        rusty_sphinx_ast::Position {
+    let span = rinx_ast::Span::new(
+        rinx_ast::Position { line: 7, column: 1 },
+        rinx_ast::Position {
             line: 7,
             column: 18,
         },

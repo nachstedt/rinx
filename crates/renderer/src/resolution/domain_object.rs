@@ -9,7 +9,7 @@
 //!
 //! Sphinx's `PythonDomain.find_obj` is the reference implementation, and the
 //! tier lists here (via
-//! [`rusty_sphinx_scope::PythonScope::reference_candidates`]) follow it. Two
+//! [`rinx_scope::PythonScope::reference_candidates`]) follow it. Two
 //! behaviours deliberately differ:
 //!
 //! 1. **The requested object type is checked in every tier, in both search
@@ -28,9 +28,9 @@
 //! checked that hazard is gone — so `` :mod:`minidom` `` written under
 //! `.. module:: xml.dom` is allowed to find `xml.dom.minidom`.
 
-use rusty_sphinx_ast::{InventorySelector, ObjectType, TargetName, TargetSearchOrder};
-use rusty_sphinx_index::{ExternalInventory, ProjectIndex};
-use rusty_sphinx_scope::Scope;
+use rinx_ast::{InventorySelector, ObjectType, TargetName, TargetSearchOrder};
+use rinx_index::{ExternalInventory, ProjectIndex};
+use rinx_scope::Scope;
 
 use super::{ExternalHit, external_entry_types, resolve_external};
 use std::cell::OnceCell;
@@ -241,7 +241,7 @@ fn reverse_dotted_segments(name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{CObjectType, PyObjectType};
+    use rinx_ast::{CObjectType, PyObjectType};
 
     #[test]
     fn test_resolve_falls_back_to_another_sites_inventory() {
@@ -255,7 +255,7 @@ mod tests {
             ObjectType::Py(PyObjectType::Exception),
             "ValueError",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -278,7 +278,7 @@ mod tests {
             ObjectType::Py(PyObjectType::Class),
             "dict",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -300,7 +300,7 @@ mod tests {
             ObjectType::Py(PyObjectType::Function),
             "dict",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -375,7 +375,7 @@ mod tests {
             py(PyObjectType::Class),
             "datetime",
             TargetSearchOrder::MostQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -402,7 +402,7 @@ mod tests {
             py(PyObjectType::Module),
             "datetime",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -430,7 +430,7 @@ mod tests {
             py(PyObjectType::Attribute),
             "tzinfo",
             TargetSearchOrder::MostQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -458,7 +458,7 @@ mod tests {
             py(PyObjectType::Class),
             "datetime",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then — resolution falls through to the module-qualified class.
@@ -486,7 +486,7 @@ mod tests {
             py(PyObjectType::Exception),
             "fault",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then — resolved, reporting the type the *definition* has.
@@ -519,7 +519,7 @@ mod tests {
             ObjectType::C(CObjectType::Function),
             "Py_VISIT",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then — resolved, reporting the type the *definition* has.
@@ -552,7 +552,7 @@ mod tests {
             ObjectType::C(CObjectType::Macro),
             "Py_REFCNT",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -581,7 +581,7 @@ mod tests {
             ObjectType::C(CObjectType::Macro),
             "MAX",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then — the `c:macro` definition, not the aliased `c:function` one.
@@ -613,7 +613,7 @@ mod tests {
             py(PyObjectType::Method),
             "TarFile.close",
             TargetSearchOrder::MostQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -647,7 +647,7 @@ mod tests {
             ObjectType::C(CObjectType::Member),
             "count",
             TargetSearchOrder::MostQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then — `TargetName` normalizes to lowercase, like every other
@@ -686,7 +686,7 @@ mod tests {
             ObjectType::C(CObjectType::Member),
             "digits",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -720,7 +720,7 @@ mod tests {
             ObjectType::C(CObjectType::Macro),
             "CONSTANT",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -756,7 +756,7 @@ mod tests {
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then — nothing is linked, and the author is told what to choose
@@ -794,7 +794,7 @@ mod tests {
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then — the attribute is not a candidate, so this is not ambiguous.
@@ -825,7 +825,7 @@ mod tests {
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::MostQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -850,7 +850,7 @@ mod tests {
             py(PyObjectType::Method),
             "close",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -875,7 +875,7 @@ mod tests {
             ObjectType::C(CObjectType::Function),
             "PyList_Append",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then
@@ -901,7 +901,7 @@ mod tests {
             py(PyObjectType::Function),
             "nonexistent",
             TargetSearchOrder::LeastQualifiedFirst,
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
         );
 
         // Then

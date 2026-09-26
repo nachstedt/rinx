@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 /// separate token — so the match starts at the prefix, which the earliest-match
 /// rule then prefers over the bare role inside it. Its meaning is read back by
 /// [`EXTERNAL_PREFIX_REGEX`]; the name excludes exactly what
-/// `rusty_sphinx_ast::InventoryName` refuses.
+/// `rinx_ast::InventoryName` refuses.
 const EXTERNAL_PREFIX: &str = r"(?:external(?:\+[^:`<>\s+]+)?:)?";
 
 /// Reads the prefix [`EXTERNAL_PREFIX`] let a role match with.

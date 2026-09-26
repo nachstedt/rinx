@@ -21,7 +21,7 @@
 
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span};
 
 use crate::diagnostics::Diagnostics;
 
@@ -370,7 +370,7 @@ pub(in crate::directives) fn expand_tabs(text: &str, width: i32) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Position, Span};
+    use rinx_ast::{Position, Span};
 
     const FILE: &str = "one\ntwo\nthree\nfour\nfive";
 

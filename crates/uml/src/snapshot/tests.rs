@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{AttributeValue, EntityId};
-use rusty_sphinx_index::EntityRecord;
+use rinx_ast::{AttributeValue, EntityId};
+use rinx_index::EntityRecord;
 
 use super::*;
 
@@ -155,10 +155,7 @@ fn test_href_lands_on_the_anchor_the_renderer_writes() {
 
     // Then
     assert!(
-        href.ends_with(&format!(
-            "#{}",
-            rusty_sphinx_index::entity_anchor("REQ_001")
-        )),
+        href.ends_with(&format!("#{}", rinx_index::entity_anchor("REQ_001"))),
         "{href}"
     );
 }
@@ -185,7 +182,7 @@ fn test_matching_selects_in_id_order() {
         ("REQ_002", requirement("reqs.rst", Some("Second"))),
     ]);
     let snapshot = snapshot_of(&index, "index.rst");
-    let filter = rusty_sphinx_filter::parse_filter("type == \"req\"").expect("a valid filter");
+    let filter = rinx_filter::parse_filter("type == \"req\"").expect("a valid filter");
 
     // When
     let matched: Vec<&String> = snapshot.matching(&filter);
@@ -207,7 +204,7 @@ fn test_matching_uses_the_same_field_meanings_a_table_filter_does() {
         ("REQ_002", requirement("reqs.rst", Some("No status"))),
     ]);
     let snapshot = snapshot_of(&index, "index.rst");
-    let filter = rusty_sphinx_filter::parse_filter("status == \"open\"").expect("a valid filter");
+    let filter = rinx_filter::parse_filter("status == \"open\"").expect("a valid filter");
 
     // When
     let matched: Vec<&String> = snapshot.matching(&filter);
@@ -221,8 +218,8 @@ fn test_matches_agrees_with_matching_one_entity_at_a_time() {
     // Given
     let index = index_with(vec![("REQ_001", requirement("reqs.rst", Some("First")))]);
     let snapshot = snapshot_of(&index, "index.rst");
-    let selecting = rusty_sphinx_filter::parse_filter("type == \"req\"").expect("a valid filter");
-    let rejecting = rusty_sphinx_filter::parse_filter("type == \"test\"").expect("a valid filter");
+    let selecting = rinx_filter::parse_filter("type == \"req\"").expect("a valid filter");
+    let rejecting = rinx_filter::parse_filter("type == \"test\"").expect("a valid filter");
 
     // When / Then
     assert!(snapshot.matches("REQ_001", &selecting));
@@ -234,7 +231,7 @@ fn test_matches_is_false_for_an_unknown_entity() {
     // Given
     let index = index_with(vec![]);
     let snapshot = snapshot_of(&index, "index.rst");
-    let filter = rusty_sphinx_filter::parse_filter("type == \"req\"").expect("a valid filter");
+    let filter = rinx_filter::parse_filter("type == \"req\"").expect("a valid filter");
 
     // When / Then
     assert!(!snapshot.matches("REQ_404", &filter));

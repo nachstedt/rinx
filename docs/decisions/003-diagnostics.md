@@ -5,7 +5,7 @@
 
 ## Context
 
-rusty-sphinx reported every problem it found without saying where. A warning read:
+rinx reported every problem it found without saying where. A warning read:
 
 ```
 warning: broken ref 'missing-section' in guide/intro.rst
@@ -40,7 +40,7 @@ The terminal still prints only the start (`guide/intro.rst:42:18`); a `42:18-42:
 
 `Position::column` counts Unicode scalar values. Bytes would make a column meaningless on any line containing `—`, `’` or `π`, which real documentation constantly does.
 
-LSP's default `PositionEncodingKind` is UTF-16, so the future `rusty_sphinx_lsp` crate converts at its own boundary. Do not "fix" one side to match the other in the middle.
+LSP's default `PositionEncodingKind` is UTF-16, so the future `rinx_lsp` crate converts at its own boundary. Do not "fix" one side to match the other in the middle.
 
 ### 3. Positions survive nesting by riding on `ParseCtx`
 
@@ -78,7 +78,7 @@ Ids become documented surface the moment an author writes one into a document. T
 See :ref:`work-in-progress` for details.
 ```
 
-**Why a comment and not a directive.** A directive (`.. rusty-sphinx:allow::`) would give us option parsing for free, but real Sphinx errors on an unknown directive. A comment it ignores silently, so a document using suppression stays buildable by both tools. That dual-buildability is worth more than the parsing convenience.
+**Why a comment and not a directive.** A directive (`.. rinx:allow::`) would give us option parsing for free, but real Sphinx errors on an unknown directive. A comment it ignores silently, so a document using suppression stays buildable by both tools. That dual-buildability is worth more than the parsing convenience.
 
 **Why the next block.** It is the usual lint-pragma scope, it is local, and it expires by itself. Because `parse_blocks` recurses, a `.. noqa:` inside a directive body or list item resolves against *that* block, and one before a container covers everything nested in it — both of which read the way an author expects.
 
@@ -104,6 +104,6 @@ A diagnostic with no span is never suppressed. There is nothing to match against
 
 ## Not Decided Here
 
-- **Ranges on AST nodes.** `Span` covers diagnostics, which is what `textDocument/publishDiagnostics` needs. Folding, document symbols and go-to-definition would need a range on every `Node` — a much larger change, and only once `rusty_sphinx_lsp` exists.
+- **Ranges on AST nodes.** `Span` covers diagnostics, which is what `textDocument/publishDiagnostics` needs. Folding, document symbols and go-to-definition would need a range on every `Node` — a much larger change, and only once `rinx_lsp` exists.
 - **A `noqa.unused` warning.** It cannot be decided in one phase: a document's parse-time and render-time diagnostics are evaluated in different processes, so neither alone can tell that a suppression matched nothing.
 - **Retiring `scripts/domain_warnings_whitelist.json`.** The benchmark corpus is third-party CPython source we do not edit, so an in-document mechanism cannot replace it.

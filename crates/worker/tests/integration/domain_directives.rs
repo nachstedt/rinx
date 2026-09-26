@@ -3,9 +3,9 @@
 //! negative case guarding the alias table against growing unintended
 //! collisions.
 
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_parser as parser;
-use rusty_sphinx_renderer as renderer;
+use rinx_analyzer as analyzer;
+use rinx_parser as parser;
+use rinx_renderer as renderer;
 
 #[test]
 fn test_e2e_class_definition_resolves_both_class_and_exc_role_references() {
@@ -119,7 +119,7 @@ fn test_e2e_decorator_directive_is_indexed_and_resolves() {
     // documents `classmethod` via `.. decorator::` and references it with
     // `:func:` (real Sphinx registers a decorator exactly as a `py:function`
     // — `PyDecoratorFunction.run()` forces `self.name = 'py:function'` before
-    // delegating), which rusty-sphinx used to drop entirely as an unknown
+    // delegating), which rinx used to drop entirely as an unknown
     // directive, breaking every reference to it.
     let input = "\
 .. decorator:: classmethod

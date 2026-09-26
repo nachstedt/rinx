@@ -1,6 +1,6 @@
-use rusty_sphinx_ast::DomainObjectBody;
-use rusty_sphinx_index::{GenIndexEntry, ProjectIndex};
-use rusty_sphinx_scope::Scope;
+use rinx_ast::DomainObjectBody;
+use rinx_index::{GenIndexEntry, ProjectIndex};
+use rinx_scope::Scope;
 
 use super::document_index::index_nodes;
 
@@ -8,7 +8,7 @@ use super::document_index::index_nodes;
 /// body), handling both qualification and module-context updates. Split out
 /// of [`index_nodes`] to keep that function's line count manageable.
 pub(super) fn index_domain_object(
-    obj: &rusty_sphinx_ast::DomainObjectBody,
+    obj: &rinx_ast::DomainObjectBody,
     doc_path: &str,
     index: &mut ProjectIndex,
     scope: &mut Scope,
@@ -21,12 +21,11 @@ pub(super) fn index_domain_object(
     // branch rather than folded into the `is_module`/`uses_c_scope` chain.
     if let DomainObjectBody::StdCmdoption { signatures, .. } = obj {
         for line in signatures.as_slice() {
-            for spec in rusty_sphinx_ast::split_option_line_specs(line) {
-                let optname = rusty_sphinx_ast::extract_option_name(&spec);
+            for spec in rinx_ast::split_option_line_specs(line) {
+                let optname = rinx_ast::extract_option_name(&spec);
                 let qualified_name = scope.program.qualify(&optname);
                 index.insert_domain_object(obj.object_type(), &qualified_name, doc_path);
-                let anchor =
-                    rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
+                let anchor = rinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
                 index.genindex_entries.push(GenIndexEntry {
                     primary: format!("{qualified_name} ({})", obj.object_type().as_str()),
                     subentry: None,
@@ -47,7 +46,7 @@ pub(super) fn index_domain_object(
     // module: real Sphinx always writes it in full and sets it verbatim as
     // the new current module, it never nests it under whatever module was
     // current before.
-    let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
+    let is_module = matches!(obj, rinx_ast::DomainObjectBody::PyModule { .. });
     // Every `c`-domain object nests under `CScope` instead of `PythonScope`
     // (`known_bugs.md` #2: `c:function`/`c:macro` used to keep qualifying via
     // `PythonScope`'s module+class stack, so nesting one inside a
@@ -106,7 +105,7 @@ pub(super) fn index_domain_object(
         if obj.no_index_entry() {
             continue;
         }
-        let anchor = rusty_sphinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
+        let anchor = rinx_ast::build_domain_object_key(obj.object_type(), &qualified_name);
         index.genindex_entries.push(GenIndexEntry {
             primary: format!("{qualified_name} ({})", obj.object_type().as_str()),
             subentry: None,

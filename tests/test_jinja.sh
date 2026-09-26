@@ -1,6 +1,6 @@
 #!/bin/bash
 # test_jinja.sh
-# Tests the two halves of the opt-in Jinja pass on a `rusty_sphinx_library`:
+# Tests the two halves of the opt-in Jinja pass on a `rinx_library`:
 #
 #   1. A template an `{% include %}` names must be declared in `parse_data`,
 #      exactly like every other file the parser reads. Undeclared, it is absent

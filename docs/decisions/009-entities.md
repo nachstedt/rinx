@@ -5,7 +5,7 @@
 
 ## Context
 
-rusty-sphinx had no extension mechanism at all. Every construct it understood
+rinx had no extension mechanism at all. Every construct it understood
 was a hard-coded Rust enum variant: `ObjectType`, `DomainObjectBody`'s fourteen
 variants with eight exhaustive accessors each, a static role-regex table, and a
 linear `if name == ...` directive chain. Adding one domain object type touched
@@ -55,8 +55,8 @@ document in every library.** On a large corpus that is the whole build.
 
 Two consequences follow:
 
-- `entity_schema` is an attribute on `rusty_sphinx_library` as well as on
-  `rusty_sphinx_site`. It is the first thing to cross that boundary —
+- `entity_schema` is an attribute on `rinx_library` as well as on
+  `rinx_site`. It is the first thing to cross that boundary —
   `default_domain` deliberately does not.
 - A library can therefore be parsed against a different schema than the site
   indexes with. `Document` carries an `entity_schema_hash` and the index phase
@@ -186,7 +186,7 @@ separately from the broken links and no document's `.. noqa:` can silence it.
 
 ### 9. Our own filter language, eventually — not Python
 
-Sphinx-needs evaluates filter strings as Python expressions. rusty-sphinx has no
+Sphinx-needs evaluates filter strings as Python expressions. rinx has no
 interpreter, and embedding one would import a foreign toolchain into a sandboxed
 multi-platform build for one feature. A small typed expression language,
 evaluated against `EntityRecord`, is planned for a later increment; unsupported
@@ -229,9 +229,9 @@ likelier mistake, so `deny_unknown_fields` was kept.
 
 The schema loader must refuse a section name that would shadow `.. note::`. It
 learns which names those are through an injected `ReservedDirectiveNames` trait,
-answered by the worker from `rusty_sphinx_parser::is_builtin_directive_name`.
+answered by the worker from `rinx_parser::is_builtin_directive_name`.
 
-`rusty_sphinx_entity` deliberately keeps no copy of that list: a second copy
+`rinx_entity` deliberately keeps no copy of that list: a second copy
 would drift the moment a directive is added, which is precisely the silent
 degradation the check exists to prevent. The list sits beside the dispatch chain
 it mirrors, with tests asserting that every enum-derived family — admonitions,
@@ -240,10 +240,10 @@ are where a one-line addition could otherwise leave it stale.
 
 ## Consequences
 
-- A new crate, `rusty_sphinx_entity`, parallel to `rusty_sphinx_scope` and
-  `rusty_sphinx_toctree`: the parser, analyzer, renderer and worker all need it
+- A new crate, `rinx_entity`, parallel to `rinx_scope` and
+  `rinx_toctree`: the parser, analyzer, renderer and worker all need it
   and are forbidden to depend on each other. It owns the *meta-model*;
-  `rusty_sphinx_ast` owns the *instance* data (`EntityId`, `AttributeValue`,
+  `rinx_ast` owns the *instance* data (`EntityId`, `AttributeValue`,
   `EntityBody`, `EntitySection`), because that is what survives into a parsed
   document. The meta-model crate depends on the AST, so the split could not run
   the other way.
@@ -268,7 +268,7 @@ looks has no business invalidating parse caches.
 
 The meta-model declares four things, all semantic — attributes, sections,
 relations, roles. Presentation belongs to render-time inputs, so the switch is
-`collapse_entities` in `rusty_sphinx.toml`, defaulting to on. A type that wants
+`collapse_entities` in `rinx.toml`, defaulting to on. A type that wants
 a different presentation entirely still names a `template`.
 
 An intermediate version routed collapsing through a per-type template

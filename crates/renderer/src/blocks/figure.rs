@@ -8,7 +8,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{Figure, FigureWidth, ImageAlign};
+use rinx_ast::{Figure, FigureWidth, ImageAlign};
 
 use crate::RenderCtx;
 use crate::inline::render_inline;
@@ -93,8 +93,8 @@ pub(super) fn render_figure_directive(html: &mut String, figure: &Figure, ctx: &
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::render_directive_html;
-    use rusty_sphinx_ast::{Directive, ImageOptions, ImageUri, InlineNode, Node, TargetName};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Directive, ImageOptions, ImageUri, InlineNode, Node, TargetName};
+    use rinx_index::ProjectIndex;
 
     fn figure(uri: &str) -> Figure {
         Figure::new(ImageOptions::new(ImageUri::new(uri)))
@@ -306,8 +306,7 @@ mod tests {
         // Given
         let mut figure = figure("logo.png");
         figure.image.alt = Some("A logo".to_string());
-        figure.image.width =
-            Some(rusty_sphinx_ast::LengthOrPercentage::new("100px").expect("valid"));
+        figure.image.width = Some(rinx_ast::LengthOrPercentage::new("100px").expect("valid"));
 
         // When
         let html = render(figure);

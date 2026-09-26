@@ -21,10 +21,10 @@
 //!
 //! A templated diagram asks the entity graph questions, and the entities it
 //! asks about live in documents the one holding the diagram has never heard
-//! of. Only [`ProjectIndex`](rusty_sphinx_index::ProjectIndex) knows them all,
+//! of. Only [`ProjectIndex`](rinx_index::ProjectIndex) knows them all,
 //! and it does not exist until every document has been parsed. So diagram
 //! compilation happens after indexing, at the site level — which is why a
-//! `rusty_sphinx_library` no longer compiles diagrams of its own.
+//! `rinx_library` no longer compiles diagrams of its own.
 
 mod assemble;
 mod context;

@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::{BarArrangement, BarOrientation, BarValueLabels, ChartColor};
+use rinx_ast::{BarArrangement, BarOrientation, BarValueLabels, ChartColor};
 
 use super::*;
 

@@ -14,7 +14,7 @@
 
 use super::error_node::malformed_directive;
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{DiagnosticCode, Directive, Span};
+use rinx_ast::{DiagnosticCode, Directive, Span};
 
 /// Why `.. needservice::` is refused, and what to write instead — stored on the
 /// node as well as reported, so the page says the same as the build log.

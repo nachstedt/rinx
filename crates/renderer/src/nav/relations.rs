@@ -6,7 +6,7 @@
 //! two stored strings per document could disagree with the sequence they came
 //! from, a position in it cannot.
 
-use rusty_sphinx_index::ProjectIndex;
+use rinx_index::ProjectIndex;
 
 use super::resolve::{document_href, document_title};
 

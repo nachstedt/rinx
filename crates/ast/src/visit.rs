@@ -9,7 +9,7 @@
 //! two.
 //!
 //! It is deliberately **not** a general refactoring target for
-//! `rusty_sphinx_analyzer`'s `index_nodes` or `rusty_sphinx_renderer`'s
+//! `rinx_analyzer`'s `index_nodes` or `rinx_renderer`'s
 //! `render_nodes`. Those push and pop domain scope around a node's children and
 //! interleave output with the walk, neither of which a `FnMut(&Node)` visitor
 //! can express. Rewriting them on top of this would require a visitor that
@@ -21,7 +21,7 @@
 //! no `_` arm. That is the point: a future variant that carries child nodes
 //! becomes a compile error here rather than a silently unvisited subtree. This
 //! is the same protection `render_directive` has, and that
-//! `rusty_sphinx_analyzer`'s `index_nodes` conspicuously lacks.
+//! `rinx_analyzer`'s `index_nodes` conspicuously lacks.
 
 use crate::directive::Directive;
 use crate::node::Node;
@@ -35,7 +35,7 @@ use crate::node::Node;
 /// # Examples
 ///
 /// ```
-/// use rusty_sphinx_ast::{walk_nodes, ListItem, Node};
+/// use rinx_ast::{walk_nodes, ListItem, Node};
 ///
 /// let nodes = vec![Node::BulletList {
 ///     bullet: '-',
@@ -53,7 +53,7 @@ use crate::node::Node;
 /// each call, so a visitor may collect them:
 ///
 /// ```
-/// use rusty_sphinx_ast::{walk_nodes, Node};
+/// use rinx_ast::{walk_nodes, Node};
 ///
 /// let nodes = vec![Node::Transition, Node::Comment];
 /// let mut collected: Vec<&Node> = Vec::new();

@@ -3,8 +3,8 @@
 //! `domain_object_reference.rs`'s own `mod tests` purely to keep file size down.
 
 use super::*;
-use rusty_sphinx_ast::TargetSearchOrder;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::TargetSearchOrder;
+use rinx_index::ProjectIndex;
 
 #[test]
 fn test_render_inline_domain_object_reference_bare_name_resolves_via_current_module() {
@@ -14,7 +14,7 @@ fn test_render_inline_domain_object_reference_bare_name_resolves_via_current_mod
     // benchmark).
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+        ObjectType::Py(rinx_ast::PyObjectType::Exception),
         "zipimport.ZipImportError",
         "library/zipimport.rst",
     );
@@ -22,7 +22,7 @@ fn test_render_inline_domain_object_reference_bare_name_resolves_via_current_mod
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
 
-    let mut scope = rusty_sphinx_scope::Scope::default();
+    let mut scope = rinx_scope::Scope::default();
     scope.python.set_module("zipimport");
 
     // When — the reference is written bare, as real Sphinx docs do,
@@ -30,13 +30,13 @@ fn test_render_inline_domain_object_reference_bare_name_resolves_via_current_mod
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Exception),
             name: "ZipImportError",
             display: "ZipImportError",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "library/zipimport.rst",
@@ -61,14 +61,14 @@ fn test_render_inline_domain_object_reference_bare_name_resolves_via_python_scop
     // `.. module:: zipimport`).
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+        ObjectType::Py(rinx_ast::PyObjectType::Method),
         "zipimport.zipimporter.find_spec",
         "library/zipimport.rst",
     );
     let mut html = String::new();
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
-    let mut scope = rusty_sphinx_scope::Scope::default();
+    let mut scope = rinx_scope::Scope::default();
     scope.python.set_module("zipimport");
     scope.python.push_classes(&["zipimporter".to_string()]);
 
@@ -77,13 +77,13 @@ fn test_render_inline_domain_object_reference_bare_name_resolves_via_python_scop
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Method),
             name: "find_spec",
             display: "find_spec",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "library/zipimport.rst",
@@ -111,14 +111,14 @@ fn test_render_inline_domain_object_reference_falls_back_from_class_to_module_sc
     // straight to the bare global name.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+        ObjectType::Py(rinx_ast::PyObjectType::Exception),
         "zipimport.ZipImportError",
         "library/zipimport.rst",
     );
     let mut html = String::new();
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
-    let mut scope = rusty_sphinx_scope::Scope::default();
+    let mut scope = rinx_scope::Scope::default();
     scope.python.set_module("zipimport");
     scope.python.push_classes(&["zipimporter".to_string()]);
 
@@ -126,13 +126,13 @@ fn test_render_inline_domain_object_reference_falls_back_from_class_to_module_sc
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Exception),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Exception),
             name: "ZipImportError",
             display: "ZipImportError",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "library/zipimport.rst",
@@ -156,7 +156,7 @@ fn test_render_inline_domain_object_reference_falls_back_to_bare_key_when_scope_
     // unrelated.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+        ObjectType::Py(rinx_ast::PyObjectType::Function),
         "greet",
         "api.rst",
     );
@@ -164,7 +164,7 @@ fn test_render_inline_domain_object_reference_falls_back_to_bare_key_when_scope_
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
 
-    let mut scope = rusty_sphinx_scope::Scope::default();
+    let mut scope = rinx_scope::Scope::default();
     scope.python.set_module("other_module");
 
     // When — the qualified attempt ("other_module.greet") misses, so
@@ -172,13 +172,13 @@ fn test_render_inline_domain_object_reference_falls_back_to_bare_key_when_scope_
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
             name: "greet",
             display: "greet",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "api.rst",
@@ -205,27 +205,27 @@ fn test_render_inline_domain_object_reference_already_qualified_name_unaffected_
     // literal name first.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+        ObjectType::Py(rinx_ast::PyObjectType::Function),
         "types.coroutine",
         "library/types.rst",
     );
     let mut html = String::new();
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
-    let mut scope = rusty_sphinx_scope::Scope::default();
+    let mut scope = rinx_scope::Scope::default();
     scope.python.set_module("types");
 
     // When
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
             name: "types.coroutine",
             display: "types.coroutine",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "library/types.rst",
@@ -248,27 +248,27 @@ fn test_render_inline_domain_object_reference_dot_prefixed_target_displays_witho
     // parser has already stripped the dot into `search_order`.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+        ObjectType::Py(rinx_ast::PyObjectType::Class),
         "datetime.datetime",
         "library/datetime.rst",
     );
     let mut html = String::new();
     let mut broken_links = Vec::new();
     let mut object_type_mismatches = Vec::new();
-    let mut scope = rusty_sphinx_scope::Scope::default();
+    let mut scope = rinx_scope::Scope::default();
     scope.python.set_module("datetime");
 
     // When
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Class),
             name: "datetime",
             display: "datetime",
             link: true,
             search_order: TargetSearchOrder::MostQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "library/datetime.rst",
@@ -291,12 +291,12 @@ fn test_render_inline_domain_object_reference_ambiguous_suffix_reports_its_candi
     // dot-prefixed reference that names neither of them unambiguously.
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+        ObjectType::Py(rinx_ast::PyObjectType::Method),
         "tarfile.TarFile.close",
         "library/tarfile.rst",
     );
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+        ObjectType::Py(rinx_ast::PyObjectType::Method),
         "zipfile.ZipFile.close",
         "library/zipfile.rst",
     );
@@ -308,13 +308,13 @@ fn test_render_inline_domain_object_reference_ambiguous_suffix_reports_its_candi
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Method),
             name: "close",
             display: "close",
             link: true,
             search_order: TargetSearchOrder::MostQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "library/shutil.rst",
@@ -322,7 +322,7 @@ fn test_render_inline_domain_object_reference_ambiguous_suffix_reports_its_candi
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then — nothing is linked, and the diagnostic names both options.
@@ -331,7 +331,7 @@ fn test_render_inline_domain_object_reference_ambiguous_suffix_reports_its_candi
         broken_links,
         vec![BrokenLink {
             kind: BrokenLinkKind::AmbiguousDomainObjectReference {
-                object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Method),
+                object_type: ObjectType::Py(rinx_ast::PyObjectType::Method),
                 candidates: vec![
                     "tarfile.tarfile.close".to_string(),
                     "zipfile.zipfile.close".to_string(),
@@ -348,7 +348,7 @@ fn test_render_inline_domain_object_reference_resolves_cross_directory_path() {
     // Given — document is nested, object defined at root
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+        ObjectType::Py(rinx_ast::PyObjectType::Function),
         "greet",
         "api.rst",
     );
@@ -360,13 +360,13 @@ fn test_render_inline_domain_object_reference_resolves_cross_directory_path() {
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
             name: "greet",
             display: "greet",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "guide/intro.rst",
@@ -374,7 +374,7 @@ fn test_render_inline_domain_object_reference_resolves_cross_directory_path() {
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -394,13 +394,13 @@ fn test_render_inline_domain_object_reference_suppressed_link_renders_plain_text
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Module),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Module),
             name: "curses",
             display: "curses",
             link: false,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -408,7 +408,7 @@ fn test_render_inline_domain_object_reference_suppressed_link_renders_plain_text
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then
@@ -424,7 +424,7 @@ fn test_render_inline_domain_object_reference_shortened_display_resolves_via_ful
     // Given
     let mut index = ProjectIndex::default();
     index.insert_domain_object(
-        ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+        ObjectType::Py(rinx_ast::PyObjectType::Function),
         "greetings.shout",
         "api.rst",
     );
@@ -436,13 +436,13 @@ fn test_render_inline_domain_object_reference_shortened_display_resolves_via_ful
     render_inline_domain_object_reference(
         &mut html,
         DomainObjectRef {
-            object_type: ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Function),
             name: "greetings.shout",
             display: "shout",
             link: true,
             search_order: TargetSearchOrder::LeastQualifiedFirst,
             span: None,
-            inventory: &rusty_sphinx_ast::InventorySelector::Any,
+            inventory: &rinx_ast::InventorySelector::Any,
         },
         &DomainObjectResolver::new(&index),
         "doc.rst",
@@ -450,7 +450,7 @@ fn test_render_inline_domain_object_reference_shortened_display_resolves_via_ful
             broken_links: &mut broken_links,
             object_type_mismatches: &mut object_type_mismatches,
         },
-        &rusty_sphinx_scope::Scope::default(),
+        &rinx_scope::Scope::default(),
     );
 
     // Then

@@ -14,7 +14,7 @@
 
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     CodeBlock, CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, Directive, Span,
 };
 
@@ -348,7 +348,7 @@ fn showed_nothing(argument: &str, body_lines: &[&str]) -> Directive {
 mod tests {
     use super::*;
     use crate::context::{LoadedFile, ParseFileLoader};
-    use rusty_sphinx_ast::{Domain, LanguageName};
+    use rinx_ast::{Domain, LanguageName};
     use std::collections::HashMap;
 
     /// An in-memory stand-in for the worker's filesystem loader.

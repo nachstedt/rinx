@@ -3,7 +3,7 @@
 use crate::config::SiteConfig;
 use crate::nav::{PageLink, ResolvedNavEntry, page_neighbors};
 use anyhow::{Context, Result};
-use rusty_sphinx_index::ProjectIndex;
+use rinx_index::ProjectIndex;
 
 /// Computes the relative path from a document at `doc_path` to a file
 /// at the site output root (e.g., `default.css`).

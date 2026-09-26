@@ -76,16 +76,16 @@ the pattern and sharing one `expand_toctree` means a glob that reaches an
 undeclared document still fails the build — it simply matches nothing in that
 narrower universe.
 
-This is why `rusty_sphinx_toctree` is its own crate. It cannot live in the
+This is why `rinx_toctree` is its own crate. It cannot live in the
 analyzer: the renderer would then depend on the whole analyzer crate, which is
-exactly what splitting `rusty_sphinx_index` out was meant to stop.
+exactly what splitting `rinx_index` out was meant to stop.
 
 Matching delegates to `globset` with `literal_separator(true)`, which is
 Sphinx's `*`-does-not-cross-`/` rule. Two deliberate narrowings are commented in
 place: `{a,b}` is escaped to stay literal (Sphinx has no alternation), and the
 owning document is excluded from its own pattern.
 
-### 3. Section ids are derived once, in `rusty_sphinx_ast`
+### 3. Section ids are derived once, in `rinx_ast`
 
 Two phases need the *same* answer: the analyzer records a section's id in the
 outline so a toctree entry can link to it, and the renderer emits that id on the
@@ -102,7 +102,7 @@ The derivation itself is a faithful port of docutils' `make_id`, with its
 digraph and stroked-letter tables transcribed rather than re-derived, and its
 `create_id` disambiguation (`overview-1`, `section-1`) reproduced. It lives flat
 beside `object_naming.rs` for the same reason that does: every later phase calls
-it. `rusty_sphinx_scope` already provides this contract for domain objects; this
+it. `rinx_scope` already provides this contract for domain objects; this
 is the same idea for sections.
 
 ### 4. A toctree's entries go where the directive was written
@@ -121,7 +121,7 @@ sections) would have been simpler and wrong in a way authors would notice.
 
 There was no root-document concept: roots were *inferred* as "every document no
 toctree references", which silently made an orphan a second top-level sidebar
-entry and left page order ambiguous. `rusty_sphinx.toml` gains `root_doc`.
+entry and left page order ambiguous. `rinx.toml` gains `root_doc`.
 
 ADR-001 forbids **file paths** in the config, because Bazel relocates files. A
 logical document name is not a path — nothing about it has to survive a sandbox
@@ -166,6 +166,6 @@ disappears. The rule is ported, and tested.
   thing to reach for if prev/next lookup shows up.
 - The default template changed, which invalidates every cached page render.
   ADR-001 already accepts that.
-- `NavEntry` is gone from `rusty_sphinx_index`'s public API.
-- `rusty_sphinx_toctree` is a new workspace crate, depended on by the analyzer,
+- `NavEntry` is gone from `rinx_index`'s public API.
+- `rinx_toctree` is a new workspace crate, depended on by the analyzer,
   the renderer and the worker.

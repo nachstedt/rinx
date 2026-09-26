@@ -3,7 +3,7 @@
 Unrecognized and malformed directives
 =====================================
 
-rusty-sphinx implements a subset of reStructuredText and Sphinx, so a document
+rinx implements a subset of reStructuredText and Sphinx, so a document
 may well name a directive this build does not know. Such a directive is never
 dropped silently: the page shows what could not be rendered, quoting the source
 verbatim, and the build reports it with a code a ``.. noqa:`` can name.

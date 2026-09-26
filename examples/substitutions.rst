@@ -16,7 +16,7 @@ with directly.
 
 This project is called |project name|, and the current release is |release|.
 
-.. |project name| replace:: **rusty-sphinx**
+.. |project name| replace:: **rinx**
 .. |release| replace:: 3.13.0
 
 A definition may be written anywhere in the document — including, as above,
@@ -58,10 +58,10 @@ in the other direction: the three *vertical* alignments (``top``, ``middle``,
 baseline to align to, but ``:name:`` is refused — a substitution may be
 referenced more than once, while a name must be unique.
 
-|logo| — the rusty-sphinx logo, inline with this text.
+|logo| — the rinx logo, inline with this text.
 
 .. |logo| image:: data/logo.svg
-   :alt: The rusty-sphinx logo
+   :alt: The rinx logo
    :align: middle
    :width: 24px
 

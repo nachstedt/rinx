@@ -1,15 +1,15 @@
 //! The `index` subcommand: merges every document's local analysis into one
-//! global `rusty_sphinx_index::ProjectIndex`.
+//! global `rinx_index::ProjectIndex`.
 
 use anyhow::{Context, Result, bail};
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_renderer::config;
+use rinx_analyzer as analyzer;
+use rinx_ast as ast;
+use rinx_renderer::config;
 use std::collections::BTreeSet;
 use std::fs;
 
-use rusty_sphinx_index::ExternalInventory;
-use rusty_sphinx_inventory::{InventoryName, MalformedLine, read_inventory};
+use rinx_index::ExternalInventory;
+use rinx_inventory::{InventoryName, MalformedLine, read_inventory};
 
 use super::cli_args::{flag_groups, flag_value, flag_value_opt, flag_values};
 use super::diagnostics::{WarningOrigin, format_diagnostic};
@@ -30,7 +30,7 @@ pub(super) struct IndexedProject {
 pub(super) fn process_index(
     ast_jsons: &[String],
     root_doc: &str,
-    schema: &rusty_sphinx_entity::EntitySchema,
+    schema: &rinx_entity::EntitySchema,
     external_inventories: Vec<ExternalInventory>,
 ) -> Result<IndexedProject> {
     let docs: Vec<ast::Document> = ast_jsons
@@ -245,7 +245,7 @@ fn malformed_line_warning(path: &str, malformed: &MalformedLine) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_entity::EntitySchema;
+    use rinx_entity::EntitySchema;
 
     /// One document's AST as the `index` subcommand receives it.
     fn ast_json(path: &str, nodes_json: &str) -> String {
@@ -349,12 +349,12 @@ mod tests {
 
     /// An inventory file listing one Python class.
     fn declared(name: &str) -> DeclaredInventory {
-        let inventory = rusty_sphinx_inventory::Inventory {
+        let inventory = rinx_inventory::Inventory {
             project: "Python".to_string(),
             version: "3.12".to_string(),
-            entries: vec![rusty_sphinx_inventory::InventoryEntry {
+            entries: vec![rinx_inventory::InventoryEntry {
                 name: "dict".to_string(),
-                entry_type: rusty_sphinx_inventory::EntryType::new("py:class").unwrap(),
+                entry_type: rinx_inventory::EntryType::new("py:class").unwrap(),
                 priority: 1,
                 uri: "library/stdtypes.html#dict".to_string(),
                 display_name: None,
@@ -364,7 +364,7 @@ mod tests {
             name: name.to_string(),
             base_url: "https://docs.python.org/3/".to_string(),
             path: format!("{name}.inv"),
-            bytes: rusty_sphinx_inventory::write_inventory(&inventory),
+            bytes: rinx_inventory::write_inventory(&inventory),
         }
     }
 
@@ -449,7 +449,7 @@ mod tests {
         let indexed = process_index(&[], "index", &EntitySchema::empty(), inventories).unwrap();
 
         // Then
-        let index: rusty_sphinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
+        let index: rinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
         assert_eq!(index.external_inventories.len(), 1);
     }
 
@@ -488,7 +488,7 @@ mod tests {
         let indexed = process_index(&docs, "index", &EntitySchema::empty(), inventories).unwrap();
 
         // Then
-        let index: rusty_sphinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
+        let index: rinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
         assert!(
             index.external_inventories[0]
                 .lookup("py:class", "dict")

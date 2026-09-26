@@ -1,6 +1,6 @@
 //! The pie chart's node: what it counts, and how the chart looks.
 
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::chart_color::ChartColor;
@@ -183,10 +183,10 @@ mod tests {
         // Given — the node is written to a `.ast` and read back to render
         let mut pie = EntityPie::new(EntityPieSource::NeedPie);
         pie.title = Some("Safety Artifacts by Type".to_string());
-        pie.filter = Some(rusty_sphinx_filter::parse_filter(r#"type == "req""#).unwrap());
+        pie.filter = Some(rinx_filter::parse_filter(r#"type == "req""#).unwrap());
         pie.slices = vec![
             PieSlice::from_filter(Some(
-                rusty_sphinx_filter::parse_filter(r#"id.startswith("SG_")"#).unwrap(),
+                rinx_filter::parse_filter(r#"id.startswith("SG_")"#).unwrap(),
             )),
             PieSlice::from_count(7),
         ];

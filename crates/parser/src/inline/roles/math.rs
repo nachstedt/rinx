@@ -11,7 +11,7 @@
 //! cannot, because the text it displays is the equation's number, which no
 //! single document knows until the project index is merged.
 
-use rusty_sphinx_ast::InlineNode;
+use rinx_ast::InlineNode;
 
 use crate::inline::regexes::{EQ_ROLE_REGEX, MATH_ROLE_REGEX};
 

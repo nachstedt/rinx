@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{AttributeValue, EntityId, FieldMutationMode};
+use rinx_ast::{AttributeValue, EntityId, FieldMutationMode};
 use serde::{Deserialize, Serialize};
 
 /// One entity's full update history — present only for an entity at least
@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// [`crate::ProjectIndex::effective_relation_targets`] fall back to.
 ///
 /// Never merged, always recomputed globally from the whole graph by
-/// `rusty_sphinx_analyzer::apply_entity_updates` — exactly like
+/// `rinx_analyzer::apply_entity_updates` — exactly like
 /// [`crate::ProjectIndex::entity_backlinks`] — and, crucially,
 /// [`crate::EntityRecord`] itself is never mutated: this is a derived overlay
 /// beside the as-authored graph, not a rewrite of it. See
@@ -62,7 +62,7 @@ pub struct AppliedFieldUpdate {
     /// diagnostic about this entry would go.
     pub doc_path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub span: Option<rusty_sphinx_ast::Span>,
+    pub span: Option<rinx_ast::Span>,
     pub mode: FieldMutationMode,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resulting_value: Option<AttributeValue>,
@@ -81,7 +81,7 @@ pub struct AppliedRelationUpdate {
     pub update_index: usize,
     pub doc_path: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub span: Option<rusty_sphinx_ast::Span>,
+    pub span: Option<rinx_ast::Span>,
     pub mode: FieldMutationMode,
     pub resulting_targets: Vec<EntityId>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -3,7 +3,7 @@
 //! `.. program::`) — mirrored from the analyzer's `index_nodes` so
 //! anchor `id`s never drift from the index keys it built.
 
-use rusty_sphinx_ast::Directive;
+use rinx_ast::Directive;
 
 use crate::RenderCtx;
 
@@ -27,8 +27,8 @@ pub(super) fn apply_scope_directive(directive: &Directive, ctx: &mut RenderCtx<'
 #[cfg(test)]
 mod tests {
     use crate::render;
-    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, TargetSearchOrder};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Directive, Document, InlineNode, Node, TargetSearchOrder};
+    use rinx_index::ProjectIndex;
 
     #[test]
     fn test_render_resolves_bare_reference_after_current_module_directive() {
@@ -43,21 +43,19 @@ mod tests {
                     module: Some("enum".to_string()),
                 }),
                 Node::Paragraph(vec![InlineNode::DomainObjectReference {
-                    object_type: rusty_sphinx_ast::ObjectType::Py(
-                        rusty_sphinx_ast::PyObjectType::Class,
-                    ),
+                    object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Class),
                     name: "Enum".to_string(),
                     display: "Enum".to_string(),
                     link: true,
                     search_order: TargetSearchOrder::LeastQualifiedFirst,
                     span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
+                    inventory: rinx_ast::InventorySelector::Any,
                 }]),
             ],
         );
         let mut index = ProjectIndex::default();
         index.insert_domain_object(
-            rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Class),
             "enum.Enum",
             "library/enum.rst",
         );
@@ -141,18 +139,16 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CType {
-                    signatures: rusty_sphinx_ast::NonEmptyVector::single(
-                        "PyMemAllocatorDomain".into(),
-                    ),
+                rinx_ast::DomainObjectBody::CType {
+                    signatures: rinx_ast::NonEmptyVector::single("PyMemAllocatorDomain".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
                     body: vec![
                         Node::Directive(Directive::CNamespace { namespace: None }),
                         Node::Directive(Directive::DomainObject(
-                            rusty_sphinx_ast::DomainObjectBody::CMacro {
-                                signatures: rusty_sphinx_ast::NonEmptyVector::single(
+                            rinx_ast::DomainObjectBody::CMacro {
+                                signatures: rinx_ast::NonEmptyVector::single(
                                     "PYMEM_DOMAIN_RAW".into(),
                                 ),
                                 body: vec![],
@@ -187,21 +183,19 @@ mod tests {
                 }),
                 Node::Directive(Directive::PyCurrentModule { module: None }),
                 Node::Paragraph(vec![InlineNode::DomainObjectReference {
-                    object_type: rusty_sphinx_ast::ObjectType::Py(
-                        rusty_sphinx_ast::PyObjectType::Class,
-                    ),
+                    object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Class),
                     name: "Enum".to_string(),
                     display: "Enum".to_string(),
                     link: true,
                     search_order: TargetSearchOrder::LeastQualifiedFirst,
                     span: None,
-                    inventory: rusty_sphinx_ast::InventorySelector::Any,
+                    inventory: rinx_ast::InventorySelector::Any,
                 }]),
             ],
         );
         let mut index = ProjectIndex::default();
         index.insert_domain_object(
-            rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Class),
             "enum.Enum",
             "library/enum.rst",
         );

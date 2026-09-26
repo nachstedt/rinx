@@ -5,7 +5,7 @@
 //! one shares used to live here; it moved to [`crate::explicit_title`] once
 //! `.. toctree::` needed the same syntax on its entry lines.
 
-use rusty_sphinx_ast::{Domain, InlineNode, InventoryName, InventorySelector};
+use rinx_ast::{Domain, InlineNode, InventoryName, InventorySelector};
 
 use crate::explicit_title::{split_display_and_target, split_optional_title};
 
@@ -32,7 +32,7 @@ pub(super) fn handle_inline_match(
     m_str: &str,
     node_opt: Option<InlineNode>,
     default_domain: Domain,
-    schema: &rusty_sphinx_entity::EntitySchema,
+    schema: &rinx_entity::EntitySchema,
 ) -> InlineNode {
     let node = build_inline_node(kind, m_str, node_opt, default_domain, schema);
     apply_inventory_selector(node, inventory_selector(m_str))
@@ -120,7 +120,7 @@ fn build_inline_node(
     m_str: &str,
     node_opt: Option<InlineNode>,
     default_domain: Domain,
-    schema: &rusty_sphinx_entity::EntitySchema,
+    schema: &rinx_entity::EntitySchema,
 ) -> InlineNode {
     match kind {
         "entity_role" => super::roles::entity::handle_entity_role_match(m_str, schema),
@@ -219,7 +219,7 @@ fn build_inline_node(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_entity::EntitySchema;
+    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_inventory_selector_is_any_without_a_prefix() {

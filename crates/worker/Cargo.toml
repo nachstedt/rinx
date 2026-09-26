@@ -1,17 +1,17 @@
 [package]
-name = "rusty_sphinx_worker"
+name = "rinx_worker"
 version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-rusty_sphinx_ast = { path = "../ast" }
-rusty_sphinx_entity = { path = "../entity" }
-rusty_sphinx_parser = { path = "../parser" }
-rusty_sphinx_analyzer = { path = "../analyzer" }
-rusty_sphinx_toctree = { path = "../toctree" }
-rusty_sphinx_index = { path = "../index" }
-rusty_sphinx_inventory = { path = "../inventory" }
-rusty_sphinx_renderer = { path = "../renderer" }
+rinx_ast = { path = "../ast" }
+rinx_entity = { path = "../entity" }
+rinx_parser = { path = "../parser" }
+rinx_analyzer = { path = "../analyzer" }
+rinx_toctree = { path = "../toctree" }
+rinx_index = { path = "../index" }
+rinx_inventory = { path = "../inventory" }
+rinx_renderer = { path = "../renderer" }
 anyhow = "1.0.102"
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }

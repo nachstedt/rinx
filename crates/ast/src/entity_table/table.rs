@@ -1,6 +1,6 @@
 //! The listing directive's node: what it selects, what it shows, how it looks.
 
-use rusty_sphinx_filter::{Expr, FieldName};
+use rinx_filter::{Expr, FieldName};
 use serde::{Deserialize, Serialize};
 
 use crate::entity_table::source::EntityTableSource;
@@ -18,7 +18,7 @@ use crate::target_name::TargetName;
 /// them all.
 ///
 /// The filter arrives here already parsed, which is the whole reason
-/// `rusty_sphinx_filter` exists as a crate. Parsing it in the *parser* is what
+/// `rinx_filter` exists as a crate. Parsing it in the *parser* is what
 /// lets a broken expression be reported at the column it breaks at, since that
 /// is the only phase still holding the option line's own position.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -158,7 +158,7 @@ mod tests {
     fn test_a_table_survives_a_serialization_round_trip() {
         // Given — the node is written to a `.ast` and read back to render
         let mut table = EntityTable::new(EntityTableSource::NeedTable);
-        table.filter = Some(rusty_sphinx_filter::parse_filter(r#"type == "req""#).unwrap());
+        table.filter = Some(rinx_filter::parse_filter(r#"type == "req""#).unwrap());
         table.sort = Some(FieldName::new("id").unwrap());
         table.classes = vec!["wide".to_string()];
 

@@ -5,7 +5,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Node, TableRow};
+use rinx_ast::{Diagnostic, DiagnosticCode, Node, TableRow};
 use std::collections::BTreeMap;
 
 use super::geometry::{
@@ -275,7 +275,7 @@ pub(crate) fn try_parse_grid_table(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::InlineNode;
+    use rinx_ast::InlineNode;
 
     // --- try_parse_grid_table via parse() integration tests ---
 

@@ -2,7 +2,7 @@
 //! lists, and the directive dispatcher — everything [`render_nodes`] reaches
 //! while walking a document's node tree.
 
-use rusty_sphinx_ast::{Directive, Enumerator, InlineNode, ListItem, Node, Toctree, ToctreeFlag};
+use rinx_ast::{Directive, Enumerator, InlineNode, ListItem, Node, Toctree, ToctreeFlag};
 use std::fmt::Write as _;
 
 use super::admonitions::{render_admonition, render_seealso, render_version_change};
@@ -32,7 +32,7 @@ use crate::nav::{expand_toctree_entries, write_nav_list};
 /// Renders the `<li>` elements shared by both list kinds.
 ///
 /// The two kinds differ only in their wrapper element — docutils models both
-/// with one `list_item` node, and so does [`rusty_sphinx_ast::ListItem`].
+/// with one `list_item` node, and so does [`rinx_ast::ListItem`].
 fn render_list_items(html: &mut String, items: &[ListItem], ctx: &mut RenderCtx) {
     for item in items {
         let _ = write!(html, "<li>");
@@ -45,7 +45,7 @@ fn render_list_items(html: &mut String, items: &[ListItem], ctx: &mut RenderCtx)
 ///
 /// Sphinx emits only the sequence class here — its HTML writers carry a
 /// literal `@@@ To do: prefix, suffix.` and drop the punctuation, so `(a)`,
-/// `a)` and `a.` all render identically. rusty-sphinx keeps the distinction:
+/// `a)` and `a.` all render identically. rinx keeps the distinction:
 /// the format class lets the stylesheet reproduce the parentheses the author
 /// actually wrote. Do not "simplify" this back to Sphinx's output.
 ///
@@ -333,7 +333,7 @@ fn render_heading(
     html: &mut String,
     level: u8,
     text: &[InlineNode],
-    id: Option<&rusty_sphinx_ast::SectionId>,
+    id: Option<&rinx_ast::SectionId>,
     is_title: bool,
     ctx: &mut RenderCtx<'_>,
 ) {
@@ -375,7 +375,7 @@ fn render_heading(
 /// The number shown on one heading, already formatted with its document's
 /// `:prefix:`/`:suffix:` — always empty for a `:numbered:` toctree, but set
 /// when the document's own `.. sectnum::` assigned this number instead (see
-/// `rusty_sphinx_analyzer::section_numbering`).
+/// `rinx_analyzer::section_numbering`).
 ///
 /// A section's number is looked up by its id. The document's *title* heading
 /// has no section number — the outline treats it as the document itself — so
@@ -384,7 +384,7 @@ fn render_heading(
 /// matching plain docutils.
 fn heading_secnumber(
     ctx: &RenderCtx<'_>,
-    id: &rusty_sphinx_ast::SectionId,
+    id: &rinx_ast::SectionId,
     is_title: bool,
 ) -> Option<String> {
     let numbers = ctx.index.section_numbers.get(ctx.original_doc_path)?;
@@ -615,9 +615,9 @@ fn render_side_effect_directive(html: &mut String, directive: &Directive, ctx: &
 mod tests {
     use super::*;
     use crate::render;
-    use rusty_sphinx_ast::TargetSearchOrder;
-    use rusty_sphinx_ast::{Document, EnumeratorFormat, EnumeratorSequence};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::TargetSearchOrder;
+    use rinx_ast::{Document, EnumeratorFormat, EnumeratorSequence};
+    use rinx_index::ProjectIndex;
 
     /// Builds a two-item enumerated list starting at `ordinal`.
     fn enumerated_list(
@@ -646,12 +646,12 @@ mod tests {
             vec![Node::BulletList {
                 bullet: '*',
                 items: vec![
-                    rusty_sphinx_ast::ListItem {
+                    rinx_ast::ListItem {
                         nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                             "Item 1".to_string(),
                         )])],
                     },
-                    rusty_sphinx_ast::ListItem {
+                    rinx_ast::ListItem {
                         nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                             "Item 2".to_string(),
                         )])],
@@ -677,12 +677,12 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::BulletList {
                 bullet: '*',
-                items: vec![rusty_sphinx_ast::ListItem {
+                items: vec![rinx_ast::ListItem {
                     nodes: vec![
                         Node::Paragraph(vec![InlineNode::Text("Parent".to_string())]),
                         Node::BulletList {
                             bullet: '-',
-                            items: vec![rusty_sphinx_ast::ListItem {
+                            items: vec![rinx_ast::ListItem {
                                 nodes: vec![Node::Paragraph(vec![InlineNode::Text(
                                     "Child".to_string(),
                                 )])],
@@ -709,7 +709,7 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::BulletList {
                 bullet: '*',
-                items: vec![rusty_sphinx_ast::ListItem {
+                items: vec![rinx_ast::ListItem {
                     nodes: vec![
                         Node::Paragraph(vec![InlineNode::Text("Para 1".to_string())]),
                         Node::Paragraph(vec![InlineNode::Text("Para 2".to_string())]),
@@ -938,13 +938,13 @@ mod tests {
             "test.rst".to_string(),
             vec![Node::DefinitionList {
                 items: vec![
-                    rusty_sphinx_ast::DefinitionListItem {
+                    rinx_ast::DefinitionListItem {
                         term: vec![InlineNode::Text("Term 1".to_string())],
                         definition: vec![Node::Paragraph(vec![InlineNode::Text(
                             "Def 1".to_string(),
                         )])],
                     },
-                    rusty_sphinx_ast::DefinitionListItem {
+                    rinx_ast::DefinitionListItem {
                         term: vec![InlineNode::Text("Term 2".to_string())],
                         definition: vec![Node::Paragraph(vec![InlineNode::Text(
                             "Def 2".to_string(),
@@ -971,19 +971,17 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::DefinitionList {
-                items: vec![rusty_sphinx_ast::DefinitionListItem {
+                items: vec![rinx_ast::DefinitionListItem {
                     term: vec![
                         InlineNode::Text("Module ".to_string()),
                         InlineNode::DomainObjectReference {
-                            object_type: rusty_sphinx_ast::ObjectType::Py(
-                                rusty_sphinx_ast::PyObjectType::Module,
-                            ),
+                            object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Module),
                             name: "curses.ascii".to_string(),
                             display: "curses.ascii".to_string(),
                             link: true,
                             search_order: TargetSearchOrder::LeastQualifiedFirst,
                             span: None,
-                            inventory: rusty_sphinx_ast::InventorySelector::Any,
+                            inventory: rinx_ast::InventorySelector::Any,
                         },
                     ],
                     definition: vec![Node::Paragraph(vec![InlineNode::Text(

@@ -1,4 +1,4 @@
-use rusty_sphinx_ast::SectionId;
+use rinx_ast::SectionId;
 
 /// One line of a rendered navigation tree, with everything a template or the
 /// HTML writer needs already resolved.

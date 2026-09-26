@@ -1,13 +1,13 @@
 """
-rusty_sphinx_library rule.
+rinx_library rule.
 
 Parses every .rst source file (Phase 1) into a .ast JSON file using the
-rusty-sphinx worker binary and propagates them via RustySphinxInfo.
+rinx worker binary and propagates them via RinxInfo.
 """
 
-load("//:providers.bzl", "RustySphinxInfo")
+load("//:providers.bzl", "RinxInfo")
 
-def _rusty_sphinx_library_impl(ctx):
+def _rinx_library_impl(ctx):
     worker = ctx.executable._worker
 
     # The entity schema is the vocabulary the *parser* works from: without it,
@@ -44,7 +44,7 @@ def _rusty_sphinx_library_impl(ctx):
     
     allowed_doc_names_list = list(local_doc_names)
     for dep in ctx.attr.deps:
-        allowed_doc_names_list.extend(dep[RustySphinxInfo].direct_doc_names)
+        allowed_doc_names_list.extend(dep[RinxInfo].direct_doc_names)
     
     allowed_doc_names = depset(allowed_doc_names_list)
 
@@ -75,7 +75,7 @@ def _rusty_sphinx_library_impl(ctx):
             # correct — the page really did change.
             inputs = [src] + ctx.files.parse_data + schema_inputs,
             outputs = [ast_raw],
-            mnemonic = "RustySphinxParse",
+            mnemonic = "RinxParse",
             progress_message = "Parsing %s" % src.short_path,
         )
         # Validate the AST's toctree entries (Phase 1.5)
@@ -91,7 +91,7 @@ def _rusty_sphinx_library_impl(ctx):
             arguments = [args],
             inputs = [ast_raw],
             outputs = [ast_out],
-            mnemonic = "RustySphinxValidate",
+            mnemonic = "RinxValidate",
             progress_message = "Validating toctree in %s" % src.short_path,
         )
         ast_files.append(ast_out)
@@ -121,7 +121,7 @@ def _rusty_sphinx_library_impl(ctx):
             arguments = [args_doctests],
             inputs = [ast_out],
             outputs = [doctest_plan],
-            mnemonic = "RustySphinxExtractDoctests",
+            mnemonic = "RinxExtractDoctests",
             progress_message = "Extracting doctests from %s" % src.short_path,
         )
         doctest_plans.append(doctest_plan)
@@ -153,25 +153,25 @@ def _rusty_sphinx_library_impl(ctx):
             arguments = [args_embeds],
             inputs = [ast_out] + ctx.files.images,
             outputs = [embeds_out],
-            mnemonic = "RustySphinxEmbedAssets",
+            mnemonic = "RinxEmbedAssets",
             progress_message = "Embedding assets for %s" % src.short_path,
         )
         embed_sidecars.append(embeds_out)
 
-    # Collect .ast files from deps (other rusty_sphinx_library targets).
-    transitive_asts = [dep[RustySphinxInfo].ast_files for dep in ctx.attr.deps]
-    transitive_diagram_asts = [dep[RustySphinxInfo].diagram_ast_files for dep in ctx.attr.deps]
-    transitive_images = [dep[RustySphinxInfo].image_files for dep in ctx.attr.deps]
-    transitive_embeds = [dep[RustySphinxInfo].embed_sidecars for dep in ctx.attr.deps]
+    # Collect .ast files from deps (other rinx_library targets).
+    transitive_asts = [dep[RinxInfo].ast_files for dep in ctx.attr.deps]
+    transitive_diagram_asts = [dep[RinxInfo].diagram_ast_files for dep in ctx.attr.deps]
+    transitive_images = [dep[RinxInfo].image_files for dep in ctx.attr.deps]
+    transitive_embeds = [dep[RinxInfo].embed_sidecars for dep in ctx.attr.deps]
 
     # `doctest_plans` carries this library's own plans, and is what
-    # `rusty_sphinx_doctest_tests` consumes. It is deliberately not in
+    # `rinx_doctest_tests` consumes. It is deliberately not in
     # DefaultInfo, so `bazel build` of a site never produces them; ask for them
     # by hand with `--output_groups=doctest_plans`.
     return [
         DefaultInfo(files = depset(ast_files)),
         OutputGroupInfo(doctest_plans = depset(doctest_plans)),
-        RustySphinxInfo(
+        RinxInfo(
             ast_files = depset(ast_files, transitive = transitive_asts),
             diagram_ast_files = depset(
                 ast_files if ctx.attr.diagrams else [],
@@ -183,8 +183,8 @@ def _rusty_sphinx_library_impl(ctx):
         ),
     ]
 
-rusty_sphinx_library = rule(
-    implementation = _rusty_sphinx_library_impl,
+rinx_library = rule(
+    implementation = _rinx_library_impl,
     attrs = {
         "srcs": attr.label_list(
             allow_files = [".rst"],
@@ -199,8 +199,8 @@ rusty_sphinx_library = rule(
             doc = "Image files this library's documents show via `.. image::`/`.. figure::`. Paths in the document resolve relative to the document itself, or to the source root with a leading `/`. Declaring the file here is what gets it bundled into the site's `_images/` directory and, for a `:loading: embed` image, into the build action that inlines it; an undeclared image fails the site's image validation.",
         ),
         "deps": attr.label_list(
-            providers = [RustySphinxInfo],
-            doc = "Other rusty_sphinx_library targets that are structurally included via `.. toctree::`. Not required for standard cross-references.",
+            providers = [RinxInfo],
+            doc = "Other rinx_library targets that are structurally included via `.. toctree::`. Not required for standard cross-references.",
         ),
         "diagrams": attr.bool(
             default = False,
@@ -223,10 +223,10 @@ rusty_sphinx_library = rule(
             doc = "The Sphinx domain (e.g. \"py\", \"c\") that bare, unprefixed directives and roles in this library's docs resolve to. This is a property of the library's content, not of any site that assembles it.",
         ),
         "_worker": attr.label(
-            default = Label("//:rusty_sphinx_worker"),
+            default = Label("//:rinx_worker"),
             executable = True,
             cfg = "exec",
-            doc = "The rusty-sphinx binary.",
+            doc = "The rinx binary.",
         ),
     },
     doc = """
@@ -235,7 +235,7 @@ Parses a set of reStructuredText files into AST files (Phase 1).
 Diagrams are opt-in with `diagrams = True`; see that attribute. Note this rule
 does *not* compile them itself. A `.. needuml::` is expanded
 against the project's entity graph, which only exists once every document has
-been indexed, so diagram compilation belongs to `rusty_sphinx_site` — and a
+been indexed, so diagram compilation belongs to `rinx_site` — and a
 plain `.. plantuml::` goes the same way, because two compile paths would mean
 two hash populations and the compiled set could drift from the validated one.
 

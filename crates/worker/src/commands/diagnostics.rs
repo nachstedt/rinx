@@ -11,7 +11,7 @@
 //! The position is the *start* of the diagnostic's span — a range reads as
 //! noise on a terminal, and the end is there for the language server, not for
 //! this output. A diagnostic with no span (see
-//! [`rusty_sphinx_ast::Diagnostic::span`]) simply omits that part rather than
+//! [`rinx_ast::Diagnostic::span`]) simply omits that part rather than
 //! pointing at a line it cannot vouch for.
 //!
 //! A span from a file spliced in by `.. include::` names *that* file, with the
@@ -28,8 +28,8 @@
 //! before spans carried a file — points confidently at the wrong place.
 
 use anyhow::{Result, anyhow};
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span};
-use rusty_sphinx_renderer::{self as renderer};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span};
+use rinx_renderer::{self as renderer};
 
 /// The document a batch of warnings is about, plus the files it included —
 /// between them, everything needed to turn a [`Span`] into a path a reader can
@@ -39,7 +39,7 @@ use rusty_sphinx_renderer::{self as renderer};
 /// formatter in this module needs both, and because the pair has an invariant
 /// worth naming: `source_files` must be the table the spans were interned
 /// against, which in practice means it and `doc_path` come from the same
-/// [`Document`](rusty_sphinx_ast::Document).
+/// [`Document`](rinx_ast::Document).
 pub(super) struct WarningOrigin<'a> {
     doc_path: &'a str,
     source_files: &'a [String],
@@ -98,7 +98,7 @@ pub(super) fn format_diagnostic(origin: &WarningOrigin<'_>, diagnostic: &Diagnos
 
 /// Prints one parse diagnostic to stderr.
 ///
-/// Printing lives here rather than in `rusty_sphinx_parser` — where it used to
+/// Printing lives here rather than in `rinx_parser` — where it used to
 /// happen, inside `parse_with_ctx` — because the parser must only *record*
 /// what went wrong. Deciding whether a diagnostic is shown at all is the
 /// build step's business, and a parser that printed as it went could not
@@ -165,7 +165,7 @@ pub(super) fn format_broken_link_warning(
 /// Formats a single object-type-mismatch diagnostic as a human-readable
 /// warning line. Both the requested and resolved object types are shown
 /// domain-qualified (e.g. `"py:class"`, not just `"class"`) via
-/// [`rusty_sphinx_ast::ObjectType::domain_qualified_str`] — the alias
+/// [`rinx_ast::ObjectType::domain_qualified_str`] — the alias
 /// fallback is domain-scoped today (`py`'s `class`/`exception`, and `c`'s
 /// `macro`/`member` and `function`/`macro`), so the two domains always match
 /// in practice, but spelling both out avoids the reader having to assume
@@ -303,7 +303,7 @@ pub(super) fn check_broken_links_strict(
 mod tests {
     use super::*;
 
-    use rusty_sphinx_ast::Position;
+    use rinx_ast::Position;
 
     fn a_span() -> Span {
         Span::new(Position::new(42, 18), Position::new(42, 35))
@@ -334,7 +334,7 @@ mod tests {
         // Given an `:external+numpy:` role in a site that declared no `numpy`
         let link = renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::UnknownInventory(
-                rusty_sphinx_ast::InventoryName::new("numpy").unwrap(),
+                rinx_ast::InventoryName::new("numpy").unwrap(),
             ),
             target: "ndarray".to_string(),
             span: Some(a_span()),
@@ -444,7 +444,7 @@ mod tests {
             DiagnosticCode::TableGridNoColumns,
             "grid table: top border defines no columns",
             Span::new(Position::new(7, 3), Position::new(7, 20))
-                .with_file(Some(rusty_sphinx_ast::FileId::new(0))),
+                .with_file(Some(rinx_ast::FileId::new(0))),
         );
 
         // When
@@ -468,7 +468,7 @@ mod tests {
         let link = renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::Reference,
             target: "missing-section".to_string(),
-            span: Some(a_span().with_file(Some(rusty_sphinx_ast::FileId::new(0)))),
+            span: Some(a_span().with_file(Some(rinx_ast::FileId::new(0)))),
         };
 
         // When
@@ -506,7 +506,7 @@ mod tests {
         let diagnostic = Diagnostic::new(
             DiagnosticCode::CsvNoData,
             "no data",
-            a_span().with_file(Some(rusty_sphinx_ast::FileId::new(4))),
+            a_span().with_file(Some(rinx_ast::FileId::new(4))),
         );
 
         // When
@@ -528,7 +528,7 @@ mod tests {
         let diagnostic = Diagnostic::new(
             DiagnosticCode::CsvNoData,
             "no data",
-            a_span().with_file(Some(rusty_sphinx_ast::FileId::new(1))),
+            a_span().with_file(Some(rinx_ast::FileId::new(1))),
         );
 
         // When
@@ -550,13 +550,11 @@ mod tests {
             renderer::BrokenLinkKind::AnonymousReference,
             renderer::BrokenLinkKind::TermReference,
             renderer::BrokenLinkKind::OptionReference,
-            renderer::BrokenLinkKind::DomainObjectReference(rusty_sphinx_ast::ObjectType::Py(
-                rusty_sphinx_ast::PyObjectType::Function,
+            renderer::BrokenLinkKind::DomainObjectReference(rinx_ast::ObjectType::Py(
+                rinx_ast::PyObjectType::Function,
             )),
             renderer::BrokenLinkKind::AmbiguousDomainObjectReference {
-                object_type: rusty_sphinx_ast::ObjectType::Py(
-                    rusty_sphinx_ast::PyObjectType::Function,
-                ),
+                object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Function),
                 candidates: Vec::new(),
             },
         ];
@@ -633,10 +631,8 @@ mod tests {
         // Given
         let mismatch = renderer::ObjectTypeMismatch {
             name: "fault".to_string(),
-            requested_type: rusty_sphinx_ast::ObjectType::Py(
-                rusty_sphinx_ast::PyObjectType::Exception,
-            ),
-            resolved_type: rusty_sphinx_ast::ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            requested_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Exception),
+            resolved_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Class),
             span: Some(a_span()),
         };
 

@@ -1,6 +1,6 @@
 //! `.. needimport::` across the whole pipeline.
 //!
-//! The unit tests in `rusty_sphinx_parser` assert on the nodes an import
+//! The unit tests in `rinx_parser` assert on the nodes an import
 //! produces. These assert the claim those tests cannot reach, and the claim
 //! the whole design rests on: **an imported need is an ordinary entity of this
 //! project**. Nothing in the analyzer, the index or the renderer was taught
@@ -14,13 +14,13 @@
 
 use std::collections::HashMap;
 
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_ast::EntityId;
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_index::ProjectIndex;
-use rusty_sphinx_parser::{self as parser, LoadedFile, ParseCtx, ParseFileLoader};
-use rusty_sphinx_renderer as renderer;
+use rinx_analyzer as analyzer;
+use rinx_ast as ast;
+use rinx_ast::EntityId;
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_index::ProjectIndex;
+use rinx_parser::{self as parser, LoadedFile, ParseCtx, ParseFileLoader};
+use rinx_renderer as renderer;
 
 /// A project declaring the sphinx-needs-shaped vocabulary a migrating project
 /// has: requirements that link to specifications, with the back-link derived.
@@ -214,10 +214,10 @@ fn test_e2e_an_imported_entity_is_listed_by_a_filter_over_the_graph() {
         &doc,
         &index,
         "requirements",
-        &rusty_sphinx_renderer::config::SiteConfig::default(),
-        &rusty_sphinx_renderer::EmbeddedAssets::new(),
+        &rinx_renderer::config::SiteConfig::default(),
+        &rinx_renderer::EmbeddedAssets::new(),
         &schema,
-        &rusty_sphinx_renderer::EntityTemplates::new(),
+        &rinx_renderer::EntityTemplates::new(),
     );
     assert!(
         output.html.contains("REQ_IMPORTED"),

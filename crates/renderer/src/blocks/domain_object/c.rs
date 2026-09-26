@@ -4,7 +4,7 @@
 //! (the `std` domain) needs its own renderer, since it doesn't fit
 //! that function's one-`<dt>`-per-name loop.
 
-use rusty_sphinx_ast::Node;
+use rinx_ast::Node;
 use std::fmt::Write as _;
 
 use crate::RenderCtx;
@@ -31,22 +31,22 @@ use crate::RenderCtx;
 /// so the shared body renders with no scope push/pop.
 pub(super) fn render_cmdoption(
     html: &mut String,
-    signatures: &rusty_sphinx_ast::NonEmptyVector<String>,
+    signatures: &rinx_ast::NonEmptyVector<String>,
     body: &[Node],
     ctx: &mut RenderCtx<'_>,
 ) {
-    let object_type = rusty_sphinx_ast::ObjectType::Std(rusty_sphinx_ast::StdObjectType::Cmdoption);
+    let object_type = rinx_ast::ObjectType::Std(rinx_ast::StdObjectType::Cmdoption);
 
     let _ = writeln!(html, "<dl class=\"std cmdoption\">");
     for line in signatures.as_slice() {
-        let specs = rusty_sphinx_ast::split_option_line_specs(line);
+        let specs = rinx_ast::split_option_line_specs(line);
         let line_escaped = html_escape::encode_text(line);
         let mut dt_open = String::from("  <dt");
         let mut secondary_anchors = String::new();
         for (spec_index, spec) in specs.iter().enumerate() {
-            let optname = rusty_sphinx_ast::extract_option_name(spec);
+            let optname = rinx_ast::extract_option_name(spec);
             let qualified_name = ctx.scope.program.qualify(&optname);
-            let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
+            let key = rinx_ast::build_domain_object_key(object_type, &qualified_name);
             let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
             if spec_index == 0 {
                 let _ = write!(dt_open, " id=\"{id_attr}\"");
@@ -67,8 +67,8 @@ pub(super) fn render_cmdoption(
 
 #[cfg(test)]
 mod tests {
-    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, NonEmptyVector};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Directive, Document, InlineNode, Node, NonEmptyVector};
+    use rinx_index::ProjectIndex;
 
     fn render_doc(doc: &Document) -> String {
         let index = ProjectIndex::default();
@@ -81,7 +81,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CFunction {
+                rinx_ast::DomainObjectBody::CFunction {
                     signatures: NonEmptyVector::single("int add(int a, int b)".into()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Adds two numbers.".to_string(),
@@ -104,7 +104,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CMacro {
+                rinx_ast::DomainObjectBody::CMacro {
                     signatures: NonEmptyVector::single("MAX(a, b)".into()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Expands to whichever of a or b is greater.".to_string(),
@@ -127,13 +127,13 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CStruct {
+                rinx_ast::DomainObjectBody::CStruct {
                     signatures: NonEmptyVector::single("Data".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::CMember {
+                        rinx_ast::DomainObjectBody::CMember {
                             signatures: NonEmptyVector::single("int count".into()),
                             no_index: false,
                             no_index_entry: false,
@@ -162,7 +162,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CUnion {
+                rinx_ast::DomainObjectBody::CUnion {
                     signatures: NonEmptyVector::single("Number".into()),
                     no_index: false,
                     no_index_entry: false,
@@ -185,7 +185,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CMember {
+                rinx_ast::DomainObjectBody::CMember {
                     signatures: NonEmptyVector::single("PyObject *PyTypeObject.tp_bases".into()),
                     no_index: false,
                     no_index_entry: false,
@@ -210,19 +210,19 @@ mod tests {
         // `c:macro` now consults `CScope` like every other `c`-domain object
         // (`known_bugs.md` #2's fix), so the nested macro renders qualified
         // by the enclosing type — a known, accepted mismatch against
-        // CPython's actual bare-rendered constants, since rusty-sphinx
+        // CPython's actual bare-rendered constants, since rinx
         // doesn't implement the `.. c:namespace:: NULL` reset real Sphinx
         // uses there (see the analyzer's equivalent test for detail).
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CType {
+                rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("PyMemAllocatorDomain".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::CMacro {
+                        rinx_ast::DomainObjectBody::CMacro {
                             signatures: NonEmptyVector::single("PYMEM_DOMAIN_RAW".into()),
                             body: vec![],
                         },
@@ -251,7 +251,7 @@ mod tests {
             "test.rst".to_string(),
             vec![
                 Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyModule {
+                    rinx_ast::DomainObjectBody::PyModule {
                         name: "greeter_module".to_string(),
                         platform: None,
                         synopsis: None,
@@ -260,12 +260,12 @@ mod tests {
                     },
                 )),
                 Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyClass {
+                    rinx_ast::DomainObjectBody::PyClass {
                         module: None,
                         signatures: NonEmptyVector::single("Greeter".to_string()),
                         is_final: false,
                         body: vec![Node::Directive(Directive::DomainObject(
-                            rusty_sphinx_ast::DomainObjectBody::CFunction {
+                            rinx_ast::DomainObjectBody::CFunction {
                                 signatures: NonEmptyVector::single("int helper(void)".into()),
                                 body: vec![],
                             },
@@ -290,13 +290,13 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CType {
+                rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("Data".into()),
                     no_index: false,
                     no_index_entry: false,
                     no_contents_entry: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::CMember {
+                        rinx_ast::DomainObjectBody::CMember {
                             signatures: NonEmptyVector::single("int count".into()),
                             no_index: false,
                             no_index_entry: false,
@@ -323,7 +323,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CType {
+                rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("unsigned long ulong".into()),
                     no_index: false,
                     no_index_entry: false,
@@ -348,7 +348,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CType {
+                rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single(
                         "int (*Py_tracefunc)(PyObject *obj, int what)".into(),
                     ),
@@ -376,7 +376,7 @@ mod tests {
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::CType {
+                rinx_ast::DomainObjectBody::CType {
                     signatures: NonEmptyVector::single("Hidden".into()),
                     no_index: true,
                     no_index_entry: false,
@@ -398,8 +398,8 @@ mod tests {
 #[cfg(test)]
 mod pipeline_tests {
     use crate::render;
-    use rusty_sphinx_ast::{Directive, Document, InlineNode, Node, NonEmptyVector};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Directive, Document, InlineNode, Node, NonEmptyVector};
+    use rinx_index::ProjectIndex;
 
     #[test]
     fn test_render_cmdoption_domain_object_produces_dt_and_dd() {
@@ -407,7 +407,7 @@ mod pipeline_tests {
         let doc = Document::new(
             "cmdline.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                rinx_ast::DomainObjectBody::StdCmdoption {
                     signatures: NonEmptyVector::single("-m <module-name>".to_string()),
                     body: vec![Node::Paragraph(vec![InlineNode::Text(
                         "Run a module.".to_string(),
@@ -433,7 +433,7 @@ mod pipeline_tests {
         let doc = Document::new(
             "zipapp.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                rinx_ast::DomainObjectBody::StdCmdoption {
                     signatures: NonEmptyVector::single("-c, --compress".to_string()),
                     body: vec![],
                 },
@@ -460,7 +460,7 @@ mod pipeline_tests {
                     name: Some("dis".to_string()),
                 }),
                 Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::StdCmdoption {
+                    rinx_ast::DomainObjectBody::StdCmdoption {
                         signatures: NonEmptyVector::single("-O".to_string()),
                         body: vec![],
                     },

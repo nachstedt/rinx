@@ -7,7 +7,7 @@ use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::indent_width;
 use crate::indent::strip_indent;
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Enumerator, EnumeratorFormat, EnumeratorSequence, ListItem, Node,
 };
 

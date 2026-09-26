@@ -1,5 +1,5 @@
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, Span};
 
 /// Strips a leading `!` (the "main entry" marker) from a trimmed entry.
 ///

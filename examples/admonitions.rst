@@ -3,7 +3,7 @@
 Admonitions Showcase
 =====================
 
-This page demonstrates all supported admonition types in Rusty-Sphinx.
+This page demonstrates all supported admonition types in Rinx.
 
 Standard Admonitions
 --------------------

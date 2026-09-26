@@ -4,13 +4,13 @@
 //! Distinct from the `sphinx.ext.doctest` directive family in
 //! [`crate::directives::doctest`], which this shares no code with: that parses
 //! `.. doctest::`/`.. testcode::`/… into a
-//! [`rusty_sphinx_ast::Directive::DocTest`], whereas this is a block-level
+//! [`rinx_ast::Directive::DocTest`], whereas this is a block-level
 //! construct producing a [`Node::DoctestBlock`] and is reached from the
 //! ordinary block dispatch chain. Both end up feeding the worker's doctest
 //! plan, which is where the two forms finally meet.
 
 use crate::indent::strip_common_indent;
-use rusty_sphinx_ast::Node;
+use rinx_ast::Node;
 
 /// Whether `line` opens a doctest block: `>>>` followed by a space or nothing,
 /// ignoring indentation.
@@ -54,7 +54,7 @@ pub(super) fn try_parse_doctest_block(lines: &[&str], i: usize) -> Option<(usize
     let content = strip_common_indent(&lines[i..end]);
     Some((
         end - i,
-        Node::DoctestBlock(rusty_sphinx_ast::HashedContent::new(content)),
+        Node::DoctestBlock(rinx_ast::HashedContent::new(content)),
     ))
 }
 

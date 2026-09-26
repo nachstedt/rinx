@@ -1,19 +1,19 @@
 """
-Public API for the rusty_sphinx Bazel rules.
+Public API for the rinx Bazel rules.
 
-Load this file to access rusty_sphinx_library, rusty_sphinx_site and
-rusty_sphinx_inventory.
+Load this file to access rinx_library, rinx_site and
+rinx_inventory.
 
 Example:
-    load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library", "rusty_sphinx_site")
+    load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
 """
 
-load("//rules:doctest.bzl", _rusty_sphinx_doctest_tests = "rusty_sphinx_doctest_tests")
-load("//rules:inventory.bzl", _rusty_sphinx_inventory = "rusty_sphinx_inventory")
-load("//rules:library.bzl", _rusty_sphinx_library = "rusty_sphinx_library")
-load("//rules:site.bzl", _rusty_sphinx_site = "rusty_sphinx_site")
+load("//rules:doctest.bzl", _rinx_doctest_tests = "rinx_doctest_tests")
+load("//rules:inventory.bzl", _rinx_inventory = "rinx_inventory")
+load("//rules:library.bzl", _rinx_library = "rinx_library")
+load("//rules:site.bzl", _rinx_site = "rinx_site")
 
-rusty_sphinx_library = _rusty_sphinx_library
-rusty_sphinx_site = _rusty_sphinx_site
-rusty_sphinx_doctest_tests = _rusty_sphinx_doctest_tests
-rusty_sphinx_inventory = _rusty_sphinx_inventory
+rinx_library = _rinx_library
+rinx_site = _rinx_site
+rinx_doctest_tests = _rinx_doctest_tests
+rinx_inventory = _rinx_inventory

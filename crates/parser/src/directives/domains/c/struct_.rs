@@ -3,7 +3,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
+use rinx_ast::{CSignature, DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. c:struct::` body: strips the common object-description flag
 /// lines (`:no-index:`, `:no-index-entry:`, `:no-contents-entry:`, and their
@@ -39,7 +39,7 @@ pub(crate) fn parse_c_struct(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::{Directive, Node};
 
     /// The raw texts of parsed `c`-domain signatures, for asserting on what
     /// was written rather than on the name derived from it.

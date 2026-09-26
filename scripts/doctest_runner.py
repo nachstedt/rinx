@@ -1,4 +1,4 @@
-"""Executes the doctest plans produced by `rusty-sphinx extract_doctests`.
+"""Executes the doctest plans produced by `rinx extract_doctests`.
 
 Why this is Python rather than Rust
 -----------------------------------
@@ -11,7 +11,7 @@ not remove the interpreter dependency (the code still has to be executed); it
 would only add a second, silently divergent oracle. So the stdlib runs the
 tests, exactly as ``sphinx.ext.doctest`` does.
 
-This mirrors how PlantUML diagrams are compiled by ``plantuml.jar``: rusty-sphinx
+This mirrors how PlantUML diagrams are compiled by ``plantuml.jar``: rinx
 does not own that language either.
 
 What this file reproduces from Sphinx

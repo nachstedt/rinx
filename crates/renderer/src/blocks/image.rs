@@ -5,17 +5,17 @@
 //! element is the block (the `<img>` here, the `<figure>` there), and
 //! `:loading:` decides what `src` even holds. The rest are attributes, and
 //! `:scale:` has already been folded into `:width:`/`:height:` by
-//! [`rusty_sphinx_ast::ImageOptions::rendered_width`].
+//! [`rinx_ast::ImageOptions::rendered_width`].
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri};
-use rusty_sphinx_index::TargetLocation;
+use rinx_ast::{ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri};
+use rinx_index::TargetLocation;
 
 use crate::RenderCtx;
 use crate::image_error::ImageError;
 use crate::{BrokenLink, BrokenLinkKind};
-use rusty_sphinx_index::relative_doc_href;
+use rinx_index::relative_doc_href;
 
 use super::asset_href::relative_asset_href;
 
@@ -212,8 +212,8 @@ pub(super) fn render_image_directive(
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::render_directive_html;
-    use rusty_sphinx_ast::{Directive, ImageUri, TargetName};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Directive, ImageUri, TargetName};
+    use rinx_index::ProjectIndex;
 
     /// Renders a `.. image::` built from `options` on a page at `doc_path`.
     fn render_at(options: ImageOptions, doc_path: &str) -> String {
@@ -277,8 +277,8 @@ mod tests {
     fn test_renders_dimensions_as_a_style() {
         // Given
         let mut options = image("logo.png");
-        options.width = Some(rusty_sphinx_ast::LengthOrPercentage::new("50%").expect("valid"));
-        options.height = Some(rusty_sphinx_ast::Length::new("3cm").expect("valid"));
+        options.width = Some(rinx_ast::LengthOrPercentage::new("50%").expect("valid"));
+        options.height = Some(rinx_ast::Length::new("3cm").expect("valid"));
 
         // When
         let html = render(options);
@@ -294,7 +294,7 @@ mod tests {
     fn test_applies_the_scale_to_the_rendered_dimensions() {
         // Given
         let mut options = image("logo.png");
-        options.width = Some(rusty_sphinx_ast::LengthOrPercentage::new("200px").expect("valid"));
+        options.width = Some(rinx_ast::LengthOrPercentage::new("200px").expect("valid"));
         options.scale = Some(50);
 
         // When
@@ -481,11 +481,11 @@ mod tests {
         options: ImageOptions,
         assets: &crate::EmbeddedAssets,
     ) -> crate::RenderOutput {
-        let doc = rusty_sphinx_ast::Document::new(
+        let doc = rinx_ast::Document::new(
             "index.rst".to_string(),
-            vec![rusty_sphinx_ast::Node::Directive(Directive::Image(
-                Box::new(options),
-            ))],
+            vec![rinx_ast::Node::Directive(Directive::Image(Box::new(
+                options,
+            )))],
         );
         crate::render_with_assets(
             &doc,
@@ -493,7 +493,7 @@ mod tests {
             "index.rst",
             &crate::config::SiteConfig::default(),
             assets,
-            rusty_sphinx_entity::EntitySchema::empty_ref(),
+            rinx_entity::EntitySchema::empty_ref(),
             &crate::blocks::EntityTemplates::new(),
         )
     }
@@ -543,7 +543,7 @@ mod tests {
         assert_eq!(output.image_errors[0].uri, "logo.svg");
         assert_eq!(
             output.image_errors[0].code(),
-            rusty_sphinx_ast::DiagnosticCode::ImageEmbedUnavailable
+            rinx_ast::DiagnosticCode::ImageEmbedUnavailable
         );
         assert!(
             output.html.contains("src=\"_images/logo.svg\""),
@@ -574,11 +574,11 @@ mod tests {
             std::path::Path::new("guide/logo.svg"),
             "data:image/svg+xml;base64,BBB".to_string(),
         );
-        let doc = rusty_sphinx_ast::Document::new(
+        let doc = rinx_ast::Document::new(
             "guide/intro.rst".to_string(),
-            vec![rusty_sphinx_ast::Node::Directive(Directive::Image(
-                Box::new(options),
-            ))],
+            vec![rinx_ast::Node::Directive(Directive::Image(Box::new(
+                options,
+            )))],
         );
 
         // When
@@ -588,7 +588,7 @@ mod tests {
             "guide/intro.rst",
             &crate::config::SiteConfig::default(),
             &assets,
-            rusty_sphinx_entity::EntitySchema::empty_ref(),
+            rinx_entity::EntitySchema::empty_ref(),
             &crate::blocks::EntityTemplates::new(),
         );
 

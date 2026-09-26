@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{OptionArgumentDelimiter, OptionListItem, OptionSpec};
+use rinx_ast::{OptionArgumentDelimiter, OptionListItem, OptionSpec};
 
 use crate::RenderCtx;
 
@@ -58,8 +58,8 @@ fn render_option_spec(html: &mut String, option: &OptionSpec) {
 
 #[cfg(test)]
 mod tests {
-    use rusty_sphinx_ast::{Document, InlineNode, Node, OptionArgument};
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::{Document, InlineNode, Node, OptionArgument};
+    use rinx_index::ProjectIndex;
 
     use super::*;
 

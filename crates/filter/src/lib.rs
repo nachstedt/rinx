@@ -18,10 +18,10 @@
 //! Two phases need it and neither may depend on the other: the **parser**
 //! parses a filter (so the syntax error lands on the option line the author
 //! wrote) and the **renderer** evaluates one. It therefore depends on nothing
-//! of ours at all — not on `rusty_sphinx_ast`, and not on the index whose
+//! of ours at all — not on `rinx_ast`, and not on the index whose
 //! records it filters. What it knows about the thing being filtered arrives
 //! through [`FilterSubject`], the same injected-trait seam
-//! `rusty_sphinx_parser`'s file loader uses.
+//! `rinx_parser`'s file loader uses.
 
 mod error;
 mod eval;

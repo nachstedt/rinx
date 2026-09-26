@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{InlineNode, Node};
+use rinx_ast::{InlineNode, Node};
 
 use crate::RenderCtx;
 use crate::inline::render_inline;
@@ -30,8 +30,8 @@ pub(super) fn render_block_quote(
 
 #[cfg(test)]
 mod tests {
-    use rusty_sphinx_ast::Document;
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::Document;
+    use rinx_index::ProjectIndex;
 
     use super::*;
 

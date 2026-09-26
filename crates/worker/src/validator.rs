@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
-use rusty_sphinx_ast::{Directive, Document, Node};
-use rusty_sphinx_toctree::{UnmatchedKind, expand_toctree};
+use rinx_ast::{Directive, Document, Node};
+use rinx_toctree::{UnmatchedKind, expand_toctree};
 use std::collections::{BTreeSet, HashSet};
 
 /// Validates that every toctree entry names a document the build declared as a
@@ -73,26 +73,26 @@ mod tests {
     /// A toctree of plain document entries, the shape almost every test here
     /// needs. Entry spans are irrelevant to these tests, so they are left
     /// unset rather than invented.
-    fn toctree_of(docnames: &[&str]) -> rusty_sphinx_ast::Toctree {
-        rusty_sphinx_ast::Toctree {
+    fn toctree_of(docnames: &[&str]) -> rinx_ast::Toctree {
+        rinx_ast::Toctree {
             entries: docnames
                 .iter()
-                .map(|docname| rusty_sphinx_ast::TocEntry::Document {
+                .map(|docname| rinx_ast::TocEntry::Document {
                     title: None,
                     docname: (*docname).to_string(),
                     span: None,
                 })
                 .collect(),
-            options: rusty_sphinx_ast::ToctreeOptions::default(),
+            options: rinx_ast::ToctreeOptions::default(),
         }
     }
 
     /// A toctree of one `:glob:` pattern.
-    fn globbing_toctree(pattern: &str) -> rusty_sphinx_ast::Toctree {
-        let mut options = rusty_sphinx_ast::ToctreeOptions::default();
-        options.set(rusty_sphinx_ast::ToctreeFlag::Glob);
-        rusty_sphinx_ast::Toctree {
-            entries: vec![rusty_sphinx_ast::TocEntry::Glob {
+    fn globbing_toctree(pattern: &str) -> rinx_ast::Toctree {
+        let mut options = rinx_ast::ToctreeOptions::default();
+        options.set(rinx_ast::ToctreeFlag::Glob);
+        rinx_ast::Toctree {
+            entries: vec![rinx_ast::TocEntry::Glob {
                 pattern: pattern.to_string(),
                 span: None,
             }],
@@ -101,7 +101,7 @@ mod tests {
     }
 
     // The path-resolution cases this module used to test moved with the
-    // function itself: `rusty_sphinx_toctree::resolve_docname` is now the one
+    // function itself: `rinx_toctree::resolve_docname` is now the one
     // implementation, and its own tests cover them.
 
     #[test]
@@ -204,22 +204,20 @@ mod tests {
         // Given — neither names a document, so neither needs declaring.
         let doc = Document::new(
             "docs/index.rst".to_string(),
-            vec![Node::Directive(Directive::Toctree(
-                rusty_sphinx_ast::Toctree {
-                    entries: vec![
-                        rusty_sphinx_ast::TocEntry::SelfRef {
-                            title: None,
-                            span: None,
-                        },
-                        rusty_sphinx_ast::TocEntry::External {
-                            title: None,
-                            url: "https://example.org".to_string(),
-                            span: None,
-                        },
-                    ],
-                    options: rusty_sphinx_ast::ToctreeOptions::default(),
-                },
-            ))],
+            vec![Node::Directive(Directive::Toctree(rinx_ast::Toctree {
+                entries: vec![
+                    rinx_ast::TocEntry::SelfRef {
+                        title: None,
+                        span: None,
+                    },
+                    rinx_ast::TocEntry::External {
+                        title: None,
+                        url: "https://example.org".to_string(),
+                        span: None,
+                    },
+                ],
+                options: rinx_ast::ToctreeOptions::default(),
+            }))],
         );
         let allowed = HashSet::new(); // empty
 

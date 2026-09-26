@@ -1,6 +1,6 @@
 //! The flowchart's node: what it selects, what it connects, how it looks.
 
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::entity_flow::direction::FlowDirection;
@@ -178,7 +178,7 @@ mod tests {
     fn test_a_flowchart_survives_a_serialization_round_trip() {
         // Given — the node is written to a `.ast` and read back to render
         let mut flow = EntityFlow::new(EntityFlowSource::NeedFlow);
-        flow.filter = Some(rusty_sphinx_filter::parse_filter(r#"type == "req""#).unwrap());
+        flow.filter = Some(rinx_filter::parse_filter(r#"type == "req""#).unwrap());
         flow.relations = Some(vec!["links".to_string()]);
         flow.show_link_names = true;
         flow.direction = FlowDirection::LeftToRight;

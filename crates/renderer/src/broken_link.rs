@@ -1,8 +1,8 @@
 //! Diagnostics a render produces alongside its HTML: cross-references that
-//! failed to resolve against the [`ProjectIndex`](rusty_sphinx_index::ProjectIndex),
+//! failed to resolve against the [`ProjectIndex`](rinx_index::ProjectIndex),
 //! and references that resolved only through an object-type fallback.
 
-use rusty_sphinx_ast::{DiagnosticCode, InventoryName, ObjectType, Span};
+use rinx_ast::{DiagnosticCode, InventoryName, ObjectType, Span};
 
 /// The kind of cross-reference role that produced a [`BrokenLink`].
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -112,7 +112,7 @@ impl BrokenLink {
 }
 
 /// A domain-object reference that *did* resolve, but only via
-/// [`rusty_sphinx_ast::ObjectType::role_alias_candidates`]'s fallback — the
+/// [`rinx_ast::ObjectType::role_alias_candidates`]'s fallback — the
 /// definition's own object type doesn't match the one the role asked for
 /// (e.g. a `:exc:` role resolved against a `.. class::` definition, as
 /// `CPython`'s `xmlrpc.client.rst` does with `Fault`). Deliberately not a
@@ -135,7 +135,7 @@ pub struct ObjectTypeMismatch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::PyObjectType;
+    use rinx_ast::PyObjectType;
 
     #[test]
     fn test_as_str_labels_each_simple_kind() {

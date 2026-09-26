@@ -11,7 +11,7 @@
 //! Positions come out as characters, not bytes, because that is what
 //! [`Position`] documents and what a reader counting along a line expects.
 
-use rusty_sphinx_ast::Span;
+use rinx_ast::Span;
 
 use crate::context::{ParseCtx, SourcePoint};
 
@@ -114,7 +114,7 @@ impl SourceMap {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{Domain, Position};
+    use rinx_ast::{Domain, Position};
 
     fn ctx() -> ParseCtx<'static> {
         ParseCtx::with_domain(Domain::Py)

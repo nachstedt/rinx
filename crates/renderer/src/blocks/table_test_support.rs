@@ -3,8 +3,8 @@
 //! shortcut and a helper building a row of single-paragraph text cells.
 #![cfg(test)]
 
-use rusty_sphinx_ast::{Document, InlineNode, Node, TableCell, TableRow};
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{Document, InlineNode, Node, TableCell, TableRow};
+use rinx_index::ProjectIndex;
 
 /// Renders `doc` against an empty project index, returning the resulting
 /// HTML — the shortcut every table-rendering test in this crate uses.

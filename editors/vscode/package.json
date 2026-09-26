@@ -1,7 +1,7 @@
 {
-  "name": "rusty-sphinx",
-  "displayName": "Rusty-Sphinx",
-  "description": "Live preview for Rusty-Sphinx documentation",
+  "name": "rinx",
+  "displayName": "Rinx",
+  "description": "Live preview for Rinx documentation",
   "version": "0.1.0",
   "publisher": "nachstedt",
   "engines": {
@@ -11,47 +11,47 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:rusty-sphinx.showPreview"
+    "onCommand:rinx.showPreview"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "rusty-sphinx.showPreview",
-        "title": "Rusty-Sphinx: Show Preview",
-        "category": "Rusty-Sphinx"
+        "command": "rinx.showPreview",
+        "title": "Rinx: Show Preview",
+        "category": "Rinx"
       }
     ],
     "configuration": {
       "type": "object",
-      "title": "Rusty-Sphinx",
+      "title": "Rinx",
       "properties": {
-        "rusty-sphinx.binaryPath": {
+        "rinx.binaryPath": {
           "type": "string",
-          "default": "rusty-sphinx",
-          "description": "Path to the rusty-sphinx binary. Can be a bare command (if in PATH) or an absolute path (e.g., /usr/local/bin/rusty-sphinx)."
+          "default": "rinx",
+          "description": "Path to the rinx binary. Can be a bare command (if in PATH) or an absolute path (e.g., /usr/local/bin/rinx)."
         },
-        "rusty-sphinx.autoDiscover": {
+        "rinx.autoDiscover": {
           "type": "boolean",
           "default": true,
           "description": "Automatically discover configuration from Bazel. Requires `bazel` to be on the PATH."
         },
-        "rusty-sphinx.configPath": {
+        "rinx.configPath": {
           "type": "string",
-          "default": "rusty_sphinx.toml",
-          "description": "Fallback path to the rusty_sphinx.toml config file (used when autoDiscover is disabled or fails)"
+          "default": "rinx.toml",
+          "description": "Fallback path to the rinx.toml config file (used when autoDiscover is disabled or fails)"
         },
-        "rusty-sphinx.templatePath": {
+        "rinx.templatePath": {
           "type": "string",
           "default": "templates/default.html",
           "description": "Fallback path to the HTML template used for rendering (used when autoDiscover is disabled or fails)"
         },
-        "rusty-sphinx.indexPath": {
+        "rinx.indexPath": {
           "type": "string",
           "default": "bazel-bin/Doc/site.project.index",
           "description": "Fallback path to the global project index (used when autoDiscover is disabled or fails)"
         },
-        "rusty-sphinx.previewMode": {
+        "rinx.previewMode": {
           "type": "string",
           "enum": [
             "onSave",

@@ -1,6 +1,6 @@
 //! The bar chart's node: what it counts, and how the chart looks.
 
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::chart_color::ChartColor;

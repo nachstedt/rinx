@@ -11,7 +11,7 @@
 //! never parses its body, so refusing the whole dropdown over a misspelled
 //! `:color:` would silently swallow every construct written inside it.
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Animation, Chevron, Diagnostic, DiagnosticCode, Directive, Dropdown, InvalidOcticonName,
     OcticonName, SemanticColor, Spacing, SpacingKind, Span, TargetName,
 };
@@ -70,7 +70,7 @@ pub(super) fn parse_dropdown(
 /// Unlike every caption in this build — a code block's, a table's — a
 /// dropdown's title really is parsed: sphinx-design runs it through
 /// `inline_text`, so a role or a literal in the title works.
-fn parse_title(argument: &str, ctx: &ParseCtx<'_>) -> Vec<rusty_sphinx_ast::InlineNode> {
+fn parse_title(argument: &str, ctx: &ParseCtx<'_>) -> Vec<rinx_ast::InlineNode> {
     let title = argument.trim();
     if title.is_empty() {
         return Vec::new();
@@ -258,7 +258,7 @@ fn report_empty_value(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{InlineNode, Node, SpacingValue};
+    use rinx_ast::{InlineNode, Node, SpacingValue};
 
     /// Parses a whole document and returns its single `.. dropdown::` with the
     /// document's diagnostics — the dispatcher is what positions the parse

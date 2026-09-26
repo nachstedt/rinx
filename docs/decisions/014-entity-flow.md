@@ -39,7 +39,7 @@ flow(id) }}{% endfor %}` is nearly the whole feature — and it would have been
 wrong in three ways that all have the same shape: the author would be diagnosed
 about text they never wrote. The filter would be re-parsed at *render* time
 from a string synthesized at parse time, so a syntax error would lose the
-column it breaks at, which is the entire reason `rusty_sphinx_filter` is parsed
+column it breaks at, which is the entire reason `rinx_filter` is parsed
 by the parser (ADR-011). Every failure would report as `uml.template-error`
 against a line of generated template. And `:relations:` needs to ask the schema
 what it declares, which the template surface cannot do.

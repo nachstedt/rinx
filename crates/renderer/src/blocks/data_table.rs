@@ -3,7 +3,7 @@
 //! Both parse into one `Directive::DataTable`, so both render through this
 //! module; `source` decides only which CSS class the `<table>` carries.
 
-use rusty_sphinx_ast::{TableAlign, TableRow, TableSource, TableWidths, TargetName};
+use rinx_ast::{TableAlign, TableRow, TableSource, TableWidths, TargetName};
 use std::fmt::Write as _;
 
 use super::table_shell::{
@@ -12,7 +12,7 @@ use super::table_shell::{
 use crate::RenderCtx;
 
 /// The fields `render_data_table` needs, borrowed straight from
-/// [`rusty_sphinx_ast::Directive::DataTable`] — grouped into one struct
+/// [`rinx_ast::Directive::DataTable`] — grouped into one struct
 /// (rather than ten separate parameters) purely to keep the function's
 /// arity reasonable.
 #[derive(Clone, Copy)]
@@ -125,7 +125,7 @@ fn render_data_table_row(
 mod tests {
     use super::*;
     use crate::blocks::table_test_support::{render_doc, table_row};
-    use rusty_sphinx_ast::{Directive, Document, Node};
+    use rinx_ast::{Directive, Document, Node};
 
     /// A minimal table carrying only `source`, for the tests that care about
     /// nothing else.

@@ -2,7 +2,7 @@
 //! `**` or ``` `` ``` span may validly open and close, per docutils'
 //! start-string and end-string context rules.
 
-use rusty_sphinx_ast::InlineNode;
+use rinx_ast::InlineNode;
 
 use super::escapes::is_escaped_at;
 use super::punctuation::{can_follow_end_string, can_precede_start_string};

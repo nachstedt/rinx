@@ -11,7 +11,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{EntityBody, EntityId, EntitySection};
+use rinx_ast::{EntityBody, EntityId, EntitySection};
 
 use crate::RenderCtx;
 use crate::inline::entity_reference::entity_href;
@@ -24,14 +24,14 @@ use crate::inline::entity_reference::entity_href;
 /// This is the fix that makes an update's effect visible on the entity's own
 /// page at all: `entity-table`/`entity-flow`/`entity-pie`/a diagram's
 /// `filter()` already read exclusively through
-/// [`rusty_sphinx_index::EntitySubject`], which already does this, but
+/// [`rinx_index::EntitySubject`], which already does this, but
 /// nothing about the built-in rendering read the index before this existed —
 /// there was nothing else to read. See `docs/decisions/019-entity-update.md`.
 fn effective_attribute<'a>(
     entity: &'a EntityBody,
     name: &str,
     ctx: &'a RenderCtx<'_>,
-) -> Option<&'a rusty_sphinx_ast::AttributeValue> {
+) -> Option<&'a rinx_ast::AttributeValue> {
     // Trusting the index fully whenever the entity is in it — including a
     // `None` that means "cleared" — rather than falling back to the AST's own
     // copy, which `or_else` would wrongly resurrect for a cleared field.
@@ -100,11 +100,11 @@ fn mark_if_conflicting(value: &str, conflict: bool) -> String {
 
 /// The anchor an entity is linked by.
 ///
-/// Re-exported from `rusty_sphinx_index` rather than defined here: a
+/// Re-exported from `rinx_index` rather than defined here: a
 /// templated diagram's generated node links have to land on exactly this
 /// anchor, and that text is built by a phase that cannot depend on the
 /// renderer.
-pub(crate) use rusty_sphinx_index::entity_anchor;
+pub(crate) use rinx_index::entity_anchor;
 
 mod template;
 
@@ -181,7 +181,7 @@ fn render_builtin(html: &mut String, entity: &EntityBody, ctx: &mut RenderCtx<'_
 /// would be far worse than showing it last.
 fn sections_in_render_order<'a>(
     entity: &'a EntityBody,
-    schema: &rusty_sphinx_entity::EntitySchema,
+    schema: &rinx_entity::EntitySchema,
 ) -> Vec<&'a EntitySection> {
     let declared: Vec<&str> = schema
         .entity_type(&entity.type_name)
@@ -335,7 +335,7 @@ fn render_links(html: &mut String, entity: &EntityBody, ctx: &RenderCtx<'_>) {
         render_link_list(
             &mut lists,
             relation.display_label(),
-            targets.iter().map(rusty_sphinx_ast::EntityId::as_str),
+            targets.iter().map(rinx_ast::EntityId::as_str),
             relation_conflict(entity, &relation.name, ctx),
             ctx,
         );
@@ -353,7 +353,7 @@ fn render_links(html: &mut String, entity: &EntityBody, ctx: &RenderCtx<'_>) {
             render_link_list(
                 &mut lists,
                 &backlink.label,
-                sources.iter().map(rusty_sphinx_ast::EntityId::as_str),
+                sources.iter().map(rinx_ast::EntityId::as_str),
                 false,
                 ctx,
             );
@@ -382,7 +382,7 @@ fn render_link_list<'t>(
         // text. The diagnostic for it was already raised by the index phase,
         // which is the only place that can see the whole graph — reporting it
         // again here would double every message.
-        match rusty_sphinx_ast::EntityId::new(target)
+        match rinx_ast::EntityId::new(target)
             .ok()
             .and_then(|id| ctx.index.entities.get(&id))
         {

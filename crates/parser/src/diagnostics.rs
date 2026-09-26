@@ -1,7 +1,7 @@
 //! What a parse records on the side: the problems it found, the `.. noqa:`
 //! comments excusing some of them, and the files it spliced text in from.
 
-use rusty_sphinx_ast::{Diagnostic, FileId, Suppression};
+use rinx_ast::{Diagnostic, FileId, Suppression};
 
 /// The collector every block-level parser is handed.
 ///
@@ -14,7 +14,7 @@ use rusty_sphinx_ast::{Diagnostic, FileId, Suppression};
 ///
 /// The included-file table joined them for the same reason: it is produced by
 /// the same pass, it is meaningless on its own, and it is what the other two
-/// are read *against* — a [`Span`](rusty_sphinx_ast::Span) from an
+/// are read *against* — a [`Span`](rinx_ast::Span) from an
 /// `.. include::` names its file by an index into it, and a `.. noqa:` in that
 /// file matches only diagnostics carrying the same index.
 #[derive(Debug, Default)]
@@ -40,7 +40,7 @@ impl Diagnostics {
     ///
     /// Deduplicating, so a fragment included in twenty places costs one entry
     /// and every span in it compares equal on its file — see
-    /// [`rusty_sphinx_ast::Document::intern_source_file`], whose contract this
+    /// [`rinx_ast::Document::intern_source_file`], whose contract this
     /// mirrors for the parse that builds one.
     pub(crate) fn intern_source_file(&mut self, path: &str) -> FileId {
         let index = self
@@ -108,7 +108,7 @@ impl std::ops::Index<usize> for Diagnostics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{DiagnosticCode, SuppressionCodes};
+    use rinx_ast::{DiagnosticCode, SuppressionCodes};
 
     #[test]
     fn test_a_new_collector_is_empty() {
@@ -204,8 +204,8 @@ mod tests {
         let second = diagnostics.intern_source_file("shared/returns.rst");
 
         // Then
-        assert_eq!(first, rusty_sphinx_ast::FileId::new(0));
-        assert_eq!(second, rusty_sphinx_ast::FileId::new(1));
+        assert_eq!(first, rinx_ast::FileId::new(0));
+        assert_eq!(second, rinx_ast::FileId::new(1));
     }
 
     #[test]

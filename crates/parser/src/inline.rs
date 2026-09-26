@@ -1,5 +1,5 @@
 //! Inline markup parsing: everything that turns a paragraph's raw text into
-//! [`rusty_sphinx_ast::InlineNode`]s.
+//! [`rinx_ast::InlineNode`]s.
 //!
 //! [`text`] drives the scan and owns the entry point; it consults
 //! [`regexes`] for what to look for, [`markup`] for emphasis/strong/literal

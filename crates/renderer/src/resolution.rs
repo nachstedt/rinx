@@ -1,4 +1,4 @@
-//! Cross-reference resolution against the [`rusty_sphinx_index::ProjectIndex`].
+//! Cross-reference resolution against the [`rinx_index::ProjectIndex`].
 //!
 //! [`domain_object`] resolves domain-object roles (`:py:func:`, `:c:struct:`,
 //! …) through the scope tiers and object-type aliasing Sphinx's domains

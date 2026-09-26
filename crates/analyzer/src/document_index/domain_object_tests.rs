@@ -3,7 +3,7 @@
 //! keys each one is registered under.
 
 use super::*;
-use rusty_sphinx_ast::{Domain, NonEmptyVector, ObjectType};
+use rinx_ast::{Domain, NonEmptyVector, ObjectType};
 
 /// Looks up a domain object by the pre-refactor flat `"domain:objtype:name"`
 /// key shape (e.g. `"py:function:greet"`), so test expectations can stay
@@ -28,7 +28,7 @@ fn test_analyze_registers_every_declared_name_of_a_multi_signature_object() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyData {
+            rinx_ast::DomainObjectBody::PyData {
                 module: None,
                 signatures: NonEmptyVector::new(
                     "AF_UNIX".to_string(),
@@ -61,7 +61,7 @@ fn test_analyze_gives_every_declared_name_its_own_genindex_entry() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyData {
+            rinx_ast::DomainObjectBody::PyData {
                 module: None,
                 signatures: NonEmptyVector::new("A".to_string(), vec!["ASCII".to_string()]),
                 type_: None,
@@ -87,13 +87,13 @@ fn test_analyze_indexes_a_multi_signature_objects_body_only_once() {
     let doc = Document::new(
         "api.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyData {
+            rinx_ast::DomainObjectBody::PyData {
                 module: None,
                 signatures: NonEmptyVector::new("AF_UNIX".to_string(), vec!["AF_INET".to_string()]),
                 type_: None,
                 value: None,
                 body: vec![Node::Target {
-                    name: rusty_sphinx_ast::TargetName::new("address-families"),
+                    name: rinx_ast::TargetName::new("address-families"),
                     uri: None,
                 }],
             },
@@ -117,7 +117,7 @@ fn test_analyze_qualifies_every_alias_of_a_multi_signature_object_by_module() {
         "api.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "socket".to_string(),
                     platform: None,
                     synopsis: None,
@@ -126,7 +126,7 @@ fn test_analyze_qualifies_every_alias_of_a_multi_signature_object_by_module() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyData {
+                rinx_ast::DomainObjectBody::PyData {
                     module: None,
                     signatures: NonEmptyVector::new(
                         "AF_UNIX".to_string(),
@@ -163,12 +163,12 @@ fn test_analyze_does_not_double_qualify_already_qualified_nested_attribute() {
     let doc = Document::new(
         "test.rst".to_string(),
         vec![Node::Directive(Directive::DomainObject(
-            rusty_sphinx_ast::DomainObjectBody::PyException {
+            rinx_ast::DomainObjectBody::PyException {
                 module: None,
                 signatures: NonEmptyVector::single("StopIteration".to_string()),
                 is_final: false,
                 body: vec![Node::Directive(Directive::DomainObject(
-                    rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+                    rinx_ast::DomainObjectBody::PyAttribute {
                         module: None,
                         signatures: NonEmptyVector::single("StopIteration.value".to_string()),
                         type_: None,
@@ -199,7 +199,7 @@ fn test_analyze_object_before_any_module_directive_stays_unqualified() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyFunction {
+                rinx_ast::DomainObjectBody::PyFunction {
                     module: None,
                     is_decorator: false,
                     signatures: NonEmptyVector::single("greet(name)".to_string()),
@@ -207,7 +207,7 @@ fn test_analyze_object_before_any_module_directive_stays_unqualified() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "greetings".to_string(),
                     platform: None,
                     synopsis: None,
@@ -234,7 +234,7 @@ fn test_analyze_composes_module_and_class_qualifiers() {
         "test.rst".to_string(),
         vec![
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyModule {
+                rinx_ast::DomainObjectBody::PyModule {
                     name: "types".to_string(),
                     platform: None,
                     synopsis: None,
@@ -243,12 +243,12 @@ fn test_analyze_composes_module_and_class_qualifiers() {
                 },
             )),
             Node::Directive(Directive::DomainObject(
-                rusty_sphinx_ast::DomainObjectBody::PyClass {
+                rinx_ast::DomainObjectBody::PyClass {
                     module: None,
                     signatures: NonEmptyVector::single("DynamicClassAttribute".to_string()),
                     is_final: false,
                     body: vec![Node::Directive(Directive::DomainObject(
-                        rusty_sphinx_ast::DomainObjectBody::PyMethod {
+                        rinx_ast::DomainObjectBody::PyMethod {
                             module: None,
                             is_decorator: false,
                             signatures: NonEmptyVector::single(

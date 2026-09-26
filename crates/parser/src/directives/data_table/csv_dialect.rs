@@ -8,7 +8,7 @@
 //! reach of `skipinitialspace`.
 
 use crate::diagnostics::Diagnostics;
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Span, TableSource};
+use rinx_ast::{Diagnostic, DiagnosticCode, Span, TableSource};
 
 use crate::context::ParseCtx;
 use crate::directives::options::OptionLine;
@@ -238,7 +238,7 @@ fn trim_leading_space(field: &str, keepspace: bool) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     fn option(name: &str, value: &str) -> OptionLine {
         OptionLine {

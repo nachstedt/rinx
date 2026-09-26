@@ -1,4 +1,4 @@
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::entity::EntityId;
@@ -37,7 +37,7 @@ mod tests {
         // Given
         let target = UpdateTarget {
             candidate_id: Some(EntityId::new("REQ_001").unwrap()),
-            filter: Some(rusty_sphinx_filter::parse_filter("REQ_001").unwrap()),
+            filter: Some(rinx_filter::parse_filter("REQ_001").unwrap()),
             raw: "REQ_001".to_string(),
         };
 

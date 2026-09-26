@@ -1,4 +1,4 @@
-"""Convert a sphinx-needs configuration into a rusty-sphinx entity schema.
+"""Convert a sphinx-needs configuration into a rinx entity schema.
 
 sphinx-needs projects that use ubCode keep their configuration in a declarative
 `ubproject.toml` (announced to Sphinx by `needs_from_toml`), optionally with a

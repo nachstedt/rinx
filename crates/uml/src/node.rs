@@ -5,7 +5,7 @@
 //! an entity should look the same and land on the same anchor whether an author
 //! drew it by hand or asked `.. entity-flow::` to.
 
-use rusty_sphinx_ast::HashedContent;
+use rinx_ast::HashedContent;
 
 use crate::snapshot::Snapshot;
 

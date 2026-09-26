@@ -1,4 +1,4 @@
-# Rusty-Sphinx: Requirements
+# Rinx: Requirements
 
 ## 1. High-Performance HTML Generation
 - The creation of HTML documentation from reStructuredText (RST) files must be extremely fast.

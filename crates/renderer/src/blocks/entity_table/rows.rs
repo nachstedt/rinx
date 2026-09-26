@@ -4,10 +4,10 @@
 //! from `write_nav_list`: selecting and ordering is where every decision is,
 //! and it is testable without reading a byte of HTML.
 
-use rusty_sphinx_ast::{EntityId, EntityTable};
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_filter::{FieldName, FieldValue, FilterSubject};
-use rusty_sphinx_index::{EntityRecord, EntitySubject, ProjectIndex};
+use rinx_ast::{EntityId, EntityTable};
+use rinx_entity::EntitySchema;
+use rinx_filter::{FieldName, FieldValue, FilterSubject};
+use rinx_index::{EntityRecord, EntitySubject, ProjectIndex};
 
 /// One cell of a rendered row.
 ///

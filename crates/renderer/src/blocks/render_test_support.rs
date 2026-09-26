@@ -7,8 +7,8 @@
 //! restate in each of them.
 #![cfg(test)]
 
-use rusty_sphinx_ast::{Directive, Node, ResolvedLanguage};
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{Directive, Node, ResolvedLanguage};
+use rinx_index::ProjectIndex;
 
 use crate::{EmbeddedAssets, RenderCtx};
 
@@ -49,7 +49,7 @@ pub(super) fn with_ctx_for<R>(
     let option_resolver = crate::resolution::OptionResolver::new(index);
     // These tests render body constructs, none of which is an entity, so the
     // empty schema is the honest input rather than a stub.
-    let schema = rusty_sphinx_entity::EntitySchema::empty_ref();
+    let schema = rinx_entity::EntitySchema::empty_ref();
     let entity_resolver = crate::resolution::EntityResolver::new(index, schema);
     let math = crate::math::MathRenderer::new();
     let highlighter = crate::highlight::Highlighter::new();
@@ -87,8 +87,8 @@ pub(super) fn with_ctx_for<R>(
         section_ids: &section_ids,
         at_top_level: true,
         contents_backlinks: &mut std::collections::HashMap::new(),
-        contents_id_allocator: &mut rusty_sphinx_ast::SectionIdAllocator::new(),
-        scope: rusty_sphinx_scope::Scope::default(),
+        contents_id_allocator: &mut rinx_ast::SectionIdAllocator::new(),
+        scope: rinx_scope::Scope::default(),
     };
 
     body(&mut ctx)

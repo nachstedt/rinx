@@ -1,4 +1,4 @@
-//! Abstract Syntax Tree representations for the Rusty-Sphinx Document.
+//! Abstract Syntax Tree representations for the Rinx Document.
 //!
 //! One module per node type or supporting value type, with nine families
 //! grouped into their own trees: `object_type` (the `domain:objtype` tags),
@@ -28,7 +28,7 @@
 //!
 //! `path_normalization` is the odd one out: a plain `.`/`..` resolver with no
 //! document vocabulary in it at all. It lives here because both
-//! [`ImageUri::resolve`] and `rusty_sphinx_toctree` need it and the toctree
+//! [`ImageUri::resolve`] and `rinx_toctree` need it and the toctree
 //! crate already depends on this one, so this is the only place the two can
 //! share one implementation.
 
@@ -146,7 +146,7 @@ pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
 pub use option_list_item::{OptionArgument, OptionArgumentDelimiter, OptionListItem, OptionSpec};
 pub use path_normalization::{normalize_path, resolve_from_document};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
-pub use rusty_sphinx_inventory::InventoryName;
+pub use rinx_inventory::InventoryName;
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
 pub use sectnum::SectnumOptions;
 pub use spacing::{InvalidSpacing, Spacing, SpacingKind, SpacingValue};

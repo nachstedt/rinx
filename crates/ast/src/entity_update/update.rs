@@ -11,7 +11,7 @@ use crate::span::Span;
 ///
 /// The node carries a *question with intended effects*, not authored data:
 /// which entities to touch and how, resolved and applied against the merged
-/// project by `rusty_sphinx_analyzer::apply_entity_updates`, never here — the
+/// project by `rinx_analyzer::apply_entity_updates`, never here — the
 /// entities this directive touches may be declared in documents this one has
 /// never heard of, and only the project index knows them all. Applying it
 /// never mutates an entity's own record: it builds a separate, traceable

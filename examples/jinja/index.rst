@@ -8,9 +8,9 @@
 
 Real Sphinx projects template their ``.rst`` files by connecting the
 ``source-read`` event in ``conf.py`` and running each file through Jinja2.
-There is no Sphinx feature for it and rusty-sphinx cannot run a ``conf.py``, so
+There is no Sphinx feature for it and rinx cannot run a ``conf.py``, so
 the same transform is a declared step of the build instead: set ``jinja = True``
-on the ``rusty_sphinx_library``, and every source in it is rendered as a Jinja
+on the ``rinx_library``, and every source in it is rendered as a Jinja
 template before it is parsed.
 
 It is off by default. A document is free to contain ``{% raw %}{{{% endraw %}`` and

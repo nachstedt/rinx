@@ -1,6 +1,6 @@
-# Benchmarking Rusty-Sphinx
+# Benchmarking Rinx
 
-This document explains how to benchmark the `rusty-sphinx` documentation generator against real-world Sphinx projects.
+This document explains how to benchmark the `rinx` documentation generator against real-world Sphinx projects.
 
 There are two benchmarks, measuring different things:
 
@@ -27,7 +27,7 @@ bazel run //scripts:benchmark
 
 ### What happens under the hood?
 
-1. **Cloning**: The script automatically performs a shallow clone of the CPython repository into a temporary directory (`rusty_sphinx_benchmark_cpython` under the system temp dir), at the **release tag** named by `PYTHON_VERSION` in `scripts/benchmark.py` — not at `main`.
+1. **Cloning**: The script automatically performs a shallow clone of the CPython repository into a temporary directory (`rinx_benchmark_cpython` under the system temp dir), at the **release tag** named by `PYTHON_VERSION` in `scripts/benchmark.py` — not at `main`.
 
 ### Why the version is pinned
 
@@ -36,7 +36,7 @@ bazel run //scripts:benchmark
 - the CPython release tag whose `Doc/` tree is cloned (`v3.14.2`), and
 - the interpreter the generated workspace resolves, via a `python.toolchain(python_version = ...)` written into the injected `MODULE.bazel`.
 
-This matters for two reasons. First, **doctests**: the script used to clone `main` while the interpreter came from rusty-sphinx's own `MODULE.bazel`, so the documentation described a development version whose APIs the interpreter did not have. Every doctest exercising a newly added API failed for a reason that had nothing to do with rusty-sphinx (`re.Pattern.prefixmatch`, `IPv4Network.next_network`, `PrettyPrinter(expand=...)`, `shlex.quote(force=...)` were all seen). Second, **reproducibility**: a benchmark against a moving branch produces numbers that change on their own, so a delta in `benchmark_result.txt` could never be attributed to a local change with confidence. A tag makes the corpus fixed.
+This matters for two reasons. First, **doctests**: the script used to clone `main` while the interpreter came from rinx's own `MODULE.bazel`, so the documentation described a development version whose APIs the interpreter did not have. Every doctest exercising a newly added API failed for a reason that had nothing to do with rinx (`re.Pattern.prefixmatch`, `IPv4Network.next_network`, `PrettyPrinter(expand=...)`, `shlex.quote(force=...)` were all seen). Second, **reproducibility**: a benchmark against a moving branch produces numbers that change on their own, so a delta in `benchmark_result.txt` could never be attributed to a local change with confidence. A tag makes the corpus fixed.
 
 Overriding it for a one-off comparison:
 
@@ -47,9 +47,9 @@ bazel run //scripts:benchmark -- --python-version 3.13.11
 A version must exist on **both** sides to be usable: as a `v<version>` tag in the CPython repository, and as an entry in rules_python's `TOOL_VERSIONS` (`python/versions.bzl`) for the rules_python release this workspace depends on. CPython ships later 3.14.x tags than rules_python 2.0.0 has interpreters for, which is why the default is 3.14.2 rather than the newest patch release.
 
 Note that `scripts/domain_warnings_whitelist.json` is tied to the pinned corpus: entries for documents that do not exist at that tag are pruned automatically. Changing `PYTHON_VERSION` will therefore churn the whitelist.
-2. **Bazel Project Generation**: A `BUILD.bazel` file is generated on the fly inside the `Doc/` directory of the clone, utilizing a `glob(["**/*.rst"])` statement to automatically capture all reStructuredText files into a single `rusty_sphinx_library` target. It also generates a `rusty_sphinx_site` target to assemble the HTML.
-3. **Warm-up build**: A second, one-document site (`bench_warmup/`, generated beside `Doc/`) is built first. Its only purpose is to compile the `rusty-sphinx` binary and resolve the Rust, Java and Python toolchains *before* the clock starts on the documentation build — see "Rendering Time" below for why this is a separate build rather than a `bazel build @rusty_sphinx//:rusty_sphinx_worker`.
-4. **Execution**: The script then runs `bazel build //Doc:site`. This triggers `rusty-sphinx` to parse, validate, and render every `.rst` file into HTML in parallel. The build currently succeeds outright against CPython's docs — toctree validation passes and HTML is produced for every page.
+2. **Bazel Project Generation**: A `BUILD.bazel` file is generated on the fly inside the `Doc/` directory of the clone, utilizing a `glob(["**/*.rst"])` statement to automatically capture all reStructuredText files into a single `rinx_library` target. It also generates a `rinx_site` target to assemble the HTML.
+3. **Warm-up build**: A second, one-document site (`bench_warmup/`, generated beside `Doc/`) is built first. Its only purpose is to compile the `rinx` binary and resolve the Rust, Java and Python toolchains *before* the clock starts on the documentation build — see "Rendering Time" below for why this is a separate build rather than a `bazel build @rinx//:rinx_worker`.
+4. **Execution**: The script then runs `bazel build //Doc:site`. This triggers `rinx` to parse, validate, and render every `.rst` file into HTML in parallel. The build currently succeeds outright against CPython's docs — toctree validation passes and HTML is produced for every page.
 5. **Analysis**: Once the build completes, the script traverses the generated Abstract Syntax Tree (`.ast`) JSON files located in `bazel-bin/`. It tallies up `Directive::Unknown` nodes (directives the parser doesn't recognize), `Toctree.ignored_options` (recognized toctree options the parser doesn't yet act on, e.g. `:caption:`), and per-document parser diagnostics, and prints each as a frequency map.
 
 ## Interpreting Results
@@ -61,16 +61,16 @@ You will see two timings, one per `bazel build`:
 ```
 Dependency build finished in Y.YY seconds.
 Documentation build succeeded in X.XX seconds.
-(Excludes Y.YY seconds spent building rusty-sphinx itself.)
+(Excludes Y.YY seconds spent building rinx itself.)
 ```
-`X.XX` is the number the benchmark is about: the raw time taken by Bazel to execute the `rusty-sphinx` pipeline across the entire CPython documentation suite. Since Bazel runs these in parallel, this highlights the concurrency benefits of our architecture. `Y.YY` is the cost of compiling `rusty-sphinx` and fetching its toolchains, which says nothing about documentation throughput and varies wildly with how warm the Bazel cache happened to be (it dominates everything after a `--clean`).
+`X.XX` is the number the benchmark is about: the raw time taken by Bazel to execute the `rinx` pipeline across the entire CPython documentation suite. Since Bazel runs these in parallel, this highlights the concurrency benefits of our architecture. `Y.YY` is the cost of compiling `rinx` and fetching its toolchains, which says nothing about documentation throughput and varies wildly with how warm the Bazel cache happened to be (it dominates everything after a `--clean`).
 
-Keeping the two apart is why the warm-up site exists. Building `@rusty_sphinx//:rusty_sphinx_worker` directly would not do: build tools are compiled in Bazel's *exec* configuration, so that would warm a differently-configured binary and leave the real one to be compiled inside the timed step. Building a trivial site warms exactly the configurations the corpus build reuses, at the cost of one tiny document.
+Keeping the two apart is why the warm-up site exists. Building `@rinx//:rinx_worker` directly would not do: build tools are compiled in Bazel's *exec* configuration, so that would warm a differently-configured binary and leave the real one to be compiled inside the timed step. Building a trivial site warms exactly the configurations the corpus build reuses, at the cost of one tiny document.
 
-Each build's output is captured (so the script can time and parse it), which means neither log is streamed to your terminal. They are written to `bazel_deps_build.log` and `bazel_build.log` in the generated workspace (`$TMPDIR/rusty_sphinx_benchmark_cpython/`), on both success and failure — inspect them there to see exactly what the inner builds printed. The Bazel timing profile is written alongside it as `profile.json.gz` (drop it into https://ui.perfetto.dev/ or `chrome://tracing`).
+Each build's output is captured (so the script can time and parse it), which means neither log is streamed to your terminal. They are written to `bazel_deps_build.log` and `bazel_build.log` in the generated workspace (`$TMPDIR/rinx_benchmark_cpython/`), on both success and failure — inspect them there to see exactly what the inner builds printed. The Bazel timing profile is written alongside it as `profile.json.gz` (drop it into https://ui.perfetto.dev/ or `chrome://tracing`).
 
 ### 2. Unsupported Directives Summary
-A sorted list of Sphinx directives that `rusty-sphinx` encountered but doesn't yet recognize (surfaced as `Directive::Unknown` nodes in the AST).
+A sorted list of Sphinx directives that `rinx` encountered but doesn't yet recognize (surfaced as `Directive::Unknown` nodes in the AST).
 
 ```
 Unsupported Directives Summary:
@@ -87,7 +87,7 @@ This list serves as a prioritized roadmap for feature implementation. Implementi
 Every one of these also reports `directive.unknown` and renders as a visible error block quoting its source, so the tally below and the corpus' own pages agree about what is missing.
 
 ### 3. Malformed Directives Summary
-The same shape, for directives `rusty-sphinx` *does* implement whose content it had to refuse (`Directive::Malformed` nodes) — a `.. figure::` with no image path, a `.. csv-table::` whose data would not parse. These used to inflate the unsupported tally above, which made a document's mistake look like a gap in coverage. Each one has already reported its own diagnostic under the summary below, so this is a count rather than a roadmap.
+The same shape, for directives `rinx` *does* implement whose content it had to refuse (`Directive::Malformed` nodes) — a `.. figure::` with no image path, a `.. csv-table::` whose data would not parse. These used to inflate the unsupported tally above, which made a document's mistake look like a gap in coverage. Each one has already reported its own diagnostic under the summary below, so this is a count rather than a roadmap.
 
 ### 4. Ignored Toctree Options / Parser Diagnostics Summaries
 Two smaller summaries follow: options seen on `.. toctree::` directives that are recognized but not yet acted upon (e.g. `:caption:`, `:numbered:`, `:hidden:`), and aggregated parser diagnostics (e.g. malformed grid tables) emitted per document. Both are minor compared to the unsupported-directives list, but flag smaller gaps worth closing.
@@ -131,7 +131,7 @@ The benchmark always exits 0 — it reports and prunes, but never gates the buil
 
 # Benchmarking the entity model
 
-`bazel run //scripts:benchmark_entities` builds a real sphinx-needs project — **useblocks' own [sphinx-needs demo](https://github.com/useblocks/sphinx-needs-demo)**, pinned at tag `v0.1.5` — against rusty-sphinx's entity model, and reports everything the pipeline did not understand.
+`bazel run //scripts:benchmark_entities` builds a real sphinx-needs project — **useblocks' own [sphinx-needs demo](https://github.com/useblocks/sphinx-needs-demo)**, pinned at tag `v0.1.5` — against rinx's entity model, and reports everything the pipeline did not understand.
 
 It is deliberately *not* a throughput measurement. 39 documents will not stress the pipeline the way CPython's 500-odd do. What it produces is a triage list: every line is either a bug in the conversion or a genuine gap in the entity model.
 
@@ -153,7 +153,7 @@ The Eclipse S-CORE pair is the larger and more demanding target — Apache-2.0, 
 
 A sphinx-needs project using ubCode keeps its configuration in `ubproject.toml` (announced to Sphinx by `needs_from_toml`). That file is data, so the vocabulary it declares converts into an `entities.toml`:
 
-| sphinx-needs | rusty-sphinx |
+| sphinx-needs | rinx |
 | --- | --- |
 | `[[needs.types]]` `directive`/`title`/`prefix` | `[[entity_type]]` `name`/`label`/`id = { prefix }`, with `argument = { fields = ["title"] }` |
 | `[needs.fields.<n>]`, plus sphinx-needs' own built-in options | `[[entity_type.attribute]]` on **every** type — sphinx-needs scopes fields to no type |
@@ -171,8 +171,8 @@ Everything the conversion cannot carry over is collected into a report rather th
 
 Two things differ from the CPython benchmark's generated project, both forced by the corpus rather than chosen:
 
-- **The corpus is the root package.** rusty-sphinx resolves a source-root-relative path (`/_images/logo.png`, and the `--doc-path` every phase keys off) against the Bazel workspace root, so a corpus whose Sphinx `srcdir` is a subdirectory would have every absolute image path miss by that prefix. The clone's `docs/` therefore *becomes* the workspace root, and the corpus lives in `//:demo_docs`. The generated `assets` and warm-up packages need no glob exclusions — a Bazel glob never crosses a package boundary.
-- **Every glob excludes `bazel-*/**`.** A consequence of the point above: Bazel's convenience symlinks (`bazel-bin`, `bazel-out`, …) are created in the workspace root, which here is also the globbed package, so without the exclusion `**/*.jpg` matches the *previous run's* `site_site_out/_images/` and makes the site's own output an input to the action that writes it — the image bundling then fails on a path Bazel cannot materialize. It hides while that action is an action-cache hit and surfaces as soon as anything re-keys it, such as a change to the rusty-sphinx binary, which is the one thing this benchmark exists to measure. `discard_stale_corpus_outputs` is not a substitute: Bazel leaves its output directories read-only, so clearing them is best-effort. The CPython benchmark needs none of this — its corpus is the `Doc/` subdirectory, so the symlinks fall outside the globbed package.
+- **The corpus is the root package.** rinx resolves a source-root-relative path (`/_images/logo.png`, and the `--doc-path` every phase keys off) against the Bazel workspace root, so a corpus whose Sphinx `srcdir` is a subdirectory would have every absolute image path miss by that prefix. The clone's `docs/` therefore *becomes* the workspace root, and the corpus lives in `//:demo_docs`. The generated `assets` and warm-up packages need no glob exclusions — a Bazel glob never crosses a package boundary.
+- **Every glob excludes `bazel-*/**`.** A consequence of the point above: Bazel's convenience symlinks (`bazel-bin`, `bazel-out`, …) are created in the workspace root, which here is also the globbed package, so without the exclusion `**/*.jpg` matches the *previous run's* `site_site_out/_images/` and makes the site's own output an input to the action that writes it — the image bundling then fails on a path Bazel cannot materialize. It hides while that action is an action-cache hit and surfaces as soon as anything re-keys it, such as a change to the rinx binary, which is the one thing this benchmark exists to measure. `discard_stale_corpus_outputs` is not a substitute: Bazel leaves its output directories read-only, so clearing them is best-effort. The CPython benchmark needs none of this — its corpus is the `Doc/` subdirectory, so the symlinks fall outside the globbed package.
 - **Sources spliced in from outside the source root are copied in.** The parser resolves `..` by popping, so a `.. literalinclude:: ../pharaoh.toml` written in a root-level document is looked for at `pharaoh.toml`. The script copies the real file to that path in the generated workspace and declares it in `parse_data`. The alternative would be editing the corpus' own directives, which would make the benchmark measure a document set nobody wrote.
 
 - **The corpus's sources are Jinja templates.** Its `conf.py` connects the
@@ -203,7 +203,7 @@ Unlike the CPython benchmark, which reads the machine-readable `*.warnings.json`
 
 Two consequences worth knowing:
 
-- The log is only complete because **every corpus action re-runs on every run**: the workspace is re-cloned and `discard_stale_corpus_outputs` drops the previous outputs, so no warning is lost to a cached action. It keeps `external/` (where the compiled rusty-sphinx binary lives) and the generated packages, so the toolchain stays warm.
+- The log is only complete because **every corpus action re-runs on every run**: the workspace is re-cloned and `discard_stale_corpus_outputs` drops the previous outputs, so no warning is lost to a cached action. It keeps `external/` (where the compiled rinx binary lives) and the generated packages, so the toolchain stays warm.
 - A warning's identity is `(document, code, message)` — **the line and column are dropped**. A diagnostic found while *indexing* (a derived back-link pointing at an unknown id) belongs to a document but to no line of it, and a position in the key would also make the whitelist churn whenever text above a warning moves.
 
 The whitelist works exactly like `scripts/domain_warnings_whitelist.json`: hand-authored, matched on that triple, with a free-text `comment` explaining why an entry is accepted, and stale entries auto-pruned only when the build succeeded and there was output to read. The benchmark always exits 0.

@@ -3,7 +3,7 @@
 use std::fmt::Write as _;
 
 use super::RefText;
-use rusty_sphinx_ast::{InventorySelector, ObjectType, StdObjectType};
+use rinx_ast::{InventorySelector, ObjectType, StdObjectType};
 
 use super::external_link::write_external_link;
 use crate::resolution::{OptionResolution, OptionResolver, unresolved_kind};
@@ -39,7 +39,7 @@ pub(super) fn render_inline_option_reference(
             qualified_name,
             doc_path: target_doc_path,
         } => {
-            let anchor = rusty_sphinx_ast::build_domain_object_key(
+            let anchor = rinx_ast::build_domain_object_key(
                 ObjectType::Std(StdObjectType::Cmdoption),
                 &qualified_name,
             );

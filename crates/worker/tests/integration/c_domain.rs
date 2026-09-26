@@ -1,9 +1,9 @@
 //! `c` domain `function`/`macro`/`member` role aliasing: symmetric where the
 //! corpus confirms it, but deliberately not transitive.
 
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_parser as parser;
-use rusty_sphinx_renderer as renderer;
+use rinx_analyzer as analyzer;
+use rinx_parser as parser;
+use rinx_renderer as renderer;
 
 #[test]
 fn test_e2e_c_macro_definition_resolves_c_func_role_reference() {

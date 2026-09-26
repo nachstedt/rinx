@@ -7,11 +7,11 @@
 //! walking the tree in lockstep, which would silently desync if either one's
 //! recursion shape ever drifted from the other's.
 
-use rusty_sphinx_ast::{Directive, Node};
+use rinx_ast::{Directive, Node};
 
 /// Walks `nodes` mutably, in document order, assigning `format!("index-{n}")`
 /// to every `Directive::Index`'s `id` field. Recurses into exactly the
-/// container shapes `rusty_sphinx_analyzer::index_nodes` also recurses into
+/// container shapes `rinx_analyzer::index_nodes` also recurses into
 /// (bullet/enumerated/definition lists, tables, admonition/version-change/seealso
 /// bodies, domain-object bodies) — anything outside that set (e.g. nested
 /// inside a glossary entry's definition) is a placement the analyzer
@@ -76,7 +76,7 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{
+    use rinx_ast::{
         AdmonitionKind, DomainObjectBody, IndexEntry, ListItem, NonEmptyVector, TableCell, TableRow,
     };
 

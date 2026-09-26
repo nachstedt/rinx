@@ -2,7 +2,7 @@ load("@crates//:defs.bzl", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_library")
 
 rust_library(
-    name = "rusty_sphinx_renderer",
+    name = "rinx_renderer",
     srcs = glob(["src/**/*.rs"]),
     # `chart/style.rs` reads the vendored font with `include_bytes!`, so it has
     # to be an input to the compile — it is not a `.rs` file, so the `srcs`
@@ -14,12 +14,12 @@ rust_library(
     deps = all_crate_deps(
         normal = True,
     ) + [
-        "//crates/ast:rusty_sphinx_ast",
-        "//crates/filter:rusty_sphinx_filter",
-        "//crates/entity:rusty_sphinx_entity",
-        "//crates/toctree:rusty_sphinx_toctree",
-        "//crates/index:rusty_sphinx_index",
-        "//crates/uml:rusty_sphinx_uml",
-        "//crates/scope:rusty_sphinx_scope",
+        "//crates/ast:rinx_ast",
+        "//crates/filter:rinx_filter",
+        "//crates/entity:rinx_entity",
+        "//crates/toctree:rinx_toctree",
+        "//crates/index:rinx_index",
+        "//crates/uml:rinx_uml",
+        "//crates/scope:rinx_scope",
     ],
 )

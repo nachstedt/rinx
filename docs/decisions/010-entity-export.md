@@ -46,7 +46,7 @@ if such a language arrives for `needtable`-style filters, constraints could
 reuse it. See Decision 6, which is where that tension is resolved rather than
 avoided.
 
-This ADR answers the prior question: which of these belong inside rusty-sphinx
+This ADR answers the prior question: which of these belong inside rinx
 at all, and what does the build hand to whatever handles the rest.
 
 ## Decision 1 — three tiers, drawn by what the pipeline must know
@@ -82,14 +82,14 @@ questions asked of the whole graph once it exists.
 
 The tiers were derived from what each phase needs, but they land exactly on the
 crate boundary that already exists: every tier-1 code is emitted by
-`rusty_sphinx_parser`, every tier-2 code by `rusty_sphinx_analyzer` or
-`rusty_sphinx_renderer`. That the two derivations agree is the main evidence the
+`rinx_parser`, every tier-2 code by `rinx_analyzer` or
+`rinx_renderer`. That the two derivations agree is the main evidence the
 line is in the right place.
 
 ## Decision 2 — the index gains a documented entity export, in its own output group
 
 The site rule's index action already produces `<name>.project.index`, and
-`rusty_sphinx_index::ProjectIndex` already carries the whole graph:
+`rinx_index::ProjectIndex` already carries the whole graph:
 `entities: BTreeMap<EntityId, EntityRecord>` — type, document, title, parsed
 attribute values and outgoing edges (`crates/index/src/entity_record.rs`) — and
 `entity_backlinks`, the derived incoming side.
@@ -98,9 +98,9 @@ So the export is close to free. What is missing is not data but a *contract*:
 `project.index` is an internal cache format that may change shape whenever a
 phase needs it to.
 
-`rusty_sphinx_site` therefore gains an `entities.json` in a **non-default output
+`rinx_site` therefore gains an `entities.json` in a **non-default output
 group** (`entity_export`), the same mechanism `doctest_plans` uses on
-`rusty_sphinx_library` and `domain_warnings` on the site. Building a site never
+`rinx_library` and `domain_warnings` on the site. Building a site never
 produces it; a target that wants it asks for the group.
 
 It stays out of the site bundle deliberately. The bundle is what gets published;
@@ -121,7 +121,7 @@ consumes the export as a test. Consequences worth stating plainly:
   re-runs whenever any document changes and cannot be sharded. That is
   acceptable for `bazel test` — doctests have the same property — and is a
   large part of why tiers 1 and 2 are *not* moved out (see Decision 5).
-- **Projects bring their own validator.** rusty-sphinx ships no expression
+- **Projects bring their own validator.** rinx ships no expression
   language, severity taxonomy or rule format. A project that already has
   `schemas.json` and a JSON-Schema runner keeps using it; one that wants Python
   expressions writes Python.
@@ -207,7 +207,7 @@ Per-document sidecars would push the join into every consumer.
 
 **Make validation part of `bazel build` rather than `bazel test`.** Rejected.
 A whole-project action in the build path serializes against every render, and
-would fail the site build on a policy question. `rusty_sphinx_site` already
+would fail the site build on a policy question. `rinx_site` already
 takes the opposite position for broken links — they warn by default and fail
 only under an opt-in `strict_links`, which `tests/test_strict_links.sh` pins —
 and the same reasoning applies with more force to project-defined policy. The
@@ -236,8 +236,8 @@ and the same reasoning applies with more force to project-defined policy. The
 
 ## Open questions
 
-- Does the export belong to `rusty_sphinx_site` only, or should
-  `rusty_sphinx_library` expose a per-library one for a project that composes
+- Does the export belong to `rinx_site` only, or should
+  `rinx_library` expose a per-library one for a project that composes
   sites from several libraries?
 - Should `id = { pattern = "..." }` be added after all? It is the one tier-3
   shape that is purely local, cheap, and checkable at parse time — which would

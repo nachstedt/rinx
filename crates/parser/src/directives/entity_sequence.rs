@@ -19,11 +19,11 @@
 
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     Diagnostic, DiagnosticCode, Directive, EntityId, EntitySequence, EntitySequenceSource,
     ImageAlign, LengthOrPercentage, NonEmptyVector, Span, TargetName,
 };
-use rusty_sphinx_filter::Expr;
+use rinx_filter::Expr;
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;

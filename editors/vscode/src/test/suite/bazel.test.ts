@@ -7,8 +7,8 @@ suite('BazelScanner Test Suite', () => {
 
     test('labelToFilesystemPath: local label', async () => {
         const scanner = new BazelScanner();
-        const p = await scanner.labelToFilesystemPath('//Doc:rusty_sphinx.toml', workspaceRoot);
-        assert.strictEqual(p, path.join(workspaceRoot, 'Doc', 'rusty_sphinx.toml'));
+        const p = await scanner.labelToFilesystemPath('//Doc:rinx.toml', workspaceRoot);
+        assert.strictEqual(p, path.join(workspaceRoot, 'Doc', 'rinx.toml'));
     });
 
     test('labelToFilesystemPath: external Bzlmod label', async () => {
@@ -19,8 +19,8 @@ suite('BazelScanner Test Suite', () => {
             return { stdout: '', stderr: '' };
         };
         const scanner = new BazelScanner(() => {}, mockExecutor);
-        const p = await scanner.labelToFilesystemPath('@@rusty_sphinx//templates:default.html', workspaceRoot);
-        assert.strictEqual(p, path.join('/output/base', 'external', 'rusty_sphinx', 'templates', 'default.html'));
+        const p = await scanner.labelToFilesystemPath('@@rinx//templates:default.html', workspaceRoot);
+        assert.strictEqual(p, path.join('/output/base', 'external', 'rinx', 'templates', 'default.html'));
     });
 
     test('deriveIndexPath: standard target', () => {
@@ -37,12 +37,12 @@ suite('BazelScanner Test Suite', () => {
 
     test('deriveBinaryPath: finds and builds worker', async () => {
         const calls: string[] = [];
-        const workerLabel = '@rusty_sphinx//:rusty_sphinx_worker';
+        const workerLabel = '@rinx//:rinx_worker';
         const mockExecutor = async (cmd: string) => {
             calls.push(cmd);
             if (cmd.includes('cquery --output=files')) {
                 // Return path but it won't exist on disk (as fs is not mocked to return true)
-                return { stdout: '/test/workspace/bazel-bin/rusty_sphinx_worker', stderr: '' };
+                return { stdout: '/test/workspace/bazel-bin/rinx_worker', stderr: '' };
             }
             if (cmd.includes('bazel build')) {
                 return { stdout: '', stderr: '' };

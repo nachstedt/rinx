@@ -15,9 +15,9 @@
 
 use std::collections::BTreeSet;
 
-use rusty_sphinx_index::ProjectIndex;
+use rinx_index::ProjectIndex;
 
-use rusty_sphinx_toctree::{TocTarget, expand_toctree};
+use rinx_toctree::{TocTarget, expand_toctree};
 
 /// Every document in reading order, starting from `index.root_documents`.
 #[must_use]
@@ -62,8 +62,8 @@ fn visit(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
-    use rusty_sphinx_index::DocumentToctree;
+    use rinx_ast::{TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
+    use rinx_index::DocumentToctree;
 
     fn toctree(docnames: &[&str]) -> Toctree {
         Toctree {

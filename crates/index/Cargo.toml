@@ -1,13 +1,13 @@
 [package]
-name = "rusty_sphinx_index"
+name = "rinx_index"
 version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-rusty_sphinx_ast = { path = "../ast" }
-rusty_sphinx_entity = { path = "../entity" }
-rusty_sphinx_filter = { path = "../filter" }
-rusty_sphinx_inventory = { path = "../inventory" }
+rinx_ast = { path = "../ast" }
+rinx_entity = { path = "../entity" }
+rinx_filter = { path = "../filter" }
+rinx_inventory = { path = "../inventory" }
 pathdiff = "0.2"
 serde = { version = "1", features = ["derive"] }
 

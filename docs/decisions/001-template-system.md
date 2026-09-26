@@ -5,9 +5,9 @@
 
 ## Context
 
-Today rusty-sphinx renders each `.rst` file into a raw HTML fragment — bare `<h1>`, `<p>`, `<ul>` elements with no surrounding page structure. There is no `<!DOCTYPE html>`, no `<head>`, no stylesheet, no navigation sidebar. The output is functional but not usable as a documentation site: it lacks visual structure, branding, and navigation between pages.
+Today rinx renders each `.rst` file into a raw HTML fragment — bare `<h1>`, `<p>`, `<ul>` elements with no surrounding page structure. There is no `<!DOCTYPE html>`, no `<head>`, no stylesheet, no navigation sidebar. The output is functional but not usable as a documentation site: it lacks visual structure, branding, and navigation between pages.
 
-Sphinx solves this with a Jinja2-based theming system. Each page body is injected into a template (`layout.html`) that provides the page chrome — sidebar navigation, project title, CSS links, header, and footer. We need an equivalent mechanism for rusty-sphinx.
+Sphinx solves this with a Jinja2-based theming system. Each page body is injected into a template (`layout.html`) that provides the page chrome — sidebar navigation, project title, CSS links, header, and footer. We need an equivalent mechanism for rinx.
 
 ## Decision Drivers
 
@@ -46,7 +46,7 @@ Use [MiniJinja](https://github.com/mitsuhiko/minijinja), a lightweight Rust-nati
 - **Clean separation:** The HTML template lives in a separate `.html` file. Designers or users can edit it without touching Rust code.
 - **Customisable without a binary rebuild:** A user-supplied template is just a different file path passed via the Bazel rule's `template` attribute. The binary does not change.
 - **Equally cacheable in Bazel:** The template file is declared as an explicit input to every render action. Bazel tracks it and correctly invalidates cached HTML when it changes — identical cache behaviour to a compile-time approach.
-- **Minimal dependencies:** MiniJinja's only mandatory dependency is `serde`, which rusty-sphinx already uses.
+- **Minimal dependencies:** MiniJinja's only mandatory dependency is `serde`, which rinx already uses.
 - **Familiar syntax:** Jinja2 syntax (`{{ body }}`, `{% for entry in nav_tree %}`) is widely known and well-supported by editor tooling.
 - **Negligible runtime cost:** Template parsing is trivial compared to the I/O cost of reading/writing files in each render action.
 
@@ -58,7 +58,7 @@ A single `default.css` file is emitted into the site output root directory. Each
 
 ## Configuration
 
-Site metadata — project name and version — is specified in a single `rusty_sphinx.toml` configuration file. File paths (template, CSS) are **not** part of the config file; they are passed as separate CLI flags (`--template`, `--config`) and as Bazel rule attributes (`template`, `config`, `css`).
+Site metadata — project name and version — is specified in a single `rinx.toml` configuration file. File paths (template, CSS) are **not** part of the config file; they are passed as separate CLI flags (`--template`, `--config`) and as Bazel rule attributes (`template`, `config`, `css`).
 
 **File paths in config rejected because:** Bazel runs build actions inside a sandbox where file paths are relocated (e.g., `bazel-out/darwin_x86_64-fastbuild/bin/...`). A config file referencing `template = "templates/default.html"` breaks because that relative path doesn't exist in the sandbox. Attempts to work around this (rewriting the config at build time) are fragile. Keeping file paths as CLI flags lets the build system resolve them correctly without touching the config content.
 

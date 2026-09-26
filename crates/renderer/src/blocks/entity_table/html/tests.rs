@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     AttributeValue, Directive, Document, EntityId, EntityTable, EntityTableSource, Node,
     TableWidths,
 };
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
-use rusty_sphinx_filter::{FieldName, parse_filter};
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_filter::{FieldName, parse_filter};
+use rinx_index::{EntityRecord, ProjectIndex};
 
 use crate::{EmbeddedAssets, RenderOutput, blocks::EntityTemplates, config::SiteConfig};
 
@@ -333,7 +333,7 @@ fn test_the_shared_presentation_options_reach_the_markup() {
     table.classes = vec!["wide".to_string()];
     table.width = Some("80%".to_string());
     table.widths = Some(TableWidths::Explicit(vec![30, 70]));
-    table.name = Some(rusty_sphinx_ast::TargetName::new("every-requirement"));
+    table.name = Some(rinx_ast::TargetName::new("every-requirement"));
 
     // When
     let html = html_of(&table);

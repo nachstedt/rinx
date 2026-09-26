@@ -11,8 +11,8 @@
 //! declared role adds is the type check on the link, and the spelling an
 //! existing sphinx-needs project already writes.
 
-use rusty_sphinx_ast::InlineNode;
-use rusty_sphinx_entity::EntitySchema;
+use rinx_ast::InlineNode;
+use rinx_entity::EntitySchema;
 
 use crate::explicit_title::split_display_and_target;
 
@@ -51,7 +51,7 @@ pub(in crate::inline) fn handle_entity_role_match(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_entity::{NoReservedNames, load_schema};
+    use rinx_entity::{NoReservedNames, load_schema};
 
     fn schema() -> EntitySchema {
         load_schema(

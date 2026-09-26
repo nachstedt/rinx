@@ -1,9 +1,9 @@
-//! The inline-node dispatcher: matches on an [`rusty_sphinx_ast::InlineNode`]
+//! The inline-node dispatcher: matches on an [`rinx_ast::InlineNode`]
 //! and delegates to the module that renders that kind.
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::ImageAlign;
+use rinx_ast::ImageAlign;
 
 use super::anonymous_reference::{
     render_inline_anonymous_hyperlink, render_inline_anonymous_reference,
@@ -30,42 +30,42 @@ use crate::blocks::render_linked_image;
 /// the diagnostic sinks.
 pub(crate) fn render_inline(
     html: &mut String,
-    inline: &rusty_sphinx_ast::InlineNode,
+    inline: &rinx_ast::InlineNode,
     ctx: &mut RenderCtx<'_>,
 ) {
     match inline {
-        rusty_sphinx_ast::InlineNode::Text(text) => {
+        rinx_ast::InlineNode::Text(text) => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
         }
-        rusty_sphinx_ast::InlineNode::Emphasis(text) => {
+        rinx_ast::InlineNode::Emphasis(text) => {
             let _ = write!(html, "<em>{}</em>", html_escape::encode_text(text));
         }
-        rusty_sphinx_ast::InlineNode::Strong(text) => {
+        rinx_ast::InlineNode::Strong(text) => {
             let _ = write!(html, "<strong>{}</strong>", html_escape::encode_text(text));
         }
-        rusty_sphinx_ast::InlineNode::Literal(text) => {
+        rinx_ast::InlineNode::Literal(text) => {
             let _ = write!(html, "<code>{}</code>", html_escape::encode_text(text));
         }
-        rusty_sphinx_ast::InlineNode::Program(text) => {
+        rinx_ast::InlineNode::Program(text) => {
             let _ = write!(
                 html,
                 "<strong class=\"program\">{}</strong>",
                 html_escape::encode_text(text)
             );
         }
-        rusty_sphinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
+        rinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
             render_inline_anonymous_hyperlink(html, text, target);
         }
         // Self-contained despite carrying a span: rendering an equation needs
         // the math backend, not the index.
-        rusty_sphinx_ast::InlineNode::Math { latex, span } => {
+        rinx_ast::InlineNode::Math { latex, span } => {
             render_inline_math(html, latex, *span, ctx.math, ctx.math_errors);
         }
         // What a `.. |name| image::` substitution reference resolves to —
         // built the same way a standalone `.. image::`'s `<img>` is, minus
         // the `:name:` anchor span it can never carry (see
         // `DiagnosticCode::SubstitutionImageNameNotAllowed`).
-        rusty_sphinx_ast::InlineNode::InlineImage(options) => {
+        rinx_ast::InlineNode::InlineImage(options) => {
             render_inline_image(html, options, ctx);
         }
         // Never reaches a well-formed document by the time it is rendered:
@@ -74,20 +74,20 @@ pub(crate) fn render_inline(
         // returns. Rendered as the written source rather than panicking, so
         // an `.ast` from a differently-behaved parser degrades instead of
         // crashing the render.
-        rusty_sphinx_ast::InlineNode::SubstitutionReference { name, .. } => {
+        rinx_ast::InlineNode::SubstitutionReference { name, .. } => {
             let _ = write!(html, "|{}|", html_escape::encode_text(name));
         }
         // Listed rather than caught by a `_`, so a variant added later is a
         // compile error here and in `render_cross_reference` instead of
         // silently rendering as nothing.
-        rusty_sphinx_ast::InlineNode::Reference { .. }
-        | rusty_sphinx_ast::InlineNode::Hyperlink { .. }
-        | rusty_sphinx_ast::InlineNode::AnonymousReference { .. }
-        | rusty_sphinx_ast::InlineNode::TermReference { .. }
-        | rusty_sphinx_ast::InlineNode::DomainObjectReference { .. }
-        | rusty_sphinx_ast::InlineNode::OptionReference { .. }
-        | rusty_sphinx_ast::InlineNode::EntityReference { .. }
-        | rusty_sphinx_ast::InlineNode::EquationReference { .. } => {
+        rinx_ast::InlineNode::Reference { .. }
+        | rinx_ast::InlineNode::Hyperlink { .. }
+        | rinx_ast::InlineNode::AnonymousReference { .. }
+        | rinx_ast::InlineNode::TermReference { .. }
+        | rinx_ast::InlineNode::DomainObjectReference { .. }
+        | rinx_ast::InlineNode::OptionReference { .. }
+        | rinx_ast::InlineNode::EntityReference { .. }
+        | rinx_ast::InlineNode::EquationReference { .. } => {
             render_cross_reference(html, inline, ctx);
         }
     }
@@ -101,11 +101,7 @@ pub(crate) fn render_inline(
 /// because nothing about *how* an image is rendered differs here; only which
 /// options the parser let an author write differs, and that was already
 /// enforced by the time this node exists.
-fn render_inline_image(
-    html: &mut String,
-    options: &rusty_sphinx_ast::ImageOptions,
-    ctx: &mut RenderCtx,
-) {
+fn render_inline_image(html: &mut String, options: &rinx_ast::ImageOptions, ctx: &mut RenderCtx) {
     let align_class: Vec<String> = options
         .align
         .map(ImageAlign::css_class)
@@ -118,11 +114,11 @@ fn render_inline_image(
 /// of which carries the source position its diagnostic is reported at.
 fn render_cross_reference(
     html: &mut String,
-    inline: &rusty_sphinx_ast::InlineNode,
+    inline: &rinx_ast::InlineNode,
     ctx: &mut RenderCtx<'_>,
 ) {
     match inline {
-        rusty_sphinx_ast::InlineNode::Reference {
+        rinx_ast::InlineNode::Reference {
             display,
             target,
             span,
@@ -141,7 +137,7 @@ fn render_cross_reference(
                 ctx.broken_links,
             );
         }
-        rusty_sphinx_ast::InlineNode::Hyperlink { text, target, span } => {
+        rinx_ast::InlineNode::Hyperlink { text, target, span } => {
             render_inline_hyperlink(
                 html,
                 RefText {
@@ -154,7 +150,7 @@ fn render_cross_reference(
                 ctx.broken_links,
             );
         }
-        rusty_sphinx_ast::InlineNode::AnonymousReference { text, span } => {
+        rinx_ast::InlineNode::AnonymousReference { text, span } => {
             render_inline_anonymous_reference(
                 html,
                 text,
@@ -164,27 +160,27 @@ fn render_cross_reference(
                 ctx.broken_links,
             );
         }
-        rusty_sphinx_ast::InlineNode::DomainObjectReference { .. } => {
+        rinx_ast::InlineNode::DomainObjectReference { .. } => {
             render_domain_object(html, inline, ctx);
         }
         // Grouped into their own function purely to keep this match's total
         // line count from growing past a readable length as roles
         // accumulate — see [`render_indexed_cross_reference`].
-        rusty_sphinx_ast::InlineNode::TermReference { .. }
-        | rusty_sphinx_ast::InlineNode::OptionReference { .. }
-        | rusty_sphinx_ast::InlineNode::EntityReference { .. }
-        | rusty_sphinx_ast::InlineNode::EquationReference { .. } => {
+        rinx_ast::InlineNode::TermReference { .. }
+        | rinx_ast::InlineNode::OptionReference { .. }
+        | rinx_ast::InlineNode::EntityReference { .. }
+        | rinx_ast::InlineNode::EquationReference { .. } => {
             render_indexed_cross_reference(html, inline, ctx);
         }
-        rusty_sphinx_ast::InlineNode::Text(_)
-        | rusty_sphinx_ast::InlineNode::AnonymousHyperlink { .. }
-        | rusty_sphinx_ast::InlineNode::Emphasis(_)
-        | rusty_sphinx_ast::InlineNode::Strong(_)
-        | rusty_sphinx_ast::InlineNode::Literal(_)
-        | rusty_sphinx_ast::InlineNode::Math { .. }
-        | rusty_sphinx_ast::InlineNode::InlineImage(_)
-        | rusty_sphinx_ast::InlineNode::SubstitutionReference { .. }
-        | rusty_sphinx_ast::InlineNode::Program(_) => {
+        rinx_ast::InlineNode::Text(_)
+        | rinx_ast::InlineNode::AnonymousHyperlink { .. }
+        | rinx_ast::InlineNode::Emphasis(_)
+        | rinx_ast::InlineNode::Strong(_)
+        | rinx_ast::InlineNode::Literal(_)
+        | rinx_ast::InlineNode::Math { .. }
+        | rinx_ast::InlineNode::InlineImage(_)
+        | rinx_ast::InlineNode::SubstitutionReference { .. }
+        | rinx_ast::InlineNode::Program(_) => {
             unreachable!("render_inline routes only cross-reference variants here")
         }
     }
@@ -196,11 +192,11 @@ fn render_cross_reference(
 /// a resolver.
 fn render_indexed_cross_reference(
     html: &mut String,
-    inline: &rusty_sphinx_ast::InlineNode,
+    inline: &rinx_ast::InlineNode,
     ctx: &mut RenderCtx<'_>,
 ) {
     match inline {
-        rusty_sphinx_ast::InlineNode::TermReference {
+        rinx_ast::InlineNode::TermReference {
             display,
             term,
             span,
@@ -219,7 +215,7 @@ fn render_indexed_cross_reference(
                 ctx.broken_links,
             );
         }
-        rusty_sphinx_ast::InlineNode::OptionReference {
+        rinx_ast::InlineNode::OptionReference {
             display,
             target,
             span,
@@ -239,7 +235,7 @@ fn render_indexed_cross_reference(
                 ctx.broken_links,
             );
         }
-        rusty_sphinx_ast::InlineNode::EntityReference {
+        rinx_ast::InlineNode::EntityReference {
             role,
             target,
             display,
@@ -258,7 +254,7 @@ fn render_indexed_cross_reference(
                 ctx.broken_links,
             );
         }
-        rusty_sphinx_ast::InlineNode::EquationReference { label, span } => {
+        rinx_ast::InlineNode::EquationReference { label, span } => {
             render_equation_reference(
                 html,
                 label,
@@ -279,12 +275,8 @@ fn render_indexed_cross_reference(
 /// Split out of [`render_cross_reference`] because it is the one reference
 /// kind that needs more than the index: its own resolver, the enclosing
 /// scope, and a second diagnostic sink for object-type mismatches.
-fn render_domain_object(
-    html: &mut String,
-    inline: &rusty_sphinx_ast::InlineNode,
-    ctx: &mut RenderCtx<'_>,
-) {
-    let rusty_sphinx_ast::InlineNode::DomainObjectReference {
+fn render_domain_object(html: &mut String, inline: &rinx_ast::InlineNode, ctx: &mut RenderCtx<'_>) {
+    let rinx_ast::InlineNode::DomainObjectReference {
         object_type,
         name,
         display,

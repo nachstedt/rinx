@@ -21,8 +21,8 @@
 //! position, so it is the only one that can point at the character a broken
 //! expression breaks at.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, EntityId, Span, UpdateTarget};
-use rusty_sphinx_filter::{Expr, FieldName, FilterError, parse_filter};
+use rinx_ast::{Diagnostic, DiagnosticCode, EntityId, Span, UpdateTarget};
+use rinx_filter::{Expr, FieldName, FilterError, parse_filter};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;

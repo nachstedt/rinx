@@ -15,7 +15,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::indent::{indent_width, strip_indent};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, InlineNode, LineBlockItem, Node};
+use rinx_ast::{Diagnostic, DiagnosticCode, InlineNode, LineBlockItem, Node};
 
 /// One line-block item as first collected, before indent inheritance and
 /// nesting are resolved.
@@ -193,7 +193,7 @@ fn nest_line_block_items(items: Vec<(usize, Vec<InlineNode>)>) -> Vec<LineBlockI
 mod tests {
     use super::*;
     use crate::diagnostics::Diagnostics;
-    use rusty_sphinx_ast::Domain;
+    use rinx_ast::Domain;
 
     fn ctx() -> ParseCtx<'static> {
         ParseCtx::with_domain(Domain::Py)

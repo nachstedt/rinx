@@ -9,7 +9,7 @@ fn test_analyze_registers_genindex_entry_for_index_directive_single() {
     let doc = Document::new(
         "guide.rst".to_string(),
         vec![Node::Directive(Directive::Index {
-            entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+            entries: vec![rinx_ast::IndexEntry::Term {
                 primary: "execution".to_string(),
                 subentry: None,
                 main: false,
@@ -35,7 +35,7 @@ fn test_analyze_registers_genindex_entry_with_subentry_and_main_flag() {
     let doc = Document::new(
         "guide.rst".to_string(),
         vec![Node::Directive(Directive::Index {
-            entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+            entries: vec![rinx_ast::IndexEntry::Term {
                 primary: "Python".to_string(),
                 subentry: Some("interpreter".to_string()),
                 main: true,
@@ -60,11 +60,11 @@ fn test_analyze_skips_see_and_seealso_index_entries() {
         "guide.rst".to_string(),
         vec![Node::Directive(Directive::Index {
             entries: vec![
-                rusty_sphinx_ast::IndexEntry::See {
+                rinx_ast::IndexEntry::See {
                     entry: "foo".to_string(),
                     target: "bar".to_string(),
                 },
-                rusty_sphinx_ast::IndexEntry::SeeAlso {
+                rinx_ast::IndexEntry::SeeAlso {
                     entry: "foo".to_string(),
                     target: "bar".to_string(),
                 },
@@ -87,9 +87,9 @@ fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_bullet_li
         "guide.rst".to_string(),
         vec![Node::BulletList {
             bullet: '-',
-            items: vec![rusty_sphinx_ast::ListItem {
+            items: vec![rinx_ast::ListItem {
                 nodes: vec![Node::Directive(Directive::Index {
-                    entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+                    entries: vec![rinx_ast::IndexEntry::Term {
                         primary: "execution".to_string(),
                         subentry: None,
                         main: false,
@@ -113,11 +113,11 @@ fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_admonitio
     let doc = Document::new(
         "guide.rst".to_string(),
         vec![Node::Directive(Directive::Admonition {
-            kind: rusty_sphinx_ast::AdmonitionKind::Note,
+            kind: rinx_ast::AdmonitionKind::Note,
             title: None,
             collapsible: None,
             body: vec![Node::Directive(Directive::Index {
-                entries: vec![rusty_sphinx_ast::IndexEntry::Term {
+                entries: vec![rinx_ast::IndexEntry::Term {
                     primary: "execution".to_string(),
                     subentry: None,
                     main: false,

@@ -9,7 +9,7 @@ use std::sync::OnceLock;
 
 use plotters::prelude::*;
 use plotters::style::register_font;
-use rusty_sphinx_ast::ChartColor;
+use rinx_ast::ChartColor;
 
 /// The vendored font, registered once before anything is drawn.
 ///

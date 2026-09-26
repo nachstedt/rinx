@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{AttributeValue, EntityId};
+use rinx_ast::{AttributeValue, EntityId};
 use serde::{Deserialize, Serialize};
 
 /// One entity as the project index knows it.

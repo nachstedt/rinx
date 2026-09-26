@@ -5,7 +5,7 @@ use crate::diagnostics::Diagnostics;
 use crate::directives::domains::object_type::DirectiveObjectType;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// The `py:method`-alias directive-name flags that [`parse_py_method`]
 /// forces on regardless of the body's own option lines — one field per
@@ -143,7 +143,7 @@ fn extract_method_options(lines: &[String]) -> (bool, bool, bool, bool, Option<S
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::{Directive, Node};
 
     #[test]
     fn test_extract_method_options_parses_all_four_flags() {

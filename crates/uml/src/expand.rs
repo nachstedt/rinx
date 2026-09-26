@@ -1,6 +1,6 @@
 //! The expansion itself: a diagram's template to the `PlantUML` text compiled.
 
-use rusty_sphinx_ast::{EntityId, HashedContent, Uml};
+use rinx_ast::{EntityId, HashedContent, Uml};
 
 use crate::assemble::finished;
 use crate::context::UmlContext;
@@ -61,9 +61,9 @@ fn assembled(text: &str, uml: &Uml, ctx: &UmlContext<'_>) -> Result<HashedConten
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::UmlSource;
-    use rusty_sphinx_entity::EntitySchema;
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_ast::UmlSource;
+    use rinx_entity::EntitySchema;
+    use rinx_index::ProjectIndex;
 
     /// Runs `body` with a context over an empty project.
     fn with_ctx<R>(body: impl FnOnce(&UmlContext<'_>) -> R) -> R {
@@ -246,7 +246,7 @@ mod tests {
             crate::snapshot::tests::requirement("reqs.rst", Some("Login")),
         )]);
         let uml = Uml {
-            entity: Some(rusty_sphinx_ast::EntityId::new("REQ_001").expect("a valid id")),
+            entity: Some(rinx_ast::EntityId::new("REQ_001").expect("a valid id")),
             ..Uml::new(UmlSource::EntityArch, "{{ need.title }}".to_string())
         };
         let schema = EntitySchema::empty_ref();

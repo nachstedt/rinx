@@ -1,10 +1,10 @@
 # Known Bugs
 
-Confirmed rusty-sphinx resolver/parser bugs found while triaging the top 20
+Confirmed rinx resolver/parser bugs found while triaging the top 20
 "Unresolved Domain-Object References" in `benchmark_result.txt` against the
 CPython doc source. Unlike the entries in `scripts/domain_warnings_whitelist.json`,
 these are cases where real Sphinx _would_ resolve the reference — the warning
-is a rusty-sphinx shortcoming, not a CPython doc inconsistency.
+is a rinx shortcoming, not a CPython doc inconsistency.
 
 ## How "real Sphinx would resolve it" was established
 
@@ -33,7 +33,7 @@ That is corroborated empirically: `csv.rst`, `threading.rst`, `functions.rst`,
 `datamodel.rst` and `bdb.rst` all contain such references and are all absent
 from `.nitignore`.
 
-Flagging these is still the *intended* rusty-sphinx behaviour — see the
+Flagging these is still the *intended* rinx behaviour — see the
 module doc of `crates/renderer/src/resolution/domain_object.rs`, deviation (1) — and
 the underlying CPython markup really is inconsistent, so these belong in the
 whitelist rather than here. Every affected entry is worded to say that
@@ -62,7 +62,7 @@ modules" rule is deliberately not reproduced here.
   the "documentation builds should fail loudly on missing diagram images"
   guarantee did not hold for nested diagrams. Both now share a single
   `collect_plantuml_contents` helper built on the new
-  `rusty_sphinx_ast::walk_nodes` pre-order walker (`crates/ast/src/visit.rs`),
+  `rinx_ast::walk_nodes` pre-order walker (`crates/ast/src/visit.rs`),
   so the compiled set and the validated set cannot drift apart again. The
   walker's inner match is exhaustive, so a future `Node`/`Directive` variant
   carrying child nodes is a compile error rather than another silent gap.

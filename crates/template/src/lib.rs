@@ -15,15 +15,15 @@
 //! {% include "demo_page_header.rst" with context %}
 //! ```
 //!
-//! rusty-sphinx cannot run a `conf.py`, so the transform has to be a declared
+//! rinx cannot run a `conf.py`, so the transform has to be a declared
 //! feature of the build instead of a hook. This crate is that transform.
 //!
 //! # Why it is its own crate
 //!
-//! The same reason `rusty_sphinx_cdecl` and `rusty_sphinx_filter` are: it is a
+//! The same reason `rinx_cdecl` and `rinx_filter` are: it is a
 //! self-contained text-to-text step with an injected seam for what it cannot
 //! do itself, and it depends on nothing of ours at all. What it needs to read
-//! a template arrives through [`TemplateLoader`], which `rusty_sphinx_parser`
+//! a template arrives through [`TemplateLoader`], which `rinx_parser`
 //! implements over the file loader an `.. include::` already reads through.
 //!
 //! # The part that is not just "call `MiniJinja`"

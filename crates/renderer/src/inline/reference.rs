@@ -2,9 +2,9 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{InventorySelector, Span, TargetName};
-use rusty_sphinx_index::relative_doc_href;
-use rusty_sphinx_index::{ProjectIndex, TargetLocation};
+use rinx_ast::{InventorySelector, Span, TargetName};
+use rinx_index::relative_doc_href;
+use rinx_index::{ProjectIndex, TargetLocation};
 
 use super::external_link::write_external_link;
 use crate::resolution::{resolve_external, unresolved_kind};
@@ -126,7 +126,7 @@ mod tests {
                 title: None,
                 target: "install",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "doc.rst",
@@ -158,7 +158,7 @@ mod tests {
                 title: Some("the setup"),
                 target: "install",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "doc.rst",
@@ -190,7 +190,7 @@ mod tests {
                 title: None,
                 target: "REQ_001",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "doc.rst",
@@ -332,8 +332,7 @@ mod tests {
     fn test_render_inline_reference_reports_an_undeclared_inventory_by_name() {
         // Given
         let index = crate::test_support::index_linking_into_python();
-        let selector =
-            InventorySelector::Named(rusty_sphinx_ast::InventoryName::new("numpy").unwrap());
+        let selector = InventorySelector::Named(rinx_ast::InventoryName::new("numpy").unwrap());
 
         // When
         let (_, broken_links) = render_selecting(&index, None, "tut-intro", &selector);
@@ -341,9 +340,7 @@ mod tests {
         // Then
         assert_eq!(
             broken_links[0].kind,
-            BrokenLinkKind::UnknownInventory(
-                rusty_sphinx_ast::InventoryName::new("numpy").unwrap()
-            )
+            BrokenLinkKind::UnknownInventory(rinx_ast::InventoryName::new("numpy").unwrap())
         );
     }
 
@@ -380,7 +377,7 @@ mod tests {
                 title: None,
                 target: "cmp",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "doc.rst",
@@ -409,7 +406,7 @@ mod tests {
                 title: None,
                 target: "my-section",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "doc.rst",
@@ -435,7 +432,7 @@ mod tests {
                 title: None,
                 target: "missing",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "doc.rst",
@@ -475,7 +472,7 @@ mod tests {
                 title: None,
                 target: "target-a",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "team_b/index.rst",
@@ -508,7 +505,7 @@ mod tests {
                 title: Some("GenericAlias"),
                 target: "types-genericalias",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "doc.rst",
@@ -538,7 +535,7 @@ mod tests {
                 title: Some("GenericAlias"),
                 target: "types-genericalias",
                 span: None,
-                inventory: &rusty_sphinx_ast::InventorySelector::Any,
+                inventory: &rinx_ast::InventorySelector::Any,
             },
             &index,
             "doc.rst",

@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
 use std::num::NonZeroU32;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     DiagnosticCode, EntityId, EntitySequence, EntitySequenceSource, HashedContent, ImageAlign,
     LengthOrPercentage, NonEmptyVector, ResolvedLanguage, TargetName,
 };
-use rusty_sphinx_index::{EntityRecord, ProjectIndex};
+use rinx_index::{EntityRecord, ProjectIndex};
 
 use crate::EmbeddedAssets;
 use crate::blocks::render_test_support::with_ctx_for;
@@ -196,9 +196,9 @@ fn test_a_walk_that_drew_nothing_renders_no_picture_and_is_reported() {
 fn test_a_failure_names_the_directive_the_author_wrote_at_its_position() {
     // Given
     let index = ProjectIndex::default();
-    let span = rusty_sphinx_ast::Span::new(
-        rusty_sphinx_ast::Position { line: 7, column: 1 },
-        rusty_sphinx_ast::Position {
+    let span = rinx_ast::Span::new(
+        rinx_ast::Position { line: 7, column: 1 },
+        rinx_ast::Position {
             line: 7,
             column: 18,
         },

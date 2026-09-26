@@ -2,7 +2,7 @@ use crate::{
     DocumentNumbers, DocumentOutline, DocumentToctree, EntityFieldHistory, EntityRecord,
     EntityUpdateRecord, EquationLocation, ExternalInventory, GenIndexEntry, TargetLocation,
 };
-use rusty_sphinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
+use rinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -102,7 +102,7 @@ pub struct ProjectIndex {
     /// keyed by document path — the last one found in that document if it
     /// wrote more than one. Per-document data, so unlike `section_numbers`
     /// (which this feeds, alongside `:numbered:` toctrees) it merges. See
-    /// `rusty_sphinx_analyzer::section_numbering` for how the two combine —
+    /// `rinx_analyzer::section_numbering` for how the two combine —
     /// an ancestor `:numbered:` toctree always wins over a document's own
     /// `.. sectnum::`.
     #[serde(default)]
@@ -131,7 +131,7 @@ pub struct ProjectIndex {
     /// two authors extending the same entities is expected, and order
     /// matters, so nothing here collapses duplicates. Sorted into canonical,
     /// deterministic application order by
-    /// `rusty_sphinx_analyzer::apply_entity_updates` the first time the full
+    /// `rinx_analyzer::apply_entity_updates` the first time the full
     /// index is built — every [`crate::AppliedFieldUpdate`]/
     /// [`crate::AppliedRelationUpdate`]'s `update_index` refers to a position
     /// in *this* vector.
@@ -337,13 +337,13 @@ impl DuplicateEntityId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_ast::{CObjectType, Domain, PyObjectType};
+    use rinx_ast::{CObjectType, Domain, PyObjectType};
 
     /// Looks up a domain object by the pre-refactor flat `"domain:objtype:name"`
     /// key shape (e.g. `"py:function:greet"`), so test expectations can stay
     /// expressed as a single string instead of repeating two-level map
     /// navigation at every call site below. Duplicated from
-    /// `rusty_sphinx_analyzer`'s own test-only helper of the same name — that
+    /// `rinx_analyzer`'s own test-only helper of the same name — that
     /// copy backs `analyze()`/`build_project_index()` tests which stay in
     /// `analyzer`, this one backs `ProjectIndex`-only tests.
     fn lookup_domain_object<'a>(index: &'a ProjectIndex, flat_key: &str) -> Option<&'a String> {
@@ -399,7 +399,7 @@ mod tests {
         stale.toctrees.insert(
             "index.rst".to_string(),
             vec![crate::DocumentToctree {
-                toctree: rusty_sphinx_ast::Toctree::default(),
+                toctree: rinx_ast::Toctree::default(),
                 section: None,
             }],
         );
@@ -408,7 +408,7 @@ mod tests {
         fresh.toctrees.insert(
             "guide.rst".to_string(),
             vec![crate::DocumentToctree {
-                toctree: rusty_sphinx_ast::Toctree::default(),
+                toctree: rinx_ast::Toctree::default(),
                 section: None,
             }],
         );
@@ -417,7 +417,7 @@ mod tests {
             crate::DocumentOutline {
                 sections: vec![crate::OutlineSection {
                     title: "Setup".to_string(),
-                    id: rusty_sphinx_ast::SectionId::from_title("Setup"),
+                    id: rinx_ast::SectionId::from_title("Setup"),
                     children: Vec::new(),
                 }],
             },
@@ -477,9 +477,9 @@ mod tests {
         // single-document analysis that never does
         let mut stale = ProjectIndex {
             external_inventories: vec![ExternalInventory::new(
-                rusty_sphinx_inventory::InventoryName::new("python").unwrap(),
+                rinx_inventory::InventoryName::new("python").unwrap(),
                 "https://docs.python.org/3/".to_string(),
-                rusty_sphinx_inventory::Inventory::default(),
+                rinx_inventory::Inventory::default(),
             )],
             ..ProjectIndex::default()
         };
@@ -602,7 +602,7 @@ mod tests {
 
         // When
         index.insert_domain_object(
-            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Class),
+            ObjectType::Py(rinx_ast::PyObjectType::Class),
             "pkg.Greeter",
             "api.rst",
         );
@@ -629,7 +629,7 @@ mod tests {
         let mut stale = ProjectIndex::default();
         let mut fresh = ProjectIndex::default();
         fresh.insert_domain_object(
-            ObjectType::Py(rusty_sphinx_ast::PyObjectType::Function),
+            ObjectType::Py(rinx_ast::PyObjectType::Function),
             "pkg.Helper",
             "api.rst",
         );
@@ -756,7 +756,7 @@ mod tests {
         index.toctrees.insert(
             "api.rst".to_string(),
             vec![DocumentToctree {
-                toctree: rusty_sphinx_ast::Toctree::default(),
+                toctree: rinx_ast::Toctree::default(),
                 section: None,
             }],
         );
@@ -780,9 +780,9 @@ mod tests {
         );
         index.entity_updates.push(crate::EntityUpdateRecord {
             doc_path: "api.rst".to_string(),
-            update: rusty_sphinx_ast::EntityUpdate::new(
-                rusty_sphinx_ast::EntityUpdateSource::EntityUpdate,
-                rusty_sphinx_ast::UpdateTarget {
+            update: rinx_ast::EntityUpdate::new(
+                rinx_ast::EntityUpdateSource::EntityUpdate,
+                rinx_ast::UpdateTarget {
                     candidate_id: EntityId::new("REQ_001").ok(),
                     filter: None,
                     raw: "REQ_001".to_string(),
@@ -971,9 +971,9 @@ mod tests {
         let mut stale = ProjectIndex::default();
         stale.entity_updates.push(crate::EntityUpdateRecord {
             doc_path: "a.rst".to_string(),
-            update: rusty_sphinx_ast::EntityUpdate::new(
-                rusty_sphinx_ast::EntityUpdateSource::EntityUpdate,
-                rusty_sphinx_ast::UpdateTarget {
+            update: rinx_ast::EntityUpdate::new(
+                rinx_ast::EntityUpdateSource::EntityUpdate,
+                rinx_ast::UpdateTarget {
                     candidate_id: EntityId::new("REQ_001").ok(),
                     filter: None,
                     raw: "REQ_001".to_string(),
@@ -983,9 +983,9 @@ mod tests {
         let mut fresh = ProjectIndex::default();
         fresh.entity_updates.push(crate::EntityUpdateRecord {
             doc_path: "b.rst".to_string(),
-            update: rusty_sphinx_ast::EntityUpdate::new(
-                rusty_sphinx_ast::EntityUpdateSource::NeedExtend,
-                rusty_sphinx_ast::UpdateTarget {
+            update: rinx_ast::EntityUpdate::new(
+                rinx_ast::EntityUpdateSource::NeedExtend,
+                rinx_ast::UpdateTarget {
                     candidate_id: EntityId::new("REQ_002").ok(),
                     filter: None,
                     raw: "REQ_002".to_string(),

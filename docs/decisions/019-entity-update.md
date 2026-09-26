@@ -35,7 +35,7 @@ test for the *other* rule ("no name of this build's beside it") is whether
 the construct "reads another tool's file format, carries that format's
 limitations... and exists to keep an existing project building." Nothing
 about `needextend` does: its argument is this project's own filter grammar
-(`rusty_sphinx_filter`), and its field vocabulary is this project's own typed
+(`rinx_filter`), and its field vocabulary is this project's own typed
 attribute/relation model. There is no foreign format to bridge to and no
 richer future construct whose name needs protecting. The diagnostic family is
 `entity-update.*` regardless of which spelling was written, both are reserved
@@ -45,7 +45,7 @@ node — `crates/ast/src/entity_update/source.rs`, the exact shape
 
 ### 2. The phase: a derived overlay, applied between merge and back-links — never a mutation of `entities`
 
-`rusty_sphinx_analyzer::apply_entity_updates` runs inside
+`rinx_analyzer::apply_entity_updates` runs inside
 `build_project_index_reporting`, **between** `merge_document_analyses` and
 `derive_entity_backlinks`. It needs the whole merged graph, exactly as
 back-link derivation does, but must run *before* it: an update can change an
@@ -141,13 +141,13 @@ the `AttributeType` a `Set`'s text must parse against belongs to the matched
 entity's own declared type, known only once a specific entity is matched, at
 apply time. So a `FieldMutation` stores its value as raw, unconverted text,
 and `apply_attribute_mutation`/`apply_relation_mutation` do the actual
-conversion — through the **same** `rusty_sphinx_entity::parse_attribute_value`/
+conversion — through the **same** `rinx_entity::parse_attribute_value`/
 `split_list` funnel a written `.. req::` and `.. needimport::` already share,
 so none of the three can validate a value differently.
 
 Two identity fields are refused outright, at parse time, as
 `entity-update.protected-field`: the entire
-`rusty_sphinx_entity::field::BUILTIN_FIELDS` set (`id`, `type`, `type_name`,
+`rinx_entity::field::BUILTIN_FIELDS` set (`id`, `type`, `type_name`,
 `docname`) plus `title`. `title` is the one addition beyond the built-in set,
 and the reason is a real desync risk, not a style preference:
 `EntityRecord` keeps a **denormalized** `title: Option<String>` separate from
@@ -334,9 +334,9 @@ this preview design.
   `effective_attribute`/`effective_relation_targets`. Every reader of an
   entity's attribute or outgoing-relation *value* now goes through the latter
   two rather than `entities` directly.
-- **`rusty_sphinx_analyzer` gained a dependency on `rusty_sphinx_filter`**,
+- **`rinx_analyzer` gained a dependency on `rinx_filter`**,
   needed for `Expr`/`FieldName` in target resolution;
-  `rusty_sphinx_index::EntitySubject` was already reachable.
+  `rinx_index::EntitySubject` was already reachable.
 - **No Bazel changes at all.** `ProjectIndex` was already the sole input every
   render action's cache key is built from; an edit to an
   `.. entity-update::` directive, or to an attribute it targets, already

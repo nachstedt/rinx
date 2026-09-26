@@ -23,7 +23,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{Dropdown, SpacingKind};
+use rinx_ast::{Dropdown, SpacingKind};
 
 use crate::RenderCtx;
 use crate::inline::render_inline;
@@ -155,11 +155,11 @@ fn class_attribute(classes: &[String]) -> String {
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::render_directive_html;
-    use rusty_sphinx_ast::{
+    use rinx_ast::{
         Animation, Chevron, Directive, InlineNode, Node, OcticonName, SemanticColor, Spacing,
         SpacingValue, TargetName,
     };
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_index::ProjectIndex;
 
     fn dropdown_html(dropdown: Dropdown) -> String {
         render_directive_html(
@@ -441,7 +441,7 @@ mod tests {
         let dropdown = Dropdown {
             body: vec![Node::BulletList {
                 bullet: '*',
-                items: vec![rusty_sphinx_ast::ListItem {
+                items: vec![rinx_ast::ListItem {
                     nodes: vec![Node::Paragraph(vec![InlineNode::Text("Item".to_string())])],
                 }],
             }],

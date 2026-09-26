@@ -1,16 +1,16 @@
 //! `.. if-builder::` across the whole pipeline: what a selected block
 //! contributes to the index and the page, and what an excluded one costs.
 //!
-//! The unit tests in `rusty_sphinx_parser` assert on the nodes; these assert
+//! The unit tests in `rinx_parser` assert on the nodes; these assert
 //! on the two things only the later phases can see — that a target written
 //! inside a selected block is a *document* target a `:ref:` elsewhere
 //! resolves against, and that one inside an excluded block is absent from the
 //! index rather than resolving to something invisible.
 
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_parser as parser;
-use rusty_sphinx_renderer as renderer;
+use rinx_analyzer as analyzer;
+use rinx_ast as ast;
+use rinx_parser as parser;
+use rinx_renderer as renderer;
 
 /// Parses, indexes and renders one document, the way the three subcommands do.
 fn build(input: &str) -> (ast::Document, renderer::RenderOutput) {

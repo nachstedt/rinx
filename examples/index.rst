@@ -1,10 +1,10 @@
 .. _home-index:
 
 #########################
-Rusty-Sphinx Example Site
+Rinx Example Site
 #########################
 
-Welcome to the Rusty-Sphinx example.
+Welcome to the Rinx example.
 
 .. toctree::
 

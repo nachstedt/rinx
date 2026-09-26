@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{AttributeValue, EntityId, EntitySection};
-use rusty_sphinx_entity::{NoReservedNames, load_schema};
+use rinx_ast::{AttributeValue, EntityId, EntitySection};
+use rinx_entity::{NoReservedNames, load_schema};
 
 use super::*;
 
@@ -102,9 +102,9 @@ fn test_index_entity_keeps_no_section_prose() {
         relations: BTreeMap::new(),
         sections: vec![EntitySection::named(
             "rationale".to_string(),
-            vec![rusty_sphinx_ast::Node::Paragraph(vec![
-                rusty_sphinx_ast::InlineNode::Text("prose".to_string()),
-            ])],
+            vec![rinx_ast::Node::Paragraph(vec![rinx_ast::InlineNode::Text(
+                "prose".to_string(),
+            )])],
             None,
         )],
         span: None,

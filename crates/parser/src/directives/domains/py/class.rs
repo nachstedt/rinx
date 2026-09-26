@@ -4,7 +4,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
-use rusty_sphinx_ast::{DomainObjectBody, NonEmptyVector};
+use rinx_ast::{DomainObjectBody, NonEmptyVector};
 
 /// Parses a `.. py:class::` body: strips a leading `:final:` flag line off
 /// the front before parsing the rest as the docstring body. Any nested
@@ -99,8 +99,8 @@ fn extract_class_options(lines: &[String]) -> (bool, Option<String>, usize) {
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::Domain;
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::Domain;
+    use rinx_ast::{Directive, Node};
 
     #[test]
     fn test_extract_class_options_parses_final_flag() {
@@ -245,7 +245,7 @@ mod tests {
             // docstring's first paragraph.
             assert_eq!(
                 body,
-                &[Node::Paragraph(vec![rusty_sphinx_ast::InlineNode::Text(
+                &[Node::Paragraph(vec![rinx_ast::InlineNode::Text(
                     "A subclass of BaseManager.".to_string()
                 )])]
             );

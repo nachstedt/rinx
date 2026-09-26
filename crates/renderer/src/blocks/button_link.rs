@@ -29,7 +29,7 @@
 
 use std::fmt::Write as _;
 
-use rusty_sphinx_ast::{ButtonFlag, ButtonLink, ButtonTarget, inline_plain_text};
+use rinx_ast::{ButtonFlag, ButtonLink, ButtonTarget, inline_plain_text};
 
 use crate::RenderCtx;
 use crate::inline::render_inline;

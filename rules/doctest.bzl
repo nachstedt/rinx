@@ -1,12 +1,12 @@
-"""rusty_sphinx_doctest_tests macro.
+"""rinx_doctest_tests macro.
 
-Runs the doctest blocks of a `rusty_sphinx_library`'s documents as one Bazel
+Runs the doctest blocks of a `rinx_library`'s documents as one Bazel
 test. See `docs/decisions/002-doctest-execution.md` for the full rationale; the
 notes below are what you need before editing this file.
 
 # Why one test per library, not per document
 
-`rusty_sphinx_library` is the unit of ownership everywhere else in this ruleset,
+`rinx_library` is the unit of ownership everywhere else in this ruleset,
 exactly like `cc_library`, and a macro cannot read its providers at loading
 time. Testing per document therefore meant repeating the document list in the
 BUILD file and connecting the two sides by a duplicated naming convention. Per
@@ -40,14 +40,14 @@ the extraction step, which stays a build action.
 # Keeping Python out of the build
 
 The Python toolchain is a dependency of these test targets only. It must never
-become one of `rusty_sphinx_library` or `rusty_sphinx_site`:
+become one of `rinx_library` or `rinx_site`:
 `bazel build //examples:site` has to stay buildable with no Python toolchain
 registered. `tests/test_doctest_isolation.sh` enforces that.
 """
 
 load("@rules_python//python:defs.bzl", "py_test")
 
-def rusty_sphinx_doctest_tests(
+def rinx_doctest_tests(
         name,
         lib,
         py_deps = None,
@@ -56,17 +56,17 @@ def rusty_sphinx_doctest_tests(
         size = "small",
         tags = None,
         **kwargs):
-    """Defines the doctest test for one `rusty_sphinx_library`.
+    """Defines the doctest test for one `rinx_library`.
 
     Args:
       name: Name of the generated `py_test`.
-      lib: The `rusty_sphinx_library` whose documents to test. Every document it
+      lib: The `rinx_library` whose documents to test. Every document it
         owns is tested; its `deps` are not, since each library carries the test
         target for its own documents.
       py_deps: `py_library` targets to put on the path, so documented code is
         importable. This is rules_python's ordinary `deps`, surfaced — not a
-        third dependency mechanism of rusty-sphinx's own. Note it is unrelated
-        to `rusty_sphinx_library`'s `deps`, which is strictly about toctrees.
+        third dependency mechanism of rinx's own. Note it is unrelated
+        to `rinx_library`'s `deps`, which is strictly about toctrees.
       global_setup: A `.py` file run before every group, Sphinx's
         `doctest_global_setup`. A file label rather than a config field,
         because sandboxes relocate paths (see ADR-001).
@@ -101,7 +101,7 @@ def rusty_sphinx_doctest_tests(
 
     py_test(
         name = name,
-        srcs = ["@rusty_sphinx//scripts:doctest_runner.py"],
+        srcs = ["@rinx//scripts:doctest_runner.py"],
         main = "doctest_runner.py",
         # `locations`, plural: one argument per document in the library.
         args = ["$(locations :%s)" % plan_target] + shared_args,

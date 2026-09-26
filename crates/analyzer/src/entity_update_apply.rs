@@ -15,14 +15,12 @@
 
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     AttributeValue, Diagnostic, DiagnosticCode, EntityId, FieldMutation, FieldMutationMode, Span,
     UpdateTarget,
 };
-use rusty_sphinx_entity::{
-    AttributeSchema, EntitySchema, RelationSpec, parse_attribute_value, split_list,
-};
-use rusty_sphinx_index::{
+use rinx_entity::{AttributeSchema, EntitySchema, RelationSpec, parse_attribute_value, split_list};
+use rinx_index::{
     AppliedFieldUpdate, AppliedRelationUpdate, AttributeFieldHistory, EntitySubject, ProjectIndex,
     RelationFieldHistory,
 };
@@ -478,7 +476,7 @@ fn report_invalid_value(
     site: UpdateSite<'_>,
     target_id: &EntityId,
     field: &str,
-    error: &rusty_sphinx_entity::AttributeParseError,
+    error: &rinx_entity::AttributeParseError,
 ) {
     report(
         by_document,

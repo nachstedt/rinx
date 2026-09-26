@@ -1,5 +1,5 @@
-use rusty_sphinx_ast::{Directive, EntityTable, EntityTableSource, Node, TableWidths};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_ast::{Directive, EntityTable, EntityTableSource, Node, TableWidths};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
 use crate::parse_with_ctx;
@@ -36,9 +36,9 @@ fn schema() -> EntitySchema {
     .expect("the test schema should load")
 }
 
-fn parse(rst: &str) -> rusty_sphinx_ast::Document {
+fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).with_schema(&schema);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
     parse_with_ctx("specs/boot", rst, &ctx)
 }
 
@@ -352,7 +352,7 @@ fn test_the_shared_presentation_options_are_read() {
 
     // Then
     assert_eq!(table.classes, ["wide"]);
-    assert_eq!(table.align, Some(rusty_sphinx_ast::TableAlign::Right));
+    assert_eq!(table.align, Some(rinx_ast::TableAlign::Right));
     assert_eq!(table.width, Some("80%".to_string()));
     assert!(table.name.is_some());
 }

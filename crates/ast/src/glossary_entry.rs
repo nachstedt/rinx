@@ -22,7 +22,7 @@ pub struct GlossaryEntry {
 /// # Examples
 ///
 /// ```
-/// use rusty_sphinx_ast::term_id;
+/// use rinx_ast::term_id;
 /// assert_eq!(term_id("Environment Variable"), "term-environment-variable");
 /// assert_eq!(term_id("python"), "term-python");
 /// ```

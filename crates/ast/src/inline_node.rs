@@ -114,7 +114,7 @@ pub enum InlineNode {
     /// Unlike [`Self::DomainObjectReference`], this carries no `object_type`
     /// (always `std:cmdoption`) and no `search_order` — `:option:`'s
     /// resolution is a distinct ambient-program/global-fallback/embedded-
-    /// program search (see `rusty_sphinx_renderer::resolution::option`), not
+    /// program search (see `rinx_renderer::resolution::option`), not
     /// the dot-prefixed most/least-qualified search [`TargetSearchOrder`]
     /// models. `target` is carried through close to verbatim: only the
     /// explicit-title split (this role's `` `display <target>` `` syntax)
@@ -152,7 +152,7 @@ pub enum InlineNode {
     /// A verbatim context like [`Self::Literal`]: the backslashes are the
     /// content, so this is one of the two variants whose escape markers turn
     /// back into backslashes rather than being dropped (see
-    /// `rusty_sphinx_parser`'s `unescape_node`).
+    /// `rinx_parser`'s `unescape_node`).
     ///
     /// Carries a span despite not being a cross-reference — unlike every other
     /// self-contained variant, its content can be rejected at render time, and
@@ -174,7 +174,7 @@ pub enum InlineNode {
         span: Option<Span>,
     },
     /// A `|name|` substitution reference, before the whole-document
-    /// resolution pass (`rusty_sphinx_parser`'s `resolve_substitutions`)
+    /// resolution pass (`rinx_parser`'s `resolve_substitutions`)
     /// replaces it with its definition's resolved content.
     ///
     /// An intermediate node rather than something a later phase ever sees:

@@ -1,8 +1,8 @@
 //! The `parse` subcommand: RST text to a serialized `ast::Document`.
 
 use anyhow::{Context, Result, anyhow};
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_parser as parser;
+use rinx_ast as ast;
+use rinx_parser as parser;
 use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};
@@ -25,7 +25,7 @@ pub(super) enum DiagramSupport {
 }
 
 impl DiagramSupport {
-    /// Reads the `--diagrams` flag `rusty_sphinx_library` passes when its
+    /// Reads the `--diagrams` flag `rinx_library` passes when its
     /// `diagrams` attribute is set. Absent means disabled, matching the
     /// attribute's default.
     pub(super) fn from_args(args: &[String]) -> Self {
@@ -74,7 +74,7 @@ pub(super) fn find_disabled_diagrams(doc: &ast::Document) -> Vec<ast::Diagnostic
             code,
             format!(
                 "{directive}: this library does not compile diagrams; set `diagrams = True` on \
-                 its rusty_sphinx_library to enable them"
+                 its rinx_library to enable them"
             ),
             span,
         ));
@@ -125,7 +125,7 @@ pub(super) fn process_parse(
 }
 
 /// Parses the optional `--default-domain` flag, defaulting to `py` — this is
-/// how `rusty_sphinx_library`'s Bazel attribute reaches the `parse`/`preview`
+/// how `rinx_library`'s Bazel attribute reaches the `parse`/`preview`
 /// subcommands (see `rules/library.bzl`, whose `default_domain` attribute
 /// restricts to the same two values via `values = ["py", "c"]`).
 ///
@@ -137,7 +137,7 @@ pub(super) fn process_parse(
 /// or `c` — `std`-domain constructs (`.. option::`, `:option:`, ...) are
 /// recognized unconditionally instead, never via `default_domain` (see
 /// `resolve_domain_object_type`/`try_parse_scope_directive` in
-/// `rusty_sphinx_parser`), so accepting `"std"` here would only invite a
+/// `rinx_parser`), so accepting `"std"` here would only invite a
 /// runtime panic with no corresponding feature.
 pub(super) fn parse_default_domain_flag(args: &[String]) -> Result<ast::Domain> {
     match flag_value_opt(args, "--default-domain") {
@@ -239,7 +239,7 @@ mod tests {
             &ParseInputs {
                 default_domain: ast::Domain::Py,
                 files: &no_parse_files(),
-                schema: &rusty_sphinx_entity::EntitySchema::empty(),
+                schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
             },
@@ -260,7 +260,7 @@ mod tests {
             &ParseInputs {
                 default_domain: ast::Domain::Py,
                 files: &no_parse_files(),
-                schema: &rusty_sphinx_entity::EntitySchema::empty(),
+                schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
             },
@@ -416,7 +416,7 @@ mod tests {
             &ParseInputs {
                 default_domain: ast::Domain::C,
                 files: &no_parse_files(),
-                schema: &rusty_sphinx_entity::EntitySchema::empty(),
+                schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
                 import_keys: &BTreeMap::new(),
             },
@@ -451,7 +451,7 @@ mod tests {
     fn test_cmd_parse_reads_a_csv_table_file_beside_the_document() {
         // Given
         let args = parse_args_for(
-            "rusty_sphinx_cmd_parse_csv_ok",
+            "rinx_cmd_parse_csv_ok",
             ".. csv-table::\n   :file: fruits.csv\n",
         );
         let dir = std::path::Path::new(&args[1])
@@ -473,7 +473,7 @@ mod tests {
         // Given — no `fruits.csv` beside the document, which is what an
         // undeclared `csv_data` file looks like inside a Bazel sandbox.
         let args = parse_args_for(
-            "rusty_sphinx_cmd_parse_csv_missing",
+            "rinx_cmd_parse_csv_missing",
             ".. csv-table::\n   :file: fruits.csv\n",
         );
 
@@ -493,12 +493,12 @@ mod tests {
     fn test_cmd_parse_renders_the_source_as_a_template() {
         // Given a document opening the way the sphinx-needs demo's do.
         // The `{% include %}` half is exercised where it can be: against a
-        // stub loader in `rusty_sphinx_parser::templating`, and against a real
+        // stub loader in `rinx_parser::templating`, and against a real
         // source root in `tests/test_jinja.sh` — a template name resolves from
         // the source root, which for an ad-hoc run is the working directory,
         // and a unit test must not depend on that.
         let args = parse_args_for(
-            "rusty_sphinx_cmd_parse_jinja_ok",
+            "rinx_cmd_parse_jinja_ok",
             "{% set page=\"doc.rst\" %}\nSource of {{ page }}, release {{ release }}.\n",
         );
         let args = [
@@ -524,7 +524,7 @@ mod tests {
     fn test_cmd_parse_leaves_a_template_alone_without_the_opt_in() {
         // Given the same document, in a library that did not ask for Jinja
         let args = parse_args_for(
-            "rusty_sphinx_cmd_parse_jinja_off",
+            "rinx_cmd_parse_jinja_off",
             "{% set page=\"doc.rst\" %}\n\nBody\n",
         );
 
@@ -541,7 +541,7 @@ mod tests {
     fn test_cmd_parse_writes_the_rendered_source_when_asked() {
         // Given
         let args = parse_args_for(
-            "rusty_sphinx_cmd_parse_jinja_dump",
+            "rinx_cmd_parse_jinja_dump",
             "{% set page=\"doc.rst\" %}\nSource of {{ page }}.\n",
         );
         let dump = std::path::Path::new(&args[1])

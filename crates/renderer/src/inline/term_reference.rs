@@ -3,8 +3,8 @@
 use std::fmt::Write as _;
 
 use super::RefText;
-use rusty_sphinx_ast::{InventorySelector, TargetName};
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::{InventorySelector, TargetName};
+use rinx_index::ProjectIndex;
 
 use super::external_link::write_external_link;
 use crate::resolution::{resolve_external, unresolved_kind};
@@ -41,7 +41,7 @@ pub(super) fn render_inline_term_reference(
         let target_html_path = std::path::Path::new(glossary_doc_path).with_extension("html");
         let relative_path =
             pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
-        let anchor = rusty_sphinx_ast::term_id(term);
+        let anchor = rinx_ast::term_id(term);
         let href = format!("{}#{}", relative_path.display(), anchor);
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
         let _ = write!(
@@ -92,7 +92,7 @@ mod tests {
                 target: "bytecode",
                 span: None,
             },
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
             &index,
             "index.rst",
             &mut broken_links,
@@ -126,7 +126,7 @@ mod tests {
                 target: "widget",
                 span: None,
             },
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
             &index,
             "doc.rst",
             &mut broken_links,
@@ -154,7 +154,7 @@ mod tests {
                 target: "unknown",
                 span: None,
             },
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
             &index,
             "doc.rst",
             &mut broken_links,
@@ -192,7 +192,7 @@ mod tests {
                 target: "api",
                 span: None,
             },
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
             &index,
             "guide/intro.rst",
             &mut broken_links,
@@ -221,7 +221,7 @@ mod tests {
                 target: "environment",
                 span: None,
             },
-            &rusty_sphinx_ast::InventorySelector::Any,
+            &rinx_ast::InventorySelector::Any,
             &index,
             "doc.rst",
             &mut broken_links,

@@ -1,4 +1,4 @@
-//! Integration tests for Rusty Sphinx public API.
+//! Integration tests for Rinx public API.
 
 mod builder_conditionals;
 mod c_domain;

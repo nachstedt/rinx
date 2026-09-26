@@ -5,8 +5,8 @@ load("@rules_java//java:defs.bzl", "java_binary", "java_import")
 # the label stable for rules/library.bzl and rules/site.bzl, which reference
 # it as a black-box CLI executable.
 alias(
-    name = "rusty_sphinx_worker",
-    actual = "//crates/worker:rusty_sphinx_worker",
+    name = "rinx_worker",
+    actual = "//crates/worker:rinx_worker",
     visibility = ["//visibility:public"],
 )
 

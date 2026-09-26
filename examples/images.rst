@@ -17,7 +17,7 @@ Alternative text
 the deliberate spelling for a picture that carries no information of its own.
 
 .. image:: data/logo.svg
-   :alt: The rusty-sphinx logo
+   :alt: The rinx logo
 
 Sizing
 ------

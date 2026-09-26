@@ -1,11 +1,11 @@
 //! Smoke tests for the individual parse/render steps and the legacy
 //! `process_rst` single-pass entry point.
 
-use rusty_sphinx_analyzer as analyzer;
-use rusty_sphinx_ast as ast;
-use rusty_sphinx_parser as parser;
-use rusty_sphinx_renderer as renderer;
-use rusty_sphinx_worker::process_rst;
+use rinx_analyzer as analyzer;
+use rinx_ast as ast;
+use rinx_parser as parser;
+use rinx_renderer as renderer;
+use rinx_worker::process_rst;
 
 #[test]
 fn test_parser_step() {

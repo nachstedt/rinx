@@ -3,21 +3,21 @@
 //! In this crate rather than beside the listing directive that first needed
 //! it, because two phases that may not depend on each other now resolve the
 //! same names: the **renderer**, for an `.. entity-table::`'s `:filter:`, and
-//! **`rusty_sphinx_uml`**, for a diagram template's `filter()`. A filter
+//! **`rinx_uml`**, for a diagram template's `filter()`. A filter
 //! meaning one thing in a table and another in a diagram would be a bug no
 //! test in either crate could see, and a second copy of these rules is the
 //! only way to get there.
 //!
-//! `rusty_sphinx_entity::field` owns *which* names exist, because the parser
+//! `rinx_entity::field` owns *which* names exist, because the parser
 //! must check them without an index in hand. This owns what each one is
 //! *worth*, because that needs a record. Splitting the two is what keeps the
 //! parser's check and this lookup from drifting: a name that validates there
 //! resolves here, and neither side holds a second copy of the list.
 
 use crate::{EntityRecord, ProjectIndex};
-use rusty_sphinx_ast::EntityId;
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_filter::{FieldName, FieldValue, FilterSubject};
+use rinx_ast::EntityId;
+use rinx_entity::EntitySchema;
+use rinx_filter::{FieldName, FieldValue, FilterSubject};
 
 /// One entity, as a filter and a table cell see it.
 pub struct EntitySubject<'a> {

@@ -1,6 +1,6 @@
 //! Anonymous (`__`-suffixed) reference and hyperlink rendering.
 
-use rusty_sphinx_ast::Span;
+use rinx_ast::Span;
 use std::fmt::Write as _;
 
 use crate::{BrokenLink, BrokenLinkKind};

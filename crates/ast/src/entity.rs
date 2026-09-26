@@ -3,7 +3,7 @@
 //!
 //! The split matters and runs right through the codebase: this module owns the
 //! **instance** data — the id, the parsed attribute values, the section node
-//! trees — while `rusty_sphinx_entity` owns the **meta-model** that describes
+//! trees — while `rinx_entity` owns the **meta-model** that describes
 //! what an instance may contain. It has to fall this way round, because the
 //! meta-model crate depends on this one; the reverse would be a cycle.
 //!

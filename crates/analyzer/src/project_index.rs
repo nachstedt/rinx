@@ -1,6 +1,6 @@
-use rusty_sphinx_ast::Document;
-use rusty_sphinx_entity::EntitySchema;
-use rusty_sphinx_index::ProjectIndex;
+use rinx_ast::Document;
+use rinx_entity::EntitySchema;
+use rinx_index::ProjectIndex;
 
 use super::document_index::analyze;
 use super::entity_index::{
@@ -9,7 +9,7 @@ use super::entity_index::{
 use super::entity_update_apply::apply_entity_updates;
 use super::page_order::collect_page_order;
 use super::section_numbering::assign_section_numbers;
-use rusty_sphinx_toctree::expand_toctree;
+use rinx_toctree::expand_toctree;
 
 use std::collections::BTreeSet;
 
@@ -21,7 +21,7 @@ use std::collections::BTreeSet;
 /// numbering and page order cannot start until the roots are chosen.
 ///
 /// `root_doc` is the configured root document, without its `.rst` extension
-/// (`rusty_sphinx.toml`'s `root_doc`). It falls back to the inferred roots
+/// (`rinx.toml`'s `root_doc`). It falls back to the inferred roots
 /// when it names no document that exists, so a project that never configured
 /// one keeps building.
 #[must_use]
@@ -100,8 +100,8 @@ fn merge_document_analyses(docs: &[Document]) -> (ProjectIndex, Vec<super::Docum
                 diagnostics: conflicts
                     .duplicate_entity_ids
                     .iter()
-                    .map(|clash| rusty_sphinx_ast::Diagnostic {
-                        code: rusty_sphinx_ast::DiagnosticCode::EntityDuplicateId,
+                    .map(|clash| rinx_ast::Diagnostic {
+                        code: rinx_ast::DiagnosticCode::EntityDuplicateId,
                         message: clash.message(),
                         span: None,
                     })
@@ -140,7 +140,7 @@ fn find_root_documents(docs: &[Document], index: &ProjectIndex, root_doc: &str) 
             for target in targets {
                 // A `self` entry names its own document, which must not make
                 // that document a non-root.
-                if let rusty_sphinx_toctree::TocTarget::Document { docname, .. } = target
+                if let rinx_toctree::TocTarget::Document { docname, .. } = target
                     && docname != *owner
                 {
                     referenced.insert(docname);
@@ -213,7 +213,7 @@ mod tests {
     fn test_find_root_documents_does_not_treat_a_self_entry_as_a_reference() {
         // Given — a root listing itself with `self` is still a root.
         let mut toctree = toctree_of(&["child"]);
-        toctree.entries.push(rusty_sphinx_ast::TocEntry::SelfRef {
+        toctree.entries.push(rinx_ast::TocEntry::SelfRef {
             title: None,
             span: None,
         });
@@ -253,7 +253,7 @@ mod tests {
     fn test_build_project_index_registers_a_toctree_name_as_a_target() {
         // Given — `:name:` makes the toctree itself referenceable.
         let mut toctree = toctree_of(&["child"]);
-        toctree.options.name = Some(rusty_sphinx_ast::TargetName::new("main-toc"));
+        toctree.options.name = Some(rinx_ast::TargetName::new("main-toc"));
         let docs = vec![
             Document::new(
                 "index.rst".to_string(),
@@ -267,10 +267,8 @@ mod tests {
 
         // Then
         assert_eq!(
-            index
-                .targets
-                .get(&rusty_sphinx_ast::TargetName::new("main-toc")),
-            Some(&rusty_sphinx_index::TargetLocation::Internal(
+            index.targets.get(&rinx_ast::TargetName::new("main-toc")),
+            Some(&rinx_index::TargetLocation::Internal(
                 "index.rst".to_string()
             ))
         );
@@ -279,20 +277,20 @@ mod tests {
     /// A toctree of plain document entries, the shape every test here needs.
     /// Entry spans are irrelevant to these tests, so they are left unset
     /// rather than invented.
-    fn toctree_of(docnames: &[&str]) -> rusty_sphinx_ast::Toctree {
-        rusty_sphinx_ast::Toctree {
+    fn toctree_of(docnames: &[&str]) -> rinx_ast::Toctree {
+        rinx_ast::Toctree {
             entries: docnames
                 .iter()
-                .map(|docname| rusty_sphinx_ast::TocEntry::Document {
+                .map(|docname| rinx_ast::TocEntry::Document {
                     title: None,
                     docname: (*docname).to_string(),
                     span: None,
                 })
                 .collect(),
-            options: rusty_sphinx_ast::ToctreeOptions::default(),
+            options: rinx_ast::ToctreeOptions::default(),
         }
     }
-    use rusty_sphinx_ast::{Directive, Node};
+    use rinx_ast::{Directive, Node};
 
     // The nesting, cycle-breaking and shared-branch cases this module used to
     // assert on a pre-flattened `nav_tree` now belong to the two phases that
@@ -332,7 +330,7 @@ mod tests {
     fn test_build_project_index_numbers_a_numbered_toctree() {
         // Given
         let mut toctree = toctree_of(&["guide"]);
-        toctree.options.numbered = Some(rusty_sphinx_ast::NumberedDepth::Unlimited);
+        toctree.options.numbered = Some(rinx_ast::NumberedDepth::Unlimited);
         let docs = vec![
             Document::new(
                 "index.rst".to_string(),

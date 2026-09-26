@@ -6,7 +6,7 @@
 //! everywhere — would let a typo'd section silently render as nothing, which
 //! is the degradation this whole diagnostic set exists to catch.
 
-use rusty_sphinx_ast::{Diagnostic, DiagnosticCode, Directive, Node, Span};
+use rinx_ast::{Diagnostic, DiagnosticCode, Directive, Node, Span};
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;

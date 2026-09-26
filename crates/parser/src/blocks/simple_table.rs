@@ -1,6 +1,6 @@
 //! Parsing for RST *simple tables* — the whitespace-column `=====  =====`
 //! syntax, as opposed to the `+---+---+` ASCII art handled by
-//! [`super::table`]. Both produce the same [`rusty_sphinx_ast::Node::Table`].
+//! [`super::table`]. Both produce the same [`rinx_ast::Node::Table`].
 //!
 //! The structure follows docutils' `SimpleTableParser`, including its central
 //! trick: the top border, the header/body rule and the bottom border are all

@@ -1,7 +1,7 @@
 Smart Typography
 =================
 
-Rusty-Sphinx automatically converts a few plain-text punctuation patterns
+Rinx automatically converts a few plain-text punctuation patterns
 into their typographic equivalents, mirroring Sphinx's default
 ``smartquotes`` behavior.
 

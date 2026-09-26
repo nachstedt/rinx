@@ -21,16 +21,16 @@ use crate::RenderCtx;
 /// options can't be forgotten here.
 ///
 /// The body renders under whatever scope this object establishes (see
-/// [`rusty_sphinx_ast::DomainObjectBody::deduce_local_scope`]), popped again
+/// [`rinx_ast::DomainObjectBody::deduce_local_scope`]), popped again
 /// afterwards so it can't leak into later siblings — the analyzer's
 /// `index_domain_object` applies the same scope to keep index keys and
 /// anchor `id`s in agreement.
 pub(crate) fn render_domain_object(
     html: &mut String,
-    obj: &rusty_sphinx_ast::DomainObjectBody,
+    obj: &rinx_ast::DomainObjectBody,
     ctx: &mut RenderCtx<'_>,
 ) {
-    if let rusty_sphinx_ast::DomainObjectBody::StdCmdoption { signatures, body } = obj {
+    if let rinx_ast::DomainObjectBody::StdCmdoption { signatures, body } = obj {
         render_cmdoption(html, signatures, body, ctx);
         return;
     }
@@ -40,7 +40,7 @@ pub(crate) fn render_domain_object(
     // A `py:module`'s own name is never qualified against the *previous*
     // module: real Sphinx always writes it in full and sets it verbatim as
     // the new current module, matching `index_domain_object` in the analyzer.
-    let is_module = matches!(obj, rusty_sphinx_ast::DomainObjectBody::PyModule { .. });
+    let is_module = matches!(obj, rinx_ast::DomainObjectBody::PyModule { .. });
     // Every `c`-domain object qualifies against `ctx.scope.c` instead of
     // `ctx.scope.python` — mirrors the analyzer's `index_domain_object`
     // exactly, so anchor `id`s never drift from the index keys. See that
@@ -48,12 +48,12 @@ pub(crate) fn render_domain_object(
     // `c:macro` joined this set.
     let uses_c_scope = matches!(
         obj,
-        rusty_sphinx_ast::DomainObjectBody::CStruct { .. }
-            | rusty_sphinx_ast::DomainObjectBody::CUnion { .. }
-            | rusty_sphinx_ast::DomainObjectBody::CMember { .. }
-            | rusty_sphinx_ast::DomainObjectBody::CType { .. }
-            | rusty_sphinx_ast::DomainObjectBody::CFunction { .. }
-            | rusty_sphinx_ast::DomainObjectBody::CMacro { .. }
+        rinx_ast::DomainObjectBody::CStruct { .. }
+            | rinx_ast::DomainObjectBody::CUnion { .. }
+            | rinx_ast::DomainObjectBody::CMember { .. }
+            | rinx_ast::DomainObjectBody::CType { .. }
+            | rinx_ast::DomainObjectBody::CFunction { .. }
+            | rinx_ast::DomainObjectBody::CMacro { .. }
     );
     // The `:module:` option: overrides `ctx.scope.python`'s current module
     // for the duration of this whole call — this object's own (and its
@@ -104,7 +104,7 @@ pub(crate) fn render_domain_object(
         if obj.no_index() {
             let _ = write!(html, "  <dt>");
         } else {
-            let key = rusty_sphinx_ast::build_domain_object_key(object_type, &qualified_name);
+            let key = rinx_ast::build_domain_object_key(object_type, &qualified_name);
             let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
             let _ = write!(html, "  <dt id=\"{id_attr}\">");
         }
@@ -148,9 +148,9 @@ pub(crate) fn render_domain_object(
 /// `py:attribute`'s `type`/`value`/`canonical`) as leading `<dd>` paragraphs.
 /// Object types with no such options (`py:function`, `c:function`,
 /// `c:macro`, `py:method`, `py:class`, `py:exception`) render nothing here.
-fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::DomainObjectBody) {
+fn render_domain_object_options(html: &mut String, obj: &rinx_ast::DomainObjectBody) {
     match obj {
-        rusty_sphinx_ast::DomainObjectBody::PyModule {
+        rinx_ast::DomainObjectBody::PyModule {
             platform,
             synopsis,
             deprecated,
@@ -174,7 +174,7 @@ fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::Domai
                 let _ = write!(html, "<p class=\"deprecated\">Deprecated.</p>");
             }
         }
-        rusty_sphinx_ast::DomainObjectBody::PyData { type_, value, .. } => {
+        rinx_ast::DomainObjectBody::PyData { type_, value, .. } => {
             if let Some(type_) = type_ {
                 let _ = write!(
                     html,
@@ -190,7 +190,7 @@ fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::Domai
                 );
             }
         }
-        rusty_sphinx_ast::DomainObjectBody::PyAttribute {
+        rinx_ast::DomainObjectBody::PyAttribute {
             type_,
             value,
             canonical,
@@ -218,17 +218,17 @@ fn render_domain_object_options(html: &mut String, obj: &rusty_sphinx_ast::Domai
                 );
             }
         }
-        rusty_sphinx_ast::DomainObjectBody::PyFunction { .. }
-        | rusty_sphinx_ast::DomainObjectBody::CFunction { .. }
-        | rusty_sphinx_ast::DomainObjectBody::CMacro { .. }
-        | rusty_sphinx_ast::DomainObjectBody::CStruct { .. }
-        | rusty_sphinx_ast::DomainObjectBody::CUnion { .. }
-        | rusty_sphinx_ast::DomainObjectBody::CMember { .. }
-        | rusty_sphinx_ast::DomainObjectBody::CType { .. }
-        | rusty_sphinx_ast::DomainObjectBody::PyMethod { .. }
-        | rusty_sphinx_ast::DomainObjectBody::PyClass { .. }
-        | rusty_sphinx_ast::DomainObjectBody::PyException { .. }
-        | rusty_sphinx_ast::DomainObjectBody::StdCmdoption { .. } => {}
+        rinx_ast::DomainObjectBody::PyFunction { .. }
+        | rinx_ast::DomainObjectBody::CFunction { .. }
+        | rinx_ast::DomainObjectBody::CMacro { .. }
+        | rinx_ast::DomainObjectBody::CStruct { .. }
+        | rinx_ast::DomainObjectBody::CUnion { .. }
+        | rinx_ast::DomainObjectBody::CMember { .. }
+        | rinx_ast::DomainObjectBody::CType { .. }
+        | rinx_ast::DomainObjectBody::PyMethod { .. }
+        | rinx_ast::DomainObjectBody::PyClass { .. }
+        | rinx_ast::DomainObjectBody::PyException { .. }
+        | rinx_ast::DomainObjectBody::StdCmdoption { .. } => {}
     }
 }
 

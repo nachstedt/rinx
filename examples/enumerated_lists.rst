@@ -43,7 +43,7 @@ Enumerator Formats
 ------------------
 
 The same three formats docutils recognises. Unlike Sphinx — which drops the
-punctuation and renders all three identically — rusty-sphinx keeps it, so the
+punctuation and renders all three identically — rinx keeps it, so the
 notation you write is the notation the reader sees.
 
 Suffixed with a period:

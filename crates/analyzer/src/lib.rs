@@ -7,7 +7,7 @@
 //! `document_index` does the per-document walk (and delegates domain objects
 //! to `domain_object_index` and toctrees to `nav_tree`); `project_index`
 //! merges every document's result into the one global index.
-//! `rusty_sphinx_ast`'s `normalize_path`, re-exported below, resolves the
+//! `rinx_ast`'s `normalize_path`, re-exported below, resolves the
 //! `.`/`..` components in the document paths a toctree may name.
 
 mod document_index;
@@ -22,10 +22,10 @@ mod project_index;
 mod section_numbering;
 
 pub use document_index::analyze;
-// `normalize_path` lives in `rusty_sphinx_ast`, which is the only crate both
+// `normalize_path` lives in `rinx_ast`, which is the only crate both
 // its callers — toctree entry resolution and image URI resolution — are
 // allowed to share; re-exported here so the worker's existing import keeps
 // working.
 pub use nav_diagnostics::DocumentDiagnostics;
 pub use project_index::{ProjectIndexBuild, build_project_index, build_project_index_reporting};
-pub use rusty_sphinx_toctree::normalize_path;
+pub use rinx_toctree::normalize_path;

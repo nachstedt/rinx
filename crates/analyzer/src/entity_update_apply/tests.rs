@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     AttributeValue, EntityId, EntityUpdate, EntityUpdateSource, FieldMutation, FieldMutationMode,
     Position, Span, UpdateTarget,
 };
-use rusty_sphinx_entity::{NoReservedNames, load_schema};
-use rusty_sphinx_index::{EntityRecord, EntityUpdateRecord, ProjectIndex};
+use rinx_entity::{NoReservedNames, load_schema};
+use rinx_index::{EntityRecord, EntityUpdateRecord, ProjectIndex};
 
 use super::*;
 
@@ -80,7 +80,7 @@ fn update_record(
     strict: bool,
 ) -> EntityUpdateRecord {
     let candidate_id = EntityId::new(target_raw).ok();
-    let filter = rusty_sphinx_filter::parse_filter(target_raw).ok();
+    let filter = rinx_filter::parse_filter(target_raw).ok();
     let mut update = EntityUpdate::new(
         EntityUpdateSource::EntityUpdate,
         UpdateTarget {

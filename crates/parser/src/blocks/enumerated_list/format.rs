@@ -5,7 +5,7 @@
 
 use crate::indent::indent_width;
 use crate::indent::strip_indent;
-use rusty_sphinx_ast::{Enumerator, EnumeratorFormat, EnumeratorSequence};
+use rinx_ast::{Enumerator, EnumeratorFormat, EnumeratorSequence};
 
 /// A line's enumerator, as recognised by [`detect_enumerator`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

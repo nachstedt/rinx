@@ -10,7 +10,7 @@
 starting with `>>> `). Together they were the largest cluster of unsupported
 directives in the CPython benchmark corpus.
 
-They are unusual among the constructs rusty-sphinx implements, because they have
+They are unusual among the constructs rinx implements, because they have
 two halves with completely different requirements:
 
 - **Rendering** is pure. The directive carries its content literally in the
@@ -40,18 +40,18 @@ the entire reason `make doctest` exists.
 
 Split the two halves across Bazel's build/test line.
 
-**Rendering happens in the normal pipeline.** `rusty_sphinx_library` parses these
-directives and `rusty_sphinx_site` renders them, exactly like any other block. No
+**Rendering happens in the normal pipeline.** `rinx_library` parses these
+directives and `rinx_site` renders them, exactly like any other block. No
 interpreter is involved.
 
-**Execution is `rusty_sphinx_doctest_tests`**, an opt-in macro emitting one stock
-`py_test` per `rusty_sphinx_library`. The Python toolchain is a dependency of
+**Execution is `rinx_doctest_tests`**, an opt-in macro emitting one stock
+`py_test` per `rinx_library`. The Python toolchain is a dependency of
 those test targets only; `tests/test_doctest_isolation.sh` turns that from a
 design intention into a checked invariant.
 
 **`scripts/doctest_runner.py` drives CPython's stdlib `doctest`** rather than
 reimplementing its comparison semantics, the same way PlantUML diagrams are
-compiled by `plantuml.jar` — rusty-sphinx does not own that language either. It
+compiled by `plantuml.jar` — rinx does not own that language either. It
 reproduces Sphinx's own deviations from the stdlib: `doctest_default_flags`, one
 namespace per group, a failed setup skipping its group, `:pyversion:` compared
 against the *running* interpreter, `:skipif:` evaluated in a context built from
@@ -61,7 +61,7 @@ global setup then global cleanup, and `DONT_ACCEPT_BLANKLINE` forced on for
 ### The cache firewall
 
 Between the two halves sits an `extract_doctests` build action, declared per
-document by `rusty_sphinx_library` (`crates/worker/src/doctest_plan.rs`). It
+document by `rinx_library` (`crates/worker/src/doctest_plan.rs`). It
 projects the AST down to a `.doctests.json` plan holding **only what changes how
 the code runs** — never `:hide:`, never the trim tri-state, never line numbers.
 
@@ -76,7 +76,7 @@ site never produces them.
 
 ### One test target per library
 
-`rusty_sphinx_library` is the unit of ownership everywhere else in this ruleset,
+`rinx_library` is the unit of ownership everywhere else in this ruleset,
 mirroring `cc_library`, and the doctest macro follows it. Someone who wants finer
 granularity splits the library — which is what they would do for any other reason
 too. `examples/BUILD.bazel` demonstrates this: the one document with executable
@@ -131,8 +131,8 @@ oracle.
 
 ## Consequences
 
-- **Doctests are opt-in.** A `rusty_sphinx_library` without a matching
-  `rusty_sphinx_doctest_tests` target has its examples rendered but never run.
+- **Doctests are opt-in.** A `rinx_library` without a matching
+  `rinx_doctest_tests` target has its examples rendered but never run.
   This is deliberate: adding a Python toolchain requirement must be the user's
   choice.
 - **A code edit in one document re-runs its library's other documents.** The

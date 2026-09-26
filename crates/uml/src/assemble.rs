@@ -9,7 +9,7 @@
 //! the SVG. Two copies of this would be two populations of diagram hashes, and
 //! the whole point of one pipeline is that there is only ever one.
 
-use rusty_sphinx_ast::HashedContent;
+use rinx_ast::HashedContent;
 
 use crate::context::UmlContext;
 
@@ -128,8 +128,8 @@ fn wrapped(text: &str, preamble: Option<&str>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rusty_sphinx_entity::EntitySchema;
-    use rusty_sphinx_index::ProjectIndex;
+    use rinx_entity::EntitySchema;
+    use rinx_index::ProjectIndex;
 
     #[test]
     fn test_drew_nothing_discounts_only_the_markers() {

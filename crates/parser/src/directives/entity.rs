@@ -14,11 +14,11 @@
 
 use std::collections::BTreeMap;
 
-use rusty_sphinx_ast::{
+use rinx_ast::{
     AttributeValue, Diagnostic, DiagnosticCode, Directive, EntityBody, EntityId, EntitySection,
     Node, Span,
 };
-use rusty_sphinx_entity::{EntityType, ID_OPTION, IdContext};
+use rinx_entity::{EntityType, ID_OPTION, IdContext};
 
 use super::entity_fields::{
     apply_defaults, collect_relation_targets, describe_options, report_id_pattern,
@@ -259,7 +259,7 @@ fn fallback_id(type_name: &str, doc_path: &str, discriminator: u32) -> EntityId 
         doc_path,
         discriminator,
     };
-    rusty_sphinx_entity::IdSpec::default()
+    rinx_entity::IdSpec::default()
         .derive(&context)
         .unwrap_or_else(|_| {
             EntityId::new("entity").expect("a constant fallback id is always legal")

@@ -7,7 +7,7 @@ use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::{indent_width, strip_indent};
-use rusty_sphinx_ast::{Node, OptionArgument, OptionArgumentDelimiter, OptionListItem, OptionSpec};
+use rinx_ast::{Node, OptionArgument, OptionArgumentDelimiter, OptionListItem, OptionSpec};
 
 /// The docutils `option_marker` transition pattern (`parsers/rst/states.py`),
 /// ported character-for-character from its `pats` fragments:
@@ -265,7 +265,7 @@ pub(super) fn try_parse_option_list(
 mod tests {
     use super::*;
     use crate::parse;
-    use rusty_sphinx_ast::InlineNode;
+    use rinx_ast::InlineNode;
 
     #[test]
     fn test_detect_option_marker_rejects_a_bullet_item() {

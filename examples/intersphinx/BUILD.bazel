@@ -13,10 +13,10 @@ Both directions are shown, and neither touches the network while building:
 """
 
 load(
-    "@rusty_sphinx//:defs.bzl",
-    "rusty_sphinx_inventory",
-    "rusty_sphinx_library",
-    "rusty_sphinx_site",
+    "@rinx//:defs.bzl",
+    "rinx_inventory",
+    "rinx_library",
+    "rinx_site",
 )
 
 # A pinned third-party inventory. A real project would more likely fetch it
@@ -24,14 +24,14 @@ load(
 # a vendored file keeps the example buildable offline. The base URL names the
 # same version the file was cut from, so every link lands on a page that has
 # the anchor.
-rusty_sphinx_inventory(
+rinx_inventory(
     name = "python",
     src = "python.inv",
     base_url = "https://docs.python.org/3.13/",
     visibility = ["//examples:__pkg__"],
 )
 
-rusty_sphinx_library(
+rinx_library(
     name = "docs",
     srcs = ["index.rst"],
     visibility = ["//examples:__pkg__"],
@@ -47,7 +47,7 @@ filegroup(
     output_group = "inventory",
 )
 
-rusty_sphinx_inventory(
+rinx_inventory(
     name = "examples_site",
     src = ":site_objects_inv",
     # Relative to this site's root: in `bazel-bin` the two sites' output
@@ -59,12 +59,12 @@ rusty_sphinx_inventory(
     inventory_name = "examples",
 )
 
-rusty_sphinx_library(
+rinx_library(
     name = "sibling_docs",
     srcs = ["sibling/index.rst"],
 )
 
-rusty_sphinx_site(
+rinx_site(
     name = "sibling_site",
     inventories = [":examples_site"],
     strict_links = True,

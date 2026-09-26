@@ -1,5 +1,5 @@
-use rusty_sphinx_ast::{Directive, EntityFlow, EntityFlowSource, FlowDirection, ImageAlign, Node};
-use rusty_sphinx_entity::{EntitySchema, NoReservedNames, load_schema};
+use rinx_ast::{Directive, EntityFlow, EntityFlowSource, FlowDirection, ImageAlign, Node};
+use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
 use crate::context::ParseCtx;
 use crate::parse_with_ctx;
@@ -41,9 +41,9 @@ fn schema() -> EntitySchema {
     .expect("the test schema should load")
 }
 
-fn parse(rst: &str) -> rusty_sphinx_ast::Document {
+fn parse(rst: &str) -> rinx_ast::Document {
     let schema = schema();
-    let ctx = ParseCtx::with_domain(rusty_sphinx_ast::Domain::Py).with_schema(&schema);
+    let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py).with_schema(&schema);
     parse_with_ctx("specs/boot", rst, &ctx)
 }
 
@@ -122,7 +122,7 @@ fn test_a_filter_is_parsed_while_the_option_line_is_still_in_hand() {
     // Then
     assert_eq!(
         flow.filter,
-        Some(rusty_sphinx_filter::parse_filter("status == \"open\"").unwrap())
+        Some(rinx_filter::parse_filter("status == \"open\"").unwrap())
     );
     assert_eq!(codes(rst), Vec::<String>::new());
 }

@@ -11,9 +11,9 @@ A figure with a caption
 The body's first paragraph becomes the caption.
 
 .. figure:: data/logo.svg
-   :alt: The rusty-sphinx logo
+   :alt: The rinx logo
 
-   The rusty-sphinx logo, drawn in **four** shapes.
+   The rinx logo, drawn in **four** shapes.
 
 A caption and a legend
 ----------------------
@@ -22,7 +22,7 @@ Everything after the caption is the legend, and it may hold any body content
 at all — paragraphs, lists, even another directive.
 
 .. figure:: data/logo.svg
-   :alt: The rusty-sphinx logo
+   :alt: The rinx logo
    :width: 100px
 
    The logo at 100 pixels wide.
@@ -40,7 +40,7 @@ An empty comment as the first body element tells docutils that the paragraph
 following it is legend rather than caption.
 
 .. figure:: data/logo.svg
-   :alt: The rusty-sphinx logo
+   :alt: The rinx logo
 
    ..
 

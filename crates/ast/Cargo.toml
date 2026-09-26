@@ -1,12 +1,12 @@
 [package]
-name = "rusty_sphinx_ast"
+name = "rinx_ast"
 version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-rusty_sphinx_cdecl = { path = "../cdecl" }
-rusty_sphinx_filter = { path = "../filter" }
-rusty_sphinx_inventory = { path = "../inventory" }
+rinx_cdecl = { path = "../cdecl" }
+rinx_filter = { path = "../filter" }
+rinx_inventory = { path = "../inventory" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.11.0"

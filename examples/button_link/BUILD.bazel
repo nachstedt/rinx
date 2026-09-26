@@ -11,9 +11,9 @@ library of its own for anything it draws: a button is ordinary HTML, so there
 is no `diagrams = True` split here.
 """
 
-load("@rusty_sphinx//:defs.bzl", "rusty_sphinx_library")
+load("@rinx//:defs.bzl", "rinx_library")
 
-rusty_sphinx_library(
+rinx_library(
     name = "docs",
     srcs = glob(["*.rst"]),
     deps = [],
