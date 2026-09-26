@@ -33,7 +33,8 @@ pub(in crate::directives) struct OptionLine {
 
 /// Splits the leading `:option:` lines off an already-unindented directive
 /// body, returning them plus the index of the first line that isn't an option
-/// (where the real body content starts).
+/// (where the real body content starts). The option block is the run of lines
+/// directly below the directive and ends at the first blank line.
 ///
 /// A line whose closing colon is missing (`:oops`) is still returned, with the
 /// whole remainder as its `name`, so that it reaches the caller's
@@ -52,26 +53,26 @@ pub(in crate::directives) fn scan_option_lines(
 ) -> (Vec<OptionLine>, usize) {
     let mut options: Vec<OptionLine> = Vec::new();
     let mut index = 0;
-    // Whether the line just consumed belonged to an option, with no blank line
-    // since. A continuation must follow its own option *immediately*: a blank
-    // line ends the field body, so indented text after one is the directive's
-    // content, which is exactly how a `.. code-block:: :dedent:` writes an
-    // indented first line.
-    let mut in_option = false;
     while index < unindented_lines.len() {
         let raw_line = &unindented_lines[index];
         let line = raw_line.trim();
+        // A blank line ends the option block for good: docutils reads options
+        // only from the lines directly below the directive, so everything
+        // after one is content — indented text (how a `.. code-block::
+        // :dedent:` writes its first line) and `:role:`-looking lines (how a
+        // code block showing roles writes its) alike.
         if line.is_empty() {
-            in_option = false;
-            index += 1;
-            continue;
+            while unindented_lines
+                .get(index)
+                .is_some_and(|blank| blank.trim().is_empty())
+            {
+                index += 1;
+            }
+            break;
         }
         // An indented line continues the option above it; with no option
-        // directly above it, it is body content and the option block is over.
+        // above it, it is body content and the option block is over.
         if raw_line.starts_with(char::is_whitespace) {
-            if !in_option {
-                break;
-            }
             let Some(previous) = options.last_mut() else {
                 break;
             };
@@ -97,7 +98,6 @@ pub(in crate::directives) fn scan_option_lines(
             raw: line.to_string(),
             line_index: index,
         });
-        in_option = true;
         index += 1;
     }
     (options, index)
@@ -314,6 +314,35 @@ mod tests {
         // Then
         assert_eq!(options.len(), 1);
         assert_eq!(options[0].value, "2");
+        assert_eq!(body_start, 2);
+    }
+
+    #[test]
+    fn test_scan_option_lines_reads_no_option_after_the_blank_line_opening_the_content() {
+        // Given — docutils reads options only from the lines directly below
+        // the directive, so after a blank line a `:role:`-looking line is
+        // content: a code block showing roles writes exactly this
+        let body = lines(&["", ":ref:`label`", ":term:`word`"]);
+
+        // When
+        let (options, body_start) = scan_option_lines(&body);
+
+        // Then
+        assert!(options.is_empty());
+        assert_eq!(body_start, 1);
+    }
+
+    #[test]
+    fn test_scan_option_lines_reads_no_option_after_the_blank_line_ending_the_options() {
+        // Given
+        let body = lines(&[":caption: Roles", "", ":ref:`label`"]);
+
+        // When
+        let (options, body_start) = scan_option_lines(&body);
+
+        // Then
+        assert_eq!(options.len(), 1);
+        assert_eq!(options[0].name, "caption");
         assert_eq!(body_start, 2);
     }
 
