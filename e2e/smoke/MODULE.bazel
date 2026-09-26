@@ -1,0 +1,16 @@
+"""A minimal project consuming rinx as a dependency.
+
+rinx's own examples build it as the *root* module, which hides everything that
+only goes wrong across a module boundary: root-only toolchain registration, a
+flag set in rinx's `.bazelrc`, a label resolved against the wrong repository.
+This module builds a small site the way a user's project would, and is the test
+module the Bazel Central Registry's presubmit runs.
+"""
+
+module(name = "rinx_smoke")
+
+bazel_dep(name = "rinx")
+local_path_override(
+    module_name = "rinx",
+    path = "../..",
+)

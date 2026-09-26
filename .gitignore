@@ -3,6 +3,10 @@
 
 # Bazel
 /bazel-*
+# The smoke module resolves against the rinx checkout it sits in, so a pinned
+# lockfile would only go stale.
+/e2e/*/bazel-*
+/e2e/*/MODULE.bazel.lock
 
 # Benchmark run output
 /benchmark_result.txt

@@ -104,6 +104,12 @@ jobs:
     - name: Run intersphinx test
       run: ./tests/test_intersphinx.sh
 
+    # rinx as a dependency of another module, the shape the Bazel Central
+    # Registry's presubmit checks and every user has.
+    - name: Build and test the smoke module
+      working-directory: e2e/smoke
+      run: bazel test //...
+
   vscode_extension:
     runs-on: ubuntu-latest
     steps:
