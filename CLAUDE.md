@@ -23,6 +23,7 @@ cargo fmt
 bazel build //:rinx    # build the CLI binary via Bazel
 bazel build //examples:site           # build the example multi-team site end-to-end
 bazel build //examples/team_a:docs    # build one team's library in isolation
+bazel build //docs:site               # rinx's own documentation, built by rinx and deployed to GitHub Pages (.github/workflows/pages.yml)
 bash tests/test_strict_deps.sh        # verifies Bazel fails the build when a toctree dep is missing from BUILD.bazel
 bash tests/test_strict_links.sh       # verifies broken links only warn by default, and fail the build when strict_links = True
 bash tests/test_diagram_cache_firewall.sh  # verifies an edit elsewhere does not restart the PlantUML JVM, and a diagram edit does
@@ -30,8 +31,8 @@ bash tests/test_diagram_opt_in.sh     # verifies a diagram in a library without 
 bash tests/test_intersphinx.sh        # verifies a site links into another through its objects.inv, and that `inventories` is load-bearing
 bazel build //examples/intersphinx:sibling_site  # a second site linking into //examples:site through its objects.inv
 (cd e2e/smoke && bazel test //...)       # rinx consumed as a dependency by another module — what the BCR presubmit (.bcr/) runs
-bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.md)
-bazel run //scripts:benchmark_entities  # benchmark the entity model against useblocks' sphinx-needs demo (see docs/benchmark.md)
+bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.rst)
+bazel run //scripts:benchmark_entities  # benchmark the entity model against useblocks' sphinx-needs demo (see docs/benchmark.rst)
 
 CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency
 ```
@@ -206,7 +207,7 @@ wrote. Four things to know:
   field carrying a real value is still reported. Measured against the benchmark
   corpus, where the alternative was 19 spurious names per need.
 
-### Inventories (`docs/decisions/023-inventories.md`, `docs/intersphinx.md`)
+### Inventories (`docs/decisions/023-inventories.md`, `docs/intersphinx.rst`)
 
 Every site writes an `objects.inv` (`commands/inventory.rs`, a projection of
 `ProjectIndex` using the renderer's own anchor functions), and links into
@@ -283,11 +284,11 @@ end of `ParseCtx::position`, which is why that returns a `SourcePoint` (a
 position *and* its file) and why building a `Span` now lives on
 `SourcePoint::to`.
 
-### Entities: a project's own construct vocabulary (`docs/entities.md`, `docs/decisions/009-entities.md`)
+### Entities: a project's own construct vocabulary (`docs/entities.rst`, `docs/decisions/009-entities.md`)
 
 A project declares its own entity types — `.. req::`, `.. audit-event::`,
 whatever it names — in a schema file, and the build treats them as first-class
-constructs. `docs/entities.md` is the guide; the two things to know before
+constructs. `docs/entities.rst` is the guide; the two things to know before
 touching the code:
 
 - **Four kinds of declaration, and they are not interchangeable.**
@@ -520,7 +521,11 @@ Templates are rendered with MiniJinja (chosen over compile-time Rust templates o
 
 ### Live preview / LSP direction
 
-`editors/vscode/` (`src/extension.ts`, `src/bazel.ts`) is a working VS Code extension implementing the architecture described in `docs/vscode.md`: a webview panel spawns the `preview` subcommand (parse+locally-analyze+merge-into-stale-global-index+render, all in-process in `crates/worker/src/commands/preview.rs::process_preview`) on every edit (debounced) or on save, per the `rinx.previewMode` setting. `bazel.ts`'s `BazelScanner` auto-discovers the site's config/template/index paths by `bazel query`-ing for a `rinx_site` target and resolving its `config`/`template` labels to filesystem paths (falling back to the `rinx.*` settings if discovery is disabled or fails), and `BazelConfigCache` invalidates that discovery when `BUILD`/`WORKSPACE`/`MODULE.bazel` files change. Not yet implemented: the background-`bazel build`-to-reconcile-global-state step from the design doc (titles/cross-refs go stale until a manual rebuild), the LSP server itself (`rinx_lsp` crate), and PlantUML rendering in the preview. Keep this flow in mind when touching `rinx_index::ProjectIndex::merge` or the `preview` subcommand — both exist specifically to support it.
+`editors/vscode/` (`src/extension.ts`, `src/bazel.ts`) is a working VS Code extension implementing the architecture described in `docs/vscode.rst`: a webview panel spawns the `preview` subcommand (parse+locally-analyze+merge-into-stale-global-index+render, all in-process in `crates/worker/src/commands/preview.rs::process_preview`) on every edit (debounced) or on save, per the `rinx.previewMode` setting. `bazel.ts`'s `BazelScanner` auto-discovers the site's config/template/index paths by `bazel query`-ing for a `rinx_site` target and resolving its `config`/`template` labels to filesystem paths (falling back to the `rinx.*` settings if discovery is disabled or fails), and `BazelConfigCache` invalidates that discovery when `BUILD`/`WORKSPACE`/`MODULE.bazel` files change. Not yet implemented: the background-`bazel build`-to-reconcile-global-state step from the design doc (titles/cross-refs go stale until a manual rebuild), the LSP server itself (`rinx_lsp` crate), and PlantUML rendering in the preview. Keep this flow in mind when touching `rinx_index::ProjectIndex::merge` or the `preview` subcommand — both exist specifically to support it.
+
+### Documentation site (`docs/`)
+
+The user guides in `docs/` are reStructuredText, and `//docs:site` builds them with rinx itself — the project's own dogfooding check, with `strict_links = True` so a broken reference fails CI. `.github/workflows/pages.yml` publishes it to <https://nachstedt.github.io/rinx/> together with `//examples:site` under `/example-site/`. Only the guides are pages: `docs/decisions/` (ADRs) and `docs/dev/` (developer notes) stay Markdown and are linked on GitHub. A page is written only with constructs rinx supports — notably no `:doc:` (use a `.. _label:` and `:ref:`) and no footnotes. A new user-facing feature belongs on `docs/syntax.rst` or in the guide it extends, as well as in `examples/`.
 
 ### Spec coverage
 

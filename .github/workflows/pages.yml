@@ -1,0 +1,72 @@
+# Builds rinx's documentation with rinx and publishes it to GitHub Pages.
+#
+# Each site's pages keep their package path (docs/…, examples/…) under a root
+# holding that site's genindex.html, stylesheet and objects.inv, so the two
+# sites cannot share one directory:
+#
+#   /                  the documentation (//docs:site), plus a redirect to
+#                      docs/index.html
+#   /example-site/     the example project (//examples:site)
+name: Pages
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions: {}
+
+# One deployment at a time; a newer push supersedes a queued one, but never
+# cancels one in progress.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Bazel
+      uses: bazel-contrib/setup-bazel@0.19.0
+      with:
+        bazelisk-cache: true
+        disk-cache: ${{ github.workflow }}
+        repository-cache: true
+
+    - name: Build the sites
+      run: bazel build //docs:site //examples:site
+
+    - name: Assemble the Pages directory
+      run: |
+        mkdir -p _site/example-site
+        cp -RL bazel-bin/docs/site_site_out/. _site/
+        cp -RL bazel-bin/examples/site_site_out/. _site/example-site/
+        cat > _site/index.html <<'HTML'
+        <!doctype html>
+        <meta charset="utf-8">
+        <title>rinx</title>
+        <meta http-equiv="refresh" content="0; url=docs/index.html">
+        <link rel="canonical" href="docs/index.html">
+        <p><a href="docs/index.html">rinx documentation</a></p>
+        HTML
+
+    - uses: actions/upload-pages-artifact@v5
+      with:
+        path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}docs/index.html
+    steps:
+    - id: deployment
+      uses: actions/deploy-pages@v5

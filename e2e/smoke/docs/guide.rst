@@ -3,7 +3,7 @@
 Guide
 =====
 
-A cross-reference back to :doc:`index`, and a highlighted code block:
+A cross-reference back to :ref:`the start page <smoke-index>`, and a highlighted code block:
 
 .. code-block:: python
 

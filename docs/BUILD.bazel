@@ -1,0 +1,30 @@
+"""rinx's own documentation site, built by rinx.
+
+Deployed to GitHub Pages by .github/workflows/pages.yml, together with the
+example site under examples/. The architecture decision records (decisions/)
+and the developer notes (dev/) stay Markdown for GitHub to render, and the site
+links to them there.
+"""
+
+load("//:defs.bzl", "rinx_library", "rinx_site")
+
+rinx_library(
+    name = "docs",
+    srcs = [
+        "benchmark.rst",
+        "entities.rst",
+        "getting_started.rst",
+        "index.rst",
+        "intersphinx.rst",
+        "rules.rst",
+        "syntax.rst",
+        "vscode.rst",
+    ],
+)
+
+rinx_site(
+    name = "site",
+    config = "rinx.toml",
+    strict_links = True,
+    deps = [":docs"],
+)

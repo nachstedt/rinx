@@ -102,7 +102,7 @@ thing that can separate them.
 The check applies to the **final** id, however it was determined: explicit,
 composed with `from`, generated, or imported, prefix included. That matches
 sphinx-needs, which validates the need as it ends up. A generated id is a hash
-and will rarely match a convention, so `docs/entities.md` advises
+and will rarely match a convention, so `docs/entities.rst` advises
 `required = true` beside a pattern. The loader does not require it, because a
 pattern loose enough to accept a generated id is legitimate.
 

@@ -64,6 +64,11 @@ jobs:
     - name: Build the sibling site linking into it (intersphinx)
       run: bazel build //examples/intersphinx:sibling_site
 
+    # rinx's own documentation, built with strict_links, so a broken
+    # cross-reference in it fails the pull request rather than the deployment.
+    - name: Build the documentation site
+      run: bazel build //docs:site
+
     - name: Build team_a in isolation (partial build)
       run: bazel build //examples/team_a:docs
 

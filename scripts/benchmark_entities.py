@@ -38,7 +38,7 @@ REPO_URL = "https://github.com/useblocks/sphinx-needs-demo.git"
 
 # The one place the corpus version is decided.
 #
-# A tag rather than `main`, for the reason docs/benchmark.md gives for CPython:
+# A tag rather than `main`, for the reason docs/benchmark.rst gives for CPython:
 # a benchmark against a moving branch produces numbers and warning lists that
 # change on their own, so a delta could never be attributed to a local change.
 # Unlike the CPython pin this one is one-sided — there is no interpreter to keep

@@ -17,7 +17,7 @@ and the typed links between them; CPython's `.. audit-event::`. All of these are
 the same shape — a typed, identified, attributed thing that can be referenced
 and can point at other such things — differing only in vocabulary.
 
-See `docs/entities.md` for what the feature *is*. This records why it is built
+See `docs/entities.rst` for what the feature *is*. This records why it is built
 the way it is.
 
 ## Decisions
@@ -135,7 +135,7 @@ vocabulary.
 The accepted cost is that a target type's own block says nothing about the
 back-links it will display. The schema loader therefore derives a per-type
 back-link table at load, which is where the two collision rules live — see
-`docs/entities.md`. Notably, a shared *outgoing* name constrains nothing; only
+`docs/entities.rst`. Notably, a shared *outgoing* name constrains nothing; only
 names that meet on a shared target do.
 
 There is deliberately no reserved-word rule for back-link names. The rendering
@@ -192,7 +192,7 @@ multi-platform build for one feature. A small typed expression language,
 evaluated against `EntityRecord`, is planned for a later increment; unsupported
 syntax will be diagnosed rather than silently matching nothing.
 
-This is why `docs/entities.md` documents the sphinx-needs compatibility target
+This is why `docs/entities.rst` documents the sphinx-needs compatibility target
 as "the vocabulary, not the filters".
 
 ### 10. The schema file has a generated JSON Schema, covering shape only
@@ -312,7 +312,7 @@ rendering faithfully, and both close real gaps:
 Attributes, sections and relations render in the order the type declares them.
 
 This was not the first answer. Sections originally rendered in *document* order,
-described in `docs/entities.md` as a promise — but nothing upstream required it.
+described in `docs/entities.rst` as a promise — but nothing upstream required it.
 Sphinx has no entity concept and sphinx-needs has no parsed sections, so the
 promise was this model's own, and it was inconsistent with its neighbours: the
 built-in box was rendering relations in declared order, sections in document

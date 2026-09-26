@@ -273,7 +273,7 @@ observe. `crates/entity/src/schema.rs`'s tests pin both halves.
   normally, since they are reported against the document's own line.
 - **No `needs.json` is written.** ADR-010's export stays `Proposed`; this is
   the reading direction only, and the format is pinned by this reader's tests
-  and by `docs/entities.md` rather than by a writer.
+  and by `docs/entities.rst` rather than by a writer.
 - **Named sections cannot be imported**, the format having no spelling for
   one (Decision 4). An argument matching no declared import key and not ending
   in `.json` is refused by name rather than opened, so a forgotten declaration
