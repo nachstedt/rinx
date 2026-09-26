@@ -55,6 +55,9 @@ build, which refreshes the checked-in `Cargo.bazel.lock`.
 [`CLAUDE.md`](CLAUDE.md) describes the code layout in detail and
 [`guidelines.md`](guidelines.md) the conventions the code follows.
 
+How a release is cut is described in
+[`docs/dev/releasing.md`](docs/dev/releasing.md).
+
 ## Licensing
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
