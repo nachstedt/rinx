@@ -2,6 +2,7 @@ use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
 use crate::directives::body::body_span;
+use crate::directives::options::scan_option_lines;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 use rinx_ast::{Diagnostic, DiagnosticCode, Directive};
@@ -42,36 +43,24 @@ pub(super) fn parse_admonition(
         };
     }
 
-    // Parse options (specifically :collapsible:)
-    let mut opt_idx = 0;
-    while opt_idx < unindented_lines.len() {
-        let line = unindented_lines[opt_idx].trim();
-        if line.is_empty() {
-            opt_idx += 1;
-            continue;
-        }
-        if line.starts_with(':') && line.contains(':') {
-            if line.starts_with(":collapsible:") {
-                let arg = line.strip_prefix(":collapsible:").unwrap().trim();
-                if arg == "open" {
-                    collapsible = Some(true);
-                } else {
-                    // Default to closed if ":collapsible:" or ":collapsible: close"
-                    collapsible = Some(false);
-                }
-            }
-            opt_idx += 1;
-        } else {
-            break;
+    // Only `:collapsible:` means anything here; every other option is
+    // skipped silently, as it always has been.
+    let (option_lines, body_start) = scan_option_lines(&unindented_lines);
+    for option in &option_lines {
+        if option.name == "collapsible" {
+            // `:collapsible:` alone or `:collapsible: close` starts closed.
+            collapsible = Some(option.value == "open");
         }
     }
 
-    // The rest is the body
-    let body_content: Vec<&str> = unindented_lines[opt_idx..]
+    // The body starts below the option block, so every position inside it is
+    // short by that many lines unless the context is rebased first.
+    let body_ctx = ctx.nested(body_start, 0);
+    let body_content: Vec<&str> = unindented_lines[body_start..]
         .iter()
         .map(String::as_str)
         .collect();
-    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, ctx);
+    let body_nodes = parse_blocks(&body_content, adornment_order, diagnostics, &body_ctx);
 
     Directive::Admonition {
         kind,
@@ -230,6 +219,25 @@ mod tests {
         } else {
             panic!("Expected Admonition directive");
         }
+    }
+
+    #[test]
+    fn test_parse_admonition_places_a_diagnostic_below_its_options_on_its_own_line() {
+        // Given — the unknown directive sits on line 4, below an option and a
+        // blank line
+        let input = ".. note::\n   :collapsible:\n\n   .. bogus::\n";
+
+        // When
+        let doc = parse("test.rst", input);
+
+        // Then
+        let lines: Vec<u32> = doc
+            .diagnostics
+            .iter()
+            .filter(|d| d.code == DiagnosticCode::DirectiveUnknown)
+            .map(|d| d.span.expect("a directive has a position").start.line)
+            .collect();
+        assert_eq!(lines, [4]);
     }
 
     #[test]

@@ -39,6 +39,34 @@ pub(crate) struct DirectiveBody<'a> {
     pub(crate) first_line_offset: usize,
 }
 
+impl<'a> DirectiveBody<'a> {
+    /// The body as a directive parser receives it, and the offset of its first
+    /// line below the directive's marker line.
+    ///
+    /// Unlike [`Self::lines`], a body that began after a blank line keeps one
+    /// of those blank lines at its head. That blank line is the only sign that
+    /// the body has no option block: docutils reads options solely from the
+    /// lines directly below the directive, so in
+    ///
+    /// ```rst
+    /// .. code-block:: rst
+    ///
+    ///    :ref:`label`
+    /// ```
+    ///
+    /// the role is content, and a scanner handed the trimmed body could not
+    /// tell it from `:ref:` written directly below the marker.
+    pub(crate) fn for_directive(&self) -> (Vec<&'a str>, usize) {
+        if self.first_line_offset == 0 {
+            return (self.lines.clone(), 0);
+        }
+        let mut lines = Vec::with_capacity(self.lines.len() + 1);
+        lines.push("");
+        lines.extend_from_slice(&self.lines);
+        (lines, self.first_line_offset - 1)
+    }
+}
+
 pub(crate) fn collect_directive_body<'a>(
     lines: &[&'a str],
     start_index: usize,
@@ -286,6 +314,35 @@ mod tests {
         let result = join_body_lines(&input);
         // Then
         assert_eq!(result, "line1\nline2\nline3");
+    }
+
+    #[test]
+    fn test_for_directive_hands_over_a_body_directly_below_the_marker_unchanged() {
+        // Given
+        let lines = vec![".. code-block:: rst", "   :linenos:", "", "   x"];
+        let body = collect_directive_body(&lines, 1, 0);
+
+        // When
+        let (body_lines, offset) = body.for_directive();
+
+        // Then
+        assert_eq!(body_lines, ["   :linenos:", "", "   x"]);
+        assert_eq!(offset, 0);
+    }
+
+    #[test]
+    fn test_for_directive_keeps_one_blank_line_ahead_of_a_body_that_follows_one() {
+        // Given — two blank lines between the marker and the content
+        let lines = vec![".. code-block:: rst", "", "", "   :ref:`label`"];
+        let body = collect_directive_body(&lines, 1, 0);
+
+        // When
+        let (body_lines, offset) = body.for_directive();
+
+        // Then — one blank line kept, and the offset now points at it, so
+        // `offset + index` still names each line's place below the marker
+        assert_eq!(body_lines, ["", "   :ref:`label`"]);
+        assert_eq!(offset, 1);
     }
 
     #[test]

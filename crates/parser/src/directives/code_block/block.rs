@@ -102,6 +102,20 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_code_block_keeps_role_lines_after_the_blank_line_as_content() {
+        // Given — a block *showing* roles: after the blank line below the
+        // directive, a line starting with `:` is code, not an option
+        let body = ["", "   :ref:`label`", "   :term:`word`"];
+
+        // When
+        let (block, diagnostics) = parse("rst", &body);
+
+        // Then
+        assert!(diagnostics.is_empty(), "{diagnostics:?}");
+        assert_eq!(block.content, ":ref:`label`\n:term:`word`");
+    }
+
+    #[test]
     fn test_parse_code_block_reads_the_language_argument() {
         // Given / When
         let (block, _) = parse("Python", &["   x = 1"]);

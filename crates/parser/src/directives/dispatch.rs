@@ -90,8 +90,9 @@ pub(crate) fn try_parse_directive(
                 (0, Vec::new())
             };
         let body = collect_directive_body(lines, i + 1 + continuations_consumed, min_indent);
+        let (body_lines, first_line_offset) = body.for_directive();
         let body_ctx = ctx.nested(
-            i + 1 + continuations_consumed + body.first_line_offset,
+            i + 1 + continuations_consumed + first_line_offset,
             body_indent(&body.lines),
         );
         let domain_object = parse_domain_object(
@@ -101,7 +102,7 @@ pub(crate) fn try_parse_directive(
                 continuations,
                 span: ctx.line_span(i, line),
             },
-            &body.lines,
+            &body_lines,
             adornment_order,
             diagnostics,
             &body_ctx,
@@ -144,8 +145,9 @@ pub(crate) fn try_parse_directive(
     // the renderer) needs a position to report against, and a bare
     // `.. image:: logo.png` has no body line to borrow one from.
     let directive_span = ctx.line_span(i, line);
-    let body_ctx = ctx.nested(i + 1 + body.first_line_offset, body_indent(&body.lines));
-    let (consumed_lines, body_lines) = (body.consumed, body.lines);
+    let (body_lines, first_line_offset) = body.for_directive();
+    let body_ctx = ctx.nested(i + 1 + first_line_offset, body_indent(&body.lines));
+    let consumed_lines = body.consumed;
 
     // Checked before the one-node chain below, because these are the
     // directives that answer with any number of nodes rather than exactly one.
@@ -343,14 +345,15 @@ fn try_parse_entity_directive(
         min_indent,
     } = site;
     let body = collect_directive_body(lines, i + 1, min_indent);
-    let body_ctx = ctx.nested(i + 1 + body.first_line_offset, body_indent(&body.lines));
+    let (body_lines, first_line_offset) = body.for_directive();
+    let body_ctx = ctx.nested(i + 1 + first_line_offset, body_indent(&body.lines));
     let discriminator = ctx.position(i, 0).map_or(0, |point| point.position.line);
     let directive = parse_entity(
         &EntityDirective {
             entity_type,
             argument,
             span: ctx.line_span(i, line),
-            body_lines: &body.lines,
+            body_lines: &body_lines,
             discriminator,
             doc_path: ctx.doc_path,
         },
@@ -843,6 +846,40 @@ mod tests {
             &ParseCtx::with_domain(Domain::Py),
         );
         (node, diagnostics)
+    }
+
+    #[test]
+    fn test_try_parse_directive_reads_no_option_after_the_blank_line_below_the_directive() {
+        // Given — a code block *showing* roles: its content starts after the
+        // blank line, so docutils reads no option there
+        let input = ".. code-block:: rst\n\n   :ref:`label`\n   :term:`word`\n";
+
+        // When
+        let doc = crate::parse("test.rst", input);
+
+        // Then
+        assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+        let [Node::Directive(Directive::CodeBlock(block))] = doc.nodes.as_slice() else {
+            panic!("Expected one code block, got {:?}", doc.nodes);
+        };
+        assert_eq!(block.content, ":ref:`label`\n:term:`word`");
+    }
+
+    #[test]
+    fn test_try_parse_directive_reads_an_option_directly_below_the_directive() {
+        // Given
+        let input = ".. code-block:: rst\n   :linenos:\n\n   :ref:`label`\n";
+
+        // When
+        let doc = crate::parse("test.rst", input);
+
+        // Then
+        assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+        let [Node::Directive(Directive::CodeBlock(block))] = doc.nodes.as_slice() else {
+            panic!("Expected one code block, got {:?}", doc.nodes);
+        };
+        assert!(block.linenos);
+        assert_eq!(block.content, ":ref:`label`");
     }
 
     #[test]
