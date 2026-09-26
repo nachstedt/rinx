@@ -39,6 +39,8 @@ stale=$(sed -n '/^\[workspace.dependencies\]/,/^\[/p' Cargo.toml |
 notes=$(awk -v v="$VERSION" '
   $0 ~ "^## \\[" v "\\]" { found = 1; heading = $0; next }
   found && /^## \[/ { exit }
+  # The link definitions closing the file belong to no version.
+  found && /^\[[^]]+\]: / { exit }
   found { print }
   END { if (!found) exit 1; if (heading ~ /Unreleased/) exit 2 }
 ' CHANGELOG.md) || fail "CHANGELOG.md has no dated '## [$VERSION] - YYYY-MM-DD' section"
