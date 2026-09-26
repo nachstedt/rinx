@@ -21,6 +21,12 @@ updates:
     directory: /editors/vscode
     schedule:
       interval: weekly
+    # @types/node describes the Node inside VS Code's Electron, not the latest
+    # Node, so its major is raised by hand. A bump of @types/vscode likewise
+    # needs `engines.vscode` in package.json raised to match.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       npm:
         patterns: ["*"]
