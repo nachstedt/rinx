@@ -5,6 +5,7 @@ members = ["crates/cdecl", "crates/filter", "crates/inventory", "crates/template
 
 [workspace.package]
 edition = "2024"
+license = "MIT OR Apache-2.0"
 
 [workspace.lints.clippy]
 pedantic = "warn"

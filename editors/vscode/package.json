@@ -3,6 +3,11 @@
   "displayName": "Rinx",
   "description": "Live preview for Rinx documentation",
   "version": "0.1.0",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nachstedt/rinx.git"
+  },
   "publisher": "nachstedt",
   "engines": {
     "vscode": "^1.75.0"

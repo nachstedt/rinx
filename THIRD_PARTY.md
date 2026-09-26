@@ -48,6 +48,26 @@ versioned by the crate rather than by us, so upgrading the dependency can change
 which `:icon:` names a document may use — see `spec_gaps.md` for the names this
 differs on from sphinx-design's own pinned copy.
 
+## PlantUML (`plantuml.jar`)
+
+Diagrams are compiled by [PlantUML](https://plantuml.com/), which
+`MODULE.bazel` fetches as the `plantuml_jar` repository: the
+`net.sourceforge.plantuml:plantuml` artifact from Maven Central, pinned by
+version and `sha256`. That artifact is licensed under the **GPL**.
+
+rinx neither links nor redistributes it. The jar is downloaded by the consuming
+Bazel build and run as a separate program, one compile action per document,
+which turns `.puml` text into SVG. Its licence therefore does not extend to
+rinx's source code, which stays under `MIT OR Apache-2.0`. Every
+`rinx_site` depends on the jar (its `_plantuml` attribute), so Bazel downloads
+it for any site build, but it only runs for a library set to
+`diagrams = True`.
+
+For your own compliance review: PlantUML is also published under permissive
+licences (the `plantuml-mit`, `plantuml-asl`, `plantuml-bsd`, `plantuml-epl` and
+`plantuml-lgpl` artifacts on Maven Central), should a project prefer one of
+those.
+
 ## Everything else
 
 The remaining dependencies are listed in each crate's `Cargo.toml` and resolved

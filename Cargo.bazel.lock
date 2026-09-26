@@ -1,5 +1,5 @@
 {
-  "checksum": "fcf0a41c3272468b57290c4396d4415e687ea93b6b6083547e3704e441dfd971",
+  "checksum": "b5473b21e262e0030947c79ddbd7ab3f50a6cd484967adbef499f19be9485ce8",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4282,6 +4282,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_analyzer",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_analyzer",
       "repository": null,
       "targets": [
@@ -4317,6 +4322,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_ast",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_ast",
       "repository": null,
       "targets": [
@@ -4334,6 +4344,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_cdecl",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_cdecl",
       "repository": null,
       "targets": [
@@ -4383,6 +4398,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_entity",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_entity",
       "repository": null,
       "targets": [
@@ -4412,6 +4432,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_filter",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_filter",
       "repository": null,
       "targets": [
@@ -4445,6 +4470,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_index",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_index",
       "repository": null,
       "targets": [
@@ -4482,6 +4512,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_inventory",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_inventory",
       "repository": null,
       "targets": [
@@ -4517,6 +4552,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_parser",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_parser",
       "repository": null,
       "targets": [
@@ -4586,6 +4626,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_renderer",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_renderer",
       "repository": null,
       "targets": [
@@ -4603,6 +4648,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_scope",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_scope",
       "repository": null,
       "targets": [
@@ -4626,6 +4676,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_template",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_template",
       "repository": null,
       "targets": [
@@ -4649,6 +4704,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_toctree",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_toctree",
       "repository": null,
       "targets": [
@@ -4672,6 +4732,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_uml",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_uml",
       "repository": null,
       "targets": [
@@ -4711,6 +4776,11 @@
         "edition": "2024"
       },
       "library_target_name": "rinx_worker",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
       "name": "rinx_worker",
       "repository": null,
       "targets": [
