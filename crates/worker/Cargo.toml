@@ -1,18 +1,26 @@
 [package]
-name = "rinx_worker"
-version = "0.1.0"
+name = "rinx"
+description = "A fast, Bazel-native re-implementation of the Sphinx documentation generator."
+version.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+readme = "../../README.md"
+keywords = ["sphinx", "restructuredtext", "bazel", "documentation", "sphinx-needs"]
+categories = ["command-line-utilities", "text-processing", "development-tools::build-utils"]
 
 [dependencies]
-rinx_ast = { path = "../ast" }
-rinx_entity = { path = "../entity" }
-rinx_parser = { path = "../parser" }
-rinx_analyzer = { path = "../analyzer" }
-rinx_toctree = { path = "../toctree" }
-rinx_index = { path = "../index" }
-rinx_inventory = { path = "../inventory" }
-rinx_renderer = { path = "../renderer" }
+rinx_ast.workspace = true
+rinx_entity.workspace = true
+rinx_parser.workspace = true
+rinx_analyzer.workspace = true
+rinx_toctree.workspace = true
+rinx_index.workspace = true
+rinx_inventory.workspace = true
+rinx_renderer.workspace = true
 anyhow = "1.0.102"
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }

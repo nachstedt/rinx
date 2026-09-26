@@ -37,12 +37,12 @@ suite('BazelScanner Test Suite', () => {
 
     test('deriveBinaryPath: finds and builds worker', async () => {
         const calls: string[] = [];
-        const workerLabel = '@rinx//:rinx_worker';
+        const workerLabel = '@rinx//:rinx';
         const mockExecutor = async (cmd: string) => {
             calls.push(cmd);
             if (cmd.includes('cquery --output=files')) {
                 // Return path but it won't exist on disk (as fs is not mocked to return true)
-                return { stdout: '/test/workspace/bazel-bin/rinx_worker', stderr: '' };
+                return { stdout: '/test/workspace/bazel-bin/rinx', stderr: '' };
             }
             if (cmd.includes('bazel build')) {
                 return { stdout: '', stderr: '' };

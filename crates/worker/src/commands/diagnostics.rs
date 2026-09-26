@@ -58,7 +58,9 @@ impl<'a> WarningOrigin<'a> {
     ///
     /// Kept distinct from [`Self::new`] with an empty slice so a caller says
     /// which it means: an empty table is also what a *mangled* `.ast` has, and
-    /// the two should not be spelled the same way at a call site.
+    /// the two should not be spelled the same way at a call site. Only tests
+    /// need it: every production caller has the document's include table.
+    #[cfg(test)]
     pub(super) const fn document_only(doc_path: &'a str) -> Self {
         Self::new(doc_path, &[])
     }

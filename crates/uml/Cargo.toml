@@ -1,14 +1,20 @@
 [package]
 name = "rinx_uml"
-version = "0.1.0"
+description = "Generates and expands the PlantUML diagrams of rinx. Internal to rinx; no stability guarantees."
+version.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
 
 [dependencies]
-rinx_ast = { path = "../ast" }
-rinx_entity = { path = "../entity" }
-rinx_filter = { path = "../filter" }
-rinx_index = { path = "../index" }
+rinx_ast.workspace = true
+rinx_entity.workspace = true
+rinx_filter.workspace = true
+rinx_index.workspace = true
 minijinja = "2"
 
 [lints]

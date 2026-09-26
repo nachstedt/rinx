@@ -223,7 +223,7 @@ rinx_library = rule(
             doc = "The Sphinx domain (e.g. \"py\", \"c\") that bare, unprefixed directives and roles in this library's docs resolve to. This is a property of the library's content, not of any site that assembles it.",
         ),
         "_worker": attr.label(
-            default = Label("//:rinx_worker"),
+            default = Label("//:rinx"),
             executable = True,
             cfg = "exec",
             doc = "The rinx binary.",

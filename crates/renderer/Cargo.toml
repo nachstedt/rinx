@@ -1,17 +1,23 @@
 [package]
 name = "rinx_renderer"
-version = "0.1.0"
+description = "Renders rinx documents to HTML. Internal to rinx; no stability guarantees."
+version.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
 
 [dependencies]
-rinx_ast = { path = "../ast" }
-rinx_filter = { path = "../filter" }
-rinx_entity = { path = "../entity" }
-rinx_index = { path = "../index" }
-rinx_toctree = { path = "../toctree" }
-rinx_scope = { path = "../scope" }
-rinx_uml = { path = "../uml" }
+rinx_ast.workspace = true
+rinx_filter.workspace = true
+rinx_entity.workspace = true
+rinx_index.workspace = true
+rinx_toctree.workspace = true
+rinx_scope.workspace = true
+rinx_uml.workspace = true
 anyhow = "1.0.102"
 html-escape = "0.2.13"
 math-core = "0.8"
@@ -26,7 +32,7 @@ syntect = { version = "5.3", default-features = false, features = ["parsing", "h
 two-face = { version = "0.5", default-features = false, features = ["syntect-fancy"] }
 
 [dev-dependencies]
-rinx_inventory = { path = "../inventory" }
+rinx_inventory.workspace = true
 serde_json = "1"
 toml = "0.8"
 

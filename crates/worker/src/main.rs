@@ -26,7 +26,7 @@
 mod commands;
 
 use anyhow::{Context, Result, anyhow};
-use rinx_worker::process_rst;
+use rinx::process_rst;
 use std::env;
 use std::fs;
 

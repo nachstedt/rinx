@@ -24,6 +24,11 @@ jobs:
     - name: Run Clippy
       run: cargo clippy --workspace --tests -- -D warnings
 
+    # The published crates are built without `--tests`, so a warning that only
+    # test code silences would otherwise surface first on crates.io.
+    - name: Run Clippy on non-test code
+      run: cargo clippy --workspace -- -D warnings
+
     - name: Build
       run: cargo build --workspace --verbose
 
@@ -32,6 +37,11 @@ jobs:
 
     - name: Document
       run: cargo doc --workspace --no-deps
+
+    # Builds every crate from the tarball crates.io would receive, so a missing
+    # file or a path-only dependency fails here rather than at release time.
+    - name: Package for crates.io
+      run: cargo package --workspace
 
   bazel_integration:
     runs-on: ubuntu-latest

@@ -2,8 +2,8 @@
 //! declared docs.
 
 use anyhow::{Context, Result};
+use rinx::validator;
 use rinx_ast as ast;
-use rinx_worker::validator;
 use std::fs;
 
 use super::cli_args::{flag_value, flag_values_opt};

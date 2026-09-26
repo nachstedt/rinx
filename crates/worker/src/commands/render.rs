@@ -1,9 +1,9 @@
 //! The `render` subcommand: one AST + the global index to a final HTML page.
 
 use anyhow::{Context, Result};
+use rinx::domain_warnings;
 use rinx_ast as ast;
 use rinx_renderer::{self as renderer, config};
-use rinx_worker::domain_warnings;
 use std::fs;
 
 use super::cli_args::{flag_value, flag_value_opt};

@@ -2,8 +2,8 @@
 //! into the runnable plan the Python runner consumes.
 
 use anyhow::{Context, Result, anyhow};
+use rinx::doctest_plan;
 use rinx_ast as ast;
-use rinx_worker::doctest_plan;
 use std::fs;
 
 use super::cli_args::flag_value;
@@ -11,7 +11,7 @@ use super::cli_args::flag_value;
 /// Deliberately cheap and deliberately *lossy*: the plan drops everything
 /// presentational, so a prose edit re-runs this step but leaves its output
 /// bytes unchanged — which is what stops Bazel from re-running the tests. See
-/// [`rinx_worker::doctest_plan`] for the full reasoning.
+/// [`rinx::doctest_plan`] for the full reasoning.
 pub(super) fn process_extract_doctests(ast_json: &str) -> Result<String> {
     let doc: ast::Document = serde_json::from_str(ast_json).context("Failed to deserialize AST")?;
     let plan = doctest_plan::build_doctest_plan(&doc)

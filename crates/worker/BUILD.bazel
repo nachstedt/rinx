@@ -2,9 +2,9 @@ load("@crates//:defs.bzl", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
 
 rust_library(
-    name = "rinx_worker_lib",
+    name = "rinx_lib",
     srcs = glob(["src/**/*.rs"]),
-    crate_name = "rinx_worker",
+    crate_name = "rinx",
     edition = "2024",
     deps = all_crate_deps(
         normal = True,
@@ -20,14 +20,14 @@ rust_library(
 )
 
 rust_binary(
-    name = "rinx_worker",
+    name = "rinx",
     srcs = glob(["src/**/*.rs"]),
     edition = "2024",
     visibility = ["//visibility:public"],
     deps = all_crate_deps(
         normal = True,
     ) + [
-        ":rinx_worker_lib",
+        ":rinx_lib",
         "//crates/analyzer:rinx_analyzer",
         "//crates/ast:rinx_ast",
         "//crates/entity:rinx_entity",

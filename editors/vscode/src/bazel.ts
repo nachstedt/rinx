@@ -102,7 +102,7 @@ export class BazelScanner {
     }
 
     async deriveBinaryPath(siteTarget: string, workspaceRoot: string): Promise<string | undefined> {
-        const workerLabel = '@rinx//:rinx_worker';
+        const workerLabel = '@rinx//:rinx';
 
         try {
             // 1. Try to find the output path via cquery

@@ -1,5 +1,5 @@
 {
-  "checksum": "b5473b21e262e0030947c79ddbd7ab3f50a6cd484967adbef499f19be9485ce8",
+  "checksum": "b0071368b6faa9a3c0a5987d1fe88afeed92dfc11330800bfcd60fb7d83781ef",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4271,6 +4271,51 @@
       ],
       "version": "0.8.11"
     },
+    "rinx 0.1.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "anyhow 1.0.103",
+            "target": "anyhow"
+          },
+          {
+            "id": "base64 0.22.1",
+            "target": "base64"
+          },
+          {
+            "id": "serde 1.0.228",
+            "target": "serde"
+          },
+          {
+            "id": "serde_json 1.0.149",
+            "target": "serde_json"
+          },
+          {
+            "id": "toml 0.8.23",
+            "target": "toml"
+          }
+        ],
+        "edition": "2024"
+      },
+      "library_target_name": "rinx",
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "rinx",
+      "package_url": "https://github.com/nachstedt/rinx",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rinx",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.0"
+    },
     "rinx_analyzer 0.1.0": {
       "common_attrs": {
         "deps": [
@@ -4288,6 +4333,7 @@
         "MIT"
       ],
       "name": "rinx_analyzer",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4328,6 +4374,7 @@
         "MIT"
       ],
       "name": "rinx_ast",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4350,6 +4397,7 @@
         "MIT"
       ],
       "name": "rinx_cdecl",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4404,6 +4452,7 @@
         "MIT"
       ],
       "name": "rinx_entity",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4438,6 +4487,7 @@
         "MIT"
       ],
       "name": "rinx_filter",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4476,6 +4526,7 @@
         "MIT"
       ],
       "name": "rinx_index",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4518,6 +4569,7 @@
         "MIT"
       ],
       "name": "rinx_inventory",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4558,6 +4610,7 @@
         "MIT"
       ],
       "name": "rinx_parser",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4632,6 +4685,7 @@
         "MIT"
       ],
       "name": "rinx_renderer",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4654,6 +4708,7 @@
         "MIT"
       ],
       "name": "rinx_scope",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4682,6 +4737,7 @@
         "MIT"
       ],
       "name": "rinx_template",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4710,6 +4766,7 @@
         "MIT"
       ],
       "name": "rinx_toctree",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
@@ -4738,55 +4795,12 @@
         "MIT"
       ],
       "name": "rinx_uml",
+      "package_url": "https://github.com/nachstedt/rinx",
       "repository": null,
       "targets": [
         {
           "Library": {
             "crate_name": "rinx_uml",
-            "crate_root": "src/lib.rs"
-          }
-        }
-      ],
-      "version": "0.1.0"
-    },
-    "rinx_worker 0.1.0": {
-      "common_attrs": {
-        "deps": [
-          {
-            "id": "anyhow 1.0.103",
-            "target": "anyhow"
-          },
-          {
-            "id": "base64 0.22.1",
-            "target": "base64"
-          },
-          {
-            "id": "serde 1.0.228",
-            "target": "serde"
-          },
-          {
-            "id": "serde_json 1.0.149",
-            "target": "serde_json"
-          },
-          {
-            "id": "toml 0.8.23",
-            "target": "toml"
-          }
-        ],
-        "edition": "2024"
-      },
-      "library_target_name": "rinx_worker",
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "name": "rinx_worker",
-      "repository": null,
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "rinx_worker",
             "crate_root": "src/lib.rs"
           }
         }
@@ -7321,6 +7335,7 @@
     "jsonschema 0.54.0"
   ],
   "workspace_members": {
+    "rinx 0.1.0": "crates/worker",
     "rinx_analyzer 0.1.0": "crates/analyzer",
     "rinx_ast 0.1.0": "crates/ast",
     "rinx_cdecl 0.1.0": "crates/cdecl",
@@ -7333,7 +7348,6 @@
     "rinx_scope 0.1.0": "crates/scope",
     "rinx_template 0.1.0": "crates/template",
     "rinx_toctree 0.1.0": "crates/toctree",
-    "rinx_uml 0.1.0": "crates/uml",
-    "rinx_worker 0.1.0": "crates/worker"
+    "rinx_uml 0.1.0": "crates/uml"
   }
 }

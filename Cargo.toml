@@ -4,8 +4,32 @@ members = ["crates/cdecl", "crates/filter", "crates/inventory", "crates/template
     "crates/toctree", "crates/entity", "crates/index", "crates/parser", "crates/analyzer", "crates/uml", "crates/renderer", "crates/worker"]
 
 [workspace.package]
+version = "0.1.0"
 edition = "2024"
+rust-version = "1.98"
 license = "MIT OR Apache-2.0"
+authors = ["Timo Nachstedt"]
+repository = "https://github.com/nachstedt/rinx"
+homepage = "https://github.com/nachstedt/rinx"
+keywords = ["rinx"]
+
+# Every internal crate is published to crates.io alongside the `rinx` binary,
+# and crates.io rejects a dependency that has only a `path`, so each carries
+# its version here once.
+[workspace.dependencies]
+rinx_analyzer = { path = "crates/analyzer", version = "0.1.0" }
+rinx_ast = { path = "crates/ast", version = "0.1.0" }
+rinx_cdecl = { path = "crates/cdecl", version = "0.1.0" }
+rinx_entity = { path = "crates/entity", version = "0.1.0" }
+rinx_filter = { path = "crates/filter", version = "0.1.0" }
+rinx_index = { path = "crates/index", version = "0.1.0" }
+rinx_inventory = { path = "crates/inventory", version = "0.1.0" }
+rinx_parser = { path = "crates/parser", version = "0.1.0" }
+rinx_renderer = { path = "crates/renderer", version = "0.1.0" }
+rinx_scope = { path = "crates/scope", version = "0.1.0" }
+rinx_template = { path = "crates/template", version = "0.1.0" }
+rinx_toctree = { path = "crates/toctree", version = "0.1.0" }
+rinx_uml = { path = "crates/uml", version = "0.1.0" }
 
 [workspace.lints.clippy]
 pedantic = "warn"

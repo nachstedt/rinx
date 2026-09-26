@@ -1,11 +1,17 @@
 [package]
 name = "rinx_scope"
-version = "0.1.0"
+description = "Domain-object scope tracking shared by rinx's analyzer and renderer. Internal to rinx; no stability guarantees."
+version.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
 
 [dependencies]
-rinx_ast = { path = "../ast" }
+rinx_ast.workspace = true
 
 [lints]
 workspace = true
