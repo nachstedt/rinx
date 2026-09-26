@@ -15,7 +15,7 @@ jobs:
   build_test_lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     
     - name: Set up Rust
       uses: dtolnay/rust-toolchain@stable
@@ -48,7 +48,7 @@ jobs:
   bazel_integration:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Set up Bazel
       uses: bazel-contrib/setup-bazel@0.19.0
@@ -115,10 +115,10 @@ jobs:
   vscode_extension:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: 18
 
