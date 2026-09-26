@@ -44,8 +44,10 @@ $BAZEL build "$TARGET" > /dev/null 2>&1
 # genuine miss would both make a piped `grep` non-zero, so the caller would
 # blame the firewall for either.
 #
-# `-s` prints each executed action; an action served from the cache is not
-# executed, so its absence is the signal.
+# `-s` prints every action whose key changed. An unchanged one is skipped by the
+# local action cache and is not printed; one whose result a disk or remote cache
+# supplies still is. That is the question a firewall asks — did the key change —
+# independent of what an earlier run left in a cache (CI restores a disk cache).
 plantuml_ran() {
     if ! build_output=$($BAZEL build -s "$TARGET" 2>&1); then
         echo "ERROR: 'bazel build $TARGET' failed. That says nothing about the"
@@ -57,11 +59,7 @@ plantuml_ran() {
 }
 
 echo "=== Testing that an edit in another document does NOT recompile diagrams ==="
-# Unique per run: appending the *same* paragraph every time leaves the edited
-# variant in the machine's cache, so every later run would pass whether or not
-# the firewall works — a false pass hiding exactly the regression this catches.
-printf '\nA paragraph unique to this run (%s), in a document with no diagrams.\n' \
-    "$(date +%s%N)" >> "$OTHER_DOC"
+printf '\nAn added paragraph, in a document with no diagrams.\n' >> "$OTHER_DOC"
 
 if plantuml_ran; then
     echo "ERROR: PlantUML re-ran after an edit to an unrelated document."
