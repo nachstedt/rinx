@@ -1,0 +1,39 @@
+load("@rinx//:defs.bzl", "rinx_doctest_tests", "rinx_library", "rinx_site")
+
+rinx_library(
+    name = "docs",
+    srcs = [
+        "docs/index.rst",
+        "docs/guide.rst",
+    ],
+    deps = [
+        ":diagram_docs",
+        ":doctest_docs",
+    ],
+)
+
+# Diagrams compile with the PlantUML jar on a Java runtime, both of which come
+# from rinx's module rather than from this one.
+rinx_library(
+    name = "diagram_docs",
+    srcs = ["docs/diagrams.rst"],
+    diagrams = True,
+)
+
+rinx_library(
+    name = "doctest_docs",
+    srcs = ["docs/doctests.rst"],
+)
+
+# Executes the doctests on rinx's Python toolchain.
+rinx_doctest_tests(
+    name = "doctests",
+    lib = ":doctest_docs",
+)
+
+# Everything left at its default: the bundled template, config and CSS.
+rinx_site(
+    name = "site",
+    deps = [":docs"],
+    strict_links = True,
+)

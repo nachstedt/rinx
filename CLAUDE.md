@@ -29,6 +29,7 @@ bash tests/test_diagram_cache_firewall.sh  # verifies an edit elsewhere does not
 bash tests/test_diagram_opt_in.sh     # verifies a diagram in a library without `diagrams = True` fails the build
 bash tests/test_intersphinx.sh        # verifies a site links into another through its objects.inv, and that `inventories` is load-bearing
 bazel build //examples/intersphinx:sibling_site  # a second site linking into //examples:site through its objects.inv
+(cd e2e/smoke && bazel test //...)       # rinx consumed as a dependency by another module — what the BCR presubmit (.bcr/) runs
 bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.md)
 bazel run //scripts:benchmark_entities  # benchmark the entity model against useblocks' sphinx-needs demo (see docs/benchmark.md)
 

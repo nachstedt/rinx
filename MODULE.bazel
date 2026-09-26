@@ -1,20 +1,20 @@
 """
-Root Bazel workspace for rinx.
+The rinx Bazel module: the rinx binary, built from the Cargo workspace under
+crates/ with rules_rust, and the rules in defs.bzl that drive it.
 
-This workspace:
- - Builds the rinx binary from src/ via rules_rust.
- - Loads the rinx Starlark rules from the local bazel/ subdirectory.
- - Provides example documentation targets under examples/.
+Users depend on it with `bazel_dep(name = "rinx", ...)`; see README.md.
+Everything marked `dev_dependency = True` below serves only this repository's
+own examples, tests and scripts, and is invisible to such a user.
 
-Quick start:
   bazel build //:rinx                  # build the binary
-  bazel build //examples:site                 # build the full example site
-  bazel build //examples/team_a:docs          # build team_a in isolation
+  bazel build //examples:site          # build the full example site
+  bazel build //examples/team_a:docs   # build team_a in isolation
 """
 
 module(
     name = "rinx",
-    version = "0.0.0",
+    version = "0.1.0",
+    compatibility_level = 0,
 )
 
 # ── Rust toolchain ────────────────────────────────────────────────────────────
@@ -80,7 +80,13 @@ python.toolchain(
     is_default = True,
 )
 
-pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+# The Python packages `scripts/` may need. No rule of rinx's uses them, so a
+# user of the module never resolves this hub.
+pip = use_extension(
+    "@rules_python//python/extensions:pip.bzl",
+    "pip",
+    dev_dependency = True,
+)
 pip.parse(
     hub_name = "pypi",
     python_version = "3.11",
