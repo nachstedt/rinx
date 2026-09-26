@@ -14,7 +14,6 @@ own examples, tests and scripts, and is invisible to such a user.
 module(
     name = "rinx",
     version = "0.1.0",
-    compatibility_level = 0,
 )
 
 # ── Rust toolchain ────────────────────────────────────────────────────────────

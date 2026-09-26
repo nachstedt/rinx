@@ -1,3 +1,5 @@
+.. _smoke-index:
+
 rinx smoke test
 ===============
 

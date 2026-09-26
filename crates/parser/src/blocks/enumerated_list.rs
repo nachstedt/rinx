@@ -26,7 +26,7 @@
 //! lines both carry an enumerator but the continuation rule rejects them, the
 //! entire block silently becomes a paragraph, which is close to impossible to
 //! diagnose from the rendered output. That message names the cause. It stays
-//! silent across every file of the benchmark corpus (see `docs/benchmark.md`),
+//! silent across every file of the benchmark corpus (see `docs/benchmark.rst`),
 //! so it is precise enough not to need narrowing.
 //!
 //! One deliberate behavioural difference from [`super::bullet_list`]: when a

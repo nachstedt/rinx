@@ -10,7 +10,7 @@ rust-version = "1.98"
 license = "MIT OR Apache-2.0"
 authors = ["Timo Nachstedt"]
 repository = "https://github.com/nachstedt/rinx"
-homepage = "https://github.com/nachstedt/rinx"
+homepage = "https://nachstedt.github.io/rinx/"
 keywords = ["rinx"]
 
 # Every internal crate is published to crates.io alongside the `rinx` binary,

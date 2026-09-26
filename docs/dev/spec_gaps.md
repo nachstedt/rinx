@@ -226,7 +226,7 @@ schemas like any built-in.
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Writing `objects.inv` (inventory version 2) | ✅ | Every `rinx_site` writes one at its root, and exposes it in an `inventory` output group. Lists documents, labels (with the title a bare `:ref:` shows), glossary terms, options, Python and C objects and `genindex`; loads in Sphinx 9.1's own reader, and re-writing a real Sphinx inventory reproduces its body line for line. Two deliberate deviations: labels without a title are listed too (Sphinx lists only titled ones), so an entity or a named directive can be linked from elsewhere; and anchors are this build's own (`py:class:pkg.greeter`, not `pkg.Greeter`), which the inventory's URIs carry. See `docs/decisions/023-inventories.md` |
-| Reading inventories (`intersphinx_mapping`) | 🔶 | `rinx_inventory` + `inventories` on `rinx_site`; `:ref:`, `:term:`, `:option:` and every domain role fall back to the declared inventories, in declaration order, once no local target matches, and a `name:` target prefix picks one out as in Sphinx. One deliberate narrowing: an inventory is a pinned build input (vendored, `http_file` with `sha256`, or another site's output) — never fetched while building, so there is no `intersphinx_cache_limit`/`intersphinx_timeout`. Version 1 inventories are refused by name. No `:doc:`/`:any:` roles exist yet, so neither resolves externally. See `docs/intersphinx.md` |
+| Reading inventories (`intersphinx_mapping`) | 🔶 | `rinx_inventory` + `inventories` on `rinx_site`; `:ref:`, `:term:`, `:option:` and every domain role fall back to the declared inventories, in declaration order, once no local target matches, and a `name:` target prefix picks one out as in Sphinx. One deliberate narrowing: an inventory is a pinned build input (vendored, `http_file` with `sha256`, or another site's output) — never fetched while building, so there is no `intersphinx_cache_limit`/`intersphinx_timeout`. Version 1 inventories are refused by name. No `:doc:`/`:any:` roles exist yet, so neither resolves externally. See `docs/intersphinx.rst` |
 | `:external:` / `:external+name:` roles | ✅ | On `:ref:`, `:term:`, `:option:` and every domain role. `:external:` skips this site; `:external+name:` searches one inventory, and naming an undeclared one is `link.unknown-inventory` |
 
 ## General Index
@@ -269,7 +269,7 @@ last two rows — they are rinx extensions, described in
 ## Entities (rinx extension)
 
 A project-declared construct vocabulary, covering the ground `sphinx-needs`
-occupies in real Sphinx. See `docs/entities.md`.
+occupies in real Sphinx. See `docs/entities.rst`.
 
 | Feature | Status | Notes |
 | --- | --- | --- |

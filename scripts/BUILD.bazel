@@ -19,7 +19,7 @@ py_library(
     # deps = ["@pypi//some_package"], # add pip dependencies here when needed
 )
 
-# The CPython benchmark: general RST coverage. See docs/benchmark.md.
+# The CPython benchmark: general RST coverage. See docs/benchmark.rst.
 py_binary(
     name = "benchmark",
     srcs = [
