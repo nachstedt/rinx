@@ -1,6 +1,7 @@
 # rinx
 
 [![CI](https://github.com/nachstedt/rinx/actions/workflows/rust.yml/badge.svg)](https://github.com/nachstedt/rinx/actions/workflows/rust.yml)
+[![crates.io](https://img.shields.io/crates/v/rinx.svg)](https://crates.io/crates/rinx)
 [![Docs](https://img.shields.io/badge/docs-nachstedt.github.io%2Frinx-blue.svg)](https://nachstedt.github.io/rinx/)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
@@ -56,16 +57,11 @@ action. So:
 
 ## Quick start
 
-rinx is not yet in the Bazel Central Registry, so depend on it from Git in your
-`MODULE.bazel`:
+Add rinx to your `MODULE.bazel`; it is in the
+[Bazel Central Registry](https://registry.bazel.build/modules/rinx):
 
 ```python
-bazel_dep(name = "rinx", version = "0.0.0")
-git_override(
-    module_name = "rinx",
-    remote = "https://github.com/nachstedt/rinx.git",
-    commit = "<commit sha>",
-)
+bazel_dep(name = "rinx", version = "0.1.0")
 ```
 
 Then declare your documents in a `BUILD.bazel`:

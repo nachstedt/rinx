@@ -9,9 +9,10 @@ incompatible ways.
 
 ## [Unreleased]
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-09-26
 
-The first public release.
+The first public release. The documentation is at
+<https://nachstedt.github.io/rinx/>.
 
 ### Added
 
@@ -22,8 +23,8 @@ The first public release.
 - reStructuredText: sections, bullet, enumerated and definition lists, grid and
   simple tables, `list-table`, `csv-table`, admonitions, substitutions,
   `include`, `literalinclude`, images and figures.
-- Sphinx: `toctree`, `:ref:`, `:doc:` and `:term:`, glossaries, the Python, C
-  and standard domains, the general index, and sphinx-simplepdf's
+- Sphinx: `toctree`, `:ref:` and `:term:`, glossaries, the Python, C and
+  standard domains, the general index, and sphinx-simplepdf's
   `.. if-builder::`.
 - `objects.inv` output, and intersphinx linking between sites through pinned
   inventories.
