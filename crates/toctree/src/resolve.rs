@@ -5,7 +5,7 @@
 //!
 //! | caller | universe | purpose |
 //! |---|---|---|
-//! | `rinx_worker`'s `validate_toctree` | the Bazel `--allowed` deps | strict-deps enforcement |
+//! | `rinx`'s `validate_toctree` | the Bazel `--allowed` deps | strict-deps enforcement |
 //! | [`crate::build_project_index`] | every document in the project | numbering, page order, diagnostics |
 //! | the renderer | the documents the index knows | rendering |
 //!

@@ -61,7 +61,7 @@ def generate_warmup_package(target_dir: Path, workspace_root: str):
     workspace has to compile the `rinx` binary (and resolve the Rust,
     Java and Python toolchains) first, and that dwarfs it. Those tools are
     built in Bazel's *exec* configuration, so `bazel build
-    @rinx//:rinx_worker` would warm a differently-configured
+    @rinx//:rinx` would warm a differently-configured
     binary and leave the real one to be compiled inside the timed step.
 
     Building a trivial site instead warms exactly the configurations the corpus

@@ -492,7 +492,7 @@ The schema is **generated** from the types the loader deserializes into, and
 checked in. After changing them:
 
 ```bash
-cargo run -p rinx_worker -- entity_json_schema > schemas/entities.schema.json
+cargo run -p rinx -- entity_json_schema > schemas/entities.schema.json
 ```
 
 A test regenerates and compares, so a stale file fails the build; another

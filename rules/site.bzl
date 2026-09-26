@@ -415,7 +415,7 @@ rinx_site = rule(
                   "warning. Off by default so existing sites are unaffected.",
         ),
         "_worker": attr.label(
-            default = Label("//:rinx_worker"),
+            default = Label("//:rinx"),
             executable = True,
             cfg = "exec",
             doc = "The rinx binary.",

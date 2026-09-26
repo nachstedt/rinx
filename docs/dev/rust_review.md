@@ -303,7 +303,7 @@ surface without losing coverage.
 `// Then` comments, unlike every unit-test module under `crates/*/src/`.
 Additionally, `test_parser_step` and `test_renderer_step` call
 `rinx_parser`/`rinx_renderer` directly and never touch
-`rinx_worker`'s own public API (`process_rst`, `validator::validate_toctree`)
+`rinx`'s own public API (`process_rst`, `validator::validate_toctree`)
 — they're spot-checks of upstream crates that already carry their own unit
 tests, not integration tests of this crate. Only `test_e2e_translation`/
 `test_e2e_multi_level_headings` actually exercise the crate under test.

@@ -902,6 +902,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
+name = "rinx"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "rinx_analyzer",
+ "rinx_ast",
+ "rinx_entity",
+ "rinx_index",
+ "rinx_inventory",
+ "rinx_parser",
+ "rinx_renderer",
+ "rinx_toctree",
+ "serde",
+ "serde_json",
+ "toml",
+]
+
+[[package]]
 name = "rinx_analyzer"
 version = "0.1.0"
 dependencies = [
@@ -1047,25 +1066,6 @@ dependencies = [
  "rinx_entity",
  "rinx_filter",
  "rinx_index",
-]
-
-[[package]]
-name = "rinx_worker"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "rinx_analyzer",
- "rinx_ast",
- "rinx_entity",
- "rinx_index",
- "rinx_inventory",
- "rinx_parser",
- "rinx_renderer",
- "rinx_toctree",
- "serde",
- "serde_json",
- "toml",
 ]
 
 [[package]]

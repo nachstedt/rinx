@@ -1,14 +1,20 @@
 [package]
 name = "rinx_parser"
-version = "0.1.0"
+description = "The error-resilient reStructuredText parser of rinx. Internal to rinx; no stability guarantees."
+version.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
 
 [dependencies]
-rinx_ast = { path = "../ast" }
-rinx_filter = { path = "../filter" }
-rinx_entity = { path = "../entity" }
-rinx_template = { path = "../template" }
+rinx_ast.workspace = true
+rinx_filter.workspace = true
+rinx_entity.workspace = true
+rinx_template.workspace = true
 csv = "1"
 octicons-pack = { version = "19.33", default-features = false }
 regex = "1.10"

@@ -94,7 +94,7 @@ mod tests {
         assert_eq!(
             generated, stored,
             "schemas/entities.schema.json is stale. Regenerate it:\n  \
-             cargo run -p rinx_worker -- entity_json_schema > schemas/entities.schema.json"
+             cargo run -p rinx -- entity_json_schema > schemas/entities.schema.json"
         );
     }
 

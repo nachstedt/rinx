@@ -2,11 +2,11 @@
 //! enumerated lists, including cross-references and doctest blocks nested
 //! inside list items.
 
+use rinx::process_rst;
 use rinx_analyzer as analyzer;
 use rinx_ast as ast;
 use rinx_parser as parser;
 use rinx_renderer as renderer;
-use rinx_worker::process_rst;
 
 #[test]
 fn test_e2e_escaped_space_empties_a_simple_table_first_cell() {

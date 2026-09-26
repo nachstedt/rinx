@@ -19,7 +19,6 @@
 
 use rinx_parser::{self as parser, LoadedFile, ParseFileLoader};
 use std::cell::RefCell;
-use std::path::PathBuf;
 
 /// Reads paths relative to the file the directive was written in, remembering
 /// the ones it could not read.
@@ -84,6 +83,7 @@ pub(super) fn parse_ctx(
 mod tests {
     use super::*;
     use rinx_ast::Domain;
+    use std::path::PathBuf;
 
     /// A scratch directory holding `files`, plus the source-root-relative
     /// document path to resolve against it.

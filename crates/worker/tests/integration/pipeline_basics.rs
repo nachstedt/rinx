@@ -1,11 +1,11 @@
 //! Smoke tests for the individual parse/render steps and the legacy
 //! `process_rst` single-pass entry point.
 
+use rinx::process_rst;
 use rinx_analyzer as analyzer;
 use rinx_ast as ast;
 use rinx_parser as parser;
 use rinx_renderer as renderer;
-use rinx_worker::process_rst;
 
 #[test]
 fn test_parser_step() {

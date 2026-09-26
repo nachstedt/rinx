@@ -7,7 +7,7 @@ This workspace:
  - Provides example documentation targets under examples/.
 
 Quick start:
-  bazel build //:rinx_worker                  # build the binary
+  bazel build //:rinx                  # build the binary
   bazel build //examples:site                 # build the full example site
   bazel build //examples/team_a:docs          # build team_a in isolation
 """

@@ -1,11 +1,17 @@
 [package]
 name = "rinx_toctree"
-version = "0.1.0"
+description = "Toctree entry resolution for rinx. Internal to rinx; no stability guarantees."
+version.workspace = true
 edition.workspace = true
 license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
 
 [dependencies]
-rinx_ast = { path = "../ast" }
+rinx_ast.workspace = true
 globset = "0.4"
 
 [lints]
