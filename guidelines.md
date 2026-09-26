@@ -226,3 +226,4 @@ entry under the heading it belongs to, as a single short sentence.
 - When a backend library cannot express a commonly used option (text at any angle) but the missing piece is small and self-contained, write that piece yourself rather than narrowing the option; narrowing is for gaps too large to own.
 - Keep sibling directives on one selection language: refuse a legacy selection option by name with the `:filter:` to write instead, rather than translating it for one sibling alone.
 - When renaming, rename consistently everywhere (package, library, build targets, docs) rather than keeping the old name alive as a compatibility shim.
+- A test asserting that a build step is or is not re-run detects it with `-s` (did the action's key change), never with `(cached)`, whose answer depends on what a disk or remote cache happens to hold.
