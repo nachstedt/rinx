@@ -62,6 +62,7 @@ inventory, in the order ``inventories`` lists them.
    :py:class:`dict`, :func:`len`, :term:`bytecode`, :option:`-O`
    :ref:`tut-intro`                  — shows the title Python gives the label
    :ref:`the tutorial <tut-intro>`   — an explicit title still wins
+   :any:`dict`                       — any entry type; the first inventory listing it wins
 
 To pick an inventory, or to skip this site, as in Sphinx:
 
@@ -71,7 +72,8 @@ To pick an inventory, or to skip this site, as in Sphinx:
    :external:py:class:`dict`           — any inventory, never this site
    :external+python:ref:`tut-intro`    — the `python` inventory only
 
-``:external:`` works on ``:ref:``, ``:term:``, ``:option:`` and every domain role.
+``:external:`` works on ``:ref:``, ``:term:``, ``:option:``, ``:any:`` and every
+domain role.
 
 .. list-table::
    :header-rows: 1

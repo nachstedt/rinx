@@ -6,7 +6,9 @@
 //! `:ref:`, [`hyperlink`] and [`anonymous_reference`] for the two hyperlink
 //! forms, [`term_reference`] for `:term:`, [`option_reference`] for
 //! `:option:`, and [`domain_object_reference`] for the domain roles. The
-//! latter two resolve through [`crate::resolution`].
+//! latter two resolve through [`crate::resolution`], as does
+//! [`any_reference`], which draws each kind it finds through the other
+//! modules' href builders.
 //!
 //! A reference that no document of this site defines but another site's
 //! inventory lists is written by [`external_link`], whichever role found it.
@@ -15,6 +17,7 @@
 //! to resolve, and where the role was written.
 
 mod anonymous_reference;
+mod any_reference;
 mod dispatch;
 mod domain_object_reference;
 pub(crate) mod entity_reference;

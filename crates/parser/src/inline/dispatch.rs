@@ -13,6 +13,7 @@ use super::regexes::{
     ANONYMOUS_PHRASED_REGEX, ANONYMOUS_SIMPLE_REGEX, EMBEDDED_URI_REGEX, EXTERNAL_PREFIX_REGEX,
     PHRASED_LINK_REGEX, PROGRAM_ROLE_REGEX, REF_REGEX, SIMPLE_LINK_REGEX, TERM_ROLE_REGEX,
 };
+use super::roles::any::handle_any_match;
 use super::roles::c::macro_::handle_macro_match;
 use super::roles::c::struct_::handle_struct_match;
 use super::roles::c::type_::handle_type_match;
@@ -68,6 +69,19 @@ fn apply_inventory_selector(node: InlineNode, selector: InventorySelector) -> In
         } => InlineNode::Reference {
             display,
             target,
+            span,
+            inventory: selector,
+        },
+        InlineNode::AnyReference {
+            display,
+            target,
+            link,
+            span,
+            ..
+        } => InlineNode::AnyReference {
+            display,
+            target,
+            link,
             span,
             inventory: selector,
         },
@@ -135,6 +149,7 @@ fn build_inline_node(
                 inventory: InventorySelector::Any,
             }
         }
+        "any" => handle_any_match(m_str),
         "program" => {
             let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
             InlineNode::Program(caps["name"].to_string())

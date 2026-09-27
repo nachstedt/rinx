@@ -5,9 +5,11 @@
 //! (`:option:`), plus the domain-agnostic target-parsing logic shared by all
 //! of them.
 //!
-//! [`math`] is the exception to the per-domain grouping: `:math:`/`:eq:`
-//! belong to no domain and resolve nothing per-domain, so they sit flat here.
+//! [`math`] and [`any`] are the exceptions to the per-domain grouping:
+//! `:math:`/`:eq:` belong to no domain, and `:any:` searches every one, so
+//! they sit flat here.
 
+pub(super) mod any;
 pub(super) mod c;
 pub(super) mod entity;
 pub(super) mod math;

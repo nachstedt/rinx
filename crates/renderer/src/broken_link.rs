@@ -46,6 +46,14 @@ pub enum BrokenLinkKind {
         /// The qualified names that matched, in index order.
         candidates: Vec<String>,
     },
+    /// An `:any:` role whose target names nothing, here or in any inventory
+    /// it may search.
+    AnyReference,
+    /// An `:any:` role whose target names several things of this site at
+    /// once. Deliberately unresolved, as an ambiguous domain-object reference
+    /// is (real Sphinx links the first); each candidate is the role that would
+    /// name it alone, e.g. ``:py:func:`pkg.close` ``.
+    AmbiguousAnyReference { candidates: Vec<String> },
     /// An `:external+name:` role whose `name` the build declared no
     /// inventory under — so nothing was searched, and the fix is the name or
     /// the site's `inventories`, not the target.
@@ -68,6 +76,8 @@ impl BrokenLinkKind {
             Self::EntityTypeMismatch { .. } => DiagnosticCode::EntityRoleTypeMismatch,
             Self::DomainObjectReference(_) => DiagnosticCode::LinkBrokenObject,
             Self::AmbiguousDomainObjectReference { .. } => DiagnosticCode::LinkAmbiguousObject,
+            Self::AnyReference => DiagnosticCode::LinkBrokenAny,
+            Self::AmbiguousAnyReference { .. } => DiagnosticCode::LinkAmbiguousAny,
             Self::UnknownInventory(_) => DiagnosticCode::LinkUnknownInventory,
         }
     }
@@ -86,6 +96,8 @@ impl BrokenLinkKind {
             Self::EntityTypeMismatch { .. } => "entity type mismatch",
             Self::DomainObjectReference(_) => "domain object",
             Self::AmbiguousDomainObjectReference { .. } => "ambiguous domain object",
+            Self::AnyReference => "any reference",
+            Self::AmbiguousAnyReference { .. } => "ambiguous any reference",
             Self::UnknownInventory(_) => "reference into an undeclared inventory",
         }
     }
@@ -146,6 +158,7 @@ mod tests {
             (BrokenLinkKind::AnonymousReference, "anonymous reference"),
             (BrokenLinkKind::TermReference, "term"),
             (BrokenLinkKind::OptionReference, "option"),
+            (BrokenLinkKind::AnyReference, "any reference"),
         ];
 
         // When / Then
@@ -189,5 +202,19 @@ mod tests {
         // When / Then
         assert_eq!(kind.code(), DiagnosticCode::LinkUnknownInventory);
         assert_eq!(kind.as_str(), "reference into an undeclared inventory");
+    }
+
+    #[test]
+    fn test_the_two_any_reference_kinds_have_codes_of_their_own() {
+        // Given
+        let broken = BrokenLinkKind::AnyReference;
+        let ambiguous = BrokenLinkKind::AmbiguousAnyReference {
+            candidates: vec![":py:func:`a.f`".to_string()],
+        };
+
+        // When / Then
+        assert_eq!(broken.code(), DiagnosticCode::LinkBrokenAny);
+        assert_eq!(ambiguous.code(), DiagnosticCode::LinkAmbiguousAny);
+        assert_eq!(ambiguous.as_str(), "ambiguous any reference");
     }
 }

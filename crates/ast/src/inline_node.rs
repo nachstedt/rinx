@@ -131,6 +131,36 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
         inventory: InventorySelector,
     },
+    /// A cross-reference produced by the `:any:` role, which names a target
+    /// without saying what kind of thing it is.
+    ///
+    /// Kept as the question rather than lowered to one of the specific
+    /// reference variants while parsing, because what `target` names — a
+    /// label, a document, a glossary term, an option, an equation or a domain
+    /// object — is a fact about the whole project, which only the merged
+    /// index knows. The renderer searches every kind and draws the one hit
+    /// exactly as its own role would.
+    ///
+    /// `display` is the explicit title of the angle-bracket form and `None`
+    /// for a bare target, as on [`Self::Reference`]: a label hit shows its
+    /// section title, which is not known here. `target` is kept as written —
+    /// unlike on [`Self::DomainObjectReference`], a trailing `()` is not
+    /// stripped, since it is markup only for the domain-object kinds and the
+    /// renderer strips it for those alone. A `!` prefix is markup for every
+    /// kind, so it is consumed here and recorded as `link: false`: the target
+    /// is then never looked up and shown as a literal.
+    AnyReference {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        display: Option<String>,
+        target: String,
+        link: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+        /// Which inventories the target may come from — see
+        /// [`InventorySelector`]. Left out of a `.ast` file when ordinary.
+        #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
+        inventory: InventorySelector,
+    },
     /// A reference to a project-declared entity, from a role the schema
     /// names — ``:req:`REQ_001` ``, ``:need:`REQ_001` ``, or the built-in
     /// ``:entity:`REQ_001` ``.
@@ -215,6 +245,7 @@ impl InlineNode {
             | Self::TermReference { span, .. }
             | Self::DomainObjectReference { span, .. }
             | Self::OptionReference { span, .. }
+            | Self::AnyReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
@@ -238,6 +269,7 @@ impl InlineNode {
             | Self::TermReference { span, .. }
             | Self::DomainObjectReference { span, .. }
             | Self::OptionReference { span, .. }
+            | Self::AnyReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
@@ -270,7 +302,7 @@ impl InlineNode {
             | Self::OptionReference { .. }
             | Self::EntityReference { .. }
             | Self::EquationReference { .. } => true,
-            Self::DomainObjectReference { link, .. } => *link,
+            Self::DomainObjectReference { link, .. } | Self::AnyReference { link, .. } => *link,
             _ => false,
         }
     }
@@ -298,6 +330,9 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             // Without the index, a bare label's section title is unknown, so
             // the label itself is the best plain text there is.
             InlineNode::Reference {
+                display, target, ..
+            }
+            | InlineNode::AnyReference {
                 display, target, ..
             } => display.as_deref().unwrap_or(target),
             InlineNode::TermReference { display, .. }
@@ -421,6 +456,90 @@ mod tests {
         // When / Then
         assert!(!suppressed.renders_as_link());
         assert!(linked.renders_as_link());
+    }
+
+    #[test]
+    fn test_a_suppressed_any_reference_is_not_a_link() {
+        // Given — `:any:` with and without the `!` prefix
+        let any = |link| InlineNode::AnyReference {
+            display: None,
+            target: "t".to_string(),
+            link,
+            span: None,
+            inventory: crate::InventorySelector::Any,
+        };
+
+        // When / Then
+        assert!(!any(false).renders_as_link());
+        assert!(any(true).renders_as_link());
+    }
+
+    #[test]
+    fn test_any_reference_carries_its_span() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(3, 1),
+            crate::span::Position::new(3, 12),
+        );
+        let node = InlineNode::AnyReference {
+            display: None,
+            target: "t".to_string(),
+            link: true,
+            span: None,
+            inventory: crate::InventorySelector::Any,
+        };
+
+        // When
+        let placed = node.with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+    }
+
+    #[test]
+    fn test_any_reference_without_explicit_title_roundtrips_without_display() {
+        // Given — a bare `:any:`, whose link text only the index can supply
+        let node = InlineNode::AnyReference {
+            display: None,
+            target: "pkg.run".to_string(),
+            link: true,
+            span: None,
+            inventory: crate::InventorySelector::Any,
+        };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert!(!json.contains("display"));
+        assert!(!json.contains("inventory"));
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_inline_plain_text_uses_the_title_or_target_of_an_any_reference() {
+        // Given
+        let titled = InlineNode::AnyReference {
+            display: Some("Go".to_string()),
+            target: "t".to_string(),
+            link: true,
+            span: None,
+            inventory: crate::InventorySelector::Any,
+        };
+        let bare = InlineNode::AnyReference {
+            display: None,
+            target: "t".to_string(),
+            link: true,
+            span: None,
+            inventory: crate::InventorySelector::Any,
+        };
+
+        // When
+        let text = inline_plain_text(&[titled, bare]);
+
+        // Then
+        assert_eq!(text, "Got");
     }
 
     #[test]

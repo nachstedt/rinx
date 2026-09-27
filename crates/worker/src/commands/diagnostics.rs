@@ -150,6 +150,9 @@ pub(super) fn format_broken_link_warning(
             object_type.domain_qualified_str(),
             candidates.join(", ")
         ),
+        renderer::BrokenLinkKind::AmbiguousAnyReference { candidates } => {
+            format!(" (could be {})", candidates.join(" or "))
+        }
         renderer::BrokenLinkKind::UnknownInventory(name) => {
             format!(" (no inventory is declared as '{name}')")
         }
@@ -328,6 +331,32 @@ mod tests {
         assert_eq!(
             message,
             "warning: guide/intro.rst:42:18: link.broken-ref: broken ref 'missing-section'"
+        );
+    }
+
+    #[test]
+    fn test_format_broken_link_warning_lists_the_roles_an_ambiguous_any_could_be() {
+        // Given
+        let link = renderer::BrokenLink {
+            kind: renderer::BrokenLinkKind::AmbiguousAnyReference {
+                candidates: vec![
+                    ":std:ref:`shared`".to_string(),
+                    ":py:func:`shared`".to_string(),
+                ],
+            },
+            target: "shared".to_string(),
+            span: Some(a_span()),
+        };
+
+        // When
+        let message =
+            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
+
+        // Then
+        assert_eq!(
+            message,
+            "warning: guide/intro.rst:42:18: link.ambiguous-any: broken ambiguous any reference \
+             'shared' (could be :std:ref:`shared` or :py:func:`shared`)"
         );
     }
 
@@ -557,6 +586,10 @@ mod tests {
             )),
             renderer::BrokenLinkKind::AmbiguousDomainObjectReference {
                 object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Function),
+                candidates: Vec::new(),
+            },
+            renderer::BrokenLinkKind::AnyReference,
+            renderer::BrokenLinkKind::AmbiguousAnyReference {
                 candidates: Vec::new(),
             },
         ];

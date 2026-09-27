@@ -175,21 +175,12 @@ impl<'a> DomainObjectResolver<'a> {
     /// finds `tarfile.TarFile.close` from a document that never mentions
     /// `tarfile`.
     fn resolve_by_suffix(&self, object_type: ObjectType, name: &str) -> DomainObjectResolution<'a> {
-        // A suffix must start at a segment boundary: `.close` may not match
-        // `preclose`. Searching the reversed-segment form turns that into a
-        // prefix query whose trailing separator enforces the boundary.
-        let prefix = format!(
-            "{}.",
-            reverse_dotted_segments(TargetName::new(name).as_str())
-        );
-
         let mut matches: Vec<(ObjectType, &'a TargetName, &'a str)> = self
-            .suffix_index()
-            .range(prefix.clone()..)
-            .take_while(|(reversed, _)| reversed.starts_with(&prefix))
-            .filter_map(|(_, indexed_name)| {
+            .names_ending_in(name)
+            .into_iter()
+            .filter_map(|indexed_name| {
                 let (matched_type, doc_path) = self.lookup(object_type, indexed_name.as_str())?;
-                Some((matched_type, *indexed_name, doc_path))
+                Some((matched_type, indexed_name, doc_path))
             })
             .collect();
 
@@ -210,6 +201,25 @@ impl<'a> DomainObjectResolver<'a> {
                     .collect(),
             },
         }
+    }
+
+    /// Every indexed object name ending in `.name` at a segment boundary, of
+    /// whatever object type — the candidates of Sphinx's "fuzzy" search, before
+    /// any type is checked. `:any:` checks no type at all, so it takes these
+    /// as they are.
+    pub(crate) fn names_ending_in(&self, name: &str) -> Vec<&'a TargetName> {
+        // A suffix must start at a segment boundary: `.close` may not match
+        // `preclose`. Searching the reversed-segment form turns that into a
+        // prefix query whose trailing separator enforces the boundary.
+        let prefix = format!(
+            "{}.",
+            reverse_dotted_segments(TargetName::new(name).as_str())
+        );
+        self.suffix_index()
+            .range(prefix.clone()..)
+            .take_while(|(reversed, _)| reversed.starts_with(&prefix))
+            .map(|(_, indexed_name)| *indexed_name)
+            .collect()
     }
 
     /// Every indexed object name keyed by its dot-segment-reversed form, so a
@@ -344,6 +354,21 @@ mod tests {
         let mut scope = Scope::default();
         scope.python.set_module(module);
         scope
+    }
+
+    #[test]
+    fn test_names_ending_in_matches_only_at_a_segment_boundary() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(py(PyObjectType::Method), "pkg.Box.close", "a.rst");
+        index.insert_domain_object(py(PyObjectType::Function), "pkg.preclose", "a.rst");
+        let resolver = DomainObjectResolver::new(&index);
+
+        // When
+        let names = resolver.names_ending_in("close");
+
+        // Then
+        assert_eq!(names, vec![&TargetName::new("pkg.Box.close")]);
     }
 
     #[test]

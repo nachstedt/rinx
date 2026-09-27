@@ -61,21 +61,57 @@ pub(crate) fn resolve_external<'a>(
     target: &str,
     selector: &InventorySelector,
 ) -> Option<ExternalHit<'a>> {
+    search_inventories(inventories, target, selector, |inventory, name| {
+        lookup_in(inventory, entry_types, name)
+    })
+}
+
+/// [`resolve_external`] for the `:any:` role, which accepts every entry type
+/// an inventory lists — as intersphinx does for it — rather than a fixed few.
+///
+/// Within one inventory the types are tried in their sorted order, which puts
+/// the domains in the alphabetical order Sphinx searches them in; the first
+/// hit wins, since intersphinx reports no ambiguity.
+pub(crate) fn resolve_external_any<'a>(
+    inventories: &'a [ExternalInventory],
+    target: &str,
+    selector: &InventorySelector,
+) -> Option<ExternalHit<'a>> {
+    search_inventories(inventories, target, selector, |inventory, name| {
+        inventory.targets.keys().find_map(|entry_type| {
+            inventory
+                .lookup(entry_type.as_str(), name)
+                .map(|found| ExternalHit {
+                    inventory,
+                    target: found,
+                })
+        })
+    })
+}
+
+/// The search order the module documentation gives, with what counts as a
+/// hit inside one inventory left to `lookup`.
+fn search_inventories<'a>(
+    inventories: &'a [ExternalInventory],
+    target: &str,
+    selector: &InventorySelector,
+    lookup: impl Fn(&'a ExternalInventory, &str) -> Option<ExternalHit<'a>>,
+) -> Option<ExternalHit<'a>> {
     if let InventorySelector::Named(name) = selector {
         let inventory = inventories
             .iter()
             .find(|inventory| &inventory.name == name)?;
-        return lookup_in(inventory, entry_types, target);
+        return lookup(inventory, target);
     }
     inventories
         .iter()
-        .find_map(|inventory| lookup_in(inventory, entry_types, target))
+        .find_map(|inventory| lookup(inventory, target))
         .or_else(|| {
             let (name, rest) = target.split_once(':')?;
             let inventory = inventories
                 .iter()
                 .find(|inventory| inventory.name.as_str() == name)?;
-            lookup_in(inventory, entry_types, rest)
+            lookup(inventory, rest)
         })
 }
 
@@ -365,5 +401,55 @@ mod tests {
 
         // When / Then
         assert_eq!(hit.tooltip(), "(in python v1.0)");
+    }
+
+    #[test]
+    fn test_resolve_external_any_finds_a_target_under_any_entry_type() {
+        // Given — `dict` listed only as a class, `intro` only as a label
+        let inventories = vec![inventory(
+            "python",
+            &[
+                ("dict", "py:class", "stdtypes.html#dict"),
+                ("intro", "std:label", "intro.html#intro"),
+            ],
+        )];
+
+        // When
+        let class = resolve_external_any(&inventories, "dict", &InventorySelector::Any);
+        let label = resolve_external_any(&inventories, "intro", &InventorySelector::Any);
+
+        // Then
+        assert_eq!(class.unwrap().target.uri, "stdtypes.html#dict");
+        assert_eq!(label.unwrap().target.uri, "intro.html#intro");
+    }
+
+    #[test]
+    fn test_resolve_external_any_honours_a_named_selector_and_a_prefix() {
+        // Given
+        let inventories = vec![
+            inventory("first", &[("intro", "std:label", "a.html#intro")]),
+            inventory("second", &[("intro", "std:label", "b.html#intro")]),
+        ];
+        let second = InventorySelector::Named(InventoryName::new("second").unwrap());
+
+        // When
+        let named = resolve_external_any(&inventories, "intro", &second);
+        let prefixed = resolve_external_any(&inventories, "second:intro", &InventorySelector::Any);
+
+        // Then
+        assert_eq!(named.unwrap().inventory.name.as_str(), "second");
+        assert_eq!(prefixed.unwrap().inventory.name.as_str(), "second");
+    }
+
+    #[test]
+    fn test_resolve_external_any_finds_nothing_for_an_unlisted_target() {
+        // Given
+        let inventories = vec![inventory("python", &[("dict", "py:class", "x.html")])];
+
+        // When
+        let hit = resolve_external_any(&inventories, "list", &InventorySelector::Any);
+
+        // Then
+        assert!(hit.is_none());
     }
 }

@@ -9,7 +9,7 @@ use std::fmt::Write as _;
 
 use math_core::MathDisplay;
 use rinx_ast::Span;
-use rinx_index::ProjectIndex;
+use rinx_index::{EquationLocation, ProjectIndex};
 
 use crate::blocks::equation_anchor_id;
 use crate::math::{MathError, MathRenderer};
@@ -59,18 +59,7 @@ pub(super) fn render_equation_reference(
 ) {
     let target_name = rinx_ast::TargetName::new(label);
     if let Some(location) = index.equations.get(&target_name) {
-        let href = format!(
-            "{}#{}",
-            relative_doc_href(&location.doc_path, doc_path),
-            equation_anchor_id(&target_name)
-        );
-        let href_attr = html_escape::encode_double_quoted_attribute(&href);
-        let _ = write!(
-            html,
-            "<a class=\"reference internal\" href=\"{href_attr}\">\
-             <span class=\"eqno\">({})</span></a>",
-            location.number
-        );
+        write_equation_link(html, &target_name, location, doc_path);
     } else {
         let id = equation_anchor_id(&target_name);
         let anchor = html_escape::encode_double_quoted_attribute(&id);
@@ -84,6 +73,28 @@ pub(super) fn render_equation_reference(
             span,
         });
     }
+}
+
+/// Writes a link to the equation labeled `label`, showing its number — what
+/// every reference that resolved to an equation renders as.
+pub(super) fn write_equation_link(
+    html: &mut String,
+    label: &rinx_ast::TargetName,
+    location: &EquationLocation,
+    doc_path: &str,
+) {
+    let href = format!(
+        "{}#{}",
+        relative_doc_href(&location.doc_path, doc_path),
+        equation_anchor_id(label)
+    );
+    let href_attr = html_escape::encode_double_quoted_attribute(&href);
+    let _ = write!(
+        html,
+        "<a class=\"reference internal\" href=\"{href_attr}\">\
+         <span class=\"eqno\">({})</span></a>",
+        location.number
+    );
 }
 
 #[cfg(test)]

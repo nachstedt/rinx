@@ -11,6 +11,8 @@ the ``objects.inv`` every site writes — the other half of intersphinx:
 * Its page on these very links: :ref:`intersphinx-example`.
 * A Python class it documents: :py:class:`Greeter`.
 * A glossary term it defines: :term:`environment`.
+* Any of those through ``:any:``, which searches every kind of entry the
+  inventory lists: :any:`Greeter`.
 
 None of those targets is defined anywhere in this site. Its ``inventories``
 name the example site's inventory with a site-relative base URL, so the links

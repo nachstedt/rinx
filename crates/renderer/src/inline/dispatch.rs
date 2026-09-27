@@ -8,6 +8,7 @@ use rinx_ast::ImageAlign;
 use super::anonymous_reference::{
     render_inline_anonymous_hyperlink, render_inline_anonymous_reference,
 };
+use super::any_reference::{AnyRef, render_inline_any_reference};
 use super::domain_object_reference::{
     DomainObjectDiagnostics, DomainObjectRef, render_inline_domain_object_reference,
 };
@@ -20,6 +21,7 @@ use super::term_reference::render_inline_term_reference;
 use super::RefText;
 use crate::RenderCtx;
 use crate::blocks::render_linked_image;
+use crate::resolution::AnyResolver;
 
 /// Renders a single inline node into `html`.
 ///
@@ -81,6 +83,7 @@ pub(crate) fn render_inline(
         // compile error here and in `render_cross_reference` instead of
         // silently rendering as nothing.
         rinx_ast::InlineNode::Reference { .. }
+        | rinx_ast::InlineNode::AnyReference { .. }
         | rinx_ast::InlineNode::Hyperlink { .. }
         | rinx_ast::InlineNode::AnonymousReference { .. }
         | rinx_ast::InlineNode::TermReference { .. }
@@ -162,6 +165,32 @@ fn render_cross_reference(
         }
         rinx_ast::InlineNode::DomainObjectReference { .. } => {
             render_domain_object(html, inline, ctx);
+        }
+        rinx_ast::InlineNode::AnyReference {
+            display,
+            target,
+            link,
+            span,
+            inventory,
+        } => {
+            render_inline_any_reference(
+                html,
+                AnyRef {
+                    title: display.as_deref(),
+                    target,
+                    link: *link,
+                    span: *span,
+                    inventory,
+                },
+                &AnyResolver {
+                    index: ctx.index,
+                    domains: ctx.domain_resolver,
+                    options: ctx.option_resolver,
+                },
+                &ctx.scope,
+                ctx.doc_path,
+                ctx.broken_links,
+            );
         }
         // Grouped into their own function purely to keep this match's total
         // line count from growing past a readable length as roles

@@ -12,6 +12,7 @@ Welcome to the Rinx example.
    hyperlinks
    admonitions
    inline_roles
+   any_role
    version_changes
    seealso
    literal_blocks
