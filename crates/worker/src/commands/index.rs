@@ -199,7 +199,7 @@ fn written_reference_targets(ast_jsons: &[String]) -> Result<BTreeSet<String>> {
             serde_json::Value::Object(fields) => {
                 for (key, inner) in fields {
                     let target_field = match key.as_str() {
-                        "Reference" | "OptionReference" => Some("target"),
+                        "Reference" | "OptionReference" | "AnyReference" => Some("target"),
                         "TermReference" => Some("term"),
                         "DomainObjectReference" => Some("name"),
                         _ => None,
@@ -455,26 +455,33 @@ mod tests {
 
     #[test]
     fn test_written_reference_targets_finds_every_role_however_deeply_nested() {
-        // Given — a `:ref:` inside a bullet list, a `:term:`, an `:option:`
-        // and a domain role, each as the parser serializes it
+        // Given — a `:ref:` inside a bullet list, a `:term:`, an `:option:`,
+        // a domain role and an `:any:`, each as the parser serializes it
         let doc = r#"{"path":"a.rst","nodes":[
             {"BulletList":{"bullet":"*","items":[{"nodes":[
                 {"Paragraph":[{"Reference":{"target":"python:tut-intro"}}]}]}]}},
             {"Paragraph":[
                 {"TermReference":{"display":"b","term":"bytecode"}},
                 {"OptionReference":{"display":"-O","target":"-O"}},
-                {"DomainObjectReference":{"object_type":"py:class","name":"dict","display":"dict","link":true}}
+                {"DomainObjectReference":{"object_type":"py:class","name":"dict","display":"dict","link":true}},
+                {"AnyReference":{"target":"list","link":true}}
             ]}]}"#;
 
         // When
         let written = written_reference_targets(&[doc.to_string()]).unwrap();
 
         // Then — the prefixed target also yields its unprefixed part
-        let expected: BTreeSet<String> =
-            ["python:tut-intro", "tut-intro", "bytecode", "-O", "dict"]
-                .iter()
-                .map(|name| (*name).to_string())
-                .collect();
+        let expected: BTreeSet<String> = [
+            "python:tut-intro",
+            "tut-intro",
+            "bytecode",
+            "-O",
+            "dict",
+            "list",
+        ]
+        .iter()
+        .map(|name| (*name).to_string())
+        .collect();
         assert_eq!(written, expected);
     }
 

@@ -19,6 +19,8 @@ pub(super) static EXTERNAL_PREFIX_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^:external(?:\+(?P<inventory>[^:`<>\s+]+))?:").unwrap());
 pub(super) static REF_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(&format!(r":{EXTERNAL_PREFIX}ref:`(?P<target>[^`]+)`")).unwrap());
+pub(super) static ANY_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(&format!(r":{EXTERNAL_PREFIX}any:`(?P<target>[^`]+)`")).unwrap());
 pub(super) static PROGRAM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":program:`(?P<name>[^`]+)`").unwrap());
 pub(super) static TERM_ROLE_REGEX: LazyLock<Regex> =
@@ -116,6 +118,7 @@ pub(super) static ANONYMOUS_SIMPLE_REGEX: LazyLock<Regex> =
 /// earliest (then longest) match regardless of table position.
 pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&REF_REGEX, "ref"),
+    (&ANY_ROLE_REGEX, "any"),
     (&PROGRAM_ROLE_REGEX, "program"),
     (&TERM_ROLE_REGEX, "term"),
     (&MATH_ROLE_REGEX, "math"),

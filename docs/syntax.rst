@@ -39,8 +39,10 @@ Supported:
 
 - ``.. toctree::`` (including ``:glob:``, ``:numbered:``, ``:maxdepth:`` and
   ``:hidden:``), with navigation, previous/next links and the general index.
-- The ``:ref:``, ``:term:`` and ``:program:`` roles, and ``:math:`` and
-  ``:eq:``.
+- The ``:ref:``, ``:term:`` and ``:program:`` roles, ``:math:`` and
+  ``:eq:``, and ``:any:``, which searches labels, documents, terms, options,
+  equations and domain objects at once and reports a target naming several
+  of them as ``link.ambiguous-any`` rather than guessing.
 - Admonitions, ``.. seealso::``, ``.. versionadded::``,
   ``.. versionchanged::`` and ``.. deprecated::``.
 - ``.. code-block::``, ``.. highlight::`` and ``.. literalinclude::``, all
@@ -56,8 +58,8 @@ Supported:
 - Linking to other sites through their ``objects.inv``, and writing one; see
   :ref:`intersphinx`.
 
-Not yet supported: the ``:doc:``, ``:numref:``, ``:any:``, ``:download:``
-and ``:code:`` roles, autodoc, ``.. only::``, and the ``:envvar:`` and
+Not yet supported: the ``:doc:``, ``:numref:``, ``:download:`` and
+``:code:`` roles, autodoc, ``.. only::``, and the ``:envvar:`` and
 ``:confval:`` objects.
 
 Extensions

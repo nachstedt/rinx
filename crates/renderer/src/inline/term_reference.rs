@@ -35,14 +35,7 @@ pub(super) fn render_inline_term_reference(
         None
     };
     if let Some(glossary_doc_path) = local {
-        let current_dir = std::path::Path::new(doc_path)
-            .parent()
-            .unwrap_or_else(|| std::path::Path::new(""));
-        let target_html_path = std::path::Path::new(glossary_doc_path).with_extension("html");
-        let relative_path =
-            pathdiff::diff_paths(&target_html_path, current_dir).unwrap_or(target_html_path);
-        let anchor = rinx_ast::term_id(term);
-        let href = format!("{}#{}", relative_path.display(), anchor);
+        let href = term_href(glossary_doc_path, term, doc_path);
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
         let _ = write!(
             html,
@@ -71,6 +64,16 @@ pub(super) fn render_inline_term_reference(
             span,
         });
     }
+}
+
+/// The href a page at `doc_path` links `term`, defined by a glossary in
+/// `glossary_doc`, by.
+pub(super) fn term_href(glossary_doc: &str, term: &str, doc_path: &str) -> String {
+    format!(
+        "{}#{}",
+        rinx_index::relative_doc_href(glossary_doc, doc_path),
+        rinx_ast::term_id(term)
+    )
 }
 
 #[cfg(test)]

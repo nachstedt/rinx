@@ -98,6 +98,32 @@ impl ObjectType {
         }
     }
 
+    /// The role an author writes to reference an object of this type
+    /// (`"func"` for [`PyObjectType::Function`]) — the inverse of
+    /// [`Self::from_role_name`], taking the canonical spelling where several
+    /// roles reach one type (`data` over `const`, `member` over `var`).
+    ///
+    /// Exists for diagnostics that suggest a role: an ambiguous `:any:` names
+    /// each candidate the way the author would have to write it to pick it.
+    #[must_use]
+    pub const fn role_name(&self) -> &'static str {
+        match self {
+            Self::Py(PyObjectType::Function) | Self::C(CObjectType::Function) => "func",
+            Self::Py(PyObjectType::Module) => "mod",
+            Self::Py(PyObjectType::Data) => "data",
+            Self::Py(PyObjectType::Method) => "meth",
+            Self::Py(PyObjectType::Class) => "class",
+            Self::Py(PyObjectType::Attribute) => "attr",
+            Self::Py(PyObjectType::Exception) => "exc",
+            Self::C(CObjectType::Macro) => "macro",
+            Self::C(CObjectType::Member) => "member",
+            Self::C(CObjectType::Struct) => "struct",
+            Self::C(CObjectType::Union) => "union",
+            Self::C(CObjectType::Type) => "type",
+            Self::Std(StdObjectType::Cmdoption) => "option",
+        }
+    }
+
     /// Parses a role-style abbreviation (e.g. `"func"` from `:func:`) within
     /// a known domain. Roles use different (often abbreviated) names than
     /// their directive counterparts, matching real Sphinx. Note `"data"` and
@@ -204,6 +230,36 @@ impl ObjectType {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_role_name_is_the_inverse_of_from_role_name() {
+        // Given every object type
+        let all = [
+            ObjectType::Py(PyObjectType::Function),
+            ObjectType::Py(PyObjectType::Module),
+            ObjectType::Py(PyObjectType::Data),
+            ObjectType::Py(PyObjectType::Method),
+            ObjectType::Py(PyObjectType::Class),
+            ObjectType::Py(PyObjectType::Attribute),
+            ObjectType::Py(PyObjectType::Exception),
+            ObjectType::C(CObjectType::Function),
+            ObjectType::C(CObjectType::Macro),
+            ObjectType::C(CObjectType::Member),
+            ObjectType::C(CObjectType::Struct),
+            ObjectType::C(CObjectType::Union),
+            ObjectType::C(CObjectType::Type),
+            ObjectType::Std(StdObjectType::Cmdoption),
+        ];
+
+        // When / Then — the role it names parses back to the same type
+        for object_type in all {
+            assert_eq!(
+                ObjectType::from_role_name(object_type.domain(), object_type.role_name()),
+                Some(object_type),
+                "{object_type:?}"
+            );
+        }
+    }
 
     #[test]
     fn test_object_type_domain_recovers_originating_domain() {

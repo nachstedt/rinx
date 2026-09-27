@@ -80,6 +80,12 @@ diagnostic_codes! {
     /// A dot-prefixed domain-object role whose suffix search matched several
     /// objects, so it was deliberately left unresolved.
     LinkAmbiguousObject => "link.ambiguous-object",
+    /// An `:any:` role whose target is no label, document, term, option,
+    /// equation or domain object, here or in any inventory it may search.
+    LinkBrokenAny => "link.broken-any",
+    /// An `:any:` role whose target names several things at once, so it was
+    /// deliberately left unresolved rather than linked to one of them.
+    LinkAmbiguousAny => "link.ambiguous-any",
     /// A domain-object role that resolved only via an object-type alias — the
     /// definition's own type differs from the one the role asked for.
     LinkTypeMismatch => "link.type-mismatch",

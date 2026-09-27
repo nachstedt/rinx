@@ -71,16 +71,10 @@ pub(super) fn render_inline_reference(
         write_external_link(html, &hit, doc_path, &html_escape::encode_text(display));
         return;
     }
-    let display = title
-        .or_else(|| index.target_titles.get(&target_name).map(String::as_str))
-        .unwrap_or(target);
+    let display = label_link_text(index, title, &target_name, target);
     let display_escaped = html_escape::encode_text(display);
     if let Some(target_path) = local {
-        let href = format!(
-            "{}#{}",
-            relative_doc_href(target_path, doc_path),
-            index.target_anchor(&target_name)
-        );
+        let href = label_href(index, &target_name, target_path, doc_path);
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
         let _ = write!(html, "<a href=\"{href_attr}\">{display_escaped}</a>");
     } else {
@@ -99,6 +93,35 @@ pub(super) fn render_inline_reference(
             span,
         });
     }
+}
+
+/// The text a link to the label `name` shows: the explicit `title` when one
+/// was written, else the title of the section the label sits above, else the
+/// label as written — a label on anything but a heading has no title to show.
+pub(super) fn label_link_text<'a>(
+    index: &'a ProjectIndex,
+    title: Option<&'a str>,
+    name: &TargetName,
+    target: &'a str,
+) -> &'a str {
+    title
+        .or_else(|| index.target_titles.get(name).map(String::as_str))
+        .unwrap_or(target)
+}
+
+/// The href a page at `doc_path` links the label `name`, defined in
+/// `target_doc`, by.
+pub(super) fn label_href(
+    index: &ProjectIndex,
+    name: &TargetName,
+    target_doc: &str,
+    doc_path: &str,
+) -> String {
+    format!(
+        "{}#{}",
+        relative_doc_href(target_doc, doc_path),
+        index.target_anchor(name)
+    )
 }
 
 #[cfg(test)]

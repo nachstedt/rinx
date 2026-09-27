@@ -98,8 +98,16 @@ Inline markup
    * - ``:eq:`` role
      - ✅
      -
-   * - ``:any:``, ``:doc:``, ``:download:``, ``:numref:`` and ``:code:``
-       roles
+   * - ``:any:`` role
+     - ✅ ℹ️
+     - - A target naming several things is reported as
+         ``link.ambiguous-any`` and not linked; Sphinx warns and links the
+         first.
+       - Glossary terms are found; Sphinx 9's ``:any:`` misses them.
+       - A label above no heading is found, showing the label, as ``:ref:``
+         does here; Sphinx's ``:any:`` does not find it.
+       - Entities are found, since each is a label.
+   * - ``:doc:``, ``:download:``, ``:numref:`` and ``:code:`` roles
      - ❌
      -
    * - ``:pep:``, ``:rfc:``, ``:cve:`` and ``:cwe:`` roles

@@ -45,6 +45,11 @@ The other roles take the prefix too: :external:py:class:`list`,
 :external+python:py:func:`open`, :external:term:`iterable` and
 :external+python:option:`-X`.
 
+``:any:`` falls back to the inventories as well, accepting whatever kind of
+entry they list under the name — :any:`dict` finds a class, and
+:any:`tut-intro` a label, which shows the title Python gives it. It takes the
+prefixes too: :external+python:any:`len`.
+
 .. _typesmapping:
 
 A local label that shadows Python's

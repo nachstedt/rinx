@@ -25,7 +25,11 @@ if ! grep -q 'class="reference external" href="[./]*site_site_out/examples/index
     echo "ERROR: the sibling site does not link into //examples:site through its inventory."
     exit 1
 fi
-echo "SUCCESS: objects.inv written, and the sibling site links through it."
+if ! grep -q 'class="reference external" href="[./]*site_site_out/examples/domains.html#py:class:greeter"[^>]*><code class="xref any' "$SIBLING_PAGE"; then
+    echo "ERROR: the sibling site's :any: does not resolve through the inventory."
+    exit 1
+fi
+echo "SUCCESS: objects.inv written, and the sibling site links through it, :any: included."
 
 cp examples/intersphinx/BUILD.bazel examples/intersphinx/BUILD.bazel.bak
 restore() {

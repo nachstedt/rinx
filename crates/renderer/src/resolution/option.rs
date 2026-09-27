@@ -89,8 +89,10 @@ impl<'a> OptionResolver<'a> {
             .map_or(OptionResolution::NotFound, OptionResolution::External)
     }
 
-    /// The search against this site's own `.. option::` definitions.
-    fn resolve_local(
+    /// The search against this site's own `.. option::` definitions — steps
+    /// 1 to 3 above, never consulting an inventory. Always
+    /// [`OptionResolution::Resolved`] when `Some`.
+    pub(crate) fn resolve_local(
         &self,
         ambient_program: Option<&str>,
         target: &str,

@@ -101,109 +101,64 @@ pub(crate) fn parse_inline_text_mapped(
 /// [`InlineNode::Literal`] is the one verbatim context, so its markers turn
 /// back into backslashes; every other field takes the display form, in which
 /// an escaped space disappears entirely.
-fn unescape_node(node: InlineNode) -> InlineNode {
-    match node {
-        InlineNode::Literal(content) => InlineNode::Literal(unescape_keeping_backslashes(&content)),
-        InlineNode::Text(text) => InlineNode::Text(unescape(&text)),
-        InlineNode::Emphasis(text) => InlineNode::Emphasis(unescape(&text)),
-        InlineNode::Strong(text) => InlineNode::Strong(unescape(&text)),
-        InlineNode::Program(name) => InlineNode::Program(unescape(&name)),
-        InlineNode::AnonymousReference { text, span } => InlineNode::AnonymousReference {
-            text: unescape(&text),
-            span,
-        },
+fn unescape_node(mut node: InlineNode) -> InlineNode {
+    match &mut node {
+        InlineNode::Literal(content) => *content = unescape_keeping_backslashes(content),
+        InlineNode::Text(text)
+        | InlineNode::Emphasis(text)
+        | InlineNode::Strong(text)
+        | InlineNode::Program(text)
+        | InlineNode::AnonymousReference { text, .. } => *text = unescape(text),
         InlineNode::Reference {
-            display,
-            target,
-            span,
-            inventory,
-        } => InlineNode::Reference {
-            display: display.map(|display| unescape(&display)),
-            target: unescape(&target),
-            span,
-            inventory,
-        },
+            display, target, ..
+        }
+        | InlineNode::AnyReference {
+            display, target, ..
+        } => {
+            *display = display.as_deref().map(unescape);
+            *target = unescape(target);
+        }
         InlineNode::EntityReference {
-            role,
+            display, target, ..
+        }
+        | InlineNode::Hyperlink {
+            text: display,
             target,
-            display,
-            span,
-        } => InlineNode::EntityReference {
-            role,
-            target: unescape(&target),
-            display: unescape(&display),
-            span,
-        },
-        InlineNode::Hyperlink { text, target, span } => InlineNode::Hyperlink {
-            text: unescape(&text),
-            target: unescape(&target),
-            span,
-        },
-        InlineNode::AnonymousHyperlink { text, target } => InlineNode::AnonymousHyperlink {
-            text: unescape(&text),
-            target: unescape(&target),
-        },
-        InlineNode::TermReference {
-            display,
-            term,
-            span,
-            inventory,
-        } => InlineNode::TermReference {
-            display: unescape(&display),
-            term: unescape(&term),
-            span,
-            inventory,
-        },
-        InlineNode::OptionReference {
-            display,
+            ..
+        }
+        | InlineNode::AnonymousHyperlink {
+            text: display,
             target,
-            span,
-            inventory,
-        } => InlineNode::OptionReference {
-            display: unescape(&display),
-            target: unescape(&target),
-            span,
-            inventory,
-        },
-        InlineNode::DomainObjectReference {
-            object_type,
-            name,
+        }
+        | InlineNode::TermReference {
             display,
-            link,
-            search_order,
-            span,
-            inventory,
-        } => InlineNode::DomainObjectReference {
-            object_type,
-            name: unescape(&name),
-            display: unescape(&display),
-            link,
-            search_order,
-            span,
-            inventory,
-        },
+            term: target,
+            ..
+        }
+        | InlineNode::OptionReference {
+            display, target, ..
+        }
+        | InlineNode::DomainObjectReference {
+            display,
+            name: target,
+            ..
+        } => {
+            *display = unescape(display);
+            *target = unescape(target);
+        }
         // LaTeX is a verbatim context, like `InlineNode::Literal`: its
         // backslashes are content (`\alpha`, `\\`), so the markers turn back
         // into backslashes rather than being dropped.
-        InlineNode::Math { latex, span } => InlineNode::Math {
-            latex: unescape_keeping_backslashes(&latex),
-            span,
-        },
-        // A label is an identifier, not LaTeX, so it takes the display form
-        // like every other cross-reference target.
-        InlineNode::EquationReference { label, span } => InlineNode::EquationReference {
-            label: unescape(&label),
-            span,
-        },
-        // The substitution name is an identifier, not prose, so it takes the
-        // display form like every other cross-reference target.
-        InlineNode::SubstitutionReference { name, span } => InlineNode::SubstitutionReference {
-            name: unescape(&name),
-            span,
-        },
+        InlineNode::Math { latex, .. } => *latex = unescape_keeping_backslashes(latex),
+        // An equation label and a substitution name are identifiers, not
+        // LaTeX or prose, so they take the display form like every other
+        // cross-reference target.
+        InlineNode::EquationReference { label: name, .. }
+        | InlineNode::SubstitutionReference { name, .. } => *name = unescape(name),
         // Never produced by the inline scan itself — only by the
         // whole-document substitution resolver splicing an already-built
         // node in after this function has already run on it once.
-        InlineNode::InlineImage(options) => InlineNode::InlineImage(options),
+        InlineNode::InlineImage(_) => {}
     }
+    node
 }
