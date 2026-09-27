@@ -94,3 +94,19 @@ py_test(
     srcs = ["doctest_runner_test.py"],
     deps = [":doctest_runner_lib"],
 )
+
+# Publishes the workspace's crates to crates.io in dependency order, skipping
+# those already published and waiting out crates.io's rate limit — the release
+# workflow's crates step. See docs/dev/releasing.md.
+py_library(
+    name = "publish_crates_lib",
+    srcs = ["publish_crates.py"],
+    imports = ["."],
+)
+
+py_test(
+    name = "publish_crates_test",
+    size = "small",
+    srcs = ["publish_crates_test.py"],
+    deps = [":publish_crates_lib"],
+)

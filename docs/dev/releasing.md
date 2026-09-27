@@ -11,7 +11,9 @@ rest:
    are the changelog section followed by the `bazel_dep` line.
 3. **publish-bcr** opens a draft pull request against the Bazel Central
    Registry from your fork (`publish.yaml`).
-4. **crates** publishes every crate to crates.io (`cargo publish --workspace`).
+4. **crates** publishes every crate to crates.io in dependency order
+   (`scripts/publish_crates.py`). It skips a crate already published at its
+   version, and waits out crates.io's limit on new crates.
 5. **finalize** publishes the draft release, but only once both 3 and 4
    succeeded.
 
@@ -51,10 +53,11 @@ release notes or the reason it would refuse.
   release if there is one, and tag again.
 - **publish-bcr:** rerun the failed job, or run **Publish to BCR** by hand
   from the Actions tab with the tag.
-- **crates:** crates.io publishes are permanent. `cargo publish --workspace`
-  skips nothing, so if some crates were published before the failure, publish
-  the remaining ones by hand in dependency order (`cargo publish -p <crate>`)
-  rather than rerunning the job. Then rerun **finalize**.
+- **crates:** crates.io publishes are permanent, but the step is resumable:
+  rerun the failed job and it skips the crates that made it and publishes the
+  rest. **finalize** then runs by itself. The same script works by hand from a
+  clean checkout of the tag (`python3 scripts/publish_crates.py`, with a token
+  from `cargo login`).
 
 ## One-time setup
 
@@ -68,6 +71,23 @@ release notes or the reason it would refuse.
   repository secret `CARGO_REGISTRY_TOKEN`. The **crates** job uses it when it
   is present.
 - **crates.io, afterwards.** On crates.io, add a trusted publisher to every
-  crate (repository `nachstedt/rinx`, workflow `release.yaml`), then delete
-  the `CARGO_REGISTRY_TOKEN` secret. Every later release authenticates through
-  GitHub's OIDC token, and no long-lived token is stored.
+  crate (repository `nachstedt/rinx`, workflow `release.yaml`, no
+  environment), then delete the `CARGO_REGISTRY_TOKEN` secret. Every later
+  release authenticates through GitHub's OIDC token, and no long-lived token is
+  stored.
+
+## A release that adds a crate
+
+Trusted publishing cannot create a crate: its token only works for crates that
+already name this repository as a trusted publisher. A release that adds a
+workspace crate therefore needs a token again, for that release only:
+
+1. Store a crates.io API token (scopes `publish-new` and `publish-update`) as
+   the `CARGO_REGISTRY_TOKEN` secret before tagging. The **crates** job uses
+   it when present.
+2. After the release, add the trusted publisher to the new crate and delete
+   the secret again.
+
+crates.io also limits new crates to a burst of five, then one every ten
+minutes. The **crates** job waits that out by itself, so a release adding many
+crates just takes longer.
