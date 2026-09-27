@@ -493,6 +493,27 @@ class TestCheckOutBranch:
             publish_pages.check_out_branch(repo)
 
 
+@pytest.fixture(autouse=True)
+def no_retry_wait(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    """Records the waits between retries instead of sleeping through them."""
+    waits: list[float] = []
+    monkeypatch.setattr(publish_pages.time, "sleep", waits.append)
+    return waits
+
+
+class TestRetryWait:
+    def test_grows_with_the_attempt_and_stays_random(self) -> None:
+        # Given / When
+        first = [publish_pages.retry_wait(1) for _ in range(200)]
+        fifth = [publish_pages.retry_wait(5) for _ in range(200)]
+
+        # Then
+        assert all(0 <= wait <= publish_pages.RETRY_WAIT_SECONDS for wait in first)
+        assert all(0 <= wait <= 5 * publish_pages.RETRY_WAIT_SECONDS for wait in fifth)
+        assert max(fifth) > publish_pages.RETRY_WAIT_SECONDS
+        assert len(set(first)) > 1
+
+
 class TestPublishChange:
     def test_pushes_the_change_to_the_branch(self, remote: Path, tmp_path: Path) -> None:
         # Given
@@ -521,7 +542,9 @@ class TestPublishChange:
         # Then
         assert run_git(remote, "log", "--format=%s", publish_pages.BRANCH) == "first"
 
-    def test_reapplies_the_change_after_losing_a_race(self, remote: Path, tmp_path: Path) -> None:
+    def test_reapplies_the_change_after_losing_a_race(
+        self, remote: Path, tmp_path: Path, no_retry_wait: list[float]
+    ) -> None:
         # Given another writer pushing between this one's fetch and push, once
         repo = clone(remote, tmp_path / "pages")
         other = clone(remote, tmp_path / "other")
@@ -539,8 +562,9 @@ class TestPublishChange:
         # When
         publish_pages.publish_change(repo, change, "mine")
 
-        # Then — neither write is lost
+        # Then — neither write is lost, and the retry waited first
         assert len(calls) == 2
+        assert len(no_retry_wait) == 1
         assert branch_files(remote) == ["base.txt", "mine.txt", "theirs.txt"]
 
     def test_retries_from_an_empty_branch_too(self, remote: Path, tmp_path: Path) -> None:

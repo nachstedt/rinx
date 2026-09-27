@@ -1,0 +1,48 @@
+# Removes a pull request's preview (pages-preview.yml) from the gh-pages
+# branch once the pull request is closed or merged.
+#
+# pull_request_target, so it holds write access for a pull request from a fork
+# too. That is safe only because it never checks out or runs the pull
+# request's code: it checks out the default branch for the publisher, and
+# takes nothing from the pull request but its number.
+name: Pages preview cleanup
+
+on:
+  pull_request_target:
+    types: [ closed ]
+
+permissions: {}
+
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        ref: ${{ github.event.repository.default_branch }}
+
+    # Removing a preview that was never published changes nothing, and pushes
+    # nothing.
+    - name: Remove pr/${{ github.event.pull_request.number }}
+      env:
+        BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+      run: |
+        cp scripts/publish_pages.py "$RUNNER_TEMP/"
+        python3 "$RUNNER_TEMP/publish_pages.py" remove \
+          --pages-dir . \
+          --base-url "$BASE_URL" \
+          --slot "pr/$NUMBER"
+
+    # Edits the comment linking the preview, if one was ever posted.
+    - name: Say so on the pull request
+      run: |
+        gh pr comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --edit-last \
+          --body "**Preview** removed, since this pull request is closed." \
+          || echo "No preview comment to update."

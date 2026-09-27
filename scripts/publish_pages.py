@@ -38,10 +38,12 @@ import argparse
 import html
 import json
 import os
+import random
 import re
 import shutil
 import subprocess
 import sys
+import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from enum import Enum
@@ -53,7 +55,12 @@ BRANCH = "gh-pages"
 WORK_BRANCH = "publish-pages"
 BOT_NAME = "github-actions[bot]"
 BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com"
-PUSH_ATTEMPTS = 5
+# Writers are not queued (a GitHub concurrency group keeps only one pending
+# run and cancels the rest), so a burst of them — a merge, its CI's preview
+# cleanup, a release — races here instead; enough attempts, spread out by a
+# random wait growing with each, lets every one of them land.
+PUSH_ATTEMPTS = 10
+RETRY_WAIT_SECONDS = 3.0
 
 # Where //examples:site goes inside a version directory, and each site's front
 # page, which a version's root redirects to.
@@ -385,6 +392,14 @@ def commit_and_push(repo: Path, message: str) -> bool:
     return pushed.returncode == 0
 
 
+def retry_wait(attempt: int) -> float:
+    """Seconds to wait after the `attempt`-th rejected push: random, growing with each.
+
+    Random so that writers rejected by the same push do not collide again.
+    """
+    return random.uniform(0, RETRY_WAIT_SECONDS * attempt)  # noqa: S311 - jitter, not secrecy
+
+
 def publish_change(repo: Path, change: Callable[[Path], object], message: str) -> None:
     """Applies `change` to the branch's tree and pushes it, retrying lost races.
 
@@ -397,7 +412,9 @@ def publish_change(repo: Path, change: Callable[[Path], object], message: str) -
         change(repo)
         if commit_and_push(repo, message):
             return
-        print(f"Push rejected (attempt {attempt} of {PUSH_ATTEMPTS}); retrying.")
+        wait = retry_wait(attempt)
+        print(f"Push rejected (attempt {attempt} of {PUSH_ATTEMPTS}); retrying in {wait:.1f}s.")
+        time.sleep(wait)
     msg = f"gave up after {PUSH_ATTEMPTS} rejected pushes to {BRANCH}"
     raise PublishError(msg)
 

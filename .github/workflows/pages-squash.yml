@@ -1,0 +1,29 @@
+# Squashes the gh-pages branch into one commit of its current tree, monthly.
+#
+# The branch is storage, not history (docs/decisions/024-versioned-docs.md):
+# every pull-request preview adds and later removes several megabytes, which
+# would otherwise stay in the repository forever. The squash is pushed with a
+# lease on the tip it read, so a publish landing meanwhile is never lost; the
+# squash then just fails and the next month's run does it.
+name: Pages squash
+
+on:
+  schedule:
+    - cron: "17 3 1 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  squash:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Squash gh-pages
+      run: |
+        cp scripts/publish_pages.py "$RUNNER_TEMP/"
+        python3 "$RUNNER_TEMP/publish_pages.py" squash --pages-dir .

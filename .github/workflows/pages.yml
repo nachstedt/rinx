@@ -98,11 +98,9 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
-    # Every writer of gh-pages, in any workflow, queues here. A queued publish
-    # is superseded by a newer one, but one in progress is never cancelled.
-    concurrency:
-      group: gh-pages
-      cancel-in-progress: false
+    # No concurrency group: GitHub keeps one pending run per group and cancels
+    # the rest, which could drop a release's publish behind a preview's. The
+    # publisher retries a push that lost a race instead.
     steps:
     # A clone of the repository with push access, which the publisher turns
     # into a checkout of gh-pages.
@@ -118,7 +116,24 @@ jobs:
         name: sites
         path: ${{ runner.temp }}/sites
 
+    # A run finishing after a newer commit's must not put main/ back: skip it,
+    # and leave main/ to the run for main's tip.
+    - name: Check the commit is still main's tip
+      id: tip
+      if: github.event_name == 'workflow_run'
+      env:
+        HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      run: |
+        tip=$(git ls-remote origin refs/heads/main | cut -f1)
+        if [ "$tip" = "$HEAD_SHA" ]; then
+          echo "moved-on=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "::notice::main has moved on to $tip; the run for that commit publishes main/."
+          echo "moved-on=true" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Publish ${{ env.VERSION }}
+      if: steps.tip.outputs.moved-on != 'true'
       env:
         FORCE: ${{ inputs.force && '--force' || '' }}
         BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
