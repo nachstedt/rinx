@@ -559,4 +559,133 @@ mod tests {
         // Then
         assert!(result.is_err());
     }
+
+    /// The theme's own page template, so the sidebar's folding is tested
+    /// against the markup that actually ships.
+    const DEFAULT_TEMPLATE: &str = include_str!("../../../../templates/default.html");
+
+    fn nav_page(
+        title: &str,
+        is_current: bool,
+        children: Vec<ResolvedNavEntry>,
+    ) -> ResolvedNavEntry {
+        let is_ancestor = children.iter().any(ResolvedNavEntry::contains_current);
+        ResolvedNavEntry::Page {
+            title: title.to_string(),
+            href: minijinja::Value::from_safe_string(format!("{title}.html")),
+            anchor: None,
+            secnumber: None,
+            is_current,
+            is_ancestor,
+            children,
+        }
+    }
+
+    /// Renders `nav_tree` through the default template and returns the
+    /// sidebar's `<nav>` alone.
+    fn render_default_sidebar(nav_tree: Vec<ResolvedNavEntry>) -> String {
+        let page = render_page(
+            "body",
+            DEFAULT_TEMPLATE,
+            &SiteConfig::default(),
+            &PageMeta {
+                css_path: "default.css",
+                nav_tree,
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
+        let start = page.find("<nav class=\"sidebar-nav\">").unwrap();
+        let end = start + page[start..].find("</nav>").unwrap();
+        page[start..end].to_string()
+    }
+
+    #[test]
+    fn test_default_template_unfolds_the_path_to_the_current_page() {
+        // Given — the current page sits two levels down.
+        let nav_tree = vec![nav_page(
+            "guide",
+            false,
+            vec![nav_page(
+                "setup",
+                true,
+                vec![nav_page("setup-linux", false, vec![])],
+            )],
+        )];
+
+        // When
+        let sidebar = render_default_sidebar(nav_tree);
+
+        // Then — the ancestor and the current page are both open.
+        assert_eq!(sidebar.matches("<details open>").count(), 2, "{sidebar}");
+        assert!(!sidebar.contains("<details>"), "{sidebar}");
+    }
+
+    #[test]
+    fn test_default_template_folds_a_branch_off_the_current_path() {
+        // Given
+        let nav_tree = vec![
+            nav_page("intro", true, vec![]),
+            nav_page("guide", false, vec![nav_page("setup", false, vec![])]),
+        ];
+
+        // When
+        let sidebar = render_default_sidebar(nav_tree);
+
+        // Then
+        assert!(sidebar.contains("<details>"), "{sidebar}");
+        assert!(!sidebar.contains("<details open>"), "{sidebar}");
+    }
+
+    #[test]
+    fn test_default_template_gives_a_leaf_no_toggle() {
+        // Given
+        let nav_tree = vec![nav_page("intro", false, vec![])];
+
+        // When
+        let sidebar = render_default_sidebar(nav_tree);
+
+        // Then
+        assert!(!sidebar.contains("<details"), "{sidebar}");
+        assert!(!sidebar.contains("has-children"), "{sidebar}");
+    }
+
+    #[test]
+    fn test_default_template_keeps_a_branch_link_outside_its_toggle() {
+        // Given
+        let nav_tree = vec![nav_page(
+            "guide",
+            false,
+            vec![nav_page("setup", false, vec![])],
+        )];
+
+        // When
+        let sidebar = render_default_sidebar(nav_tree);
+
+        // Then — the title link comes before the `<details>`, so clicking it
+        // navigates rather than folding.
+        let link = sidebar.find("<a href=\"guide.html\">").unwrap();
+        let details = sidebar.find("<details").unwrap();
+        assert!(link < details, "{sidebar}");
+    }
+
+    #[test]
+    fn test_default_template_numbers_nesting_levels_as_sphinx_does() {
+        // Given
+        let nav_tree = vec![nav_page(
+            "guide",
+            false,
+            vec![nav_page("setup", false, vec![])],
+        )];
+
+        // When
+        let sidebar = render_default_sidebar(nav_tree);
+
+        // Then
+        assert!(
+            sidebar.contains("class=\"toctree-l1 has-children\""),
+            "{sidebar}"
+        );
+        assert!(sidebar.contains("class=\"toctree-l2\""), "{sidebar}");
+    }
 }

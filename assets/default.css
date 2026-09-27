@@ -174,6 +174,68 @@ hr {
   transform: translateX(2px);
 }
 
+.sidebar-nav li.current > a {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ── Collapsible navigation ───────────────────────────────────────── */
+
+/* pydata-sphinx-theme's markup: an entry with children keeps its link
+ * outside a <details> whose <summary> is only the chevron, so the title
+ * still navigates and the chevron alone folds. The template opens the
+ * branches leading to the current page; every other one starts closed. */
+.sidebar-nav li.has-children {
+  position: relative;
+}
+
+.sidebar-nav li.has-children > a {
+  padding-right: 2.25rem;
+}
+
+.sidebar-nav li.has-children > details > summary {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2.2rem;
+  list-style: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: var(--radius);
+}
+
+.sidebar-nav li.has-children > details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar-nav li.has-children > details > summary:hover {
+  background: #f1f5f9;
+  color: var(--primary);
+}
+
+.sidebar-nav li.has-children > details > summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/* A chevron drawn from two borders, pointing right when closed. */
+.toctree-toggle {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-nav details[open] > summary > .toctree-toggle {
+  transform: rotate(45deg);
+}
+
 .sidebar-placeholder {
   color: var(--text-muted);
   font-size: 0.9rem;
