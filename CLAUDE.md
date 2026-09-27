@@ -39,12 +39,13 @@ uv sync                    # install the pinned ruff, ty and pytest
 uv run ruff format && uv run ruff check && uv run ty check
 uv run pytest --cov        # the script tests, with the coverage floor
 bazel test //scripts:all   # the same tests, one target per file, under the same pyproject.toml
+bazel test //tests/js:all  # the default theme's browser scripts (assets/*.js), under rules_js' Node.js
 uv export --only-group test --no-emit-project --format requirements-txt -o scripts/requirements.txt  # after changing the test group
 
 CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency
 ```
 
-There are no `rust_test` Bazel targets — Rust tests are run through Cargo only. The Python scripts' pytest files run both through `uv run pytest` and as one Bazel `py_test` per file (`//scripts:all`), each running pytest under the same `pyproject.toml`.
+There are no `rust_test` Bazel targets — Rust tests are run through Cargo only. The theme's JavaScript is the reverse: its tests (`tests/js/`) run through Bazel only. The Python scripts' pytest files run both through `uv run pytest` and as one Bazel `py_test` per file (`//scripts:all`), each running pytest under the same `pyproject.toml`.
 
 After any code change: run `cargo clippy --workspace --tests` (fix all warnings, don't `#[allow(...)]` them — treat them as refactor signals) and `cargo fmt`, then verify `bazel build //examples:site` still succeeds. After a Python change, likewise run `uv run ruff format`, `uv run ruff check`, `uv run ty check` and `uv run pytest --cov` (the same rule: fix findings, don't `# noqa` them). `doctest_runner.py` and `publish_crates.py` must stay stdlib-only, and the former Python 3.9-compatible, since it runs in users' `py_test`s.
 
@@ -523,6 +524,8 @@ against the set — where the `:icon:` line can be pointed at — and the
 `rinx.toml` (`rinx_renderer::config`) holds only metadata — never file paths. Template/CSS/index paths are always passed as separate CLI flags / Bazel rule attributes (`--template`, `--config`, `template =`, `css =`). This is deliberate: Bazel sandboxes relocate files, so a path baked into the config would break; keeping paths out of the config also means new metadata fields don't require CLI changes. Don't "fix" this by inlining paths into the TOML.
 
 `highlight_language` is the one exception-shaped addition: it names a language, not a path, so it respects the rule above, and it is deserialized through the same smart constructor the parser uses so a typo fails on load.
+
+`[version_switcher] json_url` is a URL the *browser* fetches, not a path the build reads, so it respects the rule too. What it deliberately lacks is pydata-sphinx-theme's `version_match`: `assets/version_switcher.js` finds the page's version by the page's own address, so the build never learns which version it is and one commit's `main/` and preview builds share their cached renders — see `docs/decisions/024-versioned-docs.md`. That script's pure functions are tested by `bazel test //tests/js:all`, a rules_js `js_test` under a hermetic Node.js — no local Node needed. `aspect_rules_js` is a `dev_dependency` and must stay one, which is why the test lives in its own package: the root package is loaded by every module depending on rinx, and `assets/` cannot become a package without breaking the `@rinx//:assets/default.css` label. rules_js brings Aspect's usage telemetry, which `.bazelrc` opts out of with `DO_NOT_TRACK`.
 
 Templates are rendered with MiniJinja (chosen over compile-time Rust templates or reusing Sphinx's Python/Jinja2 templates directly — see the ADR for why). Changing the default template invalidates every cached page render, which is expected.
 

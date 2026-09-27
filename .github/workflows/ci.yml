@@ -125,6 +125,10 @@ jobs:
     - name: Run the script tests
       run: bazel test //scripts:all
 
+    # The default theme's browser scripts, under rules_js' hermetic Node.js.
+    - name: Run the theme script tests
+      run: bazel test //tests/js:all
+
     - name: Build team_a in isolation (partial build)
       run: bazel build //examples/team_a:docs
 

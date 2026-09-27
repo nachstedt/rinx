@@ -1,2 +1,8 @@
 project = "rinx"
 root_doc = "index"
+
+# The menu of published versions and the "not the latest release" banner.
+# Silent until the list exists, e.g. in a local build opened from disk; see
+# docs/decisions/024-versioned-docs.md for how the pages are published.
+[version_switcher]
+json_url = "https://nachstedt.github.io/rinx/versions.json"

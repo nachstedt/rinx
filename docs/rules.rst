@@ -148,6 +148,56 @@ freely.
        makes. On by default.
    * - ``uml_configs``
      - Named PlantUML preambles a diagram selects with ``:config:``.
+   * - ``version_switcher``
+     - A table whose ``json_url`` lists the site's published versions. See
+       :ref:`version-switcher`.
+
+.. _version-switcher:
+
+Publishing several versions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A site published in several versions side by side, for example one directory
+per release plus one for the development branch, can show a menu of those
+versions in the sidebar. Every page other than the preferred version also gets
+a banner that links to the same page in the preferred version:
+
+.. code-block:: toml
+
+   [version_switcher]
+   json_url = "https://example.org/docs/versions.json"
+
+``json_url`` is fetched by the browser. It must be an ``http(s)://`` URL or
+start with ``/``. The file lists the versions in pydata-sphinx-theme's format,
+so a tool that writes one for that theme writes one for this:
+
+.. code-block:: json
+
+   [
+     {"version": "v1.2.0", "name": "v1.2.0 (latest)",
+      "url": "https://example.org/docs/v1.2.0/", "preferred": true},
+     {"version": "main", "name": "main (development)",
+      "url": "https://example.org/docs/main/"},
+     {"version": "v1.1.0", "url": "https://example.org/docs/v1.1.0/"}
+   ]
+
+A page finds its own version by its address: the entry whose ``url`` is the
+longest prefix of it. So the build never needs to be told which version it is,
+and the same commit built for two directories produces identical pages. A page
+under no listed ``url``, such as a pull-request preview, is labelled a preview
+build. Switching versions keeps the current page, and goes to the version's
+root when that page does not exist there.
+
+The banner depends on the version being read. On the entry marked
+``preferred`` it is absent. On a version whose name starts with a number, such
+as ``v1.1.0``, it says that is an older release. On any other version, such as
+``main``, it says that is the development version.
+
+``rinx_site`` writes ``version_switcher.js`` next to ``default.css`` for the
+default template. A custom template can use the ``version_switcher`` variable
+the same way: it holds ``json_url`` and ``script``, the script's path relative
+to the page. When ``versions.json`` cannot be fetched, which is the case for a
+build opened from disk, the menu stays hidden.
 
 rinx_inventory
 --------------

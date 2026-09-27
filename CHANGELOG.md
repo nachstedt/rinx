@@ -9,6 +9,14 @@ incompatible ways.
 
 ## [Unreleased]
 
+### Added
+
+- A version switcher for the default template: `[version_switcher] json_url`
+  in `rinx.toml` names a pydata-sphinx-theme-style `versions.json`, and every
+  page gets a menu of the published versions plus a banner on any version
+  other than the preferred one. A page finds its version by its own address,
+  so builds stay identical across the directories they are published to.
+
 ## [0.1.0] - 2026-09-26
 
 The first public release. The documentation is at

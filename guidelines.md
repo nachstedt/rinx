@@ -234,3 +234,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Prefer the current Astral toolchain (uv, ruff, ty) configured in one `pyproject.toml`, over a Bazel-native lint setup.
 - Write Python tests in plain pytest style (functions, `assert`, fixtures) rather than `unittest` classes.
 - Run tests under Bazel with the same configuration file as the local runner, so the two cannot disagree about what runs or how.
+
+## JavaScript
+
+- Run JavaScript tests hermetically under Bazel (rules_js, as a dev dependency) rather than relying on a Node.js installed on the machine.

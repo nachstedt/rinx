@@ -353,6 +353,21 @@ done
     )
     final_outputs.append(css_out)
 
+    # The default template's version switcher, beside the stylesheet. Copied
+    # whether or not the config asks for a switcher: the rule cannot read the
+    # config, and a page that does not load it never fetches it.
+    switcher_js = ctx.file._version_switcher_js
+    switcher_out = ctx.actions.declare_file(ctx.label.name + "_site_out/version_switcher.js")
+    ctx.actions.run_shell(
+        command = "cp \"$1\" \"$2\"",
+        arguments = [switcher_js.path, switcher_out.path],
+        inputs = [switcher_js],
+        outputs = [switcher_out],
+        mnemonic = "RinxCopyVersionSwitcher",
+        progress_message = "Copying version_switcher.js",
+    )
+    final_outputs.append(switcher_out)
+
     return [
         DefaultInfo(files = depset(final_outputs)),
         OutputGroupInfo(
@@ -413,6 +428,10 @@ rinx_site = rule(
             doc = "If True, a broken cross-reference (:ref:, hyperlink, :term:, or domain-object " +
                   "role) fails the render action for that page instead of only printing a " +
                   "warning. Off by default so existing sites are unaffected.",
+        ),
+        "_version_switcher_js": attr.label(
+            allow_single_file = [".js"],
+            default = Label("//:assets/version_switcher.js"),
         ),
         "_worker": attr.label(
             default = Label("//:rinx"),

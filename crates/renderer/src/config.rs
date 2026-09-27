@@ -93,6 +93,77 @@ pub struct SiteConfig {
     /// diagrams look must not re-parse every document.
     #[serde(default)]
     pub uml_configs: std::collections::BTreeMap<String, String>,
+
+    /// The version switcher the default template shows when a site is
+    /// published in several versions side by side — pydata-sphinx-theme's
+    /// `switcher`. Absent, no page mentions it at all.
+    ///
+    /// Only the *list* of versions is configured, never which one this build
+    /// is: the page finds itself in that list by its own address, so the same
+    /// commit built for `main/` and for a preview renders identical bytes and
+    /// shares one cached render (`docs/decisions/024-versioned-docs.md`).
+    #[serde(default)]
+    pub version_switcher: Option<VersionSwitcher>,
+}
+
+/// The `[version_switcher]` table of a site config.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VersionSwitcher {
+    /// Where the browser fetches the list of published versions from.
+    pub json_url: SwitcherUrl,
+}
+
+/// The address of a version switcher's `versions.json`, as the browser
+/// fetches it: absolute (`https://…`) or relative to the host's root (`/…`).
+///
+/// A path relative to the page is refused, because it would mean something
+/// different on every page of a nested site. A URL is not a file path, so this
+/// respects the no-paths rule above.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SwitcherUrl(String);
+
+impl SwitcherUrl {
+    /// Accepts an `http(s)://` URL or a root-relative `/…` path.
+    ///
+    /// # Errors
+    ///
+    /// Returns a message naming the accepted forms when `raw` is neither, or
+    /// when it holds a character that could end an HTML attribute.
+    pub fn parse(raw: &str) -> Result<Self, String> {
+        let absolute = raw.starts_with("https://") || raw.starts_with("http://");
+        let root_relative = raw.starts_with('/') && !raw.starts_with("//");
+        if !(absolute || root_relative) {
+            return Err(format!(
+                "'{raw}' must be an http(s):// URL or start with '/', since a page-relative \
+                 address differs on every page of a nested site"
+            ));
+        }
+        if raw
+            .chars()
+            .any(|c| c.is_whitespace() || matches!(c, '"' | '\'' | '<' | '>'))
+        {
+            return Err(format!("'{raw}' contains a character a URL cannot hold"));
+        }
+        Ok(Self(raw.to_string()))
+    }
+
+    /// The URL as written.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl<'de> Deserialize<'de> for SwitcherUrl {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error as _;
+        let raw = String::deserialize(deserializer)?;
+        Self::parse(&raw).map_err(|error| D::Error::custom(format!("invalid json_url: {error}")))
+    }
 }
 
 /// Reads `highlight_language` from a TOML string through the same smart
@@ -134,6 +205,7 @@ impl Default for SiteConfig {
             collapse_entities: default_collapse_entities(),
             show_entity_updates: default_show_entity_updates(),
             uml_configs: std::collections::BTreeMap::new(),
+            version_switcher: None,
         }
     }
 }
@@ -348,5 +420,99 @@ mod show_entity_updates_tests {
 
         // Then
         assert!(!config.show_entity_updates);
+    }
+}
+
+#[cfg(test)]
+mod version_switcher_tests {
+    use super::*;
+
+    #[test]
+    fn test_no_switcher_unless_the_config_asks_for_one() {
+        // Given — a config that says nothing about it
+        let config: SiteConfig = toml::from_str("project = \"Docs\"").unwrap();
+
+        // When / Then
+        assert!(config.version_switcher.is_none());
+    }
+
+    #[test]
+    fn test_the_switcher_table_is_read() {
+        // Given
+        let toml_str = "[version_switcher]\njson_url = \"https://example.org/versions.json\"\n";
+
+        // When
+        let config: SiteConfig = toml::from_str(toml_str).unwrap();
+
+        // Then
+        assert_eq!(
+            config.version_switcher.unwrap().json_url.as_str(),
+            "https://example.org/versions.json"
+        );
+    }
+
+    #[test]
+    fn test_an_unknown_key_in_the_switcher_table_is_rejected() {
+        // Given — pydata-sphinx-theme's `version_match`, which this build
+        // deliberately never needs
+        let toml_str =
+            "[version_switcher]\njson_url = \"/versions.json\"\nversion_match = \"1.0\"\n";
+
+        // When
+        let result: Result<SiteConfig, _> = toml::from_str(toml_str);
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_a_page_relative_json_url_is_rejected_on_load() {
+        // Given
+        let toml_str = "[version_switcher]\njson_url = \"versions.json\"\n";
+
+        // When
+        let result: Result<SiteConfig, _> = toml::from_str(toml_str);
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_switcher_url_accepts_absolute_urls() {
+        // Given / When / Then
+        assert!(SwitcherUrl::parse("https://example.org/v.json").is_ok());
+        assert!(SwitcherUrl::parse("http://localhost:8000/v.json").is_ok());
+    }
+
+    #[test]
+    fn test_switcher_url_accepts_a_root_relative_path() {
+        // Given / When
+        let url = SwitcherUrl::parse("/rinx/versions.json").unwrap();
+
+        // Then
+        assert_eq!(url.as_str(), "/rinx/versions.json");
+    }
+
+    #[test]
+    fn test_switcher_url_rejects_a_protocol_relative_url() {
+        // Given — `//host/…` looks root-relative but names another host
+        let result = SwitcherUrl::parse("//example.org/versions.json");
+
+        // Then
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_switcher_url_rejects_other_schemes() {
+        // Given / When / Then
+        assert!(SwitcherUrl::parse("javascript:alert(1)").is_err());
+        assert!(SwitcherUrl::parse("file:///versions.json").is_err());
+    }
+
+    #[test]
+    fn test_switcher_url_rejects_characters_that_end_an_attribute() {
+        // Given / When / Then
+        assert!(SwitcherUrl::parse("https://example.org/\"onload=x").is_err());
+        assert!(SwitcherUrl::parse("https://example.org/a b").is_err());
     }
 }
