@@ -16,6 +16,11 @@ rest:
    version, and waits out crates.io's limit on new crates.
 5. **finalize** publishes the draft release, but only once both 3 and 4
    succeeded.
+6. **docs** publishes the release's documentation and example site as
+   `vX.Y.Z/` on the `gh-pages` branch (`pages.yml`, see
+   `docs/decisions/024-versioned-docs.md`). From then on it is the preferred
+   version: the site's front page, `latest/` and the version switcher lead to
+   it.
 
 ## Cutting a release
 
@@ -53,6 +58,9 @@ release notes or the reason it would refuse.
   release if there is one, and tag again.
 - **publish-bcr:** rerun the failed job, or run **Publish to BCR** by hand
   from the Actions tab with the tag.
+- **docs:** rerun the job, or run **Pages** by hand from the Actions tab with
+  the tag as its version. A published release's documentation is never
+  replaced unless you tick **force**.
 - **crates:** crates.io publishes are permanent, but the step is resumable:
   rerun the failed job and it skips the crates that made it and publishes the
   rest. **finalize** then runs by itself. The same script works by hand from a
@@ -75,6 +83,13 @@ release notes or the reason it would refuse.
   environment), then delete the `CARGO_REGISTRY_TOKEN` secret. Every later
   release authenticates through GitHub's OIDC token, and no long-lived token is
   stored.
+
+- **GitHub Pages.** The site is served from the `gh-pages` branch, which
+  `scripts/publish_pages.py` writes. Under *Settings → Pages*, set the source
+  to *Deploy from a branch*, branch `gh-pages`, folder `/ (root)`. The branch
+  is created by the first run of **Pages** (after CI succeeds on `main`, or by
+  hand); publish the existing releases' documentation once by running
+  **Pages** by hand with each tag, starting with `v0.1.0`.
 
 ## A release that adds a crate
 

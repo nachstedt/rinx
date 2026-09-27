@@ -31,7 +31,7 @@ action. So:
   component, a `rinx_site` that assembles them, and dependency checking that
   fails the build when a toctree points at a library that isn't declared.
 - **Fast.** CPython's documentation (about 500 documents) builds as a Bazel
-  target; see [benchmarking](https://nachstedt.github.io/rinx/docs/benchmark.html).
+  target; see [benchmarking](https://nachstedt.github.io/rinx/latest/docs/benchmark.html).
 - **Resilient parsing.** A half-written document still produces a page, which
   is what makes the VS Code live preview possible.
 
@@ -42,14 +42,14 @@ action. So:
   `.. include::`, `.. literalinclude::`, images and figures.
 - Sphinx: `toctree`, `:ref:`/`:doc:`/`:term:`, glossaries, the Python, C and
   standard domains, the general index, `objects.inv` output and
-  [intersphinx](https://nachstedt.github.io/rinx/docs/intersphinx.html) linking between sites.
+  [intersphinx](https://nachstedt.github.io/rinx/latest/docs/intersphinx.html) linking between sites.
 - Code blocks highlighted at build time, math rendered to MathML, and doctests
   executed by `bazel test` rather than during the build.
 - **Entities**: a project's own directives (`.. req::`, `.. spec::`, ...)
   declared in a schema, with typed attributes, relations and derived
   back-links, plus tables, flowcharts, sequence diagrams and charts over them.
   `needimport` reads sphinx-needs' `needs.json`. See
-  [Entities](https://nachstedt.github.io/rinx/docs/entities.html).
+  [Entities](https://nachstedt.github.io/rinx/latest/docs/entities.html).
 - PlantUML diagrams, opted into per library so projects without diagrams pay
   nothing for them.
 - Jinja templating of sources, and `sphinx-design`'s `dropdown`, `grid` and
@@ -89,16 +89,17 @@ uses every feature. Build it with `bazel build //examples:site`.
 
 ## Documentation
 
-The documentation is at **<https://nachstedt.github.io/rinx/>**. It is built
-by rinx itself from [`docs/`](docs/):
-[getting started](https://nachstedt.github.io/rinx/docs/getting_started.html),
-[the Bazel rules](https://nachstedt.github.io/rinx/docs/rules.html),
-[supported syntax](https://nachstedt.github.io/rinx/docs/syntax.html),
-[entities](https://nachstedt.github.io/rinx/docs/entities.html),
-[intersphinx](https://nachstedt.github.io/rinx/docs/intersphinx.html),
-[the VS Code preview](https://nachstedt.github.io/rinx/docs/vscode.html) and
-[benchmarking](https://nachstedt.github.io/rinx/docs/benchmark.html).
-The [example site](https://nachstedt.github.io/rinx/example-site/examples/index.html)
+The documentation is at **<https://nachstedt.github.io/rinx/>**, for every
+release and for `main`, with a menu to switch between them. It is built by
+rinx itself from [`docs/`](docs/):
+[getting started](https://nachstedt.github.io/rinx/latest/docs/getting_started.html),
+[the Bazel rules](https://nachstedt.github.io/rinx/latest/docs/rules.html),
+[supported syntax](https://nachstedt.github.io/rinx/latest/docs/syntax.html),
+[entities](https://nachstedt.github.io/rinx/latest/docs/entities.html),
+[intersphinx](https://nachstedt.github.io/rinx/latest/docs/intersphinx.html),
+[the VS Code preview](https://nachstedt.github.io/rinx/latest/docs/vscode.html) and
+[benchmarking](https://nachstedt.github.io/rinx/latest/docs/benchmark.html).
+The [example site](https://nachstedt.github.io/rinx/latest/example-site/examples/index.html)
 shows every supported construct rendered.
 
 For the design, see
