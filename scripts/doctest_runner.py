@@ -27,6 +27,9 @@ What this file reproduces from Sphinx
 * ``DONT_ACCEPT_BLANKLINE`` forced on for testcode/testoutput pairs
 * Sphinx's default flags, which are *not* the stdlib's
 * a block that parses to zero examples is skipped with a warning
+
+This file runs inside users' `py_test`s, on whichever interpreter their
+toolchain provides, so it stays stdlib-only and Python 3.9-compatible.
 """
 
 from __future__ import annotations
@@ -39,8 +42,15 @@ import re
 import sys
 import traceback
 from dataclasses import dataclass, field
-from typing import Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, Union
 from xml.etree import ElementTree as ET
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from types import CodeType
+
+    from typing_extensions import Self
 
 # Sphinx's `doctest_default_flags`, which differ from the stdlib's empty
 # default. Reproduced so a block behaves the same here as under `make doctest`.
@@ -70,6 +80,86 @@ class DoctestPlanError(Exception):
 
 
 # ---------------------------------------------------------------------------
+# The plan format, as `crates/worker/src/doctest_plan.rs` serializes it
+# ---------------------------------------------------------------------------
+
+
+class Conditions(TypedDict, total=False):
+    """When a block runs: `RunConditions`."""
+
+    pyversion: str | None
+    skipif: str | None
+
+
+class Flag(TypedDict):
+    """One `+FLAG`/`-FLAG` doctest option: `DocTestFlagSpec`."""
+
+    name: str
+    enabled: bool
+
+
+class Snippet(TypedDict):
+    """A block of code: `DocTestSnippet`."""
+
+    source: str
+    conditions: Conditions
+
+
+class ExpectedOutput(TypedDict):
+    """A ``testoutput`` block: `ExpectedOutput`."""
+
+    text: str
+    conditions: Conditions
+    flags: list[Flag]
+
+
+class Interactive(TypedDict):
+    """A ``.. doctest::`` block of `>>>` examples."""
+
+    source: str
+    conditions: Conditions
+    flags: list[Flag]
+
+
+class CodeWithOutput(TypedDict):
+    """A ``testcode`` block and the ``testoutput`` paired with it, if any."""
+
+    code: Snippet
+    expected: ExpectedOutput | None
+
+
+class InteractiveCase(TypedDict):
+    """`DocTestCase::Interactive`, as serde tags it."""
+
+    Interactive: Interactive
+
+
+class CodeWithOutputCase(TypedDict):
+    """`DocTestCase::CodeWithOutput`, as serde tags it."""
+
+    CodeWithOutput: CodeWithOutput
+
+
+Case = Union[InteractiveCase, CodeWithOutputCase]
+
+
+class Group(TypedDict):
+    """One doctest group: `DocTestGroupPlan`."""
+
+    name: str
+    setup: list[Snippet]
+    cases: list[Case]
+    cleanup: list[Snippet]
+
+
+class Plan(TypedDict):
+    """One document's `.doctests.json`: `DocTestPlan`."""
+
+    doc_path: str
+    groups: list[Group]
+
+
+# ---------------------------------------------------------------------------
 # Compile mode
 # ---------------------------------------------------------------------------
 #
@@ -88,35 +178,42 @@ _CURRENT_COMPILE_MODE = "single"
 
 
 def _compile_in_current_mode(
-    source: Any,
+    source: str,
     filename: str,
     mode: str,  # noqa: ARG001 - deliberately overridden
     flags: int = 0,
-    dont_inherit: bool = False,
-    **_kwargs: Any,
-) -> Any:
+    # Positional, because `doctest` calls this with the builtin's signature.
+    dont_inherit: bool = False,  # noqa: FBT001, FBT002
+) -> CodeType:
+    """`compile`, in the mode `compile_mode` selected rather than the one asked for."""
     return compile(source, filename, _CURRENT_COMPILE_MODE, flags, dont_inherit)
 
 
-doctest.compile = _compile_in_current_mode  # type: ignore[attr-defined]
+doctest.compile = _compile_in_current_mode  # ty: ignore[unresolved-attribute]
 
 
 class compile_mode:  # noqa: N801 - used as a context manager, reads as one
     """Selects the mode `doctest` compiles examples in for the duration."""
 
     def __init__(self, mode: str) -> None:
+        """Prepare to compile in `mode` ("single" or "exec") once entered."""
         self.mode = mode
         self.previous = _CURRENT_COMPILE_MODE
 
-    def __enter__(self) -> compile_mode:
+    def __enter__(self) -> Self:
+        """Switch `doctest` to this mode."""
         global _CURRENT_COMPILE_MODE  # noqa: PLW0603 - mirrors doctest's own global state
         self.previous = _CURRENT_COMPILE_MODE
         _CURRENT_COMPILE_MODE = self.mode
         return self
 
     def __exit__(self, *_exc: object) -> None:
+        """Restore the mode that was in effect before."""
         global _CURRENT_COMPILE_MODE  # noqa: PLW0603
         _CURRENT_COMPILE_MODE = self.previous
+
+
+Status = Literal["passed", "failed", "skipped"]
 
 
 @dataclass
@@ -125,11 +222,12 @@ class CaseResult:
 
     group: str
     index: int
-    status: str  # "passed" | "failed" | "skipped"
+    status: Status
     detail: str = ""
 
     @property
     def name(self) -> str:
+        """The test case name the log and the JUnit XML show."""
         return f"{self.group}[{self.index}]"
 
 
@@ -141,14 +239,17 @@ class RunReport:
 
     @property
     def failed(self) -> list[CaseResult]:
+        """The results that failed."""
         return [r for r in self.results if r.status == "failed"]
 
     @property
     def skipped(self) -> list[CaseResult]:
+        """The results that were skipped."""
         return [r for r in self.results if r.status == "skipped"]
 
     @property
     def passed(self) -> list[CaseResult]:
+        """The results that passed."""
         return [r for r in self.results if r.status == "passed"]
 
 
@@ -162,7 +263,7 @@ def parse_version(text: str) -> tuple[int, ...]:
     return tuple(int(part) for part in text.split("."))
 
 
-def pad(left: tuple[int, ...], right: tuple[int, ...]) -> tuple:
+def pad(left: tuple[int, ...], right: tuple[int, ...]) -> tuple[tuple[int, ...], tuple[int, ...]]:
     """Zero-pads the shorter of two release tuples, as PEP 440 requires.
 
     Without this, ``>=3.5`` would compare ``(3, 11, 2) >= (3, 5)`` on unequal
@@ -182,7 +283,8 @@ def clause_matches(clause: str, version: tuple[int, ...]) -> bool:
             rest = clause[len(operator) :].strip()
             break
     else:
-        raise DoctestPlanError(f"unsupported version clause {clause!r}")
+        message = f"unsupported version clause {clause!r}"
+        raise DoctestPlanError(message)
 
     wildcard = rest.endswith(".*")
     if wildcard:
@@ -197,7 +299,8 @@ def clause_matches(clause: str, version: tuple[int, ...]) -> bool:
             return prefix == expected
         if operator == "!=":
             return prefix != expected
-        raise DoctestPlanError(f"operator {operator!r} cannot take a wildcard")
+        message = f"operator {operator!r} cannot take a wildcard"
+        raise DoctestPlanError(message)
 
     actual, expect = pad(version, expected)
     return {
@@ -213,9 +316,7 @@ def clause_matches(clause: str, version: tuple[int, ...]) -> bool:
 def version_matches(spec: str, version: tuple[int, ...]) -> bool:
     """Evaluates a comma-separated specifier set; every clause must hold."""
     return all(
-        clause_matches(clause.strip(), version)
-        for clause in spec.split(",")
-        if clause.strip()
+        clause_matches(clause.strip(), version) for clause in spec.split(",") if clause.strip()
     )
 
 
@@ -240,7 +341,7 @@ def build_skipif_context(global_setup: str, global_cleanup: str) -> dict[str, An
 
 
 def should_skip(
-    conditions: dict[str, Any],
+    conditions: Conditions,
     context: dict[str, Any],
     version: tuple[int, ...],
 ) -> str | None:
@@ -270,7 +371,7 @@ def should_skip(
 # ---------------------------------------------------------------------------
 
 
-def optionflags_for(flags: list[dict[str, Any]]) -> int:
+def optionflags_for(flags: Iterable[Flag]) -> int:
     """Folds a plan's ``+FLAG``/``-FLAG`` list into a doctest option mask."""
     mask = 0
     for flag in flags:
@@ -282,7 +383,7 @@ def optionflags_for(flags: list[dict[str, Any]]) -> int:
     return mask
 
 
-def option_overrides(flags: list[dict[str, Any]]) -> dict[int, bool]:
+def option_overrides(flags: Iterable[Flag]) -> dict[int, bool]:
     """Builds the per-example ``options`` mapping doctest expects."""
     overrides: dict[int, bool] = {}
     for flag in flags:
@@ -295,14 +396,12 @@ def option_overrides(flags: list[dict[str, Any]]) -> dict[int, bool]:
 class GroupRunner:
     """Runs one group's snippets and cases against a shared namespace."""
 
-    def __init__(self, doc_path: str, group: dict[str, Any]) -> None:
+    def __init__(self, doc_path: str, name: str) -> None:
+        """Start a group with a fresh namespace."""
         self.doc_path = doc_path
-        self.group = group
-        self.name = group["name"]
+        self.name = name
         self.namespace: dict[str, Any] = {}
-        self.runner = doctest.DocTestRunner(
-            verbose=False, optionflags=DEFAULT_OPTIONFLAGS
-        )
+        self.runner = doctest.DocTestRunner(verbose=False, optionflags=DEFAULT_OPTIONFLAGS)
 
     def _run(self, test: doctest.DocTest, mode: str) -> tuple[bool, str]:
         """Runs one synthesized doctest, returning success and any report.
@@ -320,27 +419,19 @@ class GroupRunner:
             self.runner.run(test, out=captured.append, clear_globs=False)
         return self.runner.failures == before, "".join(captured)
 
-    def run_snippets(self, snippets: list[dict[str, Any]], what: str) -> tuple[bool, str]:
+    def run_snippets(self, sources: Iterable[str], what: str) -> tuple[bool, str]:
         """Runs setup or cleanup code, which must produce no output."""
-        examples = [
-            doctest.Example(snippet["source"] + "\n", "")
-            for snippet in snippets
-            if snippet.get("_run", True)
-        ]
+        examples = [doctest.Example(source + "\n", "") for source in sources]
         if not examples:
             return True, ""
-        test = doctest.DocTest(
-            examples, {}, f"{self.name} ({what} code)", self.doc_path, 0, None
-        )
+        test = doctest.DocTest(examples, {}, f"{self.name} ({what} code)", self.doc_path, 0, None)
         return self._run(test, "exec")
 
-    def run_interactive(self, case: dict[str, Any]) -> tuple[bool, str]:
+    def run_interactive(self, case: Interactive) -> tuple[bool, str]:
         """Runs a ``.. doctest::`` block through the ordinary doctest parser."""
         parser = doctest.DocTestParser()
         try:
-            test = parser.get_doctest(
-                case["source"] + "\n", {}, self.name, self.doc_path, 0
-            )
+            test = parser.get_doctest(case["source"] + "\n", {}, self.name, self.doc_path, 0)
         except Exception:  # noqa: BLE001 - a malformed block is a failure
             return False, traceback.format_exc()
 
@@ -358,7 +449,7 @@ class GroupRunner:
 
         return self._run(test, "single")
 
-    def run_code_with_output(self, case: dict[str, Any]) -> tuple[bool, str]:
+    def run_code_with_output(self, case: CodeWithOutput) -> tuple[bool, str]:
         """Runs a ``testcode``/``testoutput`` pair as one synthesized example."""
         expected = case.get("expected")
         want = expected["text"] + "\n" if expected else ""
@@ -382,87 +473,106 @@ class GroupRunner:
         return self._run(test, "exec")
 
 
-def run_group(
-    doc_path: str,
-    group: dict[str, Any],
-    context: dict[str, Any],
-    version: tuple[int, ...],
-    global_setup: str,
-    global_cleanup: str,
-) -> list[CaseResult]:
+@dataclass(frozen=True)
+class Environment:
+    """What every group of one run shares."""
+
+    # The namespace a `:skipif:` is evaluated in; see `build_skipif_context`.
+    skipif_context: dict[str, Any]
+    # The running interpreter's version, which `:pyversion:` is compared with.
+    version: tuple[int, ...]
+    global_setup: str
+    global_cleanup: str
+
+    def skip_reason(self, conditions: Conditions) -> str | None:
+        """Why a block with these conditions is skipped, or ``None`` to run it."""
+        return should_skip(conditions, self.skipif_context, self.version)
+
+    def runnable_sources(self, snippets: Iterable[Snippet]) -> list[str]:
+        """The source of each setup or cleanup snippet whose conditions hold."""
+        return [s["source"] for s in snippets if self.skip_reason(s["conditions"]) is None]
+
+
+def unrecognized_case(case: Case) -> DoctestPlanError:
+    """The error for a serialized `DocTestCase` holding neither variant."""
+    return DoctestPlanError(f"a case is neither Interactive nor CodeWithOutput: {sorted(case)}")
+
+
+def case_skip_reason(case: Case, env: Environment) -> str | None:
+    """Why a case is skipped, or ``None`` to run it."""
+    interactive = case.get("Interactive")
+    if interactive is not None:
+        return env.skip_reason(interactive["conditions"])
+    pair = case.get("CodeWithOutput")
+    if pair is None:
+        raise unrecognized_case(case)
+    reason = env.skip_reason(pair["code"]["conditions"])
+    if reason is None and pair["expected"]:
+        # An output block can carry its own conditions; if either half is
+        # skipped the pair cannot be checked.
+        reason = env.skip_reason(pair["expected"]["conditions"])
+    return reason
+
+
+def run_case(runner: GroupRunner, case: Case) -> tuple[bool, str]:
+    """Runs one case of a group, returning success and any report."""
+    interactive = case.get("Interactive")
+    if interactive is not None:
+        return runner.run_interactive(interactive)
+    pair = case.get("CodeWithOutput")
+    if pair is None:
+        raise unrecognized_case(case)
+    return runner.run_code_with_output(pair)
+
+
+def run_group(doc_path: str, group: Group, env: Environment) -> list[CaseResult]:
     """Runs one group end to end, returning a result per case."""
-    runner = GroupRunner(doc_path, group)
+    name = group["name"]
+    runner = GroupRunner(doc_path, name)
     results: list[CaseResult] = []
 
-    setup = [dict(s) for s in group["setup"]]
-    for snippet in setup:
-        snippet["_run"] = should_skip(snippet["conditions"], context, version) is None
-    if global_setup:
+    setup = env.runnable_sources(group["setup"])
+    if env.global_setup:
         # Prepended, so a group's own setup can build on it.
-        setup.insert(0, {"source": global_setup, "conditions": {}, "_run": True})
+        setup.insert(0, env.global_setup)
 
     ok, report = runner.run_snippets(setup, "setup")
     if not ok:
         # A failed setup poisons every case, so report once and stop rather
         # than emitting a cascade of misleading failures.
-        return [CaseResult(group["name"], 0, "failed", f"setup failed\n{report}")]
+        return [CaseResult(name, 0, "failed", f"setup failed\n{report}")]
 
     for index, case in enumerate(group["cases"]):
-        kind, payload = next(iter(case.items()))
-
-        conditions = (
-            payload["conditions"]
-            if kind == "Interactive"
-            else payload["code"]["conditions"]
-        )
-        reason = should_skip(conditions, context, version)
-        if reason is None and kind == "CodeWithOutput" and payload.get("expected"):
-            # An output block can carry its own conditions; if either half is
-            # skipped the pair cannot be checked.
-            reason = should_skip(payload["expected"]["conditions"], context, version)
-
+        reason = case_skip_reason(case, env)
         if reason is not None:
-            results.append(CaseResult(group["name"], index, "skipped", reason))
+            results.append(CaseResult(name, index, "skipped", reason))
             continue
+        ok, report = run_case(runner, case)
+        results.append(CaseResult(name, index, "passed" if ok else "failed", report))
 
-        if kind == "Interactive":
-            ok, report = runner.run_interactive(payload)
-        else:
-            ok, report = runner.run_code_with_output(payload)
-
-        results.append(
-            CaseResult(group["name"], index, "passed" if ok else "failed", report)
-        )
-
-    cleanup = [dict(s) for s in group["cleanup"]]
-    for snippet in cleanup:
-        snippet["_run"] = should_skip(snippet["conditions"], context, version) is None
-    if global_cleanup:
+    cleanup = env.runnable_sources(group["cleanup"])
+    if env.global_cleanup:
         # Appended, mirroring Sphinx.
-        cleanup.append({"source": global_cleanup, "conditions": {}, "_run": True})
+        cleanup.append(env.global_cleanup)
 
     ok, report = runner.run_snippets(cleanup, "cleanup")
     if not ok:
-        results.append(
-            CaseResult(group["name"], len(group["cases"]), "failed", f"cleanup failed\n{report}")
-        )
+        results.append(CaseResult(name, len(group["cases"]), "failed", f"cleanup failed\n{report}"))
 
     return results
 
 
-def run_plan(
-    plan: dict[str, Any], global_setup: str, global_cleanup: str
-) -> list[CaseResult]:
+def run_plan(plan: Plan, global_setup: str, global_cleanup: str) -> list[CaseResult]:
     """Runs every group in one document's plan."""
-    context = build_skipif_context(global_setup, global_cleanup)
-    version = sys.version_info[:3]
+    env = Environment(
+        skipif_context=build_skipif_context(global_setup, global_cleanup),
+        version=tuple(sys.version_info[:3]),
+        global_setup=global_setup,
+        global_cleanup=global_cleanup,
+    )
     results: list[CaseResult] = []
     for group in plan["groups"]:
-        results.extend(
-            run_group(
-                plan["doc_path"], group, context, version, global_setup, global_cleanup
-            )
-        )
+        results.extend(run_group(plan["doc_path"], group, env))
     return results
 
 
@@ -481,9 +591,7 @@ def build_testsuite(doc_path: str, report: RunReport) -> ET.Element:
         skipped=str(len(report.skipped)),
     )
     for result in report.results:
-        case = ET.SubElement(
-            suite, "testcase", name=result.name, classname=doc_path
-        )
+        case = ET.SubElement(suite, "testcase", name=result.name, classname=doc_path)
         if result.status == "failed":
             failure = ET.SubElement(case, "failure", message="doctest failed")
             failure.text = result.detail
@@ -499,10 +607,9 @@ def write_junit_xml(path: str, suites: list[ET.Element]) -> None:
     suite per document and the test UI keeps naming the document a failure came
     from.
     """
-    tree = ET.ElementTree(ET.Element("testsuites"))
-    for suite in suites:
-        tree.getroot().append(suite)
-    tree.write(path, encoding="unicode", xml_declaration=True)
+    root = ET.Element("testsuites")
+    root.extend(suites)
+    ET.ElementTree(root).write(path, encoding="unicode", xml_declaration=True)
 
 
 def print_report(doc_path: str, report: RunReport) -> None:
@@ -523,11 +630,11 @@ def read_optional_file(path: str | None) -> str:
     """Reads a global setup/cleanup file, or returns empty text."""
     if not path:
         return ""
-    with open(path, encoding="utf-8") as handle:
-        return handle.read()
+    return Path(path).read_text(encoding="utf-8")
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run every plan named on the command line; exit non-zero if any case failed."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("plans", nargs="+", help="`.doctests.json` files to run")
     parser.add_argument("--global-setup", help="Python file run before every group")
@@ -540,8 +647,7 @@ def main(argv: list[str] | None = None) -> int:
     failed = 0
     suites: list[ET.Element] = []
     for plan_path in args.plans:
-        with open(plan_path, encoding="utf-8") as handle:
-            plan = json.load(handle)
+        plan: Plan = json.loads(Path(plan_path).read_text(encoding="utf-8"))
 
         report = RunReport(run_plan(plan, global_setup, global_cleanup))
         print_report(plan["doc_path"], report)

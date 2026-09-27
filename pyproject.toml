@@ -1,0 +1,116 @@
+# The Python tooling for rinx's scripts (`scripts/`) and example code
+# (`examples/shared/`). Nothing here is built or published: the scripts are
+# stdlib-only at runtime — `doctest_runner.py` runs inside users' `py_test`s
+# and `publish_crates.py` under a bare `python3` in the release workflow — so
+# every dependency below is development tooling. See docs/dev/python.md.
+[project]
+name = "rinx-scripts"
+version = "0"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+# What the tests import, exported to scripts/requirements.txt for Bazel's
+# `py_test`s — regenerate it with the `uv export` in docs/dev/python.md.
+test = ["pytest"]
+dev = [{ include-group = "test" }, "pytest-cov", "ruff", "ty"]
+
+[tool.uv]
+package = false
+default-groups = ["dev"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+# So the scripts' flat imports sort as first-party.
+src = ["scripts"]
+# A real `sphinx-build` project, kept byte-for-byte as the inventory fixture.
+extend-exclude = ["crates/inventory/testdata"]
+# Python only: ruff would otherwise also reformat the ```python blocks in the
+# Markdown docs, most of which are Starlark written to Bazel's own style.
+include = ["*.py", "*.pyi"]
+# The doctest runner is shipped: it runs inside users' `py_test`s, on whichever
+# interpreter their toolchain provides.
+# Its test holds to the same floor, so CI can run it on that interpreter.
+per-file-target-version = { "scripts/doctest_runner*.py" = "py39" }
+
+[tool.ruff.format]
+# `examples/includes.rst` quotes these by line number (`:lines: 7-11`) and by
+# marker comment, so the formatter's blank lines would move the excerpts.
+exclude = ["examples/shared/*.py"]
+
+[tool.ruff.lint]
+# Everything, with each exception argued below, so a rule new to ruff applies
+# here by default rather than by someone remembering to opt in.
+select = ["ALL"]
+ignore = [
+    # The formatter owns these; ruff documents them as conflicting with it.
+    "COM812",
+    "ISC001",
+    # Every script is a command-line tool whose output *is* its prints.
+    "T201",
+    # `scripts/` is a flat directory of top-level modules, the shape Bazel's
+    # `imports = ["."]` gives them, not a package.
+    "INP001",
+    # The repository carries its licence once, not per file.
+    "CPY001",
+    # The scripts exist to drive `cargo`, `bazel`, `git` and `plantuml` found on
+    # PATH, always with an argument list and never through a shell.
+    "S603",
+    "S607",
+    # Moving imports used only in annotations under `if TYPE_CHECKING:` pays off
+    # for import cost, which a handful of stdlib-only scripts do not have.
+    "TC001",
+    "TC002",
+    "TC003",
+    # Docstrings here open with what a function returns ("The attribute
+    # declaration for ...") as often as with what it does, as the Rust docs do.
+    "D401",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*_test.py" = [
+    # pytest's own assertion style.
+    "S101",
+    # A test's expected values are its literals; naming each would hide them.
+    "PLR2004",
+    # Tests pin module-private helpers directly, as the Rust tests do.
+    "SLF001",
+    # A test's name and Given-When-Then comments are its documentation.
+    "D1",
+    # Tests parse only the XML the code under test just wrote.
+    "S314",
+    # A boolean is as often the value under test as a flag.
+    "FBT003",
+]
+
+# Documentation examples: `includes.rst` quotes them by line and by marker
+# comment, which reads as commented-out code, and they are meant to look like
+# a reader's own code rather than this repository's.
+"examples/shared/*.py" = ["ERA001", "D103"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.pytest.ini_options]
+# `*_test.py` is the repository's test naming (and the Bazel targets'), and
+# `scripts/` on the path mirrors those targets' `imports = ["."]`.
+testpaths = ["scripts"]
+python_files = ["*_test.py"]
+pythonpath = ["scripts"]
+addopts = ["--strict-markers", "--strict-config", "-ra"]
+filterwarnings = ["error"]
+xfail_strict = true
+
+[tool.coverage.run]
+branch = true
+source = ["scripts"]
+omit = ["scripts/*_test.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+# The floor as measured when coverage was introduced. The benchmarks' drivers
+# (cloning, `bazel build`) are exercised by running them, not by unit tests,
+# which is most of what is missing.
+fail_under = 80

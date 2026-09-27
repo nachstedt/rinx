@@ -1,14 +1,29 @@
+"""Benchmark rinx against CPython's documentation: general RST coverage.
+
+Clones a pinned CPython release, builds its `Doc/` tree with rinx in a
+generated Bazel workspace, times the build, and reports what the corpus uses
+that rinx does not support. See docs/benchmark.rst.
+"""
+
 import argparse
 import json
 import os
 import subprocess
 import tempfile
+from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, TextIO
 
 import benchmark_common
 from benchmark_common import (
     WARMUP_PACKAGE,
+    ReportLayout,
+    SectionCount,
+    WarningEntry,
+    WhitelistSummary,
     collect_warning_sidecars,
+    json_objects,
     write_frequency_summary,
 )
 
@@ -43,7 +58,8 @@ WHITELIST_PATH = Path("scripts/domain_warnings_whitelist.json")
 # files live in, and therefore the one whose stale Bazel outputs get discarded.
 CORPUS_PACKAGE = "Doc"
 
-def clone_repo(python_version: str):
+
+def clone_repo(python_version: str) -> None:
     """Shallow-clones the CPython release tag matching `python_version`.
 
     Deliberately a tag rather than `main`: the documentation has to describe the
@@ -52,16 +68,21 @@ def clone_repo(python_version: str):
     """
     tag = f"v{python_version}"
     if not benchmark_common.clone_repo(REPO_URL, tag, TARGET_DIR):
-        raise SystemExit(
+        message = (
             f"Failed to clone CPython at tag {tag!r}.\n"
             f"Check that the tag exists (`git ls-remote --tags {REPO_URL} '{tag}'`) "
             f"and that rules_python ships an interpreter for {python_version} — "
             f"both are required, see PYTHON_VERSION in this file."
         )
+        raise SystemExit(message)
 
 
-def generate_bazel_project(workspace_root: str, python_version: str):
-    print("Generating artificial Bazel project in /tmp (MODULE.bazel, BUILD.bazel, config, and template)...")
+def generate_bazel_project(workspace_root: str, python_version: str) -> None:
+    """Write the throwaway Bazel workspace around the cloned `Doc/` tree."""
+    print(
+        "Generating artificial Bazel project in /tmp "
+        "(MODULE.bazel, BUILD.bazel, config, and template)..."
+    )
 
     # Create MODULE.bazel
     #
@@ -90,7 +111,7 @@ python.toolchain(
 )
 """
     (TARGET_DIR / "MODULE.bazel").write_text(module_bazel)
-    
+
     # Create root BUILD.bazel (empty, as aliases are no longer needed)
     (TARGET_DIR / "BUILD.bazel").write_text("")
 
@@ -105,15 +126,15 @@ python.toolchain(
 """)
 
     doc_dir = TARGET_DIR / "Doc"
-    
+
     # Create config
     (doc_dir / "rinx.toml").write_text('project = "CPython Benchmark"\n')
-    
+
     # Create template — use the project's default template for a nicely formatted output
     default_template_path = Path(workspace_root) / "templates" / "default.html"
     template_content = default_template_path.read_text()
     (doc_dir / "custom_template.html").write_text(template_content)
-    
+
     # Create BUILD.bazel in Doc
     build_bazel = """load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
 
@@ -150,7 +171,7 @@ rinx_site(
     benchmark_common.generate_warmup_package(TARGET_DIR, workspace_root)
 
 
-def run_benchmark(clean: bool = False):
+def run_benchmark(*, clean: bool = False) -> bool:
     """Builds rinx first, then times the CPython documentation build.
 
     The two are separate `bazel build` invocations on purpose. What the
@@ -164,7 +185,7 @@ def run_benchmark(clean: bool = False):
     if clean:
         # Run bazel clean to avoid caching from previous runs
         print("Cleaning Bazel cache...")
-        subprocess.run(["bazel", "clean"], cwd=str(TARGET_DIR), capture_output=True)
+        subprocess.run(["bazel", "clean"], cwd=str(TARGET_DIR), capture_output=True, check=False)
     else:
         benchmark_common.discard_stale_corpus_outputs(TARGET_DIR, CORPUS_PACKAGE)
 
@@ -186,9 +207,7 @@ def run_benchmark(clean: bool = False):
 
     if build_succeeded:
         print(f"Documentation build succeeded in {duration:.2f} seconds.")
-        print(
-            f"(Excludes {deps_duration:.2f} seconds spent building rinx itself.)"
-        )
+        print(f"(Excludes {deps_duration:.2f} seconds spent building rinx itself.)")
 
     build_log = TARGET_DIR / "bazel_build.log"
     print(f"\nBazel build output was captured to: {build_log}")
@@ -204,9 +223,11 @@ def run_benchmark(clean: bool = False):
 
     return build_succeeded
 
+
 # ── Domain-object warning whitelist helpers (pure, unit-tested) ───────────────
 
-def format_warning(entry, include_kind=True):
+
+def format_warning(entry: WarningEntry, *, include_kind: bool = True) -> str:
     """One-line human-readable rendering of a warning or whitelist entry.
 
     Surfaces the object-type info ("missed type"): a mismatch shows
@@ -214,7 +235,8 @@ def format_warning(entry, include_kind=True):
     the requested type it was looking for; an ambiguous reference also lists
     the qualified names it matched, since choosing between them is the fix.
     Pass include_kind=False when the surrounding section already states the
-    kind (avoids a redundant token)."""
+    kind (avoids a redundant token).
+    """
     requested = entry.get("requested_type")
     resolved = entry.get("resolved_type")
     candidates = entry.get("candidates")
@@ -232,195 +254,185 @@ def format_warning(entry, include_kind=True):
     return f"{entry.get('doc_path')}: {kind}'{entry.get('target')}'{detail}"
 
 
-def report_domain_warnings(bazel_bin_dir, whitelist_path, build_succeeded, out):
-    """Diff the emitted domain-object warnings against the whitelist, write the
-    detailed listing to the `out` file handle, and auto-prune stale whitelist
-    entries when it is safe to do so. Returns a small dict of counts for the
+@dataclass(frozen=True)
+class DomainSummary:
+    """The domain-object warning counts of the terminal summary."""
+
+    unresolved: SectionCount
+    ambiguous: SectionCount
+    mismatch: SectionCount
+    whitelist: WhitelistSummary
+
+
+DOMAIN_WARNING_LAYOUT = ReportLayout(
+    sections=[
+        ("Unresolved Domain-Object References", "domain_object_reference"),
+        ("Ambiguous Domain-Object References", "ambiguous_domain_object_reference"),
+        ("Domain-Object Type Mismatches", "object_type_mismatch"),
+    ],
+    format_entry=format_warning,
+)
+
+
+def report_domain_warnings(
+    bazel_bin_dir: Path, whitelist_path: Path, *, build_succeeded: bool, out: TextIO
+) -> DomainSummary:
+    """Diff the emitted domain-object warnings against the whitelist.
+
+    Writes the detailed listing to the `out` file handle, and auto-prunes stale
+    whitelist entries when it is safe to do so. Returns the counts for the
     terminal summary.
 
     The three sections are separate because they call for different fixes:
     "couldn't resolve at all", "matched several objects" and "resolved to the
-    wrong object type"."""
-    actual, file_count = collect_warning_sidecars(bazel_bin_dir)
+    wrong object type".
+    """
     summary = benchmark_common.report_warnings(
-        actual,
-        file_count,
+        collect_warning_sidecars(bazel_bin_dir),
         whitelist_path,
-        build_succeeded,
-        out,
-        sections=[
-            ("Unresolved Domain-Object References", "domain_object_reference"),
-            ("Ambiguous Domain-Object References", "ambiguous_domain_object_reference"),
-            ("Domain-Object Type Mismatches", "object_type_mismatch"),
-        ],
-        format_entry=format_warning,
+        DOMAIN_WARNING_LAYOUT,
+        build_succeeded=build_succeeded,
+        out=out,
+    )
+    return DomainSummary(
+        unresolved=summary.per_kind["domain_object_reference"],
+        ambiguous=summary.per_kind["ambiguous_domain_object_reference"],
+        mismatch=summary.per_kind["object_type_mismatch"],
+        whitelist=summary,
     )
 
-    per_kind = summary.pop("per_kind")
-    unresolved, ambiguous, mismatch = (
-        per_kind["domain_object_reference"],
-        per_kind["ambiguous_domain_object_reference"],
-        per_kind["object_type_mismatch"],
-    )
-    return {
-        "unresolved_distinct": unresolved[0],
-        "unresolved_occurrences": unresolved[1],
-        "ambiguous_distinct": ambiguous[0],
-        "ambiguous_occurrences": ambiguous[1],
-        "mismatch_distinct": mismatch[0],
-        "mismatch_occurrences": mismatch[1],
-        **summary,
-    }
+
+# The `.. toctree::` options with a value, as the AST names them.
+TOCTREE_VALUE_OPTIONS = ("maxdepth", "numbered", "caption", "name")
 
 
-def analyze_results(build_succeeded=False):
+@dataclass
+class AstTally:
+    """What the corpus' `.ast` files contain that the report counts."""
+
+    unknown_directives: Counter[str] = field(default_factory=Counter)
+    malformed_directives: Counter[str] = field(default_factory=Counter)
+    toctree_options_used: Counter[str] = field(default_factory=Counter)
+    parser_diagnostics: Counter[str] = field(default_factory=Counter)
+
+    def count(self, tree: object) -> None:
+        """Walk one parsed `.ast` file, counting everything in it."""
+        for node in json_objects(tree):
+            directive = node.get("Directive")
+            if isinstance(directive, dict):
+                self.count_directive(directive)
+            diagnostics = node.get("diagnostics")
+            if isinstance(diagnostics, list):
+                self.count_diagnostics(diagnostics)
+
+    def count_directive(self, directive: dict[str, Any]) -> None:
+        """Count one `Directive` node, if it is of a kind the report tallies."""
+        if "Unknown" in directive:
+            self.unknown_directives[directive["Unknown"].get("name", "unnamed")] += 1
+        elif "Malformed" in directive:
+            # A directive this build *does* implement, whose content it had to
+            # refuse. Counted separately from the unsupported tally above,
+            # which it used to inflate: "not implemented" and "implemented, and
+            # this document got it wrong" are different numbers, and only the
+            # first is a gap in coverage.
+            self.malformed_directives[directive["Malformed"].get("name", "unnamed")] += 1
+        elif "Toctree" in directive:
+            # Which `.. toctree::` options the corpus actually exercises. This
+            # used to count options the parser *ignored*, back when it recorded
+            # them in an `ignored_options` list and honoured none of them.
+            # Every option is honoured now and that field is gone, so counting
+            # usage is what keeps the number honest — a zero here would
+            # otherwise look like success while only meaning the field had been
+            # removed. An option the parser does not know is not counted here
+            # at all; it surfaces as a `directive.toctree-unknown-option` entry
+            # under parser diagnostics.
+            options = directive["Toctree"].get("options", {})
+            for name in TOCTREE_VALUE_OPTIONS:
+                if options.get(name) is not None:
+                    self.toctree_options_used[name] += 1
+            for flag in options.get("flags", []):
+                # `TitlesOnly` -> `titlesonly`, as an author writes it.
+                self.toctree_options_used[flag.lower()] += 1
+
+    def count_diagnostics(self, diagnostics: list[object]) -> None:
+        """Count a document's diagnostics by code."""
+        for diag in diagnostics:
+            # Aggregate by the diagnostic's own code. This used to key off the
+            # message's prefix as a stand-in; the code is the thing that prefix
+            # was approximating, and unlike a message it never varies with the
+            # offending text.
+            if isinstance(diag, dict):
+                code = diag.get("code", "unknown")
+            else:
+                # An .ast written before diagnostics were structured.
+                code = str(diag).split(":")[0]
+            self.parser_diagnostics[code] += 1
+
+
+def analyze_results(*, build_succeeded: bool = False) -> None:
+    """Tally the corpus' `.ast` files and warnings into the report and the summary."""
     print("Analyzing AST output for unsupported constructs...")
-    
+
     ast_files = list(TARGET_DIR.glob("bazel-bin/Doc/**/*.ast"))
 
     if not ast_files:
         print("No .ast files found in bazel-bin. Did the build succeed?")
         return
-        
-    unknown_directives = {}
-    malformed_directives = {}
-    toctree_options_used = {}
-    parser_diagnostics = {}
-    
-    def traverse(node):
-        if isinstance(node, dict):
-            # Check if this node is an Unknown directive
-            if "Directive" in node:
-                directive = node["Directive"]
-                if isinstance(directive, dict):
-                    if "Unknown" in directive:
-                        name = directive["Unknown"].get("name", "unnamed")
-                        unknown_directives[name] = unknown_directives.get(name, 0) + 1
-                    elif "Malformed" in directive:
-                        # A directive this build *does* implement, whose
-                        # content it had to refuse. Counted separately from
-                        # the unsupported tally above, which it used to
-                        # inflate: "not implemented" and "implemented, and
-                        # this document got it wrong" are different numbers,
-                        # and only the first is a gap in coverage.
-                        name = directive["Malformed"].get("name", "unnamed")
-                        malformed_directives[name] = malformed_directives.get(name, 0) + 1
-                    elif "Toctree" in directive:
-                        # Which `.. toctree::` options the corpus actually
-                        # exercises. This used to count options the parser
-                        # *ignored*, back when it recorded them in an
-                        # `ignored_options` list and honoured none of them.
-                        # Every option is honoured now and that field is gone,
-                        # so counting usage is what keeps the number honest —
-                        # a zero here would otherwise look like success while
-                        # only meaning the field had been removed. An option
-                        # the parser does not know is not counted here at all;
-                        # it surfaces as a `directive.toctree-unknown-option`
-                        # entry under parser diagnostics.
-                        options = directive["Toctree"].get("options", {})
-                        for name in ("maxdepth", "numbered", "caption", "name"):
-                            if options.get(name) is not None:
-                                toctree_options_used[name] = (
-                                    toctree_options_used.get(name, 0) + 1
-                                )
-                        for flag in options.get("flags", []):
-                            # `TitlesOnly` -> `titlesonly`, as an author writes it.
-                            key = flag.lower()
-                            toctree_options_used[key] = (
-                                toctree_options_used.get(key, 0) + 1
-                            )
-            
-            # Check for document diagnostics
-            if "diagnostics" in node and isinstance(node["diagnostics"], list):
-                for diag in node["diagnostics"]:
-                    # Aggregate by the diagnostic's own code. This used to key
-                    # off the message's prefix as a stand-in; the code is the
-                    # thing that prefix was approximating, and unlike a message
-                    # it never varies with the offending text.
-                    if isinstance(diag, dict):
-                        code = diag.get("code", "unknown")
-                    else:
-                        # An .ast written before diagnostics were structured.
-                        code = str(diag).split(":")[0]
-                    parser_diagnostics[code] = parser_diagnostics.get(code, 0) + 1
 
-            # Recursively traverse all values
-            for v in node.values():
-                traverse(v)
-        elif isinstance(node, list):
-            for item in node:
-                traverse(item)
-                
+    tally = AstTally()
     for ast_file in ast_files:
         try:
-            with open(ast_file, "r") as f:
-                data = json.load(f)
-                traverse(data)
-        except Exception as e:
+            tally.count(json.loads(ast_file.read_text()))
+        except (OSError, ValueError) as e:
             print(f"Failed to parse {ast_file}: {e}")
-            
+
     # The full listing is far too long for the terminal, so write it to a file
     # and show only a compact summary on screen.
     result_path = Path("benchmark_result.txt")
-    with open(result_path, "w") as out:
+    with result_path.open("w") as out:
         print("=== rinx benchmark: full report ===", file=out)
-        write_frequency_summary(out, "Unsupported Directives Summary", unknown_directives)
-        write_frequency_summary(out, "Malformed Directives Summary", malformed_directives)
+        write_frequency_summary(out, "Unsupported Directives Summary", tally.unknown_directives)
+        write_frequency_summary(out, "Malformed Directives Summary", tally.malformed_directives)
         write_frequency_summary(
             out,
             "Toctree Options Exercised Summary",
-            toctree_options_used,
+            tally.toctree_options_used,
             key_prefix=":",
             key_suffix=":",
         )
-        write_frequency_summary(out, "Parser Diagnostics Summary", parser_diagnostics)
+        write_frequency_summary(out, "Parser Diagnostics Summary", tally.parser_diagnostics)
         domain = report_domain_warnings(
-            TARGET_DIR / "bazel-bin", WHITELIST_PATH, build_succeeded, out
+            TARGET_DIR / "bazel-bin", WHITELIST_PATH, build_succeeded=build_succeeded, out=out
         )
 
-    print_benchmark_summary(
-        result_path,
-        unknown_directives,
-        malformed_directives,
-        toctree_options_used,
-        parser_diagnostics,
-        domain,
-    )
+    print_benchmark_summary(result_path, tally, domain)
 
 
-def print_benchmark_summary(
-    result_path, unknown, malformed, toctree_opts, diagnostics, domain
-):
-    """Print the compact, terminal-friendly summary (counts only) and point at
-    the full report file."""
+def print_benchmark_summary(result_path: Path, tally: AstTally, domain: DomainSummary) -> None:
+    """Print the compact, terminal-friendly summary (counts only) and point at the report."""
     line = benchmark_common.summary_line
+    unknown = tally.unknown_directives
+    malformed = tally.malformed_directives
+    toctree_opts = tally.toctree_options_used
 
     print("\n=== Benchmark Summary ===")
-    line("Unsupported directives:", len(unknown), sum(unknown.values()))
-    line("Malformed directives:", len(malformed), sum(malformed.values()))
-    line("Toctree options exercised:", len(toctree_opts), sum(toctree_opts.values()))
-    line("Parser diagnostics:", len(diagnostics))
-    line(
-        "Unresolved domain refs:",
-        domain["unresolved_distinct"],
-        domain["unresolved_occurrences"],
-    )
-    line(
-        "Ambiguous domain refs:",
-        domain["ambiguous_distinct"],
-        domain["ambiguous_occurrences"],
-    )
-    line(
-        "Domain type mismatches:",
-        domain["mismatch_distinct"],
-        domain["mismatch_occurrences"],
-    )
-    benchmark_common.print_whitelist_summary(domain)
+    line("Unsupported directives:", len(unknown), unknown.total())
+    line("Malformed directives:", len(malformed), malformed.total())
+    line("Toctree options exercised:", len(toctree_opts), toctree_opts.total())
+    line("Parser diagnostics:", len(tally.parser_diagnostics))
+    line("Unresolved domain refs:", *domain.unresolved)
+    line("Ambiguous domain refs:", *domain.ambiguous)
+    line("Domain type mismatches:", *domain.mismatch)
+    benchmark_common.print_whitelist_summary(domain.whitelist)
     print(f"\nFull report written to: {result_path}")
 
-def main():
+
+def main() -> None:
+    """Clone CPython, build its documentation with rinx, and report on the result."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--clean", action="store_true", help="Clear the Bazel cache before building")
+    parser.add_argument(
+        "--clean", action="store_true", help="Clear the Bazel cache before building"
+    )
     parser.add_argument(
         "--python-version",
         default=PYTHON_VERSION,
@@ -434,19 +446,20 @@ def main():
     args = parser.parse_args()
 
     # If run via `bazel run`, change to the workspace root
-    workspace_dir = os.environ.get("BUILD_WORKSPACE_DIRECTORY", os.getcwd())
+    workspace_dir = os.environ.get("BUILD_WORKSPACE_DIRECTORY", str(Path.cwd()))
     os.chdir(workspace_dir)
-        
+
     # Ensure we run from the workspace root
     if not Path("WORKSPACE").exists() and not Path("MODULE.bazel").exists():
         print("Please run this script from the root of the rinx workspace.")
         return
-        
+
     print(f"Benchmarking against CPython {args.python_version}.")
     clone_repo(args.python_version)
     generate_bazel_project(workspace_dir, args.python_version)
     build_succeeded = run_benchmark(clean=args.clean)
     analyze_results(build_succeeded=build_succeeded)
+
 
 if __name__ == "__main__":
     main()

@@ -27,11 +27,23 @@ import shutil
 import subprocess
 import tempfile
 import tomllib
+from collections import Counter
+from collections.abc import Iterable, Sequence
 from pathlib import Path, PurePosixPath
+from typing import TextIO
 
 import benchmark_common
 import needs_schema
-from benchmark_common import WARMUP_PACKAGE, write_frequency_summary
+from benchmark_common import (
+    WARMUP_PACKAGE,
+    ReportLayout,
+    WarningCorpus,
+    WarningEntry,
+    WhitelistSummary,
+    json_objects,
+    write_frequency_summary,
+)
+from needs_schema import Report
 
 TARGET_DIR = Path(tempfile.gettempdir()) / "rinx_benchmark_needs"
 REPO_URL = "https://github.com/useblocks/sphinx-needs-demo.git"
@@ -93,27 +105,29 @@ WHITELIST_PATH = Path("scripts/entity_warnings_whitelist.json")
 SCHEMA_NAME = "entities.toml"
 
 
-def clone_repo(version: str):
+def clone_repo(version: str) -> None:
     """Shallow-clones the sphinx-needs demo at the tag matching `version`."""
     tag = f"v{version}"
     if not benchmark_common.clone_repo(REPO_URL, tag, TARGET_DIR):
-        raise SystemExit(
+        message = (
             f"Failed to clone the sphinx-needs demo at tag {tag!r}.\n"
             f"Check that the tag exists (`git ls-remote --tags {REPO_URL} '{tag}'`) — "
             "see DEMO_VERSION in this file."
         )
+        raise SystemExit(message)
 
 
 # ── Schema conversion ─────────────────────────────────────────────────────────
 
-def convert_schema(docs_dir: Path):
+
+def convert_schema(docs_dir: Path) -> Report:
     """Convert the corpus' own sphinx-needs configuration into an entity schema.
 
     Returns the converter's report of constructs with no equivalent in our
-    meta-model — half the point of the whole benchmark."""
+    meta-model — half the point of the whole benchmark.
+    """
     print("Converting the project's sphinx-needs configuration into an entity schema...")
-    with open(docs_dir / "ubproject.toml", "rb") as f:
-        ubproject = tomllib.load(f)
+    ubproject = tomllib.loads((docs_dir / "ubproject.toml").read_text())
 
     schemas_path = docs_dir / "schemas.json"
     schemas = json.loads(schemas_path.read_text()) if schemas_path.exists() else {}
@@ -141,7 +155,7 @@ CSV_FILE_OPTION = re.compile(r"^[ \t]*:file:[ \t]*(\S+)[ \t]*$", re.MULTILINE)
 JINJA_INCLUDE = re.compile(r"""{%-?\s*include\s+["']([^"']+)["']""")
 
 
-def transclusion_targets(source_dir: Path):
+def transclusion_targets(source_dir: Path) -> tuple[list[str], list[tuple[str, Path]]]:
     """Find every file the corpus splices in at parse time.
 
     Returns `(included_rst, outside)`. `included_rst` holds documents pulled in
@@ -159,9 +173,10 @@ def transclusion_targets(source_dir: Path):
     resolve, and is the only alternative to editing the corpus.
 
     A path starting with `/` is source-root-relative; anything else resolves
-    against the directory holding the document. Both rules are the parser's."""
-    included_rst = set()
-    outside = {}
+    against the directory holding the document. Both rules are the parser's.
+    """
+    included_rst: set[str] = set()
+    outside: dict[str, Path] = {}
 
     for document in sorted(source_dir.rglob("*.rst")):
         relative_doc = document.relative_to(source_dir)
@@ -188,21 +203,22 @@ def transclusion_targets(source_dir: Path):
     return sorted(included_rst), sorted(outside.items())
 
 
-def resolve_from_document(written: str, doc_path: str):
+def resolve_from_document(written: str, doc_path: str) -> str:
     """The parser's `ast::resolve_from_document`, in Python.
 
     A leading `/` means "from the source root"; otherwise the path resolves
     against the document's directory. `..` pops, so the result never escapes
     the source root — which is exactly why an outside source needs copying to
-    where the parser will look."""
+    where the parser will look.
+    """
     if written.startswith("/"):
         parts = written.lstrip("/").split("/")
     else:
         parts = PurePosixPath(doc_path).parent.as_posix().split("/") + written.split("/")
 
-    normalized = []
+    normalized: list[str] = []
     for part in parts:
-        if part in ("", "."):
+        if part in {"", "."}:
             continue
         if part == "..":
             if normalized:
@@ -212,11 +228,12 @@ def resolve_from_document(written: str, doc_path: str):
     return "/".join(normalized)
 
 
-def actual_location(source_dir: Path, relative_doc: Path, written: str):
+def actual_location(source_dir: Path, relative_doc: Path, written: str) -> Path | None:
     """Where the named file really is on disk, or None if it is not there.
 
     Unlike the parser's view this one honours `..` as the filesystem does, so a
-    source outside the source root is found rather than clamped."""
+    source outside the source root is found rather than clamped.
+    """
     if written.startswith("/"):
         candidate = source_dir / written.lstrip("/")
     else:
@@ -230,7 +247,7 @@ def corpus_workspace() -> Path:
     return TARGET_DIR / CORPUS_SRCDIR
 
 
-def generate_bazel_project(rinx_root: str):
+def generate_bazel_project(rinx_root: str) -> None:
     """Turn the clone's source directory into a Bazel workspace of its own."""
     print("Generating a Bazel project around the clone...")
     workspace = corpus_workspace()
@@ -266,14 +283,14 @@ local_path_override(
     benchmark_common.generate_warmup_package(workspace, rinx_root)
 
 
-def copy_outside_sources(workspace: Path, outside):
-    """Place each source that lives outside the source root where the parser
-    will look for it.
+def copy_outside_sources(workspace: Path, outside: Iterable[tuple[str, Path]]) -> None:
+    """Place each source that lives outside the source root where the parser will look for it.
 
     The alternative would be editing the corpus' own `.. literalinclude::`
     arguments, which would make the benchmark measure a document set nobody
     wrote. The generated workspace is disposable, so adding a file to it is the
-    same kind of scaffolding as the generated BUILD file next to it."""
+    same kind of scaffolding as the generated BUILD file next to it.
+    """
     for destination, source in outside:
         target = workspace / destination
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -281,7 +298,9 @@ def copy_outside_sources(workspace: Path, outside):
         print(f"Copied {source} -> {target} (spliced in from outside the source root).")
 
 
-def render_corpus_build_file(included_rst, spliced_from_outside):
+def render_corpus_build_file(
+    included_rst: Sequence[str], spliced_from_outside: Iterable[str]
+) -> str:
     """The workspace root package's BUILD.bazel.
 
     The two lists are what makes the generated file corpus-specific: an
@@ -289,17 +308,17 @@ def render_corpus_build_file(included_rst, spliced_from_outside):
     as a page as well as spliced in) and declared as `parse_data` instead, and
     so is every source copied in from outside the source root. The generated
     `assets` and warm-up packages need no exclusion — a glob never crosses a
-    package boundary."""
+    package boundary.
+    """
     output_symlink_exclude = json.dumps(OUTPUT_SYMLINK_GLOB)
     excludes = "".join(
-        f"            {json.dumps(path)},\n"
-        for path in [*included_rst, OUTPUT_SYMLINK_GLOB]
+        f"            {json.dumps(path)},\n" for path in [*included_rst, OUTPUT_SYMLINK_GLOB]
     )
     spliced = "".join(
         f"        {json.dumps(path)},\n"
         for path in sorted(set(included_rst) | set(spliced_from_outside))
     )
-    return f'''load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
+    return f"""load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
 
 rinx_library(
     name = "demo_docs",
@@ -364,12 +383,13 @@ rinx_site(
     entity_schema = "{SCHEMA_NAME}",
     deps = [":demo_docs"],
 )
-'''
+"""
 
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 
-def discard_stale_corpus_outputs(workspace: Path):
+
+def discard_stale_corpus_outputs(workspace: Path) -> None:
     """Remove generated outputs left over from a previous run.
 
     The workspace is re-cloned every run but Bazel's output base survives it, so
@@ -377,12 +397,14 @@ def discard_stale_corpus_outputs(workspace: Path):
     `.ast` glob and inflate every count. `benchmark_common`'s version takes a
     package name; the corpus here *is* the root package, so what is kept is
     named instead: `external` (the fetched repositories and the compiled
-    rinx binary, which stay warm) and the generated packages."""
+    rinx binary, which stay warm) and the generated packages.
+    """
     info = subprocess.run(
         ["bazel", "info", *benchmark_common.BUILD_CONFIG_FLAGS, "bazel-bin"],
         cwd=str(workspace),
         capture_output=True,
         text=True,
+        check=False,
     )
     if info.returncode != 0:
         return
@@ -402,12 +424,12 @@ def discard_stale_corpus_outputs(workspace: Path):
             entry.unlink(missing_ok=True)
 
 
-def run_benchmark(clean: bool = False):
+def run_benchmark(*, clean: bool = False) -> bool:
     """Build the warm-up site, then the corpus. Returns whether the corpus built."""
     workspace = corpus_workspace()
     if clean:
         print("Cleaning Bazel cache...")
-        subprocess.run(["bazel", "clean"], cwd=str(workspace), capture_output=True)
+        subprocess.run(["bazel", "clean"], cwd=str(workspace), capture_output=True, check=False)
     else:
         discard_stale_corpus_outputs(workspace)
 
@@ -441,7 +463,7 @@ WARNING_LINE = re.compile(
 )
 
 
-def parse_build_warnings(log_text: str):
+def parse_build_warnings(log_text: str) -> list[WarningEntry]:
     """Read the diagnostics the build printed out of the captured Bazel log.
 
     The log is the only place render-time entity diagnostics
@@ -460,13 +482,14 @@ def parse_build_warnings(log_text: str):
     matching only the positioned shape would silently lose exactly the
     project-wide findings this benchmark exists for. Dropping the position also
     keeps a warning's identity from churning whenever text above it moves,
-    which matters because the whitelist matches on `(doc_path, kind, target)`."""
-    entries = {}
+    which matters because the whitelist matches on `(doc_path, kind, target)`.
+    """
+    entries: dict[benchmark_common.WarningKey, WarningEntry] = {}
     for raw_line in log_text.splitlines():
         match = WARNING_LINE.match(raw_line.strip())
         if match is None:
             continue
-        entry = {
+        entry: WarningEntry = {
             "doc_path": match.group("path"),
             "kind": match.group("code"),
             "target": match.group("message"),
@@ -479,49 +502,41 @@ def parse_build_warnings(log_text: str):
     return list(entries.values())
 
 
-def format_entity_warning(entry, include_kind=True):
+def format_entity_warning(entry: WarningEntry, *, include_kind: bool = True) -> str:
     """One-line rendering of an entity warning or whitelist entry."""
     kind = f"{entry.get('kind')}: " if include_kind else ""
     return f"{entry.get('doc_path')}: {kind}{entry.get('target')}"
 
 
-def tally_ast(ast_files):
-    """Walk the built `.ast` files, counting unknown directives and the entity
-    instances that did parse.
+def tally_ast(ast_files: Iterable[Path]) -> tuple[Counter[str], Counter[str]]:
+    """Walk the built `.ast` files, counting unknown directives and parsed entity instances.
 
     The second half is the positive signal: a type with zero instances means the
     corpus never exercised it, and a type the schema failed to declare shows up
-    in the first half as an unknown directive instead."""
-    unknown_directives = {}
-    entities = {}
-
-    def traverse(node):
-        if isinstance(node, dict):
-            directive = node.get("Directive")
-            if isinstance(directive, dict):
-                if "Unknown" in directive:
-                    name = directive["Unknown"].get("name", "unnamed")
-                    unknown_directives[name] = unknown_directives.get(name, 0) + 1
-                elif "Entity" in directive:
-                    name = directive["Entity"].get("type_name", "unnamed")
-                    entities[name] = entities.get(name, 0) + 1
-            for value in node.values():
-                traverse(value)
-        elif isinstance(node, list):
-            for item in node:
-                traverse(item)
+    in the first half as an unknown directive instead.
+    """
+    unknown_directives: Counter[str] = Counter()
+    entities: Counter[str] = Counter()
 
     for ast_file in ast_files:
         try:
-            with open(ast_file, "r") as f:
-                traverse(json.load(f))
-        except Exception as e:
+            tree = json.loads(ast_file.read_text())
+        except (OSError, ValueError) as e:
             print(f"Failed to parse {ast_file}: {e}")
+            continue
+        for node in json_objects(tree):
+            directive = node.get("Directive")
+            if not isinstance(directive, dict):
+                continue
+            if "Unknown" in directive:
+                unknown_directives[directive["Unknown"].get("name", "unnamed")] += 1
+            elif "Entity" in directive:
+                entities[directive["Entity"].get("type_name", "unnamed")] += 1
 
     return unknown_directives, entities
 
 
-def analyze_results(build_succeeded, schema_report):
+def analyze_results(*, build_succeeded: bool, schema_report: Report) -> None:
     """Write the full report and print the compact terminal summary."""
     print("Analyzing the build for entity-model gaps...")
 
@@ -541,45 +556,41 @@ def analyze_results(build_succeeded, schema_report):
     warnings = parse_build_warnings(log_text)
 
     result_path = Path("benchmark_entities_result.txt")
-    with open(result_path, "w") as out:
+    with result_path.open("w") as out:
         print("=== rinx entity benchmark: full report ===", file=out)
         write_frequency_summary(out, "Entities Parsed By Type", entities)
         write_frequency_summary(out, "Unsupported Directives Summary", unknown_directives)
         write_schema_report(out, schema_report)
         summary = benchmark_common.report_warnings(
-            warnings,
-            len(ast_files),
+            WarningCorpus(warnings, len(ast_files)),
             WHITELIST_PATH,
-            build_succeeded,
-            out,
-            sections=warning_sections(warnings),
-            format_entry=format_entity_warning,
+            ReportLayout(warning_sections(warnings), format_entity_warning),
+            build_succeeded=build_succeeded,
+            out=out,
         )
 
     print_entity_summary(result_path, entities, unknown_directives, schema_report, summary)
 
 
-def warning_sections(warnings):
+def warning_sections(warnings: Iterable[WarningEntry]) -> list[tuple[str, str]]:
     """One report section per diagnostic code seen, most frequent first.
 
     Built from the data rather than hard-coded: a code added on the Rust side
-    should appear in the report without this file being touched."""
-    counts = {}
-    for entry in warnings:
-        counts[entry["kind"]] = counts.get(entry["kind"], 0) + 1
+    should appear in the report without this file being touched.
+    """
+    counts = Counter(entry["kind"] for entry in warnings)
     ordered = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
     return [(code, code) for code, _count in ordered]
 
 
-def write_schema_report(out, schema_report):
-    """List what the sphinx-needs configuration expresses and our model cannot,
-    grouped by category."""
+def write_schema_report(out: TextIO, schema_report: Report) -> None:
+    """List what the sphinx-needs configuration expresses and our model cannot, by category."""
     print("\nSphinx-Needs Constructs Without An Entity-Model Equivalent:", file=out)
     print("-" * 58, file=out)
     if not schema_report:
         print("None found.", file=out)
         return
-    by_category = {}
+    by_category: dict[str, list[str]] = {}
     for category, detail in schema_report:
         by_category.setdefault(category, []).append(detail)
     for category in sorted(by_category, key=lambda c: (-len(by_category[c]), c)):
@@ -588,22 +599,29 @@ def write_schema_report(out, schema_report):
             print(f"  - {detail}", file=out)
 
 
-def print_entity_summary(result_path, entities, unknown, schema_report, summary):
+def print_entity_summary(
+    result_path: Path,
+    entities: Counter[str],
+    unknown: Counter[str],
+    schema_report: Report,
+    summary: WhitelistSummary,
+) -> None:
     """The compact, terminal-friendly summary."""
     line = benchmark_common.summary_line
 
     print("\n=== Entity Benchmark Summary ===")
-    line("Entity types exercised:", len(entities), sum(entities.values()))
-    line("Unsupported directives:", len(unknown), sum(unknown.values()))
+    line("Entity types exercised:", len(entities), entities.total())
+    line("Unsupported directives:", len(unknown), unknown.total())
     line("Unconvertible constructs:", len({c for c, _ in schema_report}), len(schema_report))
-    for code, (distinct, occurrences) in summary["per_kind"].items():
+    for code, (distinct, occurrences) in summary.per_kind.items():
         if distinct:
             line(f"{code}:", distinct, occurrences)
     benchmark_common.print_whitelist_summary(summary)
     print(f"\nFull report written to: {result_path}")
 
 
-def main():
+def main() -> None:
+    """Clone the sphinx-needs demo, build it against its converted schema, and report."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--clean", action="store_true", help="Clear the Bazel cache before building"
@@ -618,7 +636,7 @@ def main():
     )
     args = parser.parse_args()
 
-    rinx_root = os.environ.get("BUILD_WORKSPACE_DIRECTORY", os.getcwd())
+    rinx_root = os.environ.get("BUILD_WORKSPACE_DIRECTORY", str(Path.cwd()))
     os.chdir(rinx_root)
 
     if not Path("WORKSPACE").exists() and not Path("MODULE.bazel").exists():
@@ -630,7 +648,7 @@ def main():
     schema_report = convert_schema(corpus_workspace())
     generate_bazel_project(rinx_root)
     build_succeeded = run_benchmark(clean=args.clean)
-    analyze_results(build_succeeded, schema_report)
+    analyze_results(build_succeeded=build_succeeded, schema_report=schema_report)
 
 
 if __name__ == "__main__":

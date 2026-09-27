@@ -23,6 +23,9 @@ java_binary(
 )
 
 exports_files([
+    # The Python tooling's configuration, which `//scripts:tests` runs pytest
+    # under, so a Bazel run and `uv run pytest` behave the same.
+    "pyproject.toml",
     "templates/default.html",
     "templates/default_config.toml",
     "assets/default.css",

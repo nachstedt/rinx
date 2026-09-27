@@ -120,6 +120,47 @@ jobs:
       working-directory: e2e/smoke
       run: bazel test //...
 
+  python:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+
+    # `--locked` fails when pyproject.toml and uv.lock disagree, rather than
+    # quietly resolving afresh.
+    - name: Install the Python tooling
+      run: uv sync --locked
+
+    - name: Check formatting
+      run: uv run ruff format --check
+
+    - name: Lint
+      run: uv run ruff check --output-format=github
+
+    - name: Type-check
+      run: uv run ty check --output-format=github
+
+    - name: Run the script tests with coverage
+      run: uv run pytest --cov
+
+    # The runner ships to users' `py_test`s, whose interpreter may be older than
+    # this repository's; see docs/dev/python.md.
+    - name: Run the doctest runner's tests on its oldest supported Python
+      run: >-
+        uv run --isolated --no-project --python 3.9 --with pytest
+        pytest -p no:cacheprovider --rootdir scripts scripts/doctest_runner_test.py
+
+    # Bazel's `py_test`s resolve pytest from this file, generated from uv.lock.
+    - name: Check the Bazel requirements lock is up to date
+      run: |
+        uv export --only-group test --no-emit-project --format requirements-txt \
+          -o scripts/requirements.txt
+        git diff --exit-code scripts/requirements.txt
+
   vscode_extension:
     runs-on: ubuntu-latest
     steps:

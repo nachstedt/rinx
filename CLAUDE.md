@@ -34,12 +34,19 @@ bazel build //examples/intersphinx:sibling_site  # a second site linking into //
 bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.rst)
 bazel run //scripts:benchmark_entities  # benchmark the entity model against useblocks' sphinx-needs demo (see docs/benchmark.rst)
 
+# Python scripts (scripts/, examples/shared/) — see docs/dev/python.md
+uv sync                    # install the pinned ruff, ty and pytest
+uv run ruff format && uv run ruff check && uv run ty check
+uv run pytest --cov        # the script tests, with the coverage floor
+bazel test //scripts:all   # the same tests, one target per file, under the same pyproject.toml
+uv export --only-group test --no-emit-project --format requirements-txt -o scripts/requirements.txt  # after changing the test group
+
 CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency
 ```
 
-There are no `rust_test` Bazel targets — tests are run through Cargo only.
+There are no `rust_test` Bazel targets — Rust tests are run through Cargo only. The Python scripts' pytest files run both through `uv run pytest` and as one Bazel `py_test` per file (`//scripts:all`), each running pytest under the same `pyproject.toml`.
 
-After any code change: run `cargo clippy --workspace --tests` (fix all warnings, don't `#[allow(...)]` them — treat them as refactor signals) and `cargo fmt`, then verify `bazel build //examples:site` still succeeds.
+After any code change: run `cargo clippy --workspace --tests` (fix all warnings, don't `#[allow(...)]` them — treat them as refactor signals) and `cargo fmt`, then verify `bazel build //examples:site` still succeeds. After a Python change, likewise run `uv run ruff format`, `uv run ruff check`, `uv run ty check` and `uv run pytest --cov` (the same rule: fix findings, don't `# noqa` them). `doctest_runner.py` and `publish_crates.py` must stay stdlib-only, and the former Python 3.9-compatible, since it runs in users' `py_test`s.
 
 Adding or removing a Cargo dependency additionally needs `CARGO_BAZEL_REPIN=1` on the next Bazel build, to refresh `Cargo.bazel.lock` — the crate_universe resolver lockfile, which is separate from `Cargo.lock` and is checked in. Bazel fails with a repin request rather than silently using stale crates. That lockfile is not optional: without it rinx cannot be consumed as a non-root bzlmod module at all, which is exactly the shape `scripts/benchmark.py` builds the CPython corpus in.
 
