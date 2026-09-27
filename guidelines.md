@@ -193,7 +193,6 @@ entry under the heading it belongs to, as a single short sentence.
 - Always follow that subject with a body summarizing at a high level what the commit does and the notable decisions behind it; a bare subject line is never enough.
 - After every code modification session, verify `bazel build //examples:site` succeeds.
 - Treat clippy warnings as refactoring opportunities; do not suppress them with `#[allow(...)]` attributes.
-- Style a new rendered construct in both `assets/default.css` and the inline `<style>` of `examples/custom_template.html`; the example site uses the latter, so editing only the former leaves the example unstyled.
 - Verify a rendering change by screenshotting the built page in headless Chrome, not by reading the emitted HTML — markup that looks correct can still render as run-together text.
 - Settle a CSS or browser-behaviour question by testing it in a headless browser, not from memory; `<details>`, in particular, hides every child but its `<summary>` and no rule exempts one.
 - Keep presentation out of the entity meta-model: `entities.toml` is a parse-time input, so a flag there re-parses every document to change how something looks; put the switch in the render-time site config instead.
