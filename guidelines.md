@@ -227,3 +227,4 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep sibling directives on one selection language: refuse a legacy selection option by name with the `:filter:` to write instead, rather than translating it for one sibling alone.
 - When renaming, rename consistently everywhere (package, library, build targets, docs) rather than keeping the old name alive as a compatibility shim.
 - A test asserting that a build step is or is not re-run detects it with `-s` (did the action's key change), never with `(cached)`, whose answer depends on what a disk or remote cache happens to hold.
+- Keep manual checklists (e.g. the PR template) to what a human must judge; never list a check CI already enforces.
