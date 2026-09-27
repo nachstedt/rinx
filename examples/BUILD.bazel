@@ -109,7 +109,6 @@ rinx_site(
     # reads its labels.
     entity_schema = "//examples/entities:entities.toml",
     entity_templates = ["//examples/entities:entity_audit_event.html"],
-    template = "custom_template.html",
     strict_links = True,
     # Other sites this one links into — Sphinx's intersphinx. A reference no
     # document here defines is looked up in these, in this order; see

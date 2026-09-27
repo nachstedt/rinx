@@ -140,6 +140,60 @@ hr {
   text-align: center;
 }
 
+.sidebar-index-link {
+  margin-top: 0.75rem;
+}
+
+.sidebar-index-link a {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.sidebar-index-link a:hover {
+  color: var(--primary);
+}
+
+/* ── Page relations (prev / next) ──────────────────────────────────── */
+
+/* The template emits a prev/next bar above and below the body. Each link is
+   its own flex item, so the two never run together as one line of text, and
+   `.next` is pushed right even when a first page has no `.prev`. */
+.page-relations {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.document > .page-relations:first-child {
+  margin-bottom: 1.5rem;
+}
+
+.document > .page-relations:last-child {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.document .page-relations a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.document .page-relations a:hover {
+  color: var(--primary);
+}
+
+.page-relations .next {
+  margin-left: auto;
+  text-align: right;
+}
+
 /* ── Main Content ──────────────────────────────────────────────────── */
 
 .document {

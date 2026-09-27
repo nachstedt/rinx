@@ -385,11 +385,8 @@ The CSS classes are ``entity``, ``entity-<type>``, ``entity-header``,
 ``entity-link-list``. Note that they describe the *generic* shape, not any one
 type: a project that declares a new ``.. req::`` needs no CSS of its own.
 
-Both stylesheets in the repository carry these rules — ``assets/default.css``,
-the theme ``templates/default.html`` links, and the inline ``<style>`` in
-``examples/custom_template.html``, which the example site uses instead. Styling a
-new construct means updating both, or the example site silently keeps rendering
-it unstyled.
+These rules live in ``assets/default.css``, the stylesheet the default theme
+``templates/default.html`` links.
 
 Per-type templates
 ~~~~~~~~~~~~~~~~~~
