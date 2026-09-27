@@ -138,7 +138,7 @@ pub(crate) struct RenderCtx<'a> {
     /// `highlight_language` and every `.. highlight::` replaces it for the
     /// blocks that follow. Never restored on leaving a nested body — Sphinx
     /// scopes this to the enclosing container, and the narrower whole-document
-    /// rule is a deliberate simplification recorded in `docs/dev/spec_gaps.md`.
+    /// rule is a deliberate simplification recorded in `docs/compatibility.rst`.
     pub highlight_language: ResolvedLanguage,
     /// Whether the built-in entity rendering folds its detail behind a
     /// disclosure. From the site config; see [`config::SiteConfig`].

@@ -6,4 +6,4 @@
 
 - [ ] New behaviour is covered by tests
 - [ ] New features have an example under `examples/`
-- [ ] `docs/dev/spec_gaps.md` is updated if RST/Sphinx coverage changed
+- [ ] `docs/compatibility.rst` is updated if RST/Sphinx coverage changed

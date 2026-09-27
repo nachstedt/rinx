@@ -92,7 +92,7 @@ fn expand_pair(a: &str, b: &str, main: bool) -> Vec<IndexEntry> {
 
 /// Expands a `triple: A; B; C` value into three entries, each pairing one
 /// value against the other two (space-joined subentry text, a simplification
-/// of Sphinx's exact display string — see `docs/dev/spec_gaps.md`).
+/// of Sphinx's exact display string — see `docs/compatibility.rst`).
 fn expand_triple(a: &str, b: &str, c: &str, main: bool) -> Vec<IndexEntry> {
     vec![
         IndexEntry::Term {

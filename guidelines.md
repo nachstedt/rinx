@@ -159,7 +159,9 @@ entry under the heading it belongs to, as a single short sentence.
 - Before 1.0, rename an attribute outright rather than keeping the old spelling as an alias: one honest name is worth more than the churn of updating every call site.
 - A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
 - Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
-- In docs/dev/spec_gaps.md, mark a row 🔶 partial rather than ✅ whenever its own Notes say a specific argument/option/variant of that feature is unsupported, even though the feature's core case works.
+- In docs/compatibility.rst, mark a row 🔶 partial only while something we still intend to implement is missing; a feature whose remaining differences are all deliberate is ✅ ℹ️.
+- Keep compatibility notes to brief bullets naming only what is missing or deviates, never explaining how something works.
+- Name project status pages neutrally ("compatibility status") rather than negatively ("gaps").
 - Keep the default theme's sidebar in view while reading, scrolling on its own; a second scrollbar is a smaller cost than navigation that scrolls away with a long page.
 
 ## Interoperability

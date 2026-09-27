@@ -14,8 +14,9 @@ and it models requirements and other project-specific constructs the way
 [sphinx-needs](https://sphinx-needs.com/) does.
 
 > **Status:** early and pre-1.0. The rule and CLI interfaces may still change.
-> [`docs/dev/spec_gaps.md`](docs/dev/spec_gaps.md) tracks which
-> reStructuredText and Sphinx features are implemented and which are missing.
+> The [compatibility status](https://nachstedt.github.io/rinx/latest/docs/compatibility.html)
+> page lists which reStructuredText and Sphinx features are supported, and
+> where rinx deliberately deviates.
 
 ## Why
 

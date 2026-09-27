@@ -45,7 +45,7 @@ npm package (MIT), whose SVG data it embeds as string constants.
 Two consequences worth knowing. The icon *set* is GitHub's, so its own MIT
 notice travels with any page this build renders an icon into; and the set is
 versioned by the crate rather than by us, so upgrading the dependency can change
-which `:icon:` names a document may use — see `docs/dev/spec_gaps.md` for the names this
+which `:icon:` names a document may use — see `docs/compatibility.rst` for the names this
 differs on from sphinx-design's own pinned copy.
 
 ## PlantUML (`plantuml.jar`)

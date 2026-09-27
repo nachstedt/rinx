@@ -5,8 +5,8 @@ Its own library and package, mirroring `//examples/dropdown`'s and
 visual and independent, so each group gets a small page of its own rather than
 one page trying to show them all at once.
 
-sphinx-design's third *extension* directive family here — see `docs/dev/spec_gaps.md`'s
-"Third-party extension directives" section. Unlike the other two it needs no
+sphinx-design's third *extension* directive family here — see `docs/compatibility.rst`'s
+"Extension directives" section. Unlike the other two it needs no
 library of its own for anything it draws: a button is ordinary HTML, so there
 is no `diagrams = True` split here.
 """

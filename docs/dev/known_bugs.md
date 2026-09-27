@@ -72,7 +72,7 @@ modules" rule is deliberately not reproduced here.
 - **C-domain reference targets keep a trailing `()`.**
   `strip_trailing_call_parens` in `crates/parser/src/inline.rs` now keeps the
   parens out of the lookup name and in the display text, per domain;
-  `spec_gaps.md` records the details.
+  `compatibility.rst` records the details.
 
 - **The `:module:` option on Python domain objects was ignored.**
   Every `py:*` object-description directive except `py:module` itself now
@@ -92,4 +92,4 @@ modules" rule is deliberately not reproduced here.
   the rendered body as a stray paragraph. An empty `:module:` value clears
   the module instead of setting it, matching real Sphinx's falsy-`modname`
   check in `add_target_and_index`. See the "The `:module:` Option Override"
-  section of `examples/domains.rst` and `spec_gaps.md` for details.
+  section of `examples/domains.rst` and `compatibility.rst` for details.

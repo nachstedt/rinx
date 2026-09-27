@@ -5,8 +5,8 @@ directives have ten options between them whose effects are visual and
 independent, so each group gets a small page of its own rather than one page
 trying to show them all at once.
 
-sphinx-design's second *extension* directive family here — see `docs/dev/spec_gaps.md`'s
-"Third-party extension directives" section.
+sphinx-design's second *extension* directive family here — see `docs/compatibility.rst`'s
+"Extension directives" section.
 """
 
 load("@rinx//:defs.bzl", "rinx_library")

@@ -609,7 +609,7 @@ fn try_parse_entity_view(
 /// Grouped because they share a rule the built-ins do not: this build has no
 /// `extensions =` config, so a supported extension directive is simply always
 /// available and its name is reserved against entity schemas. See
-/// `docs/dev/spec_gaps.md`'s "Third-party extension directives" section, which lists
+/// `docs/compatibility.rst`'s "Extension directives" section, which lists
 /// exactly these.
 fn try_parse_extension_directive(
     name: &str,
