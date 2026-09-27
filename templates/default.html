@@ -4,14 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% if page_title %}{{ page_title }} — {% endif %}{{ project }}</title>
-  <link rel="stylesheet" href="{{ css_path }}">
+  <link rel="stylesheet" href="{{ css_path }}">{% if version_switcher %}
+  <script defer src="{{ version_switcher.script }}"></script>{% endif %}
 </head>
 <body>
   <div class="document-wrapper">
     <aside class="sidebar">
       <div class="sidebar-header">
         <h2 class="project-name">{{ project }}</h2>
-        {% if version %}<p class="project-version">{{ version }}</p>{% endif %}
+        {% if version %}<p class="project-version">{{ version }}</p>{% endif %}{% if version_switcher %}
+        <div class="version-switcher" data-json-url="{{ version_switcher.json_url }}" hidden></div>{% endif %}
         {% if genindex_href %}<p class="sidebar-index-link"><a href="{{ genindex_href }}">Index</a></p>{% endif %}
       </div>
       <nav class="sidebar-nav">

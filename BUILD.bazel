@@ -29,4 +29,5 @@ exports_files([
     "templates/default.html",
     "templates/default_config.toml",
     "assets/default.css",
+    "assets/version_switcher.js",
 ])

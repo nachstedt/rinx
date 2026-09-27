@@ -6,3 +6,8 @@ version = "v2.0-beta"
 # sandboxed build relocating the file (see docs/decisions/001-template-system.md).
 [uml_configs]
 monochrome = "skinparam monochrome true"
+
+# The example site is published beside rinx's own documentation, once per
+# version, so it shares that site's list of versions.
+[version_switcher]
+json_url = "https://nachstedt.github.io/rinx/versions.json"

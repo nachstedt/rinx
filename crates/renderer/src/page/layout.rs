@@ -84,6 +84,8 @@ pub fn render_page(
         minijinja::Value::from_safe_string(css_relative_path(meta.doc_path, "genindex.html"))
     });
 
+    let version_switcher = version_switcher_context(config, meta.doc_path);
+
     let mut env = minijinja::Environment::new();
     env.add_template("page.html", template_str)
         .context("Failed to parse template")?;
@@ -100,8 +102,29 @@ pub fn render_page(
         genindex_href => genindex_href,
         prev => &meta.previous,
         next => &meta.next,
+        version_switcher => version_switcher,
     };
     tmpl.render(ctx).context("Failed to render template")
+}
+
+/// The name `rinx_site` copies the version switcher's script under, next to
+/// the stylesheet at the site root.
+const VERSION_SWITCHER_SCRIPT: &str = "version_switcher.js";
+
+/// What the template needs to draw a version switcher on the page at
+/// `doc_path` — where to fetch the version list and where the script is,
+/// relative to this page — or nothing when the site configures none.
+fn version_switcher_context(config: &SiteConfig, doc_path: &str) -> Option<minijinja::Value> {
+    config.version_switcher.as_ref().map(|switcher| {
+        minijinja::context! {
+            // Escaped by the template like any text: a query string's `&`
+            // must not be read as the start of a character reference.
+            json_url => switcher.json_url.as_str(),
+            script => minijinja::Value::from_safe_string(
+                css_relative_path(doc_path, VERSION_SWITCHER_SCRIPT),
+            ),
+        }
+    })
 }
 
 #[cfg(test)]
@@ -430,6 +453,90 @@ mod tests {
 
         // Then
         assert!(!result.contains("Index</a>"));
+    }
+
+    fn config_with_switcher(json_url: &str) -> SiteConfig {
+        SiteConfig {
+            version_switcher: Some(crate::config::VersionSwitcher {
+                json_url: crate::config::SwitcherUrl::parse(json_url).unwrap(),
+            }),
+            ..SiteConfig::default()
+        }
+    }
+
+    #[test]
+    fn test_version_switcher_context_is_absent_without_config() {
+        // Given
+        let config = SiteConfig::default();
+
+        // When
+        let context = version_switcher_context(&config, "index.rst");
+
+        // Then
+        assert!(context.is_none());
+    }
+
+    #[test]
+    fn test_version_switcher_context_points_at_the_script_relative_to_the_page() {
+        // Given — a page two directories below the site root
+        let config = config_with_switcher("/versions.json");
+
+        // When
+        let context = version_switcher_context(&config, "docs/guide/intro.rst").unwrap();
+
+        // Then
+        assert_eq!(
+            context.get_attr("script").unwrap().as_str(),
+            Some("../../version_switcher.js")
+        );
+        assert_eq!(
+            context.get_attr("json_url").unwrap().as_str(),
+            Some("/versions.json")
+        );
+    }
+
+    #[test]
+    fn test_render_page_exposes_the_version_switcher_to_the_template() {
+        // Given
+        let template = r#"{% if version_switcher %}<script src="{{ version_switcher.script }}" data-url="{{ version_switcher.json_url }}"></script>{% endif %}"#;
+        let config = config_with_switcher("https://example.org/versions.json");
+
+        // When
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                doc_path: "team/index.rst",
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
+
+        // Then — the URL is escaped as attribute text, which the browser
+        // decodes back to what was configured
+        assert_eq!(
+            result,
+            r#"<script src="../version_switcher.js" data-url="https:&#x2f;&#x2f;example.org&#x2f;versions.json"></script>"#
+        );
+    }
+
+    #[test]
+    fn test_render_page_mentions_no_switcher_without_config() {
+        // Given — the default template's own guard
+        let template = "{% if version_switcher %}switcher{% endif %}{{ body }}";
+
+        // When
+        let result = render_page(
+            "body",
+            template,
+            &SiteConfig::default(),
+            &PageMeta::default(),
+        )
+        .unwrap();
+
+        // Then
+        assert_eq!(result, "body");
     }
 
     #[test]

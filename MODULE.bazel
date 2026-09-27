@@ -93,3 +93,10 @@ pip.parse(
 )
 use_repo(pip, "pypi")
 
+
+# ── JavaScript tests ──────────────────────────────────────────────────────────
+
+# Runs the default theme's browser script's tests (tests/js/) under a hermetic
+# Node.js. The script itself is shipped to sites as a plain file, so no rule of
+# rinx's needs Node and a user of the module never resolves this.
+bazel_dep(name = "aspect_rules_js", version = "3.4.1", dev_dependency = True)

@@ -1,0 +1,30 @@
+"""Tests for the browser scripts the default theme ships (assets/*.js).
+
+Its own package, rather than beside the scripts, because the root package is
+loaded by every module depending on rinx and rules_js is a dev dependency
+only; and assets/ cannot become a package without breaking the
+`@rinx//:assets/default.css` label users name.
+
+  bazel test //tests/js:all
+"""
+
+load("@aspect_rules_js//js:defs.bzl", "js_test")
+
+# rules_js runs tests from the output tree and copies only its own package's
+# sources there, so the script under test is copied in by hand, landing next to
+# the test file that requires it as `./version_switcher.js`.
+genrule(
+    name = "version_switcher_js",
+    srcs = ["//:assets/version_switcher.js"],
+    outs = ["version_switcher.js"],
+    cmd = "cp $< $@",
+)
+
+# node:test runs a file's tests when the file is executed directly, and exits
+# non-zero when one fails, so the test file is the entry point as it stands.
+js_test(
+    name = "version_switcher_test",
+    data = [":version_switcher_js"],
+    size = "small",
+    entry_point = "version_switcher.test.js",
+)
