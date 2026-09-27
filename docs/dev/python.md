@@ -3,8 +3,9 @@
 rinx is Rust, but a handful of Python scripts live in `scripts/`: the two
 benchmarks (`benchmark.py`, `benchmark_entities.py`, sharing
 `benchmark_common.py` and `needs_schema.py`), the crates.io publisher
-(`publish_crates.py`) and the doctest runner (`doctest_runner.py`). The
-examples in `examples/shared/` are Python too.
+(`publish_crates.py`), the GitHub Pages publisher (`publish_pages.py`) and
+the doctest runner (`doctest_runner.py`). The examples in `examples/shared/`
+are Python too.
 
 ## Tooling
 
@@ -34,9 +35,9 @@ The `python` job in `.github/workflows/ci.yml` runs all of these with
 - **ty is pinned.** It is pre-1.0, so a new release can add diagnostics. An
   upgrade arrives as a Dependabot pull request and is fixed there.
 
-## Two scripts are stdlib-only, one of them on Python 3.9
+## Three scripts are stdlib-only, one of them on Python 3.9
 
-`pyproject.toml` declares no runtime dependencies, and two scripts depend on
+`pyproject.toml` declares no runtime dependencies, and three scripts depend on
 that:
 
 - `doctest_runner.py` is shipped. `rinx_doctest_tests` runs it inside
@@ -47,6 +48,9 @@ that:
   `TYPE_CHECKING`, behind `from __future__ import annotations`.
 - `publish_crates.py` runs as a bare `python3 scripts/publish_crates.py` in the
   release workflow, with nothing installed.
+- `publish_pages.py` likewise runs as a bare `python3` in every workflow that
+  writes the `gh-pages` branch. Its tests drive real `git` against a bare
+  repository in a temporary directory, so they need `git` on `PATH`.
 
 Everything else targets the Python 3.11 that `MODULE.bazel`'s toolchain and
 `.python-version` both name.

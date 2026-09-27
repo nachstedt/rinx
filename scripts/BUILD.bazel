@@ -68,6 +68,14 @@ py_library(
     imports = ["."],
 )
 
+# Publishes a version of rinx's two sites to the gh-pages branch — every
+# workflow writing that branch calls it. See docs/decisions/024-versioned-docs.md.
+py_library(
+    name = "publish_pages_lib",
+    srcs = ["publish_pages.py"],
+    imports = ["."],
+)
+
 # One pytest target per `*_test.py`, so an edit re-runs only the file it
 # touches. Each runs under the repository's pyproject.toml — the configuration
 # `uv run pytest` uses — so the two cannot disagree about how a test runs
@@ -92,6 +100,7 @@ py_library(
             ":benchmark_lib",
             ":doctest_runner_lib",
             ":publish_crates_lib",
+            ":publish_pages_lib",
             "@pypi//pytest",
         ],
     )

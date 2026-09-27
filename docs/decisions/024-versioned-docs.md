@@ -36,22 +36,32 @@ What other projects do:
 ### 1. GitHub Pages, served from a `gh-pages` branch laid out like `mike`
 
 ```
-/                       redirect to latest/docs/index.html
+/                       redirect to the newest release's docs/index.html
 /versions.json          the switcher's data (§4)
 /robots.txt             Disallow: /pr/ and /main/ — search engines index releases only
 /.nojekyll              without it, Pages' Jekyll drops `_images/`
-/latest/                a copy of the newest release
+/latest/                redirects into the newest release
 /vX.Y.Z/                one per release, immutable
 /main/                  rebuilt on every merge to main
 /pr/<N>/                one per open pull request, removed when it closes
-/docs/…, /example-site/…  redirect stubs for the URLs published before this
+/docs/…, /example-site/…  redirects for the URLs published before this
 ```
 
 Every version directory has today's shape: `//docs:site` at its root and
-`//examples:site` under `example-site/`. `latest/` is a copy rather than a
-redirect, because a redirect page is not an `objects.inv` (ADR-023): another
-site's `inventories` entry should be able to name
-`…/latest/docs/objects.inv`.
+`//examples:site` under `example-site/`, plus an `index.html` at each of
+the two roots leading to the site's front page, which is where the switcher
+lands when a page does not exist in the version switched to.
+
+`latest/` and the URLs from before versions existed (the release's tree at
+the branch's root) are **redirects, not copies**: one page per page, each
+relative and keeping the `#fragment` it was opened with. A copy would sit
+under no `url` in `versions.json`, so the switcher would take it for a
+preview; a redirect lands the reader on the real `vX.Y.Z/` page, where it
+knows its version. Each `objects.inv` is the exception and *is* copied, since
+a tool fetching one does not follow an HTML redirect (ADR-023). Its entries are
+relative too, so they resolve to the redirects and from there to the real
+pages: another site can name `…/latest/objects.inv` and keep up with releases.
+Until a release is published, all of these lead to `main/`.
 
 The branch is storage, not history. A scheduled job squashes it into a single
 orphan commit monthly, so pull-request churn does not accumulate. One build is
@@ -60,16 +70,20 @@ about 7 MB, almost all of it the example site.
 ### 2. One script writes the branch
 
 `scripts/publish_pages.py` (stdlib-only, tested like the other scripts) is the
-only writer. It publishes or removes one prefix and regenerates
-`versions.json` and the redirects. It refuses to overwrite an existing
-`vX.Y.Z/` without `--force`, and it retries a rejected push after a rebase.
+only writer. It publishes or removes one version directory and then
+regenerates everything outside the version directories from them —
+`versions.json`, the redirects, `robots.txt` — so no run depends on what an
+earlier one wrote. It refuses to overwrite or remove an existing `vX.Y.Z/`
+without `--force`. A push that loses a race is not rebased: the script fetches
+the new tip and applies its change again, which is exact because everything
+derived is regenerated anyway.
 Every workflow that calls it shares one `concurrency: gh-pages` group with
 `cancel-in-progress: false`, so writes are serialized.
 
 | Trigger | Writes |
 |---|---|
 | CI succeeded on `main` (`pages.yml`) | `main/` |
-| the release workflow's `finalize` succeeded | `vX.Y.Z/`, `latest/`, `versions.json` |
+| the release workflow's `finalize` succeeded | `vX.Y.Z/` (and so `latest/`) |
 | `workflow_dispatch` with a tag | the same, to backfill a release (first: `v0.1.0`) |
 | CI succeeded on a pull request | `pr/<N>/`, and a sticky comment linking it |
 | a pull request closed | removes `pr/<N>/` |
