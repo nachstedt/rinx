@@ -3,7 +3,7 @@
 Pushing a tag `vX.Y.Z` releases rinx. `.github/workflows/release.yaml` does the
 rest:
 
-1. **ci** runs the full CI (`rust.yml`) again on the tagged commit.
+1. **ci** runs the full CI (`ci.yml`) again on the tagged commit.
 2. **release** runs `.github/workflows/release_prep.sh`, which refuses a tag
    that disagrees with `MODULE.bazel`, `Cargo.toml` or `CHANGELOG.md`. It then
    writes `rinx-vX.Y.Z.tar.gz` (the archive `.bcr/source.template.json` points

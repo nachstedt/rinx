@@ -16,7 +16,7 @@ permissions: {}
 
 jobs:
   ci:
-    uses: ./.github/workflows/rust.yml
+    uses: ./.github/workflows/ci.yml
     permissions:
       contents: read
 
@@ -68,7 +68,9 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
-      - uses: dtolnay/rust-toolchain@stable
+      # Installs the toolchain rust-toolchain.toml pins.
+      - name: Set up Rust
+        run: rustup toolchain install --no-self-update
 
       - name: Authenticate with crates.io
         id: auth

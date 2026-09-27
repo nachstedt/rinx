@@ -1,4 +1,7 @@
-name: Rust CI
+# Every check a pull request must pass. The jobs are independent and start
+# together; `ci-ok` folds their results into the one check the "main
+# gatekeeper" ruleset requires, so adding a job never needs a ruleset edit.
+name: CI
 
 on:
   push:
@@ -8,18 +11,36 @@ on:
   # release.yaml runs the full CI again on the tagged commit before releasing.
   workflow_call:
 
+permissions:
+  contents: read
+
+# A newer push to a pull request supersedes its running checks; runs on main
+# and on a release tag always finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_test_lint:
+  rust-lint:
+    name: Rust / lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v7
-    
+
+    # Installs the toolchain rust-toolchain.toml pins, with its components.
     - name: Set up Rust
-      uses: dtolnay/rust-toolchain@stable
-        
+      run: rustup toolchain install --no-self-update
+
+    # Pull requests restore main's cache but never save their own.
+    - uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: lint
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+
     - name: Check formatting
       run: cargo fmt --all -- --check
 
@@ -31,32 +52,64 @@ jobs:
     - name: Run Clippy on non-test code
       run: cargo clippy --workspace -- -D warnings
 
-    - name: Build
-      run: cargo build --workspace --verbose
-
-    - name: Run unit tests
-      run: cargo test --workspace --verbose
-
     - name: Document
       run: cargo doc --workspace --no-deps
+
+  rust-test:
+    name: Rust / test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Rust
+      run: rustup toolchain install --no-self-update
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: test
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+
+    - name: Run the tests
+      run: cargo test --workspace
+
+  rust-package:
+    name: Rust / package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Rust
+      run: rustup toolchain install --no-self-update
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: package
+        save-if: ${{ github.ref == 'refs/heads/main' }}
 
     # Builds every crate from the tarball crates.io would receive, so a missing
     # file or a path-only dependency fails here rather than at release time.
     - name: Package for crates.io
       run: cargo package --workspace
 
-  bazel_integration:
+  bazel:
+    name: Bazel / integration
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
     - uses: actions/checkout@v7
 
     - name: Set up Bazel
       uses: bazel-contrib/setup-bazel@0.19.0
       with:
-        # Cache Bazel's external dependencies between CI runs
         bazelisk-cache: true
-        disk-cache: ${{ github.workflow }}
+        # One name for every workflow building these targets (this one, the
+        # release's call of it, and pages.yml), so they share one cache.
+        disk-cache: bazel
         repository-cache: true
+        # Pull requests restore main's caches but never save their own.
+        cache-save: ${{ github.event_name != 'pull_request' }}
 
     - name: Build full site (all teams)
       run: bazel build //examples:site
@@ -78,6 +131,8 @@ jobs:
     - name: Build team_b in isolation (partial build)
       run: bazel build //examples/team_b:docs
 
+    # The scripts below edit files under examples/ and restore them, so they
+    # must run one after another in this one checkout.
     - name: Run strict dependencies test
       run: ./tests/test_strict_deps.sh
 
@@ -121,7 +176,9 @@ jobs:
       run: bazel test //...
 
   python:
+    name: Python
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v7
 
@@ -161,8 +218,10 @@ jobs:
           -o scripts/requirements.txt
         git diff --exit-code scripts/requirements.txt
 
-  vscode_extension:
+  vscode:
+    name: VS Code extension
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
     - uses: actions/checkout@v7
 
@@ -171,10 +230,29 @@ jobs:
       with:
         node-version: 22
 
+    # `npm ci` installs exactly package-lock.json, and fails when it disagrees
+    # with package.json.
     - name: Install dependencies
       working-directory: editors/vscode
-      run: npm install
+      run: npm ci
 
     - name: Run extension tests
       working-directory: editors/vscode
       run: xvfb-run -a npm test
+
+  # The one check the ruleset requires. `always()` makes it report even when a
+  # job it needs failed or was skipped, which would otherwise leave it pending
+  # and the pull request blocked without a reason.
+  ci-ok:
+    name: CI result
+    if: always()
+    needs: [rust-lint, rust-test, rust-package, bazel, python, vscode]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - name: Require every job to have succeeded
+      env:
+        NEEDS: ${{ toJSON(needs) }}
+      run: |
+        jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<<"$NEEDS"
+        jq -e 'all(.[]; .result == "success")' <<<"$NEEDS" > /dev/null
