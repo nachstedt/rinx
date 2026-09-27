@@ -10,12 +10,13 @@ use super::outline::build_document_outline;
 
 /// Analyzes a single `Document` and returns a local `ProjectIndex`.
 ///
-/// This extracts targets, document titles, the document's section outline,
+/// This records the document itself and extracts targets, document titles, the document's section outline,
 /// glossary terms and equation numbers. The `nav_tree` is not
 /// populated here — it is built globally by [`build_project_index()`].
 #[must_use]
 pub fn analyze(doc: &Document) -> ProjectIndex {
     let mut index = ProjectIndex::default();
+    index.documents.insert(doc.path.clone());
     let mut found_title = false;
     for node in &doc.nodes {
         if !found_title && let Node::Heading { level: 1, text } = node {

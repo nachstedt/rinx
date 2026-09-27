@@ -3,11 +3,12 @@
 //!
 //! [`dispatch`] owns the entry point and matches on the node kind; each
 //! remaining module renders one cross-reference role — [`reference`] for
-//! `:ref:`, [`hyperlink`] and [`anonymous_reference`] for the two hyperlink
-//! forms, [`term_reference`] for `:term:`, [`option_reference`] for
-//! `:option:`, and [`domain_object_reference`] for the domain roles. The
-//! latter two resolve through [`crate::resolution`], as does
-//! [`any_reference`], which draws each kind it finds through the other
+//! `:ref:`, [`doc_reference`] for `:doc:`, [`hyperlink`] and
+//! [`anonymous_reference`] for the two hyperlink forms, [`term_reference`]
+//! for `:term:`, [`option_reference`] for `:option:`, and
+//! [`domain_object_reference`] for the domain roles. The latter two resolve
+//! through [`crate::resolution`], as do [`doc_reference`] and
+//! [`any_reference`] — the last drawing each kind it finds through the other
 //! modules' href builders.
 //!
 //! A reference that no document of this site defines but another site's
@@ -19,6 +20,7 @@
 mod anonymous_reference;
 mod any_reference;
 mod dispatch;
+mod doc_reference;
 mod domain_object_reference;
 pub(crate) mod entity_reference;
 mod external_link;

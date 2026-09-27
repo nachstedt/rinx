@@ -55,7 +55,10 @@ Writing references
 ------------------
 
 Nothing has to change: a role searches this site first and then every declared
-inventory, in the order ``inventories`` lists them.
+inventory, in the order ``inventories`` lists them. The one exception is
+``:doc:``, which — as in Sphinx, whose ``intersphinx_disabled_reftypes`` leaves
+``std:doc`` out by default — searches the inventories only when written with
+the ``:external:`` prefix below.
 
 .. code-block:: rst
 
@@ -71,9 +74,12 @@ To pick an inventory, or to skip this site, as in Sphinx:
    :ref:`python:tut-intro`             — a `name:` prefix, tried after the target as written
    :external:py:class:`dict`           — any inventory, never this site
    :external+python:ref:`tut-intro`    — the `python` inventory only
+   :external:doc:`tutorial/index`      — a page, named as the inventory lists it
 
-``:external:`` works on ``:ref:``, ``:term:``, ``:option:``, ``:any:`` and every
-domain role.
+``:external:`` works on ``:ref:``, ``:doc:``, ``:term:``, ``:option:``,
+``:any:`` and every domain role. An external ``:doc:`` target is the other
+site's document name exactly as written — never relative to the page it is
+written on, and without a leading ``/``.
 
 .. list-table::
    :header-rows: 1

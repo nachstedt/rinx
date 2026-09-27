@@ -67,11 +67,14 @@ fn build_inventory(index: &ProjectIndex, project: &str, version: &str) -> Invent
 }
 
 /// One `std:doc` per page, named by its extensionless path and showing its
-/// title — the entry an external `` :doc: `` resolves against.
+/// title — the entry an external `` :doc: `` resolves against. A page with no
+/// title is listed too, since a `:doc:` reaches one; `page_order` is still
+/// read so an index written before `documents` existed loses nothing.
 fn document_entries(index: &ProjectIndex) -> Vec<InventoryEntry> {
     let mut paths: Vec<&String> = index
         .document_titles
         .keys()
+        .chain(&index.documents)
         .chain(&index.page_order)
         .collect();
     paths.sort();
@@ -244,6 +247,21 @@ mod tests {
             .collect();
         assert_eq!(docs.len(), 1);
         assert_eq!(docs[0].display_name, None);
+    }
+
+    #[test]
+    fn test_build_inventory_lists_an_orphan_without_a_title() {
+        // Given — a document no toctree reaches and no heading names
+        let mut index = ProjectIndex::default();
+        index.documents.insert("scratch.rst".to_string());
+
+        // When
+        let inventory = build_inventory(&index, "Demo", "1.0");
+
+        // Then
+        let entry = find(&inventory, "std:doc", "scratch");
+        assert_eq!(entry.uri, "scratch.html");
+        assert_eq!(entry.display_name, None);
     }
 
     #[test]

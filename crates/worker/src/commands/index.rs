@@ -199,7 +199,9 @@ fn written_reference_targets(ast_jsons: &[String]) -> Result<BTreeSet<String>> {
             serde_json::Value::Object(fields) => {
                 for (key, inner) in fields {
                     let target_field = match key.as_str() {
-                        "Reference" | "OptionReference" | "AnyReference" => Some("target"),
+                        "Reference" | "OptionReference" | "AnyReference" | "DocReference" => {
+                            Some("target")
+                        }
                         "TermReference" => Some("term"),
                         "DomainObjectReference" => Some("name"),
                         _ => None,
@@ -343,7 +345,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"genindex_entries":[],"equations":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[]}"#
+            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"documents":["test.rst"],"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"genindex_entries":[],"equations":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[]}"#
         );
     }
 
@@ -456,7 +458,8 @@ mod tests {
     #[test]
     fn test_written_reference_targets_finds_every_role_however_deeply_nested() {
         // Given — a `:ref:` inside a bullet list, a `:term:`, an `:option:`,
-        // a domain role and an `:any:`, each as the parser serializes it
+        // a domain role, an `:any:` and a `:doc:`, each as the parser
+        // serializes it
         let doc = r#"{"path":"a.rst","nodes":[
             {"BulletList":{"bullet":"*","items":[{"nodes":[
                 {"Paragraph":[{"Reference":{"target":"python:tut-intro"}}]}]}]}},
@@ -464,7 +467,8 @@ mod tests {
                 {"TermReference":{"display":"b","term":"bytecode"}},
                 {"OptionReference":{"display":"-O","target":"-O"}},
                 {"DomainObjectReference":{"object_type":"py:class","name":"dict","display":"dict","link":true}},
-                {"AnyReference":{"target":"list","link":true}}
+                {"AnyReference":{"target":"list","link":true}},
+                {"DocReference":{"target":"tutorial/index","link":true}}
             ]}]}"#;
 
         // When
@@ -478,6 +482,7 @@ mod tests {
             "-O",
             "dict",
             "list",
+            "tutorial/index",
         ]
         .iter()
         .map(|name| (*name).to_string())

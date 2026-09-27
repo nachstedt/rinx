@@ -18,6 +18,8 @@ rinx_library(
         "admonitions.rst",
         "inline_roles.rst",
         "any_role.rst",
+        "doc_role.rst",
+        "doc_role_untitled.rst",
         "version_changes.rst",
         "seealso.rst",
         "literal_blocks.rst",

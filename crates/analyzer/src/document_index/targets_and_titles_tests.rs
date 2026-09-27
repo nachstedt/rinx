@@ -91,6 +91,24 @@ fn test_analyze_extracts_h1_title() {
 }
 
 #[test]
+fn test_analyze_records_a_document_without_a_title() {
+    // Given — a page with no heading at all
+    let doc = Document::new(
+        "notes/scratch.rst".to_string(),
+        vec![Node::Paragraph(vec![InlineNode::Text(
+            "jottings".to_string(),
+        )])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.document_titles.is_empty());
+    assert!(index.documents.contains("notes/scratch.rst"));
+}
+
+#[test]
 fn test_analyze_extracts_h1_title_as_plain_text_when_heading_has_domain_object_reference() {
     // Given — a heading containing a `~`-shortened domain-object reference
     let doc = Document::new(

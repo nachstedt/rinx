@@ -161,6 +161,29 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
         inventory: InventorySelector,
     },
+    /// A whole-document cross-reference produced by the `:doc:` (or
+    /// `:std:doc:`) role.
+    ///
+    /// `target` is the document name as written — relative to the
+    /// referencing document, or to the source root with a leading `/` — and
+    /// is resolved only while rendering, because whether that document exists
+    /// is a fact about the whole project. `display` is the explicit title of
+    /// the angle-bracket form and `None` for a bare target, as on
+    /// [`Self::Reference`]: a bare `:doc:` shows the target document's title,
+    /// which only the project index knows. A `!` prefix is consumed here and
+    /// recorded as `link: false`, as on [`Self::AnyReference`].
+    DocReference {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        display: Option<String>,
+        target: String,
+        link: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+        /// Which inventories the target may come from — see
+        /// [`InventorySelector`]. Left out of a `.ast` file when ordinary.
+        #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
+        inventory: InventorySelector,
+    },
     /// A reference to a project-declared entity, from a role the schema
     /// names — ``:req:`REQ_001` ``, ``:need:`REQ_001` ``, or the built-in
     /// ``:entity:`REQ_001` ``.
@@ -246,6 +269,7 @@ impl InlineNode {
             | Self::DomainObjectReference { span, .. }
             | Self::OptionReference { span, .. }
             | Self::AnyReference { span, .. }
+            | Self::DocReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
@@ -270,6 +294,7 @@ impl InlineNode {
             | Self::DomainObjectReference { span, .. }
             | Self::OptionReference { span, .. }
             | Self::AnyReference { span, .. }
+            | Self::DocReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
@@ -302,7 +327,9 @@ impl InlineNode {
             | Self::OptionReference { .. }
             | Self::EntityReference { .. }
             | Self::EquationReference { .. } => true,
-            Self::DomainObjectReference { link, .. } | Self::AnyReference { link, .. } => *link,
+            Self::DomainObjectReference { link, .. }
+            | Self::AnyReference { link, .. }
+            | Self::DocReference { link, .. } => *link,
             _ => false,
         }
     }
@@ -333,6 +360,9 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
                 display, target, ..
             }
             | InlineNode::AnyReference {
+                display, target, ..
+            }
+            | InlineNode::DocReference {
                 display, target, ..
             } => display.as_deref().unwrap_or(target),
             InlineNode::TermReference { display, .. }
@@ -540,6 +570,70 @@ mod tests {
 
         // Then
         assert_eq!(text, "Got");
+    }
+
+    fn doc_reference(display: Option<&str>, link: bool) -> InlineNode {
+        InlineNode::DocReference {
+            display: display.map(str::to_string),
+            target: "guide/intro".to_string(),
+            link,
+            span: None,
+            inventory: crate::InventorySelector::Any,
+        }
+    }
+
+    #[test]
+    fn test_a_suppressed_doc_reference_is_not_a_link() {
+        // Given — `:doc:` with and without the `!` prefix
+        let suppressed = doc_reference(None, false);
+        let linked = doc_reference(None, true);
+
+        // When / Then
+        assert!(!suppressed.renders_as_link());
+        assert!(linked.renders_as_link());
+    }
+
+    #[test]
+    fn test_doc_reference_carries_its_span() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(2, 4),
+            crate::span::Position::new(2, 20),
+        );
+
+        // When
+        let placed = doc_reference(None, true).with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+    }
+
+    #[test]
+    fn test_doc_reference_without_explicit_title_roundtrips_without_display() {
+        // Given — a bare `:doc:`, whose link text only the index can supply
+        let node = doc_reference(None, true);
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert!(!json.contains("display"));
+        assert!(!json.contains("inventory"));
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_inline_plain_text_uses_the_title_or_target_of_a_doc_reference() {
+        // Given
+        let titled = doc_reference(Some("Intro"), true);
+        let bare = doc_reference(None, true);
+
+        // When
+        let text = inline_plain_text(&[titled, bare]);
+
+        // Then
+        assert_eq!(text, "Introguide/intro");
     }
 
     #[test]

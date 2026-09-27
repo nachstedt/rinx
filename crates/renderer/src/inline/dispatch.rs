@@ -9,6 +9,7 @@ use super::anonymous_reference::{
     render_inline_anonymous_hyperlink, render_inline_anonymous_reference,
 };
 use super::any_reference::{AnyRef, render_inline_any_reference};
+use super::doc_reference::{DocRef, render_inline_doc_reference};
 use super::domain_object_reference::{
     DomainObjectDiagnostics, DomainObjectRef, render_inline_domain_object_reference,
 };
@@ -84,6 +85,7 @@ pub(crate) fn render_inline(
         // silently rendering as nothing.
         rinx_ast::InlineNode::Reference { .. }
         | rinx_ast::InlineNode::AnyReference { .. }
+        | rinx_ast::InlineNode::DocReference { .. }
         | rinx_ast::InlineNode::Hyperlink { .. }
         | rinx_ast::InlineNode::AnonymousReference { .. }
         | rinx_ast::InlineNode::TermReference { .. }
@@ -195,7 +197,8 @@ fn render_cross_reference(
         // Grouped into their own function purely to keep this match's total
         // line count from growing past a readable length as roles
         // accumulate — see [`render_indexed_cross_reference`].
-        rinx_ast::InlineNode::TermReference { .. }
+        rinx_ast::InlineNode::DocReference { .. }
+        | rinx_ast::InlineNode::TermReference { .. }
         | rinx_ast::InlineNode::OptionReference { .. }
         | rinx_ast::InlineNode::EntityReference { .. }
         | rinx_ast::InlineNode::EquationReference { .. } => {
@@ -215,16 +218,37 @@ fn render_cross_reference(
     }
 }
 
-/// Renders the three cross-reference roles [`render_cross_reference`] groups
-/// into one arm purely to stay under a readable line count — nothing else
-/// ties `:term:`, `:option:` and `:eq:` together the way domain objects share
-/// a resolver.
+/// Renders the cross-reference roles [`render_cross_reference`] groups into
+/// one arm purely to stay under a readable line count — nothing else ties
+/// `:doc:`, `:term:`, `:option:`, the entity roles and `:eq:` together the
+/// way domain objects share a resolver.
 fn render_indexed_cross_reference(
     html: &mut String,
     inline: &rinx_ast::InlineNode,
     ctx: &mut RenderCtx<'_>,
 ) {
     match inline {
+        rinx_ast::InlineNode::DocReference {
+            display,
+            target,
+            link,
+            span,
+            inventory,
+        } => {
+            render_inline_doc_reference(
+                html,
+                DocRef {
+                    title: display.as_deref(),
+                    target,
+                    link: *link,
+                    span: *span,
+                    inventory,
+                },
+                ctx.index,
+                ctx.doc_path,
+                ctx.broken_links,
+            );
+        }
         rinx_ast::InlineNode::TermReference {
             display,
             term,

@@ -107,7 +107,16 @@ Inline markup
        - A label above no heading is found, showing the label, as ``:ref:``
          does here; Sphinx's ``:any:`` does not find it.
        - Entities are found, since each is a label.
-   * - ``:doc:``, ``:download:``, ``:numref:`` and ``:code:`` roles
+   * - ``:doc:`` role
+     - ✅ ℹ️
+     - - A leading ``/`` resolves from the Bazel workspace root, where every
+         document's path starts, not from the directory holding the site's
+         sources — as a toctree entry's does.
+       - A target ending in ``.rst`` is found; Sphinx looks for a document
+         named ``….rst`` and finds nothing.
+       - An unknown document is drawn as a broken link and reported as
+         ``link.broken-doc``; Sphinx shows the target as plain text.
+   * - ``:download:``, ``:numref:`` and ``:code:`` roles
      - ❌
      -
    * - ``:pep:``, ``:rfc:``, ``:cve:`` and ``:cwe:`` roles

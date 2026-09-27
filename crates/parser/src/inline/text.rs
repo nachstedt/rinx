@@ -114,6 +114,9 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         }
         | InlineNode::AnyReference {
             display, target, ..
+        }
+        | InlineNode::DocReference {
+            display, target, ..
         } => {
             *display = display.as_deref().map(unescape);
             *target = unescape(target);
