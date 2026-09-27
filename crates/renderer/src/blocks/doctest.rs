@@ -29,7 +29,7 @@ pub(crate) fn render_doctest_block(block: &DocTestBlock, ctx: &mut RenderCtx) ->
         // their output. The bundled Sublime grammars have no equivalent, so
         // an interactive block renders unhighlighted today — asking for the
         // name anyway states the intent, and starts working by itself should
-        // the grammar set ever gain one. See `docs/dev/spec_gaps.md`.
+        // the grammar set ever gain one. See `docs/compatibility.rst`.
         DocTestBlock::Interactive { .. } => named_language("pycon"),
         DocTestBlock::Code { .. } => named_language("python"),
         // Expected output is not source in any language, so it stays

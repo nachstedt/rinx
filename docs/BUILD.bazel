@@ -12,6 +12,7 @@ rinx_library(
     name = "docs",
     srcs = [
         "benchmark.rst",
+        "compatibility.rst",
         "entities.rst",
         "getting_started.rst",
         "index.rst",

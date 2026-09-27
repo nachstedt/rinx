@@ -18,7 +18,8 @@ repository.
 .. note::
 
    rinx is early and pre-1.0. The rule and CLI interfaces may still change
-   between minor versions. :ref:`syntax` lists what is supported today.
+   between minor versions. :ref:`syntax` lists what is supported today, and
+   :ref:`compatibility` has the details.
 
 Why
 ===
@@ -46,6 +47,7 @@ Contents
    getting_started
    rules
    syntax
+   compatibility
    entities
    intersphinx
    vscode

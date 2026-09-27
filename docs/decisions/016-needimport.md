@@ -6,7 +6,7 @@ Accepted.
 
 ## Context
 
-`docs/dev/spec_gaps.md` listed `needimport` among the three sphinx-needs directives
+`docs/compatibility.rst` listed `needimport` among the three sphinx-needs directives
 that *add or modify* entities, with the note that each "needs a decision about
 where in the pipeline it belongs". ADR-010 deferred it explicitly: importing
 external entities "raises questions about ids the project does not own and

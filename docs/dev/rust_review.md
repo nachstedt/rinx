@@ -6,7 +6,7 @@ conducted 2026-07-09. `unsafe_code = "forbid"` is set workspace-wide (zero
 `clippy::pedantic = "warn"` currently produces **zero warnings** — none of the
 findings below are things clippy pedantic already catches. This is a living
 document: update or remove entries as they're fixed, and add new ones the same
-way `spec_gaps.md` is maintained.
+way `compatibility.rst` is maintained.
 
 Severity scale: **Critical** (panic/crash or injection on plausible input,
 reachable from untrusted `.rst` content or an ordinary Bazel action) · **High**

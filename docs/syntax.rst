@@ -4,10 +4,8 @@ Supported syntax
 ================
 
 rinx implements the parts of reStructuredText and Sphinx that documentation
-projects use most, and grows from there. This page is an overview. The
-authoritative list, with notes on every partial feature, is `spec_gaps.md
-<https://github.com/nachstedt/rinx/blob/main/docs/dev/spec_gaps.md>`__ in the
-repository. The `example site <../example-site/examples/index.html>`__ shows each construct
+projects use most, and grows from there. This page is an overview;
+:ref:`compatibility` lists every construct with its deviations. The `example site <../example-site/examples/index.html>`__ shows each construct
 rendered.
 
 A construct rinx does not know is never dropped silently. An unknown directive

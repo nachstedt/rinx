@@ -45,7 +45,7 @@ for both authored images and compiled PlantUML diagrams — they share one
 implementation because they share one directory.
 
 This is a visible deviation from Sphinx's output layout, recorded in
-`docs/dev/spec_gaps.md`.
+`docs/compatibility.rst`.
 
 ## Decision 3 — `:loading: embed` embeds, via a per-document sidecar
 
@@ -97,7 +97,7 @@ never opens an image while rendering, so each gets its own answer:
 
 - A build on a machine with no images still works; only `bazel build` of a site
   that references one needs the declaration.
-- `docs/dev/spec_gaps.md` marks both directives 🔶 rather than ✅: the bare-`:scale:` gap
+- `docs/compatibility.rst` marks both directives as supported with deviations: the bare-`:scale:` gap
   above, and Sphinx's `.. image:: logo.*` candidate-selection wildcard, which
   presumes a source-tree glob that this explicitly-declared-inputs model
   deliberately does not have.

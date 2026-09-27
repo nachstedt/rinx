@@ -48,7 +48,7 @@ build, which refreshes the checked-in `Cargo.bazel.lock`.
 - A new feature gets an example under [`examples/`](examples/) covering its
   variants, and new `.rst` files are listed in that directory's `BUILD.bazel`.
 - If the change adds or fixes coverage of a reStructuredText or Sphinx
-  construct, update [`docs/dev/spec_gaps.md`](docs/dev/spec_gaps.md).
+  construct, update [`docs/compatibility.rst`](docs/compatibility.rst).
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
   (`feat: ...`, `fix: ...`, `docs: ...`, `chore: ...`).
 
