@@ -160,6 +160,7 @@ entry under the heading it belongs to, as a single short sentence.
 - A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
 - Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
 - In docs/dev/spec_gaps.md, mark a row 🔶 partial rather than ✅ whenever its own Notes say a specific argument/option/variant of that feature is unsupported, even though the feature's core case works.
+- Keep the default theme's sidebar in view while reading, scrolling on its own; a second scrollbar is a smaller cost than navigation that scrolls away with a long page.
 
 ## Interoperability
 
