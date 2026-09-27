@@ -69,6 +69,9 @@ jobs:
     - name: Build the documentation site
       run: bazel build //docs:site
 
+    - name: Run the script tests
+      run: bazel test //scripts:all
+
     - name: Build team_a in isolation (partial build)
       run: bazel build //examples/team_a:docs
 

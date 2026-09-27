@@ -52,6 +52,8 @@ jobs:
   crates:
     needs: release
     runs-on: ubuntu-latest
+    # Room for a release adding several new crates at one per ten minutes.
+    timeout-minutes: 180
     permissions:
       contents: read
       # crates.io trusted publishing exchanges the workflow's OIDC token for a
@@ -73,9 +75,12 @@ jobs:
         if: env.HAS_TOKEN != 'true'
         uses: rust-lang/crates-io-auth-action@v1
 
-      # Publishes every crate in dependency order.
+      # Publishes every crate in dependency order, skipping those already on
+      # crates.io, so rerunning this job resumes a release that failed halfway,
+      # and waiting out crates.io's limit on new crates (five at once, then one
+      # every ten minutes). See scripts/publish_crates.py.
       - name: Publish to crates.io
-        run: cargo publish --workspace
+        run: python3 scripts/publish_crates.py
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token || secrets.CARGO_REGISTRY_TOKEN }}
 
