@@ -20,7 +20,7 @@ uv run ty check            # type-check
 uv run pytest --cov        # run the tests, failing below the coverage floor
 ```
 
-The `python` job in `.github/workflows/rust.yml` runs all of these with
+The `python` job in `.github/workflows/ci.yml` runs all of these with
 `uv sync --locked`, so a `pyproject.toml` change without a `uv lock` fails CI.
 
 - **Every function is annotated**, which ruff's `ANN` rules enforce and ty then

@@ -7,10 +7,15 @@
 #   /                  the documentation (//docs:site), plus a redirect to
 #                      docs/index.html
 #   /example-site/     the example project (//examples:site)
+#
+# It runs once CI has succeeded on main, so a commit that fails CI is never
+# deployed; the sites are rebuilt from CI's shared Bazel disk cache.
 name: Pages
 
 on:
-  push:
+  workflow_run:
+    workflows: [ CI ]
+    types: [ completed ]
     branches: [ "main" ]
   workflow_dispatch:
 
@@ -24,18 +29,25 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+      with:
+        # The commit CI checked, not whatever main has moved on to since.
+        ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
     - name: Set up Bazel
       uses: bazel-contrib/setup-bazel@0.19.0
       with:
         bazelisk-cache: true
-        disk-cache: ${{ github.workflow }}
+        # The cache ci.yml saves on main.
+        disk-cache: bazel
         repository-cache: true
+        cache-save: false
 
     - name: Build the sites
       run: bazel build //docs:site //examples:site
@@ -61,6 +73,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write

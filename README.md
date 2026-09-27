@@ -1,6 +1,6 @@
 # rinx
 
-[![CI](https://github.com/nachstedt/rinx/actions/workflows/rust.yml/badge.svg)](https://github.com/nachstedt/rinx/actions/workflows/rust.yml)
+[![CI](https://github.com/nachstedt/rinx/actions/workflows/ci.yml/badge.svg)](https://github.com/nachstedt/rinx/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/rinx.svg)](https://crates.io/crates/rinx)
 [![Docs](https://img.shields.io/badge/docs-nachstedt.github.io%2Frinx-blue.svg)](https://nachstedt.github.io/rinx/)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
