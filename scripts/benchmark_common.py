@@ -16,7 +16,10 @@ import json
 import shutil
 import subprocess
 import time
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, NamedTuple, Protocol, TextIO, TypeAlias, TypedDict
 
 # Configuration flags shared by an inner `bazel build` and the `bazel info`
 # used to locate its outputs. They must stay identical: `bazel info bazel-bin`
@@ -29,14 +32,84 @@ BUILD_CONFIG_FLAGS = ["-c", "opt", "--host_compilation_mode=opt"]
 WARMUP_PACKAGE = "bench_warmup"
 
 
-def clone_repo(repo_url: str, tag: str, target_dir: Path):
+class WarningEntry(TypedDict, total=False):
+    """One warning as a sidecar or a whitelist file holds it.
+
+    Every key is optional: a sidecar's entries are the worker's JSON and the
+    whitelist's are hand-written, so each reader asks with `.get`.
+    """
+
+    doc_path: str
+    kind: str
+    target: str
+    requested_type: str
+    resolved_type: str
+    candidates: list[str]
+    # A whitelist entry's reason for being there.
+    comment: str
+
+
+# The identity of a warning for whitelist matching: (doc_path, kind, target).
+WarningKey: TypeAlias = tuple[str | None, str | None, str | None]
+
+
+class FormatEntry(Protocol):
+    """Renders one warning as a line of the report."""
+
+    def __call__(self, entry: WarningEntry, *, include_kind: bool) -> str:
+        """Render `entry`, naming its kind only when `include_kind` asks."""
+        ...
+
+
+@dataclass(frozen=True)
+class WarningCorpus:
+    """Every warning a build emitted, and how many reports they came from."""
+
+    entries: list[WarningEntry]
+    # The number of files read, which the pruning safety guard needs: an empty
+    # corpus must not prune.
+    file_count: int
+
+
+@dataclass(frozen=True)
+class ReportLayout:
+    """How one benchmark's warnings are listed.
+
+    `sections` is a list of (title, kind) pairs: the new warnings are split by
+    `kind` so lists that call for different fixes read as separate, scannable
+    sections rather than being interleaved by frequency.
+    """
+
+    sections: Sequence[tuple[str, str]]
+    format_entry: FormatEntry
+
+
+class SectionCount(NamedTuple):
+    """The size of one listed section."""
+
+    distinct: int
+    occurrences: int
+
+
+@dataclass(frozen=True)
+class WhitelistSummary:
+    """The counts `report_warnings` hands back for the terminal summary."""
+
+    # Each section's kind, or None for the trailing "Other" section.
+    per_kind: dict[str | None, SectionCount]
+    suppressed: int
+    whitelist_size: int
+    stale_count: int
+    stale_pruned: bool
+
+
+def clone_repo(repo_url: str, tag: str, target_dir: Path) -> bool:
     """Shallow-clones `repo_url` at `tag` into a freshly emptied `target_dir`.
 
     Deliberately a tag rather than a branch: a benchmark against a moving
     branch produces numbers that change on their own, so a delta could never be
     attributed to a local change with confidence.
     """
-    target_dir = Path(target_dir)
     print(f"Target directory: {target_dir}")
     if target_dir.exists():
         print("Directory already exists. Removing it for a fresh clone...")
@@ -50,11 +123,12 @@ def clone_repo(repo_url: str, tag: str, target_dir: Path):
     target_dir.parent.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(
         ["git", "clone", "--depth", "1", "--branch", tag, repo_url, str(target_dir)],
+        check=False,
     )
     return result.returncode == 0
 
 
-def generate_warmup_package(target_dir: Path, workspace_root: str):
+def generate_warmup_package(target_dir: Path, workspace_root: str) -> None:
     """Writes a one-document site used to build rinx before timing.
 
     The measurement we want is the documentation build alone, but a fresh
@@ -69,7 +143,7 @@ def generate_warmup_package(target_dir: Path, workspace_root: str):
     lives in its own top-level package so it stays outside the corpus package's
     `glob(["**/*.rst"])`.
     """
-    warmup_dir = Path(target_dir) / WARMUP_PACKAGE
+    warmup_dir = target_dir / WARMUP_PACKAGE
     warmup_dir.mkdir(exist_ok=True)
 
     (warmup_dir / "index.rst").write_text("""Warmup
@@ -98,7 +172,7 @@ rinx_site(
 """)
 
 
-def discard_stale_corpus_outputs(target_dir: Path, corpus_package: str):
+def discard_stale_corpus_outputs(target_dir: Path, corpus_package: str) -> None:
     """Removes generated outputs for a corpus that is no longer checked out.
 
     The workspace directory is deleted and re-cloned on every run, but Bazel's
@@ -120,6 +194,7 @@ def discard_stale_corpus_outputs(target_dir: Path, corpus_package: str):
         cwd=str(target_dir),
         capture_output=True,
         text=True,
+        check=False,
     )
     if info.returncode != 0:
         return
@@ -130,7 +205,9 @@ def discard_stale_corpus_outputs(target_dir: Path, corpus_package: str):
         shutil.rmtree(stale, ignore_errors=True)
 
 
-def timed_bazel_build(target_dir: Path, target, log_name, extra_flags=()):
+def timed_bazel_build(
+    target_dir: Path, target: str, log_name: str, extra_flags: Iterable[str] = ()
+) -> tuple[bool, float]:
     """Runs one `bazel build` in the generated workspace and times it.
 
     Returns (succeeded, duration_seconds). The build's output is captured (so
@@ -147,13 +224,15 @@ def timed_bazel_build(target_dir: Path, target, log_name, extra_flags=()):
     ]
 
     start_time = time.time()
-    result = subprocess.run(command, cwd=str(target_dir), capture_output=True, text=True)
+    result = subprocess.run(
+        command, cwd=str(target_dir), capture_output=True, text=True, check=False
+    )
     duration = time.time() - start_time
 
     # Persist the inner build's captured output — it's swallowed by
     # capture_output above, so without this it's invisible on a successful
     # build. Written on success and failure alike, so it's always inspectable.
-    log_path = Path(target_dir) / log_name
+    log_path = target_dir / log_name
     log_path.write_text(result.stdout + result.stderr)
 
     if result.returncode != 0:
@@ -163,62 +242,74 @@ def timed_bazel_build(target_dir: Path, target, log_name, extra_flags=()):
     return result.returncode == 0, duration
 
 
+def json_objects(node: object) -> Iterator[dict[str, Any]]:
+    """Every JSON object in a parsed `.ast` tree, the root included, depth-first."""
+    if isinstance(node, dict):
+        yield node
+        for value in node.values():
+            yield from json_objects(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from json_objects(item)
+
+
 # ── Warning whitelist helpers (pure, unit-tested) ─────────────────────────────
 
-def collect_warning_sidecars(bazel_bin_dir):
-    """Load every per-document .warnings.json sidecar under bazel_bin_dir and
-    flatten them into a single list of warning entries, each augmented with the
-    doc_path of the report it came from.
 
-    Returns (entries, file_count) — file_count is the number of sidecar files
-    found, used by the pruning safety guard (an empty corpus must not prune)."""
-    warning_files = sorted(Path(bazel_bin_dir).glob("**/*.warnings.json"))
-    entries = []
+def collect_warning_sidecars(bazel_bin_dir: Path) -> WarningCorpus:
+    """Load every per-document .warnings.json sidecar under bazel_bin_dir.
+
+    They are flattened into a single list of warning entries, each augmented
+    with the doc_path of the report it came from.
+    """
+    warning_files = sorted(bazel_bin_dir.glob("**/*.warnings.json"))
+    entries: list[WarningEntry] = []
     for warning_file in warning_files:
         try:
-            with open(warning_file, "r") as f:
-                report = json.load(f)
-        except Exception as e:
+            report = json.loads(warning_file.read_text())
+        except (OSError, ValueError) as e:
             print(f"Failed to parse {warning_file}: {e}")
             continue
         doc_path = report.get("doc_path", str(warning_file))
         for warning in report.get("warnings", []):
-            entry = dict(warning)
+            entry = WarningEntry(**warning)
             entry["doc_path"] = doc_path
             entries.append(entry)
-    return entries, len(warning_files)
+    return WarningCorpus(entries, len(warning_files))
 
 
-def warning_key(entry):
-    """The identity of a warning for whitelist matching: (doc_path, kind,
-    target). The requested/resolved object types are informational payload,
-    deliberately not part of the key."""
+def warning_key(entry: WarningEntry) -> WarningKey:
+    """The identity of a warning for whitelist matching.
+
+    The requested/resolved object types are informational payload, deliberately
+    not part of the key.
+    """
     return (entry.get("doc_path"), entry.get("kind"), entry.get("target"))
 
 
-def load_whitelist(path):
+def load_whitelist(path: Path) -> list[WarningEntry]:
     """Return the list of whitelist entries, or [] if the file doesn't exist."""
-    path = Path(path)
     if not path.exists():
         return []
-    with open(path, "r") as f:
-        data = json.load(f)
-    return data.get("entries", [])
+    data = json.loads(path.read_text())
+    return [WarningEntry(**entry) for entry in data.get("entries", [])]
 
 
-def write_whitelist(path, entries):
+def write_whitelist(path: Path, entries: list[WarningEntry]) -> None:
     """Rewrite the whitelist file with the given entries."""
-    with open(path, "w") as f:
-        json.dump({"entries": entries}, f, indent=2)
-        f.write("\n")
+    path.write_text(json.dumps({"entries": entries}, indent=2) + "\n")
 
 
-def partition_warnings(actual, whitelist_entries):
-    """Split actual warnings into those not covered by the whitelist ('new',
-    de-duplicated by key) and count how many actual occurrences the whitelist
-    suppressed."""
+def partition_warnings(
+    actual: Iterable[WarningEntry], whitelist_entries: Iterable[WarningEntry]
+) -> tuple[list[WarningEntry], int]:
+    """Split actual warnings into those not covered by the whitelist.
+
+    Returns those 'new' warnings, de-duplicated by key, and how many actual
+    occurrences the whitelist suppressed.
+    """
     whitelist_keys = {warning_key(w) for w in whitelist_entries}
-    new_by_key = {}
+    new_by_key: dict[WarningKey, WarningEntry] = {}
     suppressed = 0
     for entry in actual:
         key = warning_key(entry)
@@ -229,50 +320,55 @@ def partition_warnings(actual, whitelist_entries):
     return list(new_by_key.values()), suppressed
 
 
-def prune_whitelist(whitelist_entries, actual):
-    """Partition the whitelist into entries still justified by an actual
-    warning ('kept') and entries that no longer match anything ('removed')."""
+def prune_whitelist(
+    whitelist_entries: list[WarningEntry], actual: Iterable[WarningEntry]
+) -> tuple[list[WarningEntry], list[WarningEntry]]:
+    """Partition the whitelist into entries still justified by an actual warning or not.
+
+    Returns ('kept', 'removed'): the latter no longer match anything.
+    """
     actual_keys = {warning_key(a) for a in actual}
     kept = [w for w in whitelist_entries if warning_key(w) in actual_keys]
     removed = [w for w in whitelist_entries if warning_key(w) not in actual_keys]
     return kept, removed
 
 
-def report_warnings(actual, file_count, whitelist_path, build_succeeded, out,
-                    sections, format_entry):
-    """Diff emitted warnings against the whitelist, write the detailed listing
-    to the `out` file handle, and auto-prune stale whitelist entries when it is
-    safe to do so.
+def report_warnings(
+    corpus: WarningCorpus,
+    whitelist_path: Path,
+    layout: ReportLayout,
+    *,
+    build_succeeded: bool,
+    out: TextIO,
+) -> WhitelistSummary:
+    """Diff emitted warnings against the whitelist and write the listing to `out`.
 
-    `sections` is a list of (title, kind) pairs: the new warnings are split by
-    `kind` so lists that call for different fixes read as separate,
-    scannable sections rather than being interleaved by frequency. Warnings
-    whose kind matches no section land in a trailing "Other" section, so a kind
-    added on the Rust side can never be silently dropped from the report.
-    `format_entry(entry, include_kind)` renders one line.
-
-    Returns a dict of counts for the terminal summary: `per_kind` maps each
-    section's kind to (distinct, occurrences).
+    Stale whitelist entries are auto-pruned when it is safe to do so. Warnings
+    whose kind matches none of the layout's sections land in a trailing "Other"
+    section, so a kind added on the Rust side can never be silently dropped
+    from the report.
 
     Pruning is destructive (it deletes hand-written comments), so it only runs
     when the warning data is trustworthy: the build succeeded AND at least one
-    sidecar was found."""
+    sidecar was found.
+    """
+    actual = corpus.entries
     whitelist_entries = load_whitelist(whitelist_path)
     new_warnings, suppressed = partition_warnings(actual, whitelist_entries)
     occurrences = _count_occurrences(actual)
 
-    per_kind = {}
-    for title, kind in sections:
+    per_kind: dict[str | None, SectionCount] = {}
+    for title, kind in layout.sections:
         section = [e for e in new_warnings if e.get("kind") == kind]
         per_kind[kind] = _write_warning_section(
-            out, title, section, occurrences, format_entry
+            out, title, section, occurrences, layout.format_entry
         )
 
-    known_kinds = {kind for _, kind in sections}
+    known_kinds = {kind for _, kind in layout.sections}
     other = [e for e in new_warnings if e.get("kind") not in known_kinds]
     if other:
         per_kind[None] = _write_warning_section(
-            out, "Other Warnings", other, occurrences, format_entry
+            out, "Other Warnings", other, occurrences, layout.format_entry
         )
 
     print(
@@ -282,55 +378,65 @@ def report_warnings(actual, file_count, whitelist_path, build_succeeded, out,
     )
 
     kept, removed = prune_whitelist(whitelist_entries, actual)
-    pruned = _report_stale_entries(
-        out, whitelist_path, kept, removed, build_succeeded, file_count, format_entry
+    _list_stale_entries(out, removed, layout.format_entry)
+    pruned = False
+    if removed:
+        pruned = _prune_stale_entries(
+            out,
+            whitelist_path,
+            kept,
+            len(removed),
+            untrustworthy_because=_why_untrustworthy(
+                build_succeeded=build_succeeded, file_count=corpus.file_count
+            ),
+        )
+
+    return WhitelistSummary(
+        per_kind=per_kind,
+        suppressed=suppressed,
+        whitelist_size=len(whitelist_entries),
+        stale_count=len(removed),
+        stale_pruned=pruned,
     )
 
-    return {
-        "per_kind": per_kind,
-        "suppressed": suppressed,
-        "whitelist_size": len(whitelist_entries),
-        "stale_count": len(removed),
-        "stale_pruned": pruned,
-    }
 
-
-def _count_occurrences(actual):
+def _count_occurrences(actual: Iterable[WarningEntry]) -> dict[WarningKey, int]:
     """How many times each distinct warning key occurs across the corpus."""
-    counts = {}
+    counts: dict[WarningKey, int] = {}
     for entry in actual:
         key = warning_key(entry)
         counts[key] = counts.get(key, 0) + 1
     return counts
 
 
-def _write_warning_section(out, title, section, occurrences, format_entry):
-    """Write one titled, most-frequent-first warning listing. Returns
-    (distinct, occurrences) for that section."""
+def _write_warning_section(
+    out: TextIO,
+    title: str,
+    section: list[WarningEntry],
+    occurrences: Mapping[WarningKey, int],
+    format_entry: FormatEntry,
+) -> SectionCount:
+    """Write one titled, most-frequent-first warning listing, returning its size."""
     header = f"{title} ({len(section)}):"
     print(f"\n{header}", file=out)
     print("-" * len(header), file=out)
     if not section:
         print("None found.", file=out)
     else:
-        for entry in sorted(
-            section, key=lambda e: occurrences[warning_key(e)], reverse=True
-        ):
+        for entry in sorted(section, key=lambda e: occurrences[warning_key(e)], reverse=True):
             print(
-                f"{occurrences[warning_key(entry)]:5d}  "
-                f"{format_entry(entry, include_kind=False)}",
+                f"{occurrences[warning_key(entry)]:5d}  {format_entry(entry, include_kind=False)}",
                 file=out,
             )
-    return len(section), sum(occurrences[warning_key(e)] for e in section)
+    return SectionCount(len(section), sum(occurrences[warning_key(e)] for e in section))
 
 
-def _report_stale_entries(out, whitelist_path, kept, removed, build_succeeded,
-                          file_count, format_entry):
-    """List whitelist entries no longer justified by a warning, and remove them
-    when the warning data is trustworthy. Returns whether it pruned."""
+def _list_stale_entries(
+    out: TextIO, removed: list[WarningEntry], format_entry: FormatEntry
+) -> None:
+    """List whitelist entries no longer justified by a warning."""
     if not removed:
-        return False
-
+        return
     print("\nStale Whitelist Entries:", file=out)
     print("------------------------", file=out)
     for entry in removed:
@@ -338,22 +444,36 @@ def _report_stale_entries(out, whitelist_path, kept, removed, build_succeeded,
         suffix = f"  # {comment}" if comment else ""
         print(f"- {format_entry(entry, include_kind=True)}{suffix}", file=out)
 
-    if build_succeeded and file_count > 0:
-        write_whitelist(whitelist_path, kept)
-        print(
-            f"\nRemoved {len(removed)} stale entr(y/ies) from {whitelist_path}.",
-            file=out,
-        )
-        return True
 
-    reason = (
-        "build did not succeed"
-        if not build_succeeded
-        else "no .warnings.json sidecars were found"
-    )
+def _why_untrustworthy(*, build_succeeded: bool, file_count: int) -> str | None:
+    """Why the warning data cannot justify pruning, or None when it can.
+
+    Pruning is destructive (it deletes hand-written comments), so it only runs
+    when the build succeeded AND at least one sidecar was found.
+    """
+    if not build_succeeded:
+        return "build did not succeed"
+    if file_count == 0:
+        return "no .warnings.json sidecars were found"
+    return None
+
+
+def _prune_stale_entries(
+    out: TextIO,
+    whitelist_path: Path,
+    kept: list[WarningEntry],
+    stale_count: int,
+    *,
+    untrustworthy_because: str | None,
+) -> bool:
+    """Rewrite the whitelist without its stale entries if the data allows; return whether it did."""
+    if untrustworthy_because is None:
+        write_whitelist(whitelist_path, kept)
+        print(f"\nRemoved {stale_count} stale entr(y/ies) from {whitelist_path}.", file=out)
+        return True
     print(
-        f"\nSkipped auto-pruning ({reason}); "
-        f"{len(removed)} entr(y/ies) left untouched.",
+        f"\nSkipped auto-pruning ({untrustworthy_because}); "
+        f"{stale_count} entr(y/ies) left untouched.",
         file=out,
     )
     return False
@@ -361,9 +481,15 @@ def _report_stale_entries(out, whitelist_path, kept, removed, build_succeeded,
 
 # ── Report formatting ─────────────────────────────────────────────────────────
 
-def write_frequency_summary(out, title, counts, key_prefix="", key_suffix=""):
-    """Write one `name: count` frequency table (descending) to the `out` file
-    handle — used for the detailed report file."""
+
+def write_frequency_summary(
+    out: TextIO,
+    title: str,
+    counts: Mapping[str, int],
+    key_prefix: str = "",
+    key_suffix: str = "",
+) -> None:
+    """Write one `name: count` frequency table (descending) to the detailed report `out`."""
     print(f"\n{title}:", file=out)
     print("-" * (len(title) + 1), file=out)
     if not counts:
@@ -373,18 +499,18 @@ def write_frequency_summary(out, title, counts, key_prefix="", key_suffix=""):
         print(f"{key_prefix}{name}{key_suffix}: {count}", file=out)
 
 
-def summary_line(label, distinct, occurrences=None):
+def summary_line(label: str, distinct: int, occurrences: int | None = None) -> None:
     """One aligned line of the compact terminal summary."""
     occ = f"  ({occurrences} occurrences)" if occurrences is not None else ""
     print(f"  {label:<28}{distinct:6d} distinct{occ}")
 
 
-def print_whitelist_summary(domain):
+def print_whitelist_summary(summary: WhitelistSummary) -> None:
     """The two trailing whitelist lines every benchmark's summary ends with."""
     print(
         f"  {'Suppressed by whitelist:':<28}"
-        f"{domain['suppressed']:6d} occurrences ({domain['whitelist_size']} entries)"
+        f"{summary.suppressed:6d} occurrences ({summary.whitelist_size} entries)"
     )
-    if domain["stale_count"]:
-        action = "removed" if domain["stale_pruned"] else "left untouched"
-        print(f"  {'Stale whitelist entries:':<28}{domain['stale_count']:6d} ({action})")
+    if summary.stale_count:
+        action = "removed" if summary.stale_pruned else "left untouched"
+        print(f"  {'Stale whitelist entries:':<28}{summary.stale_count:6d} ({action})")

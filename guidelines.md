@@ -228,3 +228,10 @@ entry under the heading it belongs to, as a single short sentence.
 - When renaming, rename consistently everywhere (package, library, build targets, docs) rather than keeping the old name alive as a compatibility shim.
 - A test asserting that a build step is or is not re-run detects it with `-s` (did the action's key change), never with `(cached)`, whose answer depends on what a disk or remote cache happens to hold.
 - Keep manual checklists (e.g. the PR template) to what a human must judge; never list a check CI already enforces.
+
+## Python
+
+- Hold Python code to the same bar as Rust: fully annotated, type-checked, linted and formatted in CI, with lint findings treated as refactoring signals rather than suppressed.
+- Prefer the current Astral toolchain (uv, ruff, ty) configured in one `pyproject.toml`, over a Bazel-native lint setup.
+- Write Python tests in plain pytest style (functions, `assert`, fixtures) rather than `unittest` classes.
+- Run tests under Bazel with the same configuration file as the local runner, so the two cannot disagree about what runs or how.

@@ -16,7 +16,6 @@ py_library(
     # Add this package dir to sys.path so `import benchmark` resolves as a
     # top-level module (both for the binaries and the tests).
     imports = ["."],
-    # deps = ["@pypi//some_package"], # add pip dependencies here when needed
 )
 
 # The CPython benchmark: general RST coverage. See docs/benchmark.rst.
@@ -45,34 +44,6 @@ py_binary(
     main = "benchmark_entities.py",
 )
 
-py_test(
-    name = "benchmark_test",
-    size = "small",
-    srcs = ["benchmark_test.py"],
-    deps = [":benchmark_lib"],
-)
-
-py_test(
-    name = "benchmark_common_test",
-    size = "small",
-    srcs = ["benchmark_common_test.py"],
-    deps = [":benchmark_lib"],
-)
-
-py_test(
-    name = "benchmark_entities_test",
-    size = "small",
-    srcs = ["benchmark_entities_test.py"],
-    deps = [":benchmark_lib"],
-)
-
-py_test(
-    name = "needs_schema_test",
-    size = "small",
-    srcs = ["needs_schema_test.py"],
-    deps = [":benchmark_lib"],
-)
-
 # The doctest plan runner. Exposed as a library so `rinx_doctest_tests`
 # can depend on it, and as a binary for running a plan by hand.
 py_library(
@@ -88,13 +59,6 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
-py_test(
-    name = "doctest_runner_test",
-    size = "small",
-    srcs = ["doctest_runner_test.py"],
-    deps = [":doctest_runner_lib"],
-)
-
 # Publishes the workspace's crates to crates.io in dependency order, skipping
 # those already published and waiting out crates.io's rate limit — the release
 # workflow's crates step. See docs/dev/releasing.md.
@@ -104,9 +68,32 @@ py_library(
     imports = ["."],
 )
 
-py_test(
-    name = "publish_crates_test",
-    size = "small",
-    srcs = ["publish_crates_test.py"],
-    deps = [":publish_crates_lib"],
-)
+# One pytest target per `*_test.py`, so an edit re-runs only the file it
+# touches. Each runs under the repository's pyproject.toml — the configuration
+# `uv run pytest` uses — so the two cannot disagree about how a test runs
+# (`pythonpath`, `filterwarnings`, strict markers, ...). Naming the file only
+# replaces `testpaths`, and the glob means a new test file needs no BUILD edit.
+[
+    py_test(
+        name = src.removesuffix(".py"),
+        size = "small",
+        srcs = [
+            src,
+            "pytest_main.py",
+        ],
+        args = [
+            "-c",
+            "$(rootpath //:pyproject.toml)",
+            "$(rootpath {})".format(src),
+        ],
+        data = ["//:pyproject.toml"],
+        main = "pytest_main.py",
+        deps = [
+            ":benchmark_lib",
+            ":doctest_runner_lib",
+            ":publish_crates_lib",
+            "@pypi//pytest",
+        ],
+    )
+    for src in glob(["*_test.py"])
+]

@@ -30,3 +30,13 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    # A bump also needs scripts/requirements.txt regenerated (the `uv export`
+    # in docs/dev/python.md), which Dependabot cannot do; the `python` CI job
+    # fails with a diff until it is.
+    groups:
+      uv:
+        patterns: ["*"]

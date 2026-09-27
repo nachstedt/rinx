@@ -1,19 +1,18 @@
-import unittest
-
 import needs_schema
+from needs_schema import RawTable
 
 
-def convert(needs, schemas=None):
+def convert(needs: RawTable, schemas: RawTable | None = None) -> tuple[str, needs_schema.Report]:
     """Convert a `[needs]` table on its own, returning (toml_text, report)."""
     return needs_schema.convert({"needs": needs}, schemas)
 
 
-def report_categories(report):
+def report_categories(report: needs_schema.Report) -> set[str]:
     return {category for category, _detail in report}
 
 
-class EntityTypeTest(unittest.TestCase):
-    def test_need_type_becomes_an_entity_type_with_a_title_argument(self):
+class TestEntityType:
+    def test_need_type_becomes_an_entity_type_with_a_title_argument(self) -> None:
         # Given one need type carrying a title and an id prefix
         needs = {"types": [{"directive": "req", "title": "Requirement", "prefix": "R_"}]}
 
@@ -22,13 +21,13 @@ class EntityTypeTest(unittest.TestCase):
 
         # Then the directive name, label and prefix carry over, and the
         # argument fills a `title` attribute
-        self.assertIn('name = "req"', text)
-        self.assertIn('label = "Requirement"', text)
-        self.assertIn('id = { prefix = "R_" }', text)
-        self.assertIn('argument = { fields = ["title"] }', text)
-        self.assertIn('name = "title"', text)
+        assert 'name = "req"' in text
+        assert 'label = "Requirement"' in text
+        assert 'id = { prefix = "R_" }' in text
+        assert 'argument = { fields = ["title"] }' in text
+        assert 'name = "title"' in text
 
-    def test_id_required_is_carried_onto_every_type(self):
+    def test_id_required_is_carried_onto_every_type(self) -> None:
         # Given a project that forces authors to write an explicit :id:
         needs = {"id_required": True, "types": [{"directive": "req", "prefix": "R_"}]}
 
@@ -36,9 +35,9 @@ class EntityTypeTest(unittest.TestCase):
         text, _report = convert(needs)
 
         # Then
-        self.assertIn('id = { prefix = "R_", required = true }', text)
+        assert 'id = { prefix = "R_", required = true }' in text
 
-    def test_a_type_without_a_title_falls_back_to_its_directive_name(self):
+    def test_a_type_without_a_title_falls_back_to_its_directive_name(self) -> None:
         # Given a need type declaring no title
         needs = {"types": [{"directive": "spec"}]}
 
@@ -46,11 +45,11 @@ class EntityTypeTest(unittest.TestCase):
         text, _report = convert(needs)
 
         # Then
-        self.assertIn('name = "spec"\nlabel = "spec"', text)
+        assert 'name = "spec"\nlabel = "spec"' in text
 
 
-class AttributeFromFieldTest(unittest.TestCase):
-    def test_field_without_a_schema_is_an_untyped_string(self):
+class TestAttributeFromField:
+    def test_field_without_a_schema_is_an_untyped_string(self) -> None:
         # Given
         field = {"nullable": True}
 
@@ -58,11 +57,9 @@ class AttributeFromFieldTest(unittest.TestCase):
         attribute = needs_schema.attribute_from_field("contact", field)
 
         # Then
-        self.assertEqual(
-            attribute, {"name": "contact", "label": "Contact", "type": "string"}
-        )
+        assert attribute == {"name": "contact", "label": "Contact", "type": "string"}
 
-    def test_integer_boolean_and_array_schemas_map_onto_their_types(self):
+    def test_integer_boolean_and_array_schemas_map_onto_their_types(self) -> None:
         # Given three fields typed by their JSON-Schema fragment
         cases = {
             "integer": "int",
@@ -73,14 +70,12 @@ class AttributeFromFieldTest(unittest.TestCase):
 
         for json_type, expected in cases.items():
             # When
-            attribute = needs_schema.attribute_from_field(
-                "value", {"schema": {"type": json_type}}
-            )
+            attribute = needs_schema.attribute_from_field("value", {"schema": {"type": json_type}})
 
             # Then
-            self.assertEqual(attribute["type"], expected, json_type)
+            assert attribute["type"] == expected, json_type
 
-    def test_enum_values_become_strings_even_when_written_as_numbers(self):
+    def test_enum_values_become_strings_even_when_written_as_numbers(self) -> None:
         # Given sphinx-needs' `effort` field, whose enum holds integers
         field = {
             "description": "Story points",
@@ -92,10 +87,10 @@ class AttributeFromFieldTest(unittest.TestCase):
 
         # Then the type is an enum and every value is a string, which is the
         # only spelling our model has
-        self.assertEqual(attribute["type"], "enum")
-        self.assertEqual(attribute["values"], ["1", "2", "3", "5"])
+        assert attribute["type"] == "enum"
+        assert attribute["values"] == ["1", "2", "3", "5"]
 
-    def test_an_enum_array_becomes_a_list_of_enum(self):
+    def test_an_enum_array_becomes_a_list_of_enum(self) -> None:
         # Given
         field = {"schema": {"type": "array", "enum": ["a", "b"]}}
 
@@ -103,10 +98,10 @@ class AttributeFromFieldTest(unittest.TestCase):
         attribute = needs_schema.attribute_from_field("kinds", field)
 
         # Then
-        self.assertEqual(attribute["type"], "list<enum>")
-        self.assertEqual(attribute["values"], ["a", "b"])
+        assert attribute["type"] == "list<enum>"
+        assert attribute["values"] == ["a", "b"]
 
-    def test_description_is_preferred_over_a_derived_label(self):
+    def test_description_is_preferred_over_a_derived_label(self) -> None:
         # Given a field that documents itself
         field = {"description": "Automotive Safety Integrity Level"}
 
@@ -114,21 +109,21 @@ class AttributeFromFieldTest(unittest.TestCase):
         attribute = needs_schema.attribute_from_field("asil", field)
 
         # Then
-        self.assertEqual(attribute["label"], "Automotive Safety Integrity Level")
+        assert attribute["label"] == "Automotive Safety Integrity Level"
 
 
-class GlobalFieldsTest(unittest.TestCase):
-    def test_sphinx_needs_builtins_are_declared_even_when_the_project_is_not(self):
+class TestGlobalFields:
+    def test_sphinx_needs_builtins_are_declared_even_when_the_project_is_not(self) -> None:
         # Given a project declaring no fields of its own
         # When
         fields = needs_schema.global_fields({})
 
         # Then the built-in need options are still there — a `:tags:` in the
         # corpus is sphinx-needs' vocabulary, not an unknown attribute
-        self.assertEqual(fields["tags"]["type"], "list<string>")
-        self.assertEqual(fields["collapse"]["type"], "bool")
+        assert fields["tags"]["type"] == "list<string>"
+        assert fields["collapse"]["type"] == "bool"
 
-    def test_a_projects_own_declaration_overrides_the_builtin(self):
+    def test_a_projects_own_declaration_overrides_the_builtin(self) -> None:
         # Given a project that types `status` itself
         needs = {"fields": {"status": {"schema": {"type": "boolean"}}}}
 
@@ -136,9 +131,9 @@ class GlobalFieldsTest(unittest.TestCase):
         fields = needs_schema.global_fields(needs)
 
         # Then
-        self.assertEqual(fields["status"]["type"], "bool")
+        assert fields["status"]["type"] == "bool"
 
-    def test_statuses_table_turns_status_into_an_enum(self):
+    def test_statuses_table_turns_status_into_an_enum(self) -> None:
         # Given a project listing its allowed statuses
         needs = {"statuses": [{"name": "open"}, {"name": "closed"}]}
 
@@ -146,10 +141,10 @@ class GlobalFieldsTest(unittest.TestCase):
         fields = needs_schema.global_fields(needs)
 
         # Then
-        self.assertEqual(fields["status"]["type"], "enum")
-        self.assertEqual(fields["status"]["values"], ["open", "closed"])
+        assert fields["status"]["type"] == "enum"
+        assert fields["status"]["values"] == ["open", "closed"]
 
-    def test_id_and_title_are_not_attributes(self):
+    def test_id_and_title_are_not_attributes(self) -> None:
         # Given a project declaring fields our model handles structurally
         needs = {"fields": {"id": {}, "title": {}, "type": {}, "owner": {}}}
 
@@ -158,14 +153,14 @@ class GlobalFieldsTest(unittest.TestCase):
 
         # Then only the ordinary one survives — `id` is the entity id and
         # `title` comes from the directive argument
-        self.assertNotIn("id", fields)
-        self.assertNotIn("title", fields)
-        self.assertNotIn("type", fields)
-        self.assertIn("owner", fields)
+        assert "id" not in fields
+        assert "title" not in fields
+        assert "type" not in fields
+        assert "owner" in fields
 
 
-class RelationsFromLinksTest(unittest.TestCase):
-    def test_link_becomes_a_relation_with_a_derived_backlink_option(self):
+class TestRelationsFromLinks:
+    def test_link_becomes_a_relation_with_a_derived_backlink_option(self) -> None:
         # Given one link type with both labels
         needs = {"links": {"reqs": {"outgoing": "specifies", "incoming": "specified by"}}}
         report = []
@@ -176,20 +171,17 @@ class RelationsFromLinksTest(unittest.TestCase):
         # Then the TOML key is the option spelling, the two sphinx-needs
         # strings are labels, and the back-link takes sphinx-needs' own
         # `<name>_back` spelling
-        self.assertEqual(
-            relations,
-            [
-                {
-                    "name": "reqs",
-                    "label": "specifies",
-                    "multiple": True,
-                    "incoming": "reqs_back",
-                    "incoming_label": "specified by",
-                }
-            ],
-        )
+        assert relations == [
+            {
+                "name": "reqs",
+                "label": "specifies",
+                "multiple": True,
+                "incoming": "reqs_back",
+                "incoming_label": "specified by",
+            }
+        ]
 
-    def test_relation_accepts_any_target_type(self):
+    def test_relation_accepts_any_target_type(self) -> None:
         # Given a link type — sphinx-needs never scopes one to a target type
         needs = {"links": {"links": {}}}
 
@@ -197,9 +189,9 @@ class RelationsFromLinksTest(unittest.TestCase):
         relations = needs_schema.relations_from_links(needs, [])
 
         # Then `to` is left off, which is how our model spells "any type"
-        self.assertNotIn("to", relations[0])
+        assert "to" not in relations[0]
 
-    def test_a_link_computed_by_a_dynamic_function_is_reported(self):
+    def test_a_link_computed_by_a_dynamic_function_is_reported(self) -> None:
         # Given sphinx-test-reports' auto-linked `runs`
         needs = {"links": {"runs": {"predicates": [["type=='test'", "[[tr_link()]]"]]}}}
         report = []
@@ -209,11 +201,11 @@ class RelationsFromLinksTest(unittest.TestCase):
 
         # Then the relation is still declared, and the fact that nothing fills
         # it in is reported rather than hidden
-        self.assertIn("link predicates", report_categories(report))
+        assert "link predicates" in report_categories(report)
 
 
-class SchemaNarrowingTest(unittest.TestCase):
-    def test_unconditionally_required_option_is_narrowed_onto_one_type(self):
+class TestSchemaNarrowing:
+    def test_unconditionally_required_option_is_narrowed_onto_one_type(self) -> None:
         # Given a schemas.json rule requiring `role` on `person` only
         schemas = {
             "schemas": [
@@ -229,9 +221,9 @@ class SchemaNarrowingTest(unittest.TestCase):
         constraints = needs_schema.constraints_by_type(schemas, [])
 
         # Then
-        self.assertEqual(constraints["person"]["required"], {"role"})
+        assert constraints["person"].required == {"role"}
 
-    def test_narrowing_marks_the_attribute_required_on_that_type_alone(self):
+    def test_narrowing_marks_the_attribute_required_on_that_type_alone(self) -> None:
         # Given two types and a rule scoped to one of them
         needs = {
             "types": [{"directive": "person"}, {"directive": "team"}],
@@ -252,13 +244,13 @@ class SchemaNarrowingTest(unittest.TestCase):
 
         # Then `person`'s block carries the required marker and `team`'s does not
         _preamble, person, team = text.split("[[entity_type]]")
-        self.assertIn('name = "person"', person)
-        self.assertIn('name = "role"', person)
-        self.assertIn("required = true", person)
-        self.assertIn('name = "team"', team)
-        self.assertNotIn("required = true", team)
+        assert 'name = "person"' in person
+        assert 'name = "role"' in person
+        assert "required = true" in person
+        assert 'name = "team"' in team
+        assert "required = true" not in team
 
-    def test_a_conditional_rule_is_reported_rather_than_honoured(self):
+    def test_a_conditional_rule_is_reported_rather_than_honoured(self) -> None:
         # Given a rule that requires an option only for documents under a path
         schemas = {
             "schemas": [
@@ -276,10 +268,10 @@ class SchemaNarrowingTest(unittest.TestCase):
 
         # Then nothing is narrowed — honouring half of a conditional rule would
         # be worse than not honouring it — and the rule is reported
-        self.assertEqual(constraints, {})
-        self.assertIn("conditional schema rule", report_categories(report))
+        assert constraints == {}
+        assert "conditional schema rule" in report_categories(report)
 
-    def test_a_network_rule_is_reported(self):
+    def test_a_network_rule_is_reported(self) -> None:
         # Given a cross-entity constraint
         schemas = {
             "schemas": [
@@ -296,16 +288,19 @@ class SchemaNarrowingTest(unittest.TestCase):
         needs_schema.constraints_by_type(schemas, report)
 
         # Then
-        self.assertEqual(report_categories(report), {"network schema rule"})
+        assert report_categories(report) == {"network schema rule"}
 
 
-def value_rules(report):
-    """The report's value-rule entries alone, without the unrelated ones every
-    conversion carries (such as the generic `.. need::` directive)."""
+def value_rules(report: needs_schema.Report) -> needs_schema.Report:
+    """The report's value-rule entries alone.
+
+    That is without the unrelated ones every conversion carries (such as the
+    generic `.. need::` directive).
+    """
     return [entry for entry in report if entry[0] == "value schema rule"]
 
 
-def type_rule(rule_id, type_name, local):
+def type_rule(rule_id: str, type_name: str, local: RawTable) -> RawTable:
     """A `schemas.json` holding one rule selecting exactly `type_name`."""
     return {
         "schemas": [
@@ -318,8 +313,8 @@ def type_rule(rule_id, type_name, local):
     }
 
 
-class ValueRuleTest(unittest.TestCase):
-    def test_an_id_pattern_becomes_the_types_id_pattern(self):
+class TestValueRule:
+    def test_an_id_pattern_becomes_the_types_id_pattern(self) -> None:
         # Given the shape of the demo corpus' eleven `*-id-pattern` rules
         needs = {"types": [{"directive": "req", "prefix": "R_"}]}
         schemas = type_rule(
@@ -331,10 +326,10 @@ class ValueRuleTest(unittest.TestCase):
 
         # Then the pattern is carried over onto the id, and
         # nothing is left to report
-        self.assertIn('id = { prefix = "R_", pattern = "^R_[0-9]+$" }', text)
-        self.assertEqual(value_rules(report), [])
+        assert 'id = { prefix = "R_", pattern = "^R_[0-9]+$" }' in text
+        assert value_rules(report) == []
 
-    def test_a_pattern_escapes_its_backslashes_for_toml(self):
+    def test_a_pattern_escapes_its_backslashes_for_toml(self) -> None:
         # Given
         needs = {"types": [{"directive": "req"}]}
         schemas = type_rule(
@@ -345,23 +340,21 @@ class ValueRuleTest(unittest.TestCase):
         text, _report = convert(needs, schemas)
 
         # Then the TOML string decodes back to the regex as written
-        self.assertIn(r'id = { pattern = "^R_\\d+$" }', text)
+        assert r'id = { pattern = "^R_\\d+$" }' in text
 
-    def test_a_pattern_on_a_string_field_becomes_the_attributes_pattern(self):
+    def test_a_pattern_on_a_string_field_becomes_the_attributes_pattern(self) -> None:
         # Given
         needs = {"types": [{"directive": "person"}], "fields": {"email": {}}}
-        schemas = type_rule(
-            "person-email", "person", {"properties": {"email": {"pattern": "@"}}}
-        )
+        schemas = type_rule("person-email", "person", {"properties": {"email": {"pattern": "@"}}})
 
         # When
         text, report = convert(needs, schemas)
 
         # Then
-        self.assertIn('name = "email"\nlabel = "Email"\ntype = "string"\npattern = "@"', text)
-        self.assertEqual(value_rules(report), [])
+        assert 'name = "email"\nlabel = "Email"\ntype = "string"\npattern = "@"' in text
+        assert value_rules(report) == []
 
-    def test_an_enum_on_a_string_field_turns_it_into_an_enum(self):
+    def test_an_enum_on_a_string_field_turns_it_into_an_enum(self) -> None:
         # Given
         needs = {"types": [{"directive": "hazard"}], "fields": {"asil": {}}}
         schemas = type_rule(
@@ -372,28 +365,26 @@ class ValueRuleTest(unittest.TestCase):
         text, report = convert(needs, schemas)
 
         # Then
-        self.assertIn('type = "enum"\nvalues = ["QM", "A"]', text)
-        self.assertEqual(value_rules(report), [])
+        assert 'type = "enum"\nvalues = ["QM", "A"]' in text
+        assert value_rules(report) == []
 
-    def test_the_narrowing_applies_to_the_selected_type_alone(self):
+    def test_the_narrowing_applies_to_the_selected_type_alone(self) -> None:
         # Given two types and a pattern scoped to one of them
         needs = {
             "types": [{"directive": "person"}, {"directive": "team"}],
             "fields": {"email": {}},
         }
-        schemas = type_rule(
-            "person-email", "person", {"properties": {"email": {"pattern": "@"}}}
-        )
+        schemas = type_rule("person-email", "person", {"properties": {"email": {"pattern": "@"}}})
 
         # When
         text, _report = convert(needs, schemas)
 
         # Then
         _preamble, person, team = text.split("[[entity_type]]")
-        self.assertIn('pattern = "@"', person)
-        self.assertNotIn("pattern", team)
+        assert 'pattern = "@"' in person
+        assert "pattern" not in team
 
-    def test_minimums_of_one_and_empty_fragments_need_nothing_emitted(self):
+    def test_minimums_of_one_and_empty_fragments_need_nothing_emitted(self) -> None:
         # Given the demo corpus' `person-has-role`, `team-has-persons`,
         # `impl-has-implements-links` and `test-has-spec-or-impl` shapes
         needs = {
@@ -418,10 +409,10 @@ class ValueRuleTest(unittest.TestCase):
         text, report = convert(needs, schemas)
 
         # Then `required` still applies, and nothing is reported as missing
-        self.assertIn("required = true", text)
-        self.assertEqual(value_rules(report), [])
+        assert "required = true" in text
+        assert value_rules(report) == []
 
-    def test_an_inexpressible_keyword_is_reported_by_name(self):
+    def test_an_inexpressible_keyword_is_reported_by_name(self) -> None:
         # Given a minimum our model has no vocabulary for
         schemas = type_rule(
             "person-long-role",
@@ -434,19 +425,18 @@ class ValueRuleTest(unittest.TestCase):
         constraints = needs_schema.constraints_by_type(schemas, report)
 
         # Then the pattern is still taken, and only the keyword is reported
-        self.assertEqual(constraints["person"]["patterns"], {"role": "."})
-        self.assertEqual(
-            report,
-            [
+        assert constraints["person"].patterns == {"role": "."}
+        assert report == [
+            (
+                "value schema rule",
                 (
-                    "value schema rule",
                     "person-long-role: `role` uses `minLength: 3`, which the "
-                    "entity model cannot express",
-                )
-            ],
-        )
+                    "entity model cannot express"
+                ),
+            )
+        ]
 
-    def test_a_second_id_pattern_for_one_type_is_reported(self):
+    def test_a_second_id_pattern_for_one_type_is_reported(self) -> None:
         # Given two rules each constraining `req`'s id differently
         first = type_rule("a", "req", {"properties": {"id": {"pattern": "^A"}}})
         second = type_rule("b", "req", {"properties": {"id": {"pattern": "^B"}}})
@@ -457,58 +447,52 @@ class ValueRuleTest(unittest.TestCase):
         constraints = needs_schema.constraints_by_type(schemas, report)
 
         # Then the first is kept, and the conflict is reported
-        self.assertEqual(constraints["req"]["id_pattern"], "^A")
-        self.assertEqual(report_categories(report), {"value schema rule"})
+        assert constraints["req"].id_pattern == "^A"
+        assert report_categories(report) == {"value schema rule"}
 
-    def test_a_pattern_on_a_link_is_reported(self):
+    def test_a_pattern_on_a_link_is_reported(self) -> None:
         # Given a pattern on a link, whose values are entity ids
         needs = {"types": [{"directive": "spec"}], "links": {"reqs": {}}}
-        schemas = type_rule(
-            "spec-reqs", "spec", {"properties": {"reqs": {"pattern": "^R_"}}}
-        )
+        schemas = type_rule("spec-reqs", "spec", {"properties": {"reqs": {"pattern": "^R_"}}})
 
         # When
         _text, report = convert(needs, schemas)
 
         # Then
         [(_category, detail)] = value_rules(report)
-        self.assertIn("link `reqs`", detail)
+        assert "link `reqs`" in detail
 
-    def test_a_pattern_on_a_non_text_field_is_reported(self):
+    def test_a_pattern_on_a_non_text_field_is_reported(self) -> None:
         # Given a pattern on an integer field
         needs = {
             "types": [{"directive": "req"}],
             "fields": {"effort": {"schema": {"type": "integer"}}},
         }
-        schemas = type_rule(
-            "req-effort", "req", {"properties": {"effort": {"pattern": "^[0-9]$"}}}
-        )
+        schemas = type_rule("req-effort", "req", {"properties": {"effort": {"pattern": "^[0-9]$"}}})
 
         # When
         text, report = convert(needs, schemas)
 
         # Then nothing is emitted, and the rule is reported
-        self.assertNotIn("pattern", text)
+        assert "pattern" not in text
         [(_category, detail)] = value_rules(report)
-        self.assertIn("`int`", detail)
+        assert "`int`" in detail
 
-    def test_a_constraint_on_an_undeclared_field_is_reported(self):
+    def test_a_constraint_on_an_undeclared_field_is_reported(self) -> None:
         # Given a rule naming a field the project never declares
         needs = {"types": [{"directive": "req"}]}
-        schemas = type_rule(
-            "req-ghost", "req", {"properties": {"ghost": {"pattern": "."}}}
-        )
+        schemas = type_rule("req-ghost", "req", {"properties": {"ghost": {"pattern": "."}}})
 
         # When
         _text, report = convert(needs, schemas)
 
         # Then
         [(_category, detail)] = value_rules(report)
-        self.assertIn("does not declare", detail)
+        assert "does not declare" in detail
 
 
-class OptionNameClashTest(unittest.TestCase):
-    def test_a_name_that_is_both_a_field_and_a_link_becomes_the_relation(self):
+class TestOptionNameClash:
+    def test_a_name_that_is_both_a_field_and_a_link_becomes_the_relation(self) -> None:
         # Given `spec` declared as a field and as a link type — our model
         # forbids one name being an attribute and a relation on one type
         needs = {
@@ -521,43 +505,40 @@ class OptionNameClashTest(unittest.TestCase):
         text, _report = convert(needs)
 
         # Then it appears once, as the relation
-        self.assertEqual(text.count('name = "spec"'), 1)
-        block = text[text.index("[[entity_type.relation]]"):]
-        self.assertIn('name = "spec"', block)
+        assert text.count('name = "spec"') == 1
+        block = text[text.index("[[entity_type.relation]]") :]
+        assert 'name = "spec"' in block
 
 
-class RolesTest(unittest.TestCase):
-    def test_one_role_per_type_plus_the_sphinx_needs_spelling(self):
+class TestRoles:
+    def test_one_role_per_type_plus_the_sphinx_needs_spelling(self) -> None:
         # Given two types
-        types = [{"name": "req"}, {"name": "spec"}]
+        names = ["req", "spec"]
 
         # When
-        declared = needs_schema.roles(types)
+        declared = needs_schema.roles(names)
 
         # Then each type gets its own role, and `:need:` resolves to any of them
-        self.assertEqual(
-            declared,
-            [
-                {"name": "req", "types": ["req"]},
-                {"name": "spec", "types": ["spec"]},
-                {"name": "need", "types": ["req", "spec"]},
-            ],
-        )
+        assert declared == [
+            {"name": "req", "types": ["req"]},
+            {"name": "spec", "types": ["spec"]},
+            {"name": "need", "types": ["req", "spec"]},
+        ]
 
-    def test_a_type_named_need_is_not_shadowed_by_a_second_need_role(self):
+    def test_a_type_named_need_is_not_shadowed_by_a_second_need_role(self) -> None:
         # Given a project that names a type `need`
-        types = [{"name": "need"}]
+        names = ["need"]
 
         # When
-        declared = needs_schema.roles(types)
+        declared = needs_schema.roles(names)
 
         # Then only one role of that name is emitted — a duplicate is a schema
         # error
-        self.assertEqual(declared, [{"name": "need", "types": ["need"]}])
+        assert declared == [{"name": "need", "types": ["need"]}]
 
 
-class UnsupportedConstructsTest(unittest.TestCase):
-    def test_constraints_variants_and_global_options_are_reported(self):
+class TestUnsupportedConstructs:
+    def test_constraints_variants_and_global_options_are_reported(self) -> None:
         # Given a configuration using the three sphinx-needs features our model
         # has no vocabulary for
         needs = {
@@ -571,11 +552,9 @@ class UnsupportedConstructsTest(unittest.TestCase):
         report = needs_schema.unsupported_constructs(needs)
 
         # Then
-        self.assertLessEqual(
-            {"constraints", "variants", "global options"}, report_categories(report)
-        )
+        assert {"constraints", "variants", "global options"} <= report_categories(report)
 
-    def test_the_generic_need_directive_is_reported(self):
+    def test_the_generic_need_directive_is_reported(self) -> None:
         # Given a configuration that does not declare `need` as a type of its
         # own — `.. need::` then names its type in an option, which
         # one-directive-per-type cannot express
@@ -583,45 +562,43 @@ class UnsupportedConstructsTest(unittest.TestCase):
         report = needs_schema.unsupported_constructs({"types": [{"directive": "req"}]})
 
         # Then
-        self.assertIn("generic need directive", report_categories(report))
+        assert "generic need directive" in report_categories(report)
 
-    def test_a_project_declaring_need_as_a_type_is_using_the_spelling(self):
+    def test_a_project_declaring_need_as_a_type_is_using_the_spelling(self) -> None:
         # Given a project whose own vocabulary includes a type called `need`
         # When
         report = needs_schema.unsupported_constructs({"types": [{"directive": "need"}]})
 
         # Then nothing is reported — it is an ordinary type, not the built-in
-        self.assertNotIn("generic need directive", report_categories(report))
+        assert "generic need directive" not in report_categories(report)
 
 
-class TomlRenderingTest(unittest.TestCase):
-    def test_strings_bools_and_lists_render_as_toml(self):
+class TestTomlRendering:
+    def test_strings_bools_and_lists_render_as_toml(self) -> None:
         # Given the three value shapes the schema uses
         # When / Then
-        self.assertEqual(needs_schema.toml_value("a\"b"), '"a\\"b"')
-        self.assertEqual(needs_schema.toml_value(True), "true")
-        self.assertEqual(needs_schema.toml_value(False), "false")
-        self.assertEqual(needs_schema.toml_value(["a", "b"]), '["a", "b"]')
+        assert needs_schema.toml_value('a"b') == '"a\\"b"'
+        assert needs_schema.toml_value(True) == "true"
+        assert needs_schema.toml_value(False) == "false"
+        assert needs_schema.toml_value(["a", "b"]) == '["a", "b"]'
 
-    def test_the_generated_file_announces_that_it_is_generated(self):
+    def test_the_generated_file_announces_that_it_is_generated(self) -> None:
         # Given any conversion
         # When
         text, _report = convert({"types": [{"directive": "req"}]})
 
         # Then a reader who opens it in the cloned corpus is told not to edit it
-        self.assertIn("GENERATED by scripts/needs_schema.py", text)
+        assert "GENERATED by scripts/needs_schema.py" in text
 
 
-if __name__ == "__main__":
-    unittest.main()
+class TestImportKeys:
+    """`[needs.import_keys]` maps a name a `.. needimport::` may write onto the file it stands for.
 
+    This build reads the same table from the entity schema, so the conversion is
+    a straight copy.
+    """
 
-class ImportKeysTest(unittest.TestCase):
-    """`[needs.import_keys]` maps a name a `.. needimport::` may write onto the
-    file it stands for. This build reads the same table from the entity schema,
-    so the conversion is a straight copy."""
-
-    def test_import_keys_are_carried_over_verbatim(self):
+    def test_import_keys_are_carried_over_verbatim(self) -> None:
         # Given the table the sphinx-needs demo declares
         needs = {"import_keys": {"imported_project": "/needs_import.json"}}
 
@@ -632,10 +609,10 @@ class ImportKeysTest(unittest.TestCase):
         # source-root-relative with a leading `/`, which is exactly how this
         # build resolves a path in an entity schema, so there is nothing to
         # translate.
-        self.assertIn("[import_keys]", text)
-        self.assertIn('imported_project = "/needs_import.json"', text)
+        assert "[import_keys]" in text
+        assert 'imported_project = "/needs_import.json"' in text
 
-    def test_the_table_is_emitted_before_the_first_entity_type(self):
+    def test_the_table_is_emitted_before_the_first_entity_type(self) -> None:
         # Given a project declaring both an import key and a type
         needs = {
             "import_keys": {"upstream": "/u.json"},
@@ -649,9 +626,9 @@ class ImportKeysTest(unittest.TestCase):
         # tables it would still be top-level, but it reads as if it were
         # nested — and between `[[entity_type]]` and `[[entity_type.attribute]]`
         # it would break the nesting outright.
-        self.assertLess(text.index("[import_keys]"), text.index("[[entity_type]]"))
+        assert text.index("[import_keys]") < text.index("[[entity_type]]")
 
-    def test_a_project_without_import_keys_emits_no_table(self):
+    def test_a_project_without_import_keys_emits_no_table(self) -> None:
         # Given a project that declares none
         needs = {"types": [{"directive": "req", "title": "Requirement"}]}
 
@@ -659,9 +636,9 @@ class ImportKeysTest(unittest.TestCase):
         text, _report = convert(needs)
 
         # Then nothing is emitted, rather than an empty table
-        self.assertNotIn("[import_keys]", text)
+        assert "[import_keys]" not in text
 
-    def test_import_keys_are_not_reported_as_unconvertible(self):
+    def test_import_keys_are_not_reported_as_unconvertible(self) -> None:
         # Given a project declaring an import key
         needs = {"import_keys": {"upstream": "/u.json"}}
 
@@ -670,14 +647,11 @@ class ImportKeysTest(unittest.TestCase):
 
         # Then it is absent from the report: the construct is supported, and
         # listing it would overstate what a migrating project loses.
-        self.assertNotIn("import keys", report_categories(report))
+        assert "import keys" not in report_categories(report)
 
-    def test_import_keys_reads_the_table_on_its_own(self):
+    def test_import_keys_reads_the_table_on_its_own(self) -> None:
         # Given the table, and a project without one
         # When each is read
         # Then the helper is a plain copy, and missing means empty
-        self.assertEqual(
-            needs_schema.import_keys({"import_keys": {"a": "/a.json"}}),
-            {"a": "/a.json"},
-        )
-        self.assertEqual(needs_schema.import_keys({}), {})
+        assert needs_schema.import_keys({"import_keys": {"a": "/a.json"}}) == {"a": "/a.json"}
+        assert needs_schema.import_keys({}) == {}
