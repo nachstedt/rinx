@@ -20,12 +20,15 @@
         {% if nav_tree %}
         <ul class="nav-tree">
         {% for entry in nav_tree recursive %}
-          <li{% if entry.is_current %} class="current"{% elif entry.is_ancestor %} class="ancestor"{% endif %}>
+          <li class="toctree-l{{ loop.depth }}{% if entry.is_current %} current{% elif entry.is_ancestor %} ancestor{% endif %}{% if entry.children %} has-children{% endif %}">
             <a href="{{ entry.href }}">{% if entry.secnumber %}<span class="section-number">{{ entry.secnumber | join(".") }}. </span>{% endif %}{{ entry.title }}</a>
             {% if entry.children %}
-            <ul>
-              {{ loop(entry.children) }}
-            </ul>
+            <details{% if entry.is_current or entry.is_ancestor %} open{% endif %}>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle {{ entry.title }}"></span></summary>
+              <ul>
+                {{ loop(entry.children) }}
+              </ul>
+            </details>
             {% endif %}
           </li>
         {% endfor %}

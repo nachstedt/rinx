@@ -91,7 +91,8 @@ other Sphinx or rinx sites link into it through, available as the target's
        below. Defaults to one naming the project "Documentation".
    * - ``template``
      - The MiniJinja HTML template every page is rendered into. Defaults to the
-       bundled one.
+       bundled one, whose sidebar starts collapsed except for the path to the
+       current page; every other branch unfolds with its chevron.
    * - ``css``
      - The stylesheet copied into the site. Defaults to the bundled one.
    * - ``entity_schema``
