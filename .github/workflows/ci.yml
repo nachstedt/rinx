@@ -122,6 +122,29 @@ jobs:
     - name: Build the documentation site
       run: bazel build //docs:site
 
+    # The pull request's preview (pages-preview.yml publishes it), uploaded
+    # before the remaining checks so a failing test still leaves one to look
+    # at. This job runs with the pull request's code and a read-only token, so
+    # it only uploads; the number is what the publisher cross-checks against
+    # the pull request's head commit before trusting it.
+    - name: Collect the sites for a preview
+      if: github.event_name == 'pull_request'
+      env:
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        mkdir -p preview/docs preview/examples
+        cp -RL bazel-bin/docs/site_site_out/. preview/docs/
+        cp -RL bazel-bin/examples/site_site_out/. preview/examples/
+        echo "$PR_NUMBER" > preview/pr-number
+
+    - name: Upload the preview
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v7
+      with:
+        name: preview
+        path: preview
+        retention-days: 1
+
     - name: Run the script tests
       run: bazel test //scripts:all
 

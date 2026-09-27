@@ -77,8 +77,13 @@ earlier one wrote. It refuses to overwrite or remove an existing `vX.Y.Z/`
 without `--force`. A push that loses a race is not rebased: the script fetches
 the new tip and applies its change again, which is exact because everything
 derived is regenerated anyway.
-Every workflow that calls it shares one `concurrency: gh-pages` group with
-`cancel-in-progress: false`, so writes are serialized.
+Writers are deliberately **not** queued in a `concurrency` group: GitHub keeps
+one pending run per group and cancels every other, so a release's publish
+could be dropped behind a pull request's preview. They race instead, and the
+retry — up to ten attempts, each after a random wait growing with the attempt
+— is what makes a burst of them all land. A `main` build whose commit is no
+longer `main`'s tip publishes nothing, so a run finishing late cannot put an
+older `main/` back.
 
 | Trigger | Writes |
 |---|---|
@@ -98,6 +103,19 @@ workflow triggered by `workflow_run` downloads that artifact and publishes it.
 It holds write permissions, but it never checks out or runs the pull request's
 code; it only copies static files. The cleanup workflow uses
 `pull_request_target` and is safe for the same reason.
+
+On a pull request from a fork, CI runs the fork's own `ci.yml`, so the
+artifact is entirely the fork's to choose. The files are acceptable: they are
+what a preview is. The pull-request number is not, since it decides which
+directory is written. The publisher therefore publishes only when that pull
+request is open and its head is exactly the commit CI built. A fork cannot
+name another pull request's preview, and a run overtaken by a newer push
+publishes nothing.
+
+CI uploads the preview right after building the sites, before the remaining
+checks. A pull request whose tests fail still gets its preview, which is
+often exactly when a reviewer wants it. One comment per pull request links the
+preview and is edited on every push, rather than a new one being added.
 
 ### 4. The version switcher is a feature of rinx's default theme
 
