@@ -12,6 +12,7 @@ RinxInfo = provider(
         "diagram_ast_files": "A depset of the .ast File objects whose library set `diagrams = True` — a subset of `ast_files`. The site creates diagram actions for exactly these documents, which is what keeps a library that draws nothing free of the diagram pipeline's cost.",
         "direct_doc_names": "A list of string names for documents directly explicitly exported by just this library.",
         "image_files": "A depset of authored image File objects, declared via rinx_library's `images` attribute. These are files the author wrote and referenced with `.. image::`/`.. figure::`, as opposed to the diagrams the site rule compiles, which never pass through a library at all.",
+        "download_files": "A depset of the File objects this library's documents link with `:download:`, declared via rinx_library's `downloads` attribute. Copied into the site's `_downloads/` directory at their source-root-relative path and read by no other action, so editing one re-renders no page.",
         "embed_sidecars": "A depset of per-document .embeds.json File objects, mapping each `:loading: embed` image to its data: URI. Consumed by the render action of the document it belongs to.",
     },
 )

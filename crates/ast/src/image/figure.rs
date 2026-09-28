@@ -64,10 +64,10 @@ impl Figure {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::image::uri::ImageUri;
+    use crate::AssetUri;
 
     fn bare_figure() -> Figure {
-        Figure::new(ImageOptions::new(ImageUri::new("logo.png")))
+        Figure::new(ImageOptions::new(AssetUri::new("logo.png")))
     }
 
     #[test]

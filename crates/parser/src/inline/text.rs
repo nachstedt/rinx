@@ -121,6 +121,14 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
             *display = display.as_deref().map(unescape);
             *target = unescape(target);
         }
+        // The file is re-split after unescaping, so an escaped character can
+        // never decide whether it names a URL or a project file.
+        InlineNode::DownloadReference {
+            display, target, ..
+        } => {
+            *display = display.as_deref().map(unescape);
+            *target = rinx_ast::AssetUri::new(&unescape(target.as_written()));
+        }
         InlineNode::EntityReference {
             display, target, ..
         }

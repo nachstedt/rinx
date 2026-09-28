@@ -11,6 +11,7 @@
 //! render equations — and is the only module that knows which math backend
 //! is in use.
 
+mod asset_href;
 mod blocks;
 mod broken_link;
 mod chart;

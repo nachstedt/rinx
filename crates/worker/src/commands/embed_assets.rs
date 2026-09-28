@@ -17,7 +17,7 @@
 //! and only that page then re-renders.
 //!
 //! Keys are the image's *resolved* project path rather than the URI as
-//! written, because [`rinx_ast::ImageUri::resolve`] is the one
+//! written, because [`rinx_ast::AssetUri::resolve`] is the one
 //! function the renderer resolves with too. Two phases deriving the same key
 //! two ways is exactly the drift that function exists to prevent.
 
@@ -178,7 +178,7 @@ pub(crate) fn cmd_embed_assets(args: &[String]) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{Directive, Figure, ImageLoading, ImageOptions, ImageUri, Node};
+    use rinx_ast::{AssetUri, Directive, Figure, ImageLoading, ImageOptions, Node};
 
     /// A document at `doc_path` holding one image directive.
     fn document_with(doc_path: &str, options: ImageOptions) -> ast::Document {
@@ -189,7 +189,7 @@ mod tests {
     }
 
     fn embedding(uri: &str) -> ImageOptions {
-        let mut options = ImageOptions::new(ImageUri::new(uri));
+        let mut options = ImageOptions::new(AssetUri::new(uri));
         options.loading = ImageLoading::Embed;
         options
     }
@@ -297,7 +297,7 @@ mod tests {
     #[test]
     fn test_collect_embed_paths_ignores_a_linked_image() {
         // Given
-        let doc = document_with("index.rst", ImageOptions::new(ImageUri::new("logo.svg")));
+        let doc = document_with("index.rst", ImageOptions::new(AssetUri::new("logo.svg")));
 
         // When
         let paths = collect_embed_paths(&doc);
@@ -416,7 +416,7 @@ mod tests {
     #[test]
     fn test_process_embed_assets_is_empty_when_nothing_embeds() {
         // Given
-        let doc = document_with("index.rst", ImageOptions::new(ImageUri::new("logo.svg")));
+        let doc = document_with("index.rst", ImageOptions::new(AssetUri::new("logo.svg")));
         let json = serde_json::to_string(&doc).expect("should serialize");
 
         // When

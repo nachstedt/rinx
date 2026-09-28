@@ -28,11 +28,12 @@
 //!
 //! `path_normalization` is the odd one out: a plain `.`/`..` resolver with no
 //! document vocabulary in it at all. It lives here because both
-//! [`ImageUri::resolve`] and `rinx_toctree` need it and the toctree
+//! [`AssetUri::resolve`] and `rinx_toctree` need it and the toctree
 //! crate already depends on this one, so this is the only place the two can
 //! share one implementation.
 
 mod admonition_kind;
+mod asset_uri;
 mod button_link;
 mod c_signature;
 mod chart_color;
@@ -89,6 +90,7 @@ mod version_change_kind;
 mod visit;
 
 pub use admonition_kind::AdmonitionKind;
+pub use asset_uri::AssetUri;
 pub use button_link::{ButtonFlag, ButtonLink, ButtonTarget, TextAlign};
 pub use c_signature::{CSignature, NameSource, extract_c_object_name};
 pub use chart_color::{ChartColor, InvalidChartColor};
@@ -126,9 +128,8 @@ pub use grid::{
 };
 pub use hashed_content::HashedContent;
 pub use image::{
-    Figure, FigureWidth, ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri,
-    InvalidLength, Length, LengthOrPercentage, LengthUnit, Percentage, is_vertical_name,
-    scaled_width,
+    Figure, FigureWidth, ImageAlign, ImageLoading, ImageOptions, ImageTarget, InvalidLength,
+    Length, LengthOrPercentage, LengthUnit, Percentage, is_vertical_name, scaled_width,
 };
 pub use index_entry::IndexEntry;
 pub use inline_node::{InlineNode, inline_plain_text};

@@ -123,10 +123,10 @@ mod tests {
     #[test]
     fn test_image_definition_serialization_roundtrip() {
         // Given
-        use crate::image::ImageUri;
+        use crate::AssetUri;
         let definition = SubstitutionDefinition {
             name: "biohazard".to_string(),
-            kind: SubstitutionKind::Image(Box::new(ImageOptions::new(ImageUri::new(
+            kind: SubstitutionKind::Image(Box::new(ImageOptions::new(AssetUri::new(
                 "biohazard.png",
             )))),
             span: None,

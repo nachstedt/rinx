@@ -19,6 +19,7 @@ use super::roles::c::struct_::handle_struct_match;
 use super::roles::c::type_::handle_type_match;
 use super::roles::c::union::handle_union_match;
 use super::roles::doc::handle_doc_match;
+use super::roles::download::handle_download_match;
 use super::roles::math::{handle_eq_match, handle_math_match};
 use super::roles::py::attr::handle_attr_match;
 use super::roles::py::class::handle_class_match;
@@ -165,6 +166,7 @@ fn build_inline_node(
         }
         "any" => handle_any_match(m_str),
         "doc" => handle_doc_match(m_str),
+        "download" => handle_download_match(m_str),
         "program" => {
             let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
             InlineNode::Program(caps["name"].to_string())

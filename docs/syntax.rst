@@ -46,6 +46,11 @@ Supported:
   page relative to the one it is written on (``:doc:`../install```), or from
   the Bazel workspace root with a leading ``/`` (``:doc:`/docs/install```), as
   a toctree entry does.
+- The ``:download:`` role, which links a file and copies it into the site's
+  ``_downloads/`` directory. The file is named as a ``:doc:`` target is,
+  relative to the page or from the workspace root with a leading ``/``, and is
+  declared in the library's ``downloads`` attribute (see :ref:`rules`); a URL
+  is linked as written and never copied.
 - Admonitions, ``.. seealso::``, ``.. versionadded::``,
   ``.. versionchanged::`` and ``.. deprecated::``.
 - ``.. code-block::``, ``.. highlight::`` and ``.. literalinclude::``, all
@@ -61,7 +66,7 @@ Supported:
 - Linking to other sites through their ``objects.inv``, and writing one; see
   :ref:`intersphinx`.
 
-Not yet supported: the ``:numref:``, ``:download:`` and ``:code:`` roles,
+Not yet supported: the ``:numref:`` and ``:code:`` roles,
 autodoc, ``.. only::``, and the ``:envvar:`` and ``:confval:`` objects.
 
 Extensions

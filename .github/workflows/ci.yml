@@ -172,6 +172,9 @@ jobs:
     - name: Run image data test
       run: ./tests/test_image_data.sh
 
+    - name: Run download data test
+      run: ./tests/test_download_data.sh
+
     - name: Run Jinja templating test
       run: ./tests/test_jinja.sh
 

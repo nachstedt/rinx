@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::asset_uri::AssetUri;
 use crate::image::ImageOptions;
 use crate::inventory_selector::InventorySelector;
 use crate::object_type::ObjectType;
@@ -184,6 +185,26 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
         inventory: InventorySelector,
     },
+    /// A link to a file the site serves for download, produced by the
+    /// `:download:` (or `:std:download:`) role.
+    ///
+    /// Unlike every other reference role, `target` names a *file*, not
+    /// something the project index knows: it is an [`AssetUri`], split into
+    /// an external URL or a project file the moment it is parsed, exactly as
+    /// an image's argument is, so the Bazel validator and the renderer
+    /// resolve it with the one [`AssetUri::resolve`]. `display` is the
+    /// explicit title of the angle-bracket form and `None` for a bare target,
+    /// which shows the target as written. A `!` prefix is consumed here and
+    /// recorded as `link: false`: nothing is linked or copied, and `target`
+    /// then holds the whole text after the `!`.
+    DownloadReference {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        display: Option<String>,
+        target: AssetUri,
+        link: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
     /// A reference to a project-declared entity, from a role the schema
     /// names — ``:req:`REQ_001` ``, ``:need:`REQ_001` ``, or the built-in
     /// ``:entity:`REQ_001` ``.
@@ -270,6 +291,7 @@ impl InlineNode {
             | Self::OptionReference { span, .. }
             | Self::AnyReference { span, .. }
             | Self::DocReference { span, .. }
+            | Self::DownloadReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
@@ -295,6 +317,7 @@ impl InlineNode {
             | Self::OptionReference { span, .. }
             | Self::AnyReference { span, .. }
             | Self::DocReference { span, .. }
+            | Self::DownloadReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
@@ -329,7 +352,8 @@ impl InlineNode {
             | Self::EquationReference { .. } => true,
             Self::DomainObjectReference { link, .. }
             | Self::AnyReference { link, .. }
-            | Self::DocReference { link, .. } => *link,
+            | Self::DocReference { link, .. }
+            | Self::DownloadReference { link, .. } => *link,
             _ => false,
         }
     }
@@ -365,6 +389,9 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             | InlineNode::DocReference {
                 display, target, ..
             } => display.as_deref().unwrap_or(target),
+            InlineNode::DownloadReference {
+                display, target, ..
+            } => display.as_deref().unwrap_or(target.as_written()),
             InlineNode::TermReference { display, .. }
             | InlineNode::DomainObjectReference { display, .. }
             | InlineNode::OptionReference { display, .. }
@@ -634,6 +661,68 @@ mod tests {
 
         // Then
         assert_eq!(text, "Introguide/intro");
+    }
+
+    fn download_reference(display: Option<&str>, link: bool) -> InlineNode {
+        InlineNode::DownloadReference {
+            display: display.map(str::to_string),
+            target: AssetUri::new("data/sample.csv"),
+            link,
+            span: None,
+        }
+    }
+
+    #[test]
+    fn test_a_suppressed_download_reference_is_not_a_link() {
+        // Given — `:download:` with and without the `!` prefix
+        let suppressed = download_reference(None, false);
+        let linked = download_reference(None, true);
+
+        // When / Then
+        assert!(!suppressed.renders_as_link());
+        assert!(linked.renders_as_link());
+    }
+
+    #[test]
+    fn test_download_reference_carries_its_span() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(3, 1),
+            crate::span::Position::new(3, 30),
+        );
+
+        // When
+        let placed = download_reference(None, true).with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+    }
+
+    #[test]
+    fn test_download_reference_without_explicit_title_roundtrips_without_display() {
+        // Given
+        let node = download_reference(None, true);
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert!(!json.contains("display"));
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_inline_plain_text_uses_the_title_or_written_target_of_a_download_reference() {
+        // Given
+        let titled = download_reference(Some("the data"), true);
+        let bare = download_reference(None, true);
+
+        // When
+        let text = inline_plain_text(&[titled, bare]);
+
+        // Then
+        assert_eq!(text, "the datadata/sample.csv");
     }
 
     #[test]

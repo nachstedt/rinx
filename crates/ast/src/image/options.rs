@@ -12,7 +12,8 @@ use crate::target_name::TargetName;
 
 use super::align::ImageAlign;
 use super::length::{Length, LengthOrPercentage, scaled_width};
-use super::uri::{ImageTarget, ImageUri};
+use super::target::ImageTarget;
+use crate::asset_uri::AssetUri;
 
 /// How an image's bytes reach the page — docutils' `:loading:` option.
 ///
@@ -70,7 +71,7 @@ impl ImageLoading {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ImageOptions {
     /// The directive argument — what to display.
-    pub uri: ImageUri,
+    pub uri: AssetUri,
     /// `:alt:` — replacement text, emitted as the `alt` attribute.
     pub alt: Option<String>,
     /// `:height:` — a length; docutils accepts no percentage here.
@@ -105,7 +106,7 @@ pub struct ImageOptions {
 impl ImageOptions {
     /// The options of a bare `.. image:: uri` with nothing else written.
     #[must_use]
-    pub fn new(uri: ImageUri) -> Self {
+    pub fn new(uri: AssetUri) -> Self {
         Self {
             uri,
             alt: None,
@@ -159,7 +160,7 @@ mod tests {
     use super::*;
 
     fn options_with(width: Option<&str>, height: Option<&str>, scale: Option<u32>) -> ImageOptions {
-        let mut options = ImageOptions::new(ImageUri::new("logo.png"));
+        let mut options = ImageOptions::new(AssetUri::new("logo.png"));
         options.width = width.map(|raw| LengthOrPercentage::new(raw).expect("valid width"));
         options.height = height.map(|raw| Length::new(raw).expect("valid height"));
         options.scale = scale;
@@ -216,7 +217,7 @@ mod tests {
     #[test]
     fn test_new_leaves_every_option_unset() {
         // Given
-        let uri = ImageUri::new("logo.png");
+        let uri = AssetUri::new("logo.png");
 
         // When
         let options = ImageOptions::new(uri.clone());

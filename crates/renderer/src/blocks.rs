@@ -14,12 +14,12 @@
 //! and the domain-object directives in [`domain_object`].
 //! Inline markup inside these constructs goes to [`crate::inline`].
 //! [`table_test_support`] holds fixtures `data_table`'s and
-//! `table_directive`'s tests share, and [`asset_href`] the `_images/` path
-//! arithmetic every picture on the page shares — an authored image and a
-//! compiled `.. plantuml::` diagram alike.
+//! `table_directive`'s tests share. The `_images/` path arithmetic every
+//! picture on the page shares — an authored image and a compiled
+//! `.. plantuml::` diagram alike — is the crate root's `asset_href`, since
+//! `:download:` links use it too.
 
 mod admonitions;
-mod asset_href;
 mod block_quote;
 mod button_link;
 mod chart_counts;

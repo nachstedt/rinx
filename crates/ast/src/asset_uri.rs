@@ -1,17 +1,19 @@
-//! Where an image's bytes come from, and where clicking it goes.
+//! Where a file an author names lives: somewhere else on the web, or in this
+//! project.
 //!
-//! An image URI is split into "somewhere else on the web" and "a file in this
-//! project" the moment it is parsed, because three later phases each ask a
-//! different question of it and all three would otherwise re-sniff the string
-//! for a `://`: the Bazel validator asks which files must have been declared,
-//! the asset embedder asks which files to read, and the renderer asks what to
-//! put in `src`.
+//! The split is made the moment a directive argument or a role target is
+//! parsed, because three later phases each ask a different question of it and
+//! all three would otherwise re-sniff the string for a `://`: the Bazel
+//! validator asks which files must have been declared, the asset embedder asks
+//! which files to read, and the renderer asks what to put in `src` or `href`.
+//! It serves both `.. image::`/`.. figure::` and the `:download:` role, so an
+//! image and a download written with the same path cannot resolve differently.
 //!
 //! What is *not* done at parse time is resolving a document-relative path into
 //! a project-relative one. The parser does not know which document it is
 //! parsing (see `ParseCtx`, which carries a slice origin, not a path), and the
-//! AST is meant to record what the author wrote. [`ImageUri::resolve`] is the
-//! single function all three phases resolve with instead, so none of them can
+//! AST is meant to record what the author wrote. [`AssetUri::resolve`] is the
+//! single function every phase resolves with instead, so none of them can
 //! disagree about where `../shared/logo.png` points.
 
 use std::path::PathBuf;
@@ -19,7 +21,6 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::path_normalization::resolve_from_document;
-use crate::target_name::TargetName;
 
 /// Whether `raw` names a resource outside this project.
 ///
@@ -42,11 +43,11 @@ fn is_external(raw: &str) -> bool {
     well_formed && (rest.starts_with("//") || scheme.eq_ignore_ascii_case("data"))
 }
 
-/// The `.. image::`/`.. figure::` argument: what to display.
+/// A file an author named — an image to display or a file to download.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ImageUri {
+pub enum AssetUri {
     /// An absolute URL, passed through to `src` untouched. Never bundled,
-    /// never validated against the declared assets, and never embedded — a
+    /// never validated against the declared assets, and never embedded or copied — a
     /// build that fetched it would stop being hermetic.
     External(String),
     /// A file in this project, exactly as the author wrote it: relative to the
@@ -54,8 +55,8 @@ pub enum ImageUri {
     Document(String),
 }
 
-impl ImageUri {
-    /// Reads a directive argument.
+impl AssetUri {
+    /// Reads a directive argument or role target.
     #[must_use]
     pub fn new(raw: &str) -> Self {
         let trimmed = raw.trim();
@@ -90,39 +91,6 @@ impl ImageUri {
     }
 }
 
-/// What an image's `:target:` points at.
-///
-/// docutils decides between the two with `parse_target`: a value ending in a
-/// single `_` is an indirect reference to a named target, anything else is a
-/// URI. The trailing marker is markup rather than part of the name, so it is
-/// stripped here and the intent recorded as the variant instead.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum ImageTarget {
-    /// A plain URI, used as the link's `href` verbatim.
-    Uri(String),
-    /// A named target elsewhere in the project, resolved against the index at
-    /// render time. Normalized through [`TargetName`] — docutils'
-    /// `fully_normalize_name` — so it matches a target however it was cased.
-    Reference(TargetName),
-}
-
-impl ImageTarget {
-    /// Reads a `:target:` value.
-    #[must_use]
-    pub fn new(raw: &str) -> Self {
-        let trimmed = raw.trim();
-        // A trailing `__` is an *anonymous* reference in reST. docutils'
-        // `parse_target` does not accept one here, so it stays a URI rather
-        // than silently consuming an anonymous target this directive never
-        // declared.
-        if trimmed.ends_with('_') && !trimmed.ends_with("__") && trimmed.len() > 1 {
-            let name = trimmed.trim_end_matches('_');
-            return Self::Reference(TargetName::new(name));
-        }
-        Self::Uri(trimmed.to_string())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -133,10 +101,10 @@ mod tests {
         let raw = "https://example.com/logo.png";
 
         // When
-        let uri = ImageUri::new(raw);
+        let uri = AssetUri::new(raw);
 
         // Then
-        assert_eq!(uri, ImageUri::External(raw.to_string()));
+        assert_eq!(uri, AssetUri::External(raw.to_string()));
     }
 
     #[test]
@@ -145,10 +113,10 @@ mod tests {
         let raw = "data:image/png;base64,AAAA";
 
         // When
-        let uri = ImageUri::new(raw);
+        let uri = AssetUri::new(raw);
 
         // Then
-        assert_eq!(uri, ImageUri::External(raw.to_string()));
+        assert_eq!(uri, AssetUri::External(raw.to_string()));
     }
 
     #[test]
@@ -157,10 +125,10 @@ mod tests {
         let raw = "images/logo.png";
 
         // When
-        let uri = ImageUri::new(raw);
+        let uri = AssetUri::new(raw);
 
         // Then
-        assert_eq!(uri, ImageUri::Document(raw.to_string()));
+        assert_eq!(uri, AssetUri::Document(raw.to_string()));
     }
 
     #[test]
@@ -169,10 +137,10 @@ mod tests {
         let raw = r"C:\images\logo.png";
 
         // When
-        let uri = ImageUri::new(raw);
+        let uri = AssetUri::new(raw);
 
         // Then
-        assert!(matches!(uri, ImageUri::Document(_)));
+        assert!(matches!(uri, AssetUri::Document(_)));
     }
 
     #[test]
@@ -181,7 +149,7 @@ mod tests {
         let raw = "  logo.png  ";
 
         // When
-        let uri = ImageUri::new(raw);
+        let uri = AssetUri::new(raw);
 
         // Then
         assert_eq!(uri.as_written(), "logo.png");
@@ -190,7 +158,7 @@ mod tests {
     #[test]
     fn test_resolve_joins_a_relative_path_to_the_documents_directory() {
         // Given
-        let uri = ImageUri::new("images/logo.png");
+        let uri = AssetUri::new("images/logo.png");
 
         // When
         let resolved = uri.resolve("guide/intro.rst");
@@ -202,7 +170,7 @@ mod tests {
     #[test]
     fn test_resolve_handles_a_document_at_the_source_root() {
         // Given
-        let uri = ImageUri::new("logo.png");
+        let uri = AssetUri::new("logo.png");
 
         // When
         let resolved = uri.resolve("index.rst");
@@ -214,7 +182,7 @@ mod tests {
     #[test]
     fn test_resolve_reads_a_leading_slash_as_the_source_root() {
         // Given
-        let uri = ImageUri::new("/shared/logo.png");
+        let uri = AssetUri::new("/shared/logo.png");
 
         // When
         let resolved = uri.resolve("deep/nested/page.rst");
@@ -226,7 +194,7 @@ mod tests {
     #[test]
     fn test_resolve_collapses_parent_components() {
         // Given
-        let uri = ImageUri::new("../shared/logo.png");
+        let uri = AssetUri::new("../shared/logo.png");
 
         // When
         let resolved = uri.resolve("guide/intro.rst");
@@ -238,7 +206,7 @@ mod tests {
     #[test]
     fn test_resolve_returns_nothing_for_an_external_uri() {
         // Given
-        let uri = ImageUri::new("https://example.com/logo.png");
+        let uri = AssetUri::new("https://example.com/logo.png");
 
         // When
         let resolved = uri.resolve("index.rst");
@@ -250,74 +218,13 @@ mod tests {
     #[test]
     fn test_uri_serialization_round_trips() {
         // Given
-        let uri = ImageUri::new("images/logo.png");
+        let uri = AssetUri::new("images/logo.png");
 
         // When
         let json = serde_json::to_string(&uri).expect("should serialize");
-        let restored: ImageUri = serde_json::from_str(&json).expect("should deserialize");
+        let restored: AssetUri = serde_json::from_str(&json).expect("should deserialize");
 
         // Then
         assert_eq!(restored, uri);
-    }
-
-    #[test]
-    fn test_target_new_reads_a_trailing_underscore_as_a_reference() {
-        // Given
-        let raw = "My Target_";
-
-        // When
-        let target = ImageTarget::new(raw);
-
-        // Then
-        assert_eq!(target, ImageTarget::Reference(TargetName::new("My Target")));
-    }
-
-    #[test]
-    fn test_target_new_reads_a_url_as_a_uri() {
-        // Given
-        let raw = "https://example.com/";
-
-        // When
-        let target = ImageTarget::new(raw);
-
-        // Then
-        assert_eq!(target, ImageTarget::Uri("https://example.com/".to_string()));
-    }
-
-    #[test]
-    fn test_target_new_reads_a_double_underscore_as_a_uri() {
-        // Given — an anonymous reference, which docutils does not accept here
-        let raw = "something__";
-
-        // When
-        let target = ImageTarget::new(raw);
-
-        // Then
-        assert_eq!(target, ImageTarget::Uri("something__".to_string()));
-    }
-
-    #[test]
-    fn test_target_new_reads_a_bare_underscore_as_a_uri() {
-        // Given — nothing is left once the marker is stripped
-        let raw = "_";
-
-        // When
-        let target = ImageTarget::new(raw);
-
-        // Then
-        assert_eq!(target, ImageTarget::Uri("_".to_string()));
-    }
-
-    #[test]
-    fn test_target_serialization_round_trips() {
-        // Given
-        let target = ImageTarget::new("some name_");
-
-        // When
-        let json = serde_json::to_string(&target).expect("should serialize");
-        let restored: ImageTarget = serde_json::from_str(&json).expect("should deserialize");
-
-        // Then
-        assert_eq!(restored, target);
     }
 }

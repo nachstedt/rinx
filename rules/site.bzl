@@ -40,6 +40,17 @@ fi
     )
     return svg_dir
 
+# Copies (source, destination-relative-to-$OUT) argument pairs into $OUT, the
+# tail both bundling actions share.
+_COPY_PAIRS = """
+while [ "$#" -gt 0 ]; do
+  DEST="$OUT/$2"
+  mkdir -p "$(dirname "$DEST")"
+  cp "$1" "$DEST"
+  shift 2
+done
+"""
+
 def _rinx_site_impl(ctx):
     worker = ctx.executable._worker
 
@@ -265,6 +276,7 @@ def _rinx_site_impl(ctx):
 
     final_outputs = html_files + [genindex_out, inventory_out]
 
+    images_out = None
     if all_svg_dirs or all_image_files:
         images_out = ctx.actions.declare_directory(ctx.label.name + "_site_out/_images")
 
@@ -292,13 +304,7 @@ while [ "$DIR_COUNT" -gt 0 ]; do
   shift
   DIR_COUNT=$((DIR_COUNT - 1))
 done
-while [ "$#" -gt 0 ]; do
-  DEST="$OUT/$2"
-  mkdir -p "$(dirname "$DEST")"
-  cp "$1" "$DEST"
-  shift 2
-done
-""",
+""" + _COPY_PAIRS,
             arguments = [args],
             inputs = all_svg_dirs + all_image_files,
             outputs = [images_out],
@@ -307,39 +313,81 @@ done
         )
         final_outputs.append(images_out)
 
-        # ── Phase 4.5: Validate Images ────────────────────────────────────────
-        # Checks that every picture the documents refer to actually reached the
-        # bundle: a PlantUML diagram that failed to compile, and an authored
-        # image left out of its library's `images` attribute alike. Both would
-        # otherwise ship as a page that looks finished and renders a broken
-        # picture.
-        validation_sentinel = ctx.actions.declare_file(ctx.label.name + ".images.validated")
-        val_args = ctx.actions.args()
-        val_args.add("validate_images")
-        val_args.add("--image-dir", images_out.path)
-        val_args.add("--output", validation_sentinel.path)
-
-        # Each diagram source a render wrote must have its compiled SVG. The
-        # render already expanded every template, so nothing is re-derived
-        # here: the files are the record of what the pages name.
-        if puml_dirs:
-            val_args.add("--diagram-dirs")
-            val_args.add_all(puml_dirs, expand_directories = False)
-
-        # Last: this flag is variadic, so anything after it would be swallowed
-        # as another .ast path.
-        val_args.add("--inputs")
-        val_args.add_all(ast_list)
-
-        ctx.actions.run(
-            executable = worker,
-            arguments = [val_args],
-            inputs = ast_list + [images_out] + puml_dirs,
-            outputs = [validation_sentinel],
-            mnemonic = "RinxValidateImages",
-            progress_message = "Validating diagram images for %s" % ctx.label.name,
+    # ── Phase 4.25: Bundle Downloads ──────────────────────────────────────────
+    # The files `:download:` links, each at its source-root-relative path
+    # inside `_downloads/` — the `_images/` layout, for the same reason (see
+    # docs/decisions/027-download-role.md). No render action takes these as
+    # inputs: a page's href follows from the path alone, so editing a
+    # downloadable file re-runs only this copy.
+    all_download_files = depset(
+        transitive = [dep[RinxInfo].download_files for dep in ctx.attr.deps],
+    ).to_list()
+    downloads_out = None
+    if all_download_files:
+        downloads_out = ctx.actions.declare_directory(ctx.label.name + "_site_out/_downloads")
+        args = ctx.actions.args()
+        args.add(downloads_out.path)
+        for download in all_download_files:
+            args.add(download.path)
+            args.add(download.short_path)
+        ctx.actions.run_shell(
+            command = """
+set -euo pipefail
+OUT="$1"; shift
+mkdir -p "$OUT"
+""" + _COPY_PAIRS,
+            arguments = [args],
+            inputs = all_download_files,
+            outputs = [downloads_out],
+            mnemonic = "RinxBundleDownloads",
+            progress_message = "Bundling Site Downloads",
         )
-        final_outputs.append(validation_sentinel)
+        final_outputs.append(downloads_out)
+
+    # ── Phase 4.5: Validate Assets ────────────────────────────────────────────
+    # Checks that every file the documents show or link actually reached its
+    # bundle: a PlantUML diagram that failed to compile, an authored image
+    # left out of its library's `images` attribute, and a `:download:` left
+    # out of `downloads` alike. Each would otherwise ship as a page that looks
+    # finished and links to nothing.
+    #
+    # Runs even when a site bundled nothing: a document naming an image or a
+    # download in a site that declared none must fail too, and only reading
+    # the documents can tell. A missing bundle is passed as no flag at all
+    # and treated as empty.
+    validation_sentinel = ctx.actions.declare_file(ctx.label.name + ".assets.validated")
+    val_args = ctx.actions.args()
+    val_args.add("validate_assets")
+    val_args.add("--output", validation_sentinel.path)
+    val_inputs = list(ast_list) + puml_dirs
+    if images_out:
+        val_args.add("--image-dir", images_out.path)
+        val_inputs.append(images_out)
+    if downloads_out:
+        val_args.add("--download-dir", downloads_out.path)
+        val_inputs.append(downloads_out)
+
+    # Each diagram source a render wrote must have its compiled SVG. The
+    # render already expanded every template, so nothing is re-derived
+    # here: the files are the record of what the pages name.
+    if puml_dirs:
+        val_args.add("--diagram-dirs")
+        val_args.add_all(puml_dirs, expand_directories = False)
+
+    # Last: this flag is variadic, so anything after it would be swallowed
+    # as another .ast path.
+    val_args.add("--inputs")
+    val_args.add_all(ast_list)
+
+    ctx.actions.run(
+        executable = worker,
+        arguments = [val_args],
+        inputs = val_inputs,
+        outputs = [validation_sentinel],
+        mnemonic = "RinxValidateAssets",
+        progress_message = "Validating images and downloads for %s" % ctx.label.name,
+    )
+    final_outputs.append(validation_sentinel)
 
     # ── Phase 5: Copy CSS ─────────────────────────────────────────────────────
     css_out = ctx.actions.declare_file(ctx.label.name + "_site_out/default.css")

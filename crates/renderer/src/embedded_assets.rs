@@ -10,7 +10,7 @@
 //! page re-renders. See `docs/decisions/007-image-assets.md`.
 //!
 //! Keys are the image's *resolved* project path — what
-//! [`rinx_ast::ImageUri::resolve`] returns — never the URI as written,
+//! [`rinx_ast::AssetUri::resolve`] returns — never the URI as written,
 //! so `logo.png` and `./logo.png` in the same document find one entry.
 
 use std::collections::BTreeMap;

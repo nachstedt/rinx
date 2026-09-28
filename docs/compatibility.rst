@@ -116,7 +116,15 @@ Inline markup
          named ``….rst`` and finds nothing.
        - An unknown document is drawn as a broken link and reported as
          ``link.broken-doc``; Sphinx shows the target as plain text.
-   * - ``:download:``, ``:numref:`` and ``:code:`` roles
+   * - ``:download:`` role
+     - ✅ ℹ️
+     - - A file keeps its path from the Bazel workspace root under
+         ``_downloads/``; Sphinx copies it to ``_downloads/<hash>/<name>``.
+       - A leading ``/`` resolves from the Bazel workspace root, as
+         ``:doc:``'s does.
+       - A file not declared in the library's ``downloads`` fails the build
+         as ``download.undeclared``; Sphinx warns and shows the text unlinked.
+   * - ``:numref:`` and ``:code:`` roles
      - ❌
      -
    * - ``:pep:``, ``:rfc:``, ``:cve:`` and ``:cwe:`` roles

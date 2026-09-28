@@ -15,7 +15,7 @@
 //! parsing finishes, since a `|name|` may be written before its definition.
 
 use rinx_ast::{
-    Diagnostic, DiagnosticCode, Directive, ImageUri, Span, SubstitutionDefinition,
+    AssetUri, Diagnostic, DiagnosticCode, Directive, Span, SubstitutionDefinition,
     SubstitutionKind, TrimSides,
 };
 
@@ -235,7 +235,7 @@ fn parse_image_kind(
         return None;
     }
 
-    let mut options = common.with_uri(ImageUri::new(argument));
+    let mut options = common.with_uri(AssetUri::new(argument));
     options.span = directive_span;
     report_option_conflicts(&options, &option_lines, IMAGE_DIRECTIVE, diagnostics, ctx);
     Some(SubstitutionKind::Image(Box::new(options)))
@@ -475,7 +475,7 @@ mod tests {
         let SubstitutionKind::Image(options) = definition.kind else {
             panic!("expected Image");
         };
-        assert_eq!(options.uri, ImageUri::new("biohazard.png"));
+        assert_eq!(options.uri, AssetUri::new("biohazard.png"));
         assert!(diagnostics.entries().is_empty());
     }
 

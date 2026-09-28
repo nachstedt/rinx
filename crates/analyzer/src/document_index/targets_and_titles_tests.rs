@@ -408,14 +408,14 @@ fn test_analyze_code_block_without_name_registers_no_target() {
 /// An `.. image::` carrying `name`, with every other option left at its
 /// default.
 fn image_named(name: Option<&str>) -> Node {
-    let mut options = rinx_ast::ImageOptions::new(rinx_ast::ImageUri::new("logo.png"));
+    let mut options = rinx_ast::ImageOptions::new(rinx_ast::AssetUri::new("logo.png"));
     options.name = name.map(TargetName::new);
     Node::Directive(Directive::Image(Box::new(options)))
 }
 
 /// A `.. figure::` carrying `name` on its image and `legend` as its body.
 fn figure_named(name: Option<&str>, legend: Vec<Node>) -> Node {
-    let mut options = rinx_ast::ImageOptions::new(rinx_ast::ImageUri::new("logo.png"));
+    let mut options = rinx_ast::ImageOptions::new(rinx_ast::AssetUri::new("logo.png"));
     options.name = name.map(TargetName::new);
     let mut figure = rinx_ast::Figure::new(options);
     figure.legend = legend;
@@ -963,7 +963,7 @@ fn test_analyze_records_the_title_of_a_heading_labelled_inside_a_directive_body(
 }
 
 fn figure(caption: Option<&str>, name: Option<&str>) -> Node {
-    let mut image = rinx_ast::ImageOptions::new(rinx_ast::ImageUri::new("logo.png"));
+    let mut image = rinx_ast::ImageOptions::new(rinx_ast::AssetUri::new("logo.png"));
     image.name = name.map(TargetName::new);
     let mut figure = rinx_ast::Figure::new(image);
     figure.caption = caption.map(|text| vec![InlineNode::Text(text.to_string())]);
