@@ -30,6 +30,7 @@ use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 
+use super::classes::split_classes;
 use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 
 const GRID: &str = "grid";
@@ -304,11 +305,6 @@ fn report_unexpected_children(
 /// Whether a node is a `.. grid-item::`.
 fn is_grid_item(node: &Node) -> bool {
     matches!(node, Node::Directive(Directive::GridItem(_)))
-}
-
-/// Splits a class-list option value, as docutils' `class_option` does.
-fn split_classes(value: &str) -> Vec<String> {
-    value.split_whitespace().map(str::to_string).collect()
 }
 
 /// The written names of a closed option vocabulary, for a diagnostic.
@@ -829,18 +825,6 @@ mod tests {
             codes(&diagnostics),
             vec![DiagnosticCode::GridItemOutsideGrid]
         );
-    }
-
-    #[test]
-    fn test_split_classes_splits_on_any_whitespace() {
-        // Given
-        let value = "  one\ttwo   three ";
-
-        // When
-        let classes = split_classes(value);
-
-        // Then
-        assert_eq!(classes, vec!["one", "two", "three"]);
     }
 
     #[test]

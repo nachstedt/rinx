@@ -21,9 +21,9 @@ pub(crate) fn handle_func_match(m_str: &str, default_domain: Domain) -> InlineNo
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::inline::dispatch::handle_inline_match;
     use rinx_ast::TargetSearchOrder;
-    use rinx_entity::EntitySchema;
 
     /// Escapes `raw` the way `parse_inline_text` does before any of the
     /// helpers below see it, so a unit test exercises the form those helpers
@@ -57,7 +57,7 @@ mod tests {
             ":func:`foo`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -79,7 +79,7 @@ mod tests {
             ":py:func:`foo`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -101,7 +101,7 @@ mod tests {
             ":c:func:`add`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -123,7 +123,7 @@ mod tests {
             ":func:`!foo`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -145,7 +145,7 @@ mod tests {
             ":func:`~pkg.mod.foo`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -169,7 +169,7 @@ mod tests {
             &escaped(r":func:`spawn\* <spawnl>`"),
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then
@@ -233,7 +233,7 @@ mod tests {
             ":c:func:`Py_SIZE()`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
 
         // Then

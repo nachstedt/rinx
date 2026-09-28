@@ -53,6 +53,21 @@ pub struct HighlightError {
     pub kind: HighlightErrorKind,
     /// Where the block was written, when the AST node carried a position.
     pub span: Option<Span>,
+    /// What was being highlighted, which picks the diagnostic family.
+    /// [`Highlighter::highlight`] answers [`HighlightedConstruct::CodeBlock`];
+    /// a caller highlighting anything else says so, as it fills in the span.
+    pub construct: HighlightedConstruct,
+}
+
+/// The constructs whose text is highlighted, each reporting under its own
+/// codes — a code names the construct, so a `.. noqa:` written for a code
+/// block cannot silence a `:code:` role, nor the other way round.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HighlightedConstruct {
+    /// A `.. code-block::`, `.. literalinclude::` or doctest block.
+    CodeBlock,
+    /// A role derived from `:code:` by `.. role::`.
+    CodeRole,
 }
 
 /// The two ways highlighting can fail.
@@ -71,9 +86,19 @@ impl HighlightError {
     /// suppress it.
     #[must_use]
     pub const fn code(&self) -> DiagnosticCode {
-        match self.kind {
-            HighlightErrorKind::UnknownLanguage => DiagnosticCode::CodeBlockUnknownLanguage,
-            HighlightErrorKind::GrammarFailed => DiagnosticCode::CodeBlockHighlightFailed,
+        match (self.construct, self.kind) {
+            (HighlightedConstruct::CodeBlock, HighlightErrorKind::UnknownLanguage) => {
+                DiagnosticCode::CodeBlockUnknownLanguage
+            }
+            (HighlightedConstruct::CodeBlock, HighlightErrorKind::GrammarFailed) => {
+                DiagnosticCode::CodeBlockHighlightFailed
+            }
+            (HighlightedConstruct::CodeRole, HighlightErrorKind::UnknownLanguage) => {
+                DiagnosticCode::CodeRoleUnknownLanguage
+            }
+            (HighlightedConstruct::CodeRole, HighlightErrorKind::GrammarFailed) => {
+                DiagnosticCode::CodeRoleHighlightFailed
+            }
         }
     }
 }
@@ -144,6 +169,7 @@ impl Highlighter {
                 message: format!("no syntax highlighting is available for language '{name}'"),
                 kind: HighlightErrorKind::UnknownLanguage,
                 span: None,
+                construct: HighlightedConstruct::CodeBlock,
             });
         };
 
@@ -157,6 +183,7 @@ impl Highlighter {
                     message,
                     kind: HighlightErrorKind::GrammarFailed,
                     span: None,
+                    construct: HighlightedConstruct::CodeBlock,
                 })
             }
         }
@@ -403,6 +430,27 @@ mod tests {
         assert_eq!(error.kind, HighlightErrorKind::UnknownLanguage);
         assert_eq!(error.code(), DiagnosticCode::CodeBlockUnknownLanguage);
         assert!(error.message.contains("nonesuch-language"), "{error:?}");
+    }
+
+    #[test]
+    fn test_highlight_error_code_names_the_construct() {
+        // Given one error of each kind, re-attributed to a `:code:` role
+        let error = |kind| HighlightError {
+            message: String::new(),
+            kind,
+            span: None,
+            construct: HighlightedConstruct::CodeRole,
+        };
+
+        // When / Then
+        assert_eq!(
+            error(HighlightErrorKind::UnknownLanguage).code(),
+            DiagnosticCode::CodeRoleUnknownLanguage
+        );
+        assert_eq!(
+            error(HighlightErrorKind::GrammarFailed).code(),
+            DiagnosticCode::CodeRoleHighlightFailed
+        );
     }
 
     #[test]

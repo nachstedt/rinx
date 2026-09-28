@@ -253,6 +253,31 @@ diagnostic_codes! {
     /// left unhighlighted. Also render-time, and for the same reason.
     CodeBlockHighlightFailed => "code-block.highlight-failed",
 
+    // --- `.. role::` --------------------------------------------------------
+    /// An argument that is not `name(base)`, or a name no role could be
+    /// written with, so the role was not defined.
+    RoleInvalidArgument => "role.invalid-argument",
+    /// A base role other than `code`, or none at all — the only kind of role
+    /// this build can derive — so the role was not defined.
+    RoleUnsupportedBase => "role.unsupported-base",
+    /// A name this build already gives a role, which a custom role could
+    /// never take over — the built-in one is matched first — so it was not
+    /// defined.
+    RoleBuiltinName => "role.builtin-name",
+    /// A `:language:` option with no value; the role is defined unhighlighted.
+    RoleEmptyLanguage => "role.empty-language",
+    /// A `:class:` value that normalizes to no class name at all, so it was
+    /// dropped.
+    RoleInvalidClass => "role.invalid-class",
+
+    // --- `:code:` and the roles derived from it -----------------------------
+    /// A language with no grammar behind it, so the code was left
+    /// unhighlighted. Reported while rendering, as for a code block.
+    CodeRoleUnknownLanguage => "code-role.unknown-language",
+    /// A grammar that failed part-way through highlighting, so the code was
+    /// left unhighlighted.
+    CodeRoleHighlightFailed => "code-role.highlight-failed",
+
     // --- `.. image::` / `.. figure::` --------------------------------------
     /// The directive has no argument, so there is nothing to show.
     ImageMissingUri => "image.missing-uri",

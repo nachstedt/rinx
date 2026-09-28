@@ -8,7 +8,9 @@
 //! [`typography`] are the text-level primitives the rest is phrased in.
 //! [`source_map`] is what lets a matched role report where it was written:
 //! block-level parsing reflows text before the scan sees it, so the mapping
-//! back to the `.rst` has to be recorded while that reflow happens.
+//! back to the `.rst` has to be recorded while that reflow happens. The two
+//! role-name predicates are re-exported for `.. role::`, which must refuse a
+//! name this scan could never match, or would match as something else.
 
 mod dispatch;
 mod escapes;
@@ -21,7 +23,10 @@ mod text;
 mod typography;
 
 #[cfg(test)]
+mod code_pipeline_tests;
+#[cfg(test)]
 mod pipeline_tests;
 
+pub(crate) use regexes::{is_fixed_role_name, is_writable_role_name};
 pub(super) use source_map::SourceMap;
 pub(super) use text::parse_inline_text_mapped;

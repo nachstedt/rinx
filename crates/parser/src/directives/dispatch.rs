@@ -35,6 +35,7 @@ use super::index_directive::parse_index_directive;
 use super::math::parse_math_directive;
 use super::needimport::parse_needimport;
 use super::needservice::parse_needservice;
+use super::role::parse_role;
 use super::scope::try_parse_scope_directive;
 use super::sectnum::{is_sectnum, parse_sectnum};
 use super::substitution::{parse_substitution_definition, split_substitution_marker};
@@ -219,6 +220,16 @@ fn try_parse_splicing_directive(
             directive_span,
             body_lines,
             adornment_order,
+            diagnostics,
+            ctx,
+        )),
+        // Contributes no node at all: it records a role for the rest of the
+        // document, which only the parse itself reads. It sits here because
+        // this is the one dispatcher allowed to answer with *no* node.
+        "role" => Some(parse_role(
+            argument,
+            directive_span,
+            body_lines,
             diagnostics,
             ctx,
         )),
@@ -1290,6 +1301,7 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     "sectnum",
     "section-numbering",
     "include",
+    "role",
     "glossary",
     "index",
     // Other content

@@ -24,9 +24,9 @@ pub(crate) fn handle_struct_match(m_str: &str, default_domain: Domain) -> Inline
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::inline::dispatch::handle_inline_match;
     use rinx_ast::TargetSearchOrder;
-    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_struct_match_resolves_via_explicit_c_domain() {
@@ -72,7 +72,7 @@ mod tests {
             ":c:struct:`Data`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,

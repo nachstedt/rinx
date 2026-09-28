@@ -32,9 +32,9 @@ pub(crate) fn handle_data_match(m_str: &str, default_domain: Domain) -> InlineNo
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::inline::dispatch::handle_inline_match;
     use rinx_ast::TargetSearchOrder;
-    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_data_match_resolves_data_role() {
@@ -126,7 +126,7 @@ mod tests {
             ":data:`DEFAULT_TIMEOUT`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -148,7 +148,7 @@ mod tests {
             ":py:const:`DEFAULT_TIMEOUT`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -170,7 +170,7 @@ mod tests {
             ":data:`!SECRET_KEY`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -192,7 +192,7 @@ mod tests {
             ":data:`~pkg.CONST`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -216,7 +216,7 @@ mod tests {
             ":const:`DEFAULT_TIMEOUT`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -233,7 +233,7 @@ mod tests {
             ":c:data:`Py_mod_exec`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -255,7 +255,7 @@ mod tests {
             ":c:var:`errno`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -277,7 +277,7 @@ mod tests {
             ":data:`Py_tp_bases`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -301,7 +301,7 @@ mod tests {
             ":var:`errno`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(result, InlineNode::Text(":var:`errno`".to_string()));
     }

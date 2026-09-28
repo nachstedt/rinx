@@ -7,6 +7,8 @@
 
 use rinx_ast::{Domain, InlineNode, InventoryName, InventorySelector};
 
+use crate::context::ParseCtx;
+
 use crate::explicit_title::{split_display_and_target, split_optional_title};
 
 use super::regexes::{
@@ -18,6 +20,7 @@ use super::roles::c::macro_::handle_macro_match;
 use super::roles::c::struct_::handle_struct_match;
 use super::roles::c::type_::handle_type_match;
 use super::roles::c::union::handle_union_match;
+use super::roles::code::{handle_code_match, handle_custom_role_match};
 use super::roles::doc::handle_doc_match;
 use super::roles::download::handle_download_match;
 use super::roles::math::{handle_eq_match, handle_math_match};
@@ -36,9 +39,9 @@ pub(super) fn handle_inline_match(
     m_str: &str,
     node_opt: Option<InlineNode>,
     default_domain: Domain,
-    schema: &rinx_entity::EntitySchema,
+    ctx: &ParseCtx<'_>,
 ) -> InlineNode {
-    let node = build_inline_node(kind, m_str, node_opt, default_domain, schema);
+    let node = build_inline_node(kind, m_str, node_opt, default_domain, ctx);
     apply_inventory_selector(node, inventory_selector(m_str))
 }
 
@@ -150,10 +153,16 @@ fn build_inline_node(
     m_str: &str,
     node_opt: Option<InlineNode>,
     default_domain: Domain,
-    schema: &rinx_entity::EntitySchema,
+    ctx: &ParseCtx<'_>,
 ) -> InlineNode {
     match kind {
-        "entity_role" => super::roles::entity::handle_entity_role_match(m_str, schema),
+        // The schema is asked first, so a custom role can never take over an
+        // entity role — `.. role::` refuses such a name, but a document's
+        // role names are case-insensitive where the schema's are not. Anything
+        // neither knows stays the text it was written as.
+        "named_role" => super::roles::entity::handle_entity_role_match(m_str, ctx.schema)
+            .or_else(|| handle_custom_role_match(m_str, ctx.custom_roles()))
+            .unwrap_or_else(|| InlineNode::Text(m_str.to_string())),
         "inline" => node_opt.expect("inline node should be present"),
         "ref" => {
             let caps = REF_REGEX.captures(m_str).unwrap();
@@ -196,6 +205,7 @@ fn build_inline_node(
         }
         "option" => handle_option_match(m_str),
         "math" => handle_math_match(m_str),
+        "code" => handle_code_match(m_str),
         "eq" => handle_eq_match(m_str),
         "phrased" => {
             let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
@@ -253,7 +263,6 @@ fn build_inline_node(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_inventory_selector_is_any_without_a_prefix() {
@@ -324,7 +333,7 @@ mod tests {
             "",
             Some(node.clone()),
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         // Then
         assert_eq!(result, node);
@@ -336,7 +345,7 @@ mod tests {
             ":ref:`target`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -355,7 +364,7 @@ mod tests {
             ":ref:`GenericAlias <types-genericalias>`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -374,7 +383,7 @@ mod tests {
             ":program:`curl`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(result, InlineNode::Program("curl".to_string()));
     }
@@ -385,7 +394,7 @@ mod tests {
             "`text <http://uri>`_",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -403,7 +412,7 @@ mod tests {
             "`just text`_",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -416,8 +425,13 @@ mod tests {
     }
     #[test]
     fn test_handle_inline_match_simple_variant() {
-        let result =
-            handle_inline_match("simple", "name_", None, Domain::Py, &EntitySchema::empty());
+        let result = handle_inline_match(
+            "simple",
+            "name_",
+            None,
+            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
+        );
         assert_eq!(
             result,
             InlineNode::Hyperlink {
@@ -434,7 +448,7 @@ mod tests {
             "`text <http://uri>`__",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -451,7 +465,7 @@ mod tests {
             "`anon text`__",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -468,7 +482,7 @@ mod tests {
             "anon_name__",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,

@@ -16,36 +16,33 @@ use rinx_entity::EntitySchema;
 
 use crate::explicit_title::split_display_and_target;
 
-use super::super::regexes::ENTITY_ROLE_REGEX;
+use super::super::regexes::NAMED_ROLE_REGEX;
 
-/// Builds an entity reference, or plain text when the role is not declared.
+/// Builds an entity reference, or `None` when the role is not declared.
 ///
-/// Falling back to text rather than to a diagnostic is deliberate: this regex
-/// matches any ``:word:`text` `` at all, including the many role spellings this
-/// build does not implement and the occasional false positive in ordinary
-/// prose. Reporting those would be reporting on text the author never meant as
-/// markup — the diagnostics belong to roles that *are* declared and fail to
-/// resolve, which is a render-time question.
+/// A miss is not a diagnostic: this regex matches any ``:word:`text` `` at
+/// all, including a role the document defined with `.. role::`, the many role
+/// spellings this build does not implement, and the occasional false positive
+/// in ordinary prose. The caller decides what a miss becomes; the diagnostics
+/// belong to roles that *are* declared and fail to resolve, which is a
+/// render-time question.
 pub(in crate::inline) fn handle_entity_role_match(
     m_str: &str,
     schema: &EntitySchema,
-) -> InlineNode {
-    let caps = ENTITY_ROLE_REGEX
+) -> Option<InlineNode> {
+    let caps = NAMED_ROLE_REGEX
         .captures(m_str)
         .expect("the caller matched this text with this regex");
     let role = caps["role"].to_string();
-
-    if schema.role(&role).is_none() {
-        return InlineNode::Text(m_str.to_string());
-    }
+    schema.role(&role)?;
 
     let (display, target) = split_display_and_target(&caps["target"]);
-    InlineNode::EntityReference {
+    Some(InlineNode::EntityReference {
         role,
         target,
         display,
         span: None,
-    }
+    })
 }
 
 #[cfg(test)]
@@ -74,7 +71,7 @@ mod tests {
         let schema = schema();
 
         // When
-        let node = handle_entity_role_match(":req:`REQ_001`", &schema);
+        let node = handle_entity_role_match(":req:`REQ_001`", &schema).unwrap();
 
         // Then
         assert_eq!(
@@ -94,7 +91,7 @@ mod tests {
         let schema = schema();
 
         // When
-        let node = handle_entity_role_match(":entity:`REQ_001`", &schema);
+        let node = handle_entity_role_match(":entity:`REQ_001`", &schema).unwrap();
 
         // Then
         assert!(matches!(node, InlineNode::EntityReference { .. }));
@@ -106,7 +103,7 @@ mod tests {
         let schema = schema();
 
         // When
-        let node = handle_entity_role_match(":req:`the boot rule <REQ_001>`", &schema);
+        let node = handle_entity_role_match(":req:`the boot rule <REQ_001>`", &schema).unwrap();
 
         // Then
         let InlineNode::EntityReference {
@@ -120,7 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn test_an_undeclared_role_degrades_to_plain_text() {
+    fn test_an_undeclared_role_is_not_an_entity_reference() {
         // Given — this regex matches any `:word:`text``, most of which is not markup
         let schema = schema();
 
@@ -128,7 +125,7 @@ mod tests {
         let node = handle_entity_role_match(":nonsense:`whatever`", &schema);
 
         // Then
-        assert_eq!(node, InlineNode::Text(":nonsense:`whatever`".to_string()));
+        assert_eq!(node, None);
     }
 
     #[test]
@@ -141,7 +138,7 @@ mod tests {
         let builtin = handle_entity_role_match(":entity:`REQ_001`", &empty);
 
         // Then — the built-in still works; a project-specific spelling does not
-        assert_eq!(declared, InlineNode::Text(":req:`REQ_001`".to_string()));
-        assert!(matches!(builtin, InlineNode::EntityReference { .. }));
+        assert_eq!(declared, None);
+        assert!(matches!(builtin, Some(InlineNode::EntityReference { .. })));
     }
 }

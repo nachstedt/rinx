@@ -24,9 +24,9 @@ pub(crate) fn handle_mod_match(m_str: &str, default_domain: Domain) -> InlineNod
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::inline::dispatch::handle_inline_match;
     use rinx_ast::TargetSearchOrder;
-    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_mod_match_resolves_when_domain_defines_mod_role() {
@@ -56,7 +56,7 @@ mod tests {
             ":mod:`greetings`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -78,7 +78,7 @@ mod tests {
             ":py:mod:`greetings`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -100,7 +100,7 @@ mod tests {
             ":mod:`!curses`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -122,7 +122,7 @@ mod tests {
             ":mod:`~pkg.submodule`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -146,7 +146,7 @@ mod tests {
             ":mod:`greetings`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(result, InlineNode::Text(":mod:`greetings`".to_string()));
     }

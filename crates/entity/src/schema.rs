@@ -128,6 +128,22 @@ impl EntitySchema {
         None
     }
 
+    /// Whether a role of this name exists in any letter case — the built-in
+    /// `:entity:` included.
+    ///
+    /// Not a looser [`Self::role`]: a role reference is still matched by its
+    /// exact spelling. This answers the question a document's own
+    /// `.. role::` asks, whose names are case-insensitive, and which must not
+    /// define a role overlapping an entity role in any spelling.
+    #[must_use]
+    pub fn has_role_ignoring_case(&self, name: &str) -> bool {
+        name.eq_ignore_ascii_case(BUILTIN_ROLE)
+            || self
+                .roles
+                .iter()
+                .any(|role| role.name.eq_ignore_ascii_case(name))
+    }
+
     /// The back-links an entity of `type_name` can receive.
     #[must_use]
     pub fn backlinks_for(&self, type_name: &str) -> &[BacklinkSpec] {
@@ -265,6 +281,39 @@ mod tests {
         // Then
         assert!(role.accepts("req"));
         assert!(!role.accepts("spec"));
+    }
+
+    #[test]
+    fn test_has_role_ignoring_case_finds_a_declared_role_in_any_case() {
+        // Given a role declared with a capital
+        let declared = RoleSpec {
+            name: "Req".to_string(),
+            types: None,
+        };
+        let schema = EntitySchema::new(vec![bare_type("req")], vec![declared]).unwrap();
+
+        // When / Then — `role` would miss every spelling but `Req`
+        assert!(schema.role("req").is_none());
+        assert!(schema.has_role_ignoring_case("req"));
+        assert!(schema.has_role_ignoring_case("REQ"));
+    }
+
+    #[test]
+    fn test_has_role_ignoring_case_finds_the_builtin_role() {
+        // Given
+        let schema = EntitySchema::empty();
+
+        // When / Then
+        assert!(schema.has_role_ignoring_case("Entity"));
+    }
+
+    #[test]
+    fn test_has_role_ignoring_case_misses_an_undeclared_role() {
+        // Given
+        let schema = EntitySchema::new(vec![bare_type("req")], Vec::new()).unwrap();
+
+        // When / Then
+        assert!(!schema.has_role_ignoring_case("need"));
     }
 
     #[test]

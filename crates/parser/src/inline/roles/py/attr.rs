@@ -24,9 +24,9 @@ pub(crate) fn handle_attr_match(m_str: &str, default_domain: Domain) -> InlineNo
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::inline::dispatch::handle_inline_match;
     use rinx_ast::TargetSearchOrder;
-    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_attr_match_resolves_when_domain_defines_attr_role() {
@@ -72,7 +72,7 @@ mod tests {
             ":attr:`Greeter.name`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -94,7 +94,7 @@ mod tests {
             ":attr:`!Greeter.secret`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -116,7 +116,7 @@ mod tests {
             ":attr:`~Greeter.name`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,

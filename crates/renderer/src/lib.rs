@@ -36,7 +36,7 @@ pub use blocks::EntityTemplates;
 pub use broken_link::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
 pub use embedded_assets::EmbeddedAssets;
 pub use empty_listing_error::EmptyListingError;
-pub use highlight::{HighlightError, HighlightErrorKind};
+pub use highlight::{HighlightError, HighlightErrorKind, HighlightedConstruct};
 pub use image_error::ImageError;
 pub use math::MathError;
 pub use nav::{PageLink, ResolvedNavEntry};

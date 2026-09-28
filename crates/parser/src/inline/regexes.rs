@@ -50,6 +50,11 @@ pub(super) static OPTION_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 });
 pub(super) static MATH_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":math:`(?P<latex>[^`]+)`").unwrap());
+/// `:code:`. No [`EXTERNAL_PREFIX`] and no domain: it is markup, not a
+/// reference. A role *derived* from it by `.. role::` has a name only the
+/// document knows, so it is matched by [`NAMED_ROLE_REGEX`]'s shape instead.
+pub(super) static CODE_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":code:`(?P<code>[^`]+)`").unwrap());
 pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
 pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -146,6 +151,7 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&TERM_ROLE_REGEX, "term"),
     (&MATH_ROLE_REGEX, "math"),
     (&EQ_ROLE_REGEX, "eq"),
+    (&CODE_ROLE_REGEX, "code"),
     (&OPTION_ROLE_REGEX, "option"),
     (&FUNC_ROLE_REGEX, "func"),
     (&MOD_ROLE_REGEX, "mod"),
@@ -165,16 +171,80 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     // Last on purpose. This one matches *any* role spelling, so it would
     // otherwise shadow every specific role above it: the matcher keeps the
     // first entry among equally-placed matches, which makes table order the
-    // precedence rule. Whether the name it captured is really an entity role is
-    // decided against the schema in `handle_inline_match`, not here — a regex
-    // cannot know a project's vocabulary.
-    (&ENTITY_ROLE_REGEX, "entity_role"),
+    // precedence rule. Whether the name it captured is really a role — one the
+    // document defined with `.. role::`, or an entity role — is decided in
+    // `handle_inline_match`, not here: a regex cannot know a project's
+    // vocabulary, nor a document's.
+    (&NAMED_ROLE_REGEX, "named_role"),
 ];
 
-/// Any ``:name:`target` `` role, for the entity roles a schema declares.
+/// The shape of a role name this scan can match: what [`NAMED_ROLE_REGEX`]
+/// captures, and so what a `.. role::` must name for its role to be usable.
+const ROLE_NAME: &str = "[a-zA-Z][a-zA-Z0-9_-]*";
+
+/// Any ``:name:`target` `` role, for the roles whose names are not fixed: the
+/// entity roles a schema declares, and the roles a document defines with
+/// `.. role::`.
 ///
 /// Deliberately one static pattern rather than a regex compiled per project:
 /// the role names are configurable, but their *syntax* is not, so matching the
 /// shape here and checking the name afterwards keeps this table static.
-pub(super) static ENTITY_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":(?P<role>[a-zA-Z][a-zA-Z0-9_-]*):`(?P<target>[^`]+)`").unwrap());
+pub(super) static NAMED_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(&format!(r":(?P<role>{ROLE_NAME}):`(?P<target>[^`]+)`")).unwrap());
+
+/// Whether `name` could be written as a role this scan recognizes.
+pub(crate) fn is_writable_role_name(name: &str) -> bool {
+    static WHOLE_NAME: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(&format!("^{ROLE_NAME}$")).unwrap());
+    WHOLE_NAME.is_match(name)
+}
+
+/// Whether one of the fixed-spelling roles this scan implements would match
+/// ``:name:`…` `` before a custom role of that name could — `code` included.
+///
+/// Asked with a sample role rather than of a list of names, so the answer
+/// cannot drift from the table: a role added to [`SIMPLE_ROLE_REGEXES`] is
+/// reserved the moment it is.
+pub(crate) fn is_fixed_role_name(name: &str) -> bool {
+    let sample = format!(":{name}:`x`");
+    SIMPLE_ROLE_REGEXES.iter().any(|(regex, kind)| {
+        *kind != "named_role" && regex.find(&sample).is_some_and(|m| m.start() == 0)
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_writable_role_name_accepts_the_matched_shape() {
+        // Given / When / Then
+        assert!(is_writable_role_name("python"));
+        assert!(is_writable_role_name("my-role_2"));
+    }
+
+    #[test]
+    fn test_is_writable_role_name_refuses_what_the_scan_cannot_match() {
+        // Given / When / Then
+        assert!(!is_writable_role_name(""));
+        assert!(!is_writable_role_name("2py"));
+        assert!(!is_writable_role_name("a.b"));
+        assert!(!is_writable_role_name("a b"));
+    }
+
+    #[test]
+    fn test_is_fixed_role_name_knows_the_built_in_roles() {
+        // Given / When / Then
+        for name in ["code", "ref", "math", "func", "doc", "download", "numref"] {
+            assert!(is_fixed_role_name(name), "{name}");
+        }
+    }
+
+    #[test]
+    fn test_is_fixed_role_name_leaves_other_names_free() {
+        // Given / When / Then
+        assert!(!is_fixed_role_name("python"));
+        assert!(!is_fixed_role_name("codex"));
+        assert!(!is_fixed_role_name("red"));
+    }
+}
