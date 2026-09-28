@@ -13,6 +13,7 @@ Welcome to the Rinx example.
    admonitions
    inline_roles
    any_role
+   doc_role
    version_changes
    seealso
    literal_blocks

@@ -46,6 +46,9 @@ pub enum BrokenLinkKind {
         /// The qualified names that matched, in index order.
         candidates: Vec<String>,
     },
+    /// A `:doc:` role (`InlineNode::DocReference`) naming no document, here
+    /// or in any inventory it may search.
+    DocReference,
     /// An `:any:` role whose target names nothing, here or in any inventory
     /// it may search.
     AnyReference,
@@ -76,6 +79,7 @@ impl BrokenLinkKind {
             Self::EntityTypeMismatch { .. } => DiagnosticCode::EntityRoleTypeMismatch,
             Self::DomainObjectReference(_) => DiagnosticCode::LinkBrokenObject,
             Self::AmbiguousDomainObjectReference { .. } => DiagnosticCode::LinkAmbiguousObject,
+            Self::DocReference => DiagnosticCode::LinkBrokenDoc,
             Self::AnyReference => DiagnosticCode::LinkBrokenAny,
             Self::AmbiguousAnyReference { .. } => DiagnosticCode::LinkAmbiguousAny,
             Self::UnknownInventory(_) => DiagnosticCode::LinkUnknownInventory,
@@ -96,6 +100,7 @@ impl BrokenLinkKind {
             Self::EntityTypeMismatch { .. } => "entity type mismatch",
             Self::DomainObjectReference(_) => "domain object",
             Self::AmbiguousDomainObjectReference { .. } => "ambiguous domain object",
+            Self::DocReference => "doc reference",
             Self::AnyReference => "any reference",
             Self::AmbiguousAnyReference { .. } => "ambiguous any reference",
             Self::UnknownInventory(_) => "reference into an undeclared inventory",
@@ -159,6 +164,7 @@ mod tests {
             (BrokenLinkKind::TermReference, "term"),
             (BrokenLinkKind::OptionReference, "option"),
             (BrokenLinkKind::AnyReference, "any reference"),
+            (BrokenLinkKind::DocReference, "doc reference"),
         ];
 
         // When / Then
@@ -216,5 +222,14 @@ mod tests {
         assert_eq!(broken.code(), DiagnosticCode::LinkBrokenAny);
         assert_eq!(ambiguous.code(), DiagnosticCode::LinkAmbiguousAny);
         assert_eq!(ambiguous.as_str(), "ambiguous any reference");
+    }
+
+    #[test]
+    fn test_a_doc_reference_has_a_code_of_its_own() {
+        // Given
+        let kind = BrokenLinkKind::DocReference;
+
+        // When / Then
+        assert_eq!(kind.code(), DiagnosticCode::LinkBrokenDoc);
     }
 }

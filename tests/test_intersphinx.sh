@@ -29,7 +29,11 @@ if ! grep -q 'class="reference external" href="[./]*site_site_out/examples/domai
     echo "ERROR: the sibling site's :any: does not resolve through the inventory."
     exit 1
 fi
-echo "SUCCESS: objects.inv written, and the sibling site links through it, :any: included."
+if ! grep -q 'class="reference external" href="[./]*site_site_out/examples/doc_role.html"[^>]*>The :doc: Role</a>' "$SIBLING_PAGE"; then
+    echo "ERROR: the sibling site's :external:doc: does not resolve through the inventory."
+    exit 1
+fi
+echo "SUCCESS: objects.inv written, and the sibling site links through it, :any: and :doc: included."
 
 cp examples/intersphinx/BUILD.bazel examples/intersphinx/BUILD.bazel.bak
 restore() {

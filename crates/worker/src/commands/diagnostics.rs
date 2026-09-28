@@ -335,6 +335,26 @@ mod tests {
     }
 
     #[test]
+    fn test_format_broken_link_warning_names_a_broken_doc_reference() {
+        // Given
+        let link = renderer::BrokenLink {
+            kind: renderer::BrokenLinkKind::DocReference,
+            target: "../missing".to_string(),
+            span: Some(a_span()),
+        };
+
+        // When
+        let message =
+            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
+
+        // Then
+        assert_eq!(
+            message,
+            "warning: guide/intro.rst:42:18: link.broken-doc: broken doc reference '../missing'"
+        );
+    }
+
+    #[test]
     fn test_format_broken_link_warning_lists_the_roles_an_ambiguous_any_could_be() {
         // Given
         let link = renderer::BrokenLink {
@@ -588,6 +608,7 @@ mod tests {
                 object_type: rinx_ast::ObjectType::Py(rinx_ast::PyObjectType::Function),
                 candidates: Vec::new(),
             },
+            renderer::BrokenLinkKind::DocReference,
             renderer::BrokenLinkKind::AnyReference,
             renderer::BrokenLinkKind::AmbiguousAnyReference {
                 candidates: Vec::new(),

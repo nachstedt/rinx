@@ -39,6 +39,12 @@ pub(crate) fn index_linking_into_python() -> ProjectIndex {
                     ),
                     entry("bytecode", "std:term", "glossary.html#term-bytecode", None),
                     entry(
+                        "tutorial/index",
+                        "std:doc",
+                        "tutorial/index.html",
+                        Some("The Python Tutorial"),
+                    ),
+                    entry(
                         "-O",
                         "std:cmdoption",
                         "using/cmdline.html#cmdoption-O",

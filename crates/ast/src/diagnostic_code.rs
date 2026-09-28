@@ -80,6 +80,9 @@ diagnostic_codes! {
     /// A dot-prefixed domain-object role whose suffix search matched several
     /// objects, so it was deliberately left unresolved.
     LinkAmbiguousObject => "link.ambiguous-object",
+    /// A `:doc:` naming no document of this site, nor one any inventory it
+    /// may search lists.
+    LinkBrokenDoc => "link.broken-doc",
     /// An `:any:` role whose target is no label, document, term, option,
     /// equation or domain object, here or in any inventory it may search.
     LinkBrokenAny => "link.broken-any",

@@ -20,6 +20,9 @@ of which name a document the way a plain entry does.
    Renamed in the sidebar <titles_only>
    https://www.sphinx-doc.org/
 
+This page sits in a subdirectory, so the :doc:`../doc_role` example page is
+``../doc_role`` from here.
+
 Numbering
 =========
 

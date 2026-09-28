@@ -4,7 +4,7 @@ use crate::{
 };
 use rinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// A global symbol table built from all documents in the project.
 #[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
@@ -29,6 +29,15 @@ pub struct ProjectIndex {
     pub target_anchors: BTreeMap<TargetName, String>,
     /// Maps document paths to their top-level title.
     pub document_titles: BTreeMap<String, String>,
+    /// Every document's path, titled or not.
+    ///
+    /// `document_titles` lists only documents that open with a heading, and a
+    /// `:doc:` must reach the others too — Sphinx shows those as
+    /// `<no title>`. Read through [`Self::find_document`], which also accepts
+    /// a titled document an older index recorded only in `document_titles`.
+    /// Per-document data, so it merges.
+    #[serde(default)]
+    pub documents: BTreeSet<String>,
     /// Each document's `.. toctree::` directives, in document order, with
     /// their entries still unexpanded — a `:glob:` is stored as a pattern.
     ///
@@ -188,6 +197,27 @@ impl ProjectIndex {
             .map_or(name.as_str(), String::as_str)
     }
 
+    /// The document at `doc_path` (a `.rst` source path), borrowed from the
+    /// index, or `None` when this site has no such document.
+    #[must_use]
+    pub fn find_document(&self, doc_path: &str) -> Option<&str> {
+        self.documents
+            .get(doc_path)
+            .or_else(|| {
+                self.document_titles
+                    .get_key_value(doc_path)
+                    .map(|(path, _)| path)
+            })
+            .map(String::as_str)
+    }
+
+    /// The title of the document at `doc_path`, or `None` for a document with
+    /// no heading — or no such document.
+    #[must_use]
+    pub fn document_title(&self, doc_path: &str) -> Option<&str> {
+        self.document_titles.get(doc_path).map(String::as_str)
+    }
+
     /// A domain object's name as its definition spelled it, falling back to
     /// the normalized key for an index written before spellings were kept.
     #[must_use]
@@ -244,6 +274,7 @@ impl ProjectIndex {
         self.target_titles.extend(other.target_titles);
         self.target_anchors.extend(other.target_anchors);
         self.document_titles.extend(other.document_titles);
+        self.documents.extend(other.documents);
         self.document_outlines.extend(other.document_outlines);
         self.toctrees.extend(other.toctrees);
         for (name, object_types) in other.domain_objects {
@@ -469,6 +500,49 @@ mod tests {
             stale.target_titles.get(&TargetName::new("intro")),
             Some(&"New title".to_string())
         );
+    }
+
+    #[test]
+    fn test_merge_carries_the_documents_of_the_other_index() {
+        // Given — a stale index and a fresh analysis of a titleless page
+        let mut stale = ProjectIndex::default();
+        stale.documents.insert("index.rst".to_string());
+        let mut fresh = ProjectIndex::default();
+        fresh.documents.insert("notes.rst".to_string());
+
+        // When
+        stale.merge(fresh);
+
+        // Then
+        assert_eq!(stale.find_document("index.rst"), Some("index.rst"));
+        assert_eq!(stale.find_document("notes.rst"), Some("notes.rst"));
+    }
+
+    #[test]
+    fn test_find_document_knows_a_titled_document_from_an_older_index() {
+        // Given — an index written before `documents` existed
+        let mut index = ProjectIndex::default();
+        index
+            .document_titles
+            .insert("guide.rst".to_string(), "Guide".to_string());
+
+        // When / Then
+        assert_eq!(index.find_document("guide.rst"), Some("guide.rst"));
+        assert_eq!(index.find_document("missing.rst"), None);
+    }
+
+    #[test]
+    fn test_document_title_is_none_for_a_titleless_document() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.documents.insert("notes.rst".to_string());
+        index
+            .document_titles
+            .insert("guide.rst".to_string(), "Guide".to_string());
+
+        // When / Then
+        assert_eq!(index.document_title("guide.rst"), Some("Guide"));
+        assert_eq!(index.document_title("notes.rst"), None);
     }
 
     #[test]

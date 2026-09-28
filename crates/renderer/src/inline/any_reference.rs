@@ -12,6 +12,7 @@ use rinx_ast::{InventorySelector, Span};
 use rinx_index::{ProjectIndex, relative_doc_href};
 use rinx_scope::Scope;
 
+use super::doc_reference::write_doc_link;
 use super::domain_object_reference::domain_object_href;
 use super::external_link::write_external_link;
 use super::math::write_equation_link;
@@ -175,17 +176,12 @@ fn write_hit(
         AnyHit::Label { name, .. } => {
             html_escape::encode_text(label_link_text(index, title, name, target)).into_owned()
         }
+        // Drawn whole by `:doc:`'s own writer, `<no title>` included.
         AnyHit::Document {
             doc_path: target_doc,
         } => {
-            let document_title = index
-                .document_titles
-                .get(*target_doc)
-                .map_or(target, String::as_str);
-            format!(
-                "<span class=\"doc\">{}</span>",
-                html_escape::encode_text(title.unwrap_or(document_title))
-            )
+            write_doc_link(html, index, title, target_doc, doc_path);
+            return;
         }
         AnyHit::Term { .. } => format!(
             "<span class=\"xref any std std-term\">{}</span>",
@@ -331,6 +327,24 @@ mod tests {
             "<a class=\"reference internal\" href=\"guide.html\">\
              <span class=\"doc\">The guide</span></a>"
         );
+    }
+
+    #[test]
+    fn test_a_titleless_document_hit_shows_no_title_as_doc_does() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.documents.insert("notes.rst".to_string());
+
+        // When
+        let (html, broken) = render(&index, &Scope::default(), bare("notes"));
+
+        // Then
+        assert_eq!(
+            html,
+            "<a class=\"reference internal\" href=\"notes.html\">\
+             <span class=\"doc\">&lt;no title&gt;</span></a>"
+        );
+        assert!(broken.is_empty());
     }
 
     #[test]

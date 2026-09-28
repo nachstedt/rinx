@@ -36,7 +36,8 @@ use rinx_index::{EquationLocation, ProjectIndex, TargetLocation};
 use rinx_scope::Scope;
 
 use super::{
-    DomainObjectResolver, ExternalHit, OptionResolution, OptionResolver, resolve_external_any,
+    DomainObjectResolver, ExternalHit, OptionResolution, OptionResolver, resolve_document,
+    resolve_external_any,
 };
 
 /// One thing of this site an `:any:` target names, with what its link needs.
@@ -166,8 +167,7 @@ impl<'a> AnyResolver<'_, 'a> {
                 doc_path: term_doc,
             });
         }
-        let docname = rinx_toctree::resolve_docname(doc_path, target);
-        if let Some((document, _)) = self.index.document_titles.get_key_value(&docname) {
+        if let Some(document) = resolve_document(self.index, doc_path, target) {
             hits.push(AnyHit::Document { doc_path: document });
         }
         hits.extend(self.domain_object_hits(scope, Domain::C, target));
