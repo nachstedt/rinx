@@ -72,6 +72,13 @@ pub(super) fn process_preview(
 
     let local_index = analyzer::analyze(&doc);
     let _ = index.merge(local_index);
+    // Figure numbers are project-wide, so the stale index's would miss a
+    // figure this edit added and shift every one after it. Renumbering is one
+    // cheap walk over data the merge just brought up to date — unlike section
+    // numbers, which stay stale until the next build.
+    let universe = index.documents.clone();
+    index.element_numbers =
+        analyzer::assign_element_numbers(&index, &universe, config.numfig_secnum_depth);
 
     // Read straight from the filesystem rather than from a sidecar: a preview
     // has the real working tree in front of it, and no build step to run.
@@ -88,7 +95,15 @@ pub(super) fn process_preview(
     // Filtered here rather than by the caller so that a suppressed link is
     // invisible to *every* consumer of this function, not just the one that
     // remembers to ask.
-    let broken_links = retain_reportable_links(&render_output.broken_links, &doc.suppressions);
+    // With no global index nothing has a number, so every `:numref:` would be
+    // reported as unnumbered through no fault of the author — dropped here for
+    // the reason an empty listing is below.
+    let broken_links = retain_reportable_links(&render_output.broken_links, &doc.suppressions)
+        .into_iter()
+        .filter(|link| {
+            index_json.is_some() || link.kind != renderer::BrokenLinkKind::UnnumberedReference
+        })
+        .collect();
     let object_type_mismatches =
         retain_reportable_mismatches(&render_output.object_type_mismatches, &doc.suppressions);
     let math_errors = retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions);
@@ -351,5 +366,65 @@ mod tests {
         assert!(page.html.contains("class=\"broken-link\""));
         assert_eq!(page.broken_links.len(), 1);
         assert_eq!(page.broken_links[0].target, "missing");
+    }
+
+    fn preview(rst: &str, index_json: Option<&str>, config: &config::SiteConfig) -> PreviewedPage {
+        process_preview(
+            rst,
+            index_json,
+            config,
+            "<html>{{ body }}</html>",
+            "test.rst",
+            &ParseInputs {
+                default_domain: ast::Domain::Py,
+                files: &no_parse_files(),
+                schema: &EntitySchema::empty(),
+                jinja: None,
+                import_keys: &BTreeMap::new(),
+            },
+            &renderer::EntityTemplates::new(),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn test_process_preview_renumbers_a_figure_the_stale_index_never_saw() {
+        // Given a stale index naming this page its root, and an edit adding a
+        // figure to it
+        let rst = "Title\n=====\n\n.. figure:: a.png\n   :name: new-fig\n\n   New\n\n\
+                   See :numref:`new-fig`.";
+        let global_index = r#"{"targets":{},"document_titles":{},"root_documents":["test.rst"]}"#;
+        let config = config::SiteConfig {
+            numfig: true,
+            ..config::SiteConfig::default()
+        };
+
+        // When
+        let page = preview(rst, Some(global_index), &config);
+
+        // Then
+        assert!(
+            page.html.contains("caption-number\">Fig. 1 <"),
+            "{}",
+            page.html
+        );
+        assert!(page.html.contains(">Fig. 1</span></a>"), "{}", page.html);
+        assert!(page.broken_links.is_empty(), "{:?}", page.broken_links);
+    }
+
+    #[test]
+    fn test_process_preview_stays_quiet_about_unnumbered_references_without_an_index() {
+        // Given no global index, so nothing can have a number
+        let rst = ".. figure:: a.png\n   :name: fig\n\n   Caption\n\nSee :numref:`fig`.";
+        let config = config::SiteConfig {
+            numfig: true,
+            ..config::SiteConfig::default()
+        };
+
+        // When
+        let page = preview(rst, None, &config);
+
+        // Then
+        assert!(page.broken_links.is_empty(), "{:?}", page.broken_links);
     }
 }

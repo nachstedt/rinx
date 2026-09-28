@@ -14,11 +14,13 @@ use rinx_ast::{CodeBlock, ResolvedLanguage};
 
 use crate::RenderCtx;
 use crate::highlight::language_class;
+use crate::numbering::write_caption_number;
 
 /// Renders a `.. code-block::`/`.. code::` with all of its options.
 pub(super) fn render_code_block_directive(
     html: &mut String,
     block: &CodeBlock,
+    number: Option<&str>,
     ctx: &mut RenderCtx,
 ) {
     let language = block.language.resolve(&ctx.highlight_language);
@@ -40,7 +42,7 @@ pub(super) fn render_code_block_directive(
     }
     let _ = writeln!(html, ">");
 
-    render_caption(html, block.caption.as_deref());
+    render_caption(html, block.caption.as_deref(), number);
 
     let force = block.force || ctx.highlight_force;
     render_code(
@@ -179,12 +181,15 @@ fn exceeds_threshold(block: &CodeBlock, threshold: Option<NonZeroU32>) -> bool {
     u32::try_from(block.line_count()).unwrap_or(u32::MAX) >= threshold.get()
 }
 
-/// Emits a block's `:caption:`, if it has one.
-fn render_caption(html: &mut String, caption: Option<&str>) {
+/// Emits a block's `:caption:`, if it has one, starting with its `numfig`
+/// number when it has one.
+fn render_caption(html: &mut String, caption: Option<&str>, number: Option<&str>) {
     if let Some(caption) = caption {
+        html.push_str("<div class=\"code-block-caption\">");
+        write_caption_number(html, number);
         let _ = writeln!(
             html,
-            "<div class=\"code-block-caption\"><span class=\"caption-text\">{}</span></div>",
+            "<span class=\"caption-text\">{}</span></div>",
             html_escape::encode_text(caption)
         );
     }
@@ -216,7 +221,7 @@ mod tests {
     fn render(block: &CodeBlock) -> String {
         with_ctx(|ctx| {
             let mut html = String::new();
-            render_code_block_directive(&mut html, block, ctx);
+            render_code_block_directive(&mut html, block, None, ctx);
             html
         })
     }
@@ -424,7 +429,7 @@ mod tests {
         // When
         let errors = with_ctx(|ctx| {
             let mut html = String::new();
-            render_code_block_directive(&mut html, &code, ctx);
+            render_code_block_directive(&mut html, &code, None, ctx);
             ctx.highlight_errors.clone()
         });
 
@@ -457,7 +462,7 @@ mod tests {
         // When
         let errors = with_ctx(|ctx| {
             let mut html = String::new();
-            render_code_block_directive(&mut html, &code, ctx);
+            render_code_block_directive(&mut html, &code, None, ctx);
             ctx.highlight_errors.clone()
         });
 
@@ -476,7 +481,7 @@ mod tests {
         // When
         let errors = with_ctx(|ctx| {
             let mut html = String::new();
-            render_code_block_directive(&mut html, &code, ctx);
+            render_code_block_directive(&mut html, &code, None, ctx);
             ctx.highlight_errors.clone()
         });
 
@@ -493,7 +498,7 @@ mod tests {
         // When
         let errors = with_ctx(|ctx| {
             let mut html = String::new();
-            render_code_block_directive(&mut html, &code, ctx);
+            render_code_block_directive(&mut html, &code, None, ctx);
             ctx.highlight_errors.clone()
         });
 
@@ -509,7 +514,7 @@ mod tests {
         // When
         let html = with_highlight_language(named("rust"), |ctx| {
             let mut html = String::new();
-            render_code_block_directive(&mut html, &code, ctx);
+            render_code_block_directive(&mut html, &code, None, ctx);
             html
         });
 
@@ -526,7 +531,7 @@ mod tests {
         // When
         let html = with_highlight_language(named("rust"), |ctx| {
             let mut html = String::new();
-            render_code_block_directive(&mut html, &code, ctx);
+            render_code_block_directive(&mut html, &code, None, ctx);
             html
         });
 
@@ -543,7 +548,7 @@ mod tests {
         let html = with_ctx(|ctx| {
             ctx.linenothreshold = NonZeroU32::new(3);
             let mut html = String::new();
-            render_code_block_directive(&mut html, &code, ctx);
+            render_code_block_directive(&mut html, &code, None, ctx);
             html
         });
 
@@ -560,7 +565,7 @@ mod tests {
         let html = with_ctx(|ctx| {
             ctx.linenothreshold = NonZeroU32::new(3);
             let mut html = String::new();
-            render_code_block_directive(&mut html, &code, ctx);
+            render_code_block_directive(&mut html, &code, None, ctx);
             html
         });
 

@@ -94,6 +94,26 @@ diagnostic_codes! {
     LinkTypeMismatch => "link.type-mismatch",
     /// An `:external+name:` role naming an inventory the build never declared.
     LinkUnknownInventory => "link.unknown-inventory",
+    /// A `:numref:` whose label is in no document's index, or labels
+    /// something `numfig` never numbers — a paragraph, an uncaptioned code
+    /// block. Sphinx calls both an "undefined label".
+    LinkBrokenNumref => "link.broken-numref",
+
+    // --- `:numref:` --------------------------------------------------------
+    /// A `:numref:` to a figure, table or code block while `numfig` is off in
+    /// `rinx.toml`, so nothing has a number to show.
+    NumrefDisabled => "numref.disabled",
+    /// A `:numref:` to an element that exists but was given no number: it has
+    /// no caption, no toctree reaches its document, or its section is not
+    /// numbered.
+    NumrefUnnumbered => "numref.unnumbered",
+    /// A `:numref:` whose title shows `{name}` for an element with no caption.
+    NumrefNoCaption => "numref.no-caption",
+    /// A `:numref:` title Sphinx could not apply: no `%s`, two of them, an
+    /// unknown `{field}`, an unbalanced brace.
+    NumrefInvalidFormat => "numref.invalid-format",
+    /// An `:external:numref:` — an inventory holds no numbers.
+    NumrefExternal => "numref.external",
 
     // --- Headings ----------------------------------------------------------
     /// A section adornment shorter than the title's display width, which

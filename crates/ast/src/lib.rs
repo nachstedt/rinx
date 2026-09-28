@@ -57,6 +57,7 @@ mod entity_pie;
 mod entity_sequence;
 mod entity_table;
 mod entity_update;
+mod enumerable;
 mod enumerator;
 mod glossary_entry;
 mod grid;
@@ -70,6 +71,7 @@ mod line_block;
 mod list_item;
 mod node;
 mod non_empty_vector;
+mod number_format;
 mod object_naming;
 mod object_type;
 mod option_list_item;
@@ -120,6 +122,7 @@ pub use entity_table::{EntityTable, EntityTableSource};
 pub use entity_update::{
     EntityUpdate, EntityUpdateSource, FieldMutation, FieldMutationMode, UpdateTarget,
 };
+pub use enumerable::{EnumerableElement, EnumerableKind, enumerable_elements, preceding_labels};
 pub use enumerator::{Enumerator, EnumeratorError, EnumeratorFormat, EnumeratorSequence};
 pub use glossary_entry::{GlossaryEntry, term_id};
 pub use grid::{
@@ -132,13 +135,14 @@ pub use image::{
     Length, LengthOrPercentage, LengthUnit, Percentage, is_vertical_name, scaled_width,
 };
 pub use index_entry::IndexEntry;
-pub use inline_node::{InlineNode, inline_plain_text};
+pub use inline_node::{InlineNode, NumberReferenceRefusal, inline_plain_text};
 pub use inventory_selector::InventorySelector;
 pub use label_rotation::{InvalidLabelRotation, LabelRotation};
 pub use line_block::LineBlockItem;
 pub use list_item::ListItem;
 pub use node::Node;
 pub use non_empty_vector::NonEmptyVector;
+pub use number_format::{InvalidNumberFormat, NumberFormat};
 pub use object_naming::{
     build_domain_object_key, extract_option_name, extract_python_object_name,
     split_option_line_specs,
@@ -160,4 +164,4 @@ pub use target_search_order::TargetSearchOrder;
 pub use toctree::{NumberedDepth, TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
 pub use uml::{Uml, UmlSource};
 pub use version_change_kind::VersionChangeKind;
-pub use visit::walk_nodes;
+pub use visit::{walk_nodes, walk_nodes_with_siblings};

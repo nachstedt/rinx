@@ -51,6 +51,15 @@ Supported:
   relative to the page or from the workspace root with a leading ``/``, and is
   declared in the library's ``downloads`` attribute (see :ref:`rules`); a URL
   is linked as written and never copied.
+- The ``:numref:`` role, which links a figure, table, code block or section
+  and shows its number: ``Fig. 2``, ``Table 1.3``. Figures, tables and code
+  blocks are numbered only when the site sets ``numfig = true`` (see
+  :ref:`site-config`), which also writes each number in front of its caption.
+  Only captioned ones are numbered, counting across the site in toctree order
+  and starting again under each chapter of a ``:numbered:`` toctree. A section
+  shows the number a ``:numbered:`` toctree gave it. An explicit title is the
+  format: ``:numref:`Figure {number}: {name} <fig-label>``` shows the number
+  and the caption, and ``%s`` works as well as ``{number}``.
 - Admonitions, ``.. seealso::``, ``.. versionadded::``,
   ``.. versionchanged::`` and ``.. deprecated::``.
 - ``.. code-block::``, ``.. highlight::`` and ``.. literalinclude::``, all
@@ -66,7 +75,7 @@ Supported:
 - Linking to other sites through their ``objects.inv``, and writing one; see
   :ref:`intersphinx`.
 
-Not yet supported: the ``:numref:`` and ``:code:`` roles,
+Not yet supported: the ``:code:`` role,
 autodoc, ``.. only::``, and the ``:envvar:`` and ``:confval:`` objects.
 
 Extensions

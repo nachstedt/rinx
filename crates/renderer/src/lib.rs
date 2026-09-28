@@ -23,6 +23,8 @@ mod image_error;
 mod inline;
 mod math;
 mod nav;
+mod numbering;
+mod numfig_format;
 mod octicon;
 mod page;
 mod resolution;
@@ -191,6 +193,8 @@ pub(crate) struct RenderCtx<'a> {
     /// defaulting to the title "Contents") are disambiguated against each
     /// other too, exactly as docutils' single shared id registry would.
     pub contents_id_allocator: &'a mut rinx_ast::SectionIdAllocator,
+    /// `numfig`'s settings and this page's caption numbers.
+    pub numbering: &'a numbering::Numbering<'a>,
     /// The enclosing scope for both domains, mirroring the analyzer's
     /// `index_nodes`/`index_domain_object` scope so a domain object's anchor
     /// `id` always matches the qualified key the analyzer indexed it under.
@@ -278,7 +282,9 @@ pub fn render_with_assets(
     for id in section_ids.values() {
         contents_id_allocator.seed(id);
     }
+    let numbering = numbering::Numbering::new(doc, index, config);
     let mut ctx = RenderCtx {
+        numbering: &numbering,
         index,
         domain_resolver: &domain_resolver,
         option_resolver: &option_resolver,

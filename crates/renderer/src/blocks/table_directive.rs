@@ -24,6 +24,8 @@ pub(super) struct TableDirectiveParams<'a> {
     pub align: Option<TableAlign>,
     pub classes: &'a [String],
     pub name: Option<&'a TargetName>,
+    /// The `numfig` number its caption starts with, if it has one.
+    pub number: Option<&'a str>,
     pub header_rows: &'a [TableRow],
     pub body_rows: &'a [TableRow],
 }
@@ -46,13 +48,14 @@ pub(super) fn render_table_directive(
         align,
         classes,
         name,
+        number,
         header_rows,
         body_rows,
     } = params;
 
     render_table_name_anchor(html, name);
     render_table_open_tag(html, classes, align, width);
-    render_table_caption(html, title);
+    render_table_caption(html, title, number);
     render_table_colgroup(html, widths);
 
     if !header_rows.is_empty() {

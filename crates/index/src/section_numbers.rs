@@ -43,6 +43,21 @@ impl DocumentNumbers {
         self.numbers.get(id.as_str()).map(Vec::as_slice)
     }
 
+    /// The number Sphinx gives whatever is inside `section`: that section's
+    /// own number, or — for a section too deep to be numbered, for the title,
+    /// and for content outside every section — the document's.
+    ///
+    /// Sphinx's own fallback, which it applies both while numbering figures
+    /// and while resolving a `:numref:` to a section label. It is not the
+    /// enclosing section's number: a section below `:numbered:`'s depth shows
+    /// the document's, however deep it is.
+    #[must_use]
+    pub fn number_at(&self, section: Option<&SectionId>) -> Option<&[usize]> {
+        section
+            .and_then(|id| self.section(id))
+            .or_else(|| self.document())
+    }
+
     /// Records the document's own number.
     pub fn set_document(&mut self, number: Vec<usize>) {
         self.numbers.insert(DOCUMENT_KEY.to_string(), number);
@@ -84,6 +99,26 @@ impl DocumentNumbers {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_number_at_falls_back_to_the_document_number() {
+        // Given a document numbered 2 with one numbered section
+        let mut numbers = DocumentNumbers::default();
+        numbers.set_document(vec![2]);
+        numbers.set_section(&SectionId::from_title("Usage"), vec![2, 1]);
+
+        // When / Then
+        assert_eq!(
+            numbers.number_at(Some(&SectionId::from_title("Usage"))),
+            Some([2, 1].as_slice())
+        );
+        assert_eq!(
+            numbers.number_at(Some(&SectionId::from_title("Too deep"))),
+            Some([2].as_slice())
+        );
+        assert_eq!(numbers.number_at(None), Some([2].as_slice()));
+        assert_eq!(DocumentNumbers::default().number_at(None), None);
+    }
 
     #[test]
     fn test_document_number_is_separate_from_a_section_number() {

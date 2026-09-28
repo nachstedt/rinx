@@ -12,6 +12,7 @@ use rinx_ast::{Figure, FigureWidth, ImageAlign};
 
 use crate::RenderCtx;
 use crate::inline::render_inline;
+use crate::numbering::write_caption_number;
 
 use super::dispatch::render_nodes;
 use super::image::render_linked_image;
@@ -38,7 +39,12 @@ fn figure_width_style(figwidth: &FigureWidth) -> String {
 /// `<figcaption>` holding the caption paragraph and, below it, the legend in
 /// its own `<div class="legend">`. A figure with neither is legal and renders
 /// as a bare picture in a box.
-pub(super) fn render_figure_directive(html: &mut String, figure: &Figure, ctx: &mut RenderCtx) {
+pub(super) fn render_figure_directive(
+    html: &mut String,
+    figure: &Figure,
+    number: Option<&str>,
+    ctx: &mut RenderCtx,
+) {
     let mut classes: Vec<String> = figure
         .image
         .align
@@ -73,6 +79,7 @@ pub(super) fn render_figure_directive(html: &mut String, figure: &Figure, ctx: &
         let _ = writeln!(html, "<figcaption>");
         if let Some(caption) = &figure.caption {
             let _ = write!(html, "<p>");
+            write_caption_number(html, number);
             for inline in caption {
                 render_inline(html, inline, ctx);
             }

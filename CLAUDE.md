@@ -241,6 +241,28 @@ other sites' through `inventories`. Three things to know before touching it:
   `target_anchors` (for a target whose `id` is not its name, e.g. an entity's
   `entity-<id>`), read through `ProjectIndex::target_anchor`.
 
+### Numbering: `numfig` and `:numref:` (`docs/decisions/028-numref-role.md`)
+
+`numfig = true` in `rinx.toml` numbers every *captioned* figure, table and code
+block (labelled or not, as Sphinx does), and `:numref:` shows a number. Three
+things to know before touching it:
+
+- **One function decides which elements are numbered**:
+  `rinx_ast::enumerable_elements`. The analyzer stores numbers by an element's
+  position in its result (`ProjectIndex::element_numbers`), and the renderer's
+  `numbering.rs` calls it again on the same document to find each caption's
+  number by the directive's address. Never count elements separately on either
+  side.
+- **Input merges, numbers are recomputed.** `numbering_steps` and
+  `numref_targets` are per document; `element_numbers` is produced by the
+  `assign_element_numbers` phase (a port of Sphinx's `assign_figure_numbers`),
+  which runs after section numbering and again in `process_preview`.
+- **A refused `:numref:` title is reported while parsing** through an
+  intermediate `InlineNode::RefusedNumberReference`, which
+  `parser/blocks/number_references.rs` reports and lowers after substitutions.
+  It walks inline content with `blocks/inline_lists.rs`'s
+  `for_each_inline_list_mut`, the traversal substitution resolution uses too.
+
 ### Source transclusion (`docs/decisions/008-source-transclusion.md`)
 
 `.. include::` and `.. literalinclude::` read a file and splice it into the

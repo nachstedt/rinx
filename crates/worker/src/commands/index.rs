@@ -25,11 +25,12 @@ pub(super) struct IndexedProject {
     pub warnings: Vec<String>,
 }
 
-/// `root_doc` is the configured root document (without its `.rst` extension);
-/// it decides where navigation, page order and section numbering start.
+/// `settings` carries the configured root document (without its `.rst`
+/// extension), which decides where navigation, page order and section and
+/// figure numbering start, and how deep a figure's number follows its section.
 pub(super) fn process_index(
     ast_jsons: &[String],
-    root_doc: &str,
+    settings: &analyzer::IndexSettings<'_>,
     schema: &rinx_entity::EntitySchema,
     external_inventories: Vec<ExternalInventory>,
 ) -> Result<IndexedProject> {
@@ -38,7 +39,7 @@ pub(super) fn process_index(
         .map(|json| serde_json::from_str(json).context("Failed to deserialize AST"))
         .collect::<Result<_>>()?;
 
-    let mut build = analyzer::build_project_index_reporting(&docs, root_doc, schema);
+    let mut build = analyzer::build_project_index_reporting(&docs, settings, schema);
     let written = written_reference_targets(ast_jsons)?;
     build.index.external_inventories = external_inventories
         .into_iter()
@@ -129,7 +130,11 @@ pub(crate) fn cmd_index(args: &[String]) -> Result<()> {
         eprintln!("{warning}");
     }
 
-    let indexed = process_index(&files, &site_config.root_doc, &schema, external_inventories)?;
+    let settings = analyzer::IndexSettings {
+        root_doc: &site_config.root_doc,
+        numfig_secnum_depth: site_config.numfig_secnum_depth,
+    };
+    let indexed = process_index(&files, &settings, &schema, external_inventories)?;
     for warning in &indexed.warnings {
         eprintln!("{warning}");
     }
@@ -267,7 +272,13 @@ mod tests {
         let docs = vec![ast_json("index.rst", &toctree_json("missing"))];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty(), Vec::new()).unwrap();
+        let indexed = process_index(
+            &docs,
+            &analyzer::IndexSettings::new("index"),
+            &EntitySchema::empty(),
+            Vec::new(),
+        )
+        .unwrap();
 
         // Then
         assert_eq!(indexed.warnings.len(), 1, "{:?}", indexed.warnings);
@@ -290,7 +301,13 @@ mod tests {
         )];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty(), Vec::new()).unwrap();
+        let indexed = process_index(
+            &docs,
+            &analyzer::IndexSettings::new("index"),
+            &EntitySchema::empty(),
+            Vec::new(),
+        )
+        .unwrap();
 
         // Then
         assert!(indexed.warnings.is_empty(), "{:?}", indexed.warnings);
@@ -306,7 +323,13 @@ mod tests {
         ];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty(), Vec::new()).unwrap();
+        let indexed = process_index(
+            &docs,
+            &analyzer::IndexSettings::new("index"),
+            &EntitySchema::empty(),
+            Vec::new(),
+        )
+        .unwrap();
 
         // Then
         assert_eq!(indexed.warnings.len(), 1, "{:?}", indexed.warnings);
@@ -323,7 +346,13 @@ mod tests {
         ];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty(), Vec::new()).unwrap();
+        let indexed = process_index(
+            &docs,
+            &analyzer::IndexSettings::new("index"),
+            &EntitySchema::empty(),
+            Vec::new(),
+        )
+        .unwrap();
 
         // Then
         assert!(indexed.warnings.is_empty(), "{:?}", indexed.warnings);
@@ -338,14 +367,19 @@ mod tests {
         ];
 
         // When
-        let index = process_index(&docs, "index", &EntitySchema::empty(), Vec::new())
-            .unwrap()
-            .json;
+        let index = process_index(
+            &docs,
+            &analyzer::IndexSettings::new("index"),
+            &EntitySchema::empty(),
+            Vec::new(),
+        )
+        .unwrap()
+        .json;
 
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"documents":["test.rst"],"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"genindex_entries":[],"equations":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[]}"#
+            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"documents":["test.rst"],"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"genindex_entries":[],"equations":{},"numbering_steps":{},"numref_targets":{},"element_numbers":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[]}"#
         );
     }
 
@@ -448,7 +482,13 @@ mod tests {
         let (inventories, _) = read_external_inventories(vec![declared("python")]).unwrap();
 
         // When
-        let indexed = process_index(&[], "index", &EntitySchema::empty(), inventories).unwrap();
+        let indexed = process_index(
+            &[],
+            &analyzer::IndexSettings::new("index"),
+            &EntitySchema::empty(),
+            inventories,
+        )
+        .unwrap();
 
         // Then
         let index: rinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
@@ -497,7 +537,13 @@ mod tests {
         let docs = vec![ast_json("a.rst", "")];
 
         // When
-        let indexed = process_index(&docs, "index", &EntitySchema::empty(), inventories).unwrap();
+        let indexed = process_index(
+            &docs,
+            &analyzer::IndexSettings::new("index"),
+            &EntitySchema::empty(),
+            inventories,
+        )
+        .unwrap();
 
         // Then
         let index: rinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();

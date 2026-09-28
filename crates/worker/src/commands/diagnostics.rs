@@ -156,6 +156,21 @@ pub(super) fn format_broken_link_warning(
         renderer::BrokenLinkKind::UnknownInventory(name) => {
             format!(" (no inventory is declared as '{name}')")
         }
+        renderer::BrokenLinkKind::NumberReference => {
+            " (no captioned figure, table or code block, and no heading, has this label)"
+                .to_string()
+        }
+        renderer::BrokenLinkKind::NumberingDisabled => {
+            " (numfig is off in rinx.toml, so figures, tables and code blocks have no numbers)"
+                .to_string()
+        }
+        renderer::BrokenLinkKind::UnnumberedReference => {
+            " (it has no number: no toctree reaches its document, or its section is not numbered)"
+                .to_string()
+        }
+        renderer::BrokenLinkKind::UncaptionedReference => {
+            " (its format shows {name}, but it has no caption)".to_string()
+        }
         _ => String::new(),
     };
     format!(
@@ -352,6 +367,44 @@ mod tests {
             message,
             "warning: guide/intro.rst:42:18: link.broken-doc: broken doc reference '../missing'"
         );
+    }
+
+    #[test]
+    fn test_format_broken_link_warning_explains_each_numref_problem() {
+        // Given one link per `:numref:` problem
+        let cases = [
+            (
+                renderer::BrokenLinkKind::NumberReference,
+                "link.broken-numref: broken numref 'fig' (no captioned figure",
+            ),
+            (
+                renderer::BrokenLinkKind::NumberingDisabled,
+                "numref.disabled: broken numref 'fig' (numfig is off in rinx.toml",
+            ),
+            (
+                renderer::BrokenLinkKind::UnnumberedReference,
+                "numref.unnumbered: broken numref 'fig' (it has no number",
+            ),
+            (
+                renderer::BrokenLinkKind::UncaptionedReference,
+                "numref.no-caption: broken numref 'fig' (its format shows {name}",
+            ),
+        ];
+
+        for (kind, expected) in cases {
+            let link = renderer::BrokenLink {
+                kind,
+                target: "fig".to_string(),
+                span: Some(a_span()),
+            };
+
+            // When
+            let message =
+                format_broken_link_warning(&WarningOrigin::document_only("guide.rst"), &link);
+
+            // Then
+            assert!(message.contains(expected), "{message}");
+        }
     }
 
     #[test]
@@ -613,6 +666,10 @@ mod tests {
             renderer::BrokenLinkKind::AmbiguousAnyReference {
                 candidates: Vec::new(),
             },
+            renderer::BrokenLinkKind::NumberReference,
+            renderer::BrokenLinkKind::NumberingDisabled,
+            renderer::BrokenLinkKind::UnnumberedReference,
+            renderer::BrokenLinkKind::UncaptionedReference,
         ];
 
         // When

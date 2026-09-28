@@ -460,6 +460,7 @@ fn render_data_table_directive(html: &mut String, directive: &Directive, ctx: &m
             align: *align,
             classes,
             name: name.as_ref(),
+            number: ctx.numbering.caption_number(directive),
             rows,
         },
         ctx,
@@ -472,13 +473,16 @@ fn render_directive(
     placement: ContentsPlacement<'_>,
     ctx: &mut RenderCtx<'_>,
 ) {
+    // The `numfig` number of a captioned figure, table or code block; `None`
+    // for every other directive.
+    let number = ctx.numbering.caption_number(directive);
     match directive {
         Directive::Toctree(toctree) => render_toctree_directive(html, toctree, ctx),
         Directive::Contents(contents) => {
             render_contents_directive(html, contents, placement, ctx);
         }
         Directive::CodeBlock(block) => {
-            super::code_block::render_code_block_directive(html, block, ctx);
+            super::code_block::render_code_block_directive(html, block, number, ctx);
         }
         Directive::Highlight {
             language,
@@ -500,7 +504,7 @@ fn render_directive(
         Directive::Grid(grid) => super::grid::render_grid(html, grid, ctx),
         Directive::GridItem(item) => super::grid::render_grid_item(html, item, ctx),
         Directive::Image(options) => render_image_directive(html, options, ctx),
-        Directive::Figure(figure) => render_figure_directive(html, figure, ctx),
+        Directive::Figure(figure) => render_figure_directive(html, figure, number, ctx),
         Directive::Admonition {
             kind,
             title,
@@ -554,6 +558,7 @@ fn render_directive(
                 align: *align,
                 classes,
                 name: name.as_ref(),
+                number,
                 header_rows,
                 body_rows,
             },

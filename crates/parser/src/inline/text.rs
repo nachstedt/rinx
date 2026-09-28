@@ -108,7 +108,12 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         | InlineNode::Emphasis(text)
         | InlineNode::Strong(text)
         | InlineNode::Program(text)
-        | InlineNode::AnonymousReference { text, .. } => *text = unescape(text),
+        | InlineNode::AnonymousReference { text, .. }
+        // A `:numref:` title was unescaped before it was parsed into a format
+        // (see `roles::numref`), so only the label and a refusal's text are
+        // left.
+        | InlineNode::NumberReference { target: text, .. }
+        | InlineNode::RefusedNumberReference { text, .. } => *text = unescape(text),
         InlineNode::Reference {
             display, target, ..
         }
