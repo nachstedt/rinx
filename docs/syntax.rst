@@ -26,11 +26,25 @@ Supported:
   ``.. csv-table::`` (the last including ``:file:``).
 - Substitutions, ``.. include::``, ``.. image::``, ``.. figure::``,
   ``.. contents::`` and ``.. sectnum::``.
+- The ``:code:`` role, and roles derived from it with ``.. role::``, which
+  give inline code a language to be highlighted as:
+
+  .. code-block:: rst
+
+     .. role:: python(code)
+        :language: python
+
+     Call :python:`print("hi")`, or write :code:`x = 1` unhighlighted.
+
+  A role applies from its definition to the end of the document, and its
+  ``:class:`` names are added to the rendered ``<code>``. Only ``code`` can be
+  a base role: any other, or none, is reported as ``role.unsupported-base``,
+  and a name rinx already gives a role as ``role.builtin-name``.
 
 Not yet supported: footnotes and citations, field lists beyond a document's
-leading ``:orphan:``, ``.. raw::``, ``.. class::``, ``.. role::``,
-``.. topic::``, ``.. sidebar::``, ``.. rubric::`` and
-``.. parsed-literal::``.
+leading ``:orphan:``, ``.. raw::``, ``.. class::``, ``.. role::`` with a base
+other than ``code``, ``.. default-role::``, ``.. topic::``,
+``.. sidebar::``, ``.. rubric::`` and ``.. parsed-literal::``.
 
 Sphinx
 ------
@@ -75,8 +89,8 @@ Supported:
 - Linking to other sites through their ``objects.inv``, and writing one; see
   :ref:`intersphinx`.
 
-Not yet supported: the ``:code:`` role,
-autodoc, ``.. only::``, and the ``:envvar:`` and ``:confval:`` objects.
+Not yet supported: autodoc, ``.. only::``, and the ``:envvar:`` and
+``:confval:`` objects.
 
 Extensions
 ----------

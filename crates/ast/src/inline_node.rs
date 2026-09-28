@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::asset_uri::AssetUri;
+use crate::code_language::ResolvedLanguage;
 use crate::image::ImageOptions;
 use crate::inventory_selector::InventorySelector;
 use crate::number_format::NumberFormat;
@@ -284,6 +285,28 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
+    /// Inline code produced by the `:code:` role, or by a custom role a
+    /// `.. role:: name(code)` derives from it.
+    ///
+    /// Not a [`Self::Literal`]: an inline literal has no language and no
+    /// classes, where this carries the ones its role was defined with. A plain
+    /// `:code:` has [`ResolvedLanguage::None`] and no classes, and is drawn
+    /// unhighlighted. Unlike a literal, its backslashes are escapes — Sphinx's
+    /// `code_role` receives interpreted text, so `\*` shows `*`.
+    ///
+    /// Carries a span for the same reason [`Self::Math`] does: a language
+    /// with no grammar behind it is only found while rendering.
+    Code {
+        text: String,
+        /// Always written out: [`ResolvedLanguage`]'s own default is Sphinx's
+        /// `highlight_language` (`default`), which is not what an omitted
+        /// language means here.
+        language: ResolvedLanguage,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        classes: Vec<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
     /// An inline cross-reference produced by the `:eq:` role, linking to a
     /// labeled `.. math::` and displaying that equation's number.
     ///
@@ -323,9 +346,10 @@ impl InlineNode {
     /// Where this node's markup was written, for the variants that can
     /// produce a diagnostic; `None` for every other variant.
     ///
-    /// Only the cross-reference roles and [`Self::Math`] carry a position,
-    /// because only they can fail at render time — the roles by not resolving,
-    /// `Math` by holding LaTeX the math backend rejects. Giving every variant
+    /// Only the cross-reference roles, [`Self::Math`] and [`Self::Code`] carry
+    /// a position, because only they can fail at render time — the roles by
+    /// not resolving, `Math` by holding LaTeX the math backend rejects, `Code`
+    /// by naming a language no grammar highlights. Giving every variant
     /// one would double the size of a parsed document to record something
     /// nothing reads.
     #[must_use]
@@ -344,6 +368,7 @@ impl InlineNode {
             | Self::RefusedNumberReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
+            | Self::Code { span, .. }
             | Self::EquationReference { span, .. }
             | Self::SubstitutionReference { span, .. } => *span,
             _ => None,
@@ -372,6 +397,7 @@ impl InlineNode {
             | Self::RefusedNumberReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
+            | Self::Code { span, .. }
             | Self::EquationReference { span, .. }
             | Self::SubstitutionReference { span, .. } => *span = at,
             _ => {}
@@ -427,6 +453,7 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             | InlineNode::Strong(text)
             | InlineNode::Literal(text)
             | InlineNode::Program(text)
+            | InlineNode::Code { text, .. }
             | InlineNode::AnonymousReference { text, .. }
             | InlineNode::RefusedNumberReference { text, .. } => text.as_str(),
             InlineNode::Hyperlink { text, .. } | InlineNode::AnonymousHyperlink { text, .. } => {
@@ -874,6 +901,68 @@ mod tests {
         assert_eq!(placed.span(), Some(at));
         assert!(!placed.renders_as_link());
         assert_eq!(inline_plain_text(&[placed]), "see this");
+    }
+
+    #[test]
+    fn test_code_carries_its_span_and_shows_its_text() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(1, 3),
+            crate::span::Position::new(1, 20),
+        );
+        let node = InlineNode::Code {
+            text: "x = 1".to_string(),
+            language: ResolvedLanguage::None,
+            classes: Vec::new(),
+            span: None,
+        };
+
+        // When
+        let placed = node.with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+        assert!(!placed.renders_as_link());
+        assert_eq!(inline_plain_text(&[placed]), "x = 1");
+    }
+
+    #[test]
+    fn test_code_roundtrips_its_language_and_classes() {
+        // Given
+        let node = InlineNode::Code {
+            text: "print()".to_string(),
+            language: ResolvedLanguage::parse("python").unwrap(),
+            classes: vec!["extra".to_string()],
+            span: None,
+        };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+        let deserialized: InlineNode = serde_json::from_str(&json).expect("Failed to deserialize");
+
+        // Then
+        assert_eq!(node, deserialized);
+    }
+
+    #[test]
+    fn test_plain_code_roundtrips_without_classes() {
+        // Given
+        let node = InlineNode::Code {
+            text: "x".to_string(),
+            language: ResolvedLanguage::None,
+            classes: Vec::new(),
+            span: None,
+        };
+
+        // When
+        let json = serde_json::to_string(&node).expect("Failed to serialize");
+
+        // Then — no classes key, and the unhighlighted language survives
+        assert!(!json.contains("classes"));
+        assert_eq!(
+            serde_json::from_str::<InlineNode>(&json).expect("Failed to deserialize"),
+            node
+        );
     }
 
     #[test]

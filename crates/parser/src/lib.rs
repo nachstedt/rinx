@@ -2,6 +2,7 @@
 
 pub(crate) mod blocks;
 pub(crate) mod context;
+pub(crate) mod custom_roles;
 pub(crate) mod diagnostics;
 pub(crate) mod directives;
 pub(crate) mod explicit_title;

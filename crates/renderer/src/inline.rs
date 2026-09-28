@@ -15,11 +15,17 @@
 //! A reference that no document of this site defines but another site's
 //! inventory lists is written by [`external_link`], whichever role found it.
 //!
+//! [`math`] and [`code`] are the two non-reference roles with a module of
+//! their own, each because it calls a backend: the math renderer for
+//! `:math:`, the syntax highlighter for `:code:` and the roles derived from
+//! it.
+//!
 //! [`RefText`] is the one shape they all share: the visible text, the target
 //! to resolve, and where the role was written.
 
 mod anonymous_reference;
 mod any_reference;
+mod code;
 mod dispatch;
 mod doc_reference;
 mod domain_object_reference;

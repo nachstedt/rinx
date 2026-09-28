@@ -23,6 +23,7 @@ use crate::headings::Adornment;
 use crate::indent::unindent_body_lines;
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 
+use super::classes::split_classes;
 use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 
 const DIRECTIVE: &str = "dropdown";
@@ -200,11 +201,6 @@ fn is_known_octicon(name: &str) -> bool {
     ARTWORK_HEIGHTS
         .iter()
         .any(|height| octicons_pack::get_icon(&format!("{name}-{height}")).is_some())
-}
-
-/// Splits a class-list option value, as docutils' `class_option` does.
-fn split_classes(value: &str) -> Vec<String> {
-    value.split_whitespace().map(str::to_string).collect()
 }
 
 /// The written names of a closed option vocabulary, for a diagnostic.
@@ -631,18 +627,6 @@ mod tests {
         assert!(is_known_octicon("light-bulb"));
         assert!(is_known_octicon("no-entry-fill"));
         assert!(!is_known_octicon("not-an-octicon"));
-    }
-
-    #[test]
-    fn test_split_classes_splits_on_whitespace() {
-        // Given
-        let value = "  one   two ";
-
-        // When
-        let classes = split_classes(value);
-
-        // Then
-        assert_eq!(classes, vec!["one", "two"]);
     }
 
     #[test]

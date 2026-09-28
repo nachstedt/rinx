@@ -28,6 +28,7 @@ use crate::diagnostics::Diagnostics;
 use crate::indent::unindent_body_lines;
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 
+use super::classes::split_classes;
 use super::error_node::malformed_directive;
 use super::options::{OptionLine, report_unknown_options, scan_option_lines};
 
@@ -216,11 +217,6 @@ fn read_options<'a>(
         }
     }
     unrecognized
-}
-
-/// Splits a class-list option value, as docutils' `class_option` does.
-fn split_classes(value: &str) -> Vec<String> {
-    value.split_whitespace().map(str::to_string).collect()
 }
 
 /// The written names of a closed option vocabulary, for a diagnostic.

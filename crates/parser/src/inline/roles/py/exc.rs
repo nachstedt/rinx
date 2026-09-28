@@ -24,9 +24,9 @@ pub(crate) fn handle_exc_match(m_str: &str, default_domain: Domain) -> InlineNod
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::inline::dispatch::handle_inline_match;
     use rinx_ast::TargetSearchOrder;
-    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_exc_match_resolves_exc_role() {
@@ -88,7 +88,7 @@ mod tests {
             ":exc:`GreeterError`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -110,7 +110,7 @@ mod tests {
             ":py:exc:`GreeterError`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -132,7 +132,7 @@ mod tests {
             ":exc:`GreeterError`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(result, InlineNode::Text(":exc:`GreeterError`".to_string()));
     }

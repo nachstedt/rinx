@@ -414,6 +414,29 @@ mod tests {
     }
 
     #[test]
+    fn test_a_role_defined_in_a_fragment_applies_after_the_include() {
+        // Given a fragment defining a role, as docutils would apply it
+        let document = parse_document(
+            &[("roles.rst", ".. role:: py(code)\n   :language: python\n")],
+            ".. include:: roles.rst\n\nCall :py:`f()`.\n",
+        );
+
+        // Then — the including document sees the role
+        assert!(
+            document.diagnostics.is_empty(),
+            "{:?}",
+            document.diagnostics
+        );
+        let Node::Paragraph(inline) = &document.nodes[0] else {
+            panic!("expected a paragraph, got {:?}", document.nodes);
+        };
+        assert!(
+            matches!(&inline[1], InlineNode::Code { text, .. } if text == "f()"),
+            "{inline:?}"
+        );
+    }
+
+    #[test]
     fn test_an_included_file_contributes_several_nodes() {
         // Given a fragment with two paragraphs
         let document = parse_document(

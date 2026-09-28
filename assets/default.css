@@ -417,11 +417,23 @@ hr {
 .document code {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.9em;
-  background: #f1f5f9;
-  color: #0f172a;
   padding: 0.2em 0.4em;
   border-radius: 4px;
   border: 1px solid var(--border);
+}
+
+/* The light pill's colours, for every inline code but a highlighted `:code:`
+   role: that one carries `.hl-code`, and the generated theme's palette must
+   win there, or its token colours (chosen for a dark background) would sit
+   on a light one. `:where()` keeps this at `.document code`'s specificity,
+   so the rules below that recolour inline code still override it. */
+.document code:where(:not(.hl-code)) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.document code.hl-code {
+  border-color: transparent;
 }
 
 .document pre {
@@ -464,14 +476,14 @@ hr {
    so the generic `.document pre` colours step aside inside a highlighted
    block. Without this the two disagree: tokens the theme colours would sit
    on its background while tokens it leaves alone kept the page's. */
-.document .highlight.hl-code {
+.document div.highlight.hl-code {
   border-radius: var(--radius);
   overflow-x: auto;
   margin-bottom: 1.5rem;
   box-shadow: var(--shadow);
 }
 
-.document .highlight.hl-code > pre {
+.document div.highlight.hl-code > pre {
   background: transparent;
   color: inherit;
   box-shadow: none;

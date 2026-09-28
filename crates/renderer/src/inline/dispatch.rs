@@ -9,6 +9,7 @@ use super::anonymous_reference::{
     render_inline_anonymous_hyperlink, render_inline_anonymous_reference,
 };
 use super::any_reference::{AnyRef, render_inline_any_reference};
+use super::code::{CodeRef, render_inline_code};
 use super::doc_reference::{DocRef, render_inline_doc_reference};
 use super::domain_object_reference::{
     DomainObjectDiagnostics, DomainObjectRef, render_inline_domain_object_reference,
@@ -65,6 +66,26 @@ pub(crate) fn render_inline(
         // the math backend, not the index.
         rinx_ast::InlineNode::Math { latex, span } => {
             render_inline_math(html, latex, *span, ctx.math, ctx.math_errors);
+        }
+        // Self-contained like `:math:`: highlighting needs the backend, not
+        // the index.
+        rinx_ast::InlineNode::Code {
+            text,
+            language,
+            classes,
+            span,
+        } => {
+            render_inline_code(
+                html,
+                &CodeRef {
+                    text,
+                    language,
+                    classes,
+                    span: *span,
+                },
+                ctx.highlighter,
+                ctx.highlight_errors,
+            );
         }
         // What a `.. |name| image::` substitution reference resolves to —
         // built the same way a standalone `.. image::`'s `<img>` is, minus
@@ -243,6 +264,7 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::Strong(_)
         | rinx_ast::InlineNode::Literal(_)
         | rinx_ast::InlineNode::Math { .. }
+        | rinx_ast::InlineNode::Code { .. }
         | rinx_ast::InlineNode::InlineImage(_)
         | rinx_ast::InlineNode::SubstitutionReference { .. }
         | rinx_ast::InlineNode::RefusedNumberReference { .. }

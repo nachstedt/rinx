@@ -38,6 +38,7 @@ Welcome to the Rinx example.
    csv_table
    table_directive
    math
+   code_role
    images
    figures
    substitutions

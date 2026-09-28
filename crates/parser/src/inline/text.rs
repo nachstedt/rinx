@@ -70,7 +70,7 @@ pub(crate) fn parse_inline_text_mapped(
                     m_str,
                     node_opt,
                     default_domain,
-                    ctx.schema,
+                    ctx,
                 ))
                 .with_span(span),
             );
@@ -98,9 +98,10 @@ pub(crate) fn parse_inline_text_mapped(
 /// sees the escaped form, which is why `\-\-` stays two hyphens instead of
 /// becoming an en dash, matching docutils' smartquotes transform.
 ///
-/// [`InlineNode::Literal`] is the one verbatim context, so its markers turn
-/// back into backslashes; every other field takes the display form, in which
-/// an escaped space disappears entirely.
+/// [`InlineNode::Literal`] and [`InlineNode::Math`] are the verbatim
+/// contexts, so their markers turn back into backslashes; every other field —
+/// [`InlineNode::Code`]'s included — takes the display form, in which an
+/// escaped space disappears entirely.
 fn unescape_node(mut node: InlineNode) -> InlineNode {
     match &mut node {
         InlineNode::Literal(content) => *content = unescape_keeping_backslashes(content),
@@ -108,6 +109,10 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         | InlineNode::Emphasis(text)
         | InlineNode::Strong(text)
         | InlineNode::Program(text)
+        // Unlike an inline literal, `:code:` is interpreted text: Sphinx's
+        // `code_role` is handed it escaped, so `\*` shows `*` and `\\` a
+        // single backslash.
+        | InlineNode::Code { text, .. }
         | InlineNode::AnonymousReference { text, .. }
         // A `:numref:` title was unescaped before it was parsed into a format
         // (see `roles::numref`), so only the label and a refusal's text are

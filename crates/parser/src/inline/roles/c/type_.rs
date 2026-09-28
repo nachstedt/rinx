@@ -24,9 +24,9 @@ pub(crate) fn handle_type_match(m_str: &str, default_domain: Domain) -> InlineNo
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::inline::dispatch::handle_inline_match;
     use rinx_ast::TargetSearchOrder;
-    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_type_match_resolves_via_explicit_c_domain() {
@@ -75,7 +75,7 @@ mod tests {
             ":c:type:`PyMemAllocatorDomain`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,

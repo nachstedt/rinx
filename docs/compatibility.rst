@@ -140,8 +140,14 @@ Inline markup
        - ``:external:numref:`` is refused as ``numref.external``, since an
          ``objects.inv`` holds no numbers.
    * - ``:code:`` role
-     - ❌
-     -
+     - ✅ ℹ️
+     - - Rendered as ``<code class="code">``, without docutils'
+         ``docutils literal notranslate`` classes or the
+         ``<span class="pre">`` around each word, as an inline literal is.
+       - Highlighted by syntect's grammars rather than Pygments, as a code
+         block is. A language no grammar highlights is reported as
+         ``code-role.unknown-language``; Sphinx warns as
+         ``misc.highlighting_failure``.
    * - ``:pep:``, ``:rfc:``, ``:cve:`` and ``:cwe:`` roles
      - ❌
      -
@@ -347,7 +353,19 @@ Directives
    * - ``.. class::`` / ``.. rst-class::``
      - ❌
      -
-   * - ``.. role::`` / ``.. default-role::``
+   * - ``.. role::``
+     - 🔶
+     - - Only a role derived from ``code`` (``.. role:: python(code)``), with
+         ``:language:`` and ``:class:``. Any other base, or none, is reported
+         as ``role.unsupported-base`` and the role is not defined.
+       - A name rinx already gives a role (``:ref:``, ``:code:``, an entity
+         role, …) is refused as ``role.builtin-name``; docutils lets a
+         document replace it.
+       - ``:class:`` names are normalized as docutils does, except that a
+         non-ASCII letter is not reduced to its ASCII base first.
+       - ``:language: none`` highlights nothing and adds no ``highlight``
+         class; Sphinx adds ``highlight none``.
+   * - ``.. default-role::``
      - ❌
      -
    * - ``.. meta::``

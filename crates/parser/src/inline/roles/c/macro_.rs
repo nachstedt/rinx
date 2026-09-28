@@ -24,9 +24,9 @@ pub(crate) fn handle_macro_match(m_str: &str, default_domain: Domain) -> InlineN
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::context::ParseCtx;
     use crate::inline::dispatch::handle_inline_match;
     use rinx_ast::TargetSearchOrder;
-    use rinx_entity::EntitySchema;
 
     #[test]
     fn test_handle_macro_match_resolves_via_explicit_c_domain() {
@@ -104,7 +104,7 @@ mod tests {
             ":macro:`MAX`",
             None,
             Domain::C,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(
             result,
@@ -126,7 +126,7 @@ mod tests {
             ":macro:`MAX`",
             None,
             Domain::Py,
-            &EntitySchema::empty(),
+            &ParseCtx::with_domain(Domain::Py),
         );
         assert_eq!(result, InlineNode::Text(":macro:`MAX`".to_string()));
     }

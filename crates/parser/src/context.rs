@@ -20,6 +20,7 @@ use std::collections::BTreeMap;
 use rinx_ast::{Domain, EntityId, FileId, Position, Span};
 use rinx_entity::{EntitySchema, EntityType};
 
+use crate::custom_roles::CustomRoles;
 use crate::templating::TemplateMap;
 
 /// A file read at parse time, and the identity the parser knows it by.
@@ -175,6 +176,15 @@ pub struct ParseCtx<'a> {
     /// schema file, and only the worker knows where that is. This crate reads
     /// a map it can hand straight to [`ParseFileLoader::load`] with no anchor.
     pub import_keys: &'a BTreeMap<String, String>,
+    /// The roles the document has defined so far with `.. role::`.
+    ///
+    /// Unlike every other field this is *state*, not configuration: a
+    /// `.. role::` fills it in and the inline scan of every later paragraph
+    /// reads it, which is what makes a role apply from its definition onwards
+    /// — see [`crate::custom_roles`]. Set by [`crate::parse_with_ctx`], which
+    /// owns one table per document; a context built without it defines no
+    /// roles.
+    custom_roles: Option<&'a CustomRoles>,
     /// Where the current line slice came from, or `None` when it came from
     /// nowhere in the source — see [`Self::synthetic`].
     origin: Option<Origin>,
@@ -236,6 +246,7 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity_id: None,
             in_grid_row: false,
             import_keys: empty_import_keys(),
+            custom_roles: None,
             origin: Some(Origin { line: 1, column: 1 }),
             file: None,
             current_file: None,
@@ -248,6 +259,27 @@ impl<'a> ParseCtx<'a> {
     #[must_use]
     pub(crate) fn for_document(&self, doc_path: &'a str) -> Self {
         Self { doc_path, ..*self }
+    }
+
+    /// The same context, recording and reading the document's `.. role::`
+    /// definitions in `roles`.
+    ///
+    /// Borrows for a possibly shorter lifetime than `'a` because the caller
+    /// owns the table for the length of one parse, as [`Self::included`]'s
+    /// caller owns the include stack.
+    #[must_use]
+    pub(crate) fn with_custom_roles<'b>(&'b self, roles: &'b CustomRoles) -> ParseCtx<'b> {
+        ParseCtx {
+            custom_roles: Some(roles),
+            ..*self
+        }
+    }
+
+    /// The roles the document has defined so far, or `None` when this parse
+    /// keeps no table.
+    #[must_use]
+    pub(crate) const fn custom_roles(&self) -> Option<&'a CustomRoles> {
+        self.custom_roles
     }
 
     /// The same context, parsing against `schema`.
@@ -411,6 +443,7 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity_id: self.enclosing_entity_id,
             in_grid_row: self.in_grid_row,
             import_keys: self.import_keys,
+            custom_roles: self.custom_roles,
             origin: Some(Origin { line: 1, column: 1 }),
             file: Some(file),
             current_file: Some(id),
