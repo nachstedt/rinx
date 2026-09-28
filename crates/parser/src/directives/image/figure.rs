@@ -7,7 +7,7 @@
 //! caption writes an empty comment (`..`) first, which is the one piece of
 //! markup this parser consumes rather than parses.
 
-use rinx_ast::{DiagnosticCode, Directive, Figure, FigureWidth, ImageUri, InlineNode, Node, Span};
+use rinx_ast::{AssetUri, DiagnosticCode, Directive, Figure, FigureWidth, InlineNode, Node, Span};
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
@@ -170,7 +170,7 @@ pub(in crate::directives) fn parse_figure_directive(
         );
     }
 
-    let mut image = common.with_uri(ImageUri::new(argument));
+    let mut image = common.with_uri(AssetUri::new(argument));
     image.span = directive_span;
     report_option_conflicts(&image, &option_lines, DIRECTIVE, diagnostics, ctx);
 
@@ -238,7 +238,7 @@ mod tests {
 
         // Then
         let figure = figure_of(&directive);
-        assert_eq!(figure.image.uri, ImageUri::new("logo.png"));
+        assert_eq!(figure.image.uri, AssetUri::new("logo.png"));
         assert!(!figure.has_body());
         assert!(diagnostics.entries().is_empty());
     }
@@ -470,7 +470,7 @@ mod tests {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         let figure = figure_of(directive);
-        assert_eq!(figure.image.uri, ImageUri::new("images/logo.png"));
+        assert_eq!(figure.image.uri, AssetUri::new("images/logo.png"));
         assert_eq!(figure.image.alt.as_deref(), Some("The logo"));
         assert_eq!(
             figure.caption.as_deref().map(inline_plain_text),

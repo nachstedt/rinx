@@ -86,7 +86,7 @@ pub(super) fn parse_button_link(
 /// than trimming the ends, because an argument may be wrapped across lines and
 /// a URL split that way is still one URL. Written out here rather than reused
 /// from the image directives, which normalize a *path* through
-/// `ast::ImageUri` and carry resolution rules a button has no use for.
+/// `ast::AssetUri` and carry resolution rules a button has no use for.
 fn normalize_uri(argument: &str) -> String {
     argument.split_whitespace().collect()
 }

@@ -6,6 +6,7 @@ mod c_domain;
 mod doc_role;
 mod domain_directives;
 mod domain_scoping;
+mod download_role;
 mod entity_import;
 mod entity_update;
 mod pipeline_basics;

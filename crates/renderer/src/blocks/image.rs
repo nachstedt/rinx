@@ -9,7 +9,7 @@
 
 use std::fmt::Write as _;
 
-use rinx_ast::{ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri};
+use rinx_ast::{AssetUri, ImageAlign, ImageLoading, ImageOptions, ImageTarget};
 use rinx_index::TargetLocation;
 
 use crate::RenderCtx;
@@ -17,7 +17,7 @@ use crate::image_error::ImageError;
 use crate::{BrokenLink, BrokenLinkKind};
 use rinx_index::relative_doc_href;
 
-use super::asset_href::relative_asset_href;
+use crate::asset_href::{AssetDir, relative_asset_href};
 
 /// The `src` an image renders with, and whether it is a `data:` URI.
 ///
@@ -25,7 +25,7 @@ use super::asset_href::relative_asset_href;
 /// into the site's `_images/` directory, unless the author asked for the bytes
 /// themselves and the build supplied them.
 fn image_src(options: &ImageOptions, ctx: &mut RenderCtx) -> String {
-    let ImageUri::Document(written) = &options.uri else {
+    let AssetUri::Document(written) = &options.uri else {
         // An external URL. `:loading: embed` on one is already reported by the
         // parser — fetching it would make the build depend on the network — so
         // there is nothing left to say here and it simply links.
@@ -52,7 +52,7 @@ fn image_src(options: &ImageOptions, ctx: &mut RenderCtx) -> String {
         });
     }
 
-    relative_asset_href(&resolved, ctx.doc_path)
+    relative_asset_href(AssetDir::Images, &resolved, ctx.doc_path)
 }
 
 /// The `style` attribute value for an image's own dimensions, if it has any.
@@ -98,8 +98,8 @@ pub(crate) fn render_image_element(
     // wants a genuinely empty alt — the accessible spelling for a decorative
     // image — writes `:alt:` with no value, which is kept as `Some("")`.
     let alt = options.alt.clone().unwrap_or_else(|| match &options.uri {
-        ImageUri::Document(written) => written.clone(),
-        ImageUri::External(uri) => uri.clone(),
+        AssetUri::Document(written) => written.clone(),
+        AssetUri::External(uri) => uri.clone(),
     });
     let alt_attr = html_escape::encode_double_quoted_attribute(&alt);
 
@@ -212,7 +212,7 @@ pub(super) fn render_image_directive(
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::render_directive_html;
-    use rinx_ast::{Directive, ImageUri, TargetName};
+    use rinx_ast::{AssetUri, Directive, TargetName};
     use rinx_index::ProjectIndex;
 
     /// Renders a `.. image::` built from `options` on a page at `doc_path`.
@@ -229,7 +229,7 @@ mod tests {
     }
 
     fn image(uri: &str) -> ImageOptions {
-        ImageOptions::new(ImageUri::new(uri))
+        ImageOptions::new(AssetUri::new(uri))
     }
 
     #[test]

@@ -13,6 +13,7 @@ use super::doc_reference::{DocRef, render_inline_doc_reference};
 use super::domain_object_reference::{
     DomainObjectDiagnostics, DomainObjectRef, render_inline_domain_object_reference,
 };
+use super::download_reference::{DownloadRef, render_inline_download_reference};
 use super::hyperlink::render_inline_hyperlink;
 use super::math::{render_equation_reference, render_inline_math};
 use super::option_reference::render_inline_option_reference;
@@ -70,6 +71,25 @@ pub(crate) fn render_inline(
         // `DiagnosticCode::SubstitutionImageNameNotAllowed`).
         rinx_ast::InlineNode::InlineImage(options) => {
             render_inline_image(html, options, ctx);
+        }
+        // A file, not something a document defines: its href follows from the
+        // page's path alone, so it cannot be broken while rendering — the
+        // site's validation action checks the declaration instead.
+        rinx_ast::InlineNode::DownloadReference {
+            display,
+            target,
+            link,
+            ..
+        } => {
+            render_inline_download_reference(
+                html,
+                DownloadRef {
+                    title: display.as_deref(),
+                    target,
+                    link: *link,
+                },
+                ctx.doc_path,
+            );
         }
         // Never reaches a well-formed document by the time it is rendered:
         // `resolve_substitutions` replaces every reference with its
@@ -212,6 +232,7 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::Math { .. }
         | rinx_ast::InlineNode::InlineImage(_)
         | rinx_ast::InlineNode::SubstitutionReference { .. }
+        | rinx_ast::InlineNode::DownloadReference { .. }
         | rinx_ast::InlineNode::Program(_) => {
             unreachable!("render_inline routes only cross-reference variants here")
         }

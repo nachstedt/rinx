@@ -29,6 +29,10 @@ pub(super) static DOC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     ))
     .unwrap()
 });
+/// `:download:`, also spelled `:std:download:`. No [`EXTERNAL_PREFIX`]: it
+/// names a file this site serves, which no inventory lists.
+pub(super) static DOWNLOAD_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:std:)?download:`(?P<target>[^`]+)`").unwrap());
 pub(super) static PROGRAM_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":program:`(?P<name>[^`]+)`").unwrap());
 pub(super) static TERM_ROLE_REGEX: LazyLock<Regex> =
@@ -128,6 +132,7 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&REF_REGEX, "ref"),
     (&ANY_ROLE_REGEX, "any"),
     (&DOC_ROLE_REGEX, "doc"),
+    (&DOWNLOAD_ROLE_REGEX, "download"),
     (&PROGRAM_ROLE_REGEX, "program"),
     (&TERM_ROLE_REGEX, "term"),
     (&MATH_ROLE_REGEX, "math"),

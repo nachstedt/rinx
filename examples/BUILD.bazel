@@ -20,6 +20,7 @@ rinx_library(
         "any_role.rst",
         "doc_role.rst",
         "doc_role_untitled.rst",
+        "downloads.rst",
         "version_changes.rst",
         "seealso.rst",
         "literal_blocks.rst",
@@ -70,6 +71,15 @@ rinx_library(
     # and what lets a `:loading: embed` image read its bytes — see
     # `rules/library.bzl`.
     images = ["data/logo.svg"],
+    # `downloads.rst` links these with `:download:`. Declaring them here is
+    # what copies them into the site's `_downloads/` directory; nothing else
+    # reads them, so editing one re-renders no page. Two are declared in
+    # another attribute as well — each attribute answers its own question.
+    downloads = [
+        "data/fruits.csv",
+        "data/logo.svg",
+        "shared/greeter.py",
+    ],
     deps = [
         # `index.rst`'s toctree pulls in `doctests`, so the library owning it
         # has to be a declared dep.

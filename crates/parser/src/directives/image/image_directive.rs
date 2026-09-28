@@ -4,7 +4,7 @@
 //! the directive's two structural rules: the argument is required, and there
 //! is no body.
 
-use rinx_ast::{Diagnostic, DiagnosticCode, Directive, ImageLoading, ImageOptions, ImageUri, Span};
+use rinx_ast::{AssetUri, Diagnostic, DiagnosticCode, Directive, ImageLoading, ImageOptions, Span};
 
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
@@ -57,7 +57,7 @@ pub(in crate::directives) fn parse_image_directive(
         );
     }
 
-    let mut options = common.with_uri(ImageUri::new(argument));
+    let mut options = common.with_uri(AssetUri::new(argument));
     options.span = directive_span;
     report_option_conflicts(&options, &option_lines, DIRECTIVE, diagnostics, ctx);
     Directive::Image(Box::new(options))
@@ -105,7 +105,7 @@ pub(in crate::directives) fn report_option_conflicts(
     // the renderer because both halves — the `:loading:` and the argument —
     // are already known, and a parse-time diagnostic points at the line the
     // author would have to change.
-    if options.loading == ImageLoading::Embed && matches!(options.uri, ImageUri::External(_)) {
+    if options.loading == ImageLoading::Embed && matches!(options.uri, AssetUri::External(_)) {
         let span = option_line_span("loading", option_lines, ctx).or(options.span);
         diagnostics.push(Diagnostic::at(
             DiagnosticCode::ImageEmbedExternal,
@@ -153,7 +153,7 @@ pub(in crate::directives) fn report_unusable_scale(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{Domain, ImageAlign, ImageLoading, ImageUri, TargetName};
+    use rinx_ast::{AssetUri, Domain, ImageAlign, ImageLoading, TargetName};
 
     /// Parses a directive body given as already-indented source lines.
     fn parse(argument: &str, body: &[&str]) -> (Directive, Diagnostics) {
@@ -187,7 +187,7 @@ mod tests {
         let (directive, diagnostics) = parse(argument, &[]);
 
         // Then
-        assert_eq!(image_of(&directive).uri, ImageUri::new("logo.png"));
+        assert_eq!(image_of(&directive).uri, AssetUri::new("logo.png"));
         assert!(diagnostics.entries().is_empty());
     }
 
@@ -267,7 +267,7 @@ mod tests {
         let (directive, diagnostics) = parse("logo.png", &body);
 
         // Then — still an image; the parser degrades rather than discards
-        assert_eq!(image_of(&directive).uri, ImageUri::new("logo.png"));
+        assert_eq!(image_of(&directive).uri, AssetUri::new("logo.png"));
         assert_eq!(
             codes(&diagnostics),
             vec![DiagnosticCode::ImageContentNotAllowed]
@@ -393,7 +393,7 @@ mod tests {
             panic!("expected a directive, got {:?}", doc.nodes[0]);
         };
         let options = image_of(directive);
-        assert_eq!(options.uri, ImageUri::new("images/logo.png"));
+        assert_eq!(options.uri, AssetUri::new("images/logo.png"));
         assert_eq!(options.alt.as_deref(), Some("The logo"));
         assert_eq!(
             options.rendered_width().map(|width| width.to_string()),
@@ -477,7 +477,7 @@ mod tests {
         // Then
         assert_eq!(
             image_of(&directive).uri,
-            ImageUri::External(argument.to_string())
+            AssetUri::External(argument.to_string())
         );
     }
 }

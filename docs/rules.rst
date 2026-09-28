@@ -46,6 +46,12 @@ document that a ``rinx_site`` renders, not HTML.
      - The pictures ``.. image::`` and ``.. figure::`` show. They are copied
        into the site's ``_images/`` directory. An image a document shows but
        that is not declared here fails the site's build.
+   * - ``downloads``
+     - The files the ``:download:`` role links. They are copied into the
+       site's ``_downloads/`` directory, keeping their path from the workspace
+       root, and are read by nothing else, so editing one re-renders no page.
+       A file a document links but that is not declared here fails the site's
+       build as ``download.undeclared``.
    * - ``diagrams``
      - Whether the documents may hold PlantUML diagrams (``.. uml::``,
        ``.. plantuml::`` and the entity diagrams). Off by default, so a library
@@ -74,7 +80,7 @@ rinx_site
 
 Assembles a site from ``rinx_library`` targets: it indexes every document the
 libraries bring in (transitively), renders one page per document, compiles the
-diagrams, and copies the images and the stylesheet. The output is the directory
+diagrams, and copies the images, the downloads and the stylesheet. The output is the directory
 ``<name>_site_out``. The site also writes an ``objects.inv``, the inventory
 other Sphinx or rinx sites link into it through, available as the target's
 ``inventory`` output group.

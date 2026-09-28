@@ -93,11 +93,11 @@ pub(super) fn render_figure_directive(html: &mut String, figure: &Figure, ctx: &
 mod tests {
     use super::*;
     use crate::blocks::render_test_support::render_directive_html;
-    use rinx_ast::{Directive, ImageOptions, ImageUri, InlineNode, Node, TargetName};
+    use rinx_ast::{AssetUri, Directive, ImageOptions, InlineNode, Node, TargetName};
     use rinx_index::ProjectIndex;
 
     fn figure(uri: &str) -> Figure {
-        Figure::new(ImageOptions::new(ImageUri::new(uri)))
+        Figure::new(ImageOptions::new(AssetUri::new(uri)))
     }
 
     fn render(figure: Figure) -> String {

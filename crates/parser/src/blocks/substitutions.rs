@@ -447,7 +447,7 @@ fn resolve_directive(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{ImageOptions, ImageUri, SubstitutionDefinition};
+    use rinx_ast::{AssetUri, ImageOptions, SubstitutionDefinition};
 
     fn replace_def(name: &str, content: Vec<InlineNode>) -> Node {
         Node::Directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
@@ -698,7 +698,7 @@ mod tests {
     #[test]
     fn test_resolves_an_image_substitution_reference_to_an_inline_image() {
         // Given
-        let options = ImageOptions::new(ImageUri::new("logo.png"));
+        let options = ImageOptions::new(AssetUri::new("logo.png"));
         let mut nodes = vec![
             Node::Directive(Directive::SubstitutionDefinition(SubstitutionDefinition {
                 name: "logo".to_string(),

@@ -3,7 +3,8 @@
 //!
 //! [`dispatch`] owns the entry point and matches on the node kind; each
 //! remaining module renders one cross-reference role — [`reference`] for
-//! `:ref:`, [`doc_reference`] for `:doc:`, [`hyperlink`] and
+//! `:ref:`, [`doc_reference`] for `:doc:`, [`download_reference`] for
+//! `:download:` (which needs no index at all), [`hyperlink`] and
 //! [`anonymous_reference`] for the two hyperlink forms, [`term_reference`]
 //! for `:term:`, [`option_reference`] for `:option:`, and
 //! [`domain_object_reference`] for the domain roles. The latter two resolve
@@ -22,6 +23,7 @@ mod any_reference;
 mod dispatch;
 mod doc_reference;
 mod domain_object_reference;
+mod download_reference;
 pub(crate) mod entity_reference;
 mod external_link;
 mod hyperlink;

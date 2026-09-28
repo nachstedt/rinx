@@ -162,6 +162,7 @@ def _rinx_library_impl(ctx):
     transitive_asts = [dep[RinxInfo].ast_files for dep in ctx.attr.deps]
     transitive_diagram_asts = [dep[RinxInfo].diagram_ast_files for dep in ctx.attr.deps]
     transitive_images = [dep[RinxInfo].image_files for dep in ctx.attr.deps]
+    transitive_downloads = [dep[RinxInfo].download_files for dep in ctx.attr.deps]
     transitive_embeds = [dep[RinxInfo].embed_sidecars for dep in ctx.attr.deps]
 
     # `doctest_plans` carries this library's own plans, and is what
@@ -179,6 +180,9 @@ def _rinx_library_impl(ctx):
             ),
             direct_doc_names = local_doc_names,
             image_files = depset(ctx.files.images, transitive = transitive_images),
+            # No action of this library reads them: a download is served, not
+            # parsed, rendered or embedded, so it only rides to the site.
+            download_files = depset(ctx.files.downloads, transitive = transitive_downloads),
             embed_sidecars = depset(embed_sidecars, transitive = transitive_embeds),
         ),
     ]
@@ -197,6 +201,10 @@ rinx_library = rule(
         "images": attr.label_list(
             allow_files = True,
             doc = "Image files this library's documents show via `.. image::`/`.. figure::`. Paths in the document resolve relative to the document itself, or to the source root with a leading `/`. Declaring the file here is what gets it bundled into the site's `_images/` directory and, for a `:loading: embed` image, into the build action that inlines it; an undeclared image fails the site's image validation.",
+        ),
+        "downloads": attr.label_list(
+            allow_files = True,
+            doc = "Files this library's documents link with the `:download:` role. Paths in the document resolve relative to the document itself, or to the source root with a leading `/`. Declaring the file here is what copies it into the site's `_downloads/` directory, at its source-root-relative path; an undeclared one fails the site's asset validation. No parse or render action takes these as inputs, so editing a downloadable file re-renders no page.",
         ),
         "deps": attr.label_list(
             providers = [RinxInfo],
@@ -258,5 +266,7 @@ AST. Pictures
 shown by `.. image::`/`.. figure::` go in `images`, which is unrelated to both:
 those bytes are read by neither the parser nor another library — they are
 copied into the site and, when a document asks to embed one, inlined into it.
+Files linked with `:download:` go in `downloads`, which is like `images` minus
+the embedding: they are copied into the site's `_downloads/` and nothing else.
 """,
 )

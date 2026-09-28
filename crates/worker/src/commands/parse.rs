@@ -198,7 +198,7 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
 
     // A file that could not be read means a whole table or section is missing
     // from the page, so the build fails rather than shipping the gap — the
-    // same stance `validate_images` takes on a missing diagram. The parser
+    // same stance `validate_assets` takes on a missing diagram. The parser
     // itself stays resilient (it degrades the directive and carries on), which
     // is what the live preview needs; only this subcommand is strict.
     let failures = parse_files.failures();

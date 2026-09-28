@@ -25,7 +25,7 @@ use std::cell::RefCell;
 pub(super) struct DocumentRelativeFiles {
     /// The document being parsed, as a source-root-relative path. Every
     /// resolution is anchored here or at a file reached from here, so ids come
-    /// out source-root-relative too — the same key `ImageUri::resolve` and the
+    /// out source-root-relative too — the same key `AssetUri::resolve` and the
     /// asset embedder produce.
     doc_path: String,
     /// `RefCell` because [`ParseFileLoader::load`] takes `&self` — the parser

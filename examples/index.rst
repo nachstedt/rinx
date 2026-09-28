@@ -14,6 +14,7 @@ Welcome to the Rinx example.
    inline_roles
    any_role
    doc_role
+   downloads
    version_changes
    seealso
    literal_blocks

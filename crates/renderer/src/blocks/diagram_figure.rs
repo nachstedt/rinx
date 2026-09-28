@@ -19,7 +19,7 @@ use rinx_ast::{HashedContent, ImageAlign, LengthOrPercentage, TargetName};
 
 use crate::RenderCtx;
 
-use super::asset_href::relative_asset_href;
+use crate::asset_href::{AssetDir, relative_asset_href};
 
 /// The alt text every diagram gets.
 ///
@@ -114,6 +114,7 @@ pub(super) fn render_diagram_figure(
 /// builds — which is what lets Bazel skip recompiling it.
 fn diagram_src(content: &HashedContent, ctx: &RenderCtx<'_>) -> String {
     relative_asset_href(
+        AssetDir::Images,
         std::path::Path::new(&format!("{}.svg", content.hash())),
         ctx.doc_path,
     )

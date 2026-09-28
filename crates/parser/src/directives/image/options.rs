@@ -11,7 +11,7 @@
 //! wording that never offers an author an option their directive lacks.
 
 use rinx_ast::{
-    Diagnostic, DiagnosticCode, ImageAlign, ImageLoading, ImageOptions, ImageTarget, ImageUri,
+    AssetUri, Diagnostic, DiagnosticCode, ImageAlign, ImageLoading, ImageOptions, ImageTarget,
     Length, LengthOrPercentage, TargetName, is_vertical_name,
 };
 
@@ -68,7 +68,7 @@ impl CommonImageOptions {
     }
 
     /// These options together with the URI the directive's argument named.
-    pub(in crate::directives) fn with_uri(self, uri: ImageUri) -> ImageOptions {
+    pub(in crate::directives) fn with_uri(self, uri: AssetUri) -> ImageOptions {
         ImageOptions {
             uri,
             alt: self.alt,
@@ -714,7 +714,7 @@ mod tests {
     fn test_with_uri_attaches_the_argument() {
         // Given
         let (options, _, _) = parse(&[":alt: A logo"]);
-        let uri = ImageUri::new("logo.png");
+        let uri = AssetUri::new("logo.png");
 
         // When
         let image = options.with_uri(uri.clone());

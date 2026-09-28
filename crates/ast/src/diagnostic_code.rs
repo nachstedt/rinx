@@ -267,6 +267,15 @@ diagnostic_codes! {
     /// while rendering, since only there is the asset sidecar known.
     ImageEmbedUnavailable => "image.embed-unavailable",
 
+    // --- `:download:` -------------------------------------------------------
+    /// A `:download:` naming a project file that never reached the site's
+    /// `_downloads/` directory — in a Bazel build, a file missing from the
+    /// library's `downloads` attribute. Fails the build rather than warning,
+    /// as an undeclared image does: the page would otherwise ship a link to
+    /// nothing. Reported by the site's asset validation, the one step that
+    /// sees both the documents and the bundle.
+    DownloadUndeclared => "download.undeclared",
+
     // --- `.. include::` ----------------------------------------------------
     /// The directive has no argument, so it names no file to splice in.
     IncludeMissingPath => "include.missing-path",
