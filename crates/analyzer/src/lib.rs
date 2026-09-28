@@ -12,10 +12,12 @@
 
 mod document_index;
 mod domain_object_index;
+mod element_numbering;
 mod entity_index;
 mod entity_update_apply;
 mod equation_numbering;
 mod nav_diagnostics;
+mod numbering_steps;
 mod outline;
 mod page_order;
 mod project_index;
@@ -26,6 +28,9 @@ pub use document_index::analyze;
 // its callers — toctree entry resolution and image URI resolution — are
 // allowed to share; re-exported here so the worker's existing import keeps
 // working.
+pub use element_numbering::assign_element_numbers;
 pub use nav_diagnostics::DocumentDiagnostics;
-pub use project_index::{ProjectIndexBuild, build_project_index, build_project_index_reporting};
+pub use project_index::{
+    IndexSettings, ProjectIndexBuild, build_project_index, build_project_index_reporting,
+};
 pub use rinx_toctree::normalize_path;

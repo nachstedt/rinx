@@ -1,6 +1,7 @@
 use crate::{
-    DocumentNumbers, DocumentOutline, DocumentToctree, EntityFieldHistory, EntityRecord,
-    EntityUpdateRecord, EquationLocation, ExternalInventory, GenIndexEntry, TargetLocation,
+    DocumentNumbers, DocumentOutline, DocumentToctree, ElementNumbers, EntityFieldHistory,
+    EntityRecord, EntityUpdateRecord, EquationLocation, ExternalInventory, GenIndexEntry,
+    NumberingStep, NumrefTarget, TargetLocation,
 };
 use rinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
@@ -107,6 +108,21 @@ pub struct ProjectIndex {
     /// rules.
     #[serde(default)]
     pub equations: BTreeMap<TargetName, EquationLocation>,
+    /// Each document's `numfig` numbering walk: its captioned elements and
+    /// its toctrees, in document order. Per-document, so it merges — see
+    /// [`NumberingStep`].
+    #[serde(default)]
+    pub numbering_steps: BTreeMap<String, Vec<NumberingStep>>,
+    /// What each label a `:numref:` may name points at. Per-document data,
+    /// merged like `targets`.
+    #[serde(default)]
+    pub numref_targets: BTreeMap<TargetName, NumrefTarget>,
+    /// The number `numfig` gave each document's captioned elements, keyed by
+    /// document path. Project-wide — Sphinx numbers across the toctree, so one
+    /// figure's number depends on every document read before it — and so,
+    /// like `section_numbers`, recomputed rather than merged.
+    #[serde(default)]
+    pub element_numbers: BTreeMap<String, ElementNumbers>,
     /// Each document's own `.. sectnum::`/`.. section-numbering::` options,
     /// keyed by document path — the last one found in that document if it
     /// wrote more than one. Per-document data, so unlike `section_numbers`
@@ -288,11 +304,13 @@ impl ProjectIndex {
         self.genindex_entries.extend(other.genindex_entries);
         self.equations.extend(other.equations);
         self.sectnum.extend(other.sectnum);
+        self.numbering_steps.extend(other.numbering_steps);
+        self.numref_targets.extend(other.numref_targets);
         // Accumulates like `genindex_entries`; applying it is a later phase's
         // job, not this merge's.
         self.entity_updates.extend(other.entity_updates);
-        // root_documents, page_order, section_numbers, entity_backlinks and
-        // entity_update_history are built globally from the whole graph, so
+        // root_documents, page_order, section_numbers, element_numbers,
+        // entity_backlinks and entity_update_history are built globally from the whole graph, so
         // they are recomputed rather than merged; external_inventories is a
         // build input no document contributes to, so it is kept as it is
         let mut conflicts = MergeConflicts::default();
@@ -462,6 +480,50 @@ mod tests {
         assert!(stale.toctrees.contains_key("index.rst"));
         assert!(stale.toctrees.contains_key("guide.rst"));
         assert_eq!(stale.document_outlines["guide.rst"].sections.len(), 1);
+    }
+
+    #[test]
+    fn test_merge_carries_numbering_input_but_not_numbers() {
+        // Given a stale index holding numbers, and a fresh document's analysis
+        let mut stale = ProjectIndex::default();
+        let mut numbers = crate::ElementNumbers::default();
+        numbers.set(0, vec![1]);
+        stale
+            .element_numbers
+            .insert("index.rst".to_string(), numbers);
+
+        let mut fresh = ProjectIndex::default();
+        fresh.numbering_steps.insert(
+            "guide.rst".to_string(),
+            vec![crate::NumberingStep::Element {
+                kind: rinx_ast::EnumerableKind::Figure,
+                sections: Vec::new(),
+            }],
+        );
+        fresh.numref_targets.insert(
+            TargetName::new("fig"),
+            crate::NumrefTarget {
+                doc_path: "guide.rst".to_string(),
+                subject: crate::NumrefSubject::Element {
+                    ordinal: 0,
+                    kind: rinx_ast::EnumerableKind::Figure,
+                },
+            },
+        );
+        let mut fresh_numbers = crate::ElementNumbers::default();
+        fresh_numbers.set(0, vec![9]);
+        fresh
+            .element_numbers
+            .insert("guide.rst".to_string(), fresh_numbers);
+
+        // When
+        let _ = stale.merge(fresh);
+
+        // Then — the input merges; the project-wide numbers are recomputed
+        assert!(stale.numbering_steps.contains_key("guide.rst"));
+        assert!(stale.numref_targets.contains_key(&TargetName::new("fig")));
+        assert!(!stale.element_numbers.contains_key("guide.rst"));
+        assert!(stale.element_numbers.contains_key("index.rst"));
     }
 
     #[test]

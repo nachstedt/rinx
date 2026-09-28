@@ -9,6 +9,7 @@ mod domain_scoping;
 mod download_role;
 mod entity_import;
 mod entity_update;
+mod numref_role;
 mod pipeline_basics;
 mod reference_matching;
 mod rendering;

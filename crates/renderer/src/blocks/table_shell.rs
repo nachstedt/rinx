@@ -5,6 +5,7 @@
 //! None of this applies to a bare grid/simple `Node::Table`, which has no
 //! such options.
 
+use crate::numbering::write_caption_number;
 use rinx_ast::{TableAlign, TableWidths, TargetName};
 use std::fmt::Write as _;
 
@@ -48,11 +49,14 @@ pub(super) fn render_table_open_tag(
     let _ = writeln!(html, ">");
 }
 
-/// Emits a `<caption>` for the directive's title argument, when given.
-pub(super) fn render_table_caption(html: &mut String, title: Option<&str>) {
+/// Emits a `<caption>` for the directive's title argument, when given,
+/// starting with the table's `numfig` number when it has one.
+pub(super) fn render_table_caption(html: &mut String, title: Option<&str>, number: Option<&str>) {
     if let Some(title) = title {
         let title_escaped = html_escape::encode_text(title);
-        let _ = writeln!(html, "<caption>{title_escaped}</caption>");
+        html.push_str("<caption>");
+        write_caption_number(html, number);
+        let _ = writeln!(html, "{title_escaped}</caption>");
     }
 }
 
@@ -148,10 +152,25 @@ mod tests {
         let mut html = String::new();
 
         // When
-        render_table_caption(&mut html, Some("Fruit"));
+        render_table_caption(&mut html, Some("Fruit"), None);
 
         // Then
         assert_eq!(html, "<caption>Fruit</caption>\n");
+    }
+
+    #[test]
+    fn test_render_table_caption_starts_with_the_number() {
+        // Given
+        let mut html = String::new();
+
+        // When
+        render_table_caption(&mut html, Some("Fruit"), Some("Table 2"));
+
+        // Then
+        assert_eq!(
+            html,
+            "<caption><span class=\"caption-number\">Table 2 </span>Fruit</caption>\n"
+        );
     }
 
     #[test]
@@ -160,7 +179,7 @@ mod tests {
         let mut html = String::new();
 
         // When
-        render_table_caption(&mut html, None);
+        render_table_caption(&mut html, None, Some("Table 1"));
 
         // Then
         assert!(html.is_empty());

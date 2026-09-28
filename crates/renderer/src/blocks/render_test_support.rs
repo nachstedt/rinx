@@ -54,8 +54,17 @@ pub(super) fn with_ctx_for<R>(
     let math = crate::math::MathRenderer::new();
     let highlighter = crate::highlight::Highlighter::new();
     let section_ids = std::collections::BTreeMap::new();
+    // No test here renders a numbered caption through this context: numbering
+    // needs the document, and these tests render one construct at a time.
+    let config = crate::config::SiteConfig::default();
+    let numbering = crate::numbering::Numbering::new(
+        &rinx_ast::Document::new(doc_path.to_string(), Vec::new()),
+        index,
+        &config,
+    );
 
     let mut ctx = RenderCtx {
+        numbering: &numbering,
         index,
         domain_resolver: &domain_resolver,
         option_resolver: &option_resolver,

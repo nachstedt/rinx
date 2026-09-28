@@ -800,3 +800,78 @@ fn test_parse_reads_an_external_prefix_on_a_bare_domain_role() {
         }
     ));
 }
+
+#[test]
+fn test_parse_creates_a_number_reference_with_its_span() {
+    // Given
+    let input = "See :numref:`Fig. %s <fig-root>` above.";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    assert_eq!(
+        doc.nodes[0],
+        Node::Paragraph(vec![
+            InlineNode::Text("See ".to_string()),
+            InlineNode::NumberReference {
+                title: Some(rinx_ast::NumberFormat::parse("Fig. %s").expect("valid")),
+                target: "fig-root".to_string(),
+                link: true,
+                span: Some(at(1, 5, 33)),
+            },
+            InlineNode::Text(" above.".to_string()),
+        ])
+    );
+    assert!(doc.diagnostics.is_empty());
+}
+
+#[test]
+fn test_parse_reports_a_refused_numref_title_at_the_role() {
+    // Given — a title with nowhere for the number to go, on the second line
+    let input = "Intro.\n\nSee :numref:`see this <fig-root>`.";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then — reported where it was written, and shown unlinked
+    assert_eq!(doc.diagnostics.len(), 1);
+    assert_eq!(
+        doc.diagnostics[0].code,
+        rinx_ast::DiagnosticCode::NumrefInvalidFormat
+    );
+    assert_eq!(doc.diagnostics[0].span, Some(at(3, 5, 34)));
+    assert_eq!(
+        doc.nodes[1],
+        Node::Paragraph(vec![
+            InlineNode::Text("See ".to_string()),
+            InlineNode::NumberReference {
+                title: None,
+                target: "see this".to_string(),
+                link: false,
+                span: Some(at(3, 5, 34)),
+            },
+            InlineNode::Text(".".to_string()),
+        ])
+    );
+}
+
+#[test]
+fn test_parse_unescapes_a_numref_title_before_reading_its_format() {
+    // Given — an escape is reStructuredText's, not the format's: `\%s` is
+    // `%s` by the time Sphinx applies the title, so it still marks the slot
+    let input = r"See :numref:`100\%s <fig-root>`.";
+
+    // When
+    let doc = parse("test.rst", input);
+
+    // Then
+    assert!(doc.diagnostics.is_empty());
+    let Node::Paragraph(inlines) = &doc.nodes[0] else {
+        unreachable!()
+    };
+    assert!(matches!(
+        &inlines[1],
+        InlineNode::NumberReference { title: Some(title), .. } if title.as_str() == "100%s"
+    ));
+}

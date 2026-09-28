@@ -20,6 +20,7 @@ rinx_library(
         "any_role.rst",
         "doc_role.rst",
         "doc_role_untitled.rst",
+        "numref.rst",
         "downloads.rst",
         "version_changes.rst",
         "seealso.rst",

@@ -16,6 +16,7 @@ pub(super) mod doc;
 pub(super) mod download;
 pub(super) mod entity;
 pub(super) mod math;
+pub(super) mod numref;
 pub(super) mod py;
 pub(super) mod std_;
 pub(super) mod target;

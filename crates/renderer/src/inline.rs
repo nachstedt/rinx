@@ -28,6 +28,7 @@ pub(crate) mod entity_reference;
 mod external_link;
 mod hyperlink;
 mod math;
+mod number_reference;
 mod option_reference;
 mod ref_text;
 mod reference;

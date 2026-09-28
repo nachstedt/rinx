@@ -124,7 +124,22 @@ Inline markup
          ``:doc:``'s does.
        - A file not declared in the library's ``downloads`` fails the build
          as ``download.undeclared``; Sphinx warns and shows the text unlinked.
-   * - ``:numref:`` and ``:code:`` roles
+   * - ``:numref:`` role
+     - ✅ ℹ️
+     - - A title Sphinx could not apply, such as one with no ``%s`` or
+         ``{number}``, is reported while parsing as
+         ``numref.invalid-format``; Sphinx warns while resolving it, and
+         crashes on an unbalanced brace.
+       - An unknown label is drawn as a broken link and reported as
+         ``link.broken-numref``; Sphinx shows the text.
+       - A section numbered by ``.. sectnum::`` shows its number; Sphinx
+         numbers only sections a ``:numbered:`` toctree reaches.
+       - ``numfig_format`` accepts ``{number}``, which Sphinx cannot write
+         in front of a caption, and refuses ``{name}`` when the site config
+         loads.
+       - ``:external:numref:`` is refused as ``numref.external``, since an
+         ``objects.inv`` holds no numbers.
+   * - ``:code:`` role
      - ❌
      -
    * - ``:pep:``, ``:rfc:``, ``:cve:`` and ``:cwe:`` roles

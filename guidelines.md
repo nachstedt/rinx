@@ -93,6 +93,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Prefer a declarative property that states what the reference implementation computes by measuring, since the target platform can measure later and better than the build can.
 - When the reference implementation defines a rule over full Unicode character classes, port those classes rather than an ASCII approximation that happens to satisfy the current tests.
 - Transcribe a reference implementation's pre-generated tables rather than re-deriving them, so the two cannot drift apart as either side's inputs change; fetch the actual source rather than reconstructing a table from memory.
+- Keep the reference implementation's default for a feature that changes rendered output, so adopting it never alters a site that did not ask for it.
 
 ## Diagnostics
 
@@ -103,6 +104,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When porting a reference implementation, port its full diagnostic set, and additionally invent diagnostics of your own wherever it silently degrades valid-looking input into something else.
 - When two phases must derive the same identifier, give them one function to call rather than two implementations to keep in step, and key it on something that cannot collide (a position) rather than on content that can.
 - Before keeping an invented diagnostic, measure its false-positive rate over the benchmark corpus; a heuristic that stays silent across real documents is safe to keep unnarrowed.
+- Report a malformed value in the earliest phase that reads the author's text, even where the reference implementation only notices it later, but keep the reference's output for it.
 - Every diagnostic carries a source position and a stable code; the position goes in a span and the code in an enum, never formatted into the message text.
 - Report a position as a range rather than a point, even while only its start is printed, because the end is free wherever the start is and retrofitting it later re-touches every reporting site.
 - Name a file a reader can actually open in a diagnostic — the source path, not an internal logical path that merely looks like one.

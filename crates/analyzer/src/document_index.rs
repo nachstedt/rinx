@@ -6,6 +6,7 @@ use rinx_scope::Scope;
 
 use super::domain_object_index::index_domain_object;
 use super::equation_numbering::number_equations;
+use super::numbering_steps::collect_numbering;
 use super::outline::build_document_outline;
 
 /// Analyzes a single `Document` and returns a local `ProjectIndex`.
@@ -56,6 +57,13 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     }
 
     index_nodes(&doc.nodes, &doc.path, &mut index, &mut Scope::default());
+    let numbering = collect_numbering(doc);
+    if !numbering.steps.is_empty() {
+        index
+            .numbering_steps
+            .insert(doc.path.clone(), numbering.steps);
+    }
+    index.numref_targets.extend(numbering.targets);
     for (label, number) in number_equations(doc) {
         index
             .equations

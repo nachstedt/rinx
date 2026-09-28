@@ -254,7 +254,11 @@ fn test_e2e_two_documents_disagreeing_about_a_field_each_get_their_own_diagnosti
     let docs = [requirements, extend];
 
     // When
-    let build = analyzer::build_project_index_reporting(&docs, "requirements", &schema);
+    let build = analyzer::build_project_index_reporting(
+        &docs,
+        &analyzer::IndexSettings::new("requirements"),
+        &schema,
+    );
 
     // Then — one diagnostic per document, each carrying that document's own
     // span, so either author can independently suppress their own copy

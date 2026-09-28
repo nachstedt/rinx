@@ -14,6 +14,7 @@ Welcome to the Rinx example.
    inline_roles
    any_role
    doc_role
+   numref
    downloads
    version_changes
    seealso

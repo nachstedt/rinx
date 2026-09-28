@@ -3,6 +3,18 @@ use serde::{Deserialize, Serialize};
 use crate::asset_uri::AssetUri;
 use crate::image::ImageOptions;
 use crate::inventory_selector::InventorySelector;
+use crate::number_format::NumberFormat;
+
+/// Why the parser refused a `:numref:` — see
+/// [`InlineNode::RefusedNumberReference`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NumberReferenceRefusal {
+    /// The explicit title is not a format Sphinx could apply.
+    InvalidTitle,
+    /// An `:external:` prefix: an inventory holds no numbers.
+    External,
+}
 use crate::object_type::ObjectType;
 use crate::span::Span;
 use crate::target_search_order::TargetSearchOrder;
@@ -185,6 +197,42 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "InventorySelector::is_any")]
         inventory: InventorySelector,
     },
+    /// A reference showing the *number* of a figure, table, code block or
+    /// section, produced by the `:numref:` (or `:std:numref:`) role.
+    ///
+    /// `target` is the label as written and resolved only while rendering:
+    /// which element it labels, and which number the whole project's toctree
+    /// gave that element, only the project index knows. `title` is the
+    /// explicit title of the angle-bracket form, already parsed into the
+    /// [`NumberFormat`] it is applied as — so a title Sphinx could not apply
+    /// was reported here, at the role, and never reaches this variant. `None`
+    /// for a bare target, which shows the site's `numfig_format` for the kind
+    /// of thing it points at.
+    ///
+    /// `link: false` is the `!` form, and also what a refused title becomes:
+    /// either way the reference is never looked up and `target` holds the text
+    /// shown instead — everything after the `!`, or the title as written.
+    NumberReference {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        title: Option<NumberFormat>,
+        target: String,
+        link: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
+    /// A `:numref:` the parser refused, before the whole-document pass
+    /// (`rinx_parser`'s `report_refused_number_references`) reports it at
+    /// its span and lowers it to an unlinked [`Self::NumberReference`].
+    ///
+    /// An intermediate node, as [`Self::SubstitutionReference`] is: the inline
+    /// scan has nowhere to report a diagnostic, and a refusal must still reach
+    /// the author at the role. `text` is what the lowered reference shows.
+    RefusedNumberReference {
+        text: String,
+        refusal: NumberReferenceRefusal,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
     /// A link to a file the site serves for download, produced by the
     /// `:download:` (or `:std:download:`) role.
     ///
@@ -292,6 +340,8 @@ impl InlineNode {
             | Self::AnyReference { span, .. }
             | Self::DocReference { span, .. }
             | Self::DownloadReference { span, .. }
+            | Self::NumberReference { span, .. }
+            | Self::RefusedNumberReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
@@ -318,6 +368,8 @@ impl InlineNode {
             | Self::AnyReference { span, .. }
             | Self::DocReference { span, .. }
             | Self::DownloadReference { span, .. }
+            | Self::NumberReference { span, .. }
+            | Self::RefusedNumberReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::EquationReference { span, .. }
@@ -353,7 +405,8 @@ impl InlineNode {
             Self::DomainObjectReference { link, .. }
             | Self::AnyReference { link, .. }
             | Self::DocReference { link, .. }
-            | Self::DownloadReference { link, .. } => *link,
+            | Self::DownloadReference { link, .. }
+            | Self::NumberReference { link, .. } => *link,
             _ => false,
         }
     }
@@ -374,7 +427,8 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             | InlineNode::Strong(text)
             | InlineNode::Literal(text)
             | InlineNode::Program(text)
-            | InlineNode::AnonymousReference { text, .. } => text.as_str(),
+            | InlineNode::AnonymousReference { text, .. }
+            | InlineNode::RefusedNumberReference { text, .. } => text.as_str(),
             InlineNode::Hyperlink { text, .. } | InlineNode::AnonymousHyperlink { text, .. } => {
                 text.as_str()
             }
@@ -401,6 +455,11 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
             // without the project index this function deliberately doesn't take.
             InlineNode::Math { latex, .. } => latex.as_str(),
             InlineNode::EquationReference { label, .. } => label.as_str(),
+            // Without the index there is no number, so the title as written —
+            // or the label — is the best plain text there is.
+            InlineNode::NumberReference { title, target, .. } => {
+                title.as_ref().map_or(target.as_str(), NumberFormat::as_str)
+            }
             // Never reaches a caller of this function in a well-formed
             // document — resolved away by the end of parsing — but degrades
             // to the written name rather than vanishing if one somehow does.
@@ -723,6 +782,98 @@ mod tests {
 
         // Then
         assert_eq!(text, "the datadata/sample.csv");
+    }
+
+    fn number_reference(title: Option<&str>, link: bool) -> InlineNode {
+        InlineNode::NumberReference {
+            title: title.map(|text| NumberFormat::parse(text).expect("a valid format")),
+            target: "fig-root".to_string(),
+            link,
+            span: None,
+        }
+    }
+
+    #[test]
+    fn test_a_suppressed_number_reference_is_not_a_link() {
+        // Given — `:numref:` with and without the `!` prefix
+        let suppressed = number_reference(None, false);
+        let linked = number_reference(None, true);
+
+        // When / Then
+        assert!(!suppressed.renders_as_link());
+        assert!(linked.renders_as_link());
+    }
+
+    #[test]
+    fn test_number_reference_carries_its_span() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(4, 2),
+            crate::span::Position::new(4, 22),
+        );
+
+        // When
+        let placed = number_reference(None, true).with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+    }
+
+    #[test]
+    fn test_number_reference_roundtrips_its_title_as_written() {
+        // Given
+        let titled = number_reference(Some("Figure {number}"), true);
+        let bare = number_reference(None, true);
+
+        // When
+        let titled_json = serde_json::to_string(&titled).expect("serializes");
+        let bare_json = serde_json::to_string(&bare).expect("serializes");
+
+        // Then
+        assert!(
+            titled_json.contains("\"title\":\"Figure {number}\""),
+            "{titled_json}"
+        );
+        assert!(!bare_json.contains("title"));
+        assert_eq!(
+            serde_json::from_str::<InlineNode>(&titled_json).expect("deserializes"),
+            titled
+        );
+    }
+
+    #[test]
+    fn test_inline_plain_text_uses_the_title_or_label_of_a_number_reference() {
+        // Given
+        let titled = number_reference(Some("Fig. %s"), true);
+        let bare = number_reference(None, true);
+
+        // When
+        let text = inline_plain_text(&[titled, bare]);
+
+        // Then
+        assert_eq!(text, "Fig. %sfig-root");
+    }
+
+    #[test]
+    fn test_a_refused_number_reference_carries_its_span_and_shows_its_text() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(5, 1),
+            crate::span::Position::new(5, 30),
+        );
+        let refused = InlineNode::RefusedNumberReference {
+            text: "see this".to_string(),
+            refusal: NumberReferenceRefusal::InvalidTitle,
+            span: None,
+        };
+
+        // When
+        let placed = refused.with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+        assert!(!placed.renders_as_link());
+        assert_eq!(inline_plain_text(&[placed]), "see this");
     }
 
     #[test]

@@ -3,6 +3,7 @@ use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 
 use super::document_index::analyze;
+use super::element_numbering::assign_element_numbers;
 use super::entity_index::{
     collect_entity_diagnostics, collect_schema_mismatches, derive_entity_backlinks,
 };
@@ -30,7 +31,31 @@ pub fn build_project_index(
     root_doc: &str,
     schema: &EntitySchema,
 ) -> ProjectIndex {
-    build_project_index_reporting(docs, root_doc, schema).index
+    build_project_index_reporting(docs, &IndexSettings::new(root_doc), schema).index
+}
+
+/// The site settings the index action reads — every one a project-wide
+/// choice about how the documents are put together, not about any one
+/// document.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IndexSettings<'a> {
+    /// The configured root document, without its `.rst` extension
+    /// (`rinx.toml`'s `root_doc`).
+    pub root_doc: &'a str,
+    /// How many components of a section number an element's `numfig` number
+    /// starts with (`rinx.toml`'s `numfig_secnum_depth`).
+    pub numfig_secnum_depth: usize,
+}
+
+impl<'a> IndexSettings<'a> {
+    /// The settings of a site that configured only its root document.
+    #[must_use]
+    pub const fn new(root_doc: &'a str) -> Self {
+        Self {
+            root_doc,
+            numfig_secnum_depth: rinx_index::DEFAULT_NUMFIG_SECNUM_DEPTH,
+        }
+    }
 }
 
 /// A built index, plus the problems only a project-wide view could see.
@@ -47,14 +72,17 @@ pub struct ProjectIndexBuild {
 #[must_use]
 pub fn build_project_index_reporting(
     docs: &[Document],
-    root_doc: &str,
+    settings: &IndexSettings<'_>,
     schema: &EntitySchema,
 ) -> ProjectIndexBuild {
     let universe: BTreeSet<String> = docs.iter().map(|doc| doc.path.clone()).collect();
 
     let (mut index, merge_diagnostics) = merge_document_analyses(docs);
-    index.root_documents = find_root_documents(docs, &index, root_doc);
+    index.root_documents = find_root_documents(docs, &index, settings.root_doc);
     index.section_numbers = assign_section_numbers(&index, &universe);
+    // Figure numbers carry the section number they sit under, so they are
+    // assigned only once every section has one.
+    index.element_numbers = assign_element_numbers(&index, &universe, settings.numfig_secnum_depth);
     index.page_order = collect_page_order(&index, &universe);
     // Applying every collected `.. entity-update::`/`.. needextend::` comes
     // next: it can change an entity's *effective* outgoing edges (never its

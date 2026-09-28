@@ -7,6 +7,8 @@
 //! in sandboxed environments.
 
 use rinx_ast::ResolvedLanguage;
+
+pub use crate::numfig_format::NumfigFormat;
 use serde::Deserialize;
 
 /// Site-level configuration loaded from a TOML file.
@@ -93,6 +95,32 @@ pub struct SiteConfig {
     /// diagrams look must not re-parse every document.
     #[serde(default)]
     pub uml_configs: std::collections::BTreeMap<String, String>,
+
+    /// Whether figures, tables and captioned code blocks are numbered —
+    /// Sphinx's `numfig`, and like it off by default, so a site that never
+    /// asked renders exactly as before.
+    ///
+    /// Turning it on writes a number in front of every such caption and lets
+    /// a `:numref:` to one show it. A `:numref:` to a *section* works either
+    /// way, as in Sphinx: section numbers come from a `:numbered:` toctree,
+    /// not from this switch.
+    #[serde(default)]
+    pub numfig: bool,
+
+    /// How many components of the section number every `numfig` number
+    /// starts with — Sphinx's `numfig_secnum_depth`, default 1: under a
+    /// `:numbered:` toctree, the third figure of chapter 2 is `2.3`. `0`
+    /// numbers straight through the whole site.
+    ///
+    /// Read by the index action, which numbers the whole project; the others
+    /// are read while rendering.
+    #[serde(default = "default_numfig_secnum_depth")]
+    pub numfig_secnum_depth: usize,
+
+    /// The text each kind of number is shown in — Sphinx's `numfig_format`,
+    /// with the same four keys and defaults.
+    #[serde(default)]
+    pub numfig_format: NumfigFormat,
 
     /// The version switcher the default template shows when a site is
     /// published in several versions side by side — pydata-sphinx-theme's
@@ -187,6 +215,10 @@ fn default_show_entity_updates() -> bool {
     true
 }
 
+const fn default_numfig_secnum_depth() -> usize {
+    rinx_index::DEFAULT_NUMFIG_SECNUM_DEPTH
+}
+
 fn default_project() -> String {
     "Documentation".to_string()
 }
@@ -205,6 +237,9 @@ impl Default for SiteConfig {
             collapse_entities: default_collapse_entities(),
             show_entity_updates: default_show_entity_updates(),
             uml_configs: std::collections::BTreeMap::new(),
+            numfig: false,
+            numfig_secnum_depth: default_numfig_secnum_depth(),
+            numfig_format: NumfigFormat::default(),
             version_switcher: None,
         }
     }

@@ -16,6 +16,7 @@ use super::domain_object_reference::{
 use super::download_reference::{DownloadRef, render_inline_download_reference};
 use super::hyperlink::render_inline_hyperlink;
 use super::math::{render_equation_reference, render_inline_math};
+use super::number_reference::render_number_reference_node;
 use super::option_reference::render_inline_option_reference;
 use super::reference::{LabelRef, render_inline_reference};
 use super::term_reference::render_inline_term_reference;
@@ -100,6 +101,16 @@ pub(crate) fn render_inline(
         rinx_ast::InlineNode::SubstitutionReference { name, .. } => {
             let _ = write!(html, "|{}|", html_escape::encode_text(name));
         }
+        // Never reaches a well-formed document either: the parser reports
+        // every refusal and lowers it to an unlinked `NumberReference`.
+        // Rendered as that would render, for the same reason as above.
+        rinx_ast::InlineNode::RefusedNumberReference { text, .. } => {
+            let _ = write!(
+                html,
+                "<span class=\"xref std std-numref\">{}</span>",
+                html_escape::encode_text(text)
+            );
+        }
         // Listed rather than caught by a `_`, so a variant added later is a
         // compile error here and in `render_cross_reference` instead of
         // silently rendering as nothing.
@@ -112,6 +123,7 @@ pub(crate) fn render_inline(
         | rinx_ast::InlineNode::DomainObjectReference { .. }
         | rinx_ast::InlineNode::OptionReference { .. }
         | rinx_ast::InlineNode::EntityReference { .. }
+        | rinx_ast::InlineNode::NumberReference { .. }
         | rinx_ast::InlineNode::EquationReference { .. } => {
             render_cross_reference(html, inline, ctx);
         }
@@ -221,6 +233,7 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::TermReference { .. }
         | rinx_ast::InlineNode::OptionReference { .. }
         | rinx_ast::InlineNode::EntityReference { .. }
+        | rinx_ast::InlineNode::NumberReference { .. }
         | rinx_ast::InlineNode::EquationReference { .. } => {
             render_indexed_cross_reference(html, inline, ctx);
         }
@@ -232,6 +245,7 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::Math { .. }
         | rinx_ast::InlineNode::InlineImage(_)
         | rinx_ast::InlineNode::SubstitutionReference { .. }
+        | rinx_ast::InlineNode::RefusedNumberReference { .. }
         | rinx_ast::InlineNode::DownloadReference { .. }
         | rinx_ast::InlineNode::Program(_) => {
             unreachable!("render_inline routes only cross-reference variants here")
@@ -328,6 +342,9 @@ fn render_indexed_cross_reference(
                 ctx.broken_links,
             );
         }
+        rinx_ast::InlineNode::NumberReference { .. } => {
+            render_number_reference_node(html, inline, ctx);
+        }
         rinx_ast::InlineNode::EquationReference { label, span } => {
             render_equation_reference(
                 html,
@@ -338,9 +355,7 @@ fn render_indexed_cross_reference(
                 ctx.broken_links,
             );
         }
-        _ => unreachable!(
-            "render_cross_reference routes only TermReference/OptionReference/EquationReference here"
-        ),
+        _ => unreachable!("render_cross_reference routes only the index-resolved roles here"),
     }
 }
 

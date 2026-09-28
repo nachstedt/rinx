@@ -129,8 +129,13 @@ freely.
    root_doc = "index"
    highlight_language = "python"
 
+   numfig = true
+
    [uml_configs]
    monochrome = "skinparam monochrome true"
+
+   [numfig_format]
+   figure = "Figure %s"
 
 .. list-table::
    :header-rows: 1
@@ -153,6 +158,19 @@ freely.
    * - ``show_entity_updates``
      - Whether ``.. entity-update::`` renders a visible box of the changes it
        makes. On by default.
+   * - ``numfig``
+     - Whether captioned figures, tables and code blocks are numbered, and
+       ``:numref:`` can show those numbers. Off by default, as in Sphinx.
+   * - ``numfig_secnum_depth``
+     - How many levels of the section number a figure's number starts with,
+       under a ``:numbered:`` toctree. Defaults to 1, so the third figure of
+       chapter 2 is ``2.3``; ``0`` numbers straight through the site.
+   * - ``numfig_format``
+     - A table of the text each kind of number is shown in, with the keys
+       ``figure``, ``table``, ``code-block`` and ``section``. Defaults to
+       Sphinx's ``Fig. %s``, ``Table %s``, ``Listing %s`` and ``Section %s``.
+       ``{number}`` works in place of ``%s``; ``{name}`` is refused here, since
+       the same text is written in front of the caption it would name.
    * - ``uml_configs``
      - Named PlantUML preambles a diagram selects with ``:config:``.
    * - ``version_switcher``

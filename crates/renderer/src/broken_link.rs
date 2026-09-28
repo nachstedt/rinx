@@ -57,6 +57,15 @@ pub enum BrokenLinkKind {
     /// is (real Sphinx links the first); each candidate is the role that would
     /// name it alone, e.g. ``:py:func:`pkg.close` ``.
     AmbiguousAnyReference { candidates: Vec<String> },
+    /// A `:numref:` whose label names nothing a number is given to — no
+    /// label at all, or one on a paragraph or an uncaptioned code block.
+    NumberReference,
+    /// A `:numref:` to a figure, table or code block while `numfig` is off.
+    NumberingDisabled,
+    /// A `:numref:` to an element or section that was given no number.
+    UnnumberedReference,
+    /// A `:numref:` whose format shows `{name}` for something with no caption.
+    UncaptionedReference,
     /// An `:external+name:` role whose `name` the build declared no
     /// inventory under — so nothing was searched, and the fix is the name or
     /// the site's `inventories`, not the target.
@@ -83,6 +92,10 @@ impl BrokenLinkKind {
             Self::AnyReference => DiagnosticCode::LinkBrokenAny,
             Self::AmbiguousAnyReference { .. } => DiagnosticCode::LinkAmbiguousAny,
             Self::UnknownInventory(_) => DiagnosticCode::LinkUnknownInventory,
+            Self::NumberReference => DiagnosticCode::LinkBrokenNumref,
+            Self::NumberingDisabled => DiagnosticCode::NumrefDisabled,
+            Self::UnnumberedReference => DiagnosticCode::NumrefUnnumbered,
+            Self::UncaptionedReference => DiagnosticCode::NumrefNoCaption,
         }
     }
 
@@ -104,6 +117,10 @@ impl BrokenLinkKind {
             Self::AnyReference => "any reference",
             Self::AmbiguousAnyReference { .. } => "ambiguous any reference",
             Self::UnknownInventory(_) => "reference into an undeclared inventory",
+            Self::NumberReference
+            | Self::NumberingDisabled
+            | Self::UnnumberedReference
+            | Self::UncaptionedReference => "numref",
         }
     }
 }

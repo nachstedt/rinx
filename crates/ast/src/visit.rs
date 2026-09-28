@@ -61,24 +61,35 @@ use crate::node::Node;
 /// assert_eq!(collected.len(), 2);
 /// ```
 pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
-    for node in nodes {
-        visit(node);
+    walk_nodes_with_siblings(nodes, &mut |siblings, index| visit(&siblings[index]));
+}
+
+/// [`walk_nodes`], passing each node as its position in the list holding it
+/// rather than as the node alone.
+///
+/// For the passes that need a node's *neighbours* as well as the node — which
+/// `.. _label:` targets stand directly before an element, or whether a node is
+/// at the document's top level (its list is the document's own `nodes`).
+/// The order is exactly [`walk_nodes`]'s, since that is implemented on this.
+pub fn walk_nodes_with_siblings<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a [Node], usize)) {
+    for (index, node) in nodes.iter().enumerate() {
+        visit(nodes, index);
 
         match node {
             Node::Directive(directive) => walk_directive(directive, visit),
             Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
                 for item in items {
-                    walk_nodes(&item.nodes, visit);
+                    walk_nodes_with_siblings(&item.nodes, visit);
                 }
             }
             Node::DefinitionList { items } => {
                 for item in items {
-                    walk_nodes(&item.definition, visit);
+                    walk_nodes_with_siblings(&item.definition, visit);
                 }
             }
             Node::OptionList { items } => {
                 for item in items {
-                    walk_nodes(&item.description, visit);
+                    walk_nodes_with_siblings(&item.description, visit);
                 }
             }
             Node::Table {
@@ -87,11 +98,11 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
             } => {
                 for row in header_rows.iter().chain(body_rows) {
                     for cell in &row.cells {
-                        walk_nodes(&cell.content, visit);
+                        walk_nodes_with_siblings(&cell.content, visit);
                     }
                 }
             }
-            Node::BlockQuote { content, .. } => walk_nodes(content, visit),
+            Node::BlockQuote { content, .. } => walk_nodes_with_siblings(content, visit),
             // Leaf nodes: no block-level children to descend into. A doctest
             // block's body is verbatim text, not nested nodes. A line block's
             // content is `InlineNode` only — its nesting is expressed through
@@ -113,29 +124,29 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
 ///
 /// Split out from [`walk_nodes`] so both matches stay exhaustive and readable;
 /// the directive arm of `Node` is by far the most branch-heavy.
-fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)) {
+fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a [Node], usize)) {
     match directive {
         Directive::Admonition { body, .. }
         | Directive::VersionChange { body, .. }
         // A section that reached this walker was written outside any entity, so
         // it never got folded into one. Its body is still ordinary content.
         | Directive::EntitySection { body, .. }
-        | Directive::SeeAlso { body } => walk_nodes(body, visit),
-        Directive::Dropdown(dropdown) => walk_nodes(&dropdown.body, visit),
+        | Directive::SeeAlso { body } => walk_nodes_with_siblings(body, visit),
+        Directive::Dropdown(dropdown) => walk_nodes_with_siblings(&dropdown.body, visit),
         // Its body is ordinary content, exactly as a dropdown's is — a target
         // or entity written in the justification belongs to this document.
-        Directive::EntityUpdate(update) => walk_nodes(&update.body, visit),
-        Directive::Grid(grid) => walk_nodes(&grid.body, visit),
-        Directive::GridItem(item) => walk_nodes(&item.body, visit),
+        Directive::EntityUpdate(update) => walk_nodes_with_siblings(&update.body, visit),
+        Directive::Grid(grid) => walk_nodes_with_siblings(&grid.body, visit),
+        Directive::GridItem(item) => walk_nodes_with_siblings(&item.body, visit),
         Directive::Glossary { entries, .. } => {
             for entry in entries {
-                walk_nodes(&entry.definition, visit);
+                walk_nodes_with_siblings(&entry.definition, visit);
             }
         }
         Directive::DataTable { rows, .. } => {
             for row in rows {
                 for cell in &row.cells {
-                    walk_nodes(&cell.content, visit);
+                    walk_nodes_with_siblings(&cell.content, visit);
                 }
             }
         }
@@ -146,24 +157,24 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a Node)
         } => {
             for row in header_rows.iter().chain(body_rows) {
                 for cell in &row.cells {
-                    walk_nodes(&cell.content, visit);
+                    walk_nodes_with_siblings(&cell.content, visit);
                 }
             }
         }
-        Directive::DomainObject(body) => walk_nodes(body.body(), visit),
+        Directive::DomainObject(body) => walk_nodes_with_siblings(body.body(), visit),
         // Every section's prose is ordinary body content — a target, a nested
         // directive or even another entity inside a `.. verification-criteria::`
         // must be reached, or it would be invisible to indexing.
         Directive::Entity(entity) => {
             for section in &entity.sections {
-                walk_nodes(&section.body, visit);
+                walk_nodes_with_siblings(&section.body, visit);
             }
         }
 
         // A figure's legend is ordinary body content and may hold anything,
         // including another image. Its caption is inline markup only, so there
         // is nothing there to descend into.
-        Directive::Figure(figure) => walk_nodes(&figure.legend, visit),
+        Directive::Figure(figure) => walk_nodes_with_siblings(&figure.legend, visit),
         // Directives with no block-level children. A doctest block's body is
         // verbatim text, not nested nodes, a math block's is verbatim LaTeX,
         // and a code block's is verbatim source, so there is nothing to
@@ -557,5 +568,25 @@ mod tests {
 
         // Then — the three directives themselves, and nothing more.
         assert_eq!(visited, 3);
+    }
+
+    #[test]
+    fn test_walk_nodes_with_siblings_passes_each_node_with_its_list() {
+        // Given a top-level comment, then an admonition holding a transition
+        let nodes = vec![
+            Node::Comment,
+            Node::Directive(Directive::SeeAlso {
+                body: vec![Node::Transition],
+            }),
+        ];
+
+        // When
+        let mut seen: Vec<(bool, usize)> = Vec::new();
+        walk_nodes_with_siblings(&nodes, &mut |siblings, index| {
+            seen.push((std::ptr::eq(siblings, nodes.as_slice()), index));
+        });
+
+        // Then — pre-order, and only the first two are in the top-level list
+        assert_eq!(seen, vec![(true, 0), (true, 1), (false, 0)]);
     }
 }

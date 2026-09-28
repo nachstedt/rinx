@@ -29,6 +29,14 @@ pub(super) static DOC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     ))
     .unwrap()
 });
+/// `:numref:`, also spelled `:std:numref:`. Matches an [`EXTERNAL_PREFIX`]
+/// only so the handler can refuse it by name: an inventory holds no numbers.
+pub(super) static NUMREF_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(&format!(
+        r":(?P<external>{EXTERNAL_PREFIX})(?:std:)?numref:`(?P<target>[^`]+)`"
+    ))
+    .unwrap()
+});
 /// `:download:`, also spelled `:std:download:`. No [`EXTERNAL_PREFIX`]: it
 /// names a file this site serves, which no inventory lists.
 pub(super) static DOWNLOAD_ROLE_REGEX: LazyLock<Regex> =
@@ -133,6 +141,7 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&ANY_ROLE_REGEX, "any"),
     (&DOC_ROLE_REGEX, "doc"),
     (&DOWNLOAD_ROLE_REGEX, "download"),
+    (&NUMREF_ROLE_REGEX, "numref"),
     (&PROGRAM_ROLE_REGEX, "program"),
     (&TERM_ROLE_REGEX, "term"),
     (&MATH_ROLE_REGEX, "math"),

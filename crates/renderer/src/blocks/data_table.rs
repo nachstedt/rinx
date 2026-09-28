@@ -26,6 +26,8 @@ pub(super) struct DataTableParams<'a> {
     pub align: Option<TableAlign>,
     pub classes: &'a [String],
     pub name: Option<&'a TargetName>,
+    /// The `numfig` number its caption starts with, if it has one.
+    pub number: Option<&'a str>,
     pub rows: &'a [TableRow],
 }
 
@@ -48,6 +50,7 @@ pub(super) fn render_data_table(
         align,
         classes,
         name,
+        number,
         rows,
     } = params;
 
@@ -60,7 +63,7 @@ pub(super) fn render_data_table(
     class_list.extend(classes.iter().cloned());
     render_table_open_tag(html, &class_list, align, width);
 
-    render_table_caption(html, title);
+    render_table_caption(html, title, number);
     render_table_colgroup(html, widths);
 
     // Defensively re-clamp: `header_rows` is already clamped to `rows.len()`
