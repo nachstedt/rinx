@@ -15,6 +15,13 @@ def _compile_diagrams(ctx, plantuml, puml_dir, doc_path):
     starts. Wrapped in a shell to pass an absolute output path ($PWD/...) and
     to handle an opted-in document that happens to draw nothing; passing
     plantuml in `tools` lets Bazel aggregate its Java runfiles.
+
+    `-Playout=elk` lays every diagram out with the Eclipse Layout Kernel
+    inside the jar, never a Graphviz `dot` on the host: this action's key does
+    not include one, so using it would let the same key yield a diagram on one
+    machine and PlantUML's "Cannot find Graphviz" picture on another. Smetana,
+    the jar's Graphviz port, was tried first and crashes on cyclic flowcharts
+    (see ADR-012 §8).
     """
     svg_dir = ctx.actions.declare_directory(ctx.label.name + "_svgs/" + doc_path)
     command_script = """
@@ -23,7 +30,7 @@ shopt -s nullglob
 files=("{puml_dir}/"*.puml)
 mkdir -p "$PWD/{svg_dir}"
 if [ ${{#files[@]}} -gt 0 ]; then
-  "{plantuml}" -tsvg -nometadata -o "$PWD/{svg_dir}" "${{files[@]}}"
+  "{plantuml}" -tsvg -nometadata -Playout=elk -o "$PWD/{svg_dir}" "${{files[@]}}"
 fi
 """.format(
         plantuml = plantuml.path,

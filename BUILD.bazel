@@ -1,4 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary", "java_import")
+load("//rules:plantuml.bzl", "plantuml_tool")
 
 # The worker binary itself now lives at //crates/worker, split out into a
 # Cargo workspace mirroring docs/dev/architecture.md's crate layout. This alias keeps
@@ -16,9 +17,16 @@ java_import(
 )
 
 java_binary(
-    name = "plantuml_tool",
+    name = "plantuml_binary",
     main_class = "net.sourceforge.plantuml.Run",
     runtime_deps = [":plantuml_import"],
+)
+
+# What rules/site.bzl runs: the binary above, pinned to the Java runtime the
+# jar's ELK layout needs whatever the consuming build's flags say.
+plantuml_tool(
+    name = "plantuml_tool",
+    binary = ":plantuml_binary",
     visibility = ["//visibility:public"],
 )
 

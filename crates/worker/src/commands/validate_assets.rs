@@ -8,8 +8,9 @@
 //!   `diagrams = True` wrote one `<hash>.puml` per diagram, and the `<img>` on
 //!   the page names `<hash>.svg` — both from the same process, so they agree by
 //!   construction. What can still go wrong is the compile in between, so each
-//!   `.puml` must have its `.svg`. Nothing here re-expands a template: the
-//!   render already did, and the files are the record of it.
+//!   `.puml` must have its `.svg` — and that `.svg` must not be one of the
+//!   error pictures `PlantUML` draws while exiting 0. Nothing here re-expands a
+//!   template: the render already did, and the files are the record of it.
 //! - **Authored images** — what a `.. image::` or `.. figure::` names, which
 //!   must have been declared in its library's `images` attribute.
 //! - **Downloads** — what a `:download:` names, which must have been declared
@@ -59,12 +60,30 @@ pub(super) fn collect_image_paths(doc: &ast::Document) -> Vec<std::path::PathBuf
     paths
 }
 
-/// The `.svg` a compile should have produced for each `.puml` under
-/// `diagram_dir`, reported when absent from `image_dir`.
+/// Text found only in the pictures `PlantUML` draws *instead of* a diagram while
+/// still exiting 0 — so the compile action succeeds and only the file tells.
+/// A syntax error needs no entry: it exits non-zero and fails the compile.
+const PLANTUML_ERROR_MARKERS: [&str; 2] = [
+    // A layout needed the Graphviz `dot` executable and none was found.
+    "Cannot find Graphviz",
+    // A layout engine threw; PlantUML's own spelling.
+    "An error has occured",
+];
+
+/// The [`PLANTUML_ERROR_MARKERS`] entry `svg` contains, if it is one of
+/// `PlantUML`'s error pictures rather than a diagram.
+fn plantuml_error_marker(svg: &str) -> Option<&'static str> {
+    PLANTUML_ERROR_MARKERS
+        .into_iter()
+        .find(|marker| svg.contains(marker))
+}
+
+/// Every `.puml` under `diagram_dir` whose compile did not produce a diagram
+/// in `image_dir`: its `.svg` is absent, or is `PlantUML`'s error picture.
 ///
 /// Reads the directory the render wrote rather than re-deriving which diagrams
 /// a document holds: the files *are* what the page's `<img>` tags name.
-fn missing_diagram_svgs(diagram_dir: &Path, image_dir: Option<&Path>) -> Result<Vec<String>> {
+fn failed_diagram_compiles(diagram_dir: &Path, image_dir: Option<&Path>) -> Result<Vec<String>> {
     let mut missing = Vec::new();
     let entries = fs::read_dir(diagram_dir)
         .with_context(|| format!("Error reading '{}'", diagram_dir.display()))?;
@@ -79,9 +98,22 @@ fn missing_diagram_svgs(diagram_dir: &Path, image_dir: Option<&Path>) -> Result<
             continue;
         };
         let svg = format!("{}.svg", stem.to_string_lossy());
-        if !is_bundled(image_dir, Path::new(&svg)) {
+        let Some(svg_path) = image_dir
+            .map(|dir| dir.join(&svg))
+            .filter(|path| path.exists())
+        else {
             missing.push(format!(
                 "Image {svg} missing — PlantUML did not compile {}",
+                source.display()
+            ));
+            continue;
+        };
+        let content = fs::read_to_string(&svg_path)
+            .with_context(|| format!("Error reading '{}'", svg_path.display()))?;
+        if let Some(marker) = plantuml_error_marker(&content) {
+            missing.push(format!(
+                "Image {svg} is PlantUML's error picture (\"{marker}\") instead of the diagram \
+                 in {}",
                 source.display()
             ));
         }
@@ -167,7 +199,7 @@ pub(super) fn process_validate_assets(
     let mut missing = Vec::new();
 
     for diagram_dir in diagram_dirs {
-        missing.extend(missing_diagram_svgs(
+        missing.extend(failed_diagram_compiles(
             Path::new(diagram_dir),
             bundles.images,
         )?);
@@ -482,14 +514,14 @@ mod tests {
     }
 
     #[test]
-    fn test_missing_diagram_svgs_ignores_files_that_are_not_sources() {
+    fn test_failed_diagram_compiles_ignores_files_that_are_not_sources() {
         // Given — only `.puml` files are compiled, so only they need an SVG
         let diagrams = temp_dir("validate_diagrams_other");
         let images = temp_dir("validate_images_other");
         fs::write(diagrams.join("notes.txt"), "not a diagram").unwrap();
 
         // When
-        let missing = missing_diagram_svgs(&diagrams, Some(&images)).unwrap();
+        let missing = failed_diagram_compiles(&diagrams, Some(&images)).unwrap();
 
         // Then
         assert!(missing.is_empty());
@@ -498,7 +530,7 @@ mod tests {
     }
 
     #[test]
-    fn test_missing_diagram_svgs_lists_every_missing_picture_in_a_stable_order() {
+    fn test_failed_diagram_compiles_lists_every_missing_picture_in_a_stable_order() {
         // Given
         let diagrams = temp_dir("validate_diagrams_several");
         let images = temp_dir("validate_images_several");
@@ -506,7 +538,7 @@ mod tests {
         fs::write(diagrams.join("aaa.puml"), "").unwrap();
 
         // When
-        let missing = missing_diagram_svgs(&diagrams, Some(&images)).unwrap();
+        let missing = failed_diagram_compiles(&diagrams, Some(&images)).unwrap();
 
         // Then
         assert_eq!(missing.len(), 2);
@@ -514,6 +546,62 @@ mod tests {
         assert!(missing[1].contains("bbb.svg"), "{missing:?}");
         let _ = fs::remove_dir_all(diagrams);
         let _ = fs::remove_dir_all(images);
+    }
+
+    #[test]
+    fn test_a_diagram_compiled_to_plantumls_error_picture_fails_validation() {
+        // Given — what PlantUML writes, exiting 0, when a layout needs a
+        // Graphviz the machine does not have
+        let diagrams = temp_dir("validate_diagrams_error_picture");
+        let images = temp_dir("validate_images_error_picture");
+        fs::write(diagrams.join("abc123.puml"), "@startuml\n@enduml").unwrap();
+        fs::write(
+            images.join("abc123.svg"),
+            "<svg><text>Dot executable does not exist</text>\
+             <text>Cannot find Graphviz. You should try</text></svg>",
+        )
+        .unwrap();
+
+        // When
+        let result = process_validate_assets(
+            &[],
+            &[diagrams.to_string_lossy().to_string()],
+            Bundles {
+                images: Some(&images),
+                downloads: None,
+            },
+        );
+
+        // Then
+        let message = result.expect_err("should fail").to_string();
+        assert!(message.contains("abc123.svg"), "{message}");
+        assert!(message.contains("Cannot find Graphviz"), "{message}");
+        let _ = fs::remove_dir_all(diagrams);
+        let _ = fs::remove_dir_all(images);
+    }
+
+    #[test]
+    fn test_plantuml_error_marker_finds_a_crash_report() {
+        // Given — the picture PlantUML draws when a layout throws
+        let svg = "<svg><text>An error has occured : java.lang.NullPointerException</text></svg>";
+
+        // When
+        let marker = plantuml_error_marker(svg);
+
+        // Then
+        assert_eq!(marker, Some("An error has occured"));
+    }
+
+    #[test]
+    fn test_plantuml_error_marker_accepts_a_real_diagram() {
+        // Given
+        let svg = "<svg><g id=\"elem_team\"><text>Team</text></g></svg>";
+
+        // When
+        let marker = plantuml_error_marker(svg);
+
+        // Then
+        assert_eq!(marker, None);
     }
 
     #[test]

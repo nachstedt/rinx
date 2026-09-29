@@ -141,7 +141,8 @@ directions.
 
 `validate_images` no longer expands anything: it checks each `<hash>.puml` a
 render wrote has its `<hash>.svg` in the bundle — the one thing that can still
-go wrong is the compile in between.
+go wrong is the compile in between (and, since §8, that the `.svg` is not an
+error picture PlantUML drew while exiting 0).
 
 **What is genuinely lost** by compiling at the site rather than the library:
 two sites sharing a library each compile the same diagram, and building a
@@ -220,10 +221,60 @@ ignored, and the site's `diagram_sources` output group carries every diagram's
 expanded source instead — sphinx-needs' `needs_build_needumls`, as an output
 group rather than a config flag.
 
+### 8. Diagrams are laid out by ELK, never by a host `dot`
+
+Every layout except a sequence diagram's (class, component, deployment, a
+flowchart of rectangles — anything with more than one node to place) needs a
+layout engine, and by default PlantUML runs the Graphviz `dot` executable it
+finds on the host. When there is none it does not fail: it draws a "Cannot find
+Graphviz" picture in place of the diagram and **exits 0**. The compile action's
+key does not include the host's `dot`, so the same key yields a diagram on a
+developer's machine and an error picture on a runner without Graphviz — and
+whichever reaches a shared cache first is served to both. That is how GitHub's
+`ubuntu-24.04` runners published error pictures for six of the example site's
+diagrams and nearly all of the sphinx-needs demo's, while a local build looked
+fine.
+
+So the compile passes `-Playout=elk`: the Eclipse Layout Kernel, bundled in the
+jar the build already pins by hash. The output then depends only on declared
+inputs, a consumer of `@rinx` needs no system package, and the change of
+command line gave every compile action a new key, so no cached error picture
+survives it. It applies to every diagram — a diagram's own `!pragma layout`
+does not override the command line. ELK needs a recent PlantUML: 1.2024.4
+still drew error pictures for most of the example site's diagrams under it, so
+the jar moved to 1.2026.8 with it.
+
+That jar's ELK classes are compiled for Java 21, while a tool runs on
+`--tool_java_runtime_version`, which defaults to JDK 11 and is set by the
+*consuming* build — a `.bazelrc` line here would never reach a module depending
+on rinx. So `//:plantuml_tool` is a `plantuml_tool` rule (`rules/plantuml.bzl`)
+whose transition runs the PlantUML `java_binary` on `remotejdk_21`. The
+transition sits on that one edge, so no other target's configuration changes.
+
+Two alternatives were rejected:
+
+- **Smetana**, PlantUML's Java port of Graphviz, was the first choice, being
+  the closest to `dot`'s output. It crashes (`ArrayIndexOutOfBoundsException`,
+  in 1.2024.4 and 1.2026.8 alike) on the example site's generated flowchart of
+  every entity — a graph with cycles, which is exactly what an entity graph
+  produces.
+- **Installing Graphviz on the runners** keeps the build non-hermetic, leaves
+  every consumer to install it too, and leaves the key unchanged, so the cached
+  error pictures would have kept being served.
+
+What it costs: ELK routes edges orthogonally and places nodes differently from
+`dot`, so a diagram ported from a Sphinx build looks different, though no less
+readable. Sequence diagrams never used a layout engine and are unaffected.
+
+As a backstop, `validate_assets` also fails when a compiled `.svg` is one of
+PlantUML's exit-0 error pictures (the Graphviz one, or the crash report a
+throwing layout draws). A syntax error needs no such check: it exits non-zero
+and fails the compile itself.
+
 ## Consequences
 
 - A `rinx_site` now needs the PlantUML tool; a `rinx_library`
-  no longer does.
+  no longer does. It never needs Graphviz (§8).
 - A library with diagrams must set `diagrams = True`. This is the one change an
   existing `.. plantuml::` user has to make, and the parse error says so.
 - `validate_images` takes the puml directories (`--diagram-dirs`) rather than

@@ -512,6 +512,8 @@ always available, and its name cannot be used by an entity schema.
    * - ``.. uml::`` / ``.. plantuml::`` (sphinxcontrib-plantuml)
      - ✅ ℹ️
      - - Needs ``diagrams = True`` on the library.
+       - Laid out by the ELK engine bundled in PlantUML, never a Graphviz
+         ``dot`` on the host, so layouts differ from a Sphinx build's.
        - ``:scale:`` without ``:width:`` warns.
        - ``:save:`` is refused.
        - ``:config:`` names a preamble in ``rinx.toml``'s ``[uml_configs]``.
