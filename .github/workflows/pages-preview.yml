@@ -119,9 +119,19 @@ jobs:
         URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ steps.pr.outputs.number }}/
         BENCHMARKS: ${{ steps.artifact.outputs.benchmarks }}
       run: |
+        # One link per rendered benchmark, to the front page its entry.txt
+        # names. The publish step already refused a malformed one; this job
+        # holds write access, so what reaches the comment is checked again.
         benchmarks=""
         if [ "$BENCHMARKS" = true ]; then
-          benchmarks=" · [benchmarks](${URL}benchmarks/index.html)"
+          for dir in "$RUNNER_TEMP"/benchmarks/*/; do
+            name=$(basename "$dir")
+            entry=$(head -c 256 "$dir/entry.txt" | tr -d '\n')
+            if [[ "$name" =~ ^[a-z0-9]+(-[a-z0-9]+)*$ && "$entry" =~ ^[A-Za-z0-9_./-]+$ && "$entry" != *..* ]]; then
+              benchmarks+=" · [${name}](${URL}benchmarks/${name}/${entry})"
+            fi
+          done
+          benchmarks+=" ([all benchmarks and reports](${URL}benchmarks/index.html))"
         fi
         cat > "$RUNNER_TEMP/comment.md" <<EOF
         **Preview** of ${HEAD_SHA:0:7}: [documentation](${URL}docs/index.html) · [example site](${URL}example-site/examples/index.html)${benchmarks}
