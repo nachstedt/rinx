@@ -32,7 +32,9 @@ action. So:
   component, a `rinx_site` that assembles them, and dependency checking that
   fails the build when a toctree points at a library that isn't declared.
 - **Fast.** CPython's documentation (about 500 documents) builds as a Bazel
-  target; see [benchmarking](https://nachstedt.github.io/rinx/latest/docs/benchmark.html).
+  target; see [benchmarking](https://nachstedt.github.io/rinx/latest/docs/benchmark.html),
+  and [the result](https://nachstedt.github.io/rinx/main/benchmarks/cpython/Doc/contents.html)
+  as rinx renders it today.
 - **Resilient parsing.** A half-written document still produces a page, which
   is what makes the VS Code live preview possible.
 
@@ -101,7 +103,10 @@ rinx itself from [`docs/`](docs/):
 [the VS Code preview](https://nachstedt.github.io/rinx/latest/docs/vscode.html) and
 [benchmarking](https://nachstedt.github.io/rinx/latest/docs/benchmark.html).
 The [example site](https://nachstedt.github.io/rinx/latest/example-site/examples/index.html)
-shows every supported construct rendered.
+shows every supported construct rendered, and the
+[benchmarks](https://nachstedt.github.io/rinx/main/benchmarks/index.html) show
+two real projects — CPython's documentation and a sphinx-needs project —
+rendered by `main`, rebuilt by every CI run.
 
 For the design, see
 [`docs/decisions/`](docs/decisions/), the architecture decision records, and
