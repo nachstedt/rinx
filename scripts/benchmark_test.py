@@ -179,3 +179,30 @@ class TestAstTally:
 
         # Then
         assert tally.parser_diagnostics == {"directive.unknown": 1, "role.unknown": 1}
+
+
+class TestRenderCorpusBuildFile:
+    def test_the_files_pages_download_are_declared(self) -> None:
+        # Given / When
+        text = benchmark.render_corpus_build_file()
+
+        # Then CPython's example files are declared — without them the site's
+        # validate_assets fails as `download.undeclared` and no page renders
+        downloads = text.split("downloads = ")[1]
+        assert downloads.startswith("glob(")
+        assert '"includes/**"' in downloads
+
+    def test_rst_fragments_are_not_declared_as_downloads(self) -> None:
+        # Given / When
+        text = benchmark.render_corpus_build_file()
+
+        # Then the fragments under includes/ stay sources, not downloads
+        downloads = text.split("downloads = ")[1].split("),")[0]
+        assert '"**/*.rst"' in downloads.split("exclude = ")[1]
+
+    def test_images_are_still_declared(self) -> None:
+        # Given / When
+        text = benchmark.render_corpus_build_file()
+
+        # Then
+        assert "images = glob(" in text

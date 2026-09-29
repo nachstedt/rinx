@@ -135,14 +135,20 @@ python.toolchain(
     template_content = default_template_path.read_text()
     (doc_dir / "custom_template.html").write_text(template_content)
 
-    # Create BUILD.bazel in Doc
-    build_bazel = """load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
+    (doc_dir / "BUILD.bazel").write_text(render_corpus_build_file())
+
+    benchmark_common.generate_warmup_package(TARGET_DIR, workspace_root)
+
+
+def render_corpus_build_file() -> str:
+    """The corpus package's `Doc/BUILD.bazel`: one library and its site."""
+    return """load("@rinx//:defs.bzl", "rinx_library", "rinx_site")
 
 rinx_library(
     name = "cpython_docs",
     srcs = glob(["**/*.rst"]),
     # CPython's documents show real pictures, and an image has to be declared
-    # to reach the site — the same rule `csv_data` follows for the files a
+    # to reach the site — the same rule `parse_data` follows for the files a
     # `.. csv-table::` reads. Globbed rather than listed because this file is
     # generated: the corpus decides what is there, not us.
     images = glob(
@@ -156,6 +162,15 @@ rinx_library(
         ],
         allow_empty = True,
     ),
+    # A `:download:` target has to be declared as well, or the site's
+    # validate_assets fails as `download.undeclared` and no page renders.
+    # CPython keeps the files its pages link under includes/; its .rst
+    # fragments there are sources (already in srcs), not downloads.
+    downloads = glob(
+        ["includes/**"],
+        exclude = ["**/*.rst"],
+        allow_empty = True,
+    ),
 )
 
 rinx_site(
@@ -166,9 +181,6 @@ rinx_site(
     deps = [":cpython_docs"],
 )
 """
-    (doc_dir / "BUILD.bazel").write_text(build_bazel)
-
-    benchmark_common.generate_warmup_package(TARGET_DIR, workspace_root)
 
 
 def run_benchmark(*, clean: bool = False) -> bool:
