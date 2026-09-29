@@ -33,6 +33,8 @@ Both benchmarks run in every CI run — on each pull request, on ``main`` and fo
 
 Each has a landing page linking both sites and their full reports.
 
+The workflow's first step, ``bazel run //scripts:benchmark_warmup``, compiles rinx into the disk cache the two benchmarks share, in a generated workspace declared exactly as theirs are. The benchmark steps find the binary there, so each step's duration on the Actions page is close to its site build; the job summary's *Corpus build* line is the exact figure, with the benchmark's own warm-up already subtracted.
+
 **Only a corpus that no longer builds fails CI.** New warnings, whitelist entries that went stale and the timings are reported in the job's summary on the Actions page, never gated: the corpora are someone else's documentation, and a warning in them is a finding to triage rather than a regression. Timings on shared runners are too noisy to compare between runs.
 
 Two flags make that possible, and work locally too:

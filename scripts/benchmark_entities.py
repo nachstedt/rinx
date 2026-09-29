@@ -266,23 +266,11 @@ def generate_bazel_project(rinx_root: str) -> None:
     print("Generating a Bazel project around the clone...")
     workspace = corpus_workspace()
 
-    (workspace / "MODULE.bazel").write_text(f"""module(name = "sphinx_needs_demo_bench")
+    (workspace / "MODULE.bazel").write_text(
+        benchmark_common.rinx_module_bazel("sphinx_needs_demo_bench", rinx_root)
+    )
 
-bazel_dep(name = "rinx", version = "0.0.0")
-local_path_override(
-    module_name = "rinx",
-    path = "{rinx_root}",
-)
-""")
-
-    assets_dir = workspace / "assets"
-    assets_dir.mkdir(exist_ok=True)
-    (assets_dir / "BUILD.bazel").write_text("""alias(
-    name = "default.css",
-    actual = "@rinx//:assets/default.css",
-    visibility = ["//visibility:public"],
-)
-""")
+    benchmark_common.write_assets_alias(workspace)
 
     (workspace / "rinx.toml").write_text('project = "Sphinx-Needs Demo Benchmark"\n')
     default_template = Path(rinx_root) / "templates" / "default.html"

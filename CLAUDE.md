@@ -34,6 +34,7 @@ bazel build //examples/intersphinx:sibling_site  # a second site linking into //
 (cd e2e/smoke && bazel test //...)       # rinx consumed as a dependency by another module — what the BCR presubmit (.bcr/) runs
 bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.rst); CI adds --site-out/--summary-markdown
 bazel run //scripts:benchmark_entities  # benchmark the entity model against useblocks' sphinx-needs demo (see docs/benchmark.rst)
+bazel run //scripts:benchmark_warmup    # compile rinx into a disk cache both benchmarks share — CI's first benchmark step
 
 # Python scripts (scripts/, examples/shared/) — see docs/dev/python.md
 uv sync                    # install the pinned ruff, ty and pytest

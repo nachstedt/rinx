@@ -130,6 +130,36 @@ def clone_repo(repo_url: str, tag: str, target_dir: Path) -> bool:
     return result.returncode == 0
 
 
+def rinx_module_bazel(module_name: str, rinx_root: str) -> str:
+    """A generated workspace's MODULE.bazel, depending on the local rinx checkout.
+
+    Every benchmark workspace — and the warm-up one — starts from this text, so
+    they declare rinx identically and their actions hash alike: that is what
+    lets the corpora reuse the rinx binary the warm-up compiled into a shared
+    disk cache, instead of compiling it once each.
+    """
+    return f"""module(name = "{module_name}")
+
+bazel_dep(name = "rinx", version = "0.0.0")
+local_path_override(
+    module_name = "rinx",
+    path = "{rinx_root}",
+)
+"""
+
+
+def write_assets_alias(workspace: Path) -> None:
+    """Writes the `//assets:default.css` alias the generated sites' stylesheet is."""
+    assets_dir = workspace / "assets"
+    assets_dir.mkdir(exist_ok=True)
+    (assets_dir / "BUILD.bazel").write_text("""alias(
+    name = "default.css",
+    actual = "@rinx//:assets/default.css",
+    visibility = ["//visibility:public"],
+)
+""")
+
+
 def generate_warmup_package(target_dir: Path, workspace_root: str) -> None:
     """Writes a one-document site used to build rinx before timing.
 

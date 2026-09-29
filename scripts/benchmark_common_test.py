@@ -212,6 +212,37 @@ class TestGenerateWarmupPackage:
         assert (warmup / "custom_template.html").read_text() == "<html>{{ body }}</html>"
 
 
+class TestRinxModuleBazel:
+    def test_depends_on_the_local_rinx_checkout(self) -> None:
+        # Given / When
+        text = benchmark_common.rinx_module_bazel("bench", "/src/rinx")
+
+        # Then
+        assert 'module(name = "bench")' in text
+        assert 'bazel_dep(name = "rinx", version = "0.0.0")' in text
+        assert 'path = "/src/rinx"' in text
+
+    def test_every_workspace_declares_rinx_identically(self) -> None:
+        # Given / When — only the module's own name may differ, or the
+        # workspaces' action keys, and with them the shared compile, part ways
+        first = benchmark_common.rinx_module_bazel("a", "/src/rinx")
+        second = benchmark_common.rinx_module_bazel("b", "/src/rinx")
+
+        # Then
+        assert first.replace('"a"', '"b"', 1) == second
+
+
+class TestWriteAssetsAlias:
+    def test_aliases_the_default_stylesheet(self, tmp_path: Path) -> None:
+        # Given / When
+        benchmark_common.write_assets_alias(tmp_path)
+
+        # Then
+        build = (tmp_path / "assets" / "BUILD.bazel").read_text()
+        assert 'name = "default.css"' in build
+        assert 'actual = "@rinx//:assets/default.css"' in build
+
+
 class TestTimedBazelBuild:
     @staticmethod
     def _run(

@@ -12,9 +12,9 @@ directory (docs/decisions/024-versioned-docs.md):
 
 Each version directory holds //docs:site at its root and //examples:site under
 `example-site/`, and the benchmark sites CI rendered, if any, under
-`benchmarks/<name>/` — kept on main, the previews and the newest release only. Everything outside the version directories is derived
-from them and regenerated on every run, so no run has to know what an earlier
-one wrote.
+`benchmarks/<name>/` — kept on main, the previews and the newest release only.
+Everything outside the version directories is derived from them and
+regenerated on every run, so no run has to know what an earlier one wrote.
 
 Every workflow writing the branch calls this script, which fetches the branch,
 applies one change, commits and pushes. A push that loses a race with another

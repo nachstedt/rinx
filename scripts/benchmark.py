@@ -103,14 +103,8 @@ def generate_bazel_project(workspace_root: str, python_version: str) -> None:
     # honoured only for the root module, and this generated workspace *is* the
     # root when the benchmark builds — so this pin wins over the 3.x toolchain
     # rinx registers for its own tests.
-    module_bazel = f"""module(name = "cpython_docs_bench")
-
-bazel_dep(name = "rinx", version = "0.0.0")
-local_path_override(
-    module_name = "rinx",
-    path = "{workspace_root}",
-)
-
+    module_bazel = benchmark_common.rinx_module_bazel("cpython_docs_bench", workspace_root)
+    module_bazel += f"""
 # Pinned to the exact release this corpus was cloned from ({python_version});
 # see PYTHON_VERSION in scripts/benchmark.py.
 bazel_dep(name = "rules_python", version = "2.0.0")
@@ -123,18 +117,12 @@ python.toolchain(
 """
     (TARGET_DIR / "MODULE.bazel").write_text(module_bazel)
 
-    # Create root BUILD.bazel (empty, as aliases are no longer needed)
+    # Empty, but it makes the root a package: rules_rust's crate_universe
+    # resolves `@@//:MODULE.bazel` and fails to evaluate without it.
     (TARGET_DIR / "BUILD.bazel").write_text("")
 
     # Create assets/BUILD.bazel for the CSS dependency
-    assets_dir = TARGET_DIR / "assets"
-    assets_dir.mkdir(exist_ok=True)
-    (assets_dir / "BUILD.bazel").write_text("""alias(
-    name = "default.css",
-    actual = "@rinx//:assets/default.css",
-    visibility = ["//visibility:public"],
-)
-""")
+    benchmark_common.write_assets_alias(TARGET_DIR)
 
     doc_dir = TARGET_DIR / "Doc"
 
