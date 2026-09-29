@@ -7,9 +7,15 @@
 #   vX.Y.Z/   called by release.yaml once a release is final, or run by hand
 #             with a tag to publish (or, with force, republish) an older one
 #
-# Each version holds //docs:site at its root and //examples:site under
-# example-site/; scripts/publish_pages.py regenerates latest/, versions.json
-# and the redirects around them.
+# Each version holds //docs:site at its root, //examples:site under
+# example-site/, and the benchmark sites (benchmarks.yml) under benchmarks/;
+# scripts/publish_pages.py regenerates latest/, versions.json and the
+# redirects around them, and drops a superseded release's benchmarks/.
+#
+# The benchmark sites are not rebuilt here when CI already rendered them for
+# this commit: after CI on main they come from that run, and for a release from
+# CI's job in the same run. Only a by-hand republish benchmarks afresh — and a
+# tag from before they existed publishes without them.
 name: Pages
 
 on:
@@ -46,17 +52,30 @@ env:
   VERSION: ${{ inputs.version || 'main' }}
 
 jobs:
+  benchmarks:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/benchmarks.yml
+    with:
+      ref: ${{ inputs.version }}
+    permissions:
+      contents: read
+
   build:
+    needs: benchmarks
     # Only CI's run for a push to main: a pull request from a fork's branch
-    # named main also reports head_branch "main".
+    # named main also reports head_branch "main". `!cancelled()` because the
+    # benchmarks job is skipped unless run by hand, and may fail for an old tag.
     if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push')
+      !cancelled() &&
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
+      # The benchmark sites CI uploaded.
+      actions: read
     steps:
     - uses: actions/checkout@v7
       with:
@@ -82,6 +101,22 @@ jobs:
         mkdir -p sites/docs sites/examples
         cp -RL bazel-bin/docs/site_site_out/. sites/docs/
         cp -RL bazel-bin/examples/site_site_out/. sites/examples/
+
+    # From CI's run on main, or from this run: CI's job in a release, or the
+    # benchmarks job above. Missing only when a corpus failed to build.
+    - name: Fetch the benchmark sites
+      id: benchmarks
+      continue-on-error: true
+      uses: actions/download-artifact@v8
+      with:
+        name: benchmarks
+        path: sites/benchmarks
+        run-id: ${{ github.event.workflow_run.id || github.run_id }}
+        github-token: ${{ github.token }}
+
+    - name: Note missing benchmark sites
+      if: steps.benchmarks.outcome != 'success'
+      run: echo "::warning::No benchmark sites to publish; publishing ${VERSION} without them."
 
     - uses: actions/upload-artifact@v7
       with:
@@ -144,4 +179,5 @@ jobs:
         --slot "$VERSION"
         --docs "$RUNNER_TEMP/sites/docs"
         --examples "$RUNNER_TEMP/sites/examples"
+        --benchmarks-dir "$RUNNER_TEMP/sites/benchmarks"
         $FORCE

@@ -25,6 +25,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import tomllib
 from collections import Counter
@@ -36,11 +37,16 @@ import benchmark_common
 import needs_schema
 from benchmark_common import (
     WARMUP_PACKAGE,
+    BuildResult,
     ReportLayout,
+    SummaryRow,
     WarningCorpus,
     WarningEntry,
     WhitelistSummary,
+    add_output_arguments,
+    count_row,
     json_objects,
+    whitelist_rows,
     write_frequency_summary,
 )
 from needs_schema import Report
@@ -103,6 +109,9 @@ WHITELIST_PATH = Path("scripts/entity_warnings_whitelist.json")
 # The generated schema, written into the clone rather than into this repository:
 # it is derived data, regenerated on every run.
 SCHEMA_NAME = "entities.toml"
+
+# Where the analysis writes its full report, relative to the workspace root.
+RESULT_PATH = Path("benchmark_entities_result.txt")
 
 
 def clone_repo(version: str) -> None:
@@ -247,28 +256,21 @@ def corpus_workspace() -> Path:
     return TARGET_DIR / CORPUS_SRCDIR
 
 
+def site_dir() -> Path:
+    """Where the corpus build leaves the rendered site: the root package's site."""
+    return corpus_workspace() / "bazel-bin" / "site_site_out"
+
+
 def generate_bazel_project(rinx_root: str) -> None:
     """Turn the clone's source directory into a Bazel workspace of its own."""
     print("Generating a Bazel project around the clone...")
     workspace = corpus_workspace()
 
-    (workspace / "MODULE.bazel").write_text(f"""module(name = "sphinx_needs_demo_bench")
+    (workspace / "MODULE.bazel").write_text(
+        benchmark_common.rinx_module_bazel("sphinx_needs_demo_bench", rinx_root)
+    )
 
-bazel_dep(name = "rinx", version = "0.0.0")
-local_path_override(
-    module_name = "rinx",
-    path = "{rinx_root}",
-)
-""")
-
-    assets_dir = workspace / "assets"
-    assets_dir.mkdir(exist_ok=True)
-    (assets_dir / "BUILD.bazel").write_text("""alias(
-    name = "default.css",
-    actual = "@rinx//:assets/default.css",
-    visibility = ["//visibility:public"],
-)
-""")
+    benchmark_common.write_assets_alias(workspace)
 
     (workspace / "rinx.toml").write_text('project = "Sphinx-Needs Demo Benchmark"\n')
     default_template = Path(rinx_root) / "templates" / "default.html"
@@ -424,8 +426,8 @@ def discard_stale_corpus_outputs(workspace: Path) -> None:
             entry.unlink(missing_ok=True)
 
 
-def run_benchmark(*, clean: bool = False) -> bool:
-    """Build the warm-up site, then the corpus. Returns whether the corpus built."""
+def run_benchmark(*, clean: bool = False) -> BuildResult:
+    """Build the warm-up site, then the corpus, returning how both went."""
     workspace = corpus_workspace()
     if clean:
         print("Cleaning Bazel cache...")
@@ -439,7 +441,7 @@ def run_benchmark(*, clean: bool = False) -> bool:
     )
     print(f"Dependency build finished in {deps_duration:.2f} seconds.")
     if not deps_built:
-        return False
+        return BuildResult(succeeded=False, warmup_seconds=deps_duration, corpus_seconds=None)
 
     print("\nRunning Bazel build of the sphinx-needs demo documentation...")
     build_succeeded, duration = benchmark_common.timed_bazel_build(
@@ -449,8 +451,10 @@ def run_benchmark(*, clean: bool = False) -> bool:
         print(f"Documentation build succeeded in {duration:.2f} seconds.")
 
     print(f"\nBazel build output was captured to: {workspace / 'bazel_build.log'}")
-    print(f"HTML output is located at: {workspace}/bazel-bin/site_site_out/")
-    return build_succeeded
+    print(f"HTML output is located at: {site_dir()}/")
+    return BuildResult(
+        succeeded=build_succeeded, warmup_seconds=deps_duration, corpus_seconds=duration
+    )
 
 
 # ── Analysis ──────────────────────────────────────────────────────────────────
@@ -536,8 +540,8 @@ def tally_ast(ast_files: Iterable[Path]) -> tuple[Counter[str], Counter[str]]:
     return unknown_directives, entities
 
 
-def analyze_results(*, build_succeeded: bool, schema_report: Report) -> None:
-    """Write the full report and print the compact terminal summary."""
+def analyze_results(*, build_succeeded: bool, schema_report: Report) -> list[SummaryRow]:
+    """Write the full report, returning the compact summary's rows."""
     print("Analyzing the build for entity-model gaps...")
 
     # The warm-up site's one document is scaffolding, not corpus.
@@ -555,8 +559,7 @@ def analyze_results(*, build_succeeded: bool, schema_report: Report) -> None:
     log_text = log_path.read_text() if log_path.exists() else ""
     warnings = parse_build_warnings(log_text)
 
-    result_path = Path("benchmark_entities_result.txt")
-    with result_path.open("w") as out:
+    with RESULT_PATH.open("w") as out:
         print("=== rinx entity benchmark: full report ===", file=out)
         write_frequency_summary(out, "Entities Parsed By Type", entities)
         write_frequency_summary(out, "Unsupported Directives Summary", unknown_directives)
@@ -569,7 +572,8 @@ def analyze_results(*, build_succeeded: bool, schema_report: Report) -> None:
             out=out,
         )
 
-    print_entity_summary(result_path, entities, unknown_directives, schema_report, summary)
+    print(f"Full report written to: {RESULT_PATH}")
+    return summary_rows(entities, unknown_directives, schema_report, summary)
 
 
 def warning_sections(warnings: Iterable[WarningEntry]) -> list[tuple[str, str]]:
@@ -599,29 +603,34 @@ def write_schema_report(out: TextIO, schema_report: Report) -> None:
             print(f"  - {detail}", file=out)
 
 
-def print_entity_summary(
-    result_path: Path,
+def summary_rows(
     entities: Counter[str],
     unknown: Counter[str],
     schema_report: Report,
     summary: WhitelistSummary,
-) -> None:
-    """The compact, terminal-friendly summary."""
-    line = benchmark_common.summary_line
+) -> list[SummaryRow]:
+    """The compact summary's counts; the full listing is in the report."""
+    rows = [
+        count_row("Entity types exercised:", len(entities), entities.total()),
+        count_row("Unsupported directives:", len(unknown), unknown.total()),
+        count_row(
+            "Unconvertible constructs:", len({c for c, _ in schema_report}), len(schema_report)
+        ),
+    ]
+    rows.extend(
+        count_row(f"{code}:", distinct, occurrences)
+        for code, (distinct, occurrences) in summary.per_kind.items()
+        if distinct
+    )
+    rows.extend(whitelist_rows(summary))
+    return rows
 
-    print("\n=== Entity Benchmark Summary ===")
-    line("Entity types exercised:", len(entities), entities.total())
-    line("Unsupported directives:", len(unknown), unknown.total())
-    line("Unconvertible constructs:", len({c for c, _ in schema_report}), len(schema_report))
-    for code, (distinct, occurrences) in summary.per_kind.items():
-        if distinct:
-            line(f"{code}:", distinct, occurrences)
-    benchmark_common.print_whitelist_summary(summary)
-    print(f"\nFull report written to: {result_path}")
 
+def main() -> int:
+    """Clone the sphinx-needs demo, build it against its converted schema, and report.
 
-def main() -> None:
-    """Clone the sphinx-needs demo, build it against its converted schema, and report."""
+    Returns the exit status: non-zero only when the corpus did not build.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--clean", action="store_true", help="Clear the Bazel cache before building"
@@ -634,6 +643,7 @@ def main() -> None:
             f"tag (default: {DEMO_VERSION})."
         ),
     )
+    add_output_arguments(parser)
     args = parser.parse_args()
 
     rinx_root = os.environ.get("BUILD_WORKSPACE_DIRECTORY", str(Path.cwd()))
@@ -641,15 +651,25 @@ def main() -> None:
 
     if not Path("WORKSPACE").exists() and not Path("MODULE.bazel").exists():
         print("Please run this script from the root of the rinx workspace.")
-        return
+        return 2
 
     print(f"Benchmarking the entity model against sphinx-needs-demo {args.demo_version}.")
     clone_repo(args.demo_version)
     schema_report = convert_schema(corpus_workspace())
     generate_bazel_project(rinx_root)
-    build_succeeded = run_benchmark(clean=args.clean)
-    analyze_results(build_succeeded=build_succeeded, schema_report=schema_report)
+    result = run_benchmark(clean=args.clean)
+    rows = analyze_results(build_succeeded=result.succeeded, schema_report=schema_report)
+    outcome = benchmark_common.RunOutcome(
+        title=f"sphinx-needs demo {args.demo_version}",
+        build=result,
+        analysis_rows=rows,
+        site_dir=site_dir(),
+        # The corpus is the workspace's root package, so its root document is the site's.
+        entry="index.html",
+        report=RESULT_PATH,
+    )
+    return benchmark_common.finish_run(outcome, benchmark_common.RunOutputs.from_args(args))
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

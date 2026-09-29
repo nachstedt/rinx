@@ -22,6 +22,31 @@ There are two benchmarks, measuring different things:
 
 The corpus-agnostic half of both lives in ``scripts/benchmark_common.py``: cloning a pinned tag, generating the warm-up site, timing a ``bazel build``, and diffing the resulting warnings against a hand-authored whitelist. Everything below the "Benchmarking the entity model" heading is specific to the second one.
 
+In CI
+=====
+
+Both benchmarks run in every CI run — on each pull request, on ``main`` and for a release — as the reusable ``.github/workflows/benchmarks.yml``, and their rendered sites are published beside the documentation for the versions worth comparing against:
+
+- ``pr/<N>/benchmarks/`` for a pull request, linked from its preview comment,
+- https://nachstedt.github.io/rinx/main/benchmarks/index.html for ``main``,
+- ``vX.Y.Z/benchmarks/`` for the newest release only; publishing a release removes the previous one's, while its documentation stays.
+
+Each has a landing page linking both sites and their full reports.
+
+The workflow's first step, ``bazel run //scripts:benchmark_warmup``, compiles rinx into the disk cache the two benchmarks share, in a generated workspace declared exactly as theirs are. The benchmark steps find the binary there, so each step's duration on the Actions page is close to its site build; the job summary's *Corpus build* line is the exact figure, with the benchmark's own warm-up already subtracted.
+
+**Only a corpus that no longer builds fails CI.** New warnings, whitelist entries that went stale and the timings are reported in the job's summary on the Actions page, never gated: the corpora are someone else's documentation, and a warning in them is a finding to triage rather than a regression. Timings on shared runners are too noisy to compare between runs.
+
+Two flags make that possible, and work locally too:
+
+``--site-out DIR``
+   Once the corpus has built, copy its rendered site into ``DIR`` (replacing what is there), with the full report as ``report.txt`` and the site's front page named in ``entry.txt`` — which is all ``scripts/publish_pages.py`` needs to publish it.
+
+``--summary-markdown FILE``
+   Append the summary as a Markdown table to ``FILE`` — in CI, ``$GITHUB_STEP_SUMMARY``.
+
+The published sites have to fit GitHub Pages' 1 GB limit together with every other version — the reason only the newest release keeps its benchmarks, and what made the sidebar collapse by default (``docs/decisions/031-collapsed-navigation.md``): before it, CPython's site alone was 612 MB. The summary's *Site size* line is there to keep an eye on that budget.
+
 The CPython benchmark
 =====================
 
@@ -70,7 +95,7 @@ Note that ``scripts/domain_warnings_whitelist.json`` is tied to the pinned corpu
 Interpreting Results
 --------------------
 
-The full analysis is far too long for a terminal, so the script writes it to ``benchmark_result.txt`` in the workspace root and prints only a compact **Benchmark Summary** (distinct/occurrence counts per category) to the screen, ending with a pointer to that file. Everything described below — the frequency tables and the domain-object listings — lives in ``benchmark_result.txt``; the terminal shows just the counts. (``benchmark_result.txt`` is git-ignored.)
+The full analysis is far too long for a terminal, so the script writes it to ``benchmark_result.txt`` in the workspace root and prints only a compact summary (the two timings, then distinct/occurrence counts per category) to the screen, headed by the corpus and its version, after a pointer to that file. Everything described below — the frequency tables and the domain-object listings — lives in ``benchmark_result.txt``; the terminal shows just the counts. (``benchmark_result.txt`` is git-ignored.)
 
 1. Rendering Time
 ~~~~~~~~~~~~~~~~~

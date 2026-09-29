@@ -205,6 +205,15 @@ jobs:
       working-directory: e2e/smoke
       run: bazel test //...
 
+  # Both benchmark corpora, whose rendered sites the Pages workflows publish
+  # next to the documentation. A corpus that stops building fails CI; new
+  # warnings and timings only land in the job summary.
+  benchmarks:
+    name: Benchmarks
+    uses: ./.github/workflows/benchmarks.yml
+    permissions:
+      contents: read
+
   python:
     name: Python
     runs-on: ubuntu-latest
@@ -276,7 +285,7 @@ jobs:
   ci-ok:
     name: CI result
     if: always()
-    needs: [rust-lint, rust-test, rust-package, bazel, python, vscode]
+    needs: [rust-lint, rust-test, rust-package, bazel, benchmarks, python, vscode]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

@@ -38,7 +38,7 @@ What other projects do:
 ```
 /                       redirect to the newest release's docs/index.html
 /versions.json          the switcher's data (§4)
-/robots.txt             Disallow: /pr/ and /main/ — search engines index releases only
+/robots.txt             Disallow: /pr/, /main/ and every /*/benchmarks/ — search engines index releases only
 /.nojekyll              without it, Pages' Jekyll drops `_images/`
 /latest/                redirects into the newest release
 /vX.Y.Z/                one per release, immutable
@@ -51,6 +51,19 @@ Every version directory has today's shape: `//docs:site` at its root and
 `//examples:site` under `example-site/`, plus an `index.html` at each of
 the two roots leading to the site's front page, which is where the switcher
 lands when a page does not exist in the version switched to.
+
+Since CI started running the benchmarks, `main/`, every `pr/<N>/` and the
+**newest release only** also hold the two benchmark corpora's rendered sites
+under `benchmarks/<name>/`, with a landing page at `benchmarks/index.html`.
+They are a comparison point — how this version renders someone else's
+documentation — and only those three are worth comparing against, so the
+publisher deletes the previous release's `benchmarks/` when a newer release
+lands, leaving its documentation untouched. For the same reason they are never
+mirrored into `latest/` or the pre-version URLs, and never indexed. Each benchmark script
+exports its site with the front page named in an `entry.txt` beside it, so the
+publisher and the workflows name no benchmark: `--benchmarks-dir` publishes
+whatever subdirectories it is given. A tag from before the benchmarks, or a
+run where a corpus failed to build, publishes without them.
 
 `latest/` and the URLs from before versions existed (the release's tree at
 the branch's root) are **redirects, not copies**: one page per page, each
@@ -65,7 +78,12 @@ Until a release is published, all of these lead to `main/`.
 
 The branch is storage, not history. A scheduled job squashes it into a single
 orphan commit monthly, so pull-request churn does not accumulate. One build is
-about 7 MB, almost all of it the example site.
+about 7 MB, almost all of it the example site — plus about 70 MB of benchmark
+sites, nearly all of it CPython's, for main, each open preview and the newest
+release. Pages refuses a site over 1 GB, which is why an older release keeps
+no benchmarks: that way their cost does not grow with the release count, only
+with the number of open pull requests. ADR-031 is how they got that small;
+CPython's site alone was 612 MB before the sidebar collapsed.
 
 ### 2. One script writes the branch
 
@@ -87,10 +105,10 @@ older `main/` back.
 
 | Trigger | Writes |
 |---|---|
-| CI succeeded on `main` (`pages.yml`) | `main/` |
+| CI succeeded on `main` (`pages.yml`) | `main/`, with the benchmark sites CI rendered |
 | the release workflow's `finalize` succeeded | `vX.Y.Z/` (and so `latest/`) |
 | `workflow_dispatch` with a tag | the same, to backfill a release (first: `v0.1.0`) |
-| CI succeeded on a pull request | `pr/<N>/`, and a sticky comment linking it |
+| CI succeeded on a pull request | `pr/<N>/`, with CI's benchmark sites, and a sticky comment linking it |
 | a pull request closed | removes `pr/<N>/` |
 | monthly | squashes the branch |
 

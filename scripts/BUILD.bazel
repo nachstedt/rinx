@@ -11,6 +11,7 @@ py_library(
         "benchmark.py",
         "benchmark_common.py",
         "benchmark_entities.py",
+        "benchmark_warmup.py",
         "needs_schema.py",
     ],
     # Add this package dir to sys.path so `import benchmark` resolves as a
@@ -42,6 +43,18 @@ py_binary(
     ],
     imports = ["."],
     main = "benchmark_entities.py",
+)
+
+# Compiles rinx into the disk cache the two benchmarks share, so that in CI
+# neither benchmark's step holds the compile.
+py_binary(
+    name = "benchmark_warmup",
+    srcs = [
+        "benchmark_common.py",
+        "benchmark_warmup.py",
+    ],
+    imports = ["."],
+    main = "benchmark_warmup.py",
 )
 
 # The doctest plan runner. Exposed as a library so `rinx_doctest_tests`

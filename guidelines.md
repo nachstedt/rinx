@@ -166,6 +166,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Name project status pages neutrally ("compatibility status") rather than negatively ("gaps").
 - Keep the default theme's sidebar in view while reading, scrolling on its own; a second scrollbar is a smaller cost than navigation that scrolls away with a long page.
 - When a build's output outgrows a platform limit, shrink the output at its source before designing around the limit.
+- Gate CI on hard failures (a corpus no longer builds) and only report soft signals (new warnings, timings), since gating on noise trains people to ignore the gate.
+- Publish bulky derived artifacts only for the versions people actually compare against (main, previews, the newest release), so their cost does not grow with every release.
 
 ## Interoperability
 

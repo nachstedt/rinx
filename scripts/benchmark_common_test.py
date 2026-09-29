@@ -1,3 +1,4 @@
+import argparse
 import json
 import subprocess
 from collections.abc import Sequence
@@ -6,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import benchmark_common
+import publish_pages
 from benchmark_common import WarningEntry
 
 
@@ -210,6 +212,37 @@ class TestGenerateWarmupPackage:
         assert (warmup / "custom_template.html").read_text() == "<html>{{ body }}</html>"
 
 
+class TestRinxModuleBazel:
+    def test_depends_on_the_local_rinx_checkout(self) -> None:
+        # Given / When
+        text = benchmark_common.rinx_module_bazel("bench", "/src/rinx")
+
+        # Then
+        assert 'module(name = "bench")' in text
+        assert 'bazel_dep(name = "rinx", version = "0.0.0")' in text
+        assert 'path = "/src/rinx"' in text
+
+    def test_every_workspace_declares_rinx_identically(self) -> None:
+        # Given / When — only the module's own name may differ, or the
+        # workspaces' action keys, and with them the shared compile, part ways
+        first = benchmark_common.rinx_module_bazel("a", "/src/rinx")
+        second = benchmark_common.rinx_module_bazel("b", "/src/rinx")
+
+        # Then
+        assert first.replace('"a"', '"b"', 1) == second
+
+
+class TestWriteAssetsAlias:
+    def test_aliases_the_default_stylesheet(self, tmp_path: Path) -> None:
+        # Given / When
+        benchmark_common.write_assets_alias(tmp_path)
+
+        # Then
+        build = (tmp_path / "assets" / "BUILD.bazel").read_text()
+        assert 'name = "default.css"' in build
+        assert 'actual = "@rinx//:assets/default.css"' in build
+
+
 class TestTimedBazelBuild:
     @staticmethod
     def _run(
@@ -301,3 +334,302 @@ class TestWhyUntrustworthy:
     def test_a_successful_build_with_sidecars_can(self) -> None:
         # Given / When / Then
         assert benchmark_common._why_untrustworthy(build_succeeded=True, file_count=1) is None
+
+
+class TestSummaryRows:
+    def test_a_count_row_names_distinct_and_occurrences(self) -> None:
+        # Given / When
+        row = benchmark_common.count_row("Unsupported directives:", 3, 17)
+
+        # Then
+        assert row.label == "Unsupported directives:"
+        assert row.value == "3 distinct (17 occurrences)"
+
+    def test_a_count_row_without_occurrences_names_only_the_distinct(self) -> None:
+        # Given / When
+        row = benchmark_common.count_row("Parser diagnostics:", 4)
+
+        # Then
+        assert row.value == "4 distinct"
+
+    def test_whitelist_rows_mention_stale_entries_only_when_there_are_some(self) -> None:
+        # Given
+        clean = _whitelist_summary(stale_count=0, stale_pruned=False)
+        stale = _whitelist_summary(stale_count=2, stale_pruned=True)
+
+        # When
+        clean_rows = benchmark_common.whitelist_rows(clean)
+        stale_rows = benchmark_common.whitelist_rows(stale)
+
+        # Then
+        assert [row.label for row in clean_rows] == ["Suppressed by whitelist:"]
+        assert clean_rows[0].value == "5 occurrences (3 entries)"
+        assert stale_rows[1] == benchmark_common.SummaryRow(
+            "Stale whitelist entries:", "2 (removed)"
+        )
+
+    def test_timing_rows_show_both_builds(self) -> None:
+        # Given
+        result = benchmark_common.BuildResult(
+            succeeded=True, warmup_seconds=61.25, corpus_seconds=15.61
+        )
+
+        # When
+        rows = benchmark_common.timing_rows(result)
+
+        # Then
+        assert rows == [
+            benchmark_common.SummaryRow("Warm-up build (untimed):", "61.2 s"),
+            benchmark_common.SummaryRow("Corpus build:", "15.6 s"),
+        ]
+
+    def test_timing_rows_say_when_the_corpus_never_built(self) -> None:
+        # Given a warm-up build that failed, so the corpus build never ran
+        result = benchmark_common.BuildResult(
+            succeeded=False, warmup_seconds=3.0, corpus_seconds=None
+        )
+
+        # When
+        rows = benchmark_common.timing_rows(result)
+
+        # Then
+        assert rows[1] == benchmark_common.SummaryRow("Corpus build:", "not run")
+
+    def test_a_failed_corpus_build_is_marked_as_failed(self) -> None:
+        # Given
+        result = benchmark_common.BuildResult(
+            succeeded=False, warmup_seconds=3.0, corpus_seconds=9.0
+        )
+
+        # When
+        rows = benchmark_common.timing_rows(result)
+
+        # Then
+        assert rows[1] == benchmark_common.SummaryRow("Corpus build:", "failed after 9.0 s")
+
+
+class TestRenderSummary:
+    ROWS = (
+        benchmark_common.SummaryRow("Corpus build:", "15.6 s"),
+        benchmark_common.SummaryRow("Parser diagnostics:", "4 distinct"),
+    )
+
+    def test_the_terminal_summary_aligns_values_under_a_heading(self) -> None:
+        # Given / When
+        text = benchmark_common.render_terminal_summary("Benchmark Summary", self.ROWS)
+
+        # Then
+        assert text.splitlines() == [
+            "=== Benchmark Summary ===",
+            f"  {'Corpus build:':<28}15.6 s",
+            f"  {'Parser diagnostics:':<28}4 distinct",
+        ]
+
+    def test_the_markdown_summary_is_a_two_column_table(self) -> None:
+        # Given / When
+        text = benchmark_common.render_markdown_summary("CPython", self.ROWS)
+
+        # Then
+        assert text.splitlines() == [
+            "### CPython",
+            "",
+            "| | |",
+            "|---|---|",
+            "| Corpus build | 15.6 s |",
+            "| Parser diagnostics | 4 distinct |",
+            "",
+        ]
+
+    def test_markdown_table_cells_cannot_break_out_of_their_column(self) -> None:
+        # Given a label holding the table's own separator
+        rows = [benchmark_common.SummaryRow("a|b:", "c|d")]
+
+        # When
+        text = benchmark_common.render_markdown_summary("T", rows)
+
+        # Then
+        assert "| a\\|b | c\\|d |" in text
+
+
+class TestExportSite:
+    def test_copies_the_site_and_the_report_and_measures_the_site(self, tmp_path: Path) -> None:
+        # Given a site as Bazel leaves it: nested, and read-only
+        site = tmp_path / "site"
+        (site / "Doc").mkdir(parents=True)
+        (site / "Doc" / "index.html").write_text("<p>hi</p>")
+        (site / "objects.inv").write_bytes(b"inv")
+        for path in (site / "Doc" / "index.html", site / "objects.inv"):
+            path.chmod(0o444)
+        report = tmp_path / "result.txt"
+        report.write_text("report")
+        dest = tmp_path / "out"
+
+        # When
+        size = benchmark_common.export_site(site, report, "Doc/index.html", dest)
+
+        # Then
+        assert (dest / "Doc" / "index.html").read_text() == "<p>hi</p>"
+        assert (dest / "objects.inv").read_bytes() == b"inv"
+        assert (dest / benchmark_common.REPORT_NAME).read_text() == "report"
+        assert (dest / benchmark_common.ENTRY_NAME).read_text() == "Doc/index.html\n"
+        assert size == len("<p>hi</p>") + len("inv")
+
+    def test_the_copy_is_writable_so_a_later_run_can_replace_it(self, tmp_path: Path) -> None:
+        # Given a read-only site
+        site = tmp_path / "site"
+        site.mkdir()
+        (site / "index.html").write_text("x")
+        (site / "index.html").chmod(0o444)
+        report = tmp_path / "result.txt"
+        report.write_text("report")
+        dest = tmp_path / "out"
+
+        # When
+        benchmark_common.export_site(site, report, "index.html", dest)
+        (dest / "index.html").write_text("replaced")
+
+        # Then
+        assert (dest / "index.html").read_text() == "replaced"
+
+    def test_a_missing_report_is_skipped(self, tmp_path: Path) -> None:
+        # Given a site whose analysis wrote no report
+        site = tmp_path / "site"
+        site.mkdir()
+        (site / "index.html").write_text("x")
+
+        # When
+        benchmark_common.export_site(site, tmp_path / "absent.txt", "index.html", tmp_path / "out")
+
+        # Then
+        assert not (tmp_path / "out" / benchmark_common.REPORT_NAME).exists()
+
+
+class TestAppendMarkdownSummary:
+    def test_appends_rather_than_replacing(self, tmp_path: Path) -> None:
+        # Given a step summary another step already wrote to
+        summary = tmp_path / "summary.md"
+        summary.write_text("earlier\n")
+
+        # When
+        benchmark_common.append_markdown_summary(
+            summary, "CPython", [benchmark_common.SummaryRow("Corpus build:", "1.0 s")]
+        )
+
+        # Then
+        text = summary.read_text()
+        assert text.startswith("earlier\n")
+        assert "### CPython" in text
+
+
+class TestExitStatus:
+    def test_a_corpus_that_built_exits_zero(self) -> None:
+        # Given / When / Then
+        assert benchmark_common.exit_status(build_succeeded=True) == 0
+
+    def test_a_corpus_that_did_not_build_exits_non_zero(self) -> None:
+        # Given / When / Then
+        assert benchmark_common.exit_status(build_succeeded=False) == 1
+
+
+def _whitelist_summary(
+    *, stale_count: int, stale_pruned: bool
+) -> benchmark_common.WhitelistSummary:
+    return benchmark_common.WhitelistSummary(
+        per_kind={},
+        suppressed=5,
+        whitelist_size=3,
+        stale_count=stale_count,
+        stale_pruned=stale_pruned,
+    )
+
+
+class TestFinishRun:
+    def _site(self, tmp_path: Path) -> tuple[Path, Path]:
+        site = tmp_path / "site"
+        site.mkdir()
+        (site / "index.html").write_text("x" * 2_000_000)
+        report = tmp_path / "result.txt"
+        report.write_text("report")
+        return site, report
+
+    def test_a_built_corpus_is_exported_and_summarized(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        # Given
+        site, report = self._site(tmp_path)
+        result = benchmark_common.BuildResult(
+            succeeded=True, warmup_seconds=1.0, corpus_seconds=2.0
+        )
+        summary = tmp_path / "summary.md"
+
+        # When
+        status = benchmark_common.finish_run(
+            benchmark_common.RunOutcome(
+                "CPython",
+                result,
+                [benchmark_common.count_row("Parser diagnostics:", 4)],
+                site_dir=site,
+                entry="index.html",
+                report=report,
+            ),
+            benchmark_common.RunOutputs(site_out=tmp_path / "out", summary_markdown=summary),
+        )
+
+        # Then
+        assert status == 0
+        assert (tmp_path / "out" / "index.html").is_file()
+        markdown = summary.read_text()
+        assert "| Site size | 2.0 MB |" in markdown
+        assert "| Parser diagnostics | 4 distinct |" in markdown
+        assert "=== CPython ===" in capsys.readouterr().out
+
+    def test_a_failed_corpus_exports_nothing_and_fails(self, tmp_path: Path) -> None:
+        # Given a site left over from an earlier run
+        site, report = self._site(tmp_path)
+        result = benchmark_common.BuildResult(
+            succeeded=False, warmup_seconds=1.0, corpus_seconds=2.0
+        )
+
+        # When
+        status = benchmark_common.finish_run(
+            benchmark_common.RunOutcome(
+                "CPython", result, [], site_dir=site, entry="index.html", report=report
+            ),
+            benchmark_common.RunOutputs(site_out=tmp_path / "out"),
+        )
+
+        # Then
+        assert status == 1
+        assert not (tmp_path / "out").exists()
+
+
+class TestRunOutputs:
+    def test_reads_the_two_output_flags(self) -> None:
+        # Given
+        parser = argparse.ArgumentParser()
+        benchmark_common.add_output_arguments(parser)
+
+        # When
+        args = parser.parse_args(["--site-out", "out", "--summary-markdown", "s.md"])
+        outputs = benchmark_common.RunOutputs.from_args(args)
+
+        # Then
+        assert outputs == benchmark_common.RunOutputs(Path("out"), Path("s.md"))
+
+    def test_asks_for_nothing_by_default(self) -> None:
+        # Given
+        parser = argparse.ArgumentParser()
+        benchmark_common.add_output_arguments(parser)
+
+        # When
+        outputs = benchmark_common.RunOutputs.from_args(parser.parse_args([]))
+
+        # Then
+        assert outputs == benchmark_common.RunOutputs()
+
+
+class TestExportedNames:
+    def test_the_publisher_reads_the_names_the_export_writes(self) -> None:
+        # Given / When / Then — two scripts, one contract
+        assert publish_pages.BENCHMARK_REPORT == benchmark_common.REPORT_NAME
+        assert publish_pages.BENCHMARK_ENTRY == benchmark_common.ENTRY_NAME

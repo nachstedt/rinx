@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 import publish_pages
-from publish_pages import PublishError, Slot, SlotKind
+from publish_pages import BenchmarkSite, Build, PublishError, Slot, SlotKind
 
 BASE_URL = "https://example.org/rinx/"
 
@@ -32,6 +32,26 @@ def builds(tmp_path: Path) -> tuple[Path, Path]:
     write(docs / "docs/syntax.html", "<p>syntax</p>")
     examples = fake_site(tmp_path / "examples_out", "examples/index.html", "examples")
     return docs, examples
+
+
+@pytest.fixture
+def benchmarks_dir(tmp_path: Path) -> Path:
+    """Two benchmark sites as the scripts export them.
+
+    One has its pages under a subdirectory and a report; the other has neither.
+    """
+    parent = tmp_path / "benchmarks_out"
+    cpython = fake_site(parent / "cpython", "Doc/index.html", "cpython")
+    write(cpython / "report.txt", "cpython report")
+    write(cpython / "entry.txt", "Doc/index.html\n")
+    demo = fake_site(parent / "sphinx-needs-demo", "index.html", "demo")
+    write(demo / "entry.txt", "index.html\n")
+    return parent
+
+
+@pytest.fixture
+def benchmarks(benchmarks_dir: Path) -> list[BenchmarkSite]:
+    return publish_pages.read_benchmark_sites(benchmarks_dir)
 
 
 @pytest.fixture
@@ -62,6 +82,46 @@ class TestSlot:
         # When / Then
         with pytest.raises(ValueError, match="not a version slot"):
             Slot.parse(raw)
+
+
+class TestReadBenchmarkSites:
+    def test_reads_each_site_by_its_directorys_name(self, benchmarks_dir: Path) -> None:
+        # Given / When
+        sites = publish_pages.read_benchmark_sites(benchmarks_dir)
+
+        # Then
+        assert sites == [
+            BenchmarkSite("cpython", "Doc/index.html", benchmarks_dir / "cpython"),
+            BenchmarkSite("sphinx-needs-demo", "index.html", benchmarks_dir / "sphinx-needs-demo"),
+        ]
+
+    def test_finds_none_without_a_directory(self, tmp_path: Path) -> None:
+        # Given / When / Then
+        assert publish_pages.read_benchmark_sites(None) == []
+        assert publish_pages.read_benchmark_sites(tmp_path / "absent") == []
+
+    @pytest.mark.parametrize(
+        ("name", "entry"),
+        [
+            ("CPython", "index.html"),
+            ("cpython", None),
+            ("cpython", "\n"),
+            ("cpython", "/abs/index.html"),
+            ("cpython", "../index.html"),
+            ("cpython", "Doc/index.html"),
+        ],
+    )
+    def test_refuses_a_site_it_cannot_place(
+        self, tmp_path: Path, name: str, entry: str | None
+    ) -> None:
+        # Given
+        site = fake_site(tmp_path / "out" / name, "index.html")
+        if entry is not None:
+            write(site / "entry.txt", entry)
+
+        # When / Then
+        with pytest.raises(PublishError, match="is not a benchmark site"):
+            publish_pages.read_benchmark_sites(tmp_path / "out")
 
 
 class TestReleaseKey:
@@ -213,7 +273,7 @@ class TestPlaceBuild:
         docs, examples = builds
 
         # When
-        publish_pages.place_build(root, Slot.parse("main"), docs, examples, force=False)
+        publish_pages.place_build(root, Slot.parse("main"), Build(docs, examples), force=False)
 
         # Then
         assert (root / "main/docs/syntax.html").is_file()
@@ -228,7 +288,7 @@ class TestPlaceBuild:
         write(root / "pr/7/docs/removed.html")
 
         # When
-        publish_pages.place_build(root, Slot.parse("pr/7"), docs, examples, force=False)
+        publish_pages.place_build(root, Slot.parse("pr/7"), Build(docs, examples), force=False)
 
         # Then
         assert not (root / "pr/7/docs/removed.html").exists()
@@ -243,7 +303,9 @@ class TestPlaceBuild:
 
         # When / Then
         with pytest.raises(PublishError, match="already published"):
-            publish_pages.place_build(root, Slot.parse("v1.0.0"), docs, examples, force=False)
+            publish_pages.place_build(
+                root, Slot.parse("v1.0.0"), Build(docs, examples), force=False
+            )
         assert (root / "v1.0.0/docs/index.html").read_text(encoding="utf-8") == "original"
 
     def test_replaces_a_release_when_forced(self, root: Path, builds: tuple[Path, Path]) -> None:
@@ -252,7 +314,7 @@ class TestPlaceBuild:
         write(root / "v1.0.0/docs/index.html", "original")
 
         # When
-        publish_pages.place_build(root, Slot.parse("v1.0.0"), docs, examples, force=True)
+        publish_pages.place_build(root, Slot.parse("v1.0.0"), Build(docs, examples), force=True)
 
         # Then
         assert (root / "v1.0.0/docs/index.html").read_text(encoding="utf-8") == "<p>docs</p>"
@@ -267,8 +329,89 @@ class TestPlaceBuild:
 
         # When / Then
         with pytest.raises(PublishError, match=r"no objects\.inv"):
-            publish_pages.place_build(root, Slot.parse("main"), docs, empty, force=False)
+            publish_pages.place_build(root, Slot.parse("main"), Build(docs, empty), force=False)
         assert not (root / "main").exists()
+
+
+class TestPlaceBenchmarks:
+    def test_puts_each_benchmark_under_the_slots_benchmarks_directory(
+        self, root: Path, builds: tuple[Path, Path], benchmarks: list[BenchmarkSite]
+    ) -> None:
+        # Given
+        docs, examples = builds
+
+        # When
+        publish_pages.place_build(
+            root, Slot.parse("pr/7"), Build(docs, examples, benchmarks), force=False
+        )
+
+        # Then
+        assert (root / "pr/7/benchmarks/cpython/Doc/index.html").is_file()
+        assert (root / "pr/7/benchmarks/sphinx-needs-demo/index.html").is_file()
+        assert (root / "pr/7/docs/syntax.html").is_file()
+
+    def test_writes_a_landing_page_linking_each_entry_and_report(
+        self, root: Path, builds: tuple[Path, Path], benchmarks: list[BenchmarkSite]
+    ) -> None:
+        # Given
+        docs, examples = builds
+
+        # When
+        publish_pages.place_build(
+            root, Slot.parse("main"), Build(docs, examples, benchmarks), force=False
+        )
+
+        # Then — only the benchmark that exported a report links one
+        landing = (root / "main/benchmarks/index.html").read_text(encoding="utf-8")
+        assert 'href="cpython/Doc/index.html"' in landing
+        assert 'href="cpython/report.txt"' in landing
+        assert 'href="sphinx-needs-demo/index.html"' in landing
+        assert 'href="sphinx-needs-demo/report.txt"' not in landing
+
+    def test_writes_no_benchmarks_directory_without_benchmarks(
+        self, root: Path, builds: tuple[Path, Path]
+    ) -> None:
+        # Given
+        docs, examples = builds
+
+        # When
+        publish_pages.place_build(root, Slot.parse("main"), Build(docs, examples), force=False)
+
+        # Then
+        assert not (root / "main/benchmarks").exists()
+
+    def test_refuses_a_benchmark_that_is_not_a_site(
+        self, root: Path, builds: tuple[Path, Path], tmp_path: Path
+    ) -> None:
+        # Given
+        docs, examples = builds
+        empty = tmp_path / "empty"
+        empty.mkdir()
+
+        # When / Then
+        with pytest.raises(PublishError, match=r"no objects\.inv"):
+            publish_pages.place_build(
+                root,
+                Slot.parse("main"),
+                Build(docs, examples, [BenchmarkSite("cpython", "index.html", empty)]),
+                force=False,
+            )
+        assert not (root / "main").exists()
+
+    def test_refuses_two_benchmarks_of_one_name(
+        self, root: Path, builds: tuple[Path, Path], benchmarks: list[BenchmarkSite]
+    ) -> None:
+        # Given
+        docs, examples = builds
+
+        # When / Then
+        with pytest.raises(PublishError, match=r"cpython.*twice"):
+            publish_pages.place_build(
+                root,
+                Slot.parse("main"),
+                Build(docs, examples, [benchmarks[0], benchmarks[0]]),
+                force=False,
+            )
 
 
 class TestRemoveSlot:
@@ -345,7 +488,7 @@ class TestRemoveDerivedFiles:
 class TestRefreshDerivedFiles:
     def publish(self, root: Path, builds: tuple[Path, Path], slot: str) -> None:
         docs, examples = builds
-        publish_pages.place_build(root, Slot.parse(slot), docs, examples, force=False)
+        publish_pages.place_build(root, Slot.parse(slot), Build(docs, examples), force=False)
         publish_pages.refresh_derived_files(root, BASE_URL)
 
     def test_leads_everything_to_the_newest_release(
@@ -379,6 +522,67 @@ class TestRefreshDerivedFiles:
         assert [entry["version"] for entry in manifest] == ["v0.1.0", "main"]
         assert "Disallow: /pr/" in (root / "robots.txt").read_text(encoding="utf-8")
         assert (root / ".nojekyll").is_file()
+
+    def test_never_mirrors_a_slots_benchmarks(
+        self, root: Path, builds: tuple[Path, Path], benchmarks: list[BenchmarkSite]
+    ) -> None:
+        # Given a release carrying benchmarks
+        docs, examples = builds
+        publish_pages.place_build(
+            root, Slot.parse("v0.1.0"), Build(docs, examples, benchmarks), force=False
+        )
+
+        # When
+        publish_pages.refresh_derived_files(root, BASE_URL)
+
+        # Then — neither latest/ nor the pre-version root redirects into them
+        assert (root / "latest/docs/syntax.html").is_file()
+        assert not (root / "latest/benchmarks").exists()
+        assert not (root / "benchmarks").exists()
+
+    def test_keeps_benchmarks_only_on_the_newest_release(
+        self, root: Path, builds: tuple[Path, Path], benchmarks: list[BenchmarkSite]
+    ) -> None:
+        # Given two releases, main and a preview, all published with benchmarks
+        docs, examples = builds
+        for slot in ["v0.1.0", "v0.2.0", "main", "pr/3"]:
+            publish_pages.place_build(
+                root, Slot.parse(slot), Build(docs, examples, benchmarks), force=False
+            )
+
+        # When
+        publish_pages.refresh_derived_files(root, BASE_URL)
+
+        # Then — the older release keeps its documentation, but not its benchmarks
+        assert not (root / "v0.1.0/benchmarks").exists()
+        assert (root / "v0.1.0/docs/syntax.html").is_file()
+        for slot in ["v0.2.0", "main", "pr/3"]:
+            assert (root / slot / "benchmarks/index.html").is_file(), slot
+
+    def test_a_backfilled_older_release_gets_no_benchmarks(
+        self, root: Path, builds: tuple[Path, Path], benchmarks: list[BenchmarkSite]
+    ) -> None:
+        # Given a newer release already published
+        docs, examples = builds
+        self.publish(root, builds, "v0.2.0")
+
+        # When an older one is published by hand, with benchmarks
+        publish_pages.place_build(
+            root, Slot.parse("v0.1.0"), Build(docs, examples, benchmarks), force=False
+        )
+        publish_pages.refresh_derived_files(root, BASE_URL)
+
+        # Then
+        assert not (root / "v0.1.0/benchmarks").exists()
+
+    def test_keeps_search_engines_out_of_the_benchmarks(
+        self, root: Path, builds: tuple[Path, Path]
+    ) -> None:
+        # Given
+        self.publish(root, builds, "v0.1.0")
+
+        # Then
+        assert "Disallow: /*/benchmarks/" in (root / "robots.txt").read_text(encoding="utf-8")
 
     def test_leads_to_main_before_the_first_release(
         self, root: Path, builds: tuple[Path, Path]
@@ -414,6 +618,28 @@ class TestRefreshDerivedFiles:
             "robots.txt",
             "versions.json",
         ]
+
+
+class TestDropSupersededBenchmarks:
+    def test_keeps_the_newest_releases_and_leaves_other_slots_alone(self, root: Path) -> None:
+        # Given
+        for slot in ["v0.1.0", "v0.2.0", "main"]:
+            write(root / slot / "benchmarks/index.html")
+
+        # When
+        publish_pages.drop_superseded_benchmarks(root, ["v0.2.0", "v0.1.0"])
+
+        # Then
+        assert not (root / "v0.1.0/benchmarks").exists()
+        assert (root / "v0.2.0/benchmarks/index.html").is_file()
+        assert (root / "main/benchmarks/index.html").is_file()
+
+    def test_is_quiet_about_a_release_without_benchmarks(self, root: Path) -> None:
+        # Given releases from before benchmarks were published
+        (root / "v0.1.0").mkdir()
+
+        # When / Then
+        publish_pages.drop_superseded_benchmarks(root, ["v0.2.0", "v0.1.0"])
 
 
 class TestNormalizeBaseUrl:
@@ -676,6 +902,42 @@ class TestMain:
         # Then
         assert removed == 0
         assert not any(name.startswith("pr/") for name in branch_files(remote))
+
+    def test_publishes_benchmarks_given_on_the_command_line(
+        self,
+        remote: Path,
+        tmp_path: Path,
+        builds: tuple[Path, Path],
+        benchmarks_dir: Path,
+    ) -> None:
+        # Given
+        repo = clone(remote, tmp_path / "pages")
+        docs, examples = builds
+        args = [
+            "publish",
+            "--pages-dir",
+            str(repo),
+            "--base-url",
+            BASE_URL,
+            "--slot",
+            "main",
+            "--docs",
+            str(docs),
+            "--examples",
+            str(examples),
+            "--benchmarks-dir",
+            str(benchmarks_dir),
+        ]
+
+        # When
+        status = publish_pages.main(args)
+
+        # Then
+        assert status == 0
+        files = branch_files(remote)
+        assert "main/benchmarks/index.html" in files
+        assert "main/benchmarks/cpython/Doc/index.html" in files
+        assert "main/benchmarks/sphinx-needs-demo/index.html" in files
 
     def test_reports_a_refusal_as_one_line(
         self,

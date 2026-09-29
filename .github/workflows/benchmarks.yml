@@ -1,0 +1,94 @@
+# Builds the two benchmark corpora (docs/benchmark.rst) — CPython's
+# documentation and useblocks' sphinx-needs demo — and uploads their rendered
+# sites as the `benchmarks` artifact, which the Pages workflows publish under
+# benchmarks/ of main/, each pr/<N>/ and the newest release
+# (docs/decisions/024-versioned-docs.md).
+#
+# Reusable: ci.yml runs it for every pull request, push to main and release,
+# and pages.yml runs it when a release is republished by hand. Only a corpus
+# that no longer builds fails it; new warnings and the timings are reported in
+# the job summary.
+name: Benchmarks
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: The commit to benchmark; the triggering one when empty.
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        ref: ${{ inputs.ref }}
+
+    - name: Set up Bazel
+      uses: bazel-contrib/setup-bazel@0.19.0
+      with:
+        bazelisk-cache: true
+        # A cache of its own: the corpora build rinx with `-c opt`, whose
+        # outputs would otherwise crowd the integration job's out of `bazel`.
+        # The generated workspaces read the same ~/.bazelrc, so they share it.
+        disk-cache: benchmark
+        repository-cache: true
+        # Pull requests restore main's caches but never save their own.
+        cache-save: ${{ github.event_name != 'pull_request' }}
+
+    # Compiles rinx and fetches its toolchains into the shared disk cache, in a
+    # generated workspace declared exactly as the corpora's are. Both steps
+    # below then find it there, so each step's duration is about its site
+    # build rather than the compile.
+    - name: Warm up (compile rinx)
+      run: bazel run //scripts:benchmark_warmup
+
+    # Each script clones its pinned corpus, builds it in a generated workspace,
+    # exits non-zero only when it does not build, and exports the site with the
+    # page to enter it by (scripts/benchmark_common.py's export_site).
+    - name: Benchmark CPython's documentation
+      run: >-
+        bazel run //scripts:benchmark --
+        --site-out "$RUNNER_TEMP/benchmarks/cpython"
+        --summary-markdown "$GITHUB_STEP_SUMMARY"
+
+    # Runs even when CPython failed, so one broken corpus still shows the other.
+    - name: Benchmark the sphinx-needs demo
+      if: success() || failure()
+      run: >-
+        bazel run //scripts:benchmark_entities --
+        --site-out "$RUNNER_TEMP/benchmarks/sphinx-needs-demo"
+        --summary-markdown "$GITHUB_STEP_SUMMARY"
+
+    # A run prunes whitelist entries no warning justifies any more. Reported
+    # so the pruning can be carried into a commit; never a failure.
+    - name: Report stale whitelist entries
+      if: success() || failure()
+      run: |
+        if ! git diff --quiet -- 'scripts/*_whitelist.json'; then
+          {
+            echo '### Stale whitelist entries'
+            echo
+            echo 'Run the benchmarks locally and commit the pruned whitelists:'
+            echo
+            echo '```'
+            git diff --stat -- 'scripts/*_whitelist.json'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: Upload the benchmark sites
+      if: success() || failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: benchmarks
+        path: ${{ runner.temp }}/benchmarks
+        if-no-files-found: ignore
+        retention-days: 1

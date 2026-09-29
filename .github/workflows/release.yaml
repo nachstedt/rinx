@@ -108,3 +108,5 @@ jobs:
       version: ${{ github.ref_name }}
     permissions:
       contents: write
+      # The benchmark sites the ci job uploaded earlier in this run.
+      actions: read
