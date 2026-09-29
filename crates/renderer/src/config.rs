@@ -9,6 +9,7 @@
 use rinx_ast::ResolvedLanguage;
 
 pub use crate::numfig_format::NumfigFormat;
+pub use crate::pep_base_url::PepBaseUrl;
 use serde::Deserialize;
 
 /// Site-level configuration loaded from a TOML file.
@@ -132,6 +133,16 @@ pub struct SiteConfig {
     /// shares one cached render (`docs/decisions/024-versioned-docs.md`).
     #[serde(default)]
     pub version_switcher: Option<VersionSwitcher>,
+
+    /// The PEP index a `:pep:` role links into — docutils' `pep_base_url`,
+    /// defaulting to `https://peps.python.org/`. Each PEP's page, such as
+    /// `pep-0008/`, is appended to it.
+    ///
+    /// Read while rendering, never while parsing, so pointing a site at a
+    /// mirror re-parses no document. A URL, not a path, so this respects the
+    /// no-paths rule above.
+    #[serde(default)]
+    pub pep_base_url: PepBaseUrl,
 }
 
 /// The `[version_switcher]` table of a site config.
@@ -159,20 +170,7 @@ impl SwitcherUrl {
     /// Returns a message naming the accepted forms when `raw` is neither, or
     /// when it holds a character that could end an HTML attribute.
     pub fn parse(raw: &str) -> Result<Self, String> {
-        let absolute = raw.starts_with("https://") || raw.starts_with("http://");
-        let root_relative = raw.starts_with('/') && !raw.starts_with("//");
-        if !(absolute || root_relative) {
-            return Err(format!(
-                "'{raw}' must be an http(s):// URL or start with '/', since a page-relative \
-                 address differs on every page of a nested site"
-            ));
-        }
-        if raw
-            .chars()
-            .any(|c| c.is_whitespace() || matches!(c, '"' | '\'' | '<' | '>'))
-        {
-            return Err(format!("'{raw}' contains a character a URL cannot hold"));
-        }
+        check_browser_address(raw)?;
         Ok(Self(raw.to_string()))
     }
 
@@ -181,6 +179,35 @@ impl SwitcherUrl {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+}
+
+/// Checks that `raw` is an address the browser resolves the same way from
+/// every page — an `http(s)://` URL or a root-relative `/…` path — and holds
+/// no character that could end the HTML attribute it is written into.
+///
+/// Shared by every URL the config names for the browser rather than for the
+/// build.
+///
+/// # Errors
+///
+/// Returns a message naming the accepted forms, or the offending character's
+/// presence.
+pub(crate) fn check_browser_address(raw: &str) -> Result<(), String> {
+    let absolute = raw.starts_with("https://") || raw.starts_with("http://");
+    let root_relative = raw.starts_with('/') && !raw.starts_with("//");
+    if !(absolute || root_relative) {
+        return Err(format!(
+            "'{raw}' must be an http(s):// URL or start with '/', since a page-relative \
+             address differs on every page of a nested site"
+        ));
+    }
+    if raw
+        .chars()
+        .any(|c| c.is_whitespace() || matches!(c, '"' | '\'' | '<' | '>'))
+    {
+        return Err(format!("'{raw}' contains a character a URL cannot hold"));
+    }
+    Ok(())
 }
 
 impl<'de> Deserialize<'de> for SwitcherUrl {
@@ -241,6 +268,7 @@ impl Default for SiteConfig {
             numfig_secnum_depth: default_numfig_secnum_depth(),
             numfig_format: NumfigFormat::default(),
             version_switcher: None,
+            pep_base_url: PepBaseUrl::default(),
         }
     }
 }
@@ -255,6 +283,45 @@ mod tests {
         assert_eq!(config.project, "Documentation");
         assert_eq!(config.version, "");
         assert_eq!(config.root_doc, "index");
+    }
+
+    #[test]
+    fn test_deserialize_defaults_pep_base_url() {
+        // Given / When
+        let config: SiteConfig = toml::from_str("").unwrap();
+
+        // Then
+        assert_eq!(config.pep_base_url.as_str(), "https://peps.python.org/");
+    }
+
+    #[test]
+    fn test_deserialize_reads_pep_base_url() {
+        // Given / When
+        let config: SiteConfig =
+            toml::from_str("pep_base_url = \"https://mirror.example/peps/\"\n").unwrap();
+
+        // Then
+        assert_eq!(config.pep_base_url.as_str(), "https://mirror.example/peps/");
+    }
+
+    #[test]
+    fn test_deserialize_refuses_a_pep_base_url_without_trailing_slash() {
+        // Given / When
+        let error = toml::from_str::<SiteConfig>("pep_base_url = \"https://peps.python.org\"\n")
+            .unwrap_err()
+            .to_string();
+
+        // Then
+        assert!(error.contains("invalid pep_base_url"), "{error}");
+    }
+
+    #[test]
+    fn test_check_browser_address_accepts_absolute_and_root_relative() {
+        // Given / When / Then
+        assert!(check_browser_address("https://a.org/x").is_ok());
+        assert!(check_browser_address("/x").is_ok());
+        assert!(check_browser_address("x").is_err());
+        assert!(check_browser_address("/a b").is_err());
     }
 
     #[test]

@@ -7,7 +7,7 @@
 //! handler reads the markup and the explicit title's format, which is the one
 //! part of the role that can be wrong on its own.
 
-use rinx_ast::{InlineNode, NumberFormat, NumberReferenceRefusal};
+use rinx_ast::{InlineNode, NumberFormat, NumberReferenceRefusal, RoleRefusal};
 
 use crate::explicit_title::split_optional_title;
 use crate::inline::escapes::unescape;
@@ -22,7 +22,7 @@ use crate::inline::regexes::NUMREF_ROLE_REGEX;
 /// An explicit title is parsed into the [`NumberFormat`] it will be applied
 /// as. One Sphinx could not apply — `see this <fig>`, with nowhere for the
 /// number to go — and an `:external:` prefix both become a
-/// [`InlineNode::RefusedNumberReference`], which the whole-document pass
+/// [`InlineNode::RefusedRole`], which the whole-document pass
 /// reports at this role's span. The title is unescaped here, before it is
 /// parsed, because Sphinx applies the format to the text docutils already
 /// unescaped — `\%s` still marks the slot. Every other field is unescaped on
@@ -68,9 +68,9 @@ fn unlinked(text: &str) -> InlineNode {
 
 /// A reference the whole-document pass will report, then show as `text`.
 fn refused(text: &str, refusal: NumberReferenceRefusal) -> InlineNode {
-    InlineNode::RefusedNumberReference {
+    InlineNode::RefusedRole {
         text: text.to_string(),
-        refusal,
+        refusal: RoleRefusal::NumberReference(refusal),
         span: None,
     }
 }
@@ -128,9 +128,9 @@ mod tests {
         // Then — shown as the title alone, as Sphinx shows it
         assert_eq!(
             node,
-            InlineNode::RefusedNumberReference {
+            InlineNode::RefusedRole {
                 text: "see this".to_string(),
-                refusal: NumberReferenceRefusal::InvalidTitle,
+                refusal: RoleRefusal::NumberReference(NumberReferenceRefusal::InvalidTitle),
                 span: None,
             }
         );
@@ -155,9 +155,9 @@ mod tests {
         // Then
         assert_eq!(
             node,
-            InlineNode::RefusedNumberReference {
+            InlineNode::RefusedRole {
                 text: "fig-root".to_string(),
-                refusal: NumberReferenceRefusal::External,
+                refusal: RoleRefusal::NumberReference(NumberReferenceRefusal::External),
                 span: None,
             }
         );

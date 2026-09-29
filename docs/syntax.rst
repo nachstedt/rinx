@@ -74,6 +74,13 @@ Supported:
   shows the number a ``:numbered:`` toctree gave it. An explicit title is the
   format: ``:numref:`Figure {number}: {name} <fig-label>``` shows the number
   and the caption, and ``%s`` works as well as ``{number}``.
+- The ``:pep:`` role, which links a Python Enhancement Proposal —
+  ``:pep:`8``` shows **PEP 8** — and lists the mention in the general index
+  under *Python Enhancement Proposals*. ``:pep:`8#naming``` links a section of
+  the PEP, and ``:pep:`Style guide <8>``` shows a title of its own. Links go
+  to ``https://peps.python.org/`` unless the site sets ``pep_base_url`` (see
+  :ref:`site-config`); a target that is not a number is shown as written and
+  reported as ``pep.invalid-number``.
 - Admonitions, ``.. seealso::``, ``.. versionadded::``,
   ``.. versionchanged::`` and ``.. deprecated::``.
 - ``.. code-block::``, ``.. highlight::`` and ``.. literalinclude::``, all

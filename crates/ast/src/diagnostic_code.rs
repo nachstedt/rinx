@@ -115,6 +115,11 @@ diagnostic_codes! {
     /// An `:external:numref:` — an inventory holds no numbers.
     NumrefExternal => "numref.external",
 
+    // --- `:pep:` -----------------------------------------------------------
+    /// A `:pep:` whose target is not a PEP number — Sphinx's "invalid PEP
+    /// number". The role is shown as its source text.
+    PepInvalidNumber => "pep.invalid-number",
+
     // --- Headings ----------------------------------------------------------
     /// A section adornment shorter than the title's display width, which
     /// docutils accepts and reports rather than rejecting.

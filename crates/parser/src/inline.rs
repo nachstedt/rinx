@@ -25,6 +25,8 @@ mod typography;
 #[cfg(test)]
 mod code_pipeline_tests;
 #[cfg(test)]
+mod pep_pipeline_tests;
+#[cfg(test)]
 mod pipeline_tests;
 
 pub(crate) use regexes::{is_fixed_role_name, is_writable_role_name};

@@ -91,6 +91,7 @@ pub(super) fn with_ctx_for<R>(
         collapse_entities: true,
         show_entity_updates: crate::blocks::EntityUpdateVisibility::Show,
         uml_configs: &std::collections::BTreeMap::new(),
+        pep_base_url: &config.pep_base_url,
         linenothreshold: None,
         highlight_force: false,
         section_ids: &section_ids,

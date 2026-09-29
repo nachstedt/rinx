@@ -1,4 +1,6 @@
-use rinx_ast::{Directive, Document, IndexEntry, Node, TableRow, TargetName};
+use rinx_ast::{
+    Directive, Document, IndexEntry, InlineNode, Node, TableRow, TargetName, for_each_inline_list,
+};
 use rinx_index::{
     EntityUpdateRecord, EquationLocation, GenIndexEntry, ProjectIndex, TargetLocation,
 };
@@ -57,6 +59,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     }
 
     index_nodes(&doc.nodes, &doc.path, &mut index, &mut Scope::default());
+    index_pep_references(&doc.nodes, &doc.path, &mut index);
     let numbering = collect_numbering(doc);
     if !numbering.steps.is_empty() {
         index
@@ -97,6 +100,32 @@ fn index_genindex_entries(
         // IndexEntry::See/SeeAlso redirect rather than link to content and are
         // not surfaced in genindex_entries yet (see docs/compatibility.rst).
     }
+}
+
+/// Records the general-index entry every `:pep:` role in `nodes` makes —
+/// Sphinx's `single: Python Enhancement Proposals; PEP <target>`, the target
+/// as written, fragment included — linking to the anchor the parser minted.
+///
+/// Walks with the inline walker the parser numbered the anchors with, rather
+/// than [`index_nodes`], so an entry exists for exactly the roles that have
+/// an anchor.
+fn index_pep_references(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
+    for_each_inline_list(nodes, &mut |list| {
+        for node in list {
+            if let InlineNode::PepReference {
+                target, index_id, ..
+            } = node
+            {
+                index.genindex_entries.push(GenIndexEntry {
+                    primary: "Python Enhancement Proposals".to_string(),
+                    subentry: Some(format!("PEP {}", target.as_written())),
+                    main: false,
+                    doc_path: doc_path.to_string(),
+                    anchor: index_id.clone(),
+                });
+            }
+        }
+    });
 }
 
 /// Records a `.. entity-update::`/`.. needextend::` so `apply_entity_updates`

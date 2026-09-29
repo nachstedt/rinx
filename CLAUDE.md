@@ -258,10 +258,31 @@ things to know before touching it:
   `assign_element_numbers` phase (a port of Sphinx's `assign_figure_numbers`),
   which runs after section numbering and again in `process_preview`.
 - **A refused `:numref:` title is reported while parsing** through an
-  intermediate `InlineNode::RefusedNumberReference`, which
-  `parser/blocks/number_references.rs` reports and lowers after substitutions.
-  It walks inline content with `blocks/inline_lists.rs`'s
-  `for_each_inline_list_mut`, the traversal substitution resolution uses too.
+  intermediate `InlineNode::RefusedRole`, which
+  `parser/blocks/refused_roles.rs` reports and lowers after substitutions — the
+  one node and pass every refusable role shares (`:pep:` too), its
+  `RoleRefusal` saying which role and how to lower it. It walks inline content
+  with `rinx_ast`'s `for_each_inline_list_mut`, the traversal substitution
+  resolution uses too.
+
+### The `:pep:` role (`docs/decisions/030-pep-role.md`)
+
+`InlineNode::PepReference` is one node standing for Sphinx's three: the
+general-index entry, its anchor and the link. Three things to know:
+
+- **The anchor is minted after parsing**, by `parser/blocks/index_ids.rs`'s
+  `assign_pep_index_ids`, continuing the `.. index::` counter and running after
+  substitutions so each use of a definition gets its own id. The analyzer finds
+  the roles with `rinx_ast::for_each_inline_list` — generated from the same
+  macro body as the parser's `for_each_inline_list_mut` (`ast/inline_lists.rs`),
+  so an entry exists for exactly the roles that have an anchor.
+- **The `.ast` holds the PEP's page, not its URL.** `PepTarget` (number,
+  fragment, `page_path()`) is parsed once; the renderer prefixes
+  `rinx.toml`'s `pep_base_url` (`renderer/pep_base_url.rs`), so changing it
+  re-parses nothing.
+- **Role names stay case-sensitive** (`:PEP:` is not recognized), deliberately:
+  docutils' case-insensitivity belongs to every role and is left to a change
+  that introduces it for all of them.
 
 ### Source transclusion (`docs/decisions/008-source-transclusion.md`)
 

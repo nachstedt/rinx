@@ -19,6 +19,7 @@ use super::hyperlink::render_inline_hyperlink;
 use super::math::{render_equation_reference, render_inline_math};
 use super::number_reference::render_number_reference_node;
 use super::option_reference::render_inline_option_reference;
+use super::pep_reference::{PepRef, render_inline_pep_reference};
 use super::reference::{LabelRef, render_inline_reference};
 use super::term_reference::render_inline_term_reference;
 
@@ -123,13 +124,27 @@ pub(crate) fn render_inline(
             let _ = write!(html, "|{}|", html_escape::encode_text(name));
         }
         // Never reaches a well-formed document either: the parser reports
-        // every refusal and lowers it to an unlinked `NumberReference`.
-        // Rendered as that would render, for the same reason as above.
-        rinx_ast::InlineNode::RefusedNumberReference { text, .. } => {
-            let _ = write!(
+        // every refusal and lowers it to what its refusal says. Rendered as
+        // that would render, for the same reason as above.
+        rinx_ast::InlineNode::RefusedRole { text, refusal, .. } => {
+            render_refused_role(html, text, refusal);
+        }
+        // A page outside the site: its href follows from the target and the
+        // configured PEP index alone, so it cannot be broken while rendering.
+        rinx_ast::InlineNode::PepReference {
+            target,
+            display,
+            index_id,
+            ..
+        } => {
+            render_inline_pep_reference(
                 html,
-                "<span class=\"xref std std-numref\">{}</span>",
-                html_escape::encode_text(text)
+                PepRef {
+                    title: display.as_deref(),
+                    target,
+                    index_id,
+                },
+                ctx.pep_base_url,
             );
         }
         // Listed rather than caught by a `_`, so a variant added later is a
@@ -147,6 +162,23 @@ pub(crate) fn render_inline(
         | rinx_ast::InlineNode::NumberReference { .. }
         | rinx_ast::InlineNode::EquationReference { .. } => {
             render_cross_reference(html, inline, ctx);
+        }
+    }
+}
+
+/// Renders a refused role as the parser would have lowered it: an unlinked
+/// `:numref:`, or a `:pep:`'s source text.
+fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRefusal) {
+    match refusal {
+        rinx_ast::RoleRefusal::NumberReference(_) => {
+            let _ = write!(
+                html,
+                "<span class=\"xref std std-numref\">{}</span>",
+                html_escape::encode_text(text)
+            );
+        }
+        rinx_ast::RoleRefusal::PepTarget { .. } => {
+            let _ = write!(html, "{}", html_escape::encode_text(text));
         }
     }
 }
@@ -267,7 +299,8 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::Code { .. }
         | rinx_ast::InlineNode::InlineImage(_)
         | rinx_ast::InlineNode::SubstitutionReference { .. }
-        | rinx_ast::InlineNode::RefusedNumberReference { .. }
+        | rinx_ast::InlineNode::RefusedRole { .. }
+        | rinx_ast::InlineNode::PepReference { .. }
         | rinx_ast::InlineNode::DownloadReference { .. }
         | rinx_ast::InlineNode::Program(_) => {
             unreachable!("render_inline routes only cross-reference variants here")
@@ -418,4 +451,46 @@ fn render_domain_object(html: &mut String, inline: &rinx_ast::InlineNode, ctx: &
         },
         &ctx.scope,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_render_refused_role_shows_a_numref_unlinked() {
+        // Given
+        let mut html = String::new();
+
+        // When
+        render_refused_role(
+            &mut html,
+            "see <this>",
+            &rinx_ast::RoleRefusal::NumberReference(rinx_ast::NumberReferenceRefusal::InvalidTitle),
+        );
+
+        // Then
+        assert_eq!(
+            html,
+            "<span class=\"xref std std-numref\">see &lt;this&gt;</span>"
+        );
+    }
+
+    #[test]
+    fn test_render_refused_role_shows_a_pep_as_its_source() {
+        // Given
+        let mut html = String::new();
+
+        // When
+        render_refused_role(
+            &mut html,
+            ":pep:`<x>`",
+            &rinx_ast::RoleRefusal::PepTarget {
+                target: "<x>".to_string(),
+            },
+        );
+
+        // Then
+        assert_eq!(html, ":pep:`&lt;x&gt;`");
+    }
 }
