@@ -165,6 +165,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Keep compatibility notes to brief bullets naming only what is missing or deviates, never explaining how something works.
 - Name project status pages neutrally ("compatibility status") rather than negatively ("gaps").
 - Keep the default theme's sidebar in view while reading, scrolling on its own; a second scrollbar is a smaller cost than navigation that scrolls away with a long page.
+- When a build's output outgrows a platform limit, shrink the output at its source before designing around the limit.
 
 ## Interoperability
 

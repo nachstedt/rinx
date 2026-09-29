@@ -167,7 +167,7 @@ pub(super) fn process_preview(
             has_genindex: !index.genindex_entries.is_empty(),
             ..renderer::PageMeta::default()
         }
-        .with_navigation(&index),
+        .with_navigation(&index, config),
     )?;
     Ok(PreviewedPage {
         html,

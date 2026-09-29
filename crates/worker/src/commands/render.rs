@@ -107,7 +107,7 @@ pub(super) fn process_render(
             has_genindex: !index.genindex_entries.is_empty(),
             ..renderer::PageMeta::default()
         }
-        .with_navigation(&index),
+        .with_navigation(&index, config),
     )?;
     Ok(RenderedPage {
         html,

@@ -18,6 +18,7 @@ use std::collections::BTreeSet;
 use rinx_ast::{SectionId, Toctree, ToctreeFlag};
 use rinx_index::{OutlineSection, ProjectIndex};
 
+use super::collapse::SidebarTree;
 use super::entry::ResolvedNavEntry;
 use super::resolve::{document_href, document_title};
 use crate::nav::secnumber::secnumber_for;
@@ -240,9 +241,10 @@ fn section_entry(
     }
 }
 
-/// The sidebar's entries: every root document's toctrees, expanded.
+/// The sidebar's entries: every root document's toctrees, expanded, then
+/// shaped as `tree` asks.
 ///
-/// The sidebar shows the same tree on every page — only `is_current` and
+/// The sidebar expands the same tree on every page — only `is_current` and
 /// `is_ancestor` differ — so it always expands with `:includehidden:` in
 /// effect. A `:hidden:` toctree exists precisely to contribute structure the
 /// sidebar shows while the page body does not.
@@ -251,6 +253,7 @@ pub(crate) fn sidebar_entries(
     index: &ProjectIndex,
     from_doc: &str,
     current_doc: &str,
+    tree: SidebarTree,
 ) -> Vec<ResolvedNavEntry> {
     let mut entries = Vec::new();
     for root in &index.root_documents {
@@ -271,7 +274,7 @@ pub(crate) fn sidebar_entries(
             ));
         }
     }
-    entries
+    tree.shape(entries)
 }
 
 #[cfg(test)]

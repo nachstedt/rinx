@@ -7,7 +7,8 @@
 //!
 //! [`expand`] walks the toctree graph in the index into a tree of entries,
 //! applying `:maxdepth:`, `:titlesonly:` and `:includehidden:` and breaking
-//! cycles; [`resolve`] turns one document or section into the title and href
+//! cycles; [`collapse`] trims the sidebar's copy of that tree to the current
+//! page's branch; [`resolve`] turns one document or section into the title and href
 //! an entry shows; [`secnumber`] looks up `:numbered:` numbers; [`entry`]
 //! holds the resulting [`ResolvedNavEntry`]; and [`html`] writes it as the
 //! `<ul>` an in-page toctree renders to.
@@ -17,6 +18,7 @@
 //! sharing is the point: the two used to resolve titles from different places
 //! and could label the same document differently on one page.
 
+mod collapse;
 mod entry;
 mod expand;
 mod html;
@@ -24,6 +26,7 @@ mod relations;
 mod resolve;
 mod secnumber;
 
+pub use collapse::SidebarTree;
 pub use entry::ResolvedNavEntry;
 
 pub(crate) use entry::format_secnumber;
