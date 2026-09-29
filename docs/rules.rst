@@ -152,6 +152,12 @@ freely.
    * - ``highlight_language``
      - The language of code blocks that name none, like Sphinx's setting of
        the same name. A name that matches no language fails the build.
+   * - ``collapse_navigation``
+     - Whether the sidebar nests only the branch holding the current page,
+       like Sphinx themes' option of the same name. On by default; ``false``
+       writes the whole site's tree into every page and folds it in the
+       browser, which suits a small site but grows with the square of its
+       page count.
    * - ``collapse_entities``
      - Whether an entity's details are folded behind a disclosure. On by
        default.

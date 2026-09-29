@@ -8,6 +8,7 @@
 
 use rinx_ast::ResolvedLanguage;
 
+use crate::nav::SidebarTree;
 pub use crate::numfig_format::NumfigFormat;
 pub use crate::pep_base_url::PepBaseUrl;
 use serde::Deserialize;
@@ -70,6 +71,25 @@ pub struct SiteConfig {
     /// above.
     #[serde(default = "default_collapse_entities")]
     pub collapse_entities: bool,
+
+    /// How much of the site's tree the sidebar nests, read from Sphinx's
+    /// `collapse_navigation` boolean: `true` (the default) nests only the
+    /// branch holding the current page, `false` the whole site.
+    ///
+    /// Collapsed by default, as in Sphinx's themes: the whole tree is written
+    /// into every page, so it grows with the square of the page count, and on
+    /// `CPython`'s documentation it was nine tenths of every page. The whole
+    /// tree, folded in the browser, suits a small site a reader wants to see
+    /// at a glance.
+    ///
+    /// A behaviour switch, not a path, so this respects the no-paths rule
+    /// above.
+    #[serde(
+        rename = "collapse_navigation",
+        default,
+        deserialize_with = "deserialize_collapse_navigation"
+    )]
+    pub sidebar_tree: SidebarTree,
 
     /// Whether `.. entity-update::`/`.. needextend::` renders its own visible
     /// box — its target, its field mutations and its justification prose.
@@ -221,6 +241,18 @@ impl<'de> Deserialize<'de> for SwitcherUrl {
     }
 }
 
+/// Reads Sphinx's `collapse_navigation` boolean as the tree it asks for.
+fn deserialize_collapse_navigation<'de, D>(deserializer: D) -> Result<SidebarTree, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(if bool::deserialize(deserializer)? {
+        SidebarTree::CurrentBranch
+    } else {
+        SidebarTree::Full
+    })
+}
+
 /// Reads `highlight_language` from a TOML string through the same smart
 /// constructor the parser uses, so the config and a `.. highlight::` cannot
 /// disagree about what a value means.
@@ -262,6 +294,7 @@ impl Default for SiteConfig {
             root_doc: default_root_doc(),
             highlight_language: ResolvedLanguage::default(),
             collapse_entities: default_collapse_entities(),
+            sidebar_tree: SidebarTree::default(),
             show_entity_updates: default_show_entity_updates(),
             uml_configs: std::collections::BTreeMap::new(),
             numfig: false,
@@ -475,6 +508,47 @@ version = "1.0"
         let result: Result<SiteConfig, _> = toml::from_str(toml_str);
 
         // Then — caught on load, where it can be reported
+        assert!(result.is_err());
+    }
+}
+
+#[cfg(test)]
+mod collapse_navigation_tests {
+    use super::*;
+
+    #[test]
+    fn test_navigation_collapses_unless_the_config_turns_it_off() {
+        // Given — a config that says nothing about it
+        let config: SiteConfig = toml::from_str("project = \"Docs\"").unwrap();
+
+        // When / Then
+        assert_eq!(config.sidebar_tree, SidebarTree::CurrentBranch);
+    }
+
+    #[test]
+    fn test_the_whole_tree_can_be_asked_for() {
+        // Given / When
+        let config: SiteConfig = toml::from_str("collapse_navigation = false").unwrap();
+
+        // Then
+        assert_eq!(config.sidebar_tree, SidebarTree::Full);
+    }
+
+    #[test]
+    fn test_collapsing_can_be_asked_for_explicitly() {
+        // Given / When
+        let config: SiteConfig = toml::from_str("collapse_navigation = true").unwrap();
+
+        // Then
+        assert_eq!(config.sidebar_tree, SidebarTree::CurrentBranch);
+    }
+
+    #[test]
+    fn test_a_value_other_than_a_boolean_is_refused() {
+        // Given / When
+        let result = toml::from_str::<SiteConfig>("collapse_navigation = \"full\"");
+
+        // Then
         assert!(result.is_err());
     }
 }

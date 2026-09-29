@@ -53,10 +53,17 @@ impl PageMeta<'_> {
     /// sidebar's entries and the page's neighbours.
     ///
     /// The sidebar expands the *root documents'* toctrees, which is what makes
-    /// it the same tree on every page while still marking the current one.
+    /// it the same tree on every page while still marking the current one;
+    /// `config` decides how much of it is nested (see
+    /// [`SiteConfig::sidebar_tree`]).
     #[must_use]
-    pub fn with_navigation(mut self, index: &ProjectIndex) -> Self {
-        self.nav_tree = crate::nav::sidebar_entries(index, self.doc_path, self.source_path);
+    pub fn with_navigation(mut self, index: &ProjectIndex, config: &SiteConfig) -> Self {
+        self.nav_tree = crate::nav::sidebar_entries(
+            index,
+            self.doc_path,
+            self.source_path,
+            config.sidebar_tree,
+        );
         let (previous, next) = page_neighbors(index, self.source_path, self.doc_path);
         self.previous = previous;
         self.next = next;

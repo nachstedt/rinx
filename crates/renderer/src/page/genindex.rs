@@ -234,7 +234,7 @@ pub fn render_genindex(
             has_genindex,
             ..crate::PageMeta::default()
         }
-        .with_navigation(index),
+        .with_navigation(index, config),
     )
 }
 
