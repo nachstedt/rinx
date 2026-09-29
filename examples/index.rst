@@ -39,6 +39,7 @@ Welcome to the Rinx example.
    table_directive
    math
    code_role
+   pep_role
    images
    figures
    substitutions

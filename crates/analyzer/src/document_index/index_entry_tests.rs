@@ -1,5 +1,6 @@
-//! `.. index::` directive tests for [`super::analyze`]: which general-index
-//! entries it registers, and where in the node tree it finds them.
+//! `.. index::` directive and `:pep:` role tests for [`super::analyze`]:
+//! which general-index entries they register, and where in the node tree they
+//! are found.
 
 use super::*;
 
@@ -132,4 +133,60 @@ fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_admonitio
 
     // Then
     assert_eq!(index.genindex_entries.len(), 1);
+}
+
+fn pep(target: &str, index_id: &str) -> InlineNode {
+    InlineNode::PepReference {
+        target: rinx_ast::PepTarget::parse(target).unwrap(),
+        display: Some("ignored for the entry".to_string()),
+        index_id: index_id.to_string(),
+        span: None,
+    }
+}
+
+#[test]
+fn test_analyze_registers_a_genindex_entry_for_a_pep_role() {
+    // Given
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Paragraph(vec![pep("8#naming", "index-3")])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — Sphinx's entry text: the target as written, never the title
+    assert_eq!(
+        index.genindex_entries,
+        vec![GenIndexEntry {
+            primary: "Python Enhancement Proposals".to_string(),
+            subentry: Some("PEP 8#naming".to_string()),
+            main: false,
+            doc_path: "guide.rst".to_string(),
+            anchor: "index-3".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn test_analyze_finds_a_pep_role_in_a_dropdown_title() {
+    // Given inline content no block-level indexing walks
+    let mut dropdown = rinx_ast::Dropdown::new();
+    dropdown.title = vec![pep("20", "index-0")];
+    dropdown.body = vec![Node::Paragraph(vec![pep("8", "index-1")])];
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Directive(Directive::Dropdown(Box::new(dropdown)))],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    let anchors: Vec<&str> = index
+        .genindex_entries
+        .iter()
+        .map(|entry| entry.anchor.as_str())
+        .collect();
+    assert_eq!(anchors, vec!["index-0", "index-1"]);
 }

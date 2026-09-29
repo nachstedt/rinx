@@ -18,7 +18,8 @@
 //! [`math`] and [`code`] are the two non-reference roles with a module of
 //! their own, each because it calls a backend: the math renderer for
 //! `:math:`, the syntax highlighter for `:code:` and the roles derived from
-//! it.
+//! it. [`pep_reference`] is a reference that needs no index either: `:pep:`
+//! links outside the site, below its configured PEP index.
 //!
 //! [`RefText`] is the one shape they all share: the visible text, the target
 //! to resolve, and where the role was written.
@@ -36,6 +37,7 @@ mod hyperlink;
 mod math;
 mod number_reference;
 mod option_reference;
+mod pep_reference;
 mod ref_text;
 mod reference;
 mod term_reference;

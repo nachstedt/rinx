@@ -17,7 +17,8 @@
 //! one-or-four `:margin:`/`:padding:` scale is the one piece of vocabulary
 //! `dropdown` and `grid` share.
 //! `object_naming` holds the signature/option naming helpers every later
-//! pipeline phase shares, and `visit` the traversal every phase walks with.
+//! pipeline phase shares, and `visit` the traversal every phase walks with —
+//! `inline_lists` its counterpart over inline content.
 //!
 //! `span`, `diagnostic`, `diagnostic_code` and `suppression` are the
 //! reporting vocabulary
@@ -64,6 +65,7 @@ mod grid;
 mod hashed_content;
 mod image;
 mod index_entry;
+mod inline_lists;
 mod inline_node;
 mod inventory_selector;
 mod label_rotation;
@@ -76,6 +78,7 @@ mod object_naming;
 mod object_type;
 mod option_list_item;
 mod path_normalization;
+mod pep_target;
 mod py_version_spec;
 mod section_id;
 mod sectnum;
@@ -135,7 +138,8 @@ pub use image::{
     Length, LengthOrPercentage, LengthUnit, Percentage, is_vertical_name, scaled_width,
 };
 pub use index_entry::IndexEntry;
-pub use inline_node::{InlineNode, NumberReferenceRefusal, inline_plain_text};
+pub use inline_lists::{for_each_inline_list, for_each_inline_list_mut};
+pub use inline_node::{InlineNode, NumberReferenceRefusal, RoleRefusal, inline_plain_text};
 pub use inventory_selector::InventorySelector;
 pub use label_rotation::{InvalidLabelRotation, LabelRotation};
 pub use line_block::LineBlockItem;
@@ -150,6 +154,7 @@ pub use object_naming::{
 pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
 pub use option_list_item::{OptionArgument, OptionArgumentDelimiter, OptionListItem, OptionSpec};
 pub use path_normalization::{normalize_path, resolve_from_document};
+pub use pep_target::{InvalidPepTarget, PepTarget};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
 pub use rinx_inventory::InventoryName;
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};

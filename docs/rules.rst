@@ -173,6 +173,10 @@ freely.
        the same text is written in front of the caption it would name.
    * - ``uml_configs``
      - Named PlantUML preambles a diagram selects with ``:config:``.
+   * - ``pep_base_url``
+     - The PEP index a ``:pep:`` role links into, docutils' setting of the
+       same name. Defaults to ``https://peps.python.org/``. It must be an
+       ``http(s)://`` URL or start with ``/``, and end with ``/``.
    * - ``version_switcher``
      - A table whose ``json_url`` lists the site's published versions. See
        :ref:`version-switcher`.

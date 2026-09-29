@@ -45,6 +45,7 @@ rinx_library(
         "table_directive.rst",
         "math.rst",
         "code_role.rst",
+        "pep_role.rst",
         "images.rst",
         "figures.rst",
         "index_entries.rst",

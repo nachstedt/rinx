@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
 
 use crate::asset_uri::AssetUri;
@@ -5,9 +7,25 @@ use crate::code_language::ResolvedLanguage;
 use crate::image::ImageOptions;
 use crate::inventory_selector::InventorySelector;
 use crate::number_format::NumberFormat;
+use crate::pep_target::PepTarget;
 
-/// Why the parser refused a `:numref:` — see
-/// [`InlineNode::RefusedNumberReference`].
+/// Why the parser refused a role — see [`InlineNode::RefusedRole`].
+///
+/// One variant per role that can be refused, each carrying what its own
+/// diagnostic and its own lowering need: the roles share the reporting pass,
+/// not what they are shown as afterwards.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RoleRefusal {
+    /// A `:numref:`, lowered to an unlinked [`InlineNode::NumberReference`].
+    NumberReference(NumberReferenceRefusal),
+    /// A `:pep:` whose target is not a PEP number, lowered to the role's
+    /// source text as Sphinx's `problematic` node shows it. `target` is the
+    /// target as written, from which the diagnostic re-derives its reason.
+    PepTarget { target: String },
+}
+
+/// Why the parser refused a `:numref:` — see [`RoleRefusal::NumberReference`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NumberReferenceRefusal {
@@ -221,16 +239,38 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
-    /// A `:numref:` the parser refused, before the whole-document pass
-    /// (`rinx_parser`'s `report_refused_number_references`) reports it at
-    /// its span and lowers it to an unlinked [`Self::NumberReference`].
+    /// A role the parser refused, before the whole-document pass
+    /// (`rinx_parser`'s `report_refused_roles`) reports it at its span and
+    /// lowers it to what the [`RoleRefusal`] says it is shown as.
     ///
     /// An intermediate node, as [`Self::SubstitutionReference`] is: the inline
     /// scan has nowhere to report a diagnostic, and a refusal must still reach
-    /// the author at the role. `text` is what the lowered reference shows.
-    RefusedNumberReference {
+    /// the author at the role. `text` is what the lowered node shows.
+    RefusedRole {
         text: String,
-        refusal: NumberReferenceRefusal,
+        refusal: RoleRefusal,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
+    /// A link to a Python Enhancement Proposal, produced by the `:pep:` role.
+    ///
+    /// Sphinx's role yields three nodes — a general-index entry, the anchor
+    /// that entry links to, and the link — and this one node carries all
+    /// three, so nothing can separate the anchor from the entry pointing at
+    /// it. `index_id` is that anchor, minted per document once parsing ends
+    /// (`rinx_parser`'s `assign_pep_index_ids`), in the same sequence as
+    /// `.. index::` directives' ids; empty until then.
+    ///
+    /// Only the PEP's page is stored, not its URL: the PEP index's address is
+    /// the site's `pep_base_url`, applied while rendering so changing it
+    /// re-parses nothing. `display` is the explicit title of the
+    /// angle-bracket form; without one Sphinx shows `PEP ` and the target as
+    /// written.
+    PepReference {
+        target: PepTarget,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        display: Option<String>,
+        index_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
@@ -365,7 +405,8 @@ impl InlineNode {
             | Self::DocReference { span, .. }
             | Self::DownloadReference { span, .. }
             | Self::NumberReference { span, .. }
-            | Self::RefusedNumberReference { span, .. }
+            | Self::RefusedRole { span, .. }
+            | Self::PepReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::Code { span, .. }
@@ -394,7 +435,8 @@ impl InlineNode {
             | Self::DocReference { span, .. }
             | Self::DownloadReference { span, .. }
             | Self::NumberReference { span, .. }
-            | Self::RefusedNumberReference { span, .. }
+            | Self::RefusedRole { span, .. }
+            | Self::PepReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::Code { span, .. }
@@ -427,7 +469,8 @@ impl InlineNode {
             | Self::TermReference { .. }
             | Self::OptionReference { .. }
             | Self::EntityReference { .. }
-            | Self::EquationReference { .. } => true,
+            | Self::EquationReference { .. }
+            | Self::PepReference { .. } => true,
             Self::DomainObjectReference { link, .. }
             | Self::AnyReference { link, .. }
             | Self::DocReference { link, .. }
@@ -447,55 +490,64 @@ impl InlineNode {
 pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
     nodes
         .iter()
-        .map(|node| match node {
-            InlineNode::Text(text)
-            | InlineNode::Emphasis(text)
-            | InlineNode::Strong(text)
-            | InlineNode::Literal(text)
-            | InlineNode::Program(text)
-            | InlineNode::Code { text, .. }
-            | InlineNode::AnonymousReference { text, .. }
-            | InlineNode::RefusedNumberReference { text, .. } => text.as_str(),
-            InlineNode::Hyperlink { text, .. } | InlineNode::AnonymousHyperlink { text, .. } => {
-                text.as_str()
-            }
-            // Without the index, a bare label's section title is unknown, so
-            // the label itself is the best plain text there is.
-            InlineNode::Reference {
-                display, target, ..
-            }
-            | InlineNode::AnyReference {
-                display, target, ..
-            }
-            | InlineNode::DocReference {
-                display, target, ..
-            } => display.as_deref().unwrap_or(target),
-            InlineNode::DownloadReference {
-                display, target, ..
-            } => display.as_deref().unwrap_or(target.as_written()),
-            InlineNode::TermReference { display, .. }
-            | InlineNode::DomainObjectReference { display, .. }
-            | InlineNode::OptionReference { display, .. }
-            | InlineNode::EntityReference { display, .. } => display.as_str(),
-            // The LaTeX source is the only plain text an equation has: its
-            // rendered form is markup, and its `:eq:` number isn't known
-            // without the project index this function deliberately doesn't take.
-            InlineNode::Math { latex, .. } => latex.as_str(),
-            InlineNode::EquationReference { label, .. } => label.as_str(),
-            // Without the index there is no number, so the title as written —
-            // or the label — is the best plain text there is.
-            InlineNode::NumberReference { title, target, .. } => {
-                title.as_ref().map_or(target.as_str(), NumberFormat::as_str)
-            }
-            // Never reaches a caller of this function in a well-formed
-            // document — resolved away by the end of parsing — but degrades
-            // to the written name rather than vanishing if one somehow does.
-            InlineNode::SubstitutionReference { name, .. } => name.as_str(),
-            // An image has no text of its own beyond its `:alt:`, which
-            // docutils falls back to the URI for; this function takes no
-            // resolver and cannot know the URI's resolved form, so an unset
-            // `:alt:` contributes nothing rather than a wrong guess.
-            InlineNode::InlineImage(options) => options.alt.as_deref().unwrap_or(""),
+        .map(|node| -> Cow<'_, str> {
+            Cow::Borrowed(match node {
+                InlineNode::Text(text)
+                | InlineNode::Emphasis(text)
+                | InlineNode::Strong(text)
+                | InlineNode::Literal(text)
+                | InlineNode::Program(text)
+                | InlineNode::Code { text, .. }
+                | InlineNode::AnonymousReference { text, .. }
+                | InlineNode::RefusedRole { text, .. }
+                | InlineNode::Hyperlink { text, .. }
+                | InlineNode::AnonymousHyperlink { text, .. } => text.as_str(),
+                // Without the index, a bare label's section title is unknown, so
+                // the label itself is the best plain text there is.
+                InlineNode::Reference {
+                    display, target, ..
+                }
+                | InlineNode::AnyReference {
+                    display, target, ..
+                }
+                | InlineNode::DocReference {
+                    display, target, ..
+                } => display.as_deref().unwrap_or(target),
+                InlineNode::DownloadReference {
+                    display, target, ..
+                } => display.as_deref().unwrap_or(target.as_written()),
+                InlineNode::TermReference { display, .. }
+                | InlineNode::DomainObjectReference { display, .. }
+                | InlineNode::OptionReference { display, .. }
+                | InlineNode::EntityReference { display, .. }
+                // What the link shows: the title, or Sphinx's `PEP <target>`.
+                | InlineNode::PepReference {
+                    display: Some(display),
+                    ..
+                } => display.as_str(),
+                InlineNode::PepReference { target, .. } => {
+                    return Cow::Owned(format!("PEP {}", target.as_written()));
+                }
+                // The LaTeX source is the only plain text an equation has: its
+                // rendered form is markup, and its `:eq:` number isn't known
+                // without the project index this function deliberately doesn't take.
+                InlineNode::Math { latex, .. } => latex.as_str(),
+                InlineNode::EquationReference { label, .. } => label.as_str(),
+                // Without the index there is no number, so the title as written —
+                // or the label — is the best plain text there is.
+                InlineNode::NumberReference { title, target, .. } => {
+                    title.as_ref().map_or(target.as_str(), NumberFormat::as_str)
+                }
+                // Never reaches a caller of this function in a well-formed
+                // document — resolved away by the end of parsing — but degrades
+                // to the written name rather than vanishing if one somehow does.
+                InlineNode::SubstitutionReference { name, .. } => name.as_str(),
+                // An image has no text of its own beyond its `:alt:`, which
+                // docutils falls back to the URI for; this function takes no
+                // resolver and cannot know the URI's resolved form, so an unset
+                // `:alt:` contributes nothing rather than a wrong guess.
+                InlineNode::InlineImage(options) => options.alt.as_deref().unwrap_or(""),
+            })
         })
         .collect()
 }
@@ -882,15 +934,15 @@ mod tests {
     }
 
     #[test]
-    fn test_a_refused_number_reference_carries_its_span_and_shows_its_text() {
+    fn test_a_refused_role_carries_its_span_and_shows_its_text() {
         // Given
         let at = Span::new(
             crate::span::Position::new(5, 1),
             crate::span::Position::new(5, 30),
         );
-        let refused = InlineNode::RefusedNumberReference {
+        let refused = InlineNode::RefusedRole {
             text: "see this".to_string(),
-            refusal: NumberReferenceRefusal::InvalidTitle,
+            refusal: RoleRefusal::NumberReference(NumberReferenceRefusal::InvalidTitle),
             span: None,
         };
 
@@ -901,6 +953,53 @@ mod tests {
         assert_eq!(placed.span(), Some(at));
         assert!(!placed.renders_as_link());
         assert_eq!(inline_plain_text(&[placed]), "see this");
+    }
+
+    fn pep(target: &str, display: Option<&str>) -> InlineNode {
+        InlineNode::PepReference {
+            target: PepTarget::parse(target).unwrap(),
+            display: display.map(str::to_string),
+            index_id: "index-0".to_string(),
+            span: None,
+        }
+    }
+
+    #[test]
+    fn test_a_pep_reference_carries_its_span_and_is_a_link() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(2, 1),
+            crate::span::Position::new(2, 9),
+        );
+
+        // When
+        let placed = pep("8", None).with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+        assert!(placed.renders_as_link());
+    }
+
+    #[test]
+    fn test_inline_plain_text_shows_a_pep_reference_as_its_link_text() {
+        // Given / When / Then
+        assert_eq!(inline_plain_text(&[pep("8#x", None)]), "PEP 8#x");
+        assert_eq!(
+            inline_plain_text(&[pep("8", Some("Style guide"))]),
+            "Style guide"
+        );
+    }
+
+    #[test]
+    fn test_a_pep_reference_round_trips_through_json() {
+        // Given
+        let node = pep("0008#naming", Some("naming"));
+
+        // When
+        let json = serde_json::to_string(&node).unwrap();
+
+        // Then
+        assert_eq!(serde_json::from_str::<InlineNode>(&json).unwrap(), node);
     }
 
     #[test]

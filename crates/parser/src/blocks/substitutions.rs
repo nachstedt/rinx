@@ -26,7 +26,7 @@ use rinx_ast::{
 
 use crate::diagnostics::Diagnostics;
 
-use super::inline_lists::for_each_inline_list_mut;
+use rinx_ast::for_each_inline_list_mut;
 
 /// Every substitution definition found in a document, keyed by exact name,
 /// plus a case-insensitive index used only as a fallback when an exact match

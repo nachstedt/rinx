@@ -148,7 +148,23 @@ Inline markup
          block is. A language no grammar highlights is reported as
          ``code-role.unknown-language``; Sphinx warns as
          ``misc.highlighting_failure``.
-   * - ``:pep:``, ``:rfc:``, ``:cve:`` and ``:cwe:`` roles
+   * - ``:pep:`` role
+     - ✅ ℹ️
+     - - Only ASCII digits are a number: ``+8``, ``8_0`` and non-ASCII
+         digits, which Python's ``int()`` accepts, are refused.
+       - A target that is not a number is reported as ``pep.invalid-number``
+         and shown as its source text; Sphinx reports an error and shows a
+         ``problematic`` node.
+       - The PEP index is ``rinx.toml``'s ``pep_base_url``, not a
+         ``docutils.conf`` setting.
+       - Role names are case-sensitive, so ``:PEP:`` is not recognized;
+         docutils matches role names case-insensitively.
+       - Its index anchor is numbered after the document's ``.. index::``
+         anchors rather than in document order among them.
+   * - docutils' ``:pep-reference:`` role
+     - ❌
+     -
+   * - ``:rfc:``, ``:cve:`` and ``:cwe:`` roles
      - ❌
      -
    * - ``:index:`` role

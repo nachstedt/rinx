@@ -55,6 +55,11 @@ pub(super) static MATH_ROLE_REGEX: LazyLock<Regex> =
 /// document knows, so it is matched by [`NAMED_ROLE_REGEX`]'s shape instead.
 pub(super) static CODE_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":code:`(?P<code>[^`]+)`").unwrap());
+/// `:pep:`. No [`EXTERNAL_PREFIX`] and no domain: it links outside the site
+/// by construction, through the site's `pep_base_url` rather than an
+/// inventory.
+pub(super) static PEP_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":pep:`(?P<target>[^`]+)`").unwrap());
 pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
 pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -152,6 +157,7 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&MATH_ROLE_REGEX, "math"),
     (&EQ_ROLE_REGEX, "eq"),
     (&CODE_ROLE_REGEX, "code"),
+    (&PEP_ROLE_REGEX, "pep"),
     (&OPTION_ROLE_REGEX, "option"),
     (&FUNC_ROLE_REGEX, "func"),
     (&MOD_ROLE_REGEX, "mod"),
@@ -235,7 +241,9 @@ mod tests {
     #[test]
     fn test_is_fixed_role_name_knows_the_built_in_roles() {
         // Given / When / Then
-        for name in ["code", "ref", "math", "func", "doc", "download", "numref"] {
+        for name in [
+            "code", "ref", "math", "func", "doc", "download", "numref", "pep",
+        ] {
             assert!(is_fixed_role_name(name), "{name}");
         }
     }
