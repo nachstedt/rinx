@@ -1,5 +1,6 @@
 # Publishes a pull request's documentation and example site as pr/<N>/ on the
-# gh-pages branch, and links it from the pull request
+# gh-pages branch, with the benchmark sites CI rendered under
+# pr/<N>/benchmarks/, and links it from the pull request
 # (docs/decisions/024-versioned-docs.md). pages-preview-cleanup.yml removes it
 # when the pull request closes.
 #
@@ -36,22 +37,36 @@ jobs:
       HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
     steps:
     # Tells "nothing to preview" (CI failed before the sites were built) from a
-    # failure of this workflow.
+    # failure of this workflow. The benchmark sites are optional: a preview is
+    # still worth publishing when a corpus failed to build.
     - name: Find the preview CI uploaded
       id: artifact
       run: |
-        count=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
-          --jq '[.artifacts[] | select(.name == "preview")] | length')
-        if [ "$count" = 0 ]; then
+        names=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" \
+          --jq '[.artifacts[].name]')
+        found=$(jq 'index("preview") != null' <<<"$names")
+        benchmarks=$(jq 'index("benchmarks") != null' <<<"$names")
+        if [ "$found" != true ]; then
           echo "::notice::CI uploaded no preview; its site build probably failed."
+        elif [ "$benchmarks" != true ]; then
+          echo "::notice::CI uploaded no benchmark sites; publishing the preview without them."
         fi
-        echo "found=$([ "$count" != 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        echo "found=$found" >> "$GITHUB_OUTPUT"
+        echo "benchmarks=$benchmarks" >> "$GITHUB_OUTPUT"
 
     - uses: actions/download-artifact@v8
       if: steps.artifact.outputs.found == 'true'
       with:
         name: preview
         path: ${{ runner.temp }}/preview
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ github.token }}
+
+    - uses: actions/download-artifact@v8
+      if: steps.artifact.outputs.benchmarks == 'true'
+      with:
+        name: benchmarks
+        path: ${{ runner.temp }}/benchmarks
         run-id: ${{ github.event.workflow_run.id }}
         github-token: ${{ github.token }}
 
@@ -93,7 +108,8 @@ jobs:
           --base-url "$BASE_URL" \
           --slot "pr/$NUMBER" \
           --docs "$RUNNER_TEMP/preview/docs" \
-          --examples "$RUNNER_TEMP/preview/examples"
+          --examples "$RUNNER_TEMP/preview/examples" \
+          --benchmarks-dir "$RUNNER_TEMP/benchmarks"
 
     # One comment per pull request, edited on every push rather than added to.
     - name: Link the preview from the pull request
@@ -101,9 +117,14 @@ jobs:
       env:
         NUMBER: ${{ steps.pr.outputs.number }}
         URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr/${{ steps.pr.outputs.number }}/
+        BENCHMARKS: ${{ steps.artifact.outputs.benchmarks }}
       run: |
+        benchmarks=""
+        if [ "$BENCHMARKS" = true ]; then
+          benchmarks=" · [benchmarks](${URL}benchmarks/index.html)"
+        fi
         cat > "$RUNNER_TEMP/comment.md" <<EOF
-        **Preview** of ${HEAD_SHA:0:7}: [documentation](${URL}docs/index.html) · [example site](${URL}example-site/examples/index.html)
+        **Preview** of ${HEAD_SHA:0:7}: [documentation](${URL}docs/index.html) · [example site](${URL}example-site/examples/index.html)${benchmarks}
 
         GitHub Pages takes a minute or two to serve it. It is removed when this pull request closes.
         EOF

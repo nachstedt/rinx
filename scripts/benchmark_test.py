@@ -206,3 +206,28 @@ class TestRenderCorpusBuildFile:
 
         # Then
         assert "images = glob(" in text
+
+
+class TestSummaryRows:
+    def test_every_count_is_listed_then_the_whitelist(self) -> None:
+        # Given a tally and a domain summary
+        tally = benchmark.AstTally()
+        tally.unknown_directives.update({"automodule": 3, "autoclass": 1})
+        tally.parser_diagnostics.update({"role.unknown": 2})
+        whitelist = benchmark_common.WhitelistSummary(
+            per_kind={}, suppressed=7, whitelist_size=4, stale_count=0, stale_pruned=False
+        )
+        count = benchmark_common.SectionCount
+        domain = benchmark.DomainSummary(
+            unresolved=count(5, 9), ambiguous=count(0, 0), mismatch=count(1, 2), whitelist=whitelist
+        )
+
+        # When
+        rows = benchmark.summary_rows(tally, domain)
+
+        # Then
+        values = {row.label: row.value for row in rows}
+        assert values["Unsupported directives:"] == "2 distinct (4 occurrences)"
+        assert values["Parser diagnostics:"] == "1 distinct"
+        assert values["Unresolved domain refs:"] == "5 distinct (9 occurrences)"
+        assert rows[-1].label == "Suppressed by whitelist:"

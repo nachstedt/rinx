@@ -12,7 +12,9 @@ function takes the generated workspace directory explicitly rather than reading
 a module-level `TARGET_DIR`, since there are now two of them.
 """
 
+import argparse
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -499,18 +501,188 @@ def write_frequency_summary(
         print(f"{key_prefix}{name}{key_suffix}: {count}", file=out)
 
 
-def summary_line(label: str, distinct: int, occurrences: int | None = None) -> None:
-    """One aligned line of the compact terminal summary."""
-    occ = f"  ({occurrences} occurrences)" if occurrences is not None else ""
-    print(f"  {label:<28}{distinct:6d} distinct{occ}")
+class SummaryRow(NamedTuple):
+    """One line of a benchmark's compact summary: a label and its value, already worded."""
+
+    label: str
+    value: str
 
 
-def print_whitelist_summary(summary: WhitelistSummary) -> None:
-    """The two trailing whitelist lines every benchmark's summary ends with."""
-    print(
-        f"  {'Suppressed by whitelist:':<28}"
-        f"{summary.suppressed:6d} occurrences ({summary.whitelist_size} entries)"
-    )
+@dataclass(frozen=True)
+class BuildResult:
+    """How the two builds of one benchmark run went."""
+
+    # Whether the corpus built — what decides the benchmark's exit status.
+    succeeded: bool
+    warmup_seconds: float
+    # None when the warm-up build failed, so the corpus build never ran.
+    corpus_seconds: float | None
+
+
+# The names a benchmark's full report and its front page's path are exported
+# under, beside its site; scripts/publish_pages.py reads both.
+REPORT_NAME = "report.txt"
+ENTRY_NAME = "entry.txt"
+
+
+def count_row(label: str, distinct: int, occurrences: int | None = None) -> SummaryRow:
+    """A summary row counting distinct findings, and how often they occur when known."""
+    occ = f" ({occurrences} occurrences)" if occurrences is not None else ""
+    return SummaryRow(label, f"{distinct} distinct{occ}")
+
+
+def whitelist_rows(summary: WhitelistSummary) -> list[SummaryRow]:
+    """The trailing whitelist rows every benchmark's summary ends with."""
+    rows = [
+        SummaryRow(
+            "Suppressed by whitelist:",
+            f"{summary.suppressed} occurrences ({summary.whitelist_size} entries)",
+        )
+    ]
     if summary.stale_count:
         action = "removed" if summary.stale_pruned else "left untouched"
-        print(f"  {'Stale whitelist entries:':<28}{summary.stale_count:6d} ({action})")
+        rows.append(SummaryRow("Stale whitelist entries:", f"{summary.stale_count} ({action})"))
+    return rows
+
+
+def timing_rows(result: BuildResult) -> list[SummaryRow]:
+    """The two builds' durations, the corpus build's marked when it failed or never ran."""
+    if result.corpus_seconds is None:
+        corpus = "not run"
+    elif result.succeeded:
+        corpus = f"{result.corpus_seconds:.1f} s"
+    else:
+        corpus = f"failed after {result.corpus_seconds:.1f} s"
+    return [
+        SummaryRow("Warm-up build (untimed):", f"{result.warmup_seconds:.1f} s"),
+        SummaryRow("Corpus build:", corpus),
+    ]
+
+
+def render_terminal_summary(title: str, rows: Iterable[SummaryRow]) -> str:
+    """The compact, aligned summary printed at the end of a run."""
+    lines = [f"=== {title} ==="]
+    lines.extend(f"  {row.label:<28}{row.value}" for row in rows)
+    return "\n".join(lines)
+
+
+def render_markdown_summary(title: str, rows: Iterable[SummaryRow]) -> str:
+    """The same summary as a Markdown table, for a CI job's step summary."""
+    lines = [f"### {title}", "", "| | |", "|---|---|"]
+    lines.extend(
+        f"| {_markdown_cell(row.label.removesuffix(':'))} | {_markdown_cell(row.value)} |"
+        for row in rows
+    )
+    lines.append("")
+    return "\n".join(lines) + "\n"
+
+
+def _markdown_cell(text: str) -> str:
+    """`text` escaped so it cannot end its table cell."""
+    return text.replace("|", "\\|")
+
+
+def append_markdown_summary(path: Path, title: str, rows: Iterable[SummaryRow]) -> None:
+    """Appends the Markdown summary to `path`, which other steps may also write to."""
+    with path.open("a") as out:
+        out.write(render_markdown_summary(title, rows))
+
+
+def export_site(site_dir: Path, report: Path, entry: str, dest: Path) -> int:
+    """Copies the built site and its report into `dest`, returning the site's size in bytes.
+
+    Contents only, and every symlink Bazel's output tree holds is followed: the
+    copy has to outlive the generated workspace, and has to be writable, since
+    Bazel leaves its outputs read-only and a later export replaces this one.
+    `entry`, the front page relative to the site, is written beside it so a
+    publisher needs to know nothing about any one benchmark.
+    """
+    if dest.exists():
+        shutil.rmtree(dest)
+    size = 0
+    for directory, _, files in os.walk(site_dir, followlinks=True):
+        for name in files:
+            source = Path(directory) / name
+            target = dest / source.relative_to(site_dir)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+            size += target.stat().st_size
+    dest.mkdir(parents=True, exist_ok=True)
+    (dest / ENTRY_NAME).write_text(entry + "\n")
+    if report.is_file():
+        shutil.copyfile(report, dest / REPORT_NAME)
+    return size
+
+
+def site_size_row(size: int) -> SummaryRow:
+    """The exported site's size, which the published branch has a budget for."""
+    return SummaryRow("Site size:", f"{size / 1_000_000:.1f} MB")
+
+
+def add_output_arguments(parser: argparse.ArgumentParser) -> None:
+    """The two flags a CI run exports a benchmark's results through."""
+    parser.add_argument(
+        "--site-out",
+        type=Path,
+        help=(
+            "Copy the rendered site, and the full report as report.txt, into this "
+            "directory once the corpus has built (replacing what is there)."
+        ),
+    )
+    parser.add_argument(
+        "--summary-markdown",
+        type=Path,
+        help="Append the summary as a Markdown table to this file, e.g. $GITHUB_STEP_SUMMARY.",
+    )
+
+
+@dataclass(frozen=True)
+class RunOutcome:
+    """What one benchmark run produced: its builds, its summary, and where its files are."""
+
+    title: str
+    build: BuildResult
+    analysis_rows: Sequence[SummaryRow]
+    site_dir: Path
+    # The site's front page, relative to `site_dir`.
+    entry: str
+    report: Path
+
+
+@dataclass(frozen=True)
+class RunOutputs:
+    """Where `--site-out` and `--summary-markdown` asked for the results, if anywhere."""
+
+    site_out: Path | None = None
+    summary_markdown: Path | None = None
+
+    @classmethod
+    def from_args(cls, args: argparse.Namespace) -> "RunOutputs":
+        """The outputs the flags `add_output_arguments` declares asked for."""
+        return cls(site_out=args.site_out, summary_markdown=args.summary_markdown)
+
+
+def finish_run(outcome: RunOutcome, outputs: RunOutputs) -> int:
+    """Prints the summary, writes the outputs asked for, and returns the exit status.
+
+    The site is exported only when the corpus built: a failed build leaves no
+    site, or a stale one from an earlier run.
+    """
+    rows = [*timing_rows(outcome.build)]
+    if outputs.site_out is not None and outcome.build.succeeded:
+        size = export_site(outcome.site_dir, outcome.report, outcome.entry, outputs.site_out)
+        rows.append(site_size_row(size))
+        print(f"Site exported to: {outputs.site_out}")
+    rows.extend(outcome.analysis_rows)
+    print("\n" + render_terminal_summary(outcome.title, rows))
+    if outputs.summary_markdown is not None:
+        append_markdown_summary(outputs.summary_markdown, outcome.title, rows)
+    return exit_status(build_succeeded=outcome.build.succeeded)
+
+
+def exit_status(*, build_succeeded: bool) -> int:
+    """The benchmark's exit status: failing only when the corpus did not build.
+
+    New warnings never fail it; they are what the report is for.
+    """
+    return 0 if build_succeeded else 1

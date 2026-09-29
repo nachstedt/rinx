@@ -11,9 +11,10 @@ directory (docs/decisions/024-versioned-docs.md):
     versions.json   the default theme's version switcher reads this
 
 Each version directory holds //docs:site at its root and //examples:site under
-`example-site/`. Everything outside the version directories is derived from
-them and regenerated on every run, so no run has to know what an earlier one
-wrote.
+`example-site/`, and the benchmark sites CI rendered, if any, under
+`benchmarks/<name>/` — kept on main, the previews and the newest release only. Everything outside the version directories is derived
+from them and regenerated on every run, so no run has to know what an earlier
+one wrote.
 
 Every workflow writing the branch calls this script, which fetches the branch,
 applies one change, commits and pushes. A push that loses a race with another
@@ -22,7 +23,8 @@ regenerated from the tree anyway, so re-applying the change is always exact.
 
     python3 scripts/publish_pages.py publish --pages-dir _pages \
         --base-url https://nachstedt.github.io/rinx/ --slot main \
-        --docs bazel-bin/docs/site_site_out --examples bazel-bin/examples/site_site_out
+        --docs bazel-bin/docs/site_site_out --examples bazel-bin/examples/site_site_out \
+        --benchmarks-dir _benchmarks
     python3 scripts/publish_pages.py remove --pages-dir _pages \
         --base-url https://nachstedt.github.io/rinx/ --slot pr/42
     python3 scripts/publish_pages.py squash --pages-dir _pages
@@ -44,10 +46,10 @@ import shutil
 import subprocess
 import sys
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import NotRequired, TypedDict
 
 BRANCH = "gh-pages"
@@ -70,6 +72,14 @@ EXAMPLES_ENTRY = "examples/index.html"
 
 LATEST_DIR = "latest"
 PREVIEWS_DIR = "pr"
+
+# Where a version's benchmark sites go, one directory each, and the names the
+# benchmark scripts export a site's full report and its front page's path under
+# beside it (`benchmark_common`'s `REPORT_NAME` and `ENTRY_NAME`).
+BENCHMARKS_DIR = "benchmarks"
+BENCHMARK_REPORT = "report.txt"
+BENCHMARK_ENTRY = "entry.txt"
+BENCHMARK_NAME_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
 RELEASE_PATTERN = re.compile(r"v(\d+)\.(\d+)\.(\d+)")
 PREVIEW_PATTERN = re.compile(r"pr/([1-9]\d*)")
@@ -107,6 +117,63 @@ class Slot:
             return cls(SlotKind.PREVIEW, raw)
         msg = f"'{raw}' is not a version slot: expected main, vX.Y.Z or pr/<number>"
         raise ValueError(msg)
+
+
+@dataclass(frozen=True)
+class BenchmarkSite:
+    """A benchmark's rendered site: its name, the page to enter it by, and where it was built."""
+
+    name: str
+    # The front page, relative to the site's root.
+    entry: str
+    path: Path
+
+    @classmethod
+    def read(cls, directory: Path) -> BenchmarkSite:
+        """The site a benchmark script exported into `directory`, named after it.
+
+        Raises:
+            PublishError: the directory's name is not a lower-case slug (it
+                becomes a directory on the branch), or it names no front page
+                that exists inside the site.
+
+        """
+        name = directory.name
+        entry_file = directory / BENCHMARK_ENTRY
+        entry = entry_file.read_text(encoding="utf-8").strip() if entry_file.is_file() else ""
+        entry_path = PurePosixPath(entry)
+        if BENCHMARK_NAME_PATTERN.fullmatch(name) is None:
+            msg = f"{directory} is not a benchmark site: '{name}' is not a lower-case name"
+            raise PublishError(msg)
+        if (
+            not entry
+            or entry_path.is_absolute()
+            or ".." in entry_path.parts
+            or not (directory / entry_path).is_file()
+        ):
+            msg = f"{directory} is not a benchmark site: {BENCHMARK_ENTRY} names no page inside it"
+            raise PublishError(msg)
+        return cls(name, entry, directory)
+
+
+def read_benchmark_sites(parent: Path | None) -> list[BenchmarkSite]:
+    """Every benchmark site exported below `parent`, by name.
+
+    Nothing when `parent` is not given or does not exist: a run whose
+    benchmarks all failed, or a tag from before they were published, has none.
+    """
+    if parent is None or not parent.is_dir():
+        return []
+    return [BenchmarkSite.read(entry) for entry in sorted(parent.iterdir()) if entry.is_dir()]
+
+
+@dataclass(frozen=True)
+class Build:
+    """Everything one version publishes: the two sites, and the benchmark sites CI rendered."""
+
+    docs: Path
+    examples: Path
+    benchmarks: Sequence[BenchmarkSite] = ()
 
 
 class VersionEntry(TypedDict):
@@ -203,8 +270,14 @@ def write_redirect_tree(source: Path, dest: Path) -> None:
     `objects.inv` is copied rather than redirected, since a tool fetching one
     does not follow an HTML redirect; its entries are relative too, so they
     resolve to the redirects here and from there to the real pages.
+
+    A version's benchmark sites are left out: they are a version's own record,
+    never a URL anyone was given, and mirroring them would regenerate a
+    redirect per page of a third party's documentation on every run.
     """
     for relative in walk_files(source):
+        if relative.parts[0] == BENCHMARKS_DIR:
+            continue
         if relative.suffix == ".html":
             page = dest / relative
             target = os.path.relpath(source / relative, page.parent)
@@ -226,32 +299,67 @@ def copy_site(source: Path, dest: Path) -> None:
         shutil.copyfile(source / relative, dest / relative)
 
 
-def place_build(root: Path, slot: Slot, docs: Path, examples: Path, *, force: bool) -> None:
-    """Replaces `slot`'s directory with the two built sites.
+def place_build(root: Path, slot: Slot, build: Build, *, force: bool) -> None:
+    """Replaces `slot`'s directory with `build`'s sites.
 
     Raises:
         PublishError: `slot` is a release that is already published, since a
-            reader of an old release must be able to trust it has not moved.
+            reader of an old release must be able to trust it has not moved; or
+            a directory given is not a built site; or two benchmarks share a name.
 
     """
     target = root / slot.path
     if slot.kind is SlotKind.RELEASE and target.exists() and not force:
         msg = f"{slot.path} is already published; pass --force to replace a release"
         raise PublishError(msg)
-    for site in (docs, examples):
+    benchmarks = build.benchmarks
+    for site in (build.docs, build.examples, *(benchmark.path for benchmark in benchmarks)):
         # Every rinx site writes an inventory at its root.
         if not (site / "objects.inv").is_file():
             msg = f"{site} is not a built rinx site: it has no objects.inv"
             raise PublishError(msg)
+    names = [benchmark.name for benchmark in benchmarks]
+    for name in names:
+        if names.count(name) > 1:
+            msg = f"benchmark '{name}' is given twice"
+            raise PublishError(msg)
     if target.exists():
         shutil.rmtree(target)
-    copy_site(docs, target)
-    copy_site(examples, target / EXAMPLES_DIR)
+    copy_site(build.docs, target)
+    copy_site(build.examples, target / EXAMPLES_DIR)
+    if benchmarks:
+        for benchmark in benchmarks:
+            copy_site(benchmark.path, target / BENCHMARKS_DIR / benchmark.name)
+        (target / BENCHMARKS_DIR / "index.html").write_text(
+            benchmarks_page(benchmarks), encoding="utf-8"
+        )
     # A version's root is where the switcher falls back to when a page does not
     # exist in the version switched to.
     (target / "index.html").write_text(redirect_page(DOCS_ENTRY), encoding="utf-8")
     (target / EXAMPLES_DIR / "index.html").write_text(
         redirect_page(EXAMPLES_ENTRY), encoding="utf-8"
+    )
+
+
+def benchmarks_page(benchmarks: Sequence[BenchmarkSite]) -> str:
+    """The page listing a version's benchmark sites, each with its report when it has one."""
+    items = []
+    for benchmark in benchmarks:
+        name = html.escape(benchmark.name)
+        entry = html.escape(f"{benchmark.name}/{benchmark.entry}", quote=True)
+        item = f'<li><a href="{entry}">{name}</a>'
+        if (benchmark.path / BENCHMARK_REPORT).is_file():
+            report = html.escape(f"{benchmark.name}/{BENCHMARK_REPORT}", quote=True)
+            item += f' (<a href="{report}">full report</a>)'
+        items.append(item + "</li>\n")
+    return (
+        "<!doctype html>\n"
+        '<meta charset="utf-8">\n'
+        "<title>Benchmarks</title>\n"
+        "<h1>Benchmarks</h1>\n"
+        "<p>Real-world documentation projects rendered by this version of rinx. "
+        "See the benchmarking guide in the documentation for what each measures.</p>\n"
+        f"<ul>\n{''.join(items)}</ul>\n"
     )
 
 
@@ -300,6 +408,7 @@ def refresh_derived_files(root: Path, base_url: str) -> None:
     remove_derived_files(root)
 
     releases = list_releases(root)
+    drop_superseded_benchmarks(root, releases)
     has_main = (root / "main").is_dir()
     front = releases[0] if releases else ("main" if has_main else None)
     if front is not None:
@@ -313,10 +422,25 @@ def refresh_derived_files(root: Path, base_url: str) -> None:
     (root / "versions.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     # Search engines should send readers to a release, not to work in progress.
     (root / "robots.txt").write_text(
-        "User-agent: *\nDisallow: /main/\nDisallow: /pr/\n", encoding="utf-8"
+        # A benchmark site is someone else's documentation; never index a copy.
+        "User-agent: *\nDisallow: /main/\nDisallow: /pr/\nDisallow: /*/benchmarks/\n",
+        encoding="utf-8",
     )
     # Without it, GitHub Pages runs Jekyll, which drops every `_`-prefixed path.
     (root / ".nojekyll").write_text("", encoding="utf-8")
+
+
+def drop_superseded_benchmarks(root: Path, releases: list[str]) -> None:
+    """Deletes the benchmark sites of every release but the newest.
+
+    A release's documentation is permanent, but its benchmarks are a
+    comparison point, and only the newest release is one worth keeping beside
+    main and the previews. The rest would only spend the branch's 1 GB budget.
+    """
+    for release in releases[1:]:
+        benchmarks = root / release / BENCHMARKS_DIR
+        if benchmarks.exists():
+            shutil.rmtree(benchmarks)
 
 
 def normalize_base_url(raw: str) -> str:
@@ -460,6 +584,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     publish.add_argument("--slot", type=Slot.parse, required=True)
     publish.add_argument("--docs", type=Path, required=True)
     publish.add_argument("--examples", type=Path, required=True)
+    publish.add_argument(
+        "--benchmarks-dir",
+        type=Path,
+        help="a directory of exported benchmark sites, each published under benchmarks/<name>/",
+    )
     publish.add_argument("--force", action="store_true")
 
     remove = commands.add_parser("remove", help="remove a version slot")
@@ -483,9 +612,12 @@ def run(args: argparse.Namespace) -> None:
     base_url = normalize_base_url(args.base_url)
     slot: Slot = args.slot
     if args.command == "publish":
-        change = publishing(
-            slot, args.docs.resolve(), args.examples.resolve(), base_url, force=args.force
+        build = Build(
+            args.docs.resolve(),
+            args.examples.resolve(),
+            read_benchmark_sites(args.benchmarks_dir and args.benchmarks_dir.resolve()),
         )
+        change = publishing(slot, build, base_url, force=args.force)
         message = f"Publish {slot.path}"
     else:
         change = removing(slot, base_url, force=args.force)
@@ -493,13 +625,11 @@ def run(args: argparse.Namespace) -> None:
     publish_change(repo, change, message)
 
 
-def publishing(
-    slot: Slot, docs: Path, examples: Path, base_url: str, *, force: bool
-) -> Callable[[Path], object]:
-    """The change publishing the two sites into `slot`."""
+def publishing(slot: Slot, build: Build, base_url: str, *, force: bool) -> Callable[[Path], object]:
+    """The change publishing `build` into `slot`."""
 
     def change(root: Path) -> None:
-        place_build(root, slot, docs, examples, force=force)
+        place_build(root, slot, build, force=force)
         refresh_derived_files(root, base_url)
 
     return change

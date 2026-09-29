@@ -1,10 +1,12 @@
 import io
 import json
 import subprocess
+from collections import Counter
 from pathlib import Path
 
 import pytest
 
+import benchmark_common
 import benchmark_entities
 from benchmark_common import WarningEntry
 
@@ -435,3 +437,37 @@ class TestWriteSchemaReport:
 
         # Then
         assert "None found." in out.getvalue()
+
+
+class TestSummaryRows:
+    def test_only_diagnostic_codes_that_occurred_are_listed(self) -> None:
+        # Given one code with findings and one without
+        whitelist = benchmark_common.WhitelistSummary(
+            per_kind={
+                "entity.unknown-target": benchmark_common.SectionCount(2, 3),
+                "entity.role-type-mismatch": benchmark_common.SectionCount(0, 0),
+            },
+            suppressed=1,
+            whitelist_size=1,
+            stale_count=0,
+            stale_pruned=False,
+        )
+
+        # When
+        rows = benchmark_entities.summary_rows(
+            Counter({"req": 4, "spec": 2}),
+            Counter(),
+            [("Dynamic functions", "copy()")],
+            whitelist,
+        )
+
+        # Then
+        labels = [row.label for row in rows]
+        assert labels == [
+            "Entity types exercised:",
+            "Unsupported directives:",
+            "Unconvertible constructs:",
+            "entity.unknown-target:",
+            "Suppressed by whitelist:",
+        ]
+        assert rows[0].value == "2 distinct (6 occurrences)"

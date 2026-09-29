@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 import tempfile
 from collections import Counter
 from dataclasses import dataclass, field
@@ -18,12 +19,17 @@ from typing import Any, TextIO
 import benchmark_common
 from benchmark_common import (
     WARMUP_PACKAGE,
+    BuildResult,
     ReportLayout,
     SectionCount,
+    SummaryRow,
     WarningEntry,
     WhitelistSummary,
+    add_output_arguments,
     collect_warning_sidecars,
+    count_row,
     json_objects,
+    whitelist_rows,
     write_frequency_summary,
 )
 
@@ -57,6 +63,11 @@ WHITELIST_PATH = Path("scripts/domain_warnings_whitelist.json")
 # The corpus package inside the generated workspace: the directory the `.rst`
 # files live in, and therefore the one whose stale Bazel outputs get discarded.
 CORPUS_PACKAGE = "Doc"
+
+# Where the corpus build leaves the rendered site, and where the analysis writes
+# its full report (relative to the workspace root, like WHITELIST_PATH).
+SITE_DIR = TARGET_DIR / "bazel-bin" / CORPUS_PACKAGE / "site_site_out"
+RESULT_PATH = Path("benchmark_result.txt")
 
 
 def clone_repo(python_version: str) -> None:
@@ -183,7 +194,7 @@ rinx_site(
 """
 
 
-def run_benchmark(*, clean: bool = False) -> bool:
+def run_benchmark(*, clean: bool = False) -> BuildResult:
     """Builds rinx first, then times the CPython documentation build.
 
     The two are separate `bazel build` invocations on purpose. What the
@@ -207,7 +218,7 @@ def run_benchmark(*, clean: bool = False) -> bool:
     )
     print(f"Dependency build finished in {deps_duration:.2f} seconds.")
     if not deps_built:
-        return False
+        return BuildResult(succeeded=False, warmup_seconds=deps_duration, corpus_seconds=None)
 
     print("\nRunning Bazel build of the CPython documentation...")
     build_succeeded, duration = benchmark_common.timed_bazel_build(
@@ -224,16 +235,16 @@ def run_benchmark(*, clean: bool = False) -> bool:
     build_log = TARGET_DIR / "bazel_build.log"
     print(f"\nBazel build output was captured to: {build_log}")
 
-    # Inform the user where the HTML is
-    html_out = TARGET_DIR / "bazel-bin/Doc/site_site_out"
-    print(f"HTML output is located at: {html_out}/")
+    print(f"HTML output is located at: {SITE_DIR}/")
 
     # Inform the user where the Bazel profile is
     profile_out = TARGET_DIR / "profile.json.gz"
     print(f"Bazel profile is located at: {profile_out}")
     print("You can view it by dropping the file into https://ui.perfetto.dev/ or chrome://tracing")
 
-    return build_succeeded
+    return BuildResult(
+        succeeded=build_succeeded, warmup_seconds=deps_duration, corpus_seconds=duration
+    )
 
 
 # ── Domain-object warning whitelist helpers (pure, unit-tested) ───────────────
@@ -381,15 +392,15 @@ class AstTally:
             self.parser_diagnostics[code] += 1
 
 
-def analyze_results(*, build_succeeded: bool = False) -> None:
-    """Tally the corpus' `.ast` files and warnings into the report and the summary."""
+def analyze_results(*, build_succeeded: bool = False) -> list[SummaryRow]:
+    """Tally the corpus' `.ast` files and warnings into the report, returning the summary's rows."""
     print("Analyzing AST output for unsupported constructs...")
 
     ast_files = list(TARGET_DIR.glob("bazel-bin/Doc/**/*.ast"))
 
     if not ast_files:
         print("No .ast files found in bazel-bin. Did the build succeed?")
-        return
+        return []
 
     tally = AstTally()
     for ast_file in ast_files:
@@ -400,8 +411,7 @@ def analyze_results(*, build_succeeded: bool = False) -> None:
 
     # The full listing is far too long for the terminal, so write it to a file
     # and show only a compact summary on screen.
-    result_path = Path("benchmark_result.txt")
-    with result_path.open("w") as out:
+    with RESULT_PATH.open("w") as out:
         print("=== rinx benchmark: full report ===", file=out)
         write_frequency_summary(out, "Unsupported Directives Summary", tally.unknown_directives)
         write_frequency_summary(out, "Malformed Directives Summary", tally.malformed_directives)
@@ -417,30 +427,32 @@ def analyze_results(*, build_succeeded: bool = False) -> None:
             TARGET_DIR / "bazel-bin", WHITELIST_PATH, build_succeeded=build_succeeded, out=out
         )
 
-    print_benchmark_summary(result_path, tally, domain)
+    print(f"Full report written to: {RESULT_PATH}")
+    return summary_rows(tally, domain)
 
 
-def print_benchmark_summary(result_path: Path, tally: AstTally, domain: DomainSummary) -> None:
-    """Print the compact, terminal-friendly summary (counts only) and point at the report."""
-    line = benchmark_common.summary_line
+def summary_rows(tally: AstTally, domain: DomainSummary) -> list[SummaryRow]:
+    """The compact summary's counts; the full listing is in the report."""
     unknown = tally.unknown_directives
     malformed = tally.malformed_directives
     toctree_opts = tally.toctree_options_used
+    return [
+        count_row("Unsupported directives:", len(unknown), unknown.total()),
+        count_row("Malformed directives:", len(malformed), malformed.total()),
+        count_row("Toctree options exercised:", len(toctree_opts), toctree_opts.total()),
+        count_row("Parser diagnostics:", len(tally.parser_diagnostics)),
+        count_row("Unresolved domain refs:", *domain.unresolved),
+        count_row("Ambiguous domain refs:", *domain.ambiguous),
+        count_row("Domain type mismatches:", *domain.mismatch),
+        *whitelist_rows(domain.whitelist),
+    ]
 
-    print("\n=== Benchmark Summary ===")
-    line("Unsupported directives:", len(unknown), unknown.total())
-    line("Malformed directives:", len(malformed), malformed.total())
-    line("Toctree options exercised:", len(toctree_opts), toctree_opts.total())
-    line("Parser diagnostics:", len(tally.parser_diagnostics))
-    line("Unresolved domain refs:", *domain.unresolved)
-    line("Ambiguous domain refs:", *domain.ambiguous)
-    line("Domain type mismatches:", *domain.mismatch)
-    benchmark_common.print_whitelist_summary(domain.whitelist)
-    print(f"\nFull report written to: {result_path}")
 
+def main() -> int:
+    """Clone CPython, build its documentation with rinx, and report on the result.
 
-def main() -> None:
-    """Clone CPython, build its documentation with rinx, and report on the result."""
+    Returns the exit status: non-zero only when the documentation did not build.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--clean", action="store_true", help="Clear the Bazel cache before building"
@@ -455,6 +467,7 @@ def main() -> None:
             "rules_python's TOOL_VERSIONS."
         ),
     )
+    add_output_arguments(parser)
     args = parser.parse_args()
 
     # If run via `bazel run`, change to the workspace root
@@ -464,14 +477,24 @@ def main() -> None:
     # Ensure we run from the workspace root
     if not Path("WORKSPACE").exists() and not Path("MODULE.bazel").exists():
         print("Please run this script from the root of the rinx workspace.")
-        return
+        return 2
 
     print(f"Benchmarking against CPython {args.python_version}.")
     clone_repo(args.python_version)
     generate_bazel_project(workspace_dir, args.python_version)
-    build_succeeded = run_benchmark(clean=args.clean)
-    analyze_results(build_succeeded=build_succeeded)
+    result = run_benchmark(clean=args.clean)
+    rows = analyze_results(build_succeeded=result.succeeded)
+    outcome = benchmark_common.RunOutcome(
+        title=f"CPython {args.python_version}",
+        build=result,
+        analysis_rows=rows,
+        site_dir=SITE_DIR,
+        # CPython's root document is `contents`, not `index` (`root_doc` in its conf.py).
+        entry=f"{CORPUS_PACKAGE}/contents.html",
+        report=RESULT_PATH,
+    )
+    return benchmark_common.finish_run(outcome, benchmark_common.RunOutputs.from_args(args))
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
