@@ -129,6 +129,10 @@ jobs:
   # branch, which also lets it publish a tag older than the script.
   publish:
     needs: build
+    # Explicit, because the implicit `success()` covers every job upstream:
+    # `build` needs `benchmarks`, which is skipped unless run by hand, and a
+    # skipped ancestor would skip this job too — publishing nothing.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
