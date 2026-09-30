@@ -32,7 +32,7 @@
 //! the first listing wins — intersphinx reports no ambiguity for `:any:`.
 
 use rinx_ast::{Domain, InventorySelector, ObjectType, TargetName, TargetSearchOrder};
-use rinx_index::{EquationLocation, ProjectIndex, TargetLocation};
+use rinx_index::{EquationLocation, ProjectIndex, SpecialPage, TargetLocation};
 use rinx_scope::Scope;
 
 use super::{
@@ -59,6 +59,9 @@ pub(crate) enum AnyHit<'a> {
         label: TargetName,
         location: &'a EquationLocation,
     },
+    /// A page the build writes that no document is, by its predefined label
+    /// (`genindex`, `py-modindex`) — see [`ProjectIndex::special_page`].
+    SpecialPage { page: SpecialPage },
     /// A `py` or `c` domain object.
     DomainObject {
         object_type: ObjectType,
@@ -74,7 +77,7 @@ impl AnyHit<'_> {
     /// warning spells it.
     pub(crate) fn disambiguating_role(&self, target: &str) -> String {
         match self {
-            Self::Label { .. } => format!(":std:ref:`{target}`"),
+            Self::Label { .. } | Self::SpecialPage { .. } => format!(":std:ref:`{target}`"),
             Self::Term { .. } => format!(":std:term:`{target}`"),
             Self::Option { .. } => format!(":std:option:`{target}`"),
             Self::Document { .. } => format!(":std:doc:`{target}`"),
@@ -150,6 +153,10 @@ impl<'a> AnyResolver<'_, 'a> {
                 name: name.clone(),
                 doc_path: label_doc,
             });
+        } else if let Some(page) = self.index.special_page(&name) {
+            // One label table in Sphinx, so a document's label shadows the
+            // predefined one rather than competing with it.
+            hits.push(AnyHit::SpecialPage { page });
         }
         if let Some(OptionResolution::Resolved {
             qualified_name,
@@ -271,6 +278,47 @@ mod tests {
             resolution,
             AnyResolution::Local(vec![AnyHit::Label {
                 name: TargetName::new("install"),
+                doc_path: "guide.rst",
+            }])
+        );
+    }
+
+    #[test]
+    fn test_resolve_finds_the_general_index_by_its_builtin_label() {
+        // Given
+        let index = ProjectIndex::default();
+
+        // When
+        let resolution = resolve(&index, "genindex");
+
+        // Then
+        assert_eq!(
+            resolution,
+            AnyResolution::Local(vec![AnyHit::SpecialPage {
+                page: index
+                    .special_page(&TargetName::new("genindex"))
+                    .expect("always written"),
+            }])
+        );
+    }
+
+    #[test]
+    fn test_resolve_prefers_a_documents_label_over_a_special_page() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("genindex"),
+            TargetLocation::Internal("guide.rst".to_string()),
+        );
+
+        // When
+        let resolution = resolve(&index, "genindex");
+
+        // Then — one hit, not an ambiguity
+        assert_eq!(
+            resolution,
+            AnyResolution::Local(vec![AnyHit::Label {
+                name: TargetName::new("genindex"),
                 doc_path: "guide.rst",
             }])
         );

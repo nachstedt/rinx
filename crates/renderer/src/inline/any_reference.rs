@@ -16,7 +16,7 @@ use super::doc_reference::write_doc_link;
 use super::domain_object_reference::{domain_object_href, module_title_attribute};
 use super::external_link::write_external_link;
 use super::math::write_equation_link;
-use super::reference::{label_href, label_link_text};
+use super::reference::{label_href, label_link_text, write_special_page_link};
 use super::term_reference::term_href;
 use crate::blocks::equation_anchor_id;
 use crate::resolution::{AnyHit, AnyResolution, AnyResolver, unresolved_kind};
@@ -149,6 +149,7 @@ fn hit_href(hit: &AnyHit<'_>, index: &ProjectIndex, doc_path: &str) -> String {
             relative_doc_href(&location.doc_path, doc_path),
             equation_anchor_id(label)
         ),
+        AnyHit::SpecialPage { page } => crate::css_relative_path(doc_path, page.path),
         AnyHit::DomainObject {
             object_type,
             qualified_name,
@@ -175,6 +176,11 @@ fn write_hit(
         }
         AnyHit::Label { name, .. } => {
             html_escape::encode_text(label_link_text(index, title, name, target)).into_owned()
+        }
+        // Drawn whole by `:ref:`'s own writer, as the label it is.
+        AnyHit::SpecialPage { page } => {
+            write_special_page_link(html, *page, title, doc_path);
+            return;
         }
         // Drawn whole by `:doc:`'s own writer, `<no title>` included.
         AnyHit::Document {
@@ -322,6 +328,19 @@ mod tests {
              title=\"abc: Abstract base classes.\">\
              <code class=\"xref any py module docutils literal\">abc</code></a>"
         );
+    }
+
+    #[test]
+    fn test_a_special_page_hit_links_the_page_as_ref_does() {
+        // Given
+        let index = ProjectIndex::default();
+
+        // When
+        let (html, broken) = render(&index, &Scope::default(), bare("genindex"));
+
+        // Then
+        assert_eq!(html, "<a href=\"genindex.html\">Index</a>");
+        assert!(broken.is_empty());
     }
 
     #[test]

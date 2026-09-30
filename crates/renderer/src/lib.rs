@@ -42,8 +42,8 @@ pub use image_error::ImageError;
 pub use math::MathError;
 pub use nav::{PageLink, ResolvedNavEntry};
 pub use page::{
-    DomainIndex, MODINDEX_PATH, MODINDEX_TITLE, PageMeta, UnknownDomainIndex, css_relative_path,
-    render_genindex, render_modindex, render_page,
+    MODINDEX_PATH, MODINDEX_TITLE, PageMeta, css_relative_path, render_genindex, render_modindex,
+    render_page,
 };
 pub use uml_error::{DiagramError, DiagramFailure};
 

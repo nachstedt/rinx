@@ -243,9 +243,8 @@ module definition, not literal ``:py:mod:`greetings``` text.
    A module holding the ``greet`` and ``farewell`` functions.
 
 Its ``:platform:``, ``:synopsis:`` and ``:deprecated:`` are not printed
-above, as Sphinx never prints them: they appear in the Python Module Index
-(the sidebar's "Module Index" link) and as the tooltip of every link to the
-module, like :mod:`greetings` — see
+above, as Sphinx never prints them: they appear in the :ref:`py-modindex`
+and as the tooltip of every link to the module, like :mod:`greetings` — see
 :ref:`module-options-example` below.
 
 .. py:function:: shout(name)
@@ -844,6 +843,15 @@ index lists every module on this page:
   source; it is one sentence in the index and the tooltip.
 - A synopsis is plain text, never markup: the ``:pep:`8``` in
   ``texttools.wrap``'s is shown as written.
+- A package's submodules fold behind the toggle in its row. They start
+  folded here, because top-level modules outnumber submodules on this site —
+  the rule Sphinx starts its index by.
+- ``multiprocessing.shared_memory`` is listed under "s": the site's
+  ``rinx.toml`` sets ``modindex_common_prefix = ["multiprocessing."]``.
+
+Both index pages have labels no document defines, as in Sphinx:
+:ref:`genindex` links the general index, :ref:`modindex` and
+:ref:`the module index <py-modindex>` the Python Module Index.
 
 .. py:module:: greetings.formal
    :synopsis: Formal greetings, for occasions that call for a bow rather

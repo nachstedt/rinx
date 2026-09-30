@@ -7,17 +7,16 @@
 //! `build_domain_object_key`), so an entry cannot point somewhere a page's
 //! own link would not.
 
-use std::collections::BTreeSet;
 use std::fs;
 
 use anyhow::{Context, Result};
 use rinx_ast::{ObjectType, PyObjectType};
+use rinx_index::DomainIndex;
 use rinx_index::{ProjectIndex, TargetLocation, relative_doc_href};
 use rinx_inventory::{EntryType, Inventory, InventoryEntry, write_inventory};
-use rinx_renderer::{DomainIndex, MODINDEX_PATH, MODINDEX_TITLE, config};
+use rinx_renderer::{MODINDEX_PATH, MODINDEX_TITLE, config};
 
 use super::cli_args::flag_value;
-use super::cli_args::read_domain_indices;
 
 /// Sphinx's priority for an entry search should not list (every `std`
 /// entry but an option).
@@ -27,18 +26,13 @@ const IMPORTANT: i32 = 0;
 /// Sphinx's default priority.
 const DEFAULT: i32 = 1;
 
-pub(super) fn process_inventory(
-    index_json: &str,
-    config: &config::SiteConfig,
-    domain_indices: &BTreeSet<DomainIndex>,
-) -> Result<Vec<u8>> {
+pub(super) fn process_inventory(index_json: &str, config: &config::SiteConfig) -> Result<Vec<u8>> {
     let index: ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
     Ok(write_inventory(&build_inventory(
         &index,
         &config.project,
         &config.version,
-        domain_indices,
     )))
 }
 
@@ -46,7 +40,6 @@ pub(crate) fn cmd_inventory(args: &[String]) -> Result<()> {
     let index_path = flag_value(args, "--index")?;
     let output = flag_value(args, "--output")?;
     let config_path = flag_value(args, "--config")?;
-    let domain_indices = read_domain_indices(args)?;
 
     let index_json =
         fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
@@ -55,25 +48,20 @@ pub(crate) fn cmd_inventory(args: &[String]) -> Result<()> {
     let site_config: config::SiteConfig = toml::from_str(&config_str)
         .with_context(|| format!("Error parsing config '{config_path}'"))?;
 
-    let bytes = process_inventory(&index_json, &site_config, &domain_indices)?;
+    let bytes = process_inventory(&index_json, &site_config)?;
     fs::write(&output, bytes).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
 
 /// Every target the site defines, as Sphinx would list it — including the
-/// module index's two labels when `domain_indices` says the site writes it.
-fn build_inventory(
-    index: &ProjectIndex,
-    project: &str,
-    version: &str,
-    domain_indices: &BTreeSet<DomainIndex>,
-) -> Inventory {
+/// module index's two labels when the index says the site writes it.
+fn build_inventory(index: &ProjectIndex, project: &str, version: &str) -> Inventory {
     let mut entries = document_entries(index);
     entries.extend(label_entries(index));
     entries.extend(term_entries(index));
     entries.extend(domain_object_entries(index));
     entries.push(genindex_entry());
-    if domain_indices.contains(&DomainIndex::PyModindex) {
+    if index.domain_indices.contains(&DomainIndex::PyModindex) {
         entries.extend(modindex_entries());
     }
     Inventory {
@@ -252,7 +240,7 @@ mod tests {
             .insert("guide/install.rst".to_string(), "Installing".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let entry = find(&inventory, "std:doc", "guide/install");
@@ -270,7 +258,7 @@ mod tests {
         };
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let docs: Vec<_> = inventory
@@ -289,7 +277,7 @@ mod tests {
         index.documents.insert("scratch.rst".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let entry = find(&inventory, "std:doc", "scratch");
@@ -310,7 +298,7 @@ mod tests {
             .insert(TargetName::new("install"), "Installing".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let entry = find(&inventory, "std:label", "install");
@@ -331,7 +319,7 @@ mod tests {
             .insert(TargetName::new("REQ_001"), "entity-REQ_001".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let entry = find(&inventory, "std:label", "req_001");
@@ -348,7 +336,7 @@ mod tests {
         );
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         assert!(!inventory.entries.iter().any(|entry| entry.name == "python"));
@@ -363,7 +351,7 @@ mod tests {
             .insert(TargetName::new("build step"), "glossary.rst".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let entry = find(&inventory, "std:term", "build step");
@@ -381,7 +369,7 @@ mod tests {
         );
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let entry = find(&inventory, "py:class", "pkg.Greeter");
@@ -397,7 +385,7 @@ mod tests {
         index.insert_domain_object(ObjectType::C(CObjectType::Macro), "add", "c.rst");
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         find(&inventory, "c:function", "add");
@@ -415,7 +403,7 @@ mod tests {
         );
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let entry = find(&inventory, "std:cmdoption", "--verbose");
@@ -428,7 +416,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         let entry = find(&inventory, "std:label", "genindex");
@@ -438,11 +426,13 @@ mod tests {
     #[test]
     fn test_build_inventory_lists_both_module_index_labels_when_enabled() {
         // Given
-        let index = ProjectIndex::default();
-        let enabled = BTreeSet::from([DomainIndex::PyModindex]);
+        let index = ProjectIndex {
+            domain_indices: [DomainIndex::PyModindex].into(),
+            ..ProjectIndex::default()
+        };
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &enabled);
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then — as Sphinx 9.1's own `objects.inv` lists them
         let short = find(&inventory, "std:label", "modindex");
@@ -459,7 +449,7 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+        let inventory = build_inventory(&index, "Demo", "1.0");
 
         // Then
         assert!(
@@ -503,7 +493,7 @@ mod tests {
             toml::from_str("project = \"Demo\"\nversion = \"2.0\"\n").unwrap();
 
         // When
-        let bytes = process_inventory(index_json, &config, &BTreeSet::new()).unwrap();
+        let bytes = process_inventory(index_json, &config).unwrap();
 
         // Then
         let read = read_inventory(&bytes).unwrap();
@@ -523,7 +513,7 @@ mod tests {
         let config: config::SiteConfig = toml::from_str("project = \"Demo\"\n").unwrap();
 
         // When
-        let result = process_inventory("not json", &config, &BTreeSet::new());
+        let result = process_inventory("not json", &config);
 
         // Then
         assert!(result.is_err());

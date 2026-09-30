@@ -2,8 +2,9 @@
 # test_domain_indices.sh
 # Tests that `domain_indices` on rinx_site is load-bearing: with
 # "py-modindex" the site writes py-modindex.html and every page links it; without
-# it the page is not an output at all and no page links it; and a name this build
-# does not write fails the build while analyzing (ADR-032).
+# it the page is not an output at all, no page links it and `:ref:` to it is
+# broken; and a name this build does not write fails the build while analyzing
+# (ADR-032).
 
 set -euo pipefail
 
@@ -37,9 +38,15 @@ restore() {
 trap restore EXIT
 
 echo "=== Testing a site without domain_indices writes and links no module index ==="
-sed -i.tmp '/domain_indices = \["py-modindex"\],/d' examples/BUILD.bazel
+# Without the index, the example's `:ref:`py-modindex`` is a broken link, which
+# strict_links would turn into a failed build; drop both to observe the rest.
+sed -i.tmp -e '/domain_indices = \["py-modindex"\],/d' -e '/strict_links = True,/d' examples/BUILD.bazel
 rm -f examples/BUILD.bazel.tmp
-$BAZEL build //examples:site > /dev/null 2>&1
+OUTPUT=$($BAZEL build //examples:site 2>&1)
+if ! grep -q "broken ref 'py-modindex'" <<< "$OUTPUT"; then
+    echo "ERROR: :ref:\`py-modindex\` resolved although the site writes no module index."
+    exit 1
+fi
 if site_outputs | grep -q 'py-modindex.html$'; then
     echo "ERROR: py-modindex.html is an output although domain_indices is unset."
     exit 1

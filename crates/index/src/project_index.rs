@@ -1,7 +1,7 @@
 use crate::{
-    DocumentNumbers, DocumentOutline, DocumentToctree, ElementNumbers, EntityFieldHistory,
-    EntityRecord, EntityUpdateRecord, EquationLocation, ExternalInventory, GenIndexEntry,
-    ModuleEntry, NumberingStep, NumrefTarget, TargetLocation,
+    DocumentNumbers, DocumentOutline, DocumentToctree, DomainIndex, ElementNumbers,
+    EntityFieldHistory, EntityRecord, EntityUpdateRecord, EquationLocation, ExternalInventory,
+    GenIndexEntry, ModuleEntry, NumberingStep, NumrefTarget, TargetLocation,
 };
 use rinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
@@ -188,6 +188,12 @@ pub struct ProjectIndex {
     /// live preview merges a fresh document into it.
     #[serde(default)]
     pub external_inventories: Vec<ExternalInventory>,
+    /// The domain index pages the site writes (`rinx_site`'s
+    /// `domain_indices`). A build input like `external_inventories`, set once
+    /// when the index is built and never merged — so the live preview, which
+    /// merges into a stale index, still knows whether to link them.
+    #[serde(default)]
+    pub domain_indices: BTreeSet<DomainIndex>,
 }
 
 impl ProjectIndex {
@@ -320,8 +326,9 @@ impl ProjectIndex {
         self.entity_updates.extend(other.entity_updates);
         // root_documents, page_order, section_numbers, element_numbers,
         // entity_backlinks and entity_update_history are built globally from the whole graph, so
-        // they are recomputed rather than merged; external_inventories is a
-        // build input no document contributes to, so it is kept as it is
+        // they are recomputed rather than merged; external_inventories and
+        // domain_indices are build inputs no document contributes to, so
+        // they are kept as they are
         let mut conflicts = MergeConflicts::default();
         for (id, record) in other.entities {
             if let Some(existing) = self.entities.get(&id) {

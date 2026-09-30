@@ -5,8 +5,7 @@
 //! [`parse`], [`validate_toctree`], [`extract_doctests`] and
 //! [`embed_assets`] are the per-document Phase 1 actions; [`index`] is the
 //! single Phase 2 merge;
-//! [`render`], [`genindex`] and [`modindex`] are Phase 3, all drawing their
-//! page chrome from [`page_chrome`]; [`validate_assets`] checks the
+//! [`render`], [`genindex`] and [`modindex`] are Phase 3, [`validate_assets`] checks the
 //! bundled images and downloads after it, and [`preview`] collapses the first
 //! three phases into one process for the editor. [`cli_args`] holds the flag parsing
 //! they share, [`diagnostics`] the warning formatting [`render`] and
@@ -24,7 +23,6 @@ mod genindex;
 mod index;
 mod inventory;
 mod modindex;
-mod page_chrome;
 mod parse;
 mod parse_files;
 mod parse_inputs;

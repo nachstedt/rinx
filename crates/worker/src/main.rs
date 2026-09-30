@@ -8,9 +8,9 @@
 //! ```text
 //! rinx parse  --input <file.rst>  --output <file.ast>  [--default-domain <py|c>]
 //! rinx validate_toctree --input <file.ast>  [--allowed <path>...]
-//! rinx index  --inputs <a.ast> [<b.ast> ...]  --output <project.index>
-//! rinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links] [--warnings-output <file.warnings.json>] [--domain-index <name>]...
-//! rinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html> [--domain-index <name>]...
+//! rinx index  [--domain-index <name>]... --inputs <a.ast> [<b.ast> ...]  --output <project.index>
+//! rinx render --input <file.ast>  --index <project.index> --doc-path <rel_path> --output <file.html> [--strict-links] [--warnings-output <file.warnings.json>]
+//! rinx genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>
 //! rinx modindex --index <project.index> --output <py-modindex.html> --config <config.toml> --template <template.html>
 //! rinx inventory --index <project.index> --output <objects.inv> --config <config.toml>
 //! rinx extract_doctests --input <file.ast> --output <file.doctests.json>
@@ -73,12 +73,12 @@ fn run(args: &[String]) -> Result<()> {
                    {program} extract_doctests --input <file.ast> --output <file.doctests.json>\n\
                    {program} embed_assets --input <file.ast> --output <file.embeds.json>\n\
                    {program} validate_toctree --input <file.ast.raw> --output <file.ast> [--allowed <path>...]\n\
-                   {program} index  --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
-                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--embeds <file.embeds.json>] [--diagram-outdir <puml_dir>] [--strict-links] [--warnings-output <file.warnings.json>] [--domain-index <name>]...\n\
-                   {program} genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html> [--domain-index <name>]...\n\
+                   {program} index  [--domain-index <name>]... --inputs <a.ast> [<b.ast> ...] --output <project.index>\n\
+                   {program} render --input <file.ast> --index <project.index> --doc-path <rel_path> --output <file.html> --config <config.toml> --template <template.html> [--embeds <file.embeds.json>] [--diagram-outdir <puml_dir>] [--strict-links] [--warnings-output <file.warnings.json>]\n\
+                   {program} genindex --index <project.index> --output <genindex.html> --config <config.toml> --template <template.html>\n\
                    {program} modindex --index <project.index> --output <py-modindex.html> --config <config.toml> --template <template.html>\n\
                    {program} inventory --index <project.index> --output <objects.inv> --config <config.toml>\n\
-                   {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>] [--domain-index <name>]...\n\
+                   {program} preview --doc-path <rel_path> --config <config.toml> --template <template.html> [--index <project.index>] [--default-domain <py|c>]\n\
                    {program} validate_assets [--image-dir <dir>] [--download-dir <dir>] [--diagram-dirs <puml_dir>...] --inputs <a.ast> [<b.ast> ...]"
             );
             Err(anyhow!(msg))

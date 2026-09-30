@@ -114,9 +114,10 @@ other Sphinx or rinx sites link into it through, available as the target's
        ``html_domain_indices`` names them. Only ``"py-modindex"`` exists: the
        Python Module Index, listing every ``.. py:module::`` with its
        ``:synopsis:``, ``:platform:`` and ``:deprecated:``, and linked from
-       every page's sidebar. Off by default, unlike Sphinx: Bazel declares
-       every page before reading any document, and a site without Python has
-       no use for one.
+       every page's sidebar. A package's submodules fold behind a toggle.
+       ``:ref:`py-modindex``` and ``:ref:`modindex``` link it. Off by default,
+       unlike Sphinx: Bazel declares every page before reading any document,
+       and a site without Python has no use for one.
    * - ``strict_links``
      - If ``True``, a broken cross-reference fails the build instead of only
        printing a warning. Off by default.
@@ -191,6 +192,11 @@ freely.
      - The PEP index a ``:pep:`` role links into, docutils' setting of the
        same name. Defaults to ``https://peps.python.org/``. It must be an
        ``http(s)://`` URL or start with ``/``, and end with ``/``.
+   * - ``modindex_common_prefix``
+     - Module name prefixes the Python Module Index sets aside when filing a
+       module, Sphinx's setting of the same name: with ``["email."]``,
+       ``email.message`` is listed under "m". Only read by a site whose
+       ``domain_indices`` enables the index.
    * - ``version_switcher``
      - A table whose ``json_url`` lists the site's published versions. See
        :ref:`version-switcher`.

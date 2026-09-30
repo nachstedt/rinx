@@ -5,6 +5,11 @@ version = "v2.0-beta"
 # show those numbers — Sphinx's `numfig`, off by default. See numref.rst.
 numfig = true
 
+# Module name prefixes the Python Module Index sets aside when filing a module
+# under a letter — Sphinx's `modindex_common_prefix`. This one lists
+# `multiprocessing.shared_memory` under "s". See domains.rst.
+modindex_common_prefix = ["multiprocessing."]
+
 # Named PlantUML preambles a diagram may ask for with `:config:`. The text of a
 # preamble, not a path to one — a path baked into config would not survive a
 # sandboxed build relocating the file (see docs/decisions/001-template-system.md).

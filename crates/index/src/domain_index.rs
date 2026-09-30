@@ -1,7 +1,9 @@
 //! Which domain index pages a site writes — Sphinx's `html_domain_indices`,
-//! set on `rinx_site` as `domain_indices` and passed to every action drawing
-//! a page as `--domain-index`.
+//! set on `rinx_site` as `domain_indices`, passed to the index action as
+//! `--domain-index`, and stored in [`crate::ProjectIndex::domain_indices`]
+//! for every later phase to read.
 
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
 
@@ -11,15 +13,32 @@ use std::str::FromStr;
 /// page before any document is read, and a page no project asked for — a
 /// Python Module Index for documentation without Python — should not be
 /// written at all (ADR-032).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum DomainIndex {
     /// `py-modindex`, the Python Module Index.
+    #[serde(rename = "py-modindex")]
     PyModindex,
 }
 
 impl DomainIndex {
     /// Every index, so a caller can enumerate them without repeating the list.
     pub const ALL: [Self; 1] = [Self::PyModindex];
+
+    /// Where the index page is written, at the site root as Sphinx writes it.
+    #[must_use]
+    pub const fn page_path(self) -> &'static str {
+        match self {
+            Self::PyModindex => "py-modindex.html",
+        }
+    }
+
+    /// The page's title, as Sphinx gives it.
+    #[must_use]
+    pub const fn title(self) -> &'static str {
+        match self {
+            Self::PyModindex => "Python Module Index",
+        }
+    }
 
     /// The index's name as Sphinx spells it, which is how it is written in
     /// `domain_indices` and on the command line.
@@ -95,5 +114,21 @@ mod tests {
     fn test_display_writes_the_name() {
         // Given / When / Then
         assert_eq!(DomainIndex::PyModindex.to_string(), "py-modindex");
+    }
+
+    #[test]
+    fn test_the_module_index_page_is_written_at_the_site_root() {
+        // Given / When / Then
+        assert_eq!(DomainIndex::PyModindex.page_path(), "py-modindex.html");
+        assert_eq!(DomainIndex::PyModindex.title(), "Python Module Index");
+    }
+
+    #[test]
+    fn test_serialized_as_its_sphinx_name() {
+        // Given / When
+        let json = serde_json::to_string(&DomainIndex::PyModindex).unwrap();
+
+        // Then
+        assert_eq!(json, "\"py-modindex\"");
     }
 }

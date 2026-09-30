@@ -6,7 +6,6 @@ use rinx_ast as ast;
 use rinx_renderer::{self as renderer, config};
 use std::fs;
 
-use super::cli_args::read_domain_indices;
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
     WarningOrigin, check_broken_links_strict, format_broken_link_warning,
@@ -15,7 +14,6 @@ use super::diagnostics::{
     format_object_type_mismatch_warning,
 };
 use super::entity_schema::{load_entity_schema, load_entity_templates};
-use super::page_chrome::PageChrome;
 use super::suppression::{
     retain_reportable_diagram_errors, retain_reportable_empty_listing_errors,
     retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
@@ -63,7 +61,7 @@ pub(super) fn process_render(
     ast_json: &str,
     index_json: &str,
     config: &config::SiteConfig,
-    chrome: &PageChrome<'_>,
+    template_str: &str,
     doc_path: &str,
     embedded_assets: &renderer::EmbeddedAssets,
     entities: &EntityInputs<'_>,
@@ -99,7 +97,7 @@ pub(super) fn process_render(
     let css_path = renderer::css_relative_path(doc_path, "default.css");
     let html = renderer::render_page(
         &render_output.html,
-        chrome.template,
+        template_str,
         config,
         &renderer::PageMeta {
             css_path: &css_path,
@@ -107,7 +105,6 @@ pub(super) fn process_render(
             doc_path,
             source_path: &doc.path,
             has_genindex: !index.genindex_entries.is_empty(),
-            has_modindex: chrome.has_modindex(),
             ..renderer::PageMeta::default()
         }
         .with_navigation(&index, config),
@@ -156,7 +153,6 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
     let output = flag_value(args, "--output")?;
     let config_path = flag_value(args, "--config")?;
     let template_path = flag_value(args, "--template")?;
-    let domain_indices = read_domain_indices(args)?;
     let doc_path = flag_value(args, "--doc-path")?;
     let strict_links = args.iter().any(|a| a == "--strict-links");
     let warnings_output = flag_value_opt(args, "--warnings-output");
@@ -197,10 +193,7 @@ pub(crate) fn cmd_render(args: &[String]) -> Result<()> {
         &ast_json,
         &index_json,
         &site_config,
-        &PageChrome {
-            template: &template_str,
-            domain_indices: &domain_indices,
-        },
+        &template_str,
         &doc_path,
         &embedded_assets,
         &EntityInputs {
@@ -337,22 +330,21 @@ mod tests {
     }
 
     #[test]
-    fn test_process_render_links_the_module_index_only_when_the_site_enables_it() {
+    fn test_process_render_links_the_module_index_only_when_the_index_enables_it() {
         // Given
         let doc = r#"{"path":"guide/intro.rst","nodes":[]}"#;
         let config = config::SiteConfig::default();
         let template = "{% if modindex_href %}{{ modindex_href }}{% endif %}";
-        let enabled_indices = std::collections::BTreeSet::from([renderer::DomainIndex::PyModindex]);
-        let no_indices = std::collections::BTreeSet::new();
-        let render = |domain_indices| {
+        let enabled = rinx_index::ProjectIndex {
+            domain_indices: [rinx_index::DomainIndex::PyModindex].into(),
+            ..rinx_index::ProjectIndex::default()
+        };
+        let render = |index: &rinx_index::ProjectIndex| {
             process_render(
                 doc,
-                &serde_json::to_string(&rinx_index::ProjectIndex::default()).unwrap(),
+                &serde_json::to_string(index).unwrap(),
                 &config,
-                &PageChrome {
-                    template,
-                    domain_indices,
-                },
+                template,
                 "guide/intro.rst",
                 &renderer::EmbeddedAssets::new(),
                 &EntityInputs {
@@ -365,12 +357,12 @@ mod tests {
         };
 
         // When
-        let enabled = render(&enabled_indices);
-        let disabled = render(&no_indices);
+        let with = render(&enabled);
+        let without = render(&rinx_index::ProjectIndex::default());
 
         // Then
-        assert_eq!(enabled, "../py-modindex.html");
-        assert_eq!(disabled, "");
+        assert_eq!(with, "../py-modindex.html");
+        assert_eq!(without, "");
     }
 
     #[test]
@@ -387,10 +379,7 @@ mod tests {
             doc,
             index,
             &config,
-            &PageChrome {
-                template,
-                domain_indices: &std::collections::BTreeSet::new(),
-            },
+            template,
             "test.rst",
             &renderer::EmbeddedAssets::new(),
             &EntityInputs {
@@ -421,10 +410,7 @@ mod tests {
             doc,
             index,
             &config,
-            &PageChrome {
-                template,
-                domain_indices: &std::collections::BTreeSet::new(),
-            },
+            template,
             "test.rst",
             &renderer::EmbeddedAssets::new(),
             &EntityInputs {
@@ -456,10 +442,7 @@ mod tests {
             doc,
             index,
             &config,
-            &PageChrome {
-                template,
-                domain_indices: &std::collections::BTreeSet::new(),
-            },
+            template,
             "test.rst",
             &renderer::EmbeddedAssets::new(),
             &EntityInputs {
