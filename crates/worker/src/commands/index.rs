@@ -8,10 +8,10 @@ use rinx_renderer::config;
 use std::collections::BTreeSet;
 use std::fs;
 
-use rinx_index::ExternalInventory;
+use rinx_index::{DomainIndex, ExternalInventory};
 use rinx_inventory::{InventoryName, MalformedLine, read_inventory};
 
-use super::cli_args::{flag_groups, flag_value, flag_value_opt, flag_values};
+use super::cli_args::{flag_groups, flag_value, flag_value_opt, flag_values, read_domain_indices};
 use super::diagnostics::{WarningOrigin, format_diagnostic};
 use super::entity_schema::load_entity_schema;
 use super::suppression::retain_reportable;
@@ -28,11 +28,14 @@ pub(super) struct IndexedProject {
 /// `settings` carries the configured root document (without its `.rst`
 /// extension), which decides where navigation, page order and section and
 /// figure numbering start, and how deep a figure's number follows its section.
+/// `external_inventories` and `domain_indices` are build inputs stored on the
+/// index as they are, for every later phase to read.
 pub(super) fn process_index(
     ast_jsons: &[String],
     settings: &analyzer::IndexSettings<'_>,
     schema: &rinx_entity::EntitySchema,
     external_inventories: Vec<ExternalInventory>,
+    domain_indices: BTreeSet<DomainIndex>,
 ) -> Result<IndexedProject> {
     let docs: Vec<ast::Document> = ast_jsons
         .iter()
@@ -41,6 +44,7 @@ pub(super) fn process_index(
 
     let mut build = analyzer::build_project_index_reporting(&docs, settings, schema);
     let written = written_reference_targets(ast_jsons)?;
+    build.index.domain_indices = domain_indices;
     build.index.external_inventories = external_inventories
         .into_iter()
         .map(|mut inventory| {
@@ -134,7 +138,13 @@ pub(crate) fn cmd_index(args: &[String]) -> Result<()> {
         root_doc: &site_config.root_doc,
         numfig_secnum_depth: site_config.numfig_secnum_depth,
     };
-    let indexed = process_index(&files, &settings, &schema, external_inventories)?;
+    let indexed = process_index(
+        &files,
+        &settings,
+        &schema,
+        external_inventories,
+        read_domain_indices(args)?,
+    )?;
     for warning in &indexed.warnings {
         eprintln!("{warning}");
     }
@@ -277,6 +287,7 @@ mod tests {
             &analyzer::IndexSettings::new("index"),
             &EntitySchema::empty(),
             Vec::new(),
+            BTreeSet::new(),
         )
         .unwrap();
 
@@ -306,6 +317,7 @@ mod tests {
             &analyzer::IndexSettings::new("index"),
             &EntitySchema::empty(),
             Vec::new(),
+            BTreeSet::new(),
         )
         .unwrap();
 
@@ -328,6 +340,7 @@ mod tests {
             &analyzer::IndexSettings::new("index"),
             &EntitySchema::empty(),
             Vec::new(),
+            BTreeSet::new(),
         )
         .unwrap();
 
@@ -351,6 +364,7 @@ mod tests {
             &analyzer::IndexSettings::new("index"),
             &EntitySchema::empty(),
             Vec::new(),
+            BTreeSet::new(),
         )
         .unwrap();
 
@@ -372,6 +386,7 @@ mod tests {
             &analyzer::IndexSettings::new("index"),
             &EntitySchema::empty(),
             Vec::new(),
+            BTreeSet::new(),
         )
         .unwrap()
         .json;
@@ -379,7 +394,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"documents":["test.rst"],"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"modules":{},"genindex_entries":[],"equations":{},"numbering_steps":{},"numref_targets":{},"element_numbers":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[]}"#
+            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"documents":["test.rst"],"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"modules":{},"genindex_entries":[],"equations":{},"numbering_steps":{},"numref_targets":{},"element_numbers":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[],"domain_indices":[]}"#
         );
     }
 
@@ -487,12 +502,33 @@ mod tests {
             &analyzer::IndexSettings::new("index"),
             &EntitySchema::empty(),
             inventories,
+            BTreeSet::new(),
         )
         .unwrap();
 
         // Then
         let index: rinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
         assert_eq!(index.external_inventories.len(), 1);
+    }
+
+    #[test]
+    fn test_process_index_stores_the_domain_indices() {
+        // Given / When
+        let indexed = process_index(
+            &[],
+            &analyzer::IndexSettings::new("index"),
+            &EntitySchema::empty(),
+            Vec::new(),
+            [DomainIndex::PyModindex].into(),
+        )
+        .unwrap();
+
+        // Then — every later phase reads the setting from here
+        let index: rinx_index::ProjectIndex = serde_json::from_str(&indexed.json).unwrap();
+        assert_eq!(
+            index.domain_indices,
+            BTreeSet::from([DomainIndex::PyModindex])
+        );
     }
 
     #[test]
@@ -542,6 +578,7 @@ mod tests {
             &analyzer::IndexSettings::new("index"),
             &EntitySchema::empty(),
             inventories,
+            BTreeSet::new(),
         )
         .unwrap();
 

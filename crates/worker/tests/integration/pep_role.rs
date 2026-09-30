@@ -32,7 +32,6 @@ Follow :pep:`8`, read :pep:`the Zen <20>` and :pep:`484#type-aliases`.
         &index,
         &renderer::config::SiteConfig::default(),
         "{{ body }}",
-        false,
     )
     .unwrap();
 

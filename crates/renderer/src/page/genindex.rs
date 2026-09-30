@@ -195,9 +195,7 @@ fn render_jump_nav(html: &mut String, letters: &[char]) {
 }
 
 /// Renders the full `genindex.html` page: the alphabetized index body
-/// wrapped in the site's page chrome via [`crate::render_page`], whose
-/// sidebar links the module index when `has_modindex` says the site writes
-/// one.
+/// wrapped in the site's page chrome via [`crate::render_page`].
 ///
 /// # Errors
 ///
@@ -206,7 +204,6 @@ pub fn render_genindex(
     index: &ProjectIndex,
     config: &SiteConfig,
     template_str: &str,
-    has_modindex: bool,
 ) -> Result<String> {
     let groups = group_by_primary(&index.genindex_entries);
     let buckets = bucket_by_letter(&groups);
@@ -235,7 +232,6 @@ pub fn render_genindex(
             doc_path: "genindex.html",
             source_path: "genindex.html",
             has_genindex,
-            has_modindex,
             ..crate::PageMeta::default()
         }
         .with_navigation(index, config),
@@ -352,7 +348,7 @@ mod tests {
         let template = "<html><body>{{ body }}</body></html>";
 
         // When
-        let html = render_genindex(&index, &config, template, false).unwrap();
+        let html = render_genindex(&index, &config, template).unwrap();
 
         // Then
         assert!(html.contains("<html>"));
@@ -373,7 +369,7 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let html = render_genindex(&index, &config, template, false).unwrap();
+        let html = render_genindex(&index, &config, template).unwrap();
 
         // Then
         assert!(html.contains("<h2 id=\"E\">E</h2>"));
@@ -395,7 +391,7 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let html = render_genindex(&index, &config, template, false).unwrap();
+        let html = render_genindex(&index, &config, template).unwrap();
 
         // Then — two links, comma-separated, nested under the primary
         assert!(html.contains("interpreter"));
@@ -418,7 +414,7 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let html = render_genindex(&index, &config, template, false).unwrap();
+        let html = render_genindex(&index, &config, template).unwrap();
 
         // Then
         let symbols_pos = html.find("Symbols").unwrap();
@@ -437,7 +433,7 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let html = render_genindex(&index, &config, template, false).unwrap();
+        let html = render_genindex(&index, &config, template).unwrap();
 
         // Then
         assert!(html.contains("<strong><a href=\"a.html#id-0\">"));
@@ -455,8 +451,8 @@ mod tests {
         let template = "{{ body }}";
 
         // When
-        let empty_html = render_genindex(&empty_index, &config, template, false).unwrap();
-        let populated_html = render_genindex(&populated_index, &config, template, false).unwrap();
+        let empty_html = render_genindex(&empty_index, &config, template).unwrap();
+        let populated_html = render_genindex(&populated_index, &config, template).unwrap();
 
         // Then
         assert!(!empty_html.contains("genindex-jumpnav"));
@@ -466,13 +462,17 @@ mod tests {
     #[test]
     fn test_render_genindex_links_the_module_index_when_the_site_writes_one() {
         // Given
-        let index = ProjectIndex::default();
+        let enabled = ProjectIndex {
+            domain_indices: [rinx_index::DomainIndex::PyModindex].into(),
+            ..ProjectIndex::default()
+        };
         let template =
             "{% if modindex_href %}<a href=\"{{ modindex_href }}\">Modules</a>{% endif %}";
 
         // When
-        let with = render_genindex(&index, &SiteConfig::default(), template, true).unwrap();
-        let without = render_genindex(&index, &SiteConfig::default(), template, false).unwrap();
+        let with = render_genindex(&enabled, &SiteConfig::default(), template).unwrap();
+        let without =
+            render_genindex(&ProjectIndex::default(), &SiteConfig::default(), template).unwrap();
 
         // Then
         assert_eq!(with, "<a href=\"py-modindex.html\">Modules</a>");

@@ -6,6 +6,7 @@
 //! `rinx_analyzer` for how a `ProjectIndex` gets built.
 
 mod document_outline;
+mod domain_index;
 mod element_numbering;
 mod entity_record;
 mod entity_subject;
@@ -18,9 +19,11 @@ mod href;
 mod module_entry;
 mod project_index;
 mod section_numbers;
+mod special_page;
 mod target_location;
 
 pub use document_outline::{DocumentOutline, DocumentToctree, OutlineSection};
+pub use domain_index::{DomainIndex, UnknownDomainIndex};
 pub use element_numbering::{
     DEFAULT_NUMFIG_SECNUM_DEPTH, ElementNumbers, NumberingStep, NumrefSubject, NumrefTarget,
     join_number,
@@ -39,4 +42,5 @@ pub use href::{entity_anchor, relative_doc_href};
 pub use module_entry::ModuleEntry;
 pub use project_index::{DuplicateEntityId, MergeConflicts, ProjectIndex};
 pub use section_numbers::DocumentNumbers;
+pub use special_page::SpecialPage;
 pub use target_location::TargetLocation;

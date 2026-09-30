@@ -4,7 +4,7 @@ use std::fmt::Write as _;
 
 use rinx_ast::{InventorySelector, Span, TargetName};
 use rinx_index::relative_doc_href;
-use rinx_index::{ProjectIndex, TargetLocation};
+use rinx_index::{ProjectIndex, SpecialPage, TargetLocation};
 
 use super::external_link::write_external_link;
 use crate::resolution::{resolve_external, unresolved_kind};
@@ -59,6 +59,16 @@ pub(super) fn render_inline_reference(
         }
         _ => None,
     };
+    // A page the build writes that no document is (`genindex`, and the module
+    // index where enabled): local, so ahead of every inventory, but behind a
+    // label a document defines.
+    if local.is_none()
+        && inventory.allows_local()
+        && let Some(page) = index.special_page(&target_name)
+    {
+        write_special_page_link(html, page, title, doc_path);
+        return;
+    }
     if local.is_none()
         && let Some(hit) = resolve_external(
             &index.external_inventories,
@@ -93,6 +103,24 @@ pub(super) fn render_inline_reference(
             span,
         });
     }
+}
+
+/// Writes the link to a special page — shown by the explicit `title` when
+/// one was written, else by the title Sphinx gives the page. The page lives
+/// at the site root, so the href climbs out of `doc_path`'s directory.
+pub(super) fn write_special_page_link(
+    html: &mut String,
+    page: SpecialPage,
+    title: Option<&str>,
+    doc_path: &str,
+) {
+    let href = crate::css_relative_path(doc_path, page.path);
+    let _ = write!(
+        html,
+        "<a href=\"{}\">{}</a>",
+        html_escape::encode_double_quoted_attribute(&href),
+        html_escape::encode_text(title.unwrap_or(page.title))
+    );
 }
 
 /// The text a link to the label `name` shows: the explicit `title` when one
@@ -578,5 +606,88 @@ mod tests {
                 span: None,
             }]
         );
+    }
+
+    /// Renders `:ref:` to `target`, with an optional explicit `title`, from
+    /// the page `doc_path`, returning the HTML and what was reported broken.
+    fn render_label(
+        index: &ProjectIndex,
+        title: Option<&str>,
+        target: &str,
+        doc_path: &str,
+    ) -> (String, Vec<BrokenLink>) {
+        let mut html = String::new();
+        let mut broken_links = Vec::new();
+        render_inline_reference(
+            &mut html,
+            LabelRef {
+                title,
+                target,
+                span: None,
+                inventory: &rinx_ast::InventorySelector::Any,
+            },
+            index,
+            doc_path,
+            &mut broken_links,
+        );
+        (html, broken_links)
+    }
+
+    #[test]
+    fn test_render_inline_reference_links_the_general_index_by_its_builtin_label() {
+        // Given — nothing defines `genindex`; Sphinx predefines it
+        let index = ProjectIndex::default();
+
+        // When — from a page one directory deep
+        let (html, broken) = render_label(&index, None, "genindex", "guide/intro.rst");
+
+        // Then
+        assert_eq!(html, "<a href=\"../genindex.html\">Index</a>");
+        assert!(broken.is_empty());
+    }
+
+    #[test]
+    fn test_render_inline_reference_links_the_module_index_when_the_site_writes_it() {
+        // Given
+        let index = ProjectIndex {
+            domain_indices: [rinx_index::DomainIndex::PyModindex].into(),
+            ..ProjectIndex::default()
+        };
+
+        // When
+        let (short, _) = render_label(&index, None, "modindex", "intro.rst");
+        let (long, _) = render_label(&index, Some("all modules"), "py-modindex", "intro.rst");
+
+        // Then
+        assert_eq!(short, "<a href=\"py-modindex.html\">Module Index</a>");
+        assert_eq!(long, "<a href=\"py-modindex.html\">all modules</a>");
+    }
+
+    #[test]
+    fn test_render_inline_reference_reports_a_module_index_the_site_does_not_write() {
+        // Given
+        let index = ProjectIndex::default();
+
+        // When
+        let (_, broken) = render_label(&index, None, "py-modindex", "intro.rst");
+
+        // Then — broken, where Sphinx would link a page it never wrote
+        assert_eq!(broken.len(), 1);
+    }
+
+    #[test]
+    fn test_render_inline_reference_prefers_a_label_a_document_defines() {
+        // Given — a document defines its own `genindex` label
+        let mut index = ProjectIndex::default();
+        index.targets.insert(
+            TargetName::new("genindex"),
+            TargetLocation::Internal("guide.rst".to_string()),
+        );
+
+        // When
+        let (html, _) = render_label(&index, None, "genindex", "intro.rst");
+
+        // Then
+        assert_eq!(html, "<a href=\"guide.html#genindex\">genindex</a>");
     }
 }

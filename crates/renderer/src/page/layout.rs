@@ -44,8 +44,8 @@ pub struct PageMeta<'a> {
     pub has_genindex: bool,
     /// Whether the site writes a Python Module Index, making a
     /// `modindex_href` link (relative to this page, like `genindex_href`)
-    /// available to the template. Set from the site's `domain_indices`, never
-    /// from the index: Bazel declared the page before any document was read.
+    /// available to the template. Filled in by [`Self::with_navigation`] from
+    /// [`ProjectIndex::domain_indices`], the site's `domain_indices`.
     pub has_modindex: bool,
     /// The previous and next pages in reading order, for the template's
     /// page-relation links. Both `None` for a page no toctree reaches.
@@ -55,7 +55,8 @@ pub struct PageMeta<'a> {
 
 impl PageMeta<'_> {
     /// Fills in everything that can be derived from the project index: the
-    /// sidebar's entries and the page's neighbours.
+    /// sidebar's entries, the page's neighbours, and whether the site writes
+    /// a module index to link.
     ///
     /// The sidebar expands the *root documents'* toctrees, which is what makes
     /// it the same tree on every page while still marking the current one;
@@ -72,6 +73,9 @@ impl PageMeta<'_> {
         let (previous, next) = page_neighbors(index, self.source_path, self.doc_path);
         self.previous = previous;
         self.next = next;
+        self.has_modindex = index
+            .domain_indices
+            .contains(&rinx_index::DomainIndex::PyModindex);
         self
     }
 }
@@ -522,6 +526,24 @@ mod tests {
 
         // Then
         assert_eq!(result, "");
+    }
+
+    #[test]
+    fn test_with_navigation_links_the_module_index_only_when_the_index_says_so() {
+        // Given
+        let enabled = ProjectIndex {
+            domain_indices: [rinx_index::DomainIndex::PyModindex].into(),
+            ..ProjectIndex::default()
+        };
+        let config = SiteConfig::default();
+
+        // When
+        let with = PageMeta::default().with_navigation(&enabled, &config);
+        let without = PageMeta::default().with_navigation(&ProjectIndex::default(), &config);
+
+        // Then
+        assert!(with.has_modindex);
+        assert!(!without.has_modindex);
     }
 
     fn config_with_switcher(json_url: &str) -> SiteConfig {

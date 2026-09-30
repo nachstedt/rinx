@@ -68,8 +68,9 @@ def _rinx_site_impl(ctx):
 
     # Opt-in, not derived from the documents: Bazel declares every output
     # before any document is read, and a site without Python has no use for a
-    # Python Module Index (ADR-032). Every action drawing a page is told, so
-    # every sidebar links the index — and objects.inv lists it.
+    # Python Module Index (ADR-032). Only the index action is told; it stores
+    # the setting in the project index, which is where every page learns to
+    # link it, `:ref:` to resolve it, and objects.inv to list it.
     for name in ctx.attr.domain_indices:
         if name not in _DOMAIN_INDICES:
             fail("%s's `domain_indices` names '%s'; this build writes: %s" % (ctx.label, name, ", ".join(_DOMAIN_INDICES)))
@@ -108,6 +109,7 @@ def _rinx_site_impl(ctx):
     # navigation, page order and section numbering start. `--inputs` is
     # variadic, so every other flag has to precede it.
     index_args.add("--config", config_file.path)
+    index_args.add_all(domain_index_args)
     if entity_schema:
         index_args.add("--entity-schema", entity_schema.path)
 
@@ -148,7 +150,6 @@ def _rinx_site_impl(ctx):
     genindex_args.add("--output", genindex_out.path)
     genindex_args.add("--config", config_file.path)
     genindex_args.add("--template", template_file.path)
-    genindex_args.add_all(domain_index_args)
 
     ctx.actions.run(
         executable = worker,
@@ -193,7 +194,6 @@ def _rinx_site_impl(ctx):
     inventory_args.add("--index", index_out.path)
     inventory_args.add("--output", inventory_out.path)
     inventory_args.add("--config", config_file.path)
-    inventory_args.add_all(domain_index_args)
 
     ctx.actions.run(
         executable = worker,
@@ -262,7 +262,6 @@ def _rinx_site_impl(ctx):
         ]
         if ctx.attr.strict_links:
             render_args.append("--strict-links")
-        render_args.extend(domain_index_args)
 
         render_inputs = [ast_file, index_out, template_file, config_file] + schema_inputs + entity_templates
         render_outputs = [html_out, warnings_out]

@@ -557,12 +557,12 @@ Python (``py``)
          Sphinx; a synopsis wrapped over several lines is joined with a
          space, where Sphinx keeps the line break in the tooltip.
    * - Python Module Index (``py-modindex.html``)
-     - 🔶
-     - - A package's submodules cannot be collapsed.
-       - ``modindex_common_prefix`` is not supported.
-       - ``:ref:`modindex``` and ``:ref:`py-modindex``` do not resolve.
-       - Opt-in with ``domain_indices = ["py-modindex"]`` on ``rinx_site``,
+     - ✅ ℹ️
+     - - Opt-in with ``domain_indices = ["py-modindex"]`` on ``rinx_site``,
          where Sphinx writes it whenever a module is documented.
+       - Submodules fold without JavaScript, behind a checkbox toggle.
+       - ``:ref:`modindex``` and ``:ref:`py-modindex``` are broken links on
+         a site without the index, where Sphinx links a page it never wrote.
    * - ``.. py:currentmodule::`` and the ``:module:`` option
      - ✅
      -
@@ -753,9 +753,8 @@ Document structure
          are refused.
        - Template names resolve from the source root.
    * - Site-wide general index (``genindex.html``)
-     - 🔶
-     - - ``:ref:`genindex``` does not resolve.
-       - Own markup, not Sphinx's.
+     - ✅ ℹ️
+     - - Own markup, not Sphinx's.
 
 Diagnostics
 -----------

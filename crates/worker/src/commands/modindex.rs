@@ -2,7 +2,8 @@
 //! for a site whose `domain_indices` enables `py-modindex` (ADR-032).
 
 use anyhow::{Context, Result};
-use rinx_renderer::{self as renderer, DomainIndex, config};
+use rinx_index::DomainIndex;
+use rinx_renderer::{self as renderer, config};
 use std::fs;
 
 use super::cli_args::flag_value;
@@ -51,8 +52,6 @@ pub(crate) fn cmd_modindex(args: &[String]) -> Result<()> {
     let template_str = fs::read_to_string(&template_path)
         .with_context(|| format!("Error reading template '{template_path}'"))?;
 
-    // No `--domain-index` to read: this page exists only when the index is
-    // enabled, and `render_modindex` links it from its own sidebar.
     let page = process_modindex(&index_json, &site_config, &template_str)?;
     if let Some(warning) = &page.warning {
         eprintln!("{warning}");

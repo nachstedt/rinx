@@ -163,6 +163,13 @@ pub struct SiteConfig {
     /// no-paths rule above.
     #[serde(default)]
     pub pep_base_url: PepBaseUrl,
+
+    /// Module name prefixes the Python Module Index sets aside when filing a
+    /// module under a letter and a package — Sphinx's
+    /// `modindex_common_prefix`, so `["email."]` files `email.message` under
+    /// "m". Module names, not paths, so this respects the no-paths rule above.
+    #[serde(default)]
+    pub modindex_common_prefix: Vec<String>,
 }
 
 /// The `[version_switcher]` table of a site config.
@@ -302,6 +309,7 @@ impl Default for SiteConfig {
             numfig_format: NumfigFormat::default(),
             version_switcher: None,
             pep_base_url: PepBaseUrl::default(),
+            modindex_common_prefix: Vec::new(),
         }
     }
 }
@@ -316,6 +324,25 @@ mod tests {
         assert_eq!(config.project, "Documentation");
         assert_eq!(config.version, "");
         assert_eq!(config.root_doc, "index");
+    }
+
+    #[test]
+    fn test_deserialize_reads_modindex_common_prefix() {
+        // Given / When
+        let config: SiteConfig =
+            toml::from_str("modindex_common_prefix = [\"email.\", \"xml.\"]\n").unwrap();
+
+        // Then
+        assert_eq!(config.modindex_common_prefix, ["email.", "xml."]);
+    }
+
+    #[test]
+    fn test_deserialize_defaults_modindex_common_prefix_to_none() {
+        // Given / When
+        let config: SiteConfig = toml::from_str("").unwrap();
+
+        // Then
+        assert!(config.modindex_common_prefix.is_empty());
     }
 
     #[test]

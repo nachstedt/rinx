@@ -1,7 +1,7 @@
 //! Flag-parsing helpers shared by every subcommand's `cmd_*` handler.
 
 use anyhow::{Result, anyhow};
-use rinx_renderer::DomainIndex;
+use rinx_index::DomainIndex;
 use std::collections::BTreeSet;
 
 pub(super) fn flag_value(args: &[String], flag: &str) -> Result<String> {
