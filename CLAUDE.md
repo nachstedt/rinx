@@ -399,7 +399,7 @@ and `.. entity-arch::`/`.. needarch::` — parse to one `Directive::Uml`, which
 carries the diagram's **template** rather than its finished text. Two more
 constructs, `.. entity-flow::`/`.. needflow::` and
 `.. entity-sequence::`/`.. needsequence::`, have no template at all (see
-below) but share everything from the finished text onwards. Four things
+below) but share everything from the finished text onwards. Five things
 follow, and none of them is optional:
 
 - **You pay only for what you use.** `diagrams = True` on a library is what
@@ -424,6 +424,13 @@ follow, and none of them is optional:
 - **The cache firewall is the `.puml` directory.** The index is an input, so any
   edit re-runs every render; identical bytes leave the per-document compile
   action's key unchanged and no JVM starts.
+- **Layout is ELK, never a host `dot`** (`-Playout=elk` in `rules/site.bzl`;
+  Smetana crashes on cyclic flowcharts). Without Graphviz, PlantUML draws a "Cannot find Graphviz"
+  picture and exits 0, and the host's `dot` is not in the action key — so a
+  build looked fine locally while CI published error pictures. `validate_assets`
+  fails on such exit-0 error pictures as a backstop, and `rules/plantuml.bzl`
+  pins PlantUML to JDK 21, which the jar's ELK needs, whatever the consuming
+  build's `--tool_java_runtime_version` says (ADR-012 §8).
 
 `filter()` is `rinx_filter` and `flow()`/`ref()` build hrefs from
 `rinx_index`'s `relative_doc_href`/`entity_anchor` — which is why those

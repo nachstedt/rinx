@@ -168,6 +168,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When a build's output outgrows a platform limit, shrink the output at its source before designing around the limit.
 - Gate CI on hard failures (a corpus no longer builds) and only report soft signals (new warnings, timings), since gating on noise trains people to ignore the gate.
 - Publish bulky derived artifacts only for the versions people actually compare against (main, previews, the newest release), so their cost does not grow with every release.
+- Pin every tool a build action runs, and the runtime it runs on, inside the build rather than relying on the host or on consumer flags, since anything outside the action key lets one key yield different outputs on different machines.
 
 ## Interoperability
 

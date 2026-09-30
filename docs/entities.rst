@@ -1142,7 +1142,9 @@ until every document has been indexed. Compilation therefore belongs to
 ``.. plantuml::``, which goes the same way so that the set of diagrams the build
 compiles and the set it validates cannot drift apart. The render action writes
 each diagram's expanded source, and a per-document compile turns it into an
-SVG; an edit that leaves a diagram's text unchanged starts no JVM. See
+SVG; an edit that leaves a diagram's text unchanged starts no JVM. The layout
+engine is ELK, which ships inside the PlantUML jar, so no Graphviz ``dot``
+needs to be installed and a diagram looks the same on every machine. See
 ``docs/decisions/012-entity-diagrams.md``.
 
 Migrating from sphinx-needs
