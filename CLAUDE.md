@@ -30,6 +30,7 @@ bash tests/test_diagram_cache_firewall.sh  # verifies an edit elsewhere does not
 bash tests/test_diagram_opt_in.sh     # verifies a diagram in a library without `diagrams = True` fails the build
 bash tests/test_download_data.sh      # verifies a `:download:` file must be declared in `downloads`, and lands under `_downloads/`
 bash tests/test_intersphinx.sh        # verifies a site links into another through its objects.inv, and that `inventories` is load-bearing
+bash tests/test_domain_indices.sh     # verifies `domain_indices` decides whether py-modindex.html is written and linked, and refuses unknown names
 bazel build //examples/intersphinx:sibling_site  # a second site linking into //examples:site through its objects.inv
 (cd e2e/smoke && bazel test //...)       # rinx consumed as a dependency by another module — what the BCR presubmit (.bcr/) runs
 bazel run //scripts:benchmark         # clone CPython docs and benchmark the pipeline against it (see docs/benchmark.rst); CI adds --site-out/--summary-markdown

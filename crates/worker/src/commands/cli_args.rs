@@ -1,6 +1,8 @@
 //! Flag-parsing helpers shared by every subcommand's `cmd_*` handler.
 
 use anyhow::{Result, anyhow};
+use rinx_renderer::DomainIndex;
+use std::collections::BTreeSet;
 
 pub(super) fn flag_value(args: &[String], flag: &str) -> Result<String> {
     if let Some(pos) = args.iter().position(|a| a == flag) {
@@ -66,6 +68,21 @@ pub(super) fn flag_groups(args: &[String], flag: &str, arity: usize) -> Result<V
                 .map(<[String]>::to_vec)
                 .ok_or_else(|| anyhow!("Flag {flag} needs {arity} values"))
         })
+        .collect()
+}
+
+/// Reads every `--domain-index <name>` the build passed — once per index the
+/// site enabled.
+///
+/// # Errors
+///
+/// When a flag has no value, or names an index this build does not write: the
+/// rule checks the names too, but a hand-written command line must not
+/// silently lose a link.
+pub(super) fn read_domain_indices(args: &[String]) -> Result<BTreeSet<DomainIndex>> {
+    flag_groups(args, "--domain-index", 1)?
+        .into_iter()
+        .map(|group| Ok(group[0].parse::<DomainIndex>()?))
         .collect()
 }
 
@@ -343,5 +360,42 @@ mod tests {
         // Then
         let expected: Vec<String> = vec![];
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_read_domain_indices_is_empty_without_the_flag() {
+        // Given
+        let args = strings(&["--index", "project.index"]);
+
+        // When / Then
+        assert!(read_domain_indices(&args).unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_read_domain_indices_reads_every_occurrence() {
+        // Given
+        let args = strings(&["--domain-index", "py-modindex", "--output", "out.html"]);
+
+        // When
+        let indices = read_domain_indices(&args).unwrap();
+
+        // Then
+        assert_eq!(indices, BTreeSet::from([DomainIndex::PyModindex]));
+    }
+
+    #[test]
+    fn test_read_domain_indices_refuses_an_unknown_index() {
+        // Given
+        let args = strings(&["--domain-index", "c-modindex"]);
+
+        // When
+        let error = read_domain_indices(&args).unwrap_err();
+
+        // Then
+        assert!(
+            error
+                .to_string()
+                .contains("Unknown domain index 'c-modindex'")
+        );
     }
 }

@@ -207,6 +207,14 @@ class TestRenderCorpusBuildFile:
         # Then
         assert "images = glob(" in text
 
+    def test_the_site_writes_the_python_module_index(self) -> None:
+        # Given / When
+        text = benchmark.render_corpus_build_file()
+
+        # Then CPython's ~300 modules get the index Sphinx writes for them
+        site = text.split("rinx_site(")[1]
+        assert 'domain_indices = ["py-modindex"],' in site
+
 
 class TestSummaryRows:
     def test_every_count_is_listed_then_the_whitelist(self) -> None:

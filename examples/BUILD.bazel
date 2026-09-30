@@ -126,6 +126,10 @@ rinx_site(
     entity_schema = "//examples/entities:entities.toml",
     entity_templates = ["//examples/entities:entity_audit_event.html"],
     strict_links = True,
+    # Write the Python Module Index (Sphinx's `html_domain_indices`); see
+    # `examples/domains.rst`. Off by default, since a site without Python has
+    # no use for one.
+    domain_indices = ["py-modindex"],
     # Other sites this one links into — Sphinx's intersphinx. A reference no
     # document here defines is looked up in these, in this order; see
     # `examples/intersphinx/index.rst`.

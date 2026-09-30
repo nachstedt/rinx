@@ -119,9 +119,7 @@ fn test_analyze_qualifies_every_alias_of_a_multi_signature_object_by_module() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "socket".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -209,9 +207,7 @@ fn test_analyze_object_before_any_module_directive_stays_unqualified() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "greetings".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -236,9 +232,7 @@ fn test_analyze_composes_module_and_class_qualifiers() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "types".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),

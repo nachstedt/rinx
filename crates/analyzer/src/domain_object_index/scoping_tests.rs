@@ -170,9 +170,7 @@ fn test_analyze_qualifies_object_nested_in_module_domain_object() {
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
-                platform: None,
-                synopsis: None,
-                deprecated: false,
+                options: rinx_ast::ModuleOptions::default(),
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyFunction {
                         module: None,
@@ -204,9 +202,7 @@ fn test_analyze_qualifies_sibling_object_after_module_domain_object() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "types".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -242,9 +238,7 @@ fn test_analyze_does_not_dedup_module_prefix_in_flat_sibling_signature() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "datetime".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -309,9 +303,7 @@ fn test_analyze_current_module_none_resets_qualification_to_module_free() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "pickle".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -345,18 +337,14 @@ fn test_analyze_switches_current_module_on_second_module_directive() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "email.mime".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "email.mime.text".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -389,9 +377,7 @@ fn test_analyze_dedups_class_name_repeated_in_flat_nested_signature() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "random".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -481,9 +467,7 @@ fn test_analyze_module_option_overrides_the_enclosing_module() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -530,9 +514,7 @@ fn test_analyze_module_option_propagates_into_nested_body() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -582,9 +564,7 @@ fn test_analyze_module_option_is_restored_after_the_object_and_its_body() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -627,9 +607,7 @@ fn test_analyze_module_option_with_empty_value_leaves_object_unqualified() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "ctypes".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),

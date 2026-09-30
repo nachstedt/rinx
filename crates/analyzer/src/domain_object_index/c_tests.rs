@@ -303,9 +303,7 @@ fn test_analyze_c_function_nested_in_py_class_is_not_qualified_by_it() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "greeter_module".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),

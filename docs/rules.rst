@@ -109,6 +109,14 @@ other Sphinx or rinx sites link into it through, available as the target's
    * - ``inventories``
      - ``rinx_inventory`` targets: other sites this one links into. See
        :ref:`intersphinx`.
+   * - ``domain_indices``
+     - The domain index pages the site writes, named as Sphinx's
+       ``html_domain_indices`` names them. Only ``"py-modindex"`` exists: the
+       Python Module Index, listing every ``.. py:module::`` with its
+       ``:synopsis:``, ``:platform:`` and ``:deprecated:``, and linked from
+       every page's sidebar. Off by default, unlike Sphinx: Bazel declares
+       every page before reading any document, and a site without Python has
+       no use for one.
    * - ``strict_links``
      - If ``True``, a broken cross-reference fails the build instead of only
        printing a warning. Off by default.

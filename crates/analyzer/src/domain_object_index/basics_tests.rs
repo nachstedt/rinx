@@ -59,9 +59,7 @@ fn test_analyze_registers_module_domain_object() {
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
-                platform: None,
-                synopsis: None,
-                deprecated: false,
+                options: rinx_ast::ModuleOptions::default(),
                 body: vec![],
             },
         ))],
@@ -76,6 +74,125 @@ fn test_analyze_registers_module_domain_object() {
         lookup_domain_object(&index, "py:module:greetings"),
         Some(&"api.rst".to_string())
     );
+}
+/// A document holding nothing but one `.. py:module:: greetings` with
+/// `options`.
+fn module_document(options: rinx_ast::ModuleOptions) -> Document {
+    Document::new(
+        "api.rst".to_string(),
+        vec![Node::Directive(Directive::DomainObject(
+            rinx_ast::DomainObjectBody::PyModule {
+                name: "greetings".to_string(),
+                options,
+                body: vec![],
+            },
+        ))],
+    )
+}
+#[test]
+fn test_analyze_records_a_modules_synopsis_platform_and_deprecation() {
+    // Given
+    let doc = module_document(rinx_ast::ModuleOptions {
+        platform: Some("Unix".to_string()),
+        synopsis: Some("Greeting utilities.".to_string()),
+        flags: [rinx_ast::ModuleFlag::Deprecated].into(),
+    });
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.modules.get(&TargetName::new("greetings")),
+        Some(&rinx_index::ModuleEntry {
+            doc_path: "api.rst".to_string(),
+            synopsis: Some("Greeting utilities.".to_string()),
+            platform: Some("Unix".to_string()),
+            deprecated: true,
+        })
+    );
+}
+#[test]
+fn test_analyze_records_a_module_without_an_index_entry() {
+    // Given — `:no-index-entry:` drops only the general-index entry.
+    let doc = module_document(rinx_ast::ModuleOptions {
+        flags: [rinx_ast::ModuleFlag::NoIndexEntry].into(),
+        ..rinx_ast::ModuleOptions::default()
+    });
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.modules.contains_key(&TargetName::new("greetings")));
+    assert!(lookup_domain_object(&index, "py:module:greetings").is_some());
+    assert!(index.genindex_entries.is_empty());
+}
+#[test]
+fn test_analyze_leaves_a_no_index_module_out_of_every_index() {
+    // Given
+    let doc = module_document(rinx_ast::ModuleOptions {
+        flags: [rinx_ast::ModuleFlag::NoIndex].into(),
+        ..rinx_ast::ModuleOptions::default()
+    });
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.modules.is_empty());
+    assert!(index.domain_objects.is_empty());
+    assert!(index.genindex_entries.is_empty());
+}
+#[test]
+fn test_analyze_still_makes_a_no_index_module_current() {
+    // Given — Sphinx sets the current module before it looks at `:no-index:`.
+    let doc = Document::new(
+        "api.rst".to_string(),
+        vec![
+            Node::Directive(Directive::DomainObject(
+                rinx_ast::DomainObjectBody::PyModule {
+                    name: "greetings".to_string(),
+                    options: rinx_ast::ModuleOptions {
+                        flags: [rinx_ast::ModuleFlag::NoIndex].into(),
+                        ..rinx_ast::ModuleOptions::default()
+                    },
+                    body: vec![],
+                },
+            )),
+            Node::Directive(Directive::DomainObject(
+                rinx_ast::DomainObjectBody::PyFunction {
+                    signatures: NonEmptyVector::single("greet()".to_string()),
+                    is_decorator: false,
+                    module: None,
+                    body: vec![],
+                },
+            )),
+        ],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(lookup_domain_object(&index, "py:function:greetings.greet").is_some());
+}
+#[test]
+fn test_record_module_records_nothing_for_another_object_type() {
+    // Given
+    let obj = rinx_ast::DomainObjectBody::PyFunction {
+        signatures: NonEmptyVector::single("greet()".to_string()),
+        is_decorator: false,
+        module: None,
+        body: vec![],
+    };
+    let mut index = ProjectIndex::default();
+
+    // When
+    record_module(&obj, "greet", "api.rst", &mut index);
+
+    // Then
+    assert!(index.modules.is_empty());
 }
 #[test]
 fn test_analyze_registers_data_domain_object() {
@@ -609,9 +726,7 @@ fn test_analyze_registers_domain_object_nested_in_another_domain_objects_body() 
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
-                platform: None,
-                synopsis: None,
-                deprecated: false,
+                options: rinx_ast::ModuleOptions::default(),
                 body: vec![Node::Directive(Directive::DomainObject(
                     rinx_ast::DomainObjectBody::PyFunction {
                         module: None,

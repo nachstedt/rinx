@@ -92,7 +92,9 @@ Supported:
 - The Python domain (``py:function``, ``py:class``, ``py:method``,
   ``py:module``, … and their roles), the C domain (``c:function``,
   ``c:struct``, ``c:macro``, …) and the standard domain's ``.. program::`` and
-  ``.. option::``.
+  ``.. option::``. A module's ``:synopsis:`` is shown in the Python Module
+  Index, which a site enables with ``domain_indices`` (see :ref:`rules`),
+  and as the tooltip of every ``:mod:`` link.
 - Linking to other sites through their ``objects.inv``, and writing one; see
   :ref:`intersphinx`.
 

@@ -349,16 +349,18 @@ mod tests {
         assert!(html.contains("</div>"));
     }
     #[test]
-    fn test_render_formats_py_module_platform_synopsis_and_deprecated() {
+    fn test_render_omits_py_module_platform_synopsis_and_deprecated_from_the_page() {
         // Given
         let doc = Document::new(
             "test.rst".to_string(),
             vec![Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "greetings".to_string(),
-                    platform: Some("Unix, Windows".to_string()),
-                    synopsis: Some("Greeting utilities.".to_string()),
-                    deprecated: true,
+                    options: rinx_ast::ModuleOptions {
+                        platform: Some("Unix, Windows".to_string()),
+                        synopsis: Some("Greeting utilities.".to_string()),
+                        flags: [rinx_ast::ModuleFlag::Deprecated].into(),
+                    },
                     body: vec![],
                 },
             ))],
@@ -367,9 +369,11 @@ mod tests {
         // When
         let result = render_doc(&doc);
 
-        // Then
-        assert!(result.contains("<p class=\"platform\">Platform: Unix, Windows</p>"));
-        assert!(result.contains("<p class=\"synopsis\">Greeting utilities.</p>"));
-        assert!(result.contains("<p class=\"deprecated\">Deprecated.</p>"));
+        // Then — Sphinx records these for the module index and the `:mod:`
+        // tooltip only, and never prints them on the module's own page.
+        assert!(result.contains("id=\"py:module:greetings\""));
+        assert!(!result.contains("Unix, Windows"));
+        assert!(!result.contains("Greeting utilities."));
+        assert!(!result.contains("Deprecated"));
     }
 }

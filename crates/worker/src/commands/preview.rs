@@ -9,6 +9,7 @@ use rinx_renderer::{self as renderer, config};
 use std::fs;
 use std::io::{self, Read};
 
+use super::cli_args::read_domain_indices;
 use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{
     WarningOrigin, format_broken_link_warning, format_diagram_error_warning,
@@ -17,6 +18,7 @@ use super::diagnostics::{
 };
 use super::embed_assets::embed_available_assets;
 use super::entity_schema::{import_keys_from_args, load_entity_schema, load_entity_templates};
+use super::page_chrome::PageChrome;
 use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::{ParseInputs, jinja_from_args};
@@ -54,7 +56,7 @@ pub(super) fn process_preview(
     rst: &str,
     index_json: Option<&str>,
     config: &config::SiteConfig,
-    template_str: &str,
+    chrome: &PageChrome<'_>,
     doc_path: &str,
     inputs: &ParseInputs<'_>,
     entity_templates: &renderer::EntityTemplates,
@@ -157,7 +159,7 @@ pub(super) fn process_preview(
 
     let html = renderer::render_page(
         &render_output.html,
-        template_str,
+        chrome.template,
         config,
         &renderer::PageMeta {
             css_path: &css_path,
@@ -165,6 +167,7 @@ pub(super) fn process_preview(
             doc_path,
             source_path: &doc.path,
             has_genindex: !index.genindex_entries.is_empty(),
+            has_modindex: chrome.has_modindex(),
             ..renderer::PageMeta::default()
         }
         .with_navigation(&index, config),
@@ -187,6 +190,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     let doc_path = flag_value(args, "--doc-path")?;
     let config_path = flag_value(args, "--config")?;
     let template_path = flag_value(args, "--template")?;
+    let domain_indices = read_domain_indices(args)?;
     let default_domain = parse_default_domain_flag(args)?;
 
     // Read RST from stdin
@@ -218,7 +222,10 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
         &rst,
         index_json.as_deref(),
         &site_config,
-        &template_str,
+        &PageChrome {
+            template: &template_str,
+            domain_indices: &domain_indices,
+        },
         &doc_path,
         &ParseInputs {
             default_domain,
@@ -287,7 +294,10 @@ mod tests {
             rst,
             Some(global_index),
             &config,
-            template,
+            &PageChrome {
+                template,
+                domain_indices: &std::collections::BTreeSet::new(),
+            },
             "test.rst",
             &ParseInputs {
                 default_domain: ast::Domain::Py,
@@ -319,7 +329,10 @@ mod tests {
             rst,
             None,
             &config,
-            template,
+            &PageChrome {
+                template,
+                domain_indices: &std::collections::BTreeSet::new(),
+            },
             "test.rst",
             &ParseInputs {
                 default_domain: ast::Domain::Py,
@@ -349,7 +362,10 @@ mod tests {
             rst,
             None,
             &config,
-            template,
+            &PageChrome {
+                template,
+                domain_indices: &std::collections::BTreeSet::new(),
+            },
             "test.rst",
             &ParseInputs {
                 default_domain: ast::Domain::Py,
@@ -373,7 +389,10 @@ mod tests {
             rst,
             index_json,
             config,
-            "<html>{{ body }}</html>",
+            &PageChrome {
+                template: "<html>{{ body }}</html>",
+                domain_indices: &std::collections::BTreeSet::new(),
+            },
             "test.rst",
             &ParseInputs {
                 default_domain: ast::Domain::Py,

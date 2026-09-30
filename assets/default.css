@@ -262,6 +262,32 @@ hr {
   color: var(--primary);
 }
 
+/* The Module Index link sits directly under the Index link. */
+.sidebar-index-link + .sidebar-index-link {
+  margin-top: 0.25rem;
+}
+
+/* ── Python Module Index (py-modindex.html) ────────────────────────── */
+
+.modindex-jumpbox {
+  margin-bottom: 1.5rem;
+}
+
+.document table.modindextable {
+  border-collapse: collapse;
+}
+
+.document table.modindextable td {
+  padding: 0.2rem 1rem 0.2rem 0;
+  border: none;
+  vertical-align: top;
+}
+
+.document table.modindextable tr.cap td {
+  padding-top: 1rem;
+  font-size: 1.1rem;
+}
+
 /* ── Page relations (prev / next) ──────────────────────────────────── */
 
 /* The template emits a prev/next bar above and below the body. Each link is
@@ -1630,23 +1656,14 @@ dl.py dt code.sig-name, dl.c dt code.sig-name {
   font-weight: 600;
 }
 
-/* Type-specific option paragraphs: py:module's platform/synopsis/deprecated,
- * py:data/py:attribute's type/value/canonical */
+/* Type-specific option paragraphs: py:data/py:attribute's
+ * type/value/canonical. A py:module's options are never printed (ADR-032). */
 dl.py dd > p.type,
 dl.py dd > p.value,
-dl.py dd > p.canonical,
-dl.py dd > p.platform,
-dl.py dd > p.synopsis {
+dl.py dd > p.canonical {
   font-size: 0.9rem;
   color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
-  margin-bottom: 0.5rem;
-}
-
-dl.py dd > p.deprecated {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #b45309;
   margin-bottom: 0.5rem;
 }
 

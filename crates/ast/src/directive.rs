@@ -502,9 +502,15 @@ mod tests {
         // Given
         let directive = Directive::DomainObject(DomainObjectBody::PyModule {
             name: "greetings".to_string(),
-            platform: Some("Unix, Windows".to_string()),
-            synopsis: Some("Greeting utilities.".to_string()),
-            deprecated: true,
+            options: crate::ModuleOptions {
+                platform: Some("Unix, Windows".to_string()),
+                synopsis: Some("Greeting utilities.".to_string()),
+                flags: [
+                    crate::ModuleFlag::Deprecated,
+                    crate::ModuleFlag::NoIndexEntry,
+                ]
+                .into(),
+            },
             body: vec![],
         });
 

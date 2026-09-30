@@ -82,6 +82,12 @@ impl<'a> DomainObjectResolver<'a> {
         }
     }
 
+    /// The index this resolver searches, for a caller that needs more about
+    /// the object it resolved than where it is — a module's tooltip.
+    pub(crate) const fn index(&self) -> &'a ProjectIndex {
+        self.index
+    }
+
     /// The other sites' inventories this resolver searches after its own
     /// index — what a renderer needs to say why a reference failed.
     pub(crate) fn external_inventories(&self) -> &'a [ExternalInventory] {

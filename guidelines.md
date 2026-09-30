@@ -162,6 +162,7 @@ entry under the heading it belongs to, as a single short sentence.
 - A test that proves a build declaration is load-bearing must also force the affected action to re-run, since Bazel does not invalidate an action when an input is merely removed.
 - Resolve a tool from `PATH` in a test script rather than hardcoding its install location.
 - In docs/compatibility.rst, mark a row 🔶 partial only while something we still intend to implement is missing; a feature whose remaining differences are all deliberate is ✅ ℹ️.
+- A difference left out only to keep a change small is a gap, not a deliberate deviation, however easy it would be to add.
 - Keep compatibility notes to brief bullets naming only what is missing or deviates, never explaining how something works.
 - Name project status pages neutrally ("compatibility status") rather than negatively ("gaps").
 - Keep the default theme's sidebar in view while reading, scrolling on its own; a second scrollbar is a smaller cost than navigation that scrolls away with a long page.
@@ -218,6 +219,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When a build system cannot honour an option's semantics (a `:save:` writing an undeclared path), diagnose it by name and point at what does work, rather than ignoring it or dropping the directive.
 - Pay only for what you use: when the build system cannot discover whether a feature is used before running actions, make it an explicit per-library opt-in rather than a cost every document of every project pays.
 - An opt-in is only honest if forgetting it fails loudly, at the line that needed it, naming the switch to flip.
+- Do not generate an artefact that makes no sense for a project (a Python module index for documentation without Python): when the build system must declare outputs before the documents are read, make such an output an explicit opt-in rather than writing it empty everywhere.
 - A feature that declares no build action of its own needs no opt-in at all: the per-library switch exists because actions are created before any document is read, so a step folded into an action that was already running is free and should stay unconditional.
 - When two actions compute the same thing from the same inputs, fold the second into the first rather than keeping them in step; the cheapest agreement is one process.
 - Check a generated artifact for the degenerate case the external tool it is fed to rejects; an empty PlantUML diagram fails the build with a syntax error naming a file nobody wrote, when the real cause is a filter that matched nothing.

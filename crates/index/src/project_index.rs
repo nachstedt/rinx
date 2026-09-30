@@ -1,7 +1,7 @@
 use crate::{
     DocumentNumbers, DocumentOutline, DocumentToctree, ElementNumbers, EntityFieldHistory,
     EntityRecord, EntityUpdateRecord, EquationLocation, ExternalInventory, GenIndexEntry,
-    NumberingStep, NumrefTarget, TargetLocation,
+    ModuleEntry, NumberingStep, NumrefTarget, TargetLocation,
 };
 use rinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
@@ -97,6 +97,14 @@ pub struct ProjectIndex {
     /// about which names exist.
     #[serde(default)]
     pub domain_object_spellings: BTreeMap<TargetName, String>,
+    /// Every indexed `.. py:module::`, keyed like `domain_objects` so a
+    /// resolved `:mod:` finds its entry by the name it resolved to; the
+    /// spelling to show comes from [`Self::domain_object_spelling`].
+    /// Per-document data, merged last-writer-wins like `domain_objects`. A
+    /// module written with `:no-index:` is absent, as it is from Sphinx's own
+    /// `modules`.
+    #[serde(default)]
+    pub modules: BTreeMap<TargetName, ModuleEntry>,
     /// Entries for the site-wide general index page, accumulated (not
     /// deduplicated) across every document — the same term legitimately
     /// appearing from multiple locations is expected, not an error.
@@ -301,6 +309,7 @@ impl ProjectIndex {
         }
         self.domain_object_spellings
             .extend(other.domain_object_spellings);
+        self.modules.extend(other.modules);
         self.genindex_entries.extend(other.genindex_entries);
         self.equations.extend(other.equations);
         self.sectnum.extend(other.sectnum);
@@ -562,6 +571,37 @@ mod tests {
             stale.target_titles.get(&TargetName::new("intro")),
             Some(&"New title".to_string())
         );
+    }
+
+    #[test]
+    fn test_merge_carries_modules_from_the_other_index() {
+        // Given — a fresh analysis that changed one module's synopsis
+        let mut stale = ProjectIndex::default();
+        stale
+            .modules
+            .insert(TargetName::new("abc"), ModuleEntry::new("library/abc.rst"));
+        stale.modules.insert(
+            TargetName::new("zlib"),
+            ModuleEntry::new("library/zlib.rst"),
+        );
+        let mut fresh = ProjectIndex::default();
+        fresh.modules.insert(
+            TargetName::new("abc"),
+            ModuleEntry {
+                synopsis: Some("Abstract base classes.".to_string()),
+                ..ModuleEntry::new("library/abc.rst")
+            },
+        );
+
+        // When
+        stale.merge(fresh);
+
+        // Then — the fresh entry wins, the untouched one is kept
+        assert_eq!(
+            stale.modules[&TargetName::new("abc")].synopsis.as_deref(),
+            Some("Abstract base classes.")
+        );
+        assert!(stale.modules.contains_key(&TargetName::new("zlib")));
     }
 
     #[test]

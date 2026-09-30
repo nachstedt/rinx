@@ -42,6 +42,11 @@ pub struct PageMeta<'a> {
     /// `default.css`) is made available to the template — sites with no
     /// index entries get no dead link.
     pub has_genindex: bool,
+    /// Whether the site writes a Python Module Index, making a
+    /// `modindex_href` link (relative to this page, like `genindex_href`)
+    /// available to the template. Set from the site's `domain_indices`, never
+    /// from the index: Bazel declared the page before any document was read.
+    pub has_modindex: bool,
     /// The previous and next pages in reading order, for the template's
     /// page-relation links. Both `None` for a page no toctree reaches.
     pub previous: Option<PageLink>,
@@ -91,6 +96,13 @@ pub fn render_page(
         minijinja::Value::from_safe_string(css_relative_path(meta.doc_path, "genindex.html"))
     });
 
+    let modindex_href = meta.has_modindex.then(|| {
+        minijinja::Value::from_safe_string(css_relative_path(
+            meta.doc_path,
+            super::modindex::MODINDEX_PATH,
+        ))
+    });
+
     let version_switcher = version_switcher_context(config, meta.doc_path);
 
     let mut env = minijinja::Environment::new();
@@ -107,6 +119,7 @@ pub fn render_page(
         page_title => meta.page_title,
         nav_tree => &meta.nav_tree,
         genindex_href => genindex_href,
+        modindex_href => modindex_href,
         prev => &meta.previous,
         next => &meta.next,
         version_switcher => version_switcher,
@@ -460,6 +473,55 @@ mod tests {
 
         // Then
         assert!(!result.contains("Index</a>"));
+    }
+
+    #[test]
+    fn test_render_page_injects_modindex_href_when_has_modindex_true() {
+        // Given a document one directory deep
+        let template =
+            "{% if modindex_href %}<a href=\"{{ modindex_href }}\">Modules</a>{% endif %}";
+        let config = SiteConfig::default();
+
+        // When
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                doc_path: "team_a/index.rst",
+                has_modindex: true,
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
+
+        // Then
+        assert_eq!(result, "<a href=\"../py-modindex.html\">Modules</a>");
+    }
+
+    #[test]
+    fn test_render_page_omits_modindex_href_when_has_modindex_false() {
+        // Given — a site that did not enable the module index
+        let template =
+            "{% if modindex_href %}<a href=\"{{ modindex_href }}\">Modules</a>{% endif %}";
+        let config = SiteConfig::default();
+
+        // When
+        let result = render_page(
+            "body",
+            template,
+            &config,
+            &PageMeta {
+                css_path: "default.css",
+                has_genindex: true,
+                ..PageMeta::default()
+            },
+        )
+        .unwrap();
+
+        // Then
+        assert_eq!(result, "");
     }
 
     fn config_with_switcher(json_url: &str) -> SiteConfig {

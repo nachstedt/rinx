@@ -14,11 +14,12 @@ use crate::RenderCtx;
 ///
 /// The shared `<dl>`/`<dt>` wrapper and cross-reference key are built
 /// generically via `obj`'s accessors; any option specific to one object type
-/// (`py:module`'s `platform`/`synopsis`/`deprecated` and `py:data`'s
-/// `type`/`value` — real Sphinx has no equivalent module/data index page
-/// here, so they're rendered inline as leading `<dd>` paragraphs rather than
-/// dropped) is matched explicitly, so adding a new object type with its own
-/// options can't be forgotten here.
+/// (`py:data`'s `type`/`value`, rendered inline as leading `<dd>`
+/// paragraphs) is matched explicitly, so adding a new object type with its
+/// own options can't be forgotten here. `py:module`'s
+/// `platform`/`synopsis`/`deprecated` are deliberately *not* printed, as
+/// Sphinx never prints them: they reach the reader through the Python Module
+/// Index and the `:mod:` link tooltip instead (ADR-032).
 ///
 /// The body renders under whatever scope this object establishes (see
 /// [`rinx_ast::DomainObjectBody::deduce_local_scope`]), popped again
@@ -143,37 +144,13 @@ pub(crate) fn render_domain_object(
     }
 }
 
-/// Renders a domain object's type-specific options (`py:module`'s
-/// `platform`/`synopsis`/`deprecated`, `py:data`'s `type`/`value`,
+/// Renders a domain object's type-specific options (`py:data`'s `type`/`value`,
 /// `py:attribute`'s `type`/`value`/`canonical`) as leading `<dd>` paragraphs.
 /// Object types with no such options (`py:function`, `c:function`,
-/// `c:macro`, `py:method`, `py:class`, `py:exception`) render nothing here.
+/// `c:macro`, `py:method`, `py:class`, `py:exception`) render nothing here,
+/// and neither does `py:module`, whose options Sphinx never prints (ADR-032).
 fn render_domain_object_options(html: &mut String, obj: &rinx_ast::DomainObjectBody) {
     match obj {
-        rinx_ast::DomainObjectBody::PyModule {
-            platform,
-            synopsis,
-            deprecated,
-            ..
-        } => {
-            if let Some(platform) = platform {
-                let _ = write!(
-                    html,
-                    "<p class=\"platform\">Platform: {}</p>",
-                    html_escape::encode_text(platform)
-                );
-            }
-            if let Some(synopsis) = synopsis {
-                let _ = write!(
-                    html,
-                    "<p class=\"synopsis\">{}</p>",
-                    html_escape::encode_text(synopsis)
-                );
-            }
-            if *deprecated {
-                let _ = write!(html, "<p class=\"deprecated\">Deprecated.</p>");
-            }
-        }
         rinx_ast::DomainObjectBody::PyData { type_, value, .. } => {
             if let Some(type_) = type_ {
                 let _ = write!(
@@ -218,7 +195,8 @@ fn render_domain_object_options(html: &mut String, obj: &rinx_ast::DomainObjectB
                 );
             }
         }
-        rinx_ast::DomainObjectBody::PyFunction { .. }
+        rinx_ast::DomainObjectBody::PyModule { .. }
+        | rinx_ast::DomainObjectBody::PyFunction { .. }
         | rinx_ast::DomainObjectBody::CFunction { .. }
         | rinx_ast::DomainObjectBody::CMacro { .. }
         | rinx_ast::DomainObjectBody::CStruct { .. }

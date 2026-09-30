@@ -533,3 +533,136 @@ fn test_render_inline_domain_object_reference_broken_link_when_missing() {
         }]
     );
 }
+
+/// Renders a resolved `` :mod:`name` `` against `index` from `doc.rst`.
+fn render_module_reference(index: &ProjectIndex, name: &str) -> String {
+    let mut html = String::new();
+    render_inline_domain_object_reference(
+        &mut html,
+        DomainObjectRef {
+            object_type: ObjectType::Py(rinx_ast::PyObjectType::Module),
+            name,
+            display: name,
+            link: true,
+            search_order: TargetSearchOrder::LeastQualifiedFirst,
+            span: None,
+            inventory: &rinx_ast::InventorySelector::Any,
+        },
+        &DomainObjectResolver::new(index),
+        "doc.rst",
+        &mut DomainObjectDiagnostics {
+            broken_links: &mut Vec::new(),
+            object_type_mismatches: &mut Vec::new(),
+        },
+        &rinx_scope::Scope::default(),
+    );
+    html
+}
+
+/// An index defining the module `name` in `library/abc.rst` with `entry`'s
+/// options.
+fn index_with_module(name: &str, entry: rinx_index::ModuleEntry) -> ProjectIndex {
+    let mut index = ProjectIndex::default();
+    index.insert_domain_object(
+        ObjectType::Py(rinx_ast::PyObjectType::Module),
+        name,
+        &entry.doc_path,
+    );
+    index.modules.insert(rinx_ast::TargetName::new(name), entry);
+    index
+}
+
+#[test]
+fn test_module_link_title_is_just_the_name_without_options() {
+    // Given
+    let entry = rinx_index::ModuleEntry::new("library/abc.rst");
+
+    // When / Then
+    assert_eq!(module_link_title("abc", &entry), "abc");
+}
+
+#[test]
+fn test_module_link_title_joins_every_option_in_sphinxs_order() {
+    // Given
+    let entry = rinx_index::ModuleEntry {
+        synopsis: Some("Windows registry access.".to_string()),
+        platform: Some("Windows".to_string()),
+        deprecated: true,
+        ..rinx_index::ModuleEntry::new("library/winreg.rst")
+    };
+
+    // When / Then — synopsis, then deprecation, then platform
+    assert_eq!(
+        module_link_title("winreg", &entry),
+        "winreg: Windows registry access. (deprecated) (Windows)"
+    );
+}
+
+#[test]
+fn test_module_link_title_skips_a_missing_synopsis() {
+    // Given
+    let entry = rinx_index::ModuleEntry {
+        platform: Some("Unix".to_string()),
+        ..rinx_index::ModuleEntry::new("library/posix.rst")
+    };
+
+    // When / Then
+    assert_eq!(module_link_title("posix", &entry), "posix (Unix)");
+}
+
+#[test]
+fn test_a_resolved_module_link_carries_the_synopsis_as_its_title() {
+    // Given — the synopsis is plain text, so its markup is escaped, not run
+    let index = index_with_module(
+        "abc",
+        rinx_index::ModuleEntry {
+            synopsis: Some("Abstract base classes according to :pep:`3119` & more.".to_string()),
+            ..rinx_index::ModuleEntry::new("library/abc.rst")
+        },
+    );
+
+    // When
+    let html = render_module_reference(&index, "abc");
+
+    // Then
+    assert!(html.contains(
+        "href=\"library/abc.html#py:module:abc\" \
+         title=\"abc: Abstract base classes according to :pep:`3119` &amp; more.\""
+    ));
+}
+
+#[test]
+fn test_a_module_link_titles_the_name_as_the_definition_spelled_it() {
+    // Given — defined as `ConfigParser`, referenced in lower case
+    let index = index_with_module(
+        "ConfigParser",
+        rinx_index::ModuleEntry::new("library/configparser.rst"),
+    );
+
+    // When
+    let html = render_module_reference(&index, "configparser");
+
+    // Then
+    assert!(html.contains("title=\"ConfigParser\""));
+}
+
+#[test]
+fn test_a_link_to_anything_but_a_module_has_no_title() {
+    // Given
+    let mut index = ProjectIndex::default();
+    index.insert_domain_object(
+        ObjectType::Py(rinx_ast::PyObjectType::Function),
+        "greet",
+        "api.rst",
+    );
+
+    // When
+    let html = module_title_attribute(
+        &index,
+        ObjectType::Py(rinx_ast::PyObjectType::Function),
+        "greet",
+    );
+
+    // Then
+    assert_eq!(html, "");
+}
