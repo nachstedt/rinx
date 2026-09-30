@@ -551,8 +551,18 @@ Python (``py``)
      - ✅
      -
    * - ``.. py:module::`` and ``:mod:``
-     - ✅
-     -
+     - ✅ ℹ️
+     - - ``:synopsis:``, ``:platform:`` and ``:deprecated:`` are shown only
+         in the Python Module Index and a ``:mod:`` link's tooltip, as in
+         Sphinx; a synopsis wrapped over several lines is joined with a
+         space, where Sphinx keeps the line break in the tooltip.
+   * - Python Module Index (``py-modindex.html``)
+     - 🔶
+     - - A package's submodules cannot be collapsed.
+       - ``modindex_common_prefix`` is not supported.
+       - ``:ref:`modindex``` and ``:ref:`py-modindex``` do not resolve.
+       - Opt-in with ``domain_indices = ["py-modindex"]`` on ``rinx_site``,
+         where Sphinx writes it whenever a module is documented.
    * - ``.. py:currentmodule::`` and the ``:module:`` option
      - ✅
      -
@@ -743,8 +753,9 @@ Document structure
          are refused.
        - Template names resolve from the source root.
    * - Site-wide general index (``genindex.html``)
-     - ✅ ℹ️
-     - - Own markup, not Sphinx's.
+     - 🔶
+     - - ``:ref:`genindex``` does not resolve.
+       - Own markup, not Sphinx's.
 
 Diagnostics
 -----------

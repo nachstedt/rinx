@@ -119,9 +119,7 @@ fn test_render_domain_object_qualifies_every_alias_by_the_current_module() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "socket".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -158,9 +156,7 @@ fn test_render_domain_object_module_option_overrides_the_anchor_id() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "multiprocessing.shared_memory".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),

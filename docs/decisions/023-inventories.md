@@ -175,8 +175,9 @@ reader loads it, and re-writing it reproduces Sphinx's body line for line.
   build lists every internal target (showing its name), since an entity or a
   `:name:`d directive is still worth linking to from another site.
 - **Not every entry type is written.** Equations are not listed, as Sphinx
-  does not list them either; `py-modindex`, `modindex` and `search` are not,
-  because this build has no such pages.
+  does not list them either; `search` is not, because this build has no such
+  page. `py-modindex` and `modindex` are listed only for a site whose
+  `domain_indices` enables the Python Module Index (ADR-032).
 - **`:doc:` and `:any:` do not exist**, so neither resolves externally, and no
   equivalent of `intersphinx_disabled_reftypes` is needed yet.
 - **Version 1 inventories are refused by name**, and a body line Sphinx would

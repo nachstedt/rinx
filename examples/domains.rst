@@ -242,6 +242,12 @@ module definition, not literal ``:py:mod:`greetings``` text.
 
    A module holding the ``greet`` and ``farewell`` functions.
 
+Its ``:platform:``, ``:synopsis:`` and ``:deprecated:`` are not printed
+above, as Sphinx never prints them: they appear in the Python Module Index
+(the sidebar's "Module Index" link) and as the tooltip of every link to the
+module, like :mod:`greetings` — see
+:ref:`module-options-example` below.
+
 .. py:function:: shout(name)
 
    Greets the given name loudly. Written unqualified — a domain object
@@ -817,3 +823,51 @@ This is the same idiom real CPython docs use to cross-reference one tool's
 options from another tool's page — e.g. ``dis.rst`` referencing
 ``ast.rst``'s ``--feature-version`` as
 ``:option:`--feature-version <ast --feature-version>```.
+
+.. _module-options-example:
+
+Module Options and the Python Module Index
+------------------------------------------
+
+This site sets ``domain_indices = ["py-modindex"]`` on its ``rinx_site``, so
+it writes a ``py-modindex.html`` and every page's sidebar links it. A
+module's ``:synopsis:``, ``:platform:`` and ``:deprecated:`` are shown
+there, and in the tooltip of a link to the module — hover over
+:mod:`greetings.formal` or :any:`greetings.formal` — and nowhere else. The
+index lists every module on this page:
+
+- ``greetings.formal`` below is listed under its package ``greetings``,
+  which becomes a group head, because ``greetings`` is documented too.
+- ``texttools.wrap`` has no documented package, so the index adds an
+  unlinked ``texttools`` row above it, as Sphinx does.
+- The synopsis of ``greetings.formal`` is wrapped over two lines in the
+  source; it is one sentence in the index and the tooltip.
+- A synopsis is plain text, never markup: the ``:pep:`8``` in
+  ``texttools.wrap``'s is shown as written.
+
+.. py:module:: greetings.formal
+   :synopsis: Formal greetings, for occasions that call for a bow rather
+              than a wave.
+   :platform: Unix
+
+.. py:function:: bow(name)
+
+   Greets the given name formally.
+
+.. py:module:: texttools.wrap
+   :synopsis: Line wrapping that follows :pep:`8`.
+
+A second description of a module that is documented elsewhere takes
+``:no-index:``: it sets the current module for what follows, but is neither
+a target nor listed in any index, so :mod:`greetings` still links the
+section above. CPython's ``email.compat32-message.rst`` documents
+``email.message`` a second time this way.
+
+.. py:module:: greetings
+   :synopsis: This second synopsis appears nowhere.
+   :no-index:
+
+.. py:function:: nod(name)
+
+   Qualified as ``greetings.nod``, under the module the ``:no-index:``
+   directive made current: :func:`greetings.nod`.

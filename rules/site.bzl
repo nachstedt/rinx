@@ -58,8 +58,24 @@ while [ "$#" -gt 0 ]; do
 done
 """
 
+# The domain index pages a site may enable through `domain_indices`, spelled
+# as Sphinx's `html_domain_indices` spells them. The worker refuses any other
+# name too; checking here fails the build while analyzing, naming the target.
+_DOMAIN_INDICES = ["py-modindex"]
+
 def _rinx_site_impl(ctx):
     worker = ctx.executable._worker
+
+    # Opt-in, not derived from the documents: Bazel declares every output
+    # before any document is read, and a site without Python has no use for a
+    # Python Module Index (ADR-032). Every action drawing a page is told, so
+    # every sidebar links the index — and objects.inv lists it.
+    for name in ctx.attr.domain_indices:
+        if name not in _DOMAIN_INDICES:
+            fail("%s's `domain_indices` names '%s'; this build writes: %s" % (ctx.label, name, ", ".join(_DOMAIN_INDICES)))
+    domain_index_args = []
+    for name in ctx.attr.domain_indices:
+        domain_index_args.extend(["--domain-index", name])
 
     # ── Phase 2: index ────────────────────────────────────────────────────────
     # Collect every .ast file transitively from all deps.
@@ -132,6 +148,7 @@ def _rinx_site_impl(ctx):
     genindex_args.add("--output", genindex_out.path)
     genindex_args.add("--config", config_file.path)
     genindex_args.add("--template", template_file.path)
+    genindex_args.add_all(domain_index_args)
 
     ctx.actions.run(
         executable = worker,
@@ -141,6 +158,29 @@ def _rinx_site_impl(ctx):
         mnemonic = "RinxGenIndex",
         progress_message = "Generating genindex.html for %s" % ctx.label.name,
     )
+
+    # ── Phase 2.5b: py-modindex ──────────────────────────────────────────────
+    # Only for a site that enabled it. Like genindex it needs only the project
+    # index; a site that enabled it but documents no module still gets the
+    # (empty) page, since it was declared here, and a warning saying so.
+    index_pages = [genindex_out]
+    if "py-modindex" in ctx.attr.domain_indices:
+        modindex_out = ctx.actions.declare_file(ctx.label.name + "_site_out/py-modindex.html")
+        modindex_args = ctx.actions.args()
+        modindex_args.add("modindex")
+        modindex_args.add("--index", index_out.path)
+        modindex_args.add("--output", modindex_out.path)
+        modindex_args.add("--config", config_file.path)
+        modindex_args.add("--template", template_file.path)
+        ctx.actions.run(
+            executable = worker,
+            arguments = [modindex_args],
+            inputs = [index_out, template_file, config_file],
+            outputs = [modindex_out],
+            mnemonic = "RinxModIndex",
+            progress_message = "Generating py-modindex.html for %s" % ctx.label.name,
+        )
+        index_pages.append(modindex_out)
 
     # ── Phase 2.6: objects.inv ───────────────────────────────────────────────
     # The site's Sphinx inventory, so other documentation — Sphinx projects
@@ -153,6 +193,7 @@ def _rinx_site_impl(ctx):
     inventory_args.add("--index", index_out.path)
     inventory_args.add("--output", inventory_out.path)
     inventory_args.add("--config", config_file.path)
+    inventory_args.add_all(domain_index_args)
 
     ctx.actions.run(
         executable = worker,
@@ -221,6 +262,7 @@ def _rinx_site_impl(ctx):
         ]
         if ctx.attr.strict_links:
             render_args.append("--strict-links")
+        render_args.extend(domain_index_args)
 
         render_inputs = [ast_file, index_out, template_file, config_file] + schema_inputs + entity_templates
         render_outputs = [html_out, warnings_out]
@@ -281,7 +323,7 @@ def _rinx_site_impl(ctx):
         transitive = [dep[RinxInfo].image_files for dep in ctx.attr.deps],
     ).to_list()
 
-    final_outputs = html_files + [genindex_out, inventory_out]
+    final_outputs = html_files + index_pages + [inventory_out]
 
     images_out = None
     if all_svg_dirs or all_image_files:
@@ -477,6 +519,14 @@ rinx_site = rule(
         "inventories": attr.label_list(
             providers = [RinxInventoryInfo],
             doc = "rinx_inventory targets: other sites' objects.inv files this site links into (Sphinx's intersphinx). A reference no document defines is resolved against them, in the order listed; `:external+name:` and a `name:` prefix pick one out. Read by the index action alone, so editing one re-runs the index and every render, as any index input does.",
+        ),
+        "domain_indices": attr.string_list(
+            default = [],
+            doc = "The domain index pages this site writes, as Sphinx's `html_domain_indices` names them. " +
+                  "Only `py-modindex` exists: the Python Module Index, listing every `.. py:module::` " +
+                  "with its synopsis, platform and deprecation, and linked from every page's sidebar. " +
+                  "Off by default, unlike Sphinx, because Bazel declares a page before any document is " +
+                  "read and a site without Python has no use for one (ADR-032).",
         ),
         "strict_links": attr.bool(
             default = False,

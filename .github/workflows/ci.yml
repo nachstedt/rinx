@@ -199,6 +199,9 @@ jobs:
     - name: Run intersphinx test
       run: ./tests/test_intersphinx.sh
 
+    - name: Run domain indices test
+      run: ./tests/test_domain_indices.sh
+
     # rinx as a dependency of another module, the shape the Bazel Central
     # Registry's presubmit checks and every user has.
     - name: Build and test the smoke module

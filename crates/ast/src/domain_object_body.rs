@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::c_signature::CSignature;
+use crate::module_options::{ModuleFlag, ModuleOptions};
 use crate::node::Node;
 use crate::non_empty_vector::NonEmptyVector;
 use crate::object_naming::{
@@ -43,12 +44,9 @@ pub enum DomainObjectBody {
     },
     PyModule {
         name: String,
-        /// Comma-separated platform identifiers (e.g. `"Unix, Windows"`).
-        platform: Option<String>,
-        /// One-sentence module summary.
-        synopsis: Option<String>,
-        /// Marks the module as deprecated.
-        deprecated: bool,
+        /// `:platform:`, `:synopsis:` and the flag options — recorded for the
+        /// module index and the `:mod:` tooltip, never printed (ADR-032).
+        options: ModuleOptions,
         body: Vec<Node>,
     },
     PyData {
@@ -396,14 +394,14 @@ impl DomainObjectBody {
     /// its general-index entry too) is suppressed. `false` for every object
     /// type that doesn't model the option yet.
     #[must_use]
-    pub const fn no_index(&self) -> bool {
+    pub fn no_index(&self) -> bool {
         match self {
             Self::CStruct { no_index, .. }
             | Self::CUnion { no_index, .. }
             | Self::CMember { no_index, .. }
             | Self::CType { no_index, .. } => *no_index,
+            Self::PyModule { options, .. } => options.has(ModuleFlag::NoIndex),
             Self::PyFunction { .. }
-            | Self::PyModule { .. }
             | Self::PyData { .. }
             | Self::PyAttribute { .. }
             | Self::CFunction { .. }
@@ -420,7 +418,7 @@ impl DomainObjectBody {
     /// or because `no_index` implies it. `false` for every object type that
     /// doesn't model either option yet.
     #[must_use]
-    pub const fn no_index_entry(&self) -> bool {
+    pub fn no_index_entry(&self) -> bool {
         match self {
             Self::CStruct {
                 no_index,
@@ -442,8 +440,10 @@ impl DomainObjectBody {
                 no_index_entry,
                 ..
             } => *no_index || *no_index_entry,
+            Self::PyModule { options, .. } => {
+                options.has(ModuleFlag::NoIndex) || options.has(ModuleFlag::NoIndexEntry)
+            }
             Self::PyFunction { .. }
-            | Self::PyModule { .. }
             | Self::PyData { .. }
             | Self::PyAttribute { .. }
             | Self::CFunction { .. }

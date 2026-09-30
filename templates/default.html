@@ -15,6 +15,7 @@
         {% if version %}<p class="project-version">{{ version }}</p>{% endif %}{% if version_switcher %}
         <div class="version-switcher" data-json-url="{{ version_switcher.json_url }}" hidden></div>{% endif %}
         {% if genindex_href %}<p class="sidebar-index-link"><a href="{{ genindex_href }}">Index</a></p>{% endif %}
+        {% if modindex_href %}<p class="sidebar-index-link"><a href="{{ modindex_href }}">Module Index</a></p>{% endif %}
       </div>
       <nav class="sidebar-nav">
         {% if nav_tree %}

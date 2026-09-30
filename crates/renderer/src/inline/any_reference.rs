@@ -13,7 +13,7 @@ use rinx_index::{ProjectIndex, relative_doc_href};
 use rinx_scope::Scope;
 
 use super::doc_reference::write_doc_link;
-use super::domain_object_reference::domain_object_href;
+use super::domain_object_reference::{domain_object_href, module_title_attribute};
 use super::external_link::write_external_link;
 use super::math::write_equation_link;
 use super::reference::{label_href, label_link_text};
@@ -200,9 +200,17 @@ fn write_hit(
     };
     let href = hit_href(hit, index, doc_path);
     let href_attr = html_escape::encode_double_quoted_attribute(&href);
+    let title_attr = match hit {
+        AnyHit::DomainObject {
+            object_type,
+            qualified_name,
+            ..
+        } => module_title_attribute(index, *object_type, qualified_name),
+        _ => String::new(),
+    };
     let _ = write!(
         html,
-        "<a class=\"reference internal\" href=\"{href_attr}\">{inner}</a>"
+        "<a class=\"reference internal\" href=\"{href_attr}\"{title_attr}>{inner}</a>"
     );
 }
 
@@ -288,6 +296,31 @@ mod tests {
             html,
             "<a class=\"reference internal\" href=\"api.html#py:function:pkg.run\">\
              <code class=\"xref any py function docutils literal\">run()</code></a>"
+        );
+    }
+
+    #[test]
+    fn test_a_module_hit_carries_the_modules_tooltip_as_mod_does() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.insert_domain_object(ObjectType::Py(PyObjectType::Module), "abc", "abc.rst");
+        index.modules.insert(
+            TargetName::new("abc"),
+            rinx_index::ModuleEntry {
+                synopsis: Some("Abstract base classes.".to_string()),
+                ..rinx_index::ModuleEntry::new("abc.rst")
+            },
+        );
+
+        // When
+        let (html, _) = render(&index, &Scope::default(), bare("abc"));
+
+        // Then
+        assert_eq!(
+            html,
+            "<a class=\"reference internal\" href=\"abc.html#py:module:abc\" \
+             title=\"abc: Abstract base classes.\">\
+             <code class=\"xref any py module docutils literal\">abc</code></a>"
         );
     }
 

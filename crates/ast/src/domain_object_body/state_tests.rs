@@ -13,9 +13,7 @@ fn test_domain_object_body_body_returns_shared_body_for_every_variant() {
     };
     let module = DomainObjectBody::PyModule {
         name: "greetings".to_string(),
-        platform: None,
-        synopsis: None,
-        deprecated: false,
+        options: crate::ModuleOptions::default(),
         body: vec![paragraph.clone()],
     };
     let data = DomainObjectBody::PyData {
@@ -613,9 +611,7 @@ fn test_module_override_is_always_none_for_py_module_and_every_c_variant() {
     // carries the option either.
     let module = DomainObjectBody::PyModule {
         name: "greetings".to_string(),
-        platform: None,
-        synopsis: None,
-        deprecated: false,
+        options: crate::ModuleOptions::default(),
         body: vec![],
     };
 

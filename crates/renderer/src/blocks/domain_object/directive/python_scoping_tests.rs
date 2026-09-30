@@ -94,9 +94,7 @@ fn test_render_qualifies_sibling_function_after_module_id() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "types".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -134,9 +132,7 @@ fn test_render_does_not_dedup_module_prefix_in_flat_sibling_signature_id() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "datetime".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),
@@ -174,9 +170,7 @@ fn test_render_composes_module_and_class_qualifiers_in_id() {
             Node::Directive(Directive::DomainObject(
                 rinx_ast::DomainObjectBody::PyModule {
                     name: "types".to_string(),
-                    platform: None,
-                    synopsis: None,
-                    deprecated: false,
+                    options: rinx_ast::ModuleOptions::default(),
                     body: vec![],
                 },
             )),

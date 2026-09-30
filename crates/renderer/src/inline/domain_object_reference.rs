@@ -111,9 +111,11 @@ pub(super) fn render_inline_domain_object_reference(
             }
             let href = domain_object_href(matched_type, &qualified_name, target_doc_path, doc_path);
             let href_attr = html_escape::encode_double_quoted_attribute(&href);
+            let title_attr =
+                module_title_attribute(resolver.index(), matched_type, &qualified_name);
             let _ = write!(
                 html,
-                "<a class=\"reference internal\" href=\"{href_attr}\">{literal}</a>"
+                "<a class=\"reference internal\" href=\"{href_attr}\"{title_attr}>{literal}</a>"
             );
         }
         DomainObjectResolution::External(hit) => {
@@ -149,4 +151,44 @@ pub(super) fn domain_object_href(
         rinx_index::relative_doc_href(target_doc, doc_path),
         rinx_ast::build_domain_object_key(object_type, qualified_name).as_str()
     )
+}
+
+/// The ` title="…"` attribute a link to the object `qualified_name` of
+/// `object_type` carries: a module's tooltip (see [`module_link_title`]) for a
+/// module the index records, and nothing for anything else — Sphinx titles
+/// only the links `_make_module_refnode` builds. Shared by `:mod:` and by an
+/// `:any:` landing on a module, as Sphinx's `resolve_any_xref` shares it.
+pub(super) fn module_title_attribute(
+    index: &rinx_index::ProjectIndex,
+    object_type: ObjectType,
+    qualified_name: &str,
+) -> String {
+    if object_type != ObjectType::Py(rinx_ast::PyObjectType::Module) {
+        return String::new();
+    }
+    let key = rinx_ast::TargetName::new(qualified_name);
+    index.modules.get(&key).map_or_else(String::new, |entry| {
+        let title = module_link_title(index.domain_object_spelling(&key), entry);
+        format!(
+            " title=\"{}\"",
+            html_escape::encode_double_quoted_attribute(&title)
+        )
+    })
+}
+
+/// A module link's tooltip, exactly as Sphinx's `_make_module_refnode` builds
+/// it: the name, then `: synopsis`, ` (deprecated)` and ` (platform)` for
+/// whichever of them the module wrote, in that order.
+pub(super) fn module_link_title(name: &str, entry: &rinx_index::ModuleEntry) -> String {
+    let mut title = name.to_string();
+    if let Some(synopsis) = &entry.synopsis {
+        let _ = write!(title, ": {synopsis}");
+    }
+    if entry.deprecated {
+        title.push_str(" (deprecated)");
+    }
+    if let Some(platform) = &entry.platform {
+        let _ = write!(title, " ({platform})");
+    }
+    title
 }

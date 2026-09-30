@@ -1,5 +1,5 @@
 use rinx_ast::DomainObjectBody;
-use rinx_index::{GenIndexEntry, ProjectIndex};
+use rinx_index::{GenIndexEntry, ModuleEntry, ProjectIndex};
 use rinx_scope::Scope;
 
 use super::document_index::index_nodes;
@@ -102,6 +102,7 @@ pub(super) fn index_domain_object(
             continue;
         }
         index.insert_domain_object(obj.object_type(), &qualified_name, doc_path);
+        record_module(obj, &qualified_name, doc_path, index);
         if obj.no_index_entry() {
             continue;
         }
@@ -133,6 +134,24 @@ pub(super) fn index_domain_object(
 
     if let Some(previous) = restore_module {
         scope.python.restore_module(previous);
+    }
+}
+
+/// Records a `.. py:module::` in [`ProjectIndex::modules`], for the module
+/// index and the `:mod:` tooltip — what Sphinx's `note_module` does. Any other
+/// object type records nothing. Only reached for a module that is indexed at
+/// all, since `:no-index:` leaves it out of Sphinx's `modules` too.
+fn record_module(obj: &DomainObjectBody, name: &str, doc_path: &str, index: &mut ProjectIndex) {
+    if let DomainObjectBody::PyModule { options, .. } = obj {
+        index.modules.insert(
+            rinx_ast::TargetName::new(name),
+            ModuleEntry {
+                doc_path: doc_path.to_string(),
+                synopsis: options.synopsis.clone(),
+                platform: options.platform.clone(),
+                deprecated: options.has(rinx_ast::ModuleFlag::Deprecated),
+            },
+        );
     }
 }
 

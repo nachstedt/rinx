@@ -16,9 +16,7 @@ fn test_domain_object_body_object_type_matches_variant() {
     assert_eq!(
         DomainObjectBody::PyModule {
             name: "greetings".to_string(),
-            platform: None,
-            synopsis: None,
-            deprecated: false,
+            options: crate::ModuleOptions::default(),
             body: vec![],
         }
         .object_type(),
@@ -307,9 +305,7 @@ fn test_domain_object_body_name_uses_bare_name_for_modules() {
     // Given
     let module = DomainObjectBody::PyModule {
         name: "mypackage.mymodule".to_string(),
-        platform: None,
-        synopsis: None,
-        deprecated: false,
+        options: crate::ModuleOptions::default(),
         body: vec![],
     };
 
@@ -377,9 +373,7 @@ fn test_domain_object_body_signature_text_shows_bare_name_for_modules() {
     // Given
     let module = DomainObjectBody::PyModule {
         name: "greetings".to_string(),
-        platform: None,
-        synopsis: None,
-        deprecated: false,
+        options: crate::ModuleOptions::default(),
         body: vec![],
     };
 
@@ -658,9 +652,7 @@ fn test_modules_always_have_exactly_one_name_and_signature_text() {
     // argument, so `PyModule` can never be multi-signature.
     let module = DomainObjectBody::PyModule {
         name: "xml.etree.ElementTree".to_string(),
-        platform: None,
-        synopsis: None,
-        deprecated: false,
+        options: crate::ModuleOptions::default(),
         body: vec![],
     };
 

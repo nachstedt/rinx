@@ -7,15 +7,17 @@
 //! `build_domain_object_key`), so an entry cannot point somewhere a page's
 //! own link would not.
 
+use std::collections::BTreeSet;
 use std::fs;
 
 use anyhow::{Context, Result};
 use rinx_ast::{ObjectType, PyObjectType};
 use rinx_index::{ProjectIndex, TargetLocation, relative_doc_href};
 use rinx_inventory::{EntryType, Inventory, InventoryEntry, write_inventory};
-use rinx_renderer::config;
+use rinx_renderer::{DomainIndex, MODINDEX_PATH, MODINDEX_TITLE, config};
 
 use super::cli_args::flag_value;
+use super::cli_args::read_domain_indices;
 
 /// Sphinx's priority for an entry search should not list (every `std`
 /// entry but an option).
@@ -25,13 +27,18 @@ const IMPORTANT: i32 = 0;
 /// Sphinx's default priority.
 const DEFAULT: i32 = 1;
 
-pub(super) fn process_inventory(index_json: &str, config: &config::SiteConfig) -> Result<Vec<u8>> {
+pub(super) fn process_inventory(
+    index_json: &str,
+    config: &config::SiteConfig,
+    domain_indices: &BTreeSet<DomainIndex>,
+) -> Result<Vec<u8>> {
     let index: ProjectIndex =
         serde_json::from_str(index_json).context("Failed to deserialize Project Index")?;
     Ok(write_inventory(&build_inventory(
         &index,
         &config.project,
         &config.version,
+        domain_indices,
     )))
 }
 
@@ -39,6 +46,7 @@ pub(crate) fn cmd_inventory(args: &[String]) -> Result<()> {
     let index_path = flag_value(args, "--index")?;
     let output = flag_value(args, "--output")?;
     let config_path = flag_value(args, "--config")?;
+    let domain_indices = read_domain_indices(args)?;
 
     let index_json =
         fs::read_to_string(&index_path).with_context(|| format!("Error reading '{index_path}'"))?;
@@ -47,18 +55,27 @@ pub(crate) fn cmd_inventory(args: &[String]) -> Result<()> {
     let site_config: config::SiteConfig = toml::from_str(&config_str)
         .with_context(|| format!("Error parsing config '{config_path}'"))?;
 
-    let bytes = process_inventory(&index_json, &site_config)?;
+    let bytes = process_inventory(&index_json, &site_config, &domain_indices)?;
     fs::write(&output, bytes).with_context(|| format!("Error writing '{output}'"))?;
     Ok(())
 }
 
-/// Every target the site defines, as Sphinx would list it.
-fn build_inventory(index: &ProjectIndex, project: &str, version: &str) -> Inventory {
+/// Every target the site defines, as Sphinx would list it — including the
+/// module index's two labels when `domain_indices` says the site writes it.
+fn build_inventory(
+    index: &ProjectIndex,
+    project: &str,
+    version: &str,
+    domain_indices: &BTreeSet<DomainIndex>,
+) -> Inventory {
     let mut entries = document_entries(index);
     entries.extend(label_entries(index));
     entries.extend(term_entries(index));
     entries.extend(domain_object_entries(index));
     entries.push(genindex_entry());
+    if domain_indices.contains(&DomainIndex::PyModindex) {
+        entries.extend(modindex_entries());
+    }
     Inventory {
         project: project.to_string(),
         version: version.to_string(),
@@ -177,6 +194,22 @@ fn genindex_entry() -> InventoryEntry {
     }
 }
 
+/// The Python Module Index's two labels, spelled as Sphinx spells them: the
+/// generic `modindex` and the domain's own `py-modindex`.
+fn modindex_entries() -> [InventoryEntry; 2] {
+    [
+        ("modindex", "Module Index"),
+        ("py-modindex", MODINDEX_TITLE),
+    ]
+    .map(|(name, title)| InventoryEntry {
+        name: name.to_string(),
+        entry_type: entry_type("std:label"),
+        priority: HIDDEN_FROM_SEARCH,
+        uri: MODINDEX_PATH.to_string(),
+        display_name: Some(title.to_string()),
+    })
+}
+
 /// A document's page, relative to the site root.
 fn page_uri(doc_path: &str) -> String {
     relative_doc_href(doc_path, "")
@@ -219,7 +252,7 @@ mod tests {
             .insert("guide/install.rst".to_string(), "Installing".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let entry = find(&inventory, "std:doc", "guide/install");
@@ -237,7 +270,7 @@ mod tests {
         };
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let docs: Vec<_> = inventory
@@ -256,7 +289,7 @@ mod tests {
         index.documents.insert("scratch.rst".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let entry = find(&inventory, "std:doc", "scratch");
@@ -277,7 +310,7 @@ mod tests {
             .insert(TargetName::new("install"), "Installing".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let entry = find(&inventory, "std:label", "install");
@@ -298,7 +331,7 @@ mod tests {
             .insert(TargetName::new("REQ_001"), "entity-REQ_001".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let entry = find(&inventory, "std:label", "req_001");
@@ -315,7 +348,7 @@ mod tests {
         );
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         assert!(!inventory.entries.iter().any(|entry| entry.name == "python"));
@@ -330,7 +363,7 @@ mod tests {
             .insert(TargetName::new("build step"), "glossary.rst".to_string());
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let entry = find(&inventory, "std:term", "build step");
@@ -348,7 +381,7 @@ mod tests {
         );
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let entry = find(&inventory, "py:class", "pkg.Greeter");
@@ -364,7 +397,7 @@ mod tests {
         index.insert_domain_object(ObjectType::C(CObjectType::Macro), "add", "c.rst");
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         find(&inventory, "c:function", "add");
@@ -382,7 +415,7 @@ mod tests {
         );
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let entry = find(&inventory, "std:cmdoption", "--verbose");
@@ -395,11 +428,46 @@ mod tests {
         let index = ProjectIndex::default();
 
         // When
-        let inventory = build_inventory(&index, "Demo", "1.0");
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
 
         // Then
         let entry = find(&inventory, "std:label", "genindex");
         assert_eq!(entry.uri, "genindex.html");
+    }
+
+    #[test]
+    fn test_build_inventory_lists_both_module_index_labels_when_enabled() {
+        // Given
+        let index = ProjectIndex::default();
+        let enabled = BTreeSet::from([DomainIndex::PyModindex]);
+
+        // When
+        let inventory = build_inventory(&index, "Demo", "1.0", &enabled);
+
+        // Then — as Sphinx 9.1's own `objects.inv` lists them
+        let short = find(&inventory, "std:label", "modindex");
+        assert_eq!(short.uri, "py-modindex.html");
+        assert_eq!(short.display_name.as_deref(), Some("Module Index"));
+        let long = find(&inventory, "std:label", "py-modindex");
+        assert_eq!(long.uri, "py-modindex.html");
+        assert_eq!(long.display_name.as_deref(), Some("Python Module Index"));
+    }
+
+    #[test]
+    fn test_build_inventory_lists_no_module_index_when_the_site_writes_none() {
+        // Given
+        let index = ProjectIndex::default();
+
+        // When
+        let inventory = build_inventory(&index, "Demo", "1.0", &BTreeSet::new());
+
+        // Then
+        assert!(
+            inventory
+                .entries
+                .iter()
+                .all(|entry| !entry.name.contains("modindex"))
+        );
     }
 
     #[test]
@@ -435,7 +503,7 @@ mod tests {
             toml::from_str("project = \"Demo\"\nversion = \"2.0\"\n").unwrap();
 
         // When
-        let bytes = process_inventory(index_json, &config).unwrap();
+        let bytes = process_inventory(index_json, &config, &BTreeSet::new()).unwrap();
 
         // Then
         let read = read_inventory(&bytes).unwrap();
@@ -455,7 +523,7 @@ mod tests {
         let config: config::SiteConfig = toml::from_str("project = \"Demo\"\n").unwrap();
 
         // When
-        let result = process_inventory("not json", &config);
+        let result = process_inventory("not json", &config, &BTreeSet::new());
 
         // Then
         assert!(result.is_err());

@@ -163,9 +163,7 @@ fn test_deduce_local_scope_returns_empty_for_modules() {
     // prefix.
     let module = DomainObjectBody::PyModule {
         name: "xml.etree.ElementTree".to_string(),
-        platform: None,
-        synopsis: None,
-        deprecated: false,
+        options: crate::ModuleOptions::default(),
         body: vec![],
     };
 

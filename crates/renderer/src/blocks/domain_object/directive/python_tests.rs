@@ -121,9 +121,7 @@ fn test_render_formats_py_module_domain_object() {
         vec![Node::Directive(Directive::DomainObject(
             rinx_ast::DomainObjectBody::PyModule {
                 name: "greetings".to_string(),
-                platform: None,
-                synopsis: None,
-                deprecated: false,
+                options: rinx_ast::ModuleOptions::default(),
                 body: vec![Node::Paragraph(vec![InlineNode::Text(
                     "A module of greetings.".to_string(),
                 )])],

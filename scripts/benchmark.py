@@ -177,6 +177,9 @@ rinx_site(
     config = "rinx.toml",
     template = "custom_template.html",
     css = "//assets:default.css",
+    # CPython documents ~300 modules, and Sphinx writes their index; so does
+    # this site, which the benchmark then measures too.
+    domain_indices = ["py-modindex"],
     deps = [":cpython_docs"],
 )
 """
