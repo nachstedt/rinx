@@ -183,12 +183,15 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         | InlineNode::SubstitutionReference { name, .. } => *name = unescape(name),
         // A `:pep-reference:`'s or `:rfc-reference:`'s number was unescaped
         // before it was parsed (see `roles::pep_reference`), and it is all
-        // the node holds. An inline image is never produced by the inline
+        // the node holds; an `:index:`'s title and target were both unescaped
+        // before the target was parsed into entries (see `roles::index`). An
+        // inline image is never produced by the inline
         // scan itself — only by the whole-document substitution resolver
         // splicing an already-built node in after this function has already
         // run on it once.
         InlineNode::DocutilsPepReference { .. }
         | InlineNode::DocutilsRfcReference { .. }
+        | InlineNode::IndexReference { .. }
         | InlineNode::InlineImage(_) => {}
     }
     node

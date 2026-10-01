@@ -2,7 +2,8 @@ use rinx_ast::{
     Directive, Document, IndexEntry, InlineNode, Node, TableRow, TargetName, for_each_inline_list,
 };
 use rinx_index::{
-    EntityUpdateRecord, EquationLocation, GenIndexEntry, ProjectIndex, TargetLocation,
+    EntityUpdateRecord, EquationLocation, GenIndexEntry, GenIndexRedirect, GenIndexRedirectKind,
+    ProjectIndex, TargetLocation,
 };
 use rinx_scope::Scope;
 
@@ -59,7 +60,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     }
 
     index_nodes(&doc.nodes, &doc.path, &mut index, &mut Scope::default());
-    index_registry_references(&doc.nodes, &doc.path, &mut index);
+    index_inline_index_entries(&doc.nodes, &doc.path, &mut index);
     let numbering = collect_numbering(doc);
     if !numbering.steps.is_empty() {
         index
@@ -75,7 +76,12 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     index
 }
 
-/// Records a `.. index::` directive's terms for the general index page.
+/// Records the entries of a `.. index::` directive or an `:index:` role for
+/// the general index page: each term linking to `id` on `doc_path`, and each
+/// `see:`/`seealso:` as a redirect, which links nowhere.
+///
+/// The one place an [`IndexEntry`] becomes general-index data, so the
+/// directive and the role cannot record the same entry differently.
 fn index_genindex_entries(
     entries: &[IndexEntry],
     id: &str,
@@ -83,48 +89,60 @@ fn index_genindex_entries(
     index: &mut ProjectIndex,
 ) {
     for entry in entries {
-        if let IndexEntry::Term {
-            primary,
-            subentry,
-            main,
-        } = entry
-        {
-            index.genindex_entries.push(GenIndexEntry {
+        match entry {
+            IndexEntry::Term {
+                primary,
+                subentry,
+                main,
+            } => index.genindex_entries.push(GenIndexEntry {
                 primary: primary.clone(),
                 subentry: subentry.clone(),
                 main: *main,
                 doc_path: doc_path.to_string(),
                 anchor: id.to_string(),
-            });
+            }),
+            IndexEntry::See { entry, target } => index.genindex_redirects.push(GenIndexRedirect {
+                primary: entry.clone(),
+                kind: GenIndexRedirectKind::See,
+                target: target.clone(),
+            }),
+            IndexEntry::SeeAlso { entry, target } => {
+                index.genindex_redirects.push(GenIndexRedirect {
+                    primary: entry.clone(),
+                    kind: GenIndexRedirectKind::SeeAlso,
+                    target: target.clone(),
+                });
+            }
         }
-        // IndexEntry::See/SeeAlso redirect rather than link to content and are
-        // not surfaced in genindex_entries yet (see docs/compatibility.rst).
     }
 }
 
-/// Records the general-index entry every registry role in `nodes` makes —
-/// Sphinx's `single: <group>; <text>`, filed under the registry's group
+/// Records the general-index entries the inline roles make, each linking to
+/// the anchor the parser minted for it: a registry role's Sphinx
+/// `single: <group>; <text>`, filed under the registry's group
 /// (`Python Enhancement Proposals`, `RFC`, …) with the text the link shows
-/// without a title, fragment included — linking to the anchor the parser
-/// minted.
+/// without a title, fragment included; and an `:index:` role's own entries.
 ///
 /// Walks with the inline walker the parser numbered the anchors with, rather
 /// than [`index_nodes`], so an entry exists for exactly the roles that have
 /// an anchor.
-fn index_registry_references(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
+fn index_inline_index_entries(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
     for_each_inline_list(nodes, &mut |list| {
         for node in list {
-            if let InlineNode::RegistryReference {
-                target, index_id, ..
-            } = node
-            {
-                index.genindex_entries.push(GenIndexEntry {
+            match node {
+                InlineNode::RegistryReference {
+                    target, index_id, ..
+                } => index.genindex_entries.push(GenIndexEntry {
                     primary: target.registry().index_group().to_string(),
                     subentry: Some(target.display_text()),
                     main: false,
                     doc_path: doc_path.to_string(),
                     anchor: index_id.clone(),
-                });
+                }),
+                InlineNode::IndexReference {
+                    entries, index_id, ..
+                } => index_genindex_entries(entries, index_id, doc_path, index),
+                _ => {}
             }
         }
     });

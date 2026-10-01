@@ -22,7 +22,8 @@
 //! `:pep:`, `:rfc:`, `:cve:` and `:cwe:` link outside the site, below their
 //! registry's address — as do [`docutils_pep_reference`] and
 //! [`docutils_rfc_reference`], docutils' plainer `:pep-reference:` and
-//! `:rfc-reference:`.
+//! `:rfc-reference:`. [`index_reference`] is no reference at all: `:index:`
+//! writes the anchor its general-index entries link to and shows its text.
 //!
 //! [`RefText`] is the one shape they all share: the visible text, the target
 //! to resolve, and where the role was written.
@@ -39,6 +40,7 @@ mod download_reference;
 pub(crate) mod entity_reference;
 mod external_link;
 mod hyperlink;
+mod index_reference;
 mod math;
 mod number_reference;
 mod option_reference;

@@ -69,6 +69,10 @@ pub(super) static PEP_REFERENCE_ROLE_REGEX: LazyLock<Regex> =
 /// without a prefix or a domain.
 pub(super) static RFC_REFERENCE_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":rfc-reference:`(?P<target>[^`]+)`").unwrap());
+/// `:index:`, which indexes the place it is written and shows its text. No
+/// [`EXTERNAL_PREFIX`] and no domain: it names no target to look up.
+pub(super) static INDEX_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":index:`(?P<content>[^`]+)`").unwrap());
 pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
 pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -169,6 +173,7 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&REGISTRY_ROLE_REGEX, "registry"),
     (&PEP_REFERENCE_ROLE_REGEX, "pep-reference"),
     (&RFC_REFERENCE_ROLE_REGEX, "rfc-reference"),
+    (&INDEX_ROLE_REGEX, "index"),
     (&OPTION_ROLE_REGEX, "option"),
     (&FUNC_ROLE_REGEX, "func"),
     (&MOD_ROLE_REGEX, "mod"),
@@ -266,6 +271,7 @@ mod tests {
             "rfc-reference",
             "cve",
             "cwe",
+            "index",
         ] {
             assert!(is_fixed_role_name(name), "{name}");
         }

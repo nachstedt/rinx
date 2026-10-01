@@ -115,7 +115,16 @@ Supported:
 - ``.. code-block::``, ``.. highlight::`` and ``.. literalinclude::``, all
   highlighted at build time.
 - ``.. math::``, rendered to MathML at build time.
-- ``.. glossary::`` and ``.. index::``.
+- ``.. glossary::`` and ``.. index::``, whose ``see:`` and ``seealso:``
+  entries the general index lists as an unlinked "see …" or "see also …"
+  under their term.
+- The ``:index:`` role, which indexes the place it is written and shows its
+  text there: ``:index:`interpreter``` is one ``single`` entry — commas
+  included, and with ``;`` nesting a subentry — and a leading ``!`` marks it
+  main without being shown. With an explicit title the target is one
+  ``.. index::`` line, as in ``:index:`loops <pair: loop; statement>```. An
+  entry its type cannot split is reported under the role's own codes, such as
+  ``index-role.invalid-pair``, and its text is still shown.
 - The doctest directives of ``sphinx.ext.doctest``, executed by
   ``bazel test`` (see :ref:`rules`).
 - The Python domain (``py:function``, ``py:class``, ``py:method``,

@@ -1,5 +1,4 @@
-use crate::diagnostics::Diagnostics;
-use rinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, Span};
+use rinx_ast::{IndexEntry, IndexEntryType, InvalidIndexEntry};
 
 /// Strips a leading `!` (the "main entry" marker) from a trimmed entry.
 ///
@@ -8,7 +7,7 @@ use rinx_ast::{Diagnostic, DiagnosticCode, IndexEntry, Span};
 /// typed entry's value, since a real index value can legitimately start with
 /// a literal `!` character (e.g. `single: ! (exclamation); in formatted
 /// string literal`).
-pub(super) fn strip_main_prefix(entry: &str) -> (&str, bool) {
+pub(crate) fn strip_main_prefix(entry: &str) -> (&str, bool) {
     entry
         .strip_prefix('!')
         .map_or((entry, false), |rest| (rest.trim_start(), true))
@@ -57,20 +56,18 @@ fn parse_triple_value(value: &str) -> Option<(String, String, String)> {
     }
 }
 
-/// Splits a `see:`/`seealso:` value of the form `entry <target>`.
+/// Splits a `see:`/`seealso:` value of the form `entry; other` at its
+/// first `;`, as Sphinx's `_split_into(2, 'see', value)` does — so a later
+/// `;` belongs to `other`.
 ///
-/// Returns `None` if no `<...>` target is present.
-fn parse_target_value(value: &str) -> Option<(String, String)> {
-    let angle_start = value.rfind('<')?;
-    let angle_end = value[angle_start..].find('>')?;
-    let entry = value[..angle_start].trim().to_string();
-    let target = value[angle_start + 1..angle_start + angle_end]
-        .trim()
-        .to_string();
+/// Returns `None` unless both parts are non-empty.
+fn parse_see_value(value: &str) -> Option<(String, String)> {
+    let (entry, target) = value.split_once(';')?;
+    let (entry, target) = (entry.trim(), target.trim());
     if entry.is_empty() || target.is_empty() {
         return None;
     }
-    Some((entry, target))
+    Some((entry.to_string(), target.to_string()))
 }
 
 /// Expands a `pair: A; B` value into its two reciprocal `single`-equivalent
@@ -113,79 +110,43 @@ fn expand_triple(a: &str, b: &str, c: &str, main: bool) -> Vec<IndexEntry> {
     ]
 }
 
-/// One of the five recognized `.. index::` entry-type keywords.
-pub(super) fn is_known_entry_type(entry_type: &str) -> bool {
-    matches!(entry_type, "single" | "pair" | "triple" | "see" | "seealso")
-}
-
-/// Builds the `IndexEntry`s for a known `entry_type` (`single`/`pair`/
-/// `triple`/`see`/`seealso`), its raw value text, and whether the whole
-/// entry was `!`-marked as main. `original` is the unparsed source (line or
-/// comma-segment) used in diagnostics. Malformed values push a diagnostic
-/// and produce no entries, staying error-resilient.
-pub(super) fn parse_typed_entry(
-    entry_type: &str,
+/// Builds the `IndexEntry`s for an entry written as `entry_type`, its raw
+/// value text, and whether the whole entry was `!`-marked as main.
+///
+/// # Errors
+///
+/// A value its type cannot split — an empty `single:`, a `pair:` without
+/// two parts — is returned as an [`InvalidIndexEntry`], which the
+/// `.. index::` directive and the `:index:` role each report under their own
+/// code.
+pub(crate) fn parse_typed_entry(
+    entry_type: IndexEntryType,
     value: &str,
     main: bool,
-    original: &str,
-    diagnostics: &mut Diagnostics,
-    span: Option<Span>,
-) -> Vec<IndexEntry> {
-    match entry_type {
-        "single" => {
+) -> Result<Vec<IndexEntry>, InvalidIndexEntry> {
+    let entries = match entry_type {
+        IndexEntryType::Single => (!value.trim().is_empty()).then(|| {
             let (primary, subentry) = parse_single_value(value);
             vec![IndexEntry::Term {
                 primary,
                 subentry,
                 main,
             }]
+        }),
+        IndexEntryType::Pair => parse_pair_value(value).map(|(a, b)| expand_pair(&a, &b, main)),
+        IndexEntryType::Triple => {
+            parse_triple_value(value).map(|(a, b, c)| expand_triple(&a, &b, &c, main))
         }
-        "pair" => parse_pair_value(value).map_or_else(
-            || {
-                diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::IndexInvalidPair,
-                    format!("Invalid .. index:: pair entry: {original}"),
-                    span,
-                ));
-                Vec::new()
-            },
-            |(a, b)| expand_pair(&a, &b, main),
-        ),
-        "triple" => parse_triple_value(value).map_or_else(
-            || {
-                diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::IndexInvalidTriple,
-                    format!("Invalid .. index:: triple entry: {original}"),
-                    span,
-                ));
-                Vec::new()
-            },
-            |(a, b, c)| expand_triple(&a, &b, &c, main),
-        ),
-        "see" => parse_target_value(value).map_or_else(
-            || {
-                diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::IndexInvalidSee,
-                    format!("Invalid .. index:: see entry: {original}"),
-                    span,
-                ));
-                Vec::new()
-            },
-            |(entry, target)| vec![IndexEntry::See { entry, target }],
-        ),
-        "seealso" => parse_target_value(value).map_or_else(
-            || {
-                diagnostics.push(Diagnostic::at(
-                    DiagnosticCode::IndexInvalidSeeAlso,
-                    format!("Invalid .. index:: seealso entry: {original}"),
-                    span,
-                ));
-                Vec::new()
-            },
-            |(entry, target)| vec![IndexEntry::SeeAlso { entry, target }],
-        ),
-        _ => unreachable!("caller must guard with is_known_entry_type"),
-    }
+        IndexEntryType::See => {
+            parse_see_value(value).map(|(entry, target)| vec![IndexEntry::See { entry, target }])
+        }
+        IndexEntryType::SeeAlso => parse_see_value(value)
+            .map(|(entry, target)| vec![IndexEntry::SeeAlso { entry, target }]),
+    };
+    entries.ok_or_else(|| InvalidIndexEntry {
+        entry_type,
+        value: value.to_string(),
+    })
 }
 
 #[cfg(test)]
@@ -344,12 +305,12 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_target_value_splits_entry_and_target() {
+    fn test_parse_see_value_splits_entry_and_target() {
         // Given
-        let value = "Python <environment>";
+        let value = "Python; environment";
 
         // When
-        let result = parse_target_value(value);
+        let result = parse_see_value(value);
 
         // Then
         assert_eq!(
@@ -359,15 +320,23 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_target_value_rejects_missing_angle_brackets() {
-        // Given
-        let value = "Python";
+    fn test_parse_see_value_keeps_a_later_semicolon_in_the_target() {
+        // Given — Sphinx splits at the first `;` only
+        let value = "a; b; c";
 
         // When
-        let result = parse_target_value(value);
+        let result = parse_see_value(value);
 
         // Then
-        assert_eq!(result, None);
+        assert_eq!(result, Some(("a".to_string(), "b; c".to_string())));
+    }
+
+    #[test]
+    fn test_parse_see_value_rejects_a_value_without_two_parts() {
+        // Given / When / Then
+        assert_eq!(parse_see_value("Python"), None);
+        assert_eq!(parse_see_value("Python;"), None);
+        assert_eq!(parse_see_value("; environment"), None);
     }
 
     #[test]
@@ -428,16 +397,91 @@ mod tests {
     }
 
     #[test]
-    fn test_is_known_entry_type_accepts_all_five_keywords() {
-        // Given / When / Then
-        for keyword in ["single", "pair", "triple", "see", "seealso"] {
-            assert!(is_known_entry_type(keyword), "{keyword} should be known");
+    fn test_parse_typed_entry_builds_a_single_term() {
+        // Given / When
+        let entries = parse_typed_entry(IndexEntryType::Single, "execution; context", true);
+
+        // Then
+        assert_eq!(
+            entries,
+            Ok(vec![IndexEntry::Term {
+                primary: "execution".to_string(),
+                subentry: Some("context".to_string()),
+                main: true,
+            }])
+        );
+    }
+
+    #[test]
+    fn test_parse_typed_entry_refuses_an_empty_single() {
+        // Given / When
+        let result = parse_typed_entry(IndexEntryType::Single, "  ", false);
+
+        // Then
+        assert_eq!(
+            result,
+            Err(InvalidIndexEntry {
+                entry_type: IndexEntryType::Single,
+                value: "  ".to_string(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_parse_typed_entry_expands_a_pair() {
+        // Given / When
+        let entries = parse_typed_entry(IndexEntryType::Pair, "loop; statement", false);
+
+        // Then
+        assert_eq!(entries.map(|entries| entries.len()), Ok(2));
+    }
+
+    #[test]
+    fn test_parse_typed_entry_refuses_each_malformed_type_under_its_own_type() {
+        // Given
+        let cases = [
+            (IndexEntryType::Pair, "loop"),
+            (IndexEntryType::Triple, "a; b"),
+            (IndexEntryType::See, "a"),
+            (IndexEntryType::SeeAlso, "a"),
+        ];
+
+        for (entry_type, value) in cases {
+            // When
+            let result = parse_typed_entry(entry_type, value, false);
+
+            // Then
+            assert_eq!(
+                result,
+                Err(InvalidIndexEntry {
+                    entry_type,
+                    value: value.to_string(),
+                }),
+                "{entry_type:?}"
+            );
         }
     }
 
     #[test]
-    fn test_is_known_entry_type_rejects_unrecognized_keyword() {
-        // Given / When / Then
-        assert!(!is_known_entry_type("bogus"));
+    fn test_parse_typed_entry_builds_see_and_seealso_redirects() {
+        // Given / When
+        let see = parse_typed_entry(IndexEntryType::See, "goto; jump", false);
+        let see_also = parse_typed_entry(IndexEntryType::SeeAlso, "goto; jump", false);
+
+        // Then
+        assert_eq!(
+            see,
+            Ok(vec![IndexEntry::See {
+                entry: "goto".to_string(),
+                target: "jump".to_string(),
+            }])
+        );
+        assert_eq!(
+            see_also,
+            Ok(vec![IndexEntry::SeeAlso {
+                entry: "goto".to_string(),
+                target: "jump".to_string(),
+            }])
+        );
     }
 }

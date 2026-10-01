@@ -394,7 +394,7 @@ mod tests {
         // Then
         assert_eq!(
             index,
-            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"documents":["test.rst"],"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"modules":{},"genindex_entries":[],"equations":{},"numbering_steps":{},"numref_targets":{},"element_numbers":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[],"domain_indices":[]}"#
+            r#"{"targets":{},"target_titles":{},"target_anchors":{},"document_titles":{"test.rst":"Title"},"documents":["test.rst"],"toctrees":{},"root_documents":["test.rst"],"page_order":["test.rst"],"section_numbers":{},"document_outlines":{},"glossary_terms":{},"domain_objects":{},"domain_object_spellings":{},"modules":{},"genindex_entries":[],"genindex_redirects":[],"equations":{},"numbering_steps":{},"numref_targets":{},"element_numbers":{},"sectnum":{},"entities":{},"entity_backlinks":{},"entity_updates":[],"entity_update_history":{},"external_inventories":[],"domain_indices":[]}"#
         );
     }
 

@@ -37,7 +37,7 @@ pub use entity_update_history::{
 pub use entity_update_record::EntityUpdateRecord;
 pub use equation_location::EquationLocation;
 pub use external_inventory::{ExternalInventory, ExternalTarget};
-pub use gen_index_entry::GenIndexEntry;
+pub use gen_index_entry::{GenIndexEntry, GenIndexRedirect, GenIndexRedirectKind};
 pub use href::{entity_anchor, relative_doc_href};
 pub use module_entry::ModuleEntry;
 pub use project_index::{DuplicateEntityId, MergeConflicts, ProjectIndex};

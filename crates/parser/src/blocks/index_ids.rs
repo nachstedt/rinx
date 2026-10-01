@@ -1,6 +1,6 @@
 //! Assigns anchor ids to `.. index::` directives in document order, and then
-//! to the registry roles (`:pep:`, `:rfc:`, `:cve:`, `:cwe:`), whose
-//! general-index entries need an anchor too.
+//! to the inline roles whose general-index entries need an anchor too: the
+//! registry roles (`:pep:`, `:rfc:`, `:cve:`, `:cwe:`) and `:index:`.
 //!
 //! A `.. index::` directive marks a bare location with no content-derived
 //! identity (unlike a glossary term or a domain object's name), so an id is
@@ -75,8 +75,9 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
     }
 }
 
-/// Gives every registry role in `nodes` its anchor id, continuing the
-/// numbering [`assign_index_ids`] left in `counter`.
+/// Gives every registry role and `:index:` role in `nodes` its anchor id, in
+/// document order among themselves, continuing the numbering
+/// [`assign_index_ids`] left in `counter`.
 ///
 /// Sphinx numbers both kinds from one per-document counter, so the two
 /// share it here and no id can repeat. A second walk rather than one
@@ -87,11 +88,15 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
 /// an anchor's name is not something a reader links to.
 ///
 /// Runs after substitutions are resolved, so each use of a `replace`
-/// definition holding a `:pep:` gets an anchor of its own.
-pub(super) fn assign_registry_index_ids(nodes: &mut [Node], counter: &mut usize) {
+/// definition holding a `:pep:` or an `:index:` gets an anchor of its own,
+/// and after refused roles are lowered, so an `:index:` whose entry was
+/// refused still gets the anchor Sphinx gives it.
+pub(super) fn assign_inline_index_ids(nodes: &mut [Node], counter: &mut usize) {
     for_each_inline_list_mut(nodes, &mut |list| {
         for node in list.iter_mut() {
-            if let InlineNode::RegistryReference { index_id, .. } = node {
+            if let InlineNode::RegistryReference { index_id, .. }
+            | InlineNode::IndexReference { index_id, .. } = node
+            {
                 *index_id = format!("index-{counter}");
                 *counter += 1;
             }
@@ -280,14 +285,14 @@ mod tests {
     }
 
     #[test]
-    fn test_assign_registry_index_ids_continues_the_directive_counter() {
+    fn test_assign_inline_index_ids_continues_the_directive_counter() {
         // Given a directive and two roles
         let mut nodes = vec![pep_paragraph(), index_directive(), pep_paragraph()];
         let mut counter = 0;
 
         // When
         assign_index_ids(&mut nodes, &mut counter);
-        assign_registry_index_ids(&mut nodes, &mut counter);
+        assign_inline_index_ids(&mut nodes, &mut counter);
 
         // Then — no id repeats
         assert_eq!(id_of(&nodes[1]), "index-0");
@@ -296,7 +301,7 @@ mod tests {
     }
 
     #[test]
-    fn test_assign_registry_index_ids_reaches_a_glossary_definition() {
+    fn test_assign_inline_index_ids_reaches_a_glossary_definition() {
         // Given a role where `assign_index_ids` does not look
         let mut nodes = vec![Node::Directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
@@ -308,12 +313,48 @@ mod tests {
         let mut counter = 0;
 
         // When
-        assign_registry_index_ids(&mut nodes, &mut counter);
+        assign_inline_index_ids(&mut nodes, &mut counter);
 
         // Then
         let Node::Directive(Directive::Glossary { entries, .. }) = &nodes[0] else {
             unreachable!()
         };
         assert_eq!(pep_id_of(&entries[0].definition[0]), "index-0");
+    }
+
+    #[test]
+    fn test_assign_inline_index_ids_numbers_index_roles_among_registry_roles() {
+        // Given an `:index:` between two `:pep:`s in one paragraph
+        let mut inlines = vec![InlineNode::IndexReference {
+            title: "x".to_string(),
+            entries: Vec::new(),
+            index_id: String::new(),
+            span: None,
+        }];
+        let Node::Paragraph(pep) = pep_paragraph() else {
+            unreachable!()
+        };
+        inlines.insert(0, pep[0].clone());
+        inlines.push(pep[0].clone());
+        let mut nodes = vec![Node::Paragraph(inlines)];
+        let mut counter = 3;
+
+        // When
+        assign_inline_index_ids(&mut nodes, &mut counter);
+
+        // Then — document order, continuing the counter
+        let Node::Paragraph(inlines) = &nodes[0] else {
+            unreachable!()
+        };
+        let ids: Vec<&str> = inlines
+            .iter()
+            .map(|node| match node {
+                InlineNode::RegistryReference { index_id, .. }
+                | InlineNode::IndexReference { index_id, .. } => index_id.as_str(),
+                _ => panic!("unexpected {node:?}"),
+            })
+            .collect();
+        assert_eq!(ids, vec!["index-3", "index-4", "index-5"]);
+        assert_eq!(counter, 6);
     }
 }

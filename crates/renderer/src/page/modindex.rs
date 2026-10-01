@@ -279,7 +279,7 @@ pub fn render_modindex(
             page_title: MODINDEX_TITLE,
             doc_path: MODINDEX_PATH,
             source_path: MODINDEX_PATH,
-            has_genindex: !index.genindex_entries.is_empty(),
+            has_genindex: index.has_genindex_entries(),
             ..crate::PageMeta::default()
         }
         .with_navigation(index, config),

@@ -69,7 +69,7 @@ mod grid;
 mod if_builder;
 mod image;
 mod include;
-mod index_directive;
+pub(crate) mod index_directive;
 mod math;
 mod needimport;
 mod needservice;

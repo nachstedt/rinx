@@ -6,12 +6,12 @@
 //! of them.
 //!
 //! [`math`], [`code`], [`any`], [`doc`], [`download`], [`registry`],
-//! [`pep_reference`] and [`rfc_reference`] are the exceptions to the
-//! per-domain grouping: `:math:`/`:eq:` and `:code:` belong to no domain,
+//! [`pep_reference`], [`rfc_reference`] and [`index`] are the exceptions to
+//! the per-domain grouping: `:math:`/`:eq:` and `:code:` belong to no domain,
 //! `:any:` searches every one, `:doc:` names a document rather than an
-//! object, `:download:` a file and `:pep:`/`:rfc:`/`:cve:`/`:cwe:` and
-//! docutils' `:pep-reference:`/`:rfc-reference:` a page outside the site, so
-//! they sit flat here.
+//! object, `:download:` a file, `:pep:`/`:rfc:`/`:cve:`/`:cwe:` and
+//! docutils' `:pep-reference:`/`:rfc-reference:` a page outside the site, and
+//! `:index:` nothing at all, so they sit flat here.
 
 pub(super) mod any;
 pub(super) mod c;
@@ -19,6 +19,7 @@ pub(super) mod code;
 pub(super) mod doc;
 pub(super) mod download;
 pub(super) mod entity;
+pub(super) mod index;
 pub(super) mod math;
 pub(super) mod numref;
 pub(super) mod pep_reference;

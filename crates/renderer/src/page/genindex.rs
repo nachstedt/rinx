@@ -6,7 +6,7 @@
 
 use crate::config::SiteConfig;
 use anyhow::Result;
-use rinx_index::{GenIndexEntry, ProjectIndex};
+use rinx_index::{GenIndexEntry, GenIndexRedirect, ProjectIndex};
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
@@ -18,6 +18,9 @@ struct Location {
 }
 
 /// A subentry (`single: primary; subentry`) nested under a primary term.
+///
+/// A `see:`/`seealso:` redirect is one too, reading `see <target>` with no
+/// locations at all — Sphinx files it the same way.
 struct SubentryGroup {
     display: String,
     locations: Vec<Location>,
@@ -33,18 +36,16 @@ struct PrimaryGroup {
 }
 
 /// Groups raw `genindex_entries` by (lowercased) primary term, and within
-/// each primary, by (lowercased) subentry. The first-seen casing of each
+/// each primary, by (lowercased) subentry, then files each redirect as a
+/// location-less subentry of its own primary. The first-seen casing of each
 /// term is kept for display.
-fn group_by_primary(entries: &[GenIndexEntry]) -> BTreeMap<String, PrimaryGroup> {
+fn group_by_primary(
+    entries: &[GenIndexEntry],
+    redirects: &[GenIndexRedirect],
+) -> BTreeMap<String, PrimaryGroup> {
     let mut groups: BTreeMap<String, PrimaryGroup> = BTreeMap::new();
     for entry in entries {
-        let group = groups
-            .entry(entry.primary.to_lowercase())
-            .or_insert_with(|| PrimaryGroup {
-                display: entry.primary.clone(),
-                direct: Vec::new(),
-                subentries: BTreeMap::new(),
-            });
+        let group = primary_group(&mut groups, &entry.primary);
         let location = Location {
             doc_path: entry.doc_path.clone(),
             anchor: entry.anchor.clone(),
@@ -52,19 +53,39 @@ fn group_by_primary(entries: &[GenIndexEntry]) -> BTreeMap<String, PrimaryGroup>
         };
         match &entry.subentry {
             None => group.direct.push(location),
-            Some(sub) => {
-                let sub_group = group
-                    .subentries
-                    .entry(sub.to_lowercase())
-                    .or_insert_with(|| SubentryGroup {
-                        display: sub.clone(),
-                        locations: Vec::new(),
-                    });
-                sub_group.locations.push(location);
-            }
+            Some(sub) => subentry_group(group, sub).locations.push(location),
         }
     }
+    for redirect in redirects {
+        let group = primary_group(&mut groups, &redirect.primary);
+        subentry_group(group, &redirect.subentry_text());
+    }
     groups
+}
+
+/// The group for `primary`, created on first sight with its casing.
+fn primary_group<'a>(
+    groups: &'a mut BTreeMap<String, PrimaryGroup>,
+    primary: &str,
+) -> &'a mut PrimaryGroup {
+    groups
+        .entry(primary.to_lowercase())
+        .or_insert_with(|| PrimaryGroup {
+            display: primary.to_string(),
+            direct: Vec::new(),
+            subentries: BTreeMap::new(),
+        })
+}
+
+/// The subentry `sub` of `group`, created on first sight with its casing.
+fn subentry_group<'a>(group: &'a mut PrimaryGroup, sub: &str) -> &'a mut SubentryGroup {
+    group
+        .subentries
+        .entry(sub.to_lowercase())
+        .or_insert_with(|| SubentryGroup {
+            display: sub.to_string(),
+            locations: Vec::new(),
+        })
 }
 
 /// Buckets a primary term's display text into an uppercased first letter, or
@@ -145,8 +166,12 @@ fn render_primary_group(html: &mut String, group: &PrimaryGroup, index: &Project
         for sub in group.subentries.values() {
             let _ = write!(html, "<li>");
             let sub_escaped = html_escape::encode_text(&sub.display);
-            let _ = write!(html, "{sub_escaped} ");
-            render_locations(html, &sub.locations, index);
+            let _ = write!(html, "{sub_escaped}");
+            // A redirect has no location, and so nothing after its text.
+            if !sub.locations.is_empty() {
+                let _ = write!(html, " ");
+                render_locations(html, &sub.locations, index);
+            }
             let _ = writeln!(html, "</li>");
         }
         let _ = writeln!(html, "</ul>");
@@ -205,7 +230,7 @@ pub fn render_genindex(
     config: &SiteConfig,
     template_str: &str,
 ) -> Result<String> {
-    let groups = group_by_primary(&index.genindex_entries);
+    let groups = group_by_primary(&index.genindex_entries, &index.genindex_redirects);
     let buckets = bucket_by_letter(&groups);
 
     let mut body = String::new();
@@ -217,7 +242,7 @@ pub fn render_genindex(
         render_letter_section(&mut body, letter, primaries, index);
     }
 
-    let has_genindex = !index.genindex_entries.is_empty();
+    let has_genindex = index.has_genindex_entries();
     let css_path = crate::css_relative_path("genindex.html", "default.css");
     crate::render_page(
         &body,
@@ -267,7 +292,7 @@ mod tests {
         ];
 
         // When
-        let groups = group_by_primary(&entries);
+        let groups = group_by_primary(&entries, &[]);
 
         // Then
         assert_eq!(groups.len(), 1);
@@ -282,13 +307,113 @@ mod tests {
         let entries = vec![entry("execution", Some("context"), false, "a.rst", "id-0")];
 
         // When
-        let groups = group_by_primary(&entries);
+        let groups = group_by_primary(&entries, &[]);
 
         // Then
         let group = groups.get("execution").unwrap();
         assert!(group.direct.is_empty());
         assert_eq!(group.subentries.len(), 1);
         assert_eq!(group.subentries.get("context").unwrap().display, "context");
+    }
+
+    fn redirect(
+        primary: &str,
+        kind: rinx_index::GenIndexRedirectKind,
+        target: &str,
+    ) -> GenIndexRedirect {
+        GenIndexRedirect {
+            primary: primary.to_string(),
+            kind,
+            target: target.to_string(),
+        }
+    }
+
+    #[test]
+    fn test_group_by_primary_files_a_redirect_as_a_location_less_subentry() {
+        // Given — a linked term and a redirect from the same primary
+        let entries = vec![entry("goto", None, false, "a.rst", "index-0")];
+        let redirects = vec![redirect(
+            "Goto",
+            rinx_index::GenIndexRedirectKind::See,
+            "jump",
+        )];
+
+        // When
+        let groups = group_by_primary(&entries, &redirects);
+
+        // Then
+        let group = groups.get("goto").unwrap();
+        assert_eq!(group.direct.len(), 1);
+        let sub = group.subentries.get("see jump").unwrap();
+        assert_eq!(sub.display, "see jump");
+        assert!(sub.locations.is_empty());
+    }
+
+    #[test]
+    fn test_group_by_primary_creates_a_primary_for_a_redirect_alone() {
+        // Given
+        let redirects = vec![redirect(
+            "goto",
+            rinx_index::GenIndexRedirectKind::SeeAlso,
+            "jump",
+        )];
+
+        // When
+        let groups = group_by_primary(&[], &redirects);
+
+        // Then
+        let group = groups.get("goto").unwrap();
+        assert!(group.direct.is_empty());
+        assert!(group.subentries.contains_key("see also jump"));
+    }
+
+    #[test]
+    fn test_primary_group_keeps_the_first_seen_casing() {
+        // Given
+        let mut groups = BTreeMap::new();
+
+        // When
+        primary_group(&mut groups, "Python");
+        primary_group(&mut groups, "python");
+
+        // Then
+        assert_eq!(groups.len(), 1);
+        assert_eq!(groups["python"].display, "Python");
+    }
+
+    #[test]
+    fn test_subentry_group_keeps_the_first_seen_casing() {
+        // Given
+        let mut groups = BTreeMap::new();
+        let group = primary_group(&mut groups, "Python");
+
+        // When
+        subentry_group(group, "Interpreter");
+        subentry_group(group, "interpreter");
+
+        // Then
+        assert_eq!(group.subentries.len(), 1);
+        assert_eq!(group.subentries["interpreter"].display, "Interpreter");
+    }
+
+    #[test]
+    fn test_render_genindex_renders_a_redirect_as_unlinked_text() {
+        // Given — only a redirect
+        let mut index = ProjectIndex::default();
+        index.genindex_redirects.push(redirect(
+            "goto",
+            rinx_index::GenIndexRedirectKind::See,
+            "jump",
+        ));
+        let template = "{{ body }}";
+
+        // When
+        let html = render_genindex(&index, &SiteConfig::default(), template).unwrap();
+
+        // Then
+        assert!(html.contains("<h2 id=\"G\">G</h2>"), "{html}");
+        assert!(html.contains("<li>goto<ul>\n<li>see jump</li>"), "{html}");
+        assert!(!html.contains(".html#"), "{html}");
     }
 
     #[test]
@@ -312,7 +437,7 @@ mod tests {
             entry("Python", None, false, "a.rst", "id-0"),
             entry("__init__", None, false, "a.rst", "id-1"),
         ];
-        let groups = group_by_primary(&entries);
+        let groups = group_by_primary(&entries, &[]);
 
         // When
         let buckets = bucket_by_letter(&groups);

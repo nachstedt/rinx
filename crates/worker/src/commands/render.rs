@@ -104,7 +104,7 @@ pub(super) fn process_render(
             page_title: &page_title,
             doc_path,
             source_path: &doc.path,
-            has_genindex: !index.genindex_entries.is_empty(),
+            has_genindex: index.has_genindex_entries(),
             ..renderer::PageMeta::default()
         }
         .with_navigation(&index, config),

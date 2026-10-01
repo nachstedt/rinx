@@ -1,5 +1,5 @@
-//! `.. index::` directive, registry role (`:pep:`, `:rfc:`, …) and
-//! `:pep-reference:`/`:rfc-reference:` role tests for [`super::analyze`]:
+//! `.. index::` directive, `:index:` role, registry role (`:pep:`, `:rfc:`,
+//! …) and `:pep-reference:`/`:rfc-reference:` role tests for [`super::analyze`]:
 //! which general-index entries they register, and where in the node tree they
 //! are found.
 
@@ -56,7 +56,7 @@ fn test_analyze_registers_genindex_entry_with_subentry_and_main_flag() {
 }
 
 #[test]
-fn test_analyze_skips_see_and_seealso_index_entries() {
+fn test_analyze_records_see_and_seealso_index_entries_as_redirects() {
     // Given
     let doc = Document::new(
         "guide.rst".to_string(),
@@ -78,8 +78,23 @@ fn test_analyze_skips_see_and_seealso_index_entries() {
     // When
     let index = analyze(&doc);
 
-    // Then
+    // Then — redirects, not linked entries
     assert!(index.genindex_entries.is_empty());
+    assert_eq!(
+        index.genindex_redirects,
+        vec![
+            GenIndexRedirect {
+                primary: "foo".to_string(),
+                kind: GenIndexRedirectKind::See,
+                target: "bar".to_string(),
+            },
+            GenIndexRedirect {
+                primary: "foo".to_string(),
+                kind: GenIndexRedirectKind::SeeAlso,
+                target: "bar".to_string(),
+            },
+        ]
+    );
 }
 
 #[test]
@@ -268,4 +283,101 @@ fn test_analyze_registers_no_genindex_entry_for_a_pep_reference_role() {
         "{:?}",
         index.genindex_entries
     );
+}
+
+fn index_role(entries: Vec<rinx_ast::IndexEntry>, index_id: &str) -> InlineNode {
+    InlineNode::IndexReference {
+        title: "text".to_string(),
+        entries,
+        index_id: index_id.to_string(),
+        span: None,
+    }
+}
+
+#[test]
+fn test_analyze_registers_an_index_role_entries_at_its_anchor() {
+    // Given
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Paragraph(vec![index_role(
+            vec![
+                rinx_ast::IndexEntry::Term {
+                    primary: "loop".to_string(),
+                    subentry: Some("statement".to_string()),
+                    main: true,
+                },
+                rinx_ast::IndexEntry::See {
+                    entry: "goto".to_string(),
+                    target: "jump".to_string(),
+                },
+            ],
+            "index-4",
+        )])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(
+        index.genindex_entries,
+        vec![GenIndexEntry {
+            primary: "loop".to_string(),
+            subentry: Some("statement".to_string()),
+            main: true,
+            doc_path: "guide.rst".to_string(),
+            anchor: "index-4".to_string(),
+        }]
+    );
+    assert_eq!(
+        index.genindex_redirects,
+        vec![GenIndexRedirect {
+            primary: "goto".to_string(),
+            kind: GenIndexRedirectKind::See,
+            target: "jump".to_string(),
+        }]
+    );
+}
+
+#[test]
+fn test_analyze_finds_an_index_role_in_a_glossary_definition() {
+    // Given inline content block-level indexing does not walk
+    let term = rinx_ast::IndexEntry::Term {
+        primary: "execution".to_string(),
+        subentry: None,
+        main: false,
+    };
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Directive(Directive::Glossary {
+            entries: vec![rinx_ast::GlossaryEntry {
+                terms: vec!["term".to_string()],
+                definition: vec![Node::Paragraph(vec![index_role(vec![term], "index-0")])],
+            }],
+            sorted: false,
+        })],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert_eq!(index.genindex_entries.len(), 1);
+    assert_eq!(index.genindex_entries[0].anchor, "index-0");
+}
+
+#[test]
+fn test_analyze_registers_nothing_for_an_index_role_whose_entry_was_refused() {
+    // Given — a refused entry leaves the text and anchor, no entries
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Paragraph(vec![index_role(Vec::new(), "index-0")])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.genindex_entries.is_empty());
+    assert!(index.genindex_redirects.is_empty());
 }

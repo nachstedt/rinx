@@ -103,12 +103,13 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     // assigned, because a substitution reference may be written before its
     // definition — nothing before this point could have resolved it yet.
     super::substitutions::resolve_substitutions(&mut nodes, &mut diagnostics);
-    // After substitutions, so every use of a definition holding a `:pep:`
-    // gets an anchor of its own.
-    super::index_ids::assign_registry_index_ids(&mut nodes, &mut index_id_counter);
     // After substitutions, so a refused role spliced in from a `replace`
     // definition is reported where it is used, like any other.
     super::refused_roles::report_refused_roles(&mut nodes, &mut diagnostics);
+    // After substitutions, so every use of a definition holding a `:pep:` or
+    // an `:index:` gets an anchor of its own; after refusals are lowered, so
+    // an `:index:` whose entry was refused still gets one.
+    super::index_ids::assign_inline_index_ids(&mut nodes, &mut index_id_counter);
 
     let (entries, suppressions, source_files) = diagnostics.into_parts();
     let mut doc = Document::new(path.to_string(), nodes);
