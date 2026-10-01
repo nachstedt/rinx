@@ -85,6 +85,20 @@ impl ParseFileLoader for RejectParseFiles {
 struct Origin {
     line: u32,
     column: u32,
+    /// The column `lines[0]` starts at instead, when it differs from the
+    /// lines below it — a directive whose content begins on its own marker
+    /// line, after the `::`, while the rest is indented beneath it. See
+    /// [`ParseCtx::hanging`].
+    first_line_column: Option<u32>,
+}
+
+impl Origin {
+    /// The start of a document or file: line 1, column 1.
+    const START: Self = Self {
+        line: 1,
+        column: 1,
+        first_line_column: None,
+    };
 }
 
 /// A position, and the file it was measured in.
@@ -247,7 +261,7 @@ impl<'a> ParseCtx<'a> {
             in_grid_row: false,
             import_keys: empty_import_keys(),
             custom_roles: None,
-            origin: Some(Origin { line: 1, column: 1 }),
+            origin: Some(Origin::START),
             file: None,
             current_file: None,
             include_stack: &[],
@@ -397,11 +411,56 @@ impl<'a> ParseCtx<'a> {
     #[must_use]
     pub(crate) fn nested(&self, line_offset: usize, column_offset: usize) -> Self {
         Self {
-            origin: self.origin.map(|origin| Origin {
-                line: origin.line + u32::try_from(line_offset).unwrap_or(0),
-                column: origin.column + u32::try_from(column_offset).unwrap_or(0),
+            origin: self.origin.map(|origin| {
+                let column_offset = u32::try_from(column_offset).unwrap_or(0);
+                Origin {
+                    line: origin.line + u32::try_from(line_offset).unwrap_or(0),
+                    column: origin.column + column_offset,
+                    // Only the slice's first line hangs, so a slice starting
+                    // on any later line has none.
+                    first_line_column: origin
+                        .first_line_column
+                        .filter(|_| line_offset == 0)
+                        .map(|column| column + column_offset),
+                }
             }),
             ..*self
+        }
+    }
+
+    /// The context for a nested parse over a line slice that begins
+    /// `line_offset` lines below this one's first line, whose first line
+    /// starts `first_line_column` characters in, and whose remaining lines
+    /// have had `column_offset` leading characters stripped.
+    ///
+    /// The shape of a directive whose content starts on its marker line:
+    /// `.. seealso:: text` puts the first content line after the `::`, while
+    /// any continuation sits at the body's indent. A single column cannot
+    /// place both, and getting the first wrong would misplace every
+    /// diagnostic about a role written there.
+    #[must_use]
+    pub(crate) fn hanging(
+        &self,
+        line_offset: usize,
+        first_line_column: usize,
+        column_offset: usize,
+    ) -> Self {
+        let nested = self.nested(line_offset, column_offset);
+        Self {
+            origin: nested.origin.map(|origin| Origin {
+                first_line_column: self.origin.map(|outer| {
+                    // Measured from wherever the outer slice's line
+                    // `line_offset` starts, which is itself hanging when that
+                    // is its first line.
+                    let base = outer
+                        .first_line_column
+                        .filter(|_| line_offset == 0)
+                        .unwrap_or(outer.column);
+                    base + u32::try_from(first_line_column).unwrap_or(0)
+                }),
+                ..origin
+            }),
+            ..nested
         }
     }
 
@@ -444,7 +503,7 @@ impl<'a> ParseCtx<'a> {
             in_grid_row: self.in_grid_row,
             import_keys: self.import_keys,
             custom_roles: self.custom_roles,
-            origin: Some(Origin { line: 1, column: 1 }),
+            origin: Some(Origin::START),
             file: Some(file),
             current_file: Some(id),
             include_stack: stack,
@@ -474,7 +533,11 @@ impl<'a> ParseCtx<'a> {
     pub(crate) fn position(&self, local_line: usize, local_column: usize) -> Option<SourcePoint> {
         let origin = self.origin?;
         let line = origin.line + u32::try_from(local_line).unwrap_or(0);
-        let column = origin.column + u32::try_from(local_column).unwrap_or(0);
+        let first_column = origin
+            .first_line_column
+            .filter(|_| local_line == 0)
+            .unwrap_or(origin.column);
+        let column = first_column + u32::try_from(local_column).unwrap_or(0);
         let Some(map) = self.template_map else {
             return Some(SourcePoint {
                 position: Position::new(line, column),
@@ -535,6 +598,76 @@ mod tests {
             .err()
             .expect("RejectParseFiles must refuse every path");
         assert!(message.contains("data/fruits.csv"), "{message}");
+    }
+
+    #[test]
+    fn test_hanging_places_the_first_line_at_its_own_column() {
+        // Given a slice starting on line 3 whose first line begins 13
+        // characters in and whose other lines had 3 characters stripped
+        let ctx = ParseCtx::with_domain(Domain::Py).hanging(2, 13, 3);
+
+        // When
+        let first = ctx.position(0, 0).expect("positioned");
+        let second = ctx.position(1, 0).expect("positioned");
+
+        // Then
+        assert_eq!(first.position, Position::new(3, 14));
+        assert_eq!(second.position, Position::new(4, 4));
+    }
+
+    #[test]
+    fn test_nested_on_the_first_line_keeps_the_hanging_column() {
+        // Given
+        let ctx = ParseCtx::with_domain(Domain::Py).hanging(0, 10, 3);
+
+        // When
+        let nested = ctx.nested(0, 2);
+
+        // Then
+        let point = nested.position(0, 0).expect("positioned");
+        assert_eq!(point.position, Position::new(1, 13));
+        let below = nested.position(1, 0).expect("positioned");
+        assert_eq!(below.position, Position::new(2, 6));
+    }
+
+    #[test]
+    fn test_nested_below_the_first_line_drops_the_hanging_column() {
+        // Given
+        let ctx = ParseCtx::with_domain(Domain::Py).hanging(0, 10, 3);
+
+        // When
+        let nested = ctx.nested(1, 2);
+
+        // Then
+        let point = nested.position(0, 0).expect("positioned");
+        assert_eq!(point.position, Position::new(2, 6));
+    }
+
+    #[test]
+    fn test_hanging_inside_a_hanging_first_line_measures_from_it() {
+        // Given a hanging slice, and a hanging slice starting on its first line
+        let outer = ParseCtx::with_domain(Domain::Py).hanging(0, 10, 3);
+
+        // When
+        let inner = outer.hanging(0, 4, 1);
+
+        // Then
+        let point = inner.position(0, 0).expect("positioned");
+        assert_eq!(point.position, Position::new(1, 15));
+        let below = inner.position(1, 0).expect("positioned");
+        assert_eq!(below.position, Position::new(2, 5));
+    }
+
+    #[test]
+    fn test_hanging_of_a_synthetic_context_stays_positionless() {
+        // Given
+        let ctx = ParseCtx::with_domain(Domain::Py).synthetic();
+
+        // When
+        let hanging = ctx.hanging(1, 5, 3);
+
+        // Then
+        assert_eq!(hanging.position(0, 0), None);
     }
 
     #[test]

@@ -34,6 +34,19 @@ Multiple paragraphs are supported in the body:
 
    Second related resource: the inline roles page.
 
+Content on the Directive Line
+-----------------------------
+
+As in Sphinx, text after the ``::`` is the first line of the body, and lines
+indented below it continue the same paragraph:
+
+.. seealso:: The :ref:`admonitions` page, in one line.
+
+.. seealso:: The :ref:`version-changes` page, starting on the directive line
+   and continued below it.
+
+   A second paragraph follows after a blank line.
+
 Empty Body
 ----------
 

@@ -103,6 +103,70 @@ pub(in crate::directives) fn scan_option_lines(
     (options, index)
 }
 
+/// Whether `line` opens with a field marker — `:name:` followed by whitespace
+/// or the end of the line — by docutils' own `field_marker` pattern.
+///
+/// Stricter than [`scan_option_lines`]' leading-colon test, and needed where
+/// content and options can share a block: `:pep:`634` -- text` starts with a
+/// colon, but the backtick after the second one makes it a role, not a field.
+pub(in crate::directives) fn is_field_marker(line: &str) -> bool {
+    let Some(rest) = line.strip_prefix(':') else {
+        return false;
+    };
+    let mut chars = rest.chars().peekable();
+    if matches!(chars.peek(), None | Some(':' | ' ')) {
+        return false;
+    }
+    let mut previous = ' ';
+    while let Some(current) = chars.next() {
+        match current {
+            '\\' => {
+                // An escaped character is part of the name, whatever it is.
+                chars.next();
+            }
+            ':' => match chars.peek() {
+                None | Some(' ' | '\t') => return previous != ' ',
+                Some('`') => return false,
+                Some(_) => {}
+            },
+            _ => {}
+        }
+        previous = current;
+    }
+    false
+}
+
+/// Takes the options out of a directive's unindented `content`, as docutils
+/// does for a directive whose content may begin on its marker line.
+///
+/// The options are read from the content's first block — the lines before
+/// its first blank one — starting at the first [field marker](is_field_marker)
+/// in it, so that `.. note:: text` over an indented `:collapsible:` keeps the
+/// text and still reads the option. The option lines are blanked rather than
+/// removed: every line keeps its index, so every position below them stays
+/// right, and a blank line where the options stood ends a paragraph exactly
+/// where docutils' spliced content would.
+pub(in crate::directives) fn take_option_block(content: &mut [String]) -> Vec<OptionLine> {
+    let block_end = content
+        .iter()
+        .position(|line| line.trim().is_empty())
+        .unwrap_or(content.len());
+    let Some(start) = content[..block_end]
+        .iter()
+        .position(|line| is_field_marker(line))
+    else {
+        return Vec::new();
+    };
+    let (mut options, consumed) = scan_option_lines(&content[start..]);
+    for option in &mut options {
+        option.line_index += start;
+    }
+    for line in &mut content[start..start + consumed] {
+        line.clear();
+    }
+    options
+}
+
 /// Reports every option line neither a shared parser nor the directive's own
 /// parser claimed.
 ///
@@ -578,5 +642,84 @@ mod tests {
         assert_eq!(parse_percentage("half"), None);
         assert_eq!(parse_percentage(""), None);
         assert_eq!(parse_percentage("%"), None);
+    }
+
+    #[test]
+    fn test_is_field_marker_accepts_an_option() {
+        // Given / When / Then
+        assert!(is_field_marker(":collapsible:"));
+        assert!(is_field_marker(":collapsible: open"));
+        assert!(is_field_marker(":class: a b"));
+    }
+
+    #[test]
+    fn test_is_field_marker_refuses_a_role() {
+        // Given / When / Then
+        assert!(!is_field_marker(
+            ":pep:`634` -- Structural Pattern Matching"
+        ));
+        assert!(!is_field_marker(":ref:`label`"));
+    }
+
+    #[test]
+    fn test_is_field_marker_refuses_text_and_malformed_markers() {
+        // Given / When / Then
+        assert!(!is_field_marker("Plain text"));
+        assert!(!is_field_marker(":: x"));
+        assert!(!is_field_marker(": x:"));
+        assert!(!is_field_marker(":name :"));
+        assert!(!is_field_marker(":unclosed"));
+    }
+
+    #[test]
+    fn test_is_field_marker_accepts_an_escaped_colon_in_the_name() {
+        // Given / When / Then
+        assert!(is_field_marker(r":a\:b: value"));
+    }
+
+    #[test]
+    fn test_take_option_block_reads_options_below_leading_text() {
+        // Given
+        let mut content = vec![
+            "Some text".to_string(),
+            ":collapsible: open".to_string(),
+            String::new(),
+            "Body".to_string(),
+        ];
+
+        // When
+        let options = take_option_block(&mut content);
+
+        // Then
+        assert_eq!(options.len(), 1);
+        assert_eq!(options[0].name, "collapsible");
+        assert_eq!(options[0].line_index, 1);
+        assert_eq!(content, ["Some text", "", "", "Body"]);
+    }
+
+    #[test]
+    fn test_take_option_block_keeps_a_role_as_content() {
+        // Given
+        let mut content = vec![":pep:`634` -- Specification".to_string()];
+
+        // When
+        let options = take_option_block(&mut content);
+
+        // Then
+        assert!(options.is_empty());
+        assert_eq!(content, [":pep:`634` -- Specification"]);
+    }
+
+    #[test]
+    fn test_take_option_block_ignores_fields_after_the_first_blank_line() {
+        // Given
+        let mut content = vec![String::new(), ":collapsible:".to_string()];
+
+        // When
+        let options = take_option_block(&mut content);
+
+        // Then
+        assert!(options.is_empty());
+        assert_eq!(content, ["", ":collapsible:"]);
     }
 }
