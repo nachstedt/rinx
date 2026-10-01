@@ -1800,7 +1800,8 @@ does not keep track of the directories it has already visited.</p>
 </div>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>execution. For example, if a directory from <em>dirnames</em> has been replaced
+<p><a class="reference internal" href="pathlib.html#py:method:pathlib.path.walk"><code class="xref py method docutils literal">Path.walk</code></a> assumes the directories it walks are not modified during
+execution. For example, if a directory from <em>dirnames</em> has been replaced
 with a symlink and <em>follow_symlinks</em> is false, <a class="reference internal" href="pathlib.html#py:method:pathlib.path.walk"><code class="xref py method docutils literal">Path.walk</code></a> will
 still try to descend into it. To prevent such behavior, remove directories
 from <em>dirnames</em> as appropriate.</p>

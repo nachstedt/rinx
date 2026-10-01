@@ -183,7 +183,10 @@ to <code>https://peps.python.org/</code> unless the site sets <code>pep_base_url
 reported as <code>pep.invalid-number</code>.</p>
 </li>
 <li><p>Admonitions, <code>.. seealso::</code>, <code>.. versionadded::</code>,
-<code>.. versionchanged::</code> and <code>.. deprecated::</code>.</p>
+<code>.. versionchanged::</code> and <code>.. deprecated::</code>. As in Sphinx, text after
+the <code>::</code> starts the body — <code>.. seealso:: :pep:`634`</code> is a complete
+directive — except for the generic <code>.. admonition::</code>, whose argument is
+its title, and a version change's version, which is its first word.</p>
 </li>
 <li><p><code>.. code-block::</code>, <code>.. highlight::</code> and <code>.. literalinclude::</code>, all
 highlighted at build time.</p>

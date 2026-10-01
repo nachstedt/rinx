@@ -448,7 +448,8 @@
 <p><strong>Source code:</strong> :source:`Lib/email/message.py`</p>
 <hr />
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6 [1]_:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+<p>[1]_</p>
 </div>
 <p>The central class in the <a class="reference internal" href="email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a> package is the <a class="reference internal" href="email.message.html#py:class:email.message.emailmessage"><code class="xref py class docutils literal">EmailMessage</code></a>
 class, imported from the <a class="reference internal" href="email.message.html#py:module:email.message" title="email.message: The base class representing email messages."><code class="xref py module docutils literal">email.message</code></a> module.  It is the base class for
@@ -513,8 +514,9 @@ serializing messages.  Note also that this method is restricted to
 producing messages serialized as "7 bit clean" when
 <a class="reference internal" href="email.policy.html#py:attribute:email.policy.emailpolicy.utf8"><code class="xref py attribute docutils literal">utf8</code></a> is <code>False</code>, which is the default.</p>
 <div class="versionchanged">
-  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6 the default behavior when *maxheaderlen*:</span></p>
-<p>is not specified was changed from defaulting to 0 to defaulting
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>the default behavior when <em>maxheaderlen</em>
+is not specified was changed from defaulting to 0 to defaulting
 to the value of <em>max_line_length</em> from the policy.</p>
 </div>
 </dd>
@@ -525,8 +527,9 @@ to the value of <em>max_line_length</em> from the policy.</p>
 <code>str(msg)</code> to produce a string containing the serialized message in a
 readable format.</p>
 <div class="versionchanged">
-  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4 the method was changed to use ``utf8=True``,:</span></p>
-<p>thus producing an :rfc:`6531`-like message representation, instead of
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>the method was changed to use <code>utf8=True</code>,
+thus producing an :rfc:`6531`-like message representation, instead of
 being a direct alias for <a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.as_string"><code class="xref py method docutils literal">as_string</code></a>.</p>
 </div>
 </dd>
@@ -789,7 +792,8 @@ deprecated.</p>
 the <a class="reference internal" href="email.headerregistry.html#py:attribute:email.headerregistry.parameterizedmimeheader.params"><code class="xref py attribute docutils literal">params</code></a> attribute of the
 header value (for example, <code>msg['Content-Type'].params['charset']</code>).</p>
 <div class="versionchanged">
-  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4 ``replace`` keyword was added.:</span></p>
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p><code>replace</code> keyword was added.</p>
 </div>
 </dd>
 </dl>

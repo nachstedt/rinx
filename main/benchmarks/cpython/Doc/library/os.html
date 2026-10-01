@@ -1077,7 +1077,8 @@ identifying a group. This operation is typically available only to the superuser
 </div>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>system-defined maximum number of effective group ids, typically 16.
+<p>On macOS, the length of <em>groups</em> may not exceed the
+system-defined maximum number of effective group ids, typically 16.
 See the documentation for <a class="reference internal" href="os.html#py:function:os.getgroups"><code class="xref py function docutils literal">getgroups</code></a> for cases where it may not
 return the same group list set by calling setgroups().</p>
 </div>
@@ -2380,6 +2381,7 @@ make sense to block because there are no writers connected to the write end
 of the pipe.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p>The :manpage:`splice(2)` man page.</p>
 </div>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'availability'</p>
@@ -4747,6 +4749,7 @@ If there hasn't been an expiration since the last call to read,
 longer needed, or else the file descriptor will be leaked.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p>The :manpage:`timerfd_create(2)` man page.</p>
 </div>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'availability'</p>
@@ -4843,6 +4846,7 @@ If zero, the timer will only fire once, after <code>next_expiration</code> secon
 have elapsed.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p>:manpage:`timerfd_gettime(2)`</p>
 </div>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'availability'</p>
@@ -6082,6 +6086,7 @@ how <em>id</em> is interpreted:</p>
 </div>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p><code class="xref py data docutils literal">P_PIDFD</code> is only available on Linux &gt;= 5.4.</p>
 </div>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>

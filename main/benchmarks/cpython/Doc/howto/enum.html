@@ -358,6 +358,7 @@ selection of values.  For example, the days of the week:</p>
 inherits from <a class="reference internal" href="../library/enum.html#py:class:enum.enum"><code class="xref py class docutils literal">Enum</code></a> itself.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p>Case of Enum Members</p>
 <p>Because Enums are used to represent constants, and to help avoid issues
 with name clashes between mixin-class methods/attributes and enum names,
 we strongly recommend using UPPER_CASE names for members, and will be using
@@ -1220,13 +1221,16 @@ power-of-two.</p>
 </li>
 </ul>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6 ``_missing_``, ``_order_``, ``_generate_next_value_``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+<p><code>_missing_</code>, <code>_order_</code>, <code>_generate_next_value_</code></p>
 </div>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7 ``_ignore_``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+<p><code>_ignore_</code></p>
 </div>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13 ``_add_alias_``, ``_add_value_alias_``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+<p><code>_add_alias_</code>, <code>_add_value_alias_</code></p>
 </div>
 <p>To help keep Python 2 / Python 3 code in sync an <a class="reference internal" href="../library/enum.html#py:attribute:enum.enum._order_"><code class="xref py attribute docutils literal">_order_</code></a> attribute can
 be provided.  It will be checked against the actual order of the enumeration

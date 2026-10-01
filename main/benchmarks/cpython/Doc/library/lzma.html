@@ -491,7 +491,8 @@ byte of data will be returned, unless EOF has been reached. The exact
 number of bytes returned is unspecified (the <em>size</em> argument is ignored).</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>the <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a>, it may change the position of the underlying
+<p>While calling <a class="reference internal" href="lzma.html#py:method:lzma.lzmafile.peek"><code class="xref py method docutils literal">peek</code></a> does not change the file position of
+the <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a>, it may change the position of the underlying
 file object (e.g. if the <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a> was constructed by passing a
 file object for <em>filename</em>).</p>
 </div>

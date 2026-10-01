@@ -906,7 +906,8 @@ returned by the call:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">my</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">package</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">customFormatterFactory</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">bar</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">baz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">spam</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">99<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>9</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">answer</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">42</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <div class="admonition warning">
   <p class="admonition-title">Warning</p>
-<p>the above example should not be configuration dictionaries or references such
+<p>The values for keys such as <code>bar</code>, <code>spam</code> and <code>answer</code> in
+the above example should not be configuration dictionaries or references such
 as <code>cfg://foo</code> or <code>ext://bar</code>, because they will not be processed by the
 configuration machinery, but passed to the callable as-is.</p>
 </div>
@@ -938,7 +939,8 @@ following configuration:</p>
 attribute <code>baz</code> set to <code>'bozz'</code>.</p>
 <div class="admonition warning">
   <p class="admonition-title">Warning</p>
-<p>the above example should not be configuration dictionaries or references such
+<p>The values for attributes such as <code>foo</code> and <code>baz</code> in
+the above example should not be configuration dictionaries or references such
 as <code>cfg://foo</code> or <code>ext://bar</code>, because they will not be processed by the
 configuration machinery, but set as attribute values as-is.</p>
 </div>

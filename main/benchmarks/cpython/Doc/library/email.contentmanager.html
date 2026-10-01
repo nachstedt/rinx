@@ -459,7 +459,8 @@
 <p><strong>Source code:</strong> :source:`Lib/email/contentmanager.py`</p>
 <hr />
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6 [1]_:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+<p>[1]_</p>
 </div>
 <dl class="py class">
   <dt id="py:class:email.contentmanager.contentmanager"><em class="property">class</em> <code class="sig-name">ContentManager()</code></dt>
@@ -624,7 +625,8 @@ all other values of <em>subtype</em>, use <code>7bit</code>.</p>
 </ul>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>The <code>EmailMessage</code> object as modified by <code>set_content</code> is
+<p>A <em>cte</em> of <code>binary</code> does not actually work correctly yet.
+The <code>EmailMessage</code> object as modified by <code>set_content</code> is
 correct, but <a class="reference internal" href="email.generator.html#py:class:email.generator.bytesgenerator"><code class="xref py class docutils literal">BytesGenerator</code></a> does not
 serialize it correctly.</p>
 </div>

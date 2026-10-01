@@ -485,7 +485,8 @@ byte of data will be returned (unless at EOF). The exact number of bytes
 returned is unspecified.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>the <a class="reference internal" href="bz2.html#py:class:bz2.bz2file"><code class="xref py class docutils literal">BZ2File</code></a>, it may change the position of the underlying file
+<p>While calling <a class="reference internal" href="bz2.html#py:method:bz2.bz2file.peek"><code class="xref py method docutils literal">peek</code></a> does not change the file position of
+the <a class="reference internal" href="bz2.html#py:class:bz2.bz2file"><code class="xref py class docutils literal">BZ2File</code></a>, it may change the position of the underlying file
 object (e.g. if the <a class="reference internal" href="bz2.html#py:class:bz2.bz2file"><code class="xref py class docutils literal">BZ2File</code></a> was constructed by passing a file
 object for <em>filename</em>).</p>
 </div>

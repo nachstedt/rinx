@@ -545,6 +545,7 @@ in a module, <code>__name__</code> is the module's name in the Python package na
 to obtain the logger.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p>This attribute should be treated as read-only.</p>
 </div>
 </dd>
 </dl>
@@ -553,7 +554,8 @@ to obtain the logger.</p>
   <dd><p>The threshold of this logger, as set by the <a class="reference internal" href="logging.html#py:method:logging.logger.setlevel"><code class="xref py method docutils literal">setLevel</code></a> method.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>which has checks for the level passed to it.</p>
+<p>Do not set this attribute directly - always use <a class="reference internal" href="logging.html#py:method:logging.logger.setlevel"><code class="xref py method docutils literal">setLevel</code></a>,
+which has checks for the level passed to it.</p>
 </div>
 </dd>
 </dl>
@@ -563,6 +565,7 @@ to obtain the logger.</p>
 of loggers which are higher up in the namespace hierarchy.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p>This value should be treated as read-only.</p>
 </div>
 </dd>
 </dl>
@@ -586,7 +589,8 @@ are offered the event to handle, and propagation stops at that point.</p>
 <p>The constructor sets this attribute to <code>True</code>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>ancestors, it may emit the same record multiple times. In general, you
+<p>If you attach a handler to a logger <em>and</em> one or more of its
+ancestors, it may emit the same record multiple times. In general, you
 should not need to attach a handler to more than one logger - if you just
 attach it to the appropriate logger which is highest in the logger
 hierarchy, then it will see all events logged by all descendant loggers,
@@ -601,7 +605,8 @@ propagation take care of the rest.</p>
   <dd><p>The list of handlers directly attached to this logger instance.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>the <a class="reference internal" href="logging.html#py:method:logging.logger.addhandler"><code class="xref py method docutils literal">addHandler</code></a> and <a class="reference internal" href="logging.html#py:method:logging.logger.removehandler"><code class="xref py method docutils literal">removeHandler</code></a> methods, which use locks to ensure
+<p>This attribute should be treated as read-only; it is normally changed via
+the <a class="reference internal" href="logging.html#py:method:logging.logger.addhandler"><code class="xref py method docutils literal">addHandler</code></a> and <a class="reference internal" href="logging.html#py:method:logging.logger.removehandler"><code class="xref py method docutils literal">removeHandler</code></a> methods, which use locks to ensure
 thread-safe operation.</p>
 </div>
 </dd>
@@ -612,6 +617,7 @@ thread-safe operation.</p>
 initializer, and only changed by logging configuration code.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p>This attribute should be treated as read-only.</p>
 </div>
 </dd>
 </dl>
@@ -785,7 +791,8 @@ interpreted as for <a class="reference internal" href="logging.html#py:method:lo
 interpreted as for <a class="reference internal" href="logging.html#py:method:logging.logger.debug"><code class="xref py method docutils literal">debug</code></a>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>identical to <code>warning</code>. As <code>warn</code> is deprecated, please do not use
+<p>There is an obsolete method <code>warn</code> which is functionally
+identical to <code>warning</code>. As <code>warn</code> is deprecated, please do not use
 it - use <code>warning</code> instead.</p>
 </div>
 </dd>
@@ -1114,7 +1121,8 @@ is intended to be implemented by subclasses and so raises a
 <a class="reference internal" href="exceptions.html#py:exception:notimplementederror"><code class="xref py exception docutils literal">NotImplementedError</code></a>.</p>
 <div class="admonition warning">
   <p class="admonition-title">Warning</p>
-<p>is released after this method returns. When you override this method, note
+<p>This method is called after a handler-level lock is acquired, which
+is released after this method returns. When you override this method, note
 that you should be careful when calling anything that invokes other parts of
 the logging API which might do locking, because that might result in a
 deadlock. Specifically:</p>
@@ -1859,7 +1867,8 @@ are otherwise the same as for <a class="reference internal" href="logging.html#p
 are otherwise the same as for <a class="reference internal" href="logging.html#py:function:logging.debug"><code class="xref py function docutils literal">debug</code></a>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>identical to <code>warning</code>. As <code>warn</code> is deprecated, please do not use
+<p>There is an obsolete function <code>warn</code> which is functionally
+identical to <code>warning</code>. As <code>warn</code> is deprecated, please do not use
 it - use <code>warning</code> instead.</p>
 </div>
 </dd>
@@ -1922,7 +1931,8 @@ registered using this function, levels should be positive integers and they
 should increase in increasing order of severity.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>section on <a href="../howto/logging.html#custom-levels">Custom Levels</a>.</p>
+<p>If you are thinking of defining your own levels, please see the
+section on <a href="../howto/logging.html#custom-levels">Custom Levels</a>.</p>
 </div>
 </dd>
 </dl>
@@ -1952,7 +1962,8 @@ value of the level.</p>
 'Level %s' % level is returned.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>logging logic). This function is used to convert between an integer level
+<p>Levels are internally integers (as they need to be compared in the
+logging logic). This function is used to convert between an integer level
 and the level name displayed in the formatted log output by means of the
 <code>%(levelname)s</code> format specifier (see <a href="logging.html#logrecord-attributes">LogRecord attributes</a>), and
 vice versa.</p>
@@ -2002,7 +2013,8 @@ if no handlers are defined for the root logger.</p>
 configured, unless the keyword argument <em>force</em> is set to <code>True</code>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>before other threads are started. In versions of Python prior to
+<p>This function should be called from the main thread
+before other threads are started. In versions of Python prior to
 2.7.1 and 3.2, if this function is called from multiple threads,
 it is possible (in rare circumstances) that a handler will be added
 to the root logger more than once, leading to unexpected results

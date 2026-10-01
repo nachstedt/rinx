@@ -521,7 +521,8 @@ byte of data will be returned, unless EOF has been reached. The exact
 number of bytes returned is unspecified (the <em>size</em> argument is ignored).</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>the <a class="reference internal" href="compression.zstd.html#py:class:compression.zstd.zstdfile"><code class="xref py class docutils literal">ZstdFile</code></a>, it may change the position of the underlying
+<p>While calling <a class="reference internal" href="compression.zstd.html#py:method:compression.zstd.zstdfile.peek"><code class="xref py method docutils literal">peek</code></a> does not change the file position of
+the <a class="reference internal" href="compression.zstd.html#py:class:compression.zstd.zstdfile"><code class="xref py class docutils literal">ZstdFile</code></a>, it may change the position of the underlying
 file object (for example, if the <a class="reference internal" href="compression.zstd.html#py:class:compression.zstd.zstdfile"><code class="xref py class docutils literal">ZstdFile</code></a> was constructed by
 passing a file object for <em>file</em>).</p>
 </div>
@@ -983,6 +984,7 @@ compression technique used by zstd, resulting in higher compression
 ratios but slower compression.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><a class="reference internal" href="compression.zstd.html#py:class:compression.zstd.strategy"><code class="xref py class docutils literal">Strategy</code></a></p>
 </div>
 </dd>
 </dl>

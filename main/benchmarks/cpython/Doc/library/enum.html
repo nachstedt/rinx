@@ -485,6 +485,7 @@ are not normal Python classes.  See
 <a href="../howto/enum.html#enum-class-differences">How are Enums different?</a> for more details.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p>Nomenclature</p>
 <ul>
 <li><p>The class <code class="xref py class docutils literal">Color</code> is an <em>enumeration</em> (or <em>enum</em>)</p>
 </li>
@@ -591,13 +592,16 @@ and export the enum members to the global namespace.</p>
 </blockquote>
 </blockquote>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6  ``Flag``, ``IntFlag``, ``auto``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+<p><code>Flag</code>, <code>IntFlag</code>, <code>auto</code></p>
 </div>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11  ``StrEnum``, ``EnumCheck``, ``ReprEnum``, ``FlagBoundary``, ``property``, ``member``, ``nonmember``, ``global_enum``, ``show_flag_values``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+<p><code>StrEnum</code>, <code>EnumCheck</code>, <code>ReprEnum</code>, <code>FlagBoundary</code>, <code>property</code>, <code>member</code>, <code>nonmember</code>, <code>global_enum</code>, <code>show_flag_values</code></p>
 </div>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13  ``EnumDict``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+<p><code>EnumDict</code></p>
 </div>
 <hr />
 <h2 id="data-types">Data Types</h2>
@@ -724,6 +728,7 @@ names of the members in <em>cls</em>:</p>
 <p>Value of the member, can be set in <a class="reference internal" href="enum.html#py:method:enum.enum.__new__"><code class="xref py method docutils literal">__new__</code></a>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p>Enum member values</p>
 <p>Member values can be anything: <a class="reference internal" href="functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>, <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>, etc.  If
 the exact value is unimportant you may use <a class="reference internal" href="enum.html#py:class:enum.auto"><code class="xref py class docutils literal">auto</code></a> instances and an
 appropriate value will be chosen for you.  See <a class="reference internal" href="enum.html#py:class:enum.auto"><code class="xref py class docutils literal">auto</code></a> for the
@@ -925,7 +930,8 @@ returns <a class="reference internal" href="enum.html#py:method:enum.enum.__str_
 starting with <code>1</code>.</p>
 </div>
 <div class="versionchanged">
-  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12 Added :ref:`enum-dataclass-support`:</span></p>
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>Added <a href="../howto/enum.html#enum-dataclass-support">Dataclass support</a></p>
 </div>
 <dl class="py method">
   <dt id="py:method:enum.enum._add_alias_"><code class="sig-name">Enum._add_alias_</code></dt>
@@ -983,8 +989,9 @@ True</pre></div>
 value, starting with <code>1</code>.</p>
 </div>
 <div class="versionchanged">
-  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11 :meth:`~object.__str__` is now :meth:`!int.__str__` to:</span></p>
-<p>better support the <em>replacement of existing constants</em> use-case.
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p><a class="reference internal" href="../reference/datamodel.html#py:method:object.__str__"><code class="xref py method docutils literal">__str__</code></a> is now <code class="xref py method docutils literal">int.__str__</code> to
+better support the <em>replacement of existing constants</em> use-case.
 <a class="reference internal" href="../reference/datamodel.html#py:method:object.__format__"><code class="xref py method docutils literal">__format__</code></a> was already <code class="xref py method docutils literal">int.__format__</code> for that same reason.</p>
 </div>
 </dd>
@@ -1150,8 +1157,9 @@ the value's repr; common choices are <a class="reference internal" href="functio
 of two, starting with <code>1</code>.</p>
 </div>
 <div class="versionchanged">
-  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11 The *repr()* of zero-valued flags has changed.  It:</span></p>
-<p>is now:</p>
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>The <em>repr()</em> of zero-valued flags has changed.  It
+is now:</p>
 <blockquote>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; Color(0)
@@ -1434,13 +1442,16 @@ of the <a class="reference internal" href="enum.html#py:class:enum.enum"><code c
 </li>
 </ul>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6 ``_missing_``, ``_order_``, ``_generate_next_value_``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+<p><code>_missing_</code>, <code>_order_</code>, <code>_generate_next_value_</code></p>
 </div>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7 ``_ignore_``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+<p><code>_ignore_</code></p>
 </div>
 <div class="versionadded">
-  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13 ``_add_alias_``, ``_add_value_alias_``, ``_repr_*``:</span></p>
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+<p><code>_add_alias_</code>, <code>_add_value_alias_</code>, <code>_repr_*</code></p>
 </div>
 <hr />
 <h2 id="utilities-and-decorators">Utilities and Decorators</h2>
@@ -1473,7 +1484,8 @@ on the assignment line to work properly.</p>
 <em>auto</em>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>the highest member value incremented by 1, and will fail if any
+<p>in 3.13 the default <code>_generate_next_value_</code> will always return
+the highest member value incremented by 1, and will fail if any
 member is an incompatible type.</p>
 </div>
 </dd>
@@ -1485,7 +1497,8 @@ enumerations.  It allows member attributes to have the same names as members
 themselves.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>for example, the <em>value</em> and <em>name</em> attributes are defined in the
+<p>the <em>property</em> and the member must be defined in separate classes;
+for example, the <em>value</em> and <em>name</em> attributes are defined in the
 <em>Enum</em> class, and <em>Enum</em> subclasses can define members with the
 names <code>value</code> and <code>name</code>.</p>
 </div>

@@ -2348,7 +2348,9 @@ namespace and the list of any unrecognized arguments.</p>
 </dl>
 <div class="admonition warning">
   <p class="admonition-title">Warning</p>
-<p>a prefix of one of its known options, instead of leaving it in the remaining
+<p><a href="argparse.html#prefix-matching">Prefix matching</a> rules apply to
+<a class="reference internal" href="argparse.html#py:method:argparse.argumentparser.parse_known_args"><code class="xref py method docutils literal">parse_known_args</code></a>. The parser may consume an option even if it's just
+a prefix of one of its known options, instead of leaving it in the remaining
 arguments list.</p>
 </div>
 <h3 id="customizing-file-parsing">Customizing file parsing</h3>

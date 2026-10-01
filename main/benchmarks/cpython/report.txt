@@ -62,7 +62,7 @@ block-quote.unindent-no-blank-line: 4
 list.enumerated-start-not-one: 4
 table.grid.inconsistent-column-boundary: 1
 
-Unresolved Domain-Object References (1864):
+Unresolved Domain-Object References (1866):
 -------------------------------------------
    14  Doc/whatsnew/2.4: 'Decimal' (referenced as py:class)
     7  Doc/c-api/buffer: 'PyBUF_WRITABLE' (referenced as c:macro)
@@ -758,6 +758,7 @@ Unresolved Domain-Object References (1864):
     1  Doc/library/glob: 'pathlib.Path.glob' (referenced as py:function)
     1  Doc/library/hashlib: 'algorithms_guaranteed' (referenced as py:attribute)
     1  Doc/library/hashlib: 'digest_size' (referenced as py:attribute)
+    1  Doc/library/http.client: 'parse_headers' (referenced as py:method)
     1  Doc/library/http.cookiejar: 'version' (referenced as py:attribute)
     1  Doc/library/http.cookiejar: 'make_cookies' (referenced as py:method)
     1  Doc/library/http.cookiejar: 'rfc2965' (referenced as py:attribute)
@@ -872,6 +873,7 @@ Unresolved Domain-Object References (1864):
     1  Doc/library/multiprocessing: 'str' (referenced as py:function)
     1  Doc/library/multiprocessing: 'RemoteError' (referenced as py:exception)
     1  Doc/library/multiprocessing: 'multiprocessing.Pool' (referenced as py:function)
+    1  Doc/library/multiprocessing: 'multiprocessing.pool' (referenced as py:class)
     1  Doc/library/multiprocessing: 'concurrent.futures' (referenced as py:class)
     1  Doc/library/multiprocessing: 'multiprocessing.Process._bootstrap' (referenced as py:method)
     1  Doc/library/multiprocessing: 'sys.stdin' (referenced as py:function)

@@ -662,7 +662,8 @@ method delegates to this callable. The parameters passed to the callable
 are those passed to <a class="reference internal" href="logging.handlers.html#py:method:logging.handlers.baserotatinghandler.rotation_filename"><code class="xref py method docutils literal">rotation_filename</code></a>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>so it should be as simple and as fast as possible. It should also
+<p>The namer function is called quite a few times during rollover,
+so it should be as simple and as fast as possible. It should also
 return the same output every time for a given input, otherwise the
 rollover behaviour may not work as expected.</p>
 <p>It's also worth noting that care should be taken when using a namer to
@@ -897,7 +898,8 @@ interval calculation.</p>
 handled.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>is initialised. Calculation of subsequent rollover times is done only
+<p>Calculation of the initial rollover time is done when the handler
+is initialised. Calculation of subsequent rollover times is done only
 when rollover occurs, and rollover occurs only when emitting output. If
 this is not kept in mind, it might lead to some confusion. For example,
 if an interval of "every minute" is set, that does not mean you will
@@ -1050,7 +1052,8 @@ over UDP sockets.</p>
 communicate with a remote machine whose address is given by <em>host</em> and <em>port</em>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>between an instance of this handler and <em>host</em>. For this reason, when using a
+<p>As UDP is not a streaming protocol, there is no persistent connection
+between an instance of this handler and <em>host</em>. For this reason, when using a
 network socket, a DNS lookup might have to be made each time an event is
 logged, which can introduce some latency into the system. If this affects you,
 you can do a lookup yourself and initialize this handler using the looked-up IP
@@ -1114,7 +1117,8 @@ application needs to run on several platforms). On Windows, you pretty
 much have to use the UDP option.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>syslog daemon - it no longer listens on a domain socket. Therefore, you cannot
+<p>On macOS 12.x (Monterey), Apple has changed the behaviour of their
+syslog daemon - it no longer listens on a domain socket. Therefore, you cannot
 expect <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.sysloghandler"><code class="xref py class docutils literal">SysLogHandler</code></a> to work on this system.</p>
 <p>See :gh:`91070` for more information.</p>
 </div>
@@ -1604,7 +1608,8 @@ dictionary to be sent.</p>
 </dl>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>the same as a generic formatting operation, using
+<p>Since preparing a record for sending it to a web server is not
+the same as a generic formatting operation, using
 <a class="reference internal" href="logging.html#py:method:logging.handler.setformatter"><code class="xref py method docutils literal">setFormatter</code></a> to specify a
 <a class="reference internal" href="logging.html#py:class:logging.formatter"><code class="xref py class docutils literal">Formatter</code></a> for a <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.httphandler"><code class="xref py class docutils literal">HTTPHandler</code></a> has no effect.
 Instead of calling <a class="reference internal" href="logging.html#py:method:logging.handler.format"><code class="xref py method docutils literal">format</code></a>, this handler calls
@@ -1637,6 +1642,8 @@ have the task tracking API, which means that you can use
 <a class="reference internal" href="queue.html#py:class:queue.simplequeue"><code class="xref py class docutils literal">SimpleQueue</code></a> instances for <em>queue</em>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p>If you are using <a class="reference internal" href="multiprocessing.html#py:module:multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py module docutils literal">multiprocessing</code></a>, you should avoid using
+<a class="reference internal" href="queue.html#py:class:queue.simplequeue"><code class="xref py class docutils literal">SimpleQueue</code></a> and instead use <a class="reference internal" href="multiprocessing.html#py:class:multiprocessing.queue"><code class="xref py class docutils literal">multiprocessing.Queue</code></a>.</p>
 </div>
 <div class="admonition warning">
   <p class="admonition-title">Warning</p>
@@ -1673,7 +1680,8 @@ the record to a dict or JSON string, or send a modified copy
 of the record while leaving the original intact.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>the <code>message</code> and <code>msg</code> attributes to the formatted message and
+<p>The base implementation formats the message with arguments, sets
+the <code>message</code> and <code>msg</code> attributes to the formatted message and
 sets the <code>args</code> and <code>exc_text</code> attributes to <code>None</code> to allow
 pickling and to prevent further attempts at formatting. This means
 that a handler on the <a class="reference internal" href="logging.handlers.html#py:class:logging.handlers.queuelistener"><code class="xref py class docutils literal">QueueListener</code></a> side won't have the
@@ -1736,6 +1744,8 @@ task tracking API (though it's used if available), which means that you can
 use <a class="reference internal" href="queue.html#py:class:queue.simplequeue"><code class="xref py class docutils literal">SimpleQueue</code></a> instances for <em>queue</em>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
+<p>If you are using <a class="reference internal" href="multiprocessing.html#py:module:multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py module docutils literal">multiprocessing</code></a>, you should avoid using
+<a class="reference internal" href="queue.html#py:class:queue.simplequeue"><code class="xref py class docutils literal">SimpleQueue</code></a> and instead use <a class="reference internal" href="multiprocessing.html#py:class:multiprocessing.queue"><code class="xref py class docutils literal">multiprocessing.Queue</code></a>.</p>
 </div>
 <p>If <code>respect_handler_level</code> is <code>True</code>, a handler's level is respected
 (compared with the level for the message) when deciding whether to pass

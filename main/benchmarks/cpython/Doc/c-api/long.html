@@ -392,7 +392,8 @@ ignored.  If there are no digits or <em>str</em> is not NULL-terminated followin
 digits and trailing whitespace, <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> will be raised.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
-<p><a class="reference internal" href="long.html#c:function:pylong_fromnativebytes"><code class="xref c function docutils literal">PyLong_FromNativeBytes()</code></a> functions can be used to convert
+<p><a class="reference internal" href="long.html#c:function:pylong_asnativebytes"><code class="xref c function docutils literal">PyLong_AsNativeBytes()</code></a> and
+<a class="reference internal" href="long.html#c:function:pylong_fromnativebytes"><code class="xref c function docutils literal">PyLong_FromNativeBytes()</code></a> functions can be used to convert
 a <a class="reference internal" href="long.html#c:type:pylongobject"><code class="xref c type docutils literal">PyLongObject</code></a> to/from an array of bytes in base <code>256</code>.</p>
 </div>
 </dd>

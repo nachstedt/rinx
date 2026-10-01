@@ -708,11 +708,13 @@ For IPv6, this is all addresses <a href="iana-ipv6-address-space_">allocated</a>
 <code>Reserved by IETF</code> for future use.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p><code>Reserved-by-Protocol</code> column in <a href="https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml">iana-ipv4-special-registry</a>.</p>
+<p>For IPv4, <code>is_reserved</code> is not related to the address block value of the
+<code>Reserved-by-Protocol</code> column in <a href="https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml">iana-ipv4-special-registry</a>.</p>
 </div>
 <div class="admonition caution">
   <p class="admonition-title">Caution</p>
-<p>currently excluded from that list (see <a class="reference internal" href="ipaddress.html#py:attribute:ipaddress.ipv6address.is_site_local"><code class="xref py attribute docutils literal">is_site_local</code></a> &amp; :rfc:`3879`).</p>
+<p>For IPv6, <code>fec0::/10</code> a former Site-Local scoped address prefix is
+currently excluded from that list (see <a class="reference internal" href="ipaddress.html#py:attribute:ipaddress.ipv6address.is_site_local"><code class="xref py attribute docutils literal">is_site_local</code></a> &amp; :rfc:`3879`).</p>
 </div>
 </dd>
 </dl>

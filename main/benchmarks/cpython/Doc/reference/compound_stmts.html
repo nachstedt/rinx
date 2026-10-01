@@ -1075,7 +1075,9 @@ items, as for a fixed-length sequence.</p>
 </ol>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>This length may be cached by the interpreter in a similar manner as
+<p>The length of the subject sequence is obtained via
+<a class="reference internal" href="../library/functions.html#py:function:len"><code class="xref py function docutils literal">len</code></a> (i.e. via the <a class="reference internal" href="datamodel.html#py:method:object.__len__"><code class="xref py method docutils literal">__len__</code></a> protocol).
+This length may be cached by the interpreter in a similar manner as
 <a href="compound_stmts.html#value-patterns">value patterns</a>.</p>
 </div>
 </li>
@@ -1129,7 +1131,8 @@ values; or a <a class="reference internal" href="../library/exceptions.html#py:e
 </ol>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>subject's <code>get()</code> method.  Matched key-value pairs must already be present
+<p>Key-value pairs are matched using the two-argument form of the mapping
+subject's <code>get()</code> method.  Matched key-value pairs must already be present
 in the mapping, and not created on-the-fly via <a class="reference internal" href="datamodel.html#py:method:object.__missing__"><code class="xref py method docutils literal">__missing__</code></a>
 or <a class="reference internal" href="datamodel.html#py:method:object.__getitem__"><code class="xref py method docutils literal">__getitem__</code></a>.</p>
 </div>
@@ -1217,6 +1220,7 @@ be a string; if not <a class="reference internal" href="../library/exceptions.ht
 </ul>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><a href="datamodel.html#class-pattern-matching">Customizing positional arguments in class pattern matching</a></p>
 </div>
 </li>
 <li><p>Once all positional patterns have been converted to keyword patterns,

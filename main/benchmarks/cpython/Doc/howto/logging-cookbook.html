@@ -1022,7 +1022,8 @@ MainThread: Look out!</pre></div>
 </div>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>async code, but rather about slow logging handlers, it should be noted that
+<p>Although the earlier discussion wasn't specifically talking about
+async code, but rather about slow logging handlers, it should be noted that
 when logging from async code, network and even file handlers could lead to
 problems (blocking the event loop) because some logging is done from
 <a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> internals. It might be best, if any async code is used in an

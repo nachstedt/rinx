@@ -49,6 +49,11 @@
           </li>
         
           <li class="toctree-l2">
+            <a href="admonitions.html#content-on-the-directive-line">Content on the Directive Line</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
             <a href="admonitions.html#collapsible-admonitions">Collapsible Admonitions</a>
             
           </li>
@@ -367,6 +372,19 @@
   <p class="admonition-title">Custom Title</p>
 <p>This is a generic admonition with a custom title provided as an argument.</p>
 </div>
+<h2 id="content-on-the-directive-line">Content on the Directive Line</h2>
+<p>Every admonition but the generic one reads text after the <code>::</code> as the first
+line of its body:</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>A one-line note.</p>
+</div>
+<details class="admonition warning" open>
+  <summary class="admonition-title">Warning</summary>
+<p>A warning starting on the directive line,
+continued below it.</p>
+<p>Options may follow that first block, and the body after a blank line.</p>
+</details>
 <h2 id="collapsible-admonitions">Collapsible Admonitions</h2>
 <details class="admonition note">
   <summary class="admonition-title">Note</summary>

@@ -1140,7 +1140,8 @@ to <code>1</code> unless the <strong class="program">python</strong> interpreter
 <p>See also <a class="reference internal" href="init_config.html#c:member:pyconfig.orig_argv"><code class="xref c member docutils literal">PyConfig.orig_argv</code></a> and <a class="reference internal" href="init_config.html#c:member:pyconfig.argv"><code class="xref c member docutils literal">PyConfig.argv</code></a>
 members of the <a href="init_config.html#init-config">Python Initialization Configuration</a>.</p>
 <div class="versionchanged">
-  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4 The *updatepath* value depends on :option:`-I`.:</span></p>
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>The <em>updatepath</em> value depends on <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-i"><code class="xref std cmdoption docutils literal">-I</code></a>.</p>
 </div>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
@@ -1574,6 +1575,7 @@ for most cases.</p>
 </div>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><a class="reference internal" href="init.html#c:function:pythreadstate_get"><code class="xref c function docutils literal">PyThreadState_Get</code></a></p>
 </div>
 </dd>
 </dl>
@@ -2596,6 +2598,7 @@ CPython interpreter.  This API uses a new type <a class="reference internal" hre
 </div>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p>"A New C-API for Thread-Local Storage in CPython" (<span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0539/"><strong>PEP 539</strong></a>)</p>
 </div>
 <dl class="c type">
   <dt id="c:type:py_tss_t"><code class="sig-name">Py_tss_t</code></dt>

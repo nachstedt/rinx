@@ -590,7 +590,8 @@ and <a class="reference internal" href="http.server.html#py:attribute:http.serve
 After returning, the file pointer <em>fp</em> is ready to read the HTTP body.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>it only parses the <code>Name: value</code> lines. The file has to be ready to
+<p><a href="#" class="broken-link"><code class="xref py method docutils literal">parse_headers</code></a> does not parse the start-line of a HTTP message;
+it only parses the <code>Name: value</code> lines. The file has to be ready to
 read these field lines, so the first line should already be consumed
 before calling the function.</p>
 </div>
@@ -904,7 +905,8 @@ The method automatically signals the end of the chunk-encoded data
 immediately after <em>message_body</em>.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>yielded by an iterator body will be ignored by the chunk-encoder.
+<p>Due to the chunked encoding specification, empty chunks
+yielded by an iterator body will be ignored by the chunk-encoder.
 This is to avoid premature termination of the read of the request by
 the target server due to malformed encoding.</p>
 </div>

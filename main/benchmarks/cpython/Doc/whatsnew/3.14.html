@@ -534,9 +534,10 @@ for multiple interpreters.</p>
 <p>(Contributed by Eric Snow in :gh:`134939`.)</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0734/"><strong>PEP 734</strong></a></p>
 </div>
 <a id="whatsnew314-template-string-literals"></a>
-<h3 id="pep-750-template-string-literals"><span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0750/"><strong>PEP 750</strong></a>: Template string literals</h3>
+<h3 id="pep-750-template-string-literals"><span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0750/"><strong>PEP 750</strong></a>: Template string literals</h3>
 <p>Template strings are a new mechanism for custom string processing.
 They share the familiar syntax of f-strings but, unlike f-strings,
 return an object representing the static and interpolated parts of
@@ -598,9 +599,10 @@ Lysandros Nikolaou, Dave Peck, Adam Turner, Jelle Zijlstra, Bénédikt Tran,
 and Pablo Galindo Salgado in :gh:`132661`.)</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0750/"><strong>PEP 750</strong></a>.</p>
 </div>
 <a id="whatsnew314-remote-debugging"></a>
-<h3 id="pep-768-safe-external-debugger-interface"><span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0768/"><strong>PEP 768</strong></a>: Safe external debugger interface</h3>
+<h3 id="pep-768-safe-external-debugger-interface"><span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0768/"><strong>PEP 768</strong></a>: Safe external debugger interface</h3>
 <p>Python 3.14 introduces a zero-overhead debugging interface that allows
 debuggers and profilers to safely attach to running Python processes
 without stopping or restarting them.
@@ -648,6 +650,7 @@ the feature at build time.</p>
 in :gh:`131591`.)</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0768/"><strong>PEP 768</strong></a>.</p>
 </div>
 <a id="whatsnew314-tail-call-interpreter"></a>
 <h3 id="a-new-type-of-interpreter">A new type of interpreter</h3>
@@ -679,12 +682,12 @@ all.  It can improve their performance, but doesn't change anything else.</p>
 in CPython by Mark Shannon, Garrett Gu, Haoran Xu, and Josh Haberman.)</p>
 <a id="whatsnew314-free-threaded-cpython"></a>
 <h3 id="free-threaded-mode-improvements">Free-threaded mode improvements</h3>
-<p>CPython's free-threaded mode (<span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0703/"><strong>PEP 703</strong></a>), initially added in 3.13,
+<p>CPython's free-threaded mode (<span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0703/"><strong>PEP 703</strong></a>), initially added in 3.13,
 has been significantly improved in Python 3.14.
 The implementation described in PEP 703 has been finished, including C API
 changes, and temporary workarounds in the interpreter were replaced with
 more permanent solutions.
-The specializing adaptive interpreter (<span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0659/"><strong>PEP 659</strong></a>) is now enabled
+The specializing adaptive interpreter (<span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0659/"><strong>PEP 659</strong></a>) is now enabled
 in free-threaded mode, which along with many other optimizations
 greatly improves its performance.
 The performance penalty on single-threaded code in free-threaded mode
@@ -840,7 +843,7 @@ and vice versa for the asynchronous context manager protocol.
 </li>
 </ul>
 <a id="whatsnew314-zstandard"></a>
-<h3 id="pep-784-zstandard-support-in-the-standard-library"><span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0784/"><strong>PEP 784</strong></a>: Zstandard support in the standard library</h3>
+<h3 id="pep-784-zstandard-support-in-the-standard-library"><span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0784/"><strong>PEP 784</strong></a>: Zstandard support in the standard library</h3>
 <p>The new <code class="xref py module docutils literal">compression</code> package contains modules <code class="xref py module docutils literal">compression.lzma</code>,
 <code class="xref py module docutils literal">compression.bz2</code>, <code class="xref py module docutils literal">compression.gzip</code> and <code class="xref py module docutils literal">compression.zlib</code>
 which re-export the <a class="reference internal" href="../library/lzma.html#py:module:lzma" title="lzma: A Python wrapper for the liblzma compression library."><code class="xref py module docutils literal">lzma</code></a>, <a class="reference internal" href="../library/bz2.html#py:module:bz2" title="bz2: Interfaces for bzip2 compression and decompression."><code class="xref py module docutils literal">bz2</code></a>, <a class="reference internal" href="../library/gzip.html#py:module:gzip" title="gzip: Interfaces for gzip compression and decompression using file objects."><code class="xref py module docutils literal">gzip</code></a> and <a class="reference internal" href="../library/zlib.html#py:module:zlib" title="zlib: Low-level interface to compression and decompression routines compatible with gzip."><code class="xref py module docutils literal">zlib</code></a>
@@ -872,6 +875,7 @@ archives has been added to the <a class="reference internal" href="../library/ta
 Victor Stinner, and Rogdham in :gh:`132983`.)</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0784/"><strong>PEP 784</strong></a>.</p>
 </div>
 <a id="whatsnew314-asyncio-introspection"></a>
 <h3 id="asyncio-introspection-capabilities">Asyncio introspection capabilities</h3>
@@ -1081,13 +1085,13 @@ For example:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-keyword hl-control hl-exception hl-catch hl-python">except</span> <span class="hl-support hl-type hl-exception hl-python">TimeoutError</span><span class="hl-punctuation hl-separator hl-target-list hl-python">,</span> <span class="hl-support hl-type hl-exception hl-python">ConnectionRefusedError</span><span class="hl-punctuation hl-section hl-block hl-exception hl-catch hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">The network has ceased to be!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 </div>
-<p>(Contributed by Pablo Galindo and Brett Cannon in <span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0758/"><strong>PEP 758</strong></a> and :gh:`131831`.)</p>
+<p>(Contributed by Pablo Galindo and Brett Cannon in <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0758/"><strong>PEP 758</strong></a> and :gh:`131831`.)</p>
 <a id="whatsnew314-finally-syntaxwarning"></a>
 <h3 id="pep-765-control-flow-in-keyword-finally-blocks">PEP 765: Control flow in :keyword:`finally` blocks</h3>
 <p>The compiler now emits a <a class="reference internal" href="../library/exceptions.html#py:exception:syntaxwarning"><code class="xref py exception docutils literal">SyntaxWarning</code></a> when a :keyword:`return`,
 :keyword:`break`, or :keyword:`continue` statement have the effect of
 leaving a :keyword:`finally` block.
-This change is specified in <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0765/"><strong>PEP 765</strong></a>.</p>
+This change is specified in <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0765/"><strong>PEP 765</strong></a>.</p>
 <p>In situations where this change is inconvenient (such as those where the
 warnings are redundant due to code linting), the <a href="../library/warnings.html#warning-filter">warning filter</a> can be used to turn off all syntax warnings by adding
 <code>ignore::SyntaxWarning</code> as a filter. This can be specified in combination
@@ -2117,7 +2121,7 @@ This change could increase memory usage for some programs that use
 a large number of unions created by subscripting <code>typing.Union</code>.
 However, several factors offset this cost:
 unions used in annotations are no longer evaluated by default in Python
-3.14 because of <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0649/"><strong>PEP 649</strong></a>; an instance of <a class="reference internal" href="../library/types.html#py:class:types.uniontype"><code class="xref py class docutils literal">types.UnionType</code></a> is
+3.14 because of <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0649/"><strong>PEP 649</strong></a>; an instance of <a class="reference internal" href="../library/types.html#py:class:types.uniontype"><code class="xref py class docutils literal">types.UnionType</code></a> is
 itself much smaller than the object returned by <code>Union[]</code> was on prior
 Python versions; and removing the cache also saves some space.
 It is therefore unlikely that this change will cause a significant increase
@@ -2786,7 +2790,7 @@ Use <a class="reference internal" href="../library/pathlib.html#py:method:pathli
 <li><p><a class="reference internal" href="../library/pdb.html#py:module:pdb" title="pdb: The Python debugger for interactive interpreters."><code class="xref py module docutils literal">pdb</code></a>:
 The undocumented <code>pdb.Pdb.curframe_locals</code> attribute is now a deprecated
 read-only property, which will be removed in a future version of Python.
-The low overhead dynamic frame locals access added in Python 3.13 by <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>
+The low overhead dynamic frame locals access added in Python 3.13 by <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>
 means the frame locals cache reference previously stored in this attribute
 is no longer needed. Derived debuggers should access
 <code>pdb.Pdb.curframe.f_locals</code> directly in Python 3.13 and later versions.
@@ -2900,7 +2904,7 @@ ignoring every argument.</p>
 <li><p><a class="reference internal" href="../library/types.html#py:module:types" title="types: Names for built-in types."><code class="xref py module docutils literal">types</code></a>:</p>
 <ul>
 <li><p><a class="reference internal" href="../library/types.html#py:class:types.codetype"><code class="xref py class docutils literal">types.CodeType</code></a>: Accessing <a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_lnotab"><code class="xref py attribute docutils literal">co_lnotab</code></a> was
-deprecated in <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0626/"><strong>PEP 626</strong></a>
+deprecated in <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0626/"><strong>PEP 626</strong></a>
 since 3.10 and was planned to be removed in 3.12,
 but it only got a proper <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> in 3.12.
 May be removed in 3.15.
@@ -3096,7 +3100,7 @@ instance of <code class="xref py class docutils literal">ByteString</code> never
 about the object. Other common buffer types such as <a class="reference internal" href="../library/stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a>
 were also never understood as subtypes of <code class="xref py class docutils literal">ByteString</code> (either at
 runtime or by static type checkers).</p>
-<p>See <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
+<p>See <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
 (Contributed by Shantanu Jain in :gh:`91896`.)</p>
 </li>
 </ul>
@@ -3123,7 +3127,7 @@ instance of <code class="xref py class docutils literal">ByteString</code> never
 about the object. Other common buffer types such as <a class="reference internal" href="../library/stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a>
 were also never understood as subtypes of <code class="xref py class docutils literal">ByteString</code> (either at
 runtime or by static type checkers).</p>
-<p>See <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
+<p>See <span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
 (Contributed by Shantanu Jain in :gh:`91896`.)</p>
 </li>
 </ul>
@@ -3431,12 +3435,12 @@ to record branch events (such as :monitoring-event:`BRANCH_LEFT`).
 <p>Add a <a href="../c-api/init_config.html#pyinitconfig_api">PyInitConfig C API</a> to configure the Python
 initialization without relying on C structures and the ability to make
 ABI-compatible changes in the future.</p>
-<p>Complete the <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a> <a href="../c-api/init_config.html#pyconfig_api">PyConfig C API</a> by adding
+<p>Complete the <span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a> <a href="../c-api/init_config.html#pyconfig_api">PyConfig C API</a> by adding
 <a class="reference internal" href="../c-api/init_config.html#c:function:pyinitconfig_addmodule"><code class="xref c function docutils literal">PyInitConfig_AddModule</code></a> which can be used to add a built-in extension
 module; a feature previously referred to as the "inittab".</p>
 <p>Add <a class="reference internal" href="../c-api/init_config.html#c:function:pyconfig_get"><code class="xref c function docutils literal">PyConfig_Get</code></a> and <a class="reference internal" href="../c-api/init_config.html#c:function:pyconfig_set"><code class="xref c function docutils literal">PyConfig_Set</code></a> functions to get and set
 the current runtime configuration.</p>
-<p><span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a> 'Python Initialization Configuration' unified all the ways
+<p><span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a> 'Python Initialization Configuration' unified all the ways
 to configure Python's initialization. This PEP also unifies the configuration
 of Python's preinitialization and initialization in a single API.
 Moreover, this PEP only provides a single choice to embed Python,
@@ -3449,6 +3453,7 @@ configuration mechanisms).</p>
 <p>(Contributed by Victor Stinner in :gh:`107954`.)</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0741/"><strong>PEP 741</strong></a> and <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a></p>
 </div>
 <h3 id="new-features-in-the-c-api">New features in the C API</h3>
 <ul>
@@ -3562,7 +3567,7 @@ Python <a class="reference internal" href="../library/functions.html#py:class:in
 <p>(Contributed by Victor Stinner in :gh:`120389`.)</p>
 </li>
 <li><p>Add a new import and export API for Python <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a> objects
-(<span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0757/"><strong>PEP 757</strong></a>):</p>
+(<span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0757/"><strong>PEP 757</strong></a>):</p>
 <ul>
 <li><p><a class="reference internal" href="../c-api/long.html#c:function:pylong_getnativelayout"><code class="xref c function docutils literal">PyLong_GetNativeLayout</code></a></p>
 </li>
@@ -3590,7 +3595,7 @@ events, respectively.
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/type.html#c:function:pytype_getbasebytoken"><code class="xref c function docutils literal">PyType_GetBaseByToken</code></a> and <a class="reference internal" href="../c-api/type.html#c:macro:py_tp_token"><code class="xref c member docutils literal">Py_tp_token</code></a> slot
 for easier superclass identification, which attempts to resolve the
-type checking issue mentioned in <span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0630/#type-checking"><strong>PEP 630</strong></a>.
+type checking issue mentioned in <span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0630/#type-checking"><strong>PEP 630</strong></a>.
 (Contributed in :gh:`124153`.)</p>
 </li>
 <li><p>Add a new <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_equal"><code class="xref c function docutils literal">PyUnicode_Equal</code></a> function to test if two
@@ -3644,7 +3649,7 @@ an object is <a class="reference internal" href="../glossary.html#term-immortal"
 (Contributed by Peter Bierma in :gh:`128509`.)</p>
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/object.html#c:function:pyunstable_object_enabledeferredrefcount"><code class="xref c function docutils literal">PyUnstable_Object_EnableDeferredRefcount</code></a> for enabling
-deferred reference counting, as outlined in <span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0703/"><strong>PEP 703</strong></a>.</p>
+deferred reference counting, as outlined in <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0703/"><strong>PEP 703</strong></a>.</p>
 </li>
 <li><p>Add <a class="reference internal" href="../c-api/object.html#c:function:pyunstable_object_isuniquelyreferenced"><code class="xref c function docutils literal">PyUnstable_Object_IsUniquelyReferenced</code></a> as
 a replacement for <code>Py_REFCNT(op) == 1</code> on <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free threaded</span></a> builds.
@@ -3688,7 +3693,7 @@ Use the <a class="reference internal" href="../c-api/dict.html#c:function:pydict
 (Contributed by Sam Gross in :gh:`124296`.)</p>
 </li>
 <li><p>Remove the private <code>_Py_InitializeMain()</code> function.
-It was a <a class="reference internal" href="../glossary.html#term-provisional-api"><span class="xref std std-term">provisional API</span></a> added to Python 3.8 by <span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a>.
+It was a <a class="reference internal" href="../glossary.html#term-provisional-api"><span class="xref std std-term">provisional API</span></a> added to Python 3.8 by <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a>.
 (Contributed by Victor Stinner in :gh:`129033`.)</p>
 </li>
 <li><p>Remove the undocumented APIs <code class="xref c macro docutils literal">Py_C_RECURSION_LIMIT</code>
@@ -4034,8 +4039,8 @@ Unneeded since Python 3.7.</p>
 <a id="whatsnew314-build-changes"></a>
 <h2 id="build-changes">Build changes</h2>
 <ul>
-<li><p><span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0776/"><strong>PEP 776</strong></a>: Emscripten is now an officially supported platform at
-<span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/#tier-3"><strong>tier 3</strong></a>. As a part of this effort, more than 25 bugs in
+<li><p><span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0776/"><strong>PEP 776</strong></a>: Emscripten is now an officially supported platform at
+<span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/#tier-3"><strong>tier 3</strong></a>. As a part of this effort, more than 25 bugs in
 <a href="#" class="broken-link">Emscripten libc</a> were fixed. Emscripten now includes support
 for <a class="reference internal" href="../library/ctypes.html#py:module:ctypes" title="ctypes: A foreign function library for Python."><code class="xref py module docutils literal">ctypes</code></a>, <a class="reference internal" href="../library/termios.html#py:module:termios" title="termios: POSIX style tty control. (Unix)"><code class="xref py module docutils literal">termios</code></a>, and <a class="reference internal" href="../library/fcntl.html#py:module:fcntl" title="fcntl: The fcntl() and ioctl() system calls. (Unix)"><code class="xref py module docutils literal">fcntl</code></a>, as well as
 experimental support for the new <a href="../tutorial/interpreter.html#tut-interactive">default interactive shell</a>.
@@ -4048,7 +4053,7 @@ experimental support for the new <a href="../tutorial/interpreter.html#tut-inter
 <li><p>GNU Autoconf 2.72 is now required to generate :file:`configure`.
 (Contributed by Erlend Aasland in :gh:`115765`.)</p>
 </li>
-<li><p><code>wasm32-unknown-emscripten</code> is now a <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> tier 3 platform.
+<li><p><code>wasm32-unknown-emscripten</code> is now a <span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> tier 3 platform.
 (Contributed by R. Hood Chatham in :gh:`127146`, :gh:`127683`, and :gh:`136931`.)</p>
 </li>
 <li><p><code>#pragma</code>-based linking with <code>python3*.lib</code> can now be switched off
@@ -4094,7 +4099,7 @@ standard library directory. This corresponds to the <a href="../library/sysconfi
 which can be found by running <code>sysconfig.get_path('stdlib')</code>.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
-<p><span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0739/"><strong>PEP 739</strong></a> – <code>build-details.json</code> 1.0 – a static description file
+<p><span class="target" id="index-49"></span><a class="pep reference external" href="https://peps.python.org/pep-0739/"><strong>PEP 739</strong></a> – <code>build-details.json</code> 1.0 – a static description file
 for Python build details</p>
 </div>
 <a id="whatsnew314-no-more-pgp"></a>
@@ -4103,7 +4108,7 @@ for Python build details</p>
 for releases of Python 3.14 or future versions.
 To verify CPython artifacts, users must use <a href="https://www.python.org/downloads/metadata/sigstore/">Sigstore verification materials</a>.
 Releases have been signed using <a href="https://www.sigstore.dev/">Sigstore</a> since Python 3.11.</p>
-<p>This change in release process was specified in <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0761/"><strong>PEP 761</strong></a>.</p>
+<p>This change in release process was specified in <span class="target" id="index-50"></span><a class="pep reference external" href="https://peps.python.org/pep-0761/"><strong>PEP 761</strong></a>.</p>
 <a id="whatsnew314-free-threaded-now-supported"></a>
 <h3 id="free-threaded-python-is-officially-supported">Free-threaded Python is officially supported</h3>
 <p>The free-threaded build of Python is now supported and no longer experimental.
@@ -4122,7 +4127,7 @@ and dependent on many factors both within CPython itself and the community.
 This decision is for the future.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
-<p><span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0779/"><strong>PEP 779</strong></a></p>
+<p><span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0779/"><strong>PEP 779</strong></a></p>
 <p><a href="https://discuss.python.org/t/84319/123">PEP 779's acceptance</a></p>
 </div>
 <a id="whatsnew314-jit-compiler"></a>
@@ -4147,6 +4152,7 @@ work without modification). Free-threaded builds do not support JIT compilation.
 <p>Please report any bugs or major performance regressions that you encounter!</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><span class="target" id="index-52"></span><a class="pep reference external" href="https://peps.python.org/pep-0744/"><strong>PEP 744</strong></a></p>
 </div>
 <h2 id="porting-to-python-3-14">Porting to Python 3.14</h2>
 <p>This section lists previously described changes and other bugfixes
@@ -4204,7 +4210,7 @@ when given as the entire pattern, which may cause behavioural changes.</p>
 </li>
 </ul>
 <a id="whatsnew314-porting-annotations"></a>
-<h3 id="changes-in-annotations-pep-649-and-pep-749">Changes in annotations (<span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0649/"><strong>PEP 649</strong></a> and <span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0749/"><strong>PEP 749</strong></a>)</h3>
+<h3 id="changes-in-annotations-pep-649-and-pep-749">Changes in annotations (<span class="target" id="index-53"></span><a class="pep reference external" href="https://peps.python.org/pep-0649/"><strong>PEP 649</strong></a> and <span class="target" id="index-54"></span><a class="pep reference external" href="https://peps.python.org/pep-0749/"><strong>PEP 749</strong></a>)</h3>
 <p>This section contains guidance on changes that may be needed to annotations
 or Python code that interacts with or introspects annotations,
 due to the changes related to <a href="3.14.html#whatsnew314-deferred-annotations">deferred evaluation of annotations</a>.</p>
@@ -4251,7 +4257,7 @@ construction and <a class="reference internal" href="../library/annotationlib.ht
 from an instance of an annotated class. This behavior was undocumented
 and accidental, and will no longer work in Python 3.14.</p>
 <h4 id="from-future-import-annotations"><code>from __future__ import annotations</code></h4>
-<p>In Python 3.7, <span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0563/"><strong>PEP 563</strong></a> introduced the <code>from __future__ import annotations</code>
+<p>In Python 3.7, <span class="target" id="index-55"></span><a class="pep reference external" href="https://peps.python.org/pep-0563/"><strong>PEP 563</strong></a> introduced the <code>from __future__ import annotations</code>
 <a href="../reference/simple_stmts.html#future">future statement</a>, which turns all annotations into strings.</p>
 <p>However, this statement is now deprecated and it is expected to be removed
 in a future version of Python.

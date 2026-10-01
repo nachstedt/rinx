@@ -1015,7 +1015,8 @@ code approach, mainly separation of configuration and code and the ability of
 noncoders to easily modify the logging properties.</p>
 <div class="admonition warning">
   <p class="admonition-title">Warning</p>
-<p><code>disable_existing_loggers</code>, which defaults to <code>True</code> for reasons of
+<p>The <a class="reference internal" href="../library/logging.config.html#py:function:logging.config.fileconfig"><code class="xref py function docutils literal">fileConfig</code></a> function takes a default parameter,
+<code>disable_existing_loggers</code>, which defaults to <code>True</code> for reasons of
 backward compatibility. This may or may not be what you want, since it
 will cause any non-root loggers existing before the <a class="reference internal" href="../library/logging.config.html#py:function:logging.config.fileconfig"><code class="xref py function docutils literal">fileConfig</code></a>
 call to be disabled unless they (or an ancestor) are explicitly named in
@@ -1129,7 +1130,8 @@ libraries, then the logger name specified can be 'orgname.foo' rather than
 just 'foo'.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>in your library. Instead, use a logger with a unique and easily
+<p>It is strongly advised that you <em>do not log to the root logger</em>
+in your library. Instead, use a logger with a unique and easily
 identifiable name, such as the <code>__name__</code> for your library's top-level package
 or module. Logging to the root logger will make it difficult or impossible for
 the application developer to configure the logging verbosity or handlers of
@@ -1137,7 +1139,8 @@ your library as they wish.</p>
 </div>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>than* <a class="reference internal" href="../library/logging.handlers.html#py:class:logging.nullhandler"><code class="xref py class docutils literal">NullHandler</code></a> <em>to your library's loggers</em>. This is
+<p>It is strongly advised that you <em>do not add any handlers other
+than</em> <a class="reference internal" href="../library/logging.handlers.html#py:class:logging.nullhandler"><code class="xref py class docutils literal">NullHandler</code></a> <em>to your library's loggers</em>. This is
 because the configuration of handlers is the prerogative of the application
 developer who uses your library. The application developer knows their
 target audience and what handlers are most appropriate for their
@@ -1369,7 +1372,8 @@ You can write code like this:</p>
 <code>expensive_func1</code> and <code>expensive_func2</code> are never made.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>expensive than you'd like (e.g. for deeply nested loggers where an explicit
+<p>In some cases, <a class="reference internal" href="../library/logging.html#py:method:logging.logger.isenabledfor"><code class="xref py method docutils literal">isEnabledFor</code></a> can itself be more
+expensive than you'd like (e.g. for deeply nested loggers where an explicit
 level is only set high up in the logger hierarchy). In such cases (or if you
 want to avoid calling a method in tight loops), you can cache the result of a
 call to <a class="reference internal" href="../library/logging.html#py:method:logging.logger.isenabledfor"><code class="xref py method docutils literal">isEnabledFor</code></a> in a local or instance variable, and use

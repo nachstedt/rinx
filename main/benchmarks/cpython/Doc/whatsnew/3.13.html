@@ -670,6 +670,7 @@ build-time dependency on LLVM.</p>
 </ul>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0744/"><strong>PEP 744</strong></a></p>
 </div>
 <p>(JIT by Brandt Bucher, inspired by a paper by Haoran Xu and Fredrik Kjolstad.
 Tier 2 IR by Mark Shannon and Guido van Rossum.
@@ -678,7 +679,7 @@ Tier 2 optimizer by Ken Jin.)</p>
 <h3 id="defined-mutation-semantics-for-locals">Defined mutation semantics for <a class="reference internal" href="../library/functions.html#py:function:locals"><code class="xref py function docutils literal">locals</code></a></h3>
 <p>Historically, the expected result of mutating the return value of
 <a class="reference internal" href="../library/functions.html#py:function:locals"><code class="xref py function docutils literal">locals</code></a> has been left to individual Python implementations to define.
-Starting from Python 3.13, <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a> standardises
+Starting from Python 3.13, <span class="target" id="index-20"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a> standardises
 the historical behavior of CPython for most code execution scopes,
 but changes <a class="reference internal" href="../glossary.html#term-optimized-scope"><span class="xref std std-term">optimized scopes</span></a>
 (functions, generators, coroutines, comprehensions, and generator expressions)
@@ -707,7 +708,7 @@ scopes affected by this change, <a class="reference internal" href="../reference
 returns a write-through proxy to the frame's local and locally referenced
 nonlocal variables in these scopes, rather than returning an inconsistently
 updated shared <code>dict</code> instance with undefined runtime semantics.</p>
-<p>See <span class="target" id="index-20"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a> for more details, including related C API changes
+<p>See <span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a> for more details, including related C API changes
 and deprecations. Porting notes are also provided below for the affected
 <a href="3.13.html#pep667-porting-notes-py">Python APIs</a> and <a href="3.13.html#pep667-porting-notes-c">C APIs</a>.</p>
 <p>(PEP and implementation contributed by Mark Shannon and Tian Gao in
@@ -715,7 +716,7 @@ and deprecations. Porting notes are also provided below for the affected
 Alyssa Coghlan.)</p>
 <a id="whatsnew313-platform-support"></a>
 <h3 id="support-for-mobile-platforms">Support for mobile platforms</h3>
-<p><span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0730/"><strong>PEP 730</strong></a>: iOS is now a <span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> supported platform, with the
+<p><span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0730/"><strong>PEP 730</strong></a>: iOS is now a <span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> supported platform, with the
 <code>arm64-apple-ios</code> and <code>arm64-apple-ios-simulator</code> targets at tier 3
 (iPhone and iPad devices released after 2013 and the Xcode iOS simulator
 running on Apple silicon hardware, respectively).
@@ -724,7 +725,7 @@ running on Apple silicon hardware, respectively).
 is not a tier 3 supported platform, but will have best-effort support.
 (PEP written and implementation contributed by Russell Keith-Magee in
 :gh:`114099`.)</p>
-<p><span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0738/"><strong>PEP 738</strong></a>: Android is now a <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> supported platform, with the
+<p><span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0738/"><strong>PEP 738</strong></a>: Android is now a <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> supported platform, with the
 <code>aarch64-linux-android</code> and <code>x86_64-linux-android</code> targets at tier 3.
 The 32-bit targets <code>arm-linux-androideabi</code> and <code>i686-linux-android</code>
 are not tier 3 supported platforms, but will have best-effort support.
@@ -732,6 +733,7 @@ are not tier 3 supported platforms, but will have best-effort support.
 :gh:`116622`.)</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
+<p><span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0730/"><strong>PEP 730</strong></a>, <span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0738/"><strong>PEP 738</strong></a></p>
 </div>
 <h2 id="other-language-changes">Other Language Changes</h2>
 <ul>
@@ -1580,10 +1582,10 @@ This argument must either be a mapping or an iterable of key-value pairs.
 </ul>
 <h3 id="typing">typing</h3>
 <ul>
-<li><p><span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0705/"><strong>PEP 705</strong></a>: Add <a class="reference internal" href="../library/typing.html#py:data:typing.readonly"><code class="xref py data docutils literal">ReadOnly</code></a>, a special typing construct
+<li><p><span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0705/"><strong>PEP 705</strong></a>: Add <a class="reference internal" href="../library/typing.html#py:data:typing.readonly"><code class="xref py data docutils literal">ReadOnly</code></a>, a special typing construct
 to mark a <a class="reference internal" href="../library/typing.html#py:class:typing.typeddict"><code class="xref py class docutils literal">TypedDict</code></a> item as read-only for type checkers.</p>
 </li>
-<li><p><span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0742/"><strong>PEP 742</strong></a>: Add <a class="reference internal" href="../library/typing.html#py:data:typing.typeis"><code class="xref py data docutils literal">TypeIs</code></a>, a typing construct
+<li><p><span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0742/"><strong>PEP 742</strong></a>: Add <a class="reference internal" href="../library/typing.html#py:data:typing.typeis"><code class="xref py data docutils literal">TypeIs</code></a>, a typing construct
 that can be used to instruct a type checker how to narrow a type.</p>
 </li>
 <li><p>Add <a class="reference internal" href="../library/typing.html#py:data:typing.nodefault"><code class="xref py data docutils literal">NoDefault</code></a>, a sentinel object used to represent
@@ -1624,7 +1626,7 @@ and opt-out via the CLI, using <a href="#" class="broken-link"><code class="xref
 </ul>
 <h3 id="warnings">warnings</h3>
 <ul>
-<li><p><span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0702/"><strong>PEP 702</strong></a>: The new <a class="reference internal" href="../library/warnings.html#py:function:warnings.deprecated"><code class="xref py function docutils literal">warnings.deprecated</code></a> decorator provides a way to
+<li><p><span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0702/"><strong>PEP 702</strong></a>: The new <a class="reference internal" href="../library/warnings.html#py:function:warnings.deprecated"><code class="xref py function docutils literal">warnings.deprecated</code></a> decorator provides a way to
 communicate deprecations to a <a class="reference internal" href="../glossary.html#term-static-type-checker"><span class="xref std std-term">static type checker</span></a>
 and to warn on usage of deprecated classes and functions.
 A <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> may also be emitted when
@@ -1690,7 +1692,7 @@ See the <a href="3.13.html#whatsnew313-subprocess">subprocess</a> section above 
 <h2 id="removed-modules-and-apis">Removed Modules And APIs</h2>
 <a id="whatsnew313-pep594"></a>
 <h3 id="pep-594-remove-dead-batteries-from-the-standard-library">PEP 594: Remove "dead batteries" from the standard library</h3>
-<p><span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a> proposed removing 19 modules from the standard library,
+<p><span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a> proposed removing 19 modules from the standard library,
 colloquially referred to as 'dead batteries' due to their
 historic, obsolete, or insecure status.
 All of the following modules were deprecated in Python 3.11,
@@ -2465,7 +2467,7 @@ ignoring every argument.</p>
 <li><p><a class="reference internal" href="../library/types.html#py:module:types" title="types: Names for built-in types."><code class="xref py module docutils literal">types</code></a>:</p>
 <ul>
 <li><p><a class="reference internal" href="../library/types.html#py:class:types.codetype"><code class="xref py class docutils literal">types.CodeType</code></a>: Accessing <a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_lnotab"><code class="xref py attribute docutils literal">co_lnotab</code></a> was
-deprecated in <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0626/"><strong>PEP 626</strong></a>
+deprecated in <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0626/"><strong>PEP 626</strong></a>
 since 3.10 and was planned to be removed in 3.12,
 but it only got a proper <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> in 3.12.
 May be removed in 3.15.
@@ -2661,7 +2663,7 @@ instance of <code class="xref py class docutils literal">ByteString</code> never
 about the object. Other common buffer types such as <a class="reference internal" href="../library/stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a>
 were also never understood as subtypes of <code class="xref py class docutils literal">ByteString</code> (either at
 runtime or by static type checkers).</p>
-<p>See <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
+<p>See <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
 (Contributed by Shantanu Jain in :gh:`91896`.)</p>
 </li>
 </ul>
@@ -2688,7 +2690,7 @@ instance of <code class="xref py class docutils literal">ByteString</code> never
 about the object. Other common buffer types such as <a class="reference internal" href="../library/stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a>
 were also never understood as subtypes of <code class="xref py class docutils literal">ByteString</code> (either at
 runtime or by static type checkers).</p>
-<p>See <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
+<p>See <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.
 (Contributed by Shantanu Jain in :gh:`91896`.)</p>
 </li>
 </ul>
@@ -2916,7 +2918,7 @@ if the except-depth is 1, which is needed to optimize closing of generators.
 <h3 id="new-features-1">New Features</h3>
 <ul>
 <li><p>Add the <a href="../c-api/monitoring.html#c-api-monitoring">PyMonitoring C API</a>
-for generating <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0669/"><strong>PEP 669</strong></a> monitoring events:</p>
+for generating <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0669/"><strong>PEP 669</strong></a> monitoring events:</p>
 <ul>
 <li><p><a class="reference internal" href="../c-api/monitoring.html#c:type:pymonitoringstate"><code class="xref c type docutils literal">PyMonitoringState</code></a></p>
 </li>
@@ -3214,7 +3216,7 @@ to <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicod
 <li><p><code>%#N</code>: As above, but use a colon as the separator</p>
 </li>
 </ul>
-<p>See <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0737/"><strong>PEP 737</strong></a> for more information.
+<p>See <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0737/"><strong>PEP 737</strong></a> for more information.
 (Contributed by Victor Stinner in :gh:`111696`.)</p>
 </li>
 <li><p>You no longer have to define the <code>PY_SSIZE_T_CLEAN</code> macro before
@@ -3367,7 +3369,7 @@ Set <a class="reference internal" href="../c-api/init_config.html#c:member:pycon
 </li>
 </ul>
 <p>Use the new <a class="reference internal" href="../c-api/init_config.html#c:type:pyconfig"><code class="xref c type docutils literal">PyConfig</code></a> API of the <a href="../c-api/init_config.html#init-config">Python Initialization
-Configuration</a> instead (<span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a>), added to Python 3.8.
+Configuration</a> instead (<span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a>), added to Python 3.8.
 (Contributed by Victor Stinner in :gh:`105145`.)</p>
 </li>
 <li><p>Remove <code class="xref c function docutils literal">PyEval_AcquireLock</code> and <code class="xref c function docutils literal">PyEval_ReleaseLock</code> functions,
@@ -3400,7 +3402,7 @@ The <a href="https://github.com/python/pythoncapi-compat/">pythoncapi-compat pro
 </li>
 <li><p>Remove the private <code class="xref c function docutils literal">_PyObject_FastCall</code> function:
 use <code class="xref c function docutils literal">PyObject_Vectorcall</code> which is available since Python 3.8
-(<span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0590/"><strong>PEP 590</strong></a>).
+(<span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0590/"><strong>PEP 590</strong></a>).
 (Contributed by Victor Stinner in :gh:`106023`.)</p>
 </li>
 <li><p>Remove the <code>cpython/pytime.h</code> header file,
@@ -3450,7 +3452,7 @@ or the :envvar:`PYTHONHOME` environment variable instead.</p>
 <a class="reference internal" href="../c-api/reflection.html#c:function:pyeval_getbuiltins"><code class="xref c function docutils literal">PyEval_GetBuiltins</code></a>, <a class="reference internal" href="../c-api/reflection.html#c:function:pyeval_getglobals"><code class="xref c function docutils literal">PyEval_GetGlobals</code></a>,
 and <a class="reference internal" href="../c-api/reflection.html#c:function:pyeval_getlocals"><code class="xref c function docutils literal">PyEval_GetLocals</code></a> functions,
 which return a <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a>.
-(Soft deprecated as part of <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>.)</p>
+(Soft deprecated as part of <span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>.)</p>
 </li>
 <li><p>Deprecate the <a class="reference internal" href="../c-api/import.html#c:function:pyimport_importmodulenoblock"><code class="xref c function docutils literal">PyImport_ImportModuleNoBlock</code></a> function,
 which is just an alias to <a class="reference internal" href="../c-api/import.html#c:function:pyimport_importmodule"><code class="xref c function docutils literal">PyImport_ImportModule</code></a> since Python 3.3.
@@ -3482,7 +3484,7 @@ The <a href="https://github.com/python/pythoncapi-compat/">pythoncapi-compat pro
 <h4 id="pending-removal-in-python-3-14-1">Pending removal in Python 3.14</h4>
 <ul>
 <li><p>The <code>ma_version_tag</code> field in <a class="reference internal" href="../c-api/dict.html#c:type:pydictobject"><code class="xref c type docutils literal">PyDictObject</code></a> for extension modules
-(<span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>; :gh:`101193`).</p>
+(<span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>; :gh:`101193`).</p>
 </li>
 <li><p>Creating <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_immutabletype"><code class="xref c member docutils literal">immutable types</code></a> with mutable
 bases (:gh:`95388`).</p>
@@ -3792,19 +3794,19 @@ Unneeded since Python 3.7.</p>
 <h2 id="build-changes">Build Changes</h2>
 <ul>
 <li><p><code>arm64-apple-ios</code> and <code>arm64-apple-ios-simulator</code> are both
-now <span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> tier 3 platforms.
+now <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> tier 3 platforms.
 (<a href="3.13.html#whatsnew313-platform-support">PEP 730</a> written
 and implementation contributed by Russell Keith-Magee in :gh:`114099`.)</p>
 </li>
 <li><p><code>aarch64-linux-android</code> and <code>x86_64-linux-android</code> are both
-now <span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> tier 3 platforms.
+now <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> tier 3 platforms.
 (<a href="3.13.html#whatsnew313-platform-support">PEP 738</a> written
 and implementation contributed by Malcolm Smith in :gh:`116622`.)</p>
 </li>
-<li><p><code>wasm32-wasi</code> is now a <span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> tier 2 platform.
+<li><p><code>wasm32-wasi</code> is now a <span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> tier 2 platform.
 (Contributed by Brett Cannon in :gh:`115192`.)</p>
 </li>
-<li><p><code>wasm32-emscripten</code> is no longer a <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> supported platform.
+<li><p><code>wasm32-emscripten</code> is no longer a <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> supported platform.
 (Contributed by Brett Cannon in :gh:`115192`.)</p>
 </li>
 <li><p>Building CPython now requires a compiler with support for the C11 atomic
@@ -3861,20 +3863,20 @@ requires explicit calls to update the initially returned dictionary with the
 results of subsequent calls to <code class="xref py function docutils literal">locals</code>. Code execution functions that
 implicitly target <code class="xref py function docutils literal">locals</code> (such as <code>exec</code> and <code>eval</code>) must be
 passed an explicit namespace to access their results in an optimized scope.
-(Changed as part of <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>.)</p>
+(Changed as part of <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>.)</p>
 </li>
 <li><p>Calling <a class="reference internal" href="../library/functions.html#py:function:locals"><code class="xref py function docutils literal">locals</code></a> from a comprehension at module or class scope
 (including via <code>exec</code> or <code>eval</code>) once more behaves as if the comprehension
 were running as an independent nested function (i.e. the local variables from
 the containing scope are not included). In Python 3.12, this had changed
 to include the local variables from the containing scope when implementing
-<span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0709/"><strong>PEP 709</strong></a>. (Changed as part of <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>.)</p>
+<span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0709/"><strong>PEP 709</strong></a>. (Changed as part of <span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>.)</p>
 </li>
 <li><p>Accessing <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_locals"><code class="xref py attribute docutils literal">FrameType.f_locals</code></a> in an
 <a class="reference internal" href="../glossary.html#term-optimized-scope"><span class="xref std std-term">optimized scope</span></a> now returns a write-through proxy rather than a
 snapshot that gets updated at ill-specified times. If a snapshot is desired,
 it must be created explicitly with <code>dict</code> or the proxy's <code>.copy()</code> method.
-(Changed as part of <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>.)</p>
+(Changed as part of <span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0667/"><strong>PEP 667</strong></a>.)</p>
 </li>
 </ul>
 </li>

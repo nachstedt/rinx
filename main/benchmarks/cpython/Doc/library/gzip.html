@@ -484,7 +484,8 @@ including iteration and the :keyword:`with` statement.  Only the
 The number of bytes returned may be more or less than requested.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>the <a class="reference internal" href="gzip.html#py:class:gzip.gzipfile"><code class="xref py class docutils literal">GzipFile</code></a>, it may change the position of the underlying
+<p>While calling <a class="reference internal" href="gzip.html#py:method:gzip.gzipfile.peek"><code class="xref py method docutils literal">peek</code></a> does not change the file position of
+the <a class="reference internal" href="gzip.html#py:class:gzip.gzipfile"><code class="xref py class docutils literal">GzipFile</code></a>, it may change the position of the underlying
 file object (e.g. if the <a class="reference internal" href="gzip.html#py:class:gzip.gzipfile"><code class="xref py class docutils literal">GzipFile</code></a> was constructed with the
 <em>fileobj</em> parameter).</p>
 </div>

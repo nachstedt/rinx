@@ -2673,7 +2673,8 @@ appropriately.</p>
 the process which created the pool.</p>
 <div class="admonition warning">
   <p class="admonition-title">Warning</p>
-<p>properly managed (like any other resource) by using the pool as a context manager
+<p><a href="#" class="broken-link"><code class="xref py class docutils literal">multiprocessing.pool</code></a> objects have internal resources that need to be
+properly managed (like any other resource) by using the pool as a context manager
 or by calling <a class="reference internal" href="multiprocessing.html#py:method:multiprocessing.pool.pool.close"><code class="xref py method docutils literal">close</code></a> and <a class="reference internal" href="multiprocessing.html#py:method:multiprocessing.pool.pool.terminate"><code class="xref py method docutils literal">terminate</code></a> manually. Failure to do this
 can lead to the process hanging on finalization.</p>
 <p>Note that it is <strong>not correct</strong> to rely on the garbage collector to destroy the pool

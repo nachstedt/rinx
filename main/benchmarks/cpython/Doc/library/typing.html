@@ -3957,7 +3957,8 @@ True</pre></div>
 a user, but may be used by introspection tools.</p>
 <div class="admonition note">
   <p class="admonition-title">Note</p>
-<p>implicitly transformed into <code>list[ForwardRef("SomeClass")]</code> and thus
+<p><span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> generic types such as <code>list["SomeClass"]</code> will not be
+implicitly transformed into <code>list[ForwardRef("SomeClass")]</code> and thus
 will not automatically resolve to <code>list[SomeClass]</code>.</p>
 </div>
 <div class="versionadded">
@@ -4014,7 +4015,7 @@ type checkers. It's <code>False</code> at runtime.</p>
 used for typing annotations, can be safely imported inside an
 <code>if TYPE_CHECKING:</code> block.  This prevents the module from actually
 being imported at runtime; annotations aren't eagerly evaluated
-(see <span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0649/"><strong>PEP 649</strong></a>) so using undefined symbols in annotations is
+(see <span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0649/"><strong>PEP 649</strong></a>) so using undefined symbols in annotations is
 harmless–as long as you don't later examine them.
 Your static type analysis tool will set <code>TYPE_CHECKING</code> to
 <code>True</code> during static type analysis, which means the module will
@@ -4045,7 +4046,7 @@ standard library classes. These were originally included in the <code class="xre
 module in order to support parameterizing these generic classes using <code>[]</code>.
 However, the aliases became redundant in Python 3.9 when the
 corresponding pre-existing classes were enhanced to support <code>[]</code> (see
-<span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a>).</p>
+<span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a>).</p>
 <p>The redundant types are deprecated as of Python 3.9. However, while the aliases
 may be removed at some point, removal of these aliases is not currently
 planned. As such, no deprecation warnings are currently issued by the
@@ -4067,7 +4068,7 @@ rather than to use <a class="reference internal" href="stdtypes.html#py:class:di
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="stdtypes.html#py:class:dict"><code class="xref py class docutils literal">builtins.dict</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4081,7 +4082,7 @@ rather than to use <a class="reference internal" href="stdtypes.html#py:class:li
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="stdtypes.html#py:class:list"><code class="xref py class docutils literal">builtins.list</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4094,7 +4095,7 @@ rather than to use <a class="reference internal" href="stdtypes.html#py:class:se
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="stdtypes.html#py:class:set"><code class="xref py class docutils literal">builtins.set</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4105,7 +4106,7 @@ See <span class="target" id="index-42"></span><a class="pep reference external" 
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="stdtypes.html#py:class:frozenset"><code class="xref py class docutils literal">builtins.frozenset</code></a>
 now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4117,7 +4118,7 @@ See <span class="target" id="index-43"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="stdtypes.html#py:class:tuple"><code class="xref py class docutils literal">builtins.tuple</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4132,7 +4133,7 @@ See <span class="target" id="index-44"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="functions.html#py:class:type"><code class="xref py class docutils literal">builtins.type</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4147,7 +4148,7 @@ See <span class="target" id="index-45"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.html#py:class:collections.defaultdict"><code class="xref py class docutils literal">collections.defaultdict</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4160,7 +4161,7 @@ See <span class="target" id="index-46"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.html#py:class:collections.ordereddict"><code class="xref py class docutils literal">collections.OrderedDict</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4173,7 +4174,7 @@ See <span class="target" id="index-47"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.html#py:class:collections.chainmap"><code class="xref py class docutils literal">collections.ChainMap</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-49"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4186,7 +4187,7 @@ See <span class="target" id="index-48"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.html#py:class:collections.counter"><code class="xref py class docutils literal">collections.Counter</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-49"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-50"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4199,7 +4200,7 @@ See <span class="target" id="index-49"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.html#py:class:collections.deque"><code class="xref py class docutils literal">collections.deque</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-50"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4217,7 +4218,7 @@ See <span class="target" id="index-50"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p>Classes <code>Pattern</code> and <code>Match</code> from <a class="reference internal" href="re.html#py:module:re" title="re: Regular expression operations."><code class="xref py module docutils literal">re</code></a> now support <code>[]</code>.
-See <span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-52"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4253,7 +4254,7 @@ currently planned, but users are encouraged to use
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.set"><code class="xref py class docutils literal">collections.abc.Set</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-52"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-53"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4272,7 +4273,7 @@ instance of <code class="xref py class docutils literal">ByteString</code> never
 about the object. Other common buffer types such as <a class="reference internal" href="stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a> were
 also never understood as subtypes of <code class="xref py class docutils literal">ByteString</code> (either at runtime
 or by static type checkers).</p>
-<p>See <span class="target" id="index-53"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.</p>
+<p>See <span class="target" id="index-54"></span><a class="pep reference external" href="https://peps.python.org/pep-0688/#current-options"><strong>PEP 688</strong></a> for more details.</p>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
 <pre class="directive-error-source">.. deprecated-removed:: 3.9 3.17</pre>
@@ -4288,7 +4289,7 @@ or by static type checkers).</p>
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.collection"><code class="xref py class docutils literal">collections.abc.Collection</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-54"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-55"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4298,7 +4299,7 @@ See <span class="target" id="index-54"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.container"><code class="xref py class docutils literal">collections.abc.Container</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-55"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-56"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4308,7 +4309,7 @@ See <span class="target" id="index-55"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.itemsview"><code class="xref py class docutils literal">collections.abc.ItemsView</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-56"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-57"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4318,7 +4319,7 @@ See <span class="target" id="index-56"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.keysview"><code class="xref py class docutils literal">collections.abc.KeysView</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-57"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-58"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4328,7 +4329,7 @@ See <span class="target" id="index-57"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.mapping"><code class="xref py class docutils literal">collections.abc.Mapping</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-58"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-59"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4338,7 +4339,7 @@ See <span class="target" id="index-58"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.mappingview"><code class="xref py class docutils literal">collections.abc.MappingView</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-59"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-60"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4349,7 +4350,7 @@ See <span class="target" id="index-59"></span><a class="pep reference external" 
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.mutablemapping"><code class="xref py class docutils literal">collections.abc.MutableMapping</code></a>
 now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-60"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-61"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4360,7 +4361,7 @@ See <span class="target" id="index-60"></span><a class="pep reference external" 
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.mutablesequence"><code class="xref py class docutils literal">collections.abc.MutableSequence</code></a>
 now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-61"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-62"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4370,7 +4371,7 @@ See <span class="target" id="index-61"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.mutableset"><code class="xref py class docutils literal">collections.abc.MutableSet</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-62"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-63"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4380,7 +4381,7 @@ See <span class="target" id="index-62"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.sequence"><code class="xref py class docutils literal">collections.abc.Sequence</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-63"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-64"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4390,7 +4391,7 @@ See <span class="target" id="index-63"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.valuesview"><code class="xref py class docutils literal">collections.abc.ValuesView</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-64"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-65"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4408,7 +4409,7 @@ and <code>typing.Coroutine</code> in type annotations.</p>
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.coroutine"><code class="xref py class docutils literal">collections.abc.Coroutine</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-65"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-66"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4425,7 +4426,7 @@ and <code>typing.AsyncGenerator</code> in type annotations.</p>
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.asyncgenerator"><code class="xref py class docutils literal">collections.abc.AsyncGenerator</code></a>
 now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-66"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-67"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
@@ -4442,7 +4443,7 @@ See <span class="target" id="index-66"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.asynciterable"><code class="xref py class docutils literal">collections.abc.AsyncIterable</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-67"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-68"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4455,7 +4456,7 @@ See <span class="target" id="index-67"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.asynciterator"><code class="xref py class docutils literal">collections.abc.AsyncIterator</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-68"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-69"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4468,7 +4469,7 @@ See <span class="target" id="index-68"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.awaitable"><code class="xref py class docutils literal">collections.abc.Awaitable</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-69"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-70"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4480,7 +4481,7 @@ See <span class="target" id="index-69"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.iterable"><code class="xref py class docutils literal">collections.abc.Iterable</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-70"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-71"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4490,7 +4491,7 @@ See <span class="target" id="index-70"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.iterator"><code class="xref py class docutils literal">collections.abc.Iterator</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-71"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-72"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4502,12 +4503,12 @@ See <span class="target" id="index-71"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.callable"><code class="xref py class docutils literal">collections.abc.Callable</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-72"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-73"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
 <p><code>Callable</code> now supports <a class="reference internal" href="typing.html#py:class:typing.paramspec"><code class="xref py class docutils literal">ParamSpec</code></a> and <a class="reference internal" href="typing.html#py:data:typing.concatenate"><code class="xref py data docutils literal">Concatenate</code></a>.
-See <span class="target" id="index-73"></span><a class="pep reference external" href="https://peps.python.org/pep-0612/"><strong>PEP 612</strong></a> for more details.</p>
+See <span class="target" id="index-74"></span><a class="pep reference external" href="https://peps.python.org/pep-0612/"><strong>PEP 612</strong></a> for more details.</p>
 </div>
 </dd>
 </dl>
@@ -4520,7 +4521,7 @@ and <code>typing.Generator</code> in type annotations.</p>
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.generator"><code class="xref py class docutils literal">collections.abc.Generator</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-74"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-75"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
@@ -4543,7 +4544,7 @@ See <span class="target" id="index-74"></span><a class="pep reference external" 
 <div class="deprecated">
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="collections.abc.html#py:class:collections.abc.reversible"><code class="xref py class docutils literal">collections.abc.Reversible</code></a> now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-75"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-76"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 </dd>
 </dl>
@@ -4572,7 +4573,7 @@ which defaults to <code>bool | None</code>, represents the type returned by the
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="contextlib.html#py:class:contextlib.abstractcontextmanager"><code class="xref py class docutils literal">contextlib.AbstractContextManager</code></a>
 now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-76"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-77"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
@@ -4594,7 +4595,7 @@ which defaults to <code>bool | None</code>, represents the type returned by the
   <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.9:</span></p>
 <p><a class="reference internal" href="contextlib.html#py:class:contextlib.abstractasynccontextmanager"><code class="xref py class docutils literal">contextlib.AbstractAsyncContextManager</code></a>
 now supports subscripting (<code>[]</code>).
-See <span class="target" id="index-77"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
+See <span class="target" id="index-78"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a href="stdtypes.html#types-genericalias">Generic Alias Type</a>.</p>
 </div>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
@@ -4627,7 +4628,7 @@ convenience. This is subject to change, and not all deprecations are listed.</p>
 </td>
 <td><p>Undecided (see <a href="typing.html#deprecated-aliases">Deprecated aliases</a> for more information)</p>
 </td>
-<td><p><span class="target" id="index-78"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a></p>
+<td><p><span class="target" id="index-79"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a></p>
 </td>
 </tr>
 <tr>
@@ -4667,7 +4668,7 @@ convenience. This is subject to change, and not all deprecations are listed.</p>
 </td>
 <td><p>Undecided</p>
 </td>
-<td><p><span class="target" id="index-79"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a></p>
+<td><p><span class="target" id="index-80"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a></p>
 </td>
 </tr>
 <tr>
