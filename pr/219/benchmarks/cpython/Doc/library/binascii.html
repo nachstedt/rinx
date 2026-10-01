@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>binascii — Convert between binary and ASCII — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Data Handling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="email.html">email — An email and MIME handling package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="json.html">json — JSON encoder and decoder</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mimetypes.html">mimetypes — Map filenames to MIME types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="binascii.html">binascii — Convert between binary and ASCII</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="base64.html">&larr; base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+        <a class="next" href="quopri.html">quopri — Encode and decode MIME quoted-printable data &rarr;</a>
+      </nav>
+      
+      <h1 id="binascii-convert-between-binary-and-ascii"><code class="xref py module docutils literal">binascii</code> — Convert between binary and ASCII</h1>
+<dl class="py module">
+  <dt id="py:module:binascii"><code class="sig-name">binascii</code></dt>
+  <dd></dd>
+</dl>
+<span id="index-0"></span>
+<hr />
+<p>The <a class="reference internal" href="binascii.html#py:module:binascii" title="binascii: Tools for converting between binary and various ASCII-encoded binary representations."><code class="xref py module docutils literal">binascii</code></a> module contains a number of methods to convert between
+binary and various ASCII-encoded binary representations. Normally, you will not
+use these functions directly but use wrapper modules like
+<a class="reference internal" href="base64.html#py:module:base64" title="base64: RFC 4648: Base16, Base32, Base64 Data Encodings; Base85 and Ascii85"><code class="xref py module docutils literal">base64</code></a> instead. The <a class="reference internal" href="binascii.html#py:module:binascii" title="binascii: Tools for converting between binary and various ASCII-encoded binary representations."><code class="xref py module docutils literal">binascii</code></a> module contains
+low-level functions written in C for greater speed that are used by the
+higher-level modules.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p><code>a2b_*</code> functions accept Unicode strings containing only ASCII characters.
+Other functions only accept <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like objects</span></a> (such as
+<a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> and other objects that support the buffer
+protocol).</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>ASCII-only unicode strings are now accepted by the <code>a2b_*</code> functions.</p>
+</div>
+</div>
+<p>The <a class="reference internal" href="binascii.html#py:module:binascii" title="binascii: Tools for converting between binary and various ASCII-encoded binary representations."><code class="xref py module docutils literal">binascii</code></a> module defines the following functions:</p>
+<dl class="py function">
+  <dt id="py:function:binascii.a2b_uu"><code class="sig-name">a2b_uu(string)</code></dt>
+  <dd><p>Convert a single line of uuencoded data back to binary and return the binary
+data. Lines normally contain 45 (binary) bytes, except for the last line. Line
+data may be followed by whitespace.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.b2a_uu"><code class="sig-name">b2a_uu(data, *, backtick=False)</code></dt>
+  <dd><p>Convert binary data to a line of ASCII characters, the return value is the
+converted line, including a newline char. The length of <em>data</em> should be at most
+45. If <em>backtick</em> is true, zeros are represented by <code>'`'</code> instead of spaces.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>Added the <em>backtick</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.a2b_base64"><code class="sig-name">a2b_base64(string, /, *, strict_mode=False)</code></dt>
+  <dd><p>Convert a block of base64 data back to binary and return the binary data. More
+than one line may be passed at a time.</p>
+<p>If <em>strict_mode</em> is true, only valid base64 data will be converted. Invalid base64
+data will raise <a class="reference internal" href="binascii.html#py:exception:binascii.error"><code class="xref py exception docutils literal">binascii.Error</code></a>.</p>
+<p>Valid base64:</p>
+<ul>
+<li><p>Conforms to :rfc:`3548`.</p>
+</li>
+<li><p>Contains only characters from the base64 alphabet.</p>
+</li>
+<li><p>Contains no excess data after padding (including excess padding, newlines, etc.).</p>
+</li>
+<li><p>Does not start with a padding.</p>
+</li>
+</ul>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Added the <em>strict_mode</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.b2a_base64"><code class="sig-name">b2a_base64(data, *, newline=True)</code></dt>
+  <dd><p>Convert binary data to a line of ASCII characters in base64 coding. The return
+value is the converted line, including a newline char if <em>newline</em> is
+true.  The output of this function conforms to :rfc:`3548`.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Added the <em>newline</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.a2b_qp"><code class="sig-name">a2b_qp(data, header=False)</code></dt>
+  <dd><p>Convert a block of quoted-printable data back to binary and return the binary
+data. More than one line may be passed at a time. If the optional argument
+<em>header</em> is present and true, underscores will be decoded as spaces.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.b2a_qp"><code class="sig-name">b2a_qp(data, quotetabs=False, istext=True, header=False)</code></dt>
+  <dd><p>Convert binary data to a line(s) of ASCII characters in quoted-printable
+encoding.  The return value is the converted line(s). If the optional argument
+<em>quotetabs</em> is present and true, all tabs and spaces will be encoded.   If the
+optional argument <em>istext</em> is present and true, newlines are not encoded but
+trailing whitespace will be encoded. If the optional argument <em>header</em> is
+present and true, spaces will be encoded as underscores per :rfc:`1522`. If the
+optional argument <em>header</em> is present and false, newline characters will be
+encoded as well; otherwise linefeed conversion might corrupt the binary data
+stream.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.crc_hqx"><code class="sig-name">crc_hqx(data, value)</code></dt>
+  <dd><p>Compute a 16-bit CRC value of <em>data</em>, starting with <em>value</em> as the
+initial CRC, and return the result.  This uses the CRC-CCITT polynomial
+<em>x</em>:sup:`16` + <em>x</em>:sup:`12` + <em>x</em>:sup:`5` + 1, often represented as
+0x1021.  This CRC is used in the binhex4 format.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.crc32"><code class="sig-name">crc32(data[, value])</code></dt>
+  <dd><p>Compute CRC-32, the unsigned 32-bit checksum of <em>data</em>, starting with an
+initial CRC of <em>value</em>.  The default initial CRC is zero.  The algorithm
+is consistent with the ZIP file checksum.  Since the algorithm is designed for
+use as a checksum algorithm, it is not suitable for use as a general hash
+algorithm.  Use as follows:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">binascii</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">crc32</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">hello world<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Or, in two pieces:
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">crc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">binascii</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">crc32</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">hello<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">crc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">binascii</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">crc32</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"> world<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">crc</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">crc32 = <span class="hl-constant hl-other hl-placeholder hl-python"><span class="hl-punctuation hl-definition hl-placeholder hl-begin hl-python">{</span><span class="hl-constant hl-other hl-format-spec hl-python">:#010x</span><span class="hl-punctuation hl-definition hl-placeholder hl-end hl-python">}</span></span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">format</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">crc</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.0:</span></p>
+<p>The result is always unsigned.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.b2a_hex"><code class="sig-name">b2a_hex(data[, sep[, bytes_per_sep=1]])</code></dt>
+  <dt id="py:function:binascii.hexlify"><code class="sig-name">hexlify(data[, sep[, bytes_per_sep=1]])</code></dt>
+  <dd><p>Return the hexadecimal representation of the binary <em>data</em>.  Every byte of
+<em>data</em> is converted into the corresponding 2-digit hex representation.  The
+returned bytes object is therefore twice as long as the length of <em>data</em>.</p>
+<p>Similar functionality (but returning a text string) is also conveniently
+accessible using the <a class="reference internal" href="stdtypes.html#py:method:bytes.hex"><code class="xref py method docutils literal">bytes.hex</code></a> method.</p>
+<p>If <em>sep</em> is specified, it must be a single character str or bytes object.
+It will be inserted in the output after every <em>bytes_per_sep</em> input bytes.
+Separator placement is counted from the right end of the output by default,
+if you wish to count from the left, supply a negative <em>bytes_per_sep</em> value.</p>
+<blockquote>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; import binascii
+&gt;&gt;&gt; binascii.b2a_hex(b'\xb9\x01\xef')
+b'b901ef'
+&gt;&gt;&gt; binascii.hexlify(b'\xb9\x01\xef', '-')
+b'b9-01-ef'
+&gt;&gt;&gt; binascii.b2a_hex(b'\xb9\x01\xef', b'_', 2)
+b'b9_01ef'
+&gt;&gt;&gt; binascii.b2a_hex(b'\xb9\x01\xef', b' ', -2)
+b'b901 ef'</pre></div>
+</blockquote>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>The <em>sep</em> and <em>bytes_per_sep</em> parameters were added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:binascii.a2b_hex"><code class="sig-name">a2b_hex(hexstr)</code></dt>
+  <dt id="py:function:binascii.unhexlify"><code class="sig-name">unhexlify(hexstr)</code></dt>
+  <dd><p>Return the binary data represented by the hexadecimal string <em>hexstr</em>.  This
+function is the inverse of <a class="reference internal" href="binascii.html#py:function:binascii.b2a_hex"><code class="xref py function docutils literal">b2a_hex</code></a>. <em>hexstr</em> must contain an even number
+of hexadecimal digits (which can be upper or lower case), otherwise an
+<a class="reference internal" href="binascii.html#py:exception:binascii.error"><code class="xref py exception docutils literal">Error</code></a> exception is raised.</p>
+<p>Similar functionality (accepting only text string arguments, but more
+liberal towards whitespace) is also accessible using the
+<a class="reference internal" href="stdtypes.html#py:method:bytes.fromhex"><code class="xref py method docutils literal">bytes.fromhex</code></a> class method.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:binascii.error"><em class="property">exception</em> <code class="sig-name">Error</code></dt>
+  <dd><p>Exception raised on errors. These are usually programming errors.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:binascii.incomplete"><em class="property">exception</em> <code class="sig-name">Incomplete</code></dt>
+  <dd><p>Exception raised on incomplete data. These are usually not programming errors,
+but may be handled by reading a little more data and trying again.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="base64.html#py:module:base64" title="base64: RFC 4648: Base16, Base32, Base64 Data Encodings; Base85 and Ascii85"><code class="xref py module docutils literal">base64</code></a></dt>
+<dd><p>Support for RFC compliant base64-style encoding in base 16, 32, 64,
+and 85.</p>
+</dd>
+<dt>Module <a class="reference internal" href="quopri.html#py:module:quopri" title="quopri: Encode and decode files using the MIME quoted-printable encoding."><code class="xref py module docutils literal">quopri</code></a></dt>
+<dd><p>Support for quoted-printable encoding used in MIME email messages.</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="base64.html">&larr; base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+        <a class="next" href="quopri.html">quopri — Encode and decode MIME quoted-printable data &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

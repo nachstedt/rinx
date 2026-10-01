@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Definition Lists — Megacorp Documentation</title>
+  <link rel="stylesheet" href="../default.css">
+  <script defer src="../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Megacorp Documentation</h2>
+        <p class="project-version">v2.0-beta</p>
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        <p class="sidebar-index-link"><a href="../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="headings.html">Section headings</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="hyperlinks.html">Hyperlinks and Targets</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="admonitions.html">Admonitions Showcase</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="inline_roles.html">Inline Roles</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="any_role.html">The :any: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="doc_role.html">The :doc: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="numref.html">The :numref: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="downloads.html">The :download: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="version_changes.html">Version Change Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="seealso.html">See Also Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="literal_blocks.html">Literal Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="code_blocks.html">Code Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="definition_lists.html">Definition Lists</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Definition Lists"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="definition_lists.html#basic-usage">Basic Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="definition_lists.html#multi-paragraph-definition">Multi-Paragraph Definition</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="definition_lists.html#inline-markup-in-terms">Inline Markup in Terms</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="definition_lists.html#inside-a-seealso-directive">Inside a seealso Directive</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="enumerated_lists.html">Enumerated Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="option_lists.html">Option Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="block_quotes.html">Block Quotes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="line_blocks.html">Line Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="comments.html">Comments</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="domains.html">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="current_module.html">Current Module</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="transitions.html">Transitions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="typography.html">Smart Typography</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="escapes.html">Backslash Escapes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="tables.html">Grid Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="simple_tables.html">Simple Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="list_table.html">List Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="csv_table.html">CSV Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="table_directive.html">The table Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="math.html">Math</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="code_role.html">The :code: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="pep_role.html">The :pep: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="images.html">Images</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="figures.html">Figures</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="substitutions.html">Substitutions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="includes.html">Includes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="index_entries.html">Index Entries</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="noqa.html">Suppressing diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="unknown_directives.html">Unrecognized and malformed directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="if_builder.html">Conditional content by builder</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="doctests.html">Doctest Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="entities/index.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="toctree/index.html">Toctree Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="contents/index.html">Contents Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="sectnum/index.html">Sectnum Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="dropdown/index.html">Dropdown Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="grid/index.html">Grid Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="button_link/index.html">Button Link Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="jinja/index.html">🧩 Templated Sources</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="intersphinx/index.html">Linking into other sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="team_a/index.html">Team A: Getting Started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="team_b/index.html">Team B: Infrastructure Guide</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="glossary.html">&larr; Glossary</a>
+        <a class="next" href="enumerated_lists.html">Enumerated Lists &rarr;</a>
+      </nav>
+      
+      <h1 id="definition-lists">Definition Lists</h1>
+<p>A term line immediately followed by a more-indented line starts a
+definition list, rendered as <code>&lt;dl&gt;&lt;dt&gt;term&lt;/dt&gt;&lt;dd&gt;definition&lt;/dd&gt;&lt;/dl&gt;</code>.</p>
+<h2 id="basic-usage">Basic Usage</h2>
+<dl>
+<dt>Environment</dt>
+<dd><p>A structure where information about all documents under the root is
+saved, used for cross-referencing.</p>
+</dd>
+<dt>Builder</dt>
+<dd><p>A class (or function) that takes parsed documents and performs an
+output action, such as rendering HTML.</p>
+</dd>
+</dl>
+<h2 id="multi-paragraph-definition">Multi-Paragraph Definition</h2>
+<p>A term's definition can span multiple paragraphs, as long as each stays
+indented relative to the term:</p>
+<dl>
+<dt>Configuration</dt>
+<dd><p>The first paragraph of the definition.</p>
+<p>A second paragraph, still part of the same definition.</p>
+</dd>
+</dl>
+<h2 id="inline-markup-in-terms">Inline Markup in Terms</h2>
+<p>Term text is parsed like any other inline text, so it may contain
+cross-reference roles:</p>
+<dl>
+<dt>The <a class="reference internal" href="domains.html#py:module:greetings" title="greetings: Greeting utilities. (deprecated) (Unix, Windows)"><code class="xref py module docutils literal">greetings</code></a> module</dt>
+<dd><p>Greeting utilities, cross-referenced from the term itself.</p>
+</dd>
+<dt>See <a href="index.html#home-index">Rinx Example Site</a></dt>
+<dd><p>Links back to the site's home page.</p>
+</dd>
+</dl>
+<h2 id="inside-a-seealso-directive">Inside a <code>seealso</code> Directive</h2>
+<p>Definition lists are a plain block-level construct, so they also work
+nested inside directive bodies such as <code>.. seealso::</code>:</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>The <a class="reference internal" href="domains.html#py:module:greetings" title="greetings: Greeting utilities. (deprecated) (Unix, Windows)"><code class="xref py module docutils literal">greetings</code></a> module</dt>
+<dd><p>Utilities for greeting people, regardless of language settings.</p>
+</dd>
+<dt>See <a href="index.html#home-index">Rinx Example Site</a></dt>
+<dd><p>Tutorial material on getting started with the example site.</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="glossary.html">&larr; Glossary</a>
+        <a class="next" href="enumerated_lists.html">Enumerated Lists &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

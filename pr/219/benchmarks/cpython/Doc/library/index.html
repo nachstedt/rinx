@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Python Standard Library — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="../reference/grammar.html">&larr; Full Grammar specification</a>
+        <a class="next" href="intro.html">Introduction &rarr;</a>
+      </nav>
+      
+      <a id="library-index"></a>
+<h1 id="the-python-standard-library">The Python Standard Library</h1>
+<p>While <a href="../reference/index.html#reference-index">The Python Language Reference</a> describes the exact syntax and
+semantics of the Python language, this library reference manual
+describes the standard library that is distributed with Python. It also
+describes some of the optional components that are commonly included
+in Python distributions.</p>
+<p>Python's standard library is very extensive, offering a wide range of
+facilities as indicated by the long table of contents listed below. The
+library contains built-in modules (written in C) that provide access to
+system functionality such as file I/O that would otherwise be
+inaccessible to Python programmers, as well as modules written in Python
+that provide standardized solutions for many problems that occur in
+everyday programming. Some of these modules are explicitly designed to
+encourage and enhance the portability of Python programs by abstracting
+away platform-specifics into platform-neutral APIs.</p>
+<p>The Python installers for the Windows platform usually include
+the entire standard library and often also include many additional
+components. For Unix-like operating systems Python is normally provided
+as a collection of packages, so it may be necessary to use the packaging
+tools provided with the operating system to obtain some or all of the
+optional components.</p>
+<p>In addition to the standard library, there is an active collection of
+hundreds of thousands of components (from individual programs and modules to
+packages and entire application development frameworks), available from
+the <a href="https://pypi.org">Python Package Index</a>.</p>
+<ul>
+  <li><a href="intro.html">Introduction</a>
+<ul>
+  <li><a href="intro.html#notes-on-availability">Notes on availability</a></li>
+</ul>
+  </li>
+  <li><a href="functions.html">Built-in Functions</a></li>
+  <li><a href="constants.html">Built-in Constants</a>
+<ul>
+  <li><a href="constants.html#constants-added-by-the-site-module">Constants added by the site module</a></li>
+</ul>
+  </li>
+  <li><a href="stdtypes.html">Built-in Types</a>
+<ul>
+  <li><a href="stdtypes.html#truth-value-testing">Truth Value Testing</a></li>
+  <li><a href="stdtypes.html#boolean-operations-keyword-and-keyword-or-keyword-not">Boolean Operations — :keyword:`!and`, :keyword:`!or`, :keyword:`!not`</a></li>
+  <li><a href="stdtypes.html#comparisons">Comparisons</a></li>
+  <li><a href="stdtypes.html#numeric-types-int-float-complex">Numeric Types — int, float, complex</a></li>
+  <li><a href="stdtypes.html#boolean-type-bool">Boolean Type - bool</a></li>
+  <li><a href="stdtypes.html#iterator-types">Iterator Types</a></li>
+  <li><a href="stdtypes.html#sequence-types-list-tuple-range">Sequence Types — list, tuple, range</a></li>
+  <li><a href="stdtypes.html#text-and-binary-sequence-type-methods-summary">Text and Binary Sequence Type Methods Summary</a></li>
+  <li><a href="stdtypes.html#text-sequence-type-str">Text Sequence Type — str</a></li>
+  <li><a href="stdtypes.html#binary-sequence-types-bytes-bytearray-memoryview">Binary Sequence Types — bytes, bytearray, memoryview</a></li>
+  <li><a href="stdtypes.html#set-types-set-frozenset">Set Types — set, frozenset</a></li>
+  <li><a href="stdtypes.html#mapping-types-dict">Mapping Types — dict</a></li>
+  <li><a href="stdtypes.html#context-manager-types">Context Manager Types</a></li>
+  <li><a href="stdtypes.html#type-annotation-types-generic-alias-union">Type Annotation Types — Generic Alias, Union</a></li>
+  <li><a href="stdtypes.html#other-built-in-types">Other Built-in Types</a></li>
+  <li><a href="stdtypes.html#special-attributes">Special Attributes</a></li>
+  <li><a href="stdtypes.html#integer-string-conversion-length-limitation">Integer string conversion length limitation</a></li>
+</ul>
+  </li>
+  <li><a href="exceptions.html">Built-in Exceptions</a>
+<ul>
+  <li><a href="exceptions.html#exception-context">Exception context</a></li>
+  <li><a href="exceptions.html#inheriting-from-built-in-exceptions">Inheriting from built-in exceptions</a></li>
+  <li><a href="exceptions.html#base-classes">Base classes</a></li>
+  <li><a href="exceptions.html#concrete-exceptions">Concrete exceptions</a></li>
+  <li><a href="exceptions.html#warnings">Warnings</a></li>
+  <li><a href="exceptions.html#exception-groups">Exception groups</a></li>
+  <li><a href="exceptions.html#exception-hierarchy">Exception hierarchy</a></li>
+</ul>
+  </li>
+  <li><a href="text.html">Text Processing Services</a>
+<ul>
+  <li><a href="string.html">string — Common string operations</a></li>
+  <li><a href="string.templatelib.html">string.templatelib — Support for template string literals</a></li>
+  <li><a href="re.html">re — Regular expression operations</a></li>
+  <li><a href="difflib.html">difflib — Helpers for computing deltas</a></li>
+  <li><a href="textwrap.html">textwrap — Text wrapping and filling</a></li>
+  <li><a href="unicodedata.html">unicodedata — Unicode Database</a></li>
+  <li><a href="stringprep.html">stringprep — Internet String Preparation</a></li>
+  <li><a href="readline.html">readline — GNU readline interface</a></li>
+  <li><a href="rlcompleter.html">rlcompleter — Completion function for GNU readline</a></li>
+</ul>
+  </li>
+  <li><a href="binary.html">Binary Data Services</a>
+<ul>
+  <li><a href="struct.html">struct — Interpret bytes as packed binary data</a></li>
+  <li><a href="codecs.html">codecs — Codec registry and base classes</a></li>
+</ul>
+  </li>
+  <li><a href="datatypes.html">Data Types</a>
+<ul>
+  <li><a href="datetime.html">datetime — Basic date and time types</a></li>
+  <li><a href="zoneinfo.html">zoneinfo — IANA time zone support</a></li>
+  <li><a href="calendar.html">calendar — General calendar-related functions</a></li>
+  <li><a href="collections.html">collections — Container datatypes</a></li>
+  <li><a href="collections.abc.html">collections.abc — Abstract Base Classes for Containers</a></li>
+  <li><a href="heapq.html">heapq — Heap queue algorithm</a></li>
+  <li><a href="bisect.html">bisect — Array bisection algorithm</a></li>
+  <li><a href="array.html">array — Efficient arrays of numeric values</a></li>
+  <li><a href="weakref.html">weakref — Weak references</a></li>
+  <li><a href="types.html">types — Dynamic type creation and names for built-in types</a></li>
+  <li><a href="copy.html">copy — Shallow and deep copy operations</a></li>
+  <li><a href="pprint.html">pprint — Data pretty printer</a></li>
+  <li><a href="reprlib.html">reprlib — Alternate repr implementation</a></li>
+  <li><a href="enum.html">enum — Support for enumerations</a></li>
+  <li><a href="graphlib.html">graphlib — Functionality to operate with graph-like structures</a></li>
+</ul>
+  </li>
+  <li><a href="numeric.html">Numeric and Mathematical Modules</a>
+<ul>
+  <li><a href="numbers.html">numbers — Numeric abstract base classes</a></li>
+  <li><a href="math.html">math — Mathematical functions</a></li>
+  <li><a href="cmath.html">cmath — Mathematical functions for complex numbers</a></li>
+  <li><a href="decimal.html">decimal — Decimal fixed-point and floating-point arithmetic</a></li>
+  <li><a href="fractions.html">fractions — Rational numbers</a></li>
+  <li><a href="random.html">random — Generate pseudo-random numbers</a></li>
+  <li><a href="statistics.html">statistics — Mathematical statistics functions</a></li>
+</ul>
+  </li>
+  <li><a href="functional.html">Functional Programming Modules</a>
+<ul>
+  <li><a href="itertools.html">itertools — Functions creating iterators for efficient looping</a></li>
+  <li><a href="functools.html">functools — Higher-order functions and operations on callable objects</a></li>
+  <li><a href="operator.html">operator — Standard operators as functions</a></li>
+</ul>
+  </li>
+  <li><a href="filesys.html">File and Directory Access</a>
+<ul>
+  <li><a href="pathlib.html">pathlib — Object-oriented filesystem paths</a></li>
+  <li><a href="os.path.html">os.path — Common pathname manipulations</a></li>
+  <li><a href="stat.html">stat — Interpreting stat results</a></li>
+  <li><a href="filecmp.html">filecmp — File and Directory Comparisons</a></li>
+  <li><a href="tempfile.html">tempfile — Generate temporary files and directories</a></li>
+  <li><a href="glob.html">glob — Unix style pathname pattern expansion</a></li>
+  <li><a href="fnmatch.html">fnmatch — Unix filename pattern matching</a></li>
+  <li><a href="linecache.html">linecache — Random access to text lines</a></li>
+  <li><a href="shutil.html">shutil — High-level file operations</a></li>
+</ul>
+  </li>
+  <li><a href="persistence.html">Data Persistence</a>
+<ul>
+  <li><a href="pickle.html">pickle — Python object serialization</a></li>
+  <li><a href="copyreg.html">copyreg — Register pickle support functions</a></li>
+  <li><a href="shelve.html">shelve — Python object persistence</a></li>
+  <li><a href="marshal.html">marshal — Internal Python object serialization</a></li>
+  <li><a href="dbm.html">dbm — Interfaces to Unix "databases"</a></li>
+  <li><a href="sqlite3.html">sqlite3 — DB-API 2.0 interface for SQLite databases</a></li>
+</ul>
+  </li>
+  <li><a href="archiving.html">Data Compression and Archiving</a>
+<ul>
+  <li><a href="compression.html">The compression package</a></li>
+  <li><a href="compression.zstd.html">compression.zstd — Compression compatible with the Zstandard format</a></li>
+  <li><a href="zlib.html">zlib — Compression compatible with gzip</a></li>
+  <li><a href="gzip.html">gzip — Support for gzip files</a></li>
+  <li><a href="bz2.html">bz2 — Support for bzip2 compression</a></li>
+  <li><a href="lzma.html">lzma — Compression using the LZMA algorithm</a></li>
+  <li><a href="zipfile.html">zipfile — Work with ZIP archives</a></li>
+  <li><a href="tarfile.html">tarfile — Read and write tar archive files</a></li>
+</ul>
+  </li>
+  <li><a href="fileformats.html">File Formats</a>
+<ul>
+  <li><a href="csv.html">csv — CSV File Reading and Writing</a></li>
+  <li><a href="configparser.html">configparser — Configuration file parser</a></li>
+  <li><a href="tomllib.html">tomllib — Parse TOML files</a></li>
+  <li><a href="netrc.html">netrc — netrc file processing</a></li>
+  <li><a href="plistlib.html">plistlib — Generate and parse Apple .plist files</a></li>
+</ul>
+  </li>
+  <li><a href="crypto.html">Cryptographic Services</a>
+<ul>
+  <li><a href="hashlib.html">hashlib — Secure hashes and message digests</a></li>
+  <li><a href="hmac.html">hmac — Keyed-Hashing for Message Authentication</a></li>
+  <li><a href="secrets.html">secrets — Generate secure random numbers for managing secrets</a></li>
+</ul>
+  </li>
+  <li><a href="allos.html">Generic Operating System Services</a>
+<ul>
+  <li><a href="os.html">os — Miscellaneous operating system interfaces</a></li>
+  <li><a href="io.html">io — Core tools for working with streams</a></li>
+  <li><a href="time.html">time — Time access and conversions</a></li>
+  <li><a href="logging.html">logging — Logging facility for Python</a></li>
+  <li><a href="logging.config.html">logging.config — Logging configuration</a></li>
+  <li><a href="logging.handlers.html">logging.handlers — Logging handlers</a></li>
+  <li><a href="platform.html">platform —  Access to underlying platform's identifying data</a></li>
+  <li><a href="errno.html">errno — Standard errno system symbols</a></li>
+  <li><a href="ctypes.html">ctypes — A foreign function library for Python</a></li>
+</ul>
+  </li>
+  <li><a href="cmdlinelibs.html">Command-line interface libraries</a>
+<ul>
+  <li><a href="argparse.html">argparse — Parser for command-line options, arguments and subcommands</a></li>
+  <li><a href="optparse.html">optparse — Parser for command line options</a></li>
+  <li><a href="getpass.html">getpass — Portable password input</a></li>
+  <li><a href="fileinput.html">fileinput — Iterate over lines from multiple input streams</a></li>
+  <li><a href="curses.html">curses — Terminal handling for character-cell displays</a></li>
+  <li><a href="curses.ascii.html">curses.ascii — Utilities for ASCII characters</a></li>
+  <li><a href="curses.panel.html">curses.panel — A panel stack extension for curses</a></li>
+  <li><a href="cmd.html">cmd — Support for line-oriented command interpreters</a></li>
+</ul>
+  </li>
+  <li><a href="concurrency.html">Concurrent Execution</a>
+<ul>
+  <li><a href="threading.html">threading — Thread-based parallelism</a></li>
+  <li><a href="multiprocessing.html">multiprocessing — Process-based parallelism</a></li>
+  <li><a href="multiprocessing.shared_memory.html">multiprocessing.shared_memory — Shared memory for direct access across processes</a></li>
+  <li><a href="concurrent.html">The concurrent package</a></li>
+  <li><a href="concurrent.futures.html">concurrent.futures — Launching parallel tasks</a></li>
+  <li><a href="concurrent.interpreters.html">concurrent.interpreters — Multiple interpreters in the same process</a></li>
+  <li><a href="subprocess.html">subprocess — Subprocess management</a></li>
+  <li><a href="sched.html">sched — Event scheduler</a></li>
+  <li><a href="queue.html">queue — A synchronized queue class</a></li>
+  <li><a href="contextvars.html">contextvars — Context Variables</a></li>
+  <li><a href="_thread.html">_thread — Low-level threading API</a></li>
+</ul>
+  </li>
+  <li><a href="ipc.html">Networking and Interprocess Communication</a>
+<ul>
+  <li><a href="asyncio.html">asyncio — Asynchronous I/O</a></li>
+  <li><a href="socket.html">socket — Low-level networking interface</a></li>
+  <li><a href="ssl.html">ssl — TLS/SSL wrapper for socket objects</a></li>
+  <li><a href="select.html">select — Waiting for I/O completion</a></li>
+  <li><a href="selectors.html">selectors — High-level I/O multiplexing</a></li>
+  <li><a href="signal.html">signal — Set handlers for asynchronous events</a></li>
+  <li><a href="mmap.html">mmap — Memory-mapped file support</a></li>
+</ul>
+  </li>
+  <li><a href="netdata.html">Internet Data Handling</a>
+<ul>
+  <li><a href="email.html">email — An email and MIME handling package</a></li>
+  <li><a href="json.html">json — JSON encoder and decoder</a></li>
+  <li><a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a></li>
+  <li><a href="mimetypes.html">mimetypes — Map filenames to MIME types</a></li>
+  <li><a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a></li>
+  <li><a href="binascii.html">binascii — Convert between binary and ASCII</a></li>
+  <li><a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a></li>
+</ul>
+  </li>
+  <li><a href="markup.html">Structured Markup Processing Tools</a>
+<ul>
+  <li><a href="html.html">html — HyperText Markup Language support</a></li>
+  <li><a href="html.parser.html">html.parser — Simple HTML and XHTML parser</a></li>
+  <li><a href="html.entities.html">html.entities — Definitions of HTML general entities</a></li>
+  <li><a href="xml.html">XML Processing Modules</a></li>
+  <li><a href="xml.etree.elementtree.html">xml.etree.ElementTree — The ElementTree XML API</a></li>
+  <li><a href="xml.dom.html">xml.dom — The Document Object Model API</a></li>
+  <li><a href="xml.dom.minidom.html">xml.dom.minidom — Minimal DOM implementation</a></li>
+  <li><a href="xml.dom.pulldom.html">xml.dom.pulldom — Support for building partial DOM trees</a></li>
+  <li><a href="xml.sax.html">xml.sax — Support for SAX2 parsers</a></li>
+  <li><a href="xml.sax.handler.html">xml.sax.handler — Base classes for SAX handlers</a></li>
+  <li><a href="xml.sax.utils.html">xml.sax.saxutils — SAX Utilities</a></li>
+  <li><a href="xml.sax.reader.html">xml.sax.xmlreader — Interface for XML parsers</a></li>
+  <li><a href="pyexpat.html">xml.parsers.expat — Fast XML parsing using Expat</a></li>
+</ul>
+  </li>
+  <li><a href="internet.html">Internet Protocols and Support</a>
+<ul>
+  <li><a href="webbrowser.html">webbrowser — Convenient web-browser controller</a></li>
+  <li><a href="wsgiref.html">wsgiref — WSGI Utilities and Reference Implementation</a></li>
+  <li><a href="urllib.html">urllib — URL handling modules</a></li>
+  <li><a href="urllib.request.html">urllib.request — Extensible library for opening URLs</a></li>
+  <li><a href="urllib.parse.html">urllib.parse — Parse URLs into components</a></li>
+  <li><a href="urllib.error.html">urllib.error — Exception classes raised by urllib.request</a></li>
+  <li><a href="urllib.robotparser.html">urllib.robotparser —  Parser for robots.txt</a></li>
+  <li><a href="http.html">http — HTTP modules</a></li>
+  <li><a href="http.client.html">http.client — HTTP protocol client</a></li>
+  <li><a href="ftplib.html">ftplib — FTP protocol client</a></li>
+  <li><a href="poplib.html">poplib — POP3 protocol client</a></li>
+  <li><a href="imaplib.html">imaplib — IMAP4 protocol client</a></li>
+  <li><a href="smtplib.html">smtplib — SMTP protocol client</a></li>
+  <li><a href="uuid.html">uuid — UUID objects according to :rfc:`9562`</a></li>
+  <li><a href="socketserver.html">socketserver — A framework for network servers</a></li>
+  <li><a href="http.server.html">http.server — HTTP servers</a></li>
+  <li><a href="http.cookies.html">http.cookies — HTTP state management</a></li>
+  <li><a href="http.cookiejar.html">http.cookiejar — Cookie handling for HTTP clients</a></li>
+  <li><a href="xmlrpc.html">xmlrpc — XMLRPC server and client modules</a></li>
+  <li><a href="xmlrpc.client.html">xmlrpc.client — XML-RPC client access</a></li>
+  <li><a href="xmlrpc.server.html">xmlrpc.server — Basic XML-RPC servers</a></li>
+  <li><a href="ipaddress.html">ipaddress — IPv4/IPv6 manipulation library</a></li>
+</ul>
+  </li>
+  <li><a href="mm.html">Multimedia Services</a>
+<ul>
+  <li><a href="wave.html">wave — Read and write WAV files</a></li>
+  <li><a href="colorsys.html">colorsys — Conversions between color systems</a></li>
+</ul>
+  </li>
+  <li><a href="i18n.html">Internationalization</a>
+<ul>
+  <li><a href="gettext.html">gettext — Multilingual internationalization services</a></li>
+  <li><a href="locale.html">locale — Internationalization services</a></li>
+</ul>
+  </li>
+  <li><a href="tk.html">Graphical user interfaces with Tk</a>
+<ul>
+  <li><a href="tkinter.html">tkinter — Python interface to Tcl/Tk</a></li>
+  <li><a href="tkinter.colorchooser.html">tkinter.colorchooser — Color choosing dialog</a></li>
+  <li><a href="tkinter.font.html">tkinter.font — Tkinter font wrapper</a></li>
+  <li><a href="dialog.html">Tkinter Dialogs</a></li>
+  <li><a href="tkinter.messagebox.html">tkinter.messagebox — Tkinter message prompts</a></li>
+  <li><a href="tkinter.scrolledtext.html">tkinter.scrolledtext — Scrolled Text Widget</a></li>
+  <li><a href="tkinter.dnd.html">tkinter.dnd — Drag and drop support</a></li>
+  <li><a href="tkinter.ttk.html">tkinter.ttk — Tk themed widgets</a></li>
+  <li><a href="idle.html">IDLE — Python editor and shell</a></li>
+  <li><a href="turtle.html">turtle — Turtle graphics</a></li>
+</ul>
+  </li>
+  <li><a href="development.html">Development Tools</a>
+<ul>
+  <li><a href="typing.html">typing — Support for type hints</a></li>
+  <li><a href="pydoc.html">pydoc — Documentation generator and online help system</a></li>
+  <li><a href="devmode.html">Python Development Mode</a></li>
+  <li><a href="doctest.html">doctest — Test interactive Python examples</a></li>
+  <li><a href="unittest.html">unittest — Unit testing framework</a></li>
+  <li><a href="unittest.mock.html">unittest.mock — mock object library</a></li>
+  <li><a href="unittest.mock-examples.html">unittest.mock — getting started</a></li>
+  <li><a href="test.html">test — Regression tests package for Python</a></li>
+</ul>
+  </li>
+  <li><a href="debug.html">Debugging and Profiling</a>
+<ul>
+  <li><a href="audit_events.html">Audit events table</a></li>
+  <li><a href="bdb.html">bdb — Debugger framework</a></li>
+  <li><a href="faulthandler.html">faulthandler — Dump the Python traceback</a></li>
+  <li><a href="pdb.html">pdb — The Python Debugger</a></li>
+  <li><a href="profile.html">The Python Profilers</a></li>
+  <li><a href="timeit.html">timeit — Measure execution time of small code snippets</a></li>
+  <li><a href="trace.html">trace — Trace or track Python statement execution</a></li>
+  <li><a href="tracemalloc.html">tracemalloc — Trace memory allocations</a></li>
+</ul>
+  </li>
+  <li><a href="distribution.html">Software Packaging and Distribution</a>
+<ul>
+  <li><a href="ensurepip.html">ensurepip — Bootstrapping the pip installer</a></li>
+  <li><a href="venv.html">venv — Creation of virtual environments</a></li>
+  <li><a href="zipapp.html">zipapp — Manage executable Python zip archives</a></li>
+</ul>
+  </li>
+  <li><a href="python.html">Python Runtime Services</a>
+<ul>
+  <li><a href="sys.html">sys — System-specific parameters and functions</a></li>
+  <li><a href="sys.monitoring.html">sys.monitoring — Execution event monitoring</a></li>
+  <li><a href="sysconfig.html">sysconfig — Provide access to Python's configuration information</a></li>
+  <li><a href="builtins.html">builtins — Built-in objects</a></li>
+  <li><a href="__main__.html">__main__ — Top-level code environment</a></li>
+  <li><a href="warnings.html">warnings — Warning control</a></li>
+  <li><a href="dataclasses.html">dataclasses — Data Classes</a></li>
+  <li><a href="contextlib.html">contextlib — Utilities for :keyword:`!with`-statement contexts</a></li>
+  <li><a href="abc.html">abc — Abstract Base Classes</a></li>
+  <li><a href="atexit.html">atexit — Exit handlers</a></li>
+  <li><a href="traceback.html">traceback — Print or retrieve a stack traceback</a></li>
+  <li><a href="__future__.html">__future__ — Future statement definitions</a></li>
+  <li><a href="gc.html">gc — Garbage Collector interface</a></li>
+  <li><a href="inspect.html">inspect — Inspect live objects</a></li>
+  <li><a href="annotationlib.html">annotationlib — Functionality for introspecting annotations</a></li>
+  <li><a href="site.html">site — Site-specific configuration hook</a></li>
+</ul>
+  </li>
+  <li><a href="custominterp.html">Custom Python Interpreters</a>
+<ul>
+  <li><a href="code.html">code — Interpreter base classes</a></li>
+  <li><a href="codeop.html">codeop — Compile Python code</a></li>
+</ul>
+  </li>
+  <li><a href="modules.html">Importing Modules</a>
+<ul>
+  <li><a href="zipimport.html">zipimport — Import modules from Zip archives</a></li>
+  <li><a href="pkgutil.html">pkgutil — Package extension utility</a></li>
+  <li><a href="modulefinder.html">modulefinder — Find modules used by a script</a></li>
+  <li><a href="runpy.html">runpy — Locating and executing Python modules</a></li>
+  <li><a href="importlib.html">importlib — The implementation of :keyword:`!import`</a></li>
+  <li><a href="importlib.resources.html">importlib.resources – Package resource reading, opening and access</a></li>
+  <li><a href="importlib.resources.abc.html">importlib.resources.abc – Abstract base classes for resources</a></li>
+  <li><a href="importlib.metadata.html">importlib.metadata – Accessing package metadata</a></li>
+  <li><a href="sys_path_init.html">The initialization of the sys.path module search path</a></li>
+</ul>
+  </li>
+  <li><a href="language.html">Python Language Services</a>
+<ul>
+  <li><a href="ast.html">ast — Abstract syntax trees</a></li>
+  <li><a href="symtable.html">symtable — Access to the compiler's symbol tables</a></li>
+  <li><a href="token.html">token — Constants used with Python parse trees</a></li>
+  <li><a href="keyword.html">keyword — Testing for Python keywords</a></li>
+  <li><a href="tokenize.html">tokenize — Tokenizer for Python source</a></li>
+  <li><a href="tabnanny.html">tabnanny — Detection of ambiguous indentation</a></li>
+  <li><a href="pyclbr.html">pyclbr — Python module browser support</a></li>
+  <li><a href="py_compile.html">py_compile — Compile Python source files</a></li>
+  <li><a href="compileall.html">compileall — Byte-compile Python libraries</a></li>
+  <li><a href="dis.html">dis — Disassembler for Python bytecode</a></li>
+  <li><a href="pickletools.html">pickletools — Tools for pickle developers</a></li>
+</ul>
+  </li>
+  <li><a href="windows.html">MS Windows Specific Services</a>
+<ul>
+  <li><a href="msvcrt.html">msvcrt — Useful routines from the MS VC++ runtime</a></li>
+  <li><a href="winreg.html">winreg — Windows registry access</a></li>
+  <li><a href="winsound.html">winsound — Sound-playing interface for Windows</a></li>
+</ul>
+  </li>
+  <li><a href="unix.html">Unix-specific services</a>
+<ul>
+  <li><a href="shlex.html">shlex — Simple lexical analysis</a></li>
+  <li><a href="posix.html">posix — The most common POSIX system calls</a></li>
+  <li><a href="pwd.html">pwd — The password database</a></li>
+  <li><a href="grp.html">grp — The group database</a></li>
+  <li><a href="termios.html">termios — POSIX style tty control</a></li>
+  <li><a href="tty.html">tty — Terminal control functions</a></li>
+  <li><a href="pty.html">pty — Pseudo-terminal utilities</a></li>
+  <li><a href="fcntl.html">fcntl — The fcntl and ioctl system calls</a></li>
+  <li><a href="resource.html">resource — Resource usage information</a></li>
+  <li><a href="syslog.html">syslog — Unix syslog library routines</a></li>
+</ul>
+  </li>
+  <li><a href="cmdline.html">Modules command-line interface (CLI)</a></li>
+  <li><a href="superseded.html">Superseded Modules</a>
+<ul>
+  <li><a href="getopt.html">getopt — C-style parser for command line options</a></li>
+</ul>
+  </li>
+  <li><a href="removed.html">Removed Modules</a>
+<ul>
+  <li><a href="aifc.html">aifc — Read and write AIFF and AIFC files</a></li>
+  <li><a href="asynchat.html">asynchat — Asynchronous socket command/response handler</a></li>
+  <li><a href="asyncore.html">asyncore — Asynchronous socket handler</a></li>
+  <li><a href="audioop.html">audioop — Manipulate raw audio data</a></li>
+  <li><a href="cgi.html">cgi — Common Gateway Interface support</a></li>
+  <li><a href="cgitb.html">cgitb — Traceback manager for CGI scripts</a></li>
+  <li><a href="chunk.html">chunk — Read IFF chunked data</a></li>
+  <li><a href="crypt.html">crypt — Function to check Unix passwords</a></li>
+  <li><a href="distutils.html">distutils — Building and installing Python modules</a></li>
+  <li><a href="imghdr.html">imghdr — Determine the type of an image</a></li>
+  <li><a href="imp.html">imp — Access the import internals</a></li>
+  <li><a href="mailcap.html">mailcap — Mailcap file handling</a></li>
+  <li><a href="msilib.html">msilib — Read and write Microsoft Installer files</a></li>
+  <li><a href="nis.html">nis — Interface to Sun’s NIS (Yellow Pages)</a></li>
+  <li><a href="nntplib.html">nntplib — NNTP protocol client</a></li>
+  <li><a href="ossaudiodev.html">ossaudiodev — Access to OSS-compatible audio devices</a></li>
+  <li><a href="pipes.html">pipes — Interface to shell pipelines</a></li>
+  <li><a href="smtpd.html">smtpd — SMTP Server</a></li>
+  <li><a href="sndhdr.html">sndhdr — Determine type of sound file</a></li>
+  <li><a href="spwd.html">spwd — The shadow password database</a></li>
+  <li><a href="sunau.html">sunau — Read and write Sun AU files</a></li>
+  <li><a href="telnetlib.html">telnetlib — Telnet client</a></li>
+  <li><a href="uu.html">uu — Encode and decode uuencode files</a></li>
+  <li><a href="xdrlib.html">xdrlib — Encode and decode XDR data</a></li>
+</ul>
+  </li>
+  <li><a href="security_warnings.html">Security Considerations</a></li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="../reference/grammar.html">&larr; Full Grammar specification</a>
+        <a class="next" href="intro.html">Introduction &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

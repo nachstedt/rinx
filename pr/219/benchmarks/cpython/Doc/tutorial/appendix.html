@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appendix — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Tutorial</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Tutorial"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="appetite.html"><span class="section-number">1. </span>Whetting Your Appetite</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="interpreter.html"><span class="section-number">2. </span>Using the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="introduction.html"><span class="section-number">3. </span>An Informal Introduction to Python</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="controlflow.html"><span class="section-number">4. </span>More Control Flow Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datastructures.html"><span class="section-number">5. </span>Data Structures</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html"><span class="section-number">6. </span>Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="inputoutput.html"><span class="section-number">7. </span>Input and Output</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="errors.html"><span class="section-number">8. </span>Errors and Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="classes.html"><span class="section-number">9. </span>Classes</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdlib.html"><span class="section-number">10. </span>Brief Tour of the Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdlib2.html"><span class="section-number">11. </span>Brief Tour of the Standard Library — Part II</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="venv.html"><span class="section-number">12. </span>Virtual Environments and Packages</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="whatnow.html"><span class="section-number">13. </span>What Now?</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="interactive.html"><span class="section-number">14. </span>Interactive Input Editing and History Substitution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="floatingpoint.html"><span class="section-number">15. </span>Floating-Point Arithmetic:  Issues and Limitations</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="appendix.html"><span class="section-number">16. </span>Appendix</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Appendix"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="appendix.html#interactive-mode"><span class="section-number">16.1. </span>Interactive Mode</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="floatingpoint.html">&larr; Floating-Point Arithmetic:  Issues and Limitations</a>
+        <a class="next" href="../using/index.html">Python Setup and Usage &rarr;</a>
+      </nav>
+      
+      <a id="tut-appendix"></a>
+<h1 id="appendix"><span class="section-number">16. </span>Appendix</h1>
+<a id="tut-interac"></a>
+<h2 id="interactive-mode"><span class="section-number">16.1. </span>Interactive Mode</h2>
+<p>There are two variants of the interactive <a class="reference internal" href="../glossary.html#term-repl"><span class="xref std std-term">REPL</span></a>.  The classic
+basic interpreter is supported on all platforms with minimal line
+control capabilities.</p>
+<p>On Windows, or Unix-like systems with <a class="reference internal" href="../library/curses.html#py:module:curses" title="curses: An interface to the curses library, providing portable terminal handling. (Unix)"><code class="xref py module docutils literal">curses</code></a> support,
+a new interactive shell is used by default since Python 3.13.
+This one supports color, multiline editing, history browsing, and
+paste mode.  To disable color, see <a href="../using/cmdline.html#using-on-controlling-color">Controlling color</a> for
+details.  Function keys provide some additional functionality.
+:kbd:`F1` enters the interactive help browser <a class="reference internal" href="../library/pydoc.html#py:module:pydoc" title="pydoc: Documentation generator and online help system."><code class="xref py module docutils literal">pydoc</code></a>.
+:kbd:`F2` allows for browsing command-line history with neither output nor the
+<a href="#" class="broken-link"><span class="xref std std-term">&gt;&gt;&gt;</span></a> and <a href="#" class="broken-link"><span class="xref std std-term">...</span></a> prompts. :kbd:`F3` enters "paste mode", which
+makes pasting larger blocks of code easier. Press :kbd:`F3` to return to
+the regular prompt.</p>
+<p>When using the new interactive shell, exit the shell by typing :kbd:`exit`
+or :kbd:`quit`. Adding call parentheses after those commands is not
+required.</p>
+<p>If the new interactive shell is not desired, it can be disabled via
+the :envvar:`PYTHON_BASIC_REPL` environment variable.</p>
+<a id="tut-error"></a>
+<h3 id="error-handling"><span class="section-number">16.1.1. </span>Error Handling</h3>
+<p>When an error occurs, the interpreter prints an error message and a stack trace.
+In interactive mode, it then returns to the primary prompt; when input came from
+a file, it exits with a nonzero exit status after printing the stack trace.
+(Exceptions handled by an :keyword:`except` clause in a :keyword:`try` statement
+are not errors in this context.)  Some errors are unconditionally fatal and
+cause an exit with a nonzero exit status; this applies to internal inconsistencies and
+some cases of running out of memory.  All error messages are written to the
+standard error stream; normal output from executed commands is written to
+standard output.</p>
+<p>Typing the interrupt character (usually :kbd:`Control-C` or :kbd:`Delete`) to the primary or
+secondary prompt cancels the input and returns to the primary prompt. [#]_
+Typing an interrupt while a command is executing raises the
+<a class="reference internal" href="../library/exceptions.html#py:exception:keyboardinterrupt"><code class="xref py exception docutils literal">KeyboardInterrupt</code></a> exception, which may be handled by a :keyword:`try`
+statement.</p>
+<a id="tut-scripts"></a>
+<h3 id="executable-python-scripts"><span class="section-number">16.1.2. </span>Executable Python Scripts</h3>
+<p>On BSD'ish Unix systems, Python scripts can be made directly executable, like
+shell scripts, by putting the line :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span>!/usr/bin/env python3</span></span></pre></div>
+<p>(assuming that the interpreter is on the user's :envvar:`PATH`) at the beginning
+of the script and giving the file an executable mode.  The <code>#!</code> must be the
+first two characters of the file.  On some platforms, this first line must end
+with a Unix-style line ending (<code>'\n'</code>), not a Windows (<code>'\r\n'</code>) line
+ending.  Note that the hash, or pound, character, <code>'#'</code>, is used to start a
+comment in Python.</p>
+<p>The script can be given an executable mode, or permission, using the
+<strong class="program">chmod</strong> command.</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ chmod +x myscript.py</pre></div>
+</div>
+<p>On Windows systems, there is no notion of an "executable mode".  The Python
+installer automatically associates <code>.py</code> files with <code>python.exe</code> so that
+a double-click on a Python file will run it as a script.  The extension can
+also be <code>.pyw</code>, in that case, the console window that normally appears is
+suppressed.</p>
+<a id="tut-startup"></a>
+<h3 id="the-interactive-startup-file"><span class="section-number">16.1.3. </span>The Interactive Startup File</h3>
+<p>When you use Python interactively, it is frequently handy to have some standard
+commands executed every time the interpreter is started.  You can do this by
+setting an environment variable named :envvar:`PYTHONSTARTUP` to the name of a
+file containing your start-up commands.  This is similar to the :file:`.profile`
+feature of the Unix shells.</p>
+<p>This file is only read in interactive sessions, not when Python reads commands
+from a script, and not when :file:`/dev/tty` is given as the explicit source of
+commands (which otherwise behaves like an interactive session).  It is executed
+in the same namespace where interactive commands are executed, so that objects
+that it defines or imports can be used without qualification in the interactive
+session. You can also change the prompts <code>sys.ps1</code> and <code>sys.ps2</code> in this
+file.</p>
+<p>If you want to read an additional start-up file from the current directory, you
+can program this in the global start-up file using code like <code>if
+os.path.isfile('.pythonrc.py'): exec(open('.pythonrc.py').read())</code>.
+If you want to use the startup file in a script, you must do this explicitly
+in the script:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">filename</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">environ</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">PYTHONSTARTUP<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">filename</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">and</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">path</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">isfile</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">filename</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">filename</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">fobj</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">startup_file</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fobj</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">exec</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">startup_file</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<a id="tut-customize"></a>
+<h3 id="the-customization-modules"><span class="section-number">16.1.4. </span>The Customization Modules</h3>
+<p>Python provides two hooks to let you customize it: :index:`sitecustomize` and
+:index:`usercustomize`.  To see how it works, you need first to find the location
+of your user site-packages directory.  Start Python and run this code:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">site</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">site</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">getusersitepackages</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">/home/user/.local/lib/python3.x/site-packages<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<p>Now you can create a file named :file:`usercustomize.py` in that directory and
+put anything you want in it.  It will affect every invocation of Python, unless
+it is started with the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-s"><code class="xref std cmdoption docutils literal">-s</code></a> option to disable the automatic import.</p>
+<p>:index:`sitecustomize` works in the same way, but is typically created by an
+administrator of the computer in the global site-packages directory, and is
+imported before :index:`usercustomize`.  See the documentation of the <a class="reference internal" href="../library/site.html#py:module:site" title="site: Module responsible for site-specific configuration."><code class="xref py module docutils literal">site</code></a>
+module for more details.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Footnotes</pre>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="floatingpoint.html">&larr; Floating-Point Arithmetic:  Issues and Limitations</a>
+        <a class="next" href="../using/index.html">Python Setup and Usage &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

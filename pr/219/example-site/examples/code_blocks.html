@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Code Blocks — Megacorp Documentation</title>
+  <link rel="stylesheet" href="../default.css">
+  <script defer src="../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Megacorp Documentation</h2>
+        <p class="project-version">v2.0-beta</p>
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        <p class="sidebar-index-link"><a href="../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="headings.html">Section headings</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="hyperlinks.html">Hyperlinks and Targets</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="admonitions.html">Admonitions Showcase</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="inline_roles.html">Inline Roles</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="any_role.html">The :any: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="doc_role.html">The :doc: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="numref.html">The :numref: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="downloads.html">The :download: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="version_changes.html">Version Change Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="seealso.html">See Also Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="literal_blocks.html">Literal Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="code_blocks.html">Code Blocks</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Code Blocks"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="code_blocks.html#the-language-argument">The Language Argument</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="code_blocks.html#caption-and-name">:caption: and :name:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="code_blocks.html#linenos-and-lineno-start">:linenos: and :lineno-start:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="code_blocks.html#emphasize-lines">:emphasize-lines:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="code_blocks.html#dedent">:dedent:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="code_blocks.html#class-and-force">:class: and :force:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="code_blocks.html#highlight">.. highlight::</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="code_blocks.html#code">.. code::</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="definition_lists.html">Definition Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="enumerated_lists.html">Enumerated Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="option_lists.html">Option Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="block_quotes.html">Block Quotes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="line_blocks.html">Line Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="comments.html">Comments</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="domains.html">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="current_module.html">Current Module</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="transitions.html">Transitions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="typography.html">Smart Typography</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="escapes.html">Backslash Escapes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="tables.html">Grid Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="simple_tables.html">Simple Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="list_table.html">List Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="csv_table.html">CSV Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="table_directive.html">The table Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="math.html">Math</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="code_role.html">The :code: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="pep_role.html">The :pep: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="images.html">Images</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="figures.html">Figures</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="substitutions.html">Substitutions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="includes.html">Includes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="index_entries.html">Index Entries</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="noqa.html">Suppressing diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="unknown_directives.html">Unrecognized and malformed directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="if_builder.html">Conditional content by builder</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="doctests.html">Doctest Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="entities/index.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="toctree/index.html">Toctree Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="contents/index.html">Contents Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="sectnum/index.html">Sectnum Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="dropdown/index.html">Dropdown Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="grid/index.html">Grid Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="button_link/index.html">Button Link Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="jinja/index.html">🧩 Templated Sources</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="intersphinx/index.html">Linking into other sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="team_a/index.html">Team A: Getting Started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="team_b/index.html">Team B: Infrastructure Guide</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="literal_blocks.html">&larr; Literal Blocks</a>
+        <a class="next" href="glossary.html">Glossary &rarr;</a>
+      </nav>
+      
+      <a id="code-blocks"></a>
+<h1 id="code-blocks">Code Blocks</h1>
+<p>Code blocks are highlighted <strong>during the build</strong>, into HTML carrying one CSS
+class per token. Nothing is loaded at view time: no script, no network, no
+webfont. A language the highlighter does not know becomes a build warning
+rather than a silently unstyled block in a reader's browser.</p>
+<h2 id="the-language-argument">The Language Argument</h2>
+<p>The directive's argument names the language:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">greet</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">name</span></span><span class="hl-meta hl-function hl-parameters hl-annotation hl-python"><span class="hl-punctuation hl-separator hl-annotation hl-parameter hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"> </span><span class="hl-meta hl-function hl-annotation hl-return hl-python"><span class="hl-punctuation hl-separator hl-annotation hl-return hl-python">-&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello, </span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">name</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python">!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">greet</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">World<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<p>Any of the bundled languages works, and a language's file extension is
+accepted as an alias for its name — <code>py</code> for <code>python</code>, <code>rs</code> for <code>rust</code>:</p>
+<div class="highlight-rust notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-rust"><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-function hl-rust"><span class="hl-storage hl-type hl-function hl-rust">fn</span> </span><span class="hl-entity hl-name hl-function hl-rust">main</span></span><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-function hl-parameters hl-rust"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-rust">(</span></span><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-function hl-parameters hl-rust"><span class="hl-punctuation hl-section hl-parameters hl-end hl-rust">)</span></span></span></span><span class="hl-meta hl-function hl-rust"> </span><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-block hl-rust"><span class="hl-punctuation hl-section hl-block hl-begin hl-rust">{</span></span></span></span>
+<span class="hl-source hl-rust"><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-block hl-rust">    <span class="hl-storage hl-type hl-rust">let</span> greeting <span class="hl-keyword hl-operator hl-assignment hl-rust">=</span> <span class="hl-support hl-type hl-rust">String</span><span class="hl-meta hl-path hl-rust"><span class="hl-punctuation hl-accessor hl-rust">::</span></span>from<span class="hl-meta hl-group hl-rust"><span class="hl-punctuation hl-section hl-group hl-begin hl-rust">(</span><span class="hl-string hl-quoted hl-double hl-rust"><span class="hl-punctuation hl-definition hl-string hl-begin hl-rust">&quot;</span>Hello, World!<span class="hl-punctuation hl-definition hl-string hl-end hl-rust">&quot;</span></span></span><span class="hl-meta hl-group hl-rust"><span class="hl-punctuation hl-section hl-group hl-end hl-rust">)</span></span><span class="hl-punctuation hl-terminator hl-rust">;</span></span></span></span>
+<span class="hl-source hl-rust"><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-block hl-rust">    <span class="hl-support hl-macro hl-rust">println!</span><span class="hl-meta hl-group hl-rust"><span class="hl-punctuation hl-section hl-group hl-begin hl-rust">(</span></span><span class="hl-meta hl-group hl-rust"><span class="hl-string hl-quoted hl-double hl-rust"><span class="hl-punctuation hl-definition hl-string hl-begin hl-rust">&quot;</span><span class="hl-constant hl-other hl-placeholder hl-rust">{greeting}</span><span class="hl-punctuation hl-definition hl-string hl-end hl-rust">&quot;</span></span></span><span class="hl-meta hl-group hl-rust"><span class="hl-punctuation hl-section hl-group hl-end hl-rust">)</span></span><span class="hl-punctuation hl-terminator hl-rust">;</span></span></span></span>
+<span class="hl-source hl-rust"><span class="hl-meta hl-function hl-rust"><span class="hl-meta hl-block hl-rust"></span><span class="hl-meta hl-block hl-rust"><span class="hl-punctuation hl-section hl-block hl-end hl-rust">}</span></span></span></span></pre></div>
+</div>
+<p>Two argument values are reserved rather than being languages. <code>none</code> turns
+highlighting off for one block:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+This text is shown exactly as written,
+with no highlighting applied to it at all.</pre></div>
+</div>
+<p><code>default</code> means "Python, but do not complain if it does not fit" — the value
+a block falls back to when nothing else has set a language:</p>
+<div class="highlight-default notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span></pre></div>
+</div>
+<p><code>text</code> and <code>plain</code> are accepted as spellings of <code>none</code>, since Pygments
+uses them for its do-nothing lexer and Sphinx documents are full of both.</p>
+<p>Omitting the argument entirely does <em>not</em> mean "no language": the block
+inherits whatever <code>.. highlight::</code> last set, described below.</p>
+<h2 id="caption-and-name"><code>:caption:</code> and <code>:name:</code></h2>
+<p>A caption is rendered above the block. A <code>:name:</code> makes the block a
+cross-reference target, so <a href="code_blocks.html#greet-example">A greeting, with a caption and a name</a> links to it:</p>
+<div class="highlight-python notranslate" id="greet-example">
+<div class="code-block-caption"><span class="caption-number">Listing 2 </span><span class="caption-text">A greeting, with a caption and a name</span></div>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">greet</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">name</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello, </span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">name</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python">!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span></pre></div>
+</div>
+<h2 id="linenos-and-lineno-start"><code>:linenos:</code> and <code>:lineno-start:</code></h2>
+<p><code>:linenos:</code> numbers the lines from one:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="linenos">1</span><span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span></span></span>
+<span class="linenos">2</span><span class="hl-source hl-python"></span>
+<span class="linenos">3</span><span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="linenos">4</span><span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">exit</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<p><code>:lineno-start:</code> numbers them from somewhere else, which is what an excerpt
+lifted out of a longer file wants. It implies <code>:linenos:</code>, so writing both is
+unnecessary:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="linenos">42</span><span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="linenos">43</span><span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">exit</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<h2 id="emphasize-lines"><code>:emphasize-lines:</code></h2>
+<p>Draws a band across the lines named, given as a comma-separated list in which
+each entry is either a single line or an inclusive <code>first-last</code> range. The
+numbers are relative to the block, not to the file it came from, and are
+validated against the block's own length while parsing:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hll"><span class="linenos">1</span><span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span></span></span>
+</span><span class="linenos">2</span><span class="hl-source hl-python"></span>
+<span class="linenos">3</span><span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hll"><span class="linenos">4</span><span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">this line and the next are emphasized<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+</span><span class="hll"><span class="linenos">5</span><span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">exit</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+</span></pre></div>
+</div>
+<h2 id="dedent"><code>:dedent:</code></h2>
+<p>Removes leading columns from every line, for source pasted in at an
+indentation that made sense where it came from but not here. With a value it
+removes exactly that many columns:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> four columns were removed from each of these lines
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-pass hl-python">pass</span></span></pre></div>
+</div>
+<p>Without a value it removes whatever indentation the lines share, which is the
+common case:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">indented</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">the shared indent is gone<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span></pre></div>
+</div>
+<h2 id="class-and-force"><code>:class:</code> and <code>:force:</code></h2>
+<p><code>:class:</code> adds CSS classes to the block's wrapper, after the language class
+the renderer always emits. <code>:force:</code> says a highlighting failure is
+acceptable, which suppresses the warning an unknown language would otherwise
+produce:</p>
+<div class="highlight-not-a-real-language notranslate custom-block">
+<div class="highlight hl-code"><pre>
+Whatever this is, the build does not complain about it.</pre></div>
+</div>
+<h2 id="highlight"><code>.. highlight::</code></h2>
+<p>Sets the language every following block inherits, so a document written mostly
+in one language need not repeat it:</p>
+<p>With that in force, a block with no argument is Rust:</p>
+<div class="highlight-rust notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-rust"><span class="hl-storage hl-type hl-rust">let</span> inherited <span class="hl-keyword hl-operator hl-assignment hl-rust">=</span> <span class="hl-string hl-quoted hl-double hl-rust"><span class="hl-punctuation hl-definition hl-string hl-begin hl-rust">&quot;</span>this block never named a language<span class="hl-punctuation hl-definition hl-string hl-end hl-rust">&quot;</span></span><span class="hl-punctuation hl-terminator hl-rust">;</span></span></pre></div>
+</div>
+<p>So is a plain <code>::</code> literal block, exactly as in Sphinx:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-rust"><span class="hl-storage hl-type hl-rust">let</span> also_inherited <span class="hl-keyword hl-operator hl-assignment hl-rust">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-rust">1</span><span class="hl-punctuation hl-terminator hl-rust">;</span></span></pre></div>
+<p>A block that names its own language still wins:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">inherited</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-language hl-python">False</span></span></pre></div>
+</div>
+<p><code>:linenothreshold:</code> numbers any following block at least that many lines
+long, without each one having to ask:</p>
+<p>This block is three lines long, so it is numbered:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="linenos">1</span><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">first</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span></span>
+<span class="linenos">2</span><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">second</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span></span>
+<span class="linenos">3</span><span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">third</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span></span></pre></div>
+</div>
+<p>This one is shorter than the threshold, so it is not:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">only</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span></span></pre></div>
+</div>
+<p>Restoring the default for the rest of the page:</p>
+<h2 id="code"><code>.. code::</code></h2>
+<p>docutils spells the same directive <code>.. code::</code>. It takes the language as its
+argument in the same way, but writes line numbering as a single
+<code>:number-lines:</code> option, whose optional value is the starting number:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="linenos">1</span><span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">counted</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="linenos">2</span><span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">numbered from one<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span></pre></div>
+</div>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="linenos">10</span><span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">counted_from_ten</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="linenos">11</span><span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">numbered from ten<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span></pre></div>
+</div>
+<p>Because the two directives are genuinely different spellings rather than
+aliases, each accepts only its own options: <code>:linenos:</code> on a <code>.. code::</code>
+is reported as an unknown option, and so is <code>:number-lines:</code> on a
+<code>.. code-block::</code>.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="literal_blocks.html">&larr; Literal Blocks</a>
+        <a class="next" href="glossary.html">Glossary &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
