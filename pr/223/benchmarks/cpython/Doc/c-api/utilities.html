@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Utilities — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="utilities.html">Utilities</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Utilities"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="sys.html">Operating System Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="import.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="marshal.html">Data marshalling support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="arg.html">Parsing arguments and building values</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="conversion.html">String conversion and formatting</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="hash.html">PyHash API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="reflection.html">Reflection</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="codec.html">Codec registry and support functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="time.html">PyTime C API</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="perfmaps.html">Support for Perf Maps</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="extension-modules.html">&larr; Defining extension modules</a>
+        <a class="next" href="sys.html">Operating System Utilities &rarr;</a>
+      </nav>
+      
+      <a id="utilities"></a>
+<h1 id="utilities">Utilities</h1>
+<p>The functions in this chapter perform various utility tasks, ranging from
+helping C code be more portable across platforms, using Python modules from C,
+and parsing function arguments and constructing Python values from C values.</p>
+<ul>
+  <li><a href="sys.html">Operating System Utilities</a>
+<ul>
+  <li><a href="sys.html#operating-system-utilities">Operating System Utilities</a></li>
+  <li><a href="sys.html#system-functions">System Functions</a></li>
+  <li><a href="sys.html#process-control">Process Control</a></li>
+</ul>
+  </li>
+  <li><a href="import.html">Importing Modules</a></li>
+  <li><a href="marshal.html">Data marshalling support</a></li>
+  <li><a href="arg.html">Parsing arguments and building values</a>
+<ul>
+  <li><a href="arg.html#parsing-arguments">Parsing arguments</a>
+<ul>
+  <li><a href="arg.html#strings-and-buffers">Strings and buffers</a></li>
+  <li><a href="arg.html#numbers">Numbers</a></li>
+  <li><a href="arg.html#other-objects">Other objects</a></li>
+  <li><a href="arg.html#api-functions">API Functions</a></li>
+</ul>
+  </li>
+  <li><a href="arg.html#building-values">Building values</a></li>
+</ul>
+  </li>
+  <li><a href="conversion.html">String conversion and formatting</a>
+<ul>
+  <li><a href="conversion.html#string-conversion-and-formatting">String conversion and formatting</a></li>
+  <li><a href="conversion.html#character-classification-and-conversion">Character classification and conversion</a></li>
+</ul>
+  </li>
+  <li><a href="hash.html">PyHash API</a></li>
+  <li><a href="reflection.html">Reflection</a></li>
+  <li><a href="codec.html">Codec registry and support functions</a>
+<ul>
+  <li><a href="codec.html#codec-lookup-api">Codec lookup API</a></li>
+  <li><a href="codec.html#registry-api-for-unicode-encoding-error-handlers">Registry API for Unicode encoding error handlers</a></li>
+  <li><a href="codec.html#codec-utility-variables">Codec utility variables</a></li>
+</ul>
+  </li>
+  <li><a href="time.html">PyTime C API</a>
+<ul>
+  <li><a href="time.html#types">Types</a></li>
+  <li><a href="time.html#clock-functions">Clock Functions</a></li>
+  <li><a href="time.html#raw-clock-functions">Raw Clock Functions</a></li>
+  <li><a href="time.html#conversion-functions">Conversion functions</a></li>
+</ul>
+  </li>
+  <li><a href="perfmaps.html">Support for Perf Maps</a></li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="extension-modules.html">&larr; Defining extension modules</a>
+        <a class="next" href="sys.html">Operating System Utilities &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
