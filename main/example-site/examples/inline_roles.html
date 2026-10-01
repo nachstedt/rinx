@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inline Roles — Megacorp Documentation</title>
+  <link rel="stylesheet" href="../default.css">
+  <script defer src="../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Megacorp Documentation</h2>
+        <p class="project-version">v2.0-beta</p>
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        <p class="sidebar-index-link"><a href="../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="headings.html">Section headings</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="hyperlinks.html">Hyperlinks and Targets</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="admonitions.html">Admonitions Showcase</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="inline_roles.html">Inline Roles</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Inline Roles"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="inline_roles.html#supported-roles">Supported Roles</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="inline_roles.html#examples">Examples</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="inline_roles.html#term-references-term">Term References (:term:)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="inline_roles.html#reference-role-ref">Reference Role (:ref:)</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="any_role.html">The :any: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="doc_role.html">The :doc: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="numref.html">The :numref: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="downloads.html">The :download: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="version_changes.html">Version Change Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="seealso.html">See Also Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="literal_blocks.html">Literal Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="code_blocks.html">Code Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="definition_lists.html">Definition Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="enumerated_lists.html">Enumerated Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="option_lists.html">Option Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="block_quotes.html">Block Quotes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="line_blocks.html">Line Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="comments.html">Comments</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="domains.html">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="current_module.html">Current Module</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="transitions.html">Transitions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="typography.html">Smart Typography</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="escapes.html">Backslash Escapes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="tables.html">Grid Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="simple_tables.html">Simple Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="list_table.html">List Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="csv_table.html">CSV Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="table_directive.html">The table Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="math.html">Math</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="code_role.html">The :code: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="pep_role.html">The :pep: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="images.html">Images</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="figures.html">Figures</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="substitutions.html">Substitutions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="includes.html">Includes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="index_entries.html">Index Entries</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="noqa.html">Suppressing diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="unknown_directives.html">Unrecognized and malformed directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="if_builder.html">Conditional content by builder</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="doctests.html">Doctest Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="entities/index.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="toctree/index.html">Toctree Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="contents/index.html">Contents Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="sectnum/index.html">Sectnum Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="dropdown/index.html">Dropdown Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="grid/index.html">Grid Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="button_link/index.html">Button Link Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="jinja/index.html">🧩 Templated Sources</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="intersphinx/index.html">Linking into other sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="team_a/index.html">Team A: Getting Started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="team_b/index.html">Team B: Infrastructure Guide</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="admonitions.html">&larr; Admonitions Showcase</a>
+        <a class="next" href="any_role.html">The :any: Role &rarr;</a>
+      </nav>
+      
+      <h1 id="inline-roles">Inline Roles</h1>
+<p>This page demonstrates the interpreted text roles supported by Rinx.</p>
+<h2 id="supported-roles">Supported Roles</h2>
+<p>Currently, we support the following interpreted text roles:</p>
+<ul>
+<li><p><strong>Program Name</strong> (<code>:program:</code>):
+Used to mark the name of an executable program or command-line tool.
+For example, the <strong class="program">rustc</strong> compiler and the <strong class="program">cargo</strong> tool
+make up the core of Rust development.</p>
+</li>
+</ul>
+<h2 id="examples">Examples</h2>
+<p>Here are some more examples of program names in different contexts:</p>
+<ul>
+<li><p>Program name as a single word: Use <strong class="program">curl</strong> to fetch webpage source.</p>
+</li>
+<li><p>Program name with internal spaces: Run <strong class="program">git status</strong> to see unstaged changes.</p>
+</li>
+<li><p>Program name adjacent to punctuation: Run (<strong class="program">wget</strong>), or search for <strong class="program">tar</strong>.</p>
+</li>
+<li><p>Multiple program names in one sentence: You can use either <strong class="program">gzip</strong> or <strong class="program">bzip2</strong> to compress the output.</p>
+</li>
+</ul>
+<h2 id="term-references-term">Term References (<code>:term:</code>)</h2>
+<p>The <code>:term:</code> role creates a cross-reference to a term defined in a
+<code>.. glossary::</code> directive.</p>
+<ul>
+<li><p>Basic term reference: The <a class="reference internal" href="glossary.html#term-environment"><span class="xref std std-term">environment</span></a> stores document metadata.</p>
+</li>
+<li><p>Multi-word term: The <a class="reference internal" href="glossary.html#term-configuration-directory"><span class="xref std std-term">configuration directory</span></a> holds project settings.</p>
+</li>
+<li><p>Custom display text: <a class="reference internal" href="glossary.html#term-builder"><span class="xref std std-term">the build tool</span></a> processes the RST files.</p>
+</li>
+</ul>
+<h2 id="reference-role-ref">Reference Role (<code>:ref:</code>)</h2>
+<p>The <code>:ref:</code> role creates a cross-reference to a labeled location
+elsewhere in the site.</p>
+<ul>
+<li><p>Basic reference: See <a href="index.html#home-index">Rinx Example Site</a> for the project overview. With no
+explicit title, the link shows the title of the section the label sits
+above, as in Sphinx.</p>
+</li>
+<li><p>Custom display text: <a href="index.html#home-index">the site home</a> links back to
+the same page under different link text.</p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="admonitions.html">&larr; Admonitions Showcase</a>
+        <a class="next" href="any_role.html">The :any: Role &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

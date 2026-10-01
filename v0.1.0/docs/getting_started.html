@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Getting started — rinx</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">rinx</h2>
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="current">
+            <a href="getting_started.html">Getting started</a>
+            
+            <ul>
+              
+          <li>
+            <a href="getting_started.html#adding-rinx-to-a-project">Adding rinx to a project</a>
+            
+          </li>
+        
+          <li>
+            <a href="getting_started.html#a-first-site">A first site</a>
+            
+          </li>
+        
+          <li>
+            <a href="getting_started.html#building-and-viewing-it">Building and viewing it</a>
+            
+          </li>
+        
+          <li>
+            <a href="getting_started.html#where-to-go-next">Where to go next</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="rules.html">Bazel rules</a>
+            
+            <ul>
+              
+          <li>
+            <a href="rules.html#rinx-library">rinx_library</a>
+            
+          </li>
+        
+          <li>
+            <a href="rules.html#rinx-site">rinx_site</a>
+            
+          </li>
+        
+          <li>
+            <a href="rules.html#rinx-inventory">rinx_inventory</a>
+            
+          </li>
+        
+          <li>
+            <a href="rules.html#rinx-doctest-tests">rinx_doctest_tests</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="syntax.html">Supported syntax</a>
+            
+            <ul>
+              
+          <li>
+            <a href="syntax.html#restructuredtext">reStructuredText</a>
+            
+          </li>
+        
+          <li>
+            <a href="syntax.html#sphinx">Sphinx</a>
+            
+          </li>
+        
+          <li>
+            <a href="syntax.html#extensions">Extensions</a>
+            
+          </li>
+        
+          <li>
+            <a href="syntax.html#diagnostics">Diagnostics</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html">Entities</a>
+            
+            <ul>
+              
+          <li>
+            <a href="entities.html#the-four-kinds-of-declaration">The four kinds of declaration</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#declaring-a-type">Declaring a type</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#identity">Identity</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#cardinality">Cardinality</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#sections">Sections</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#relations-and-back-links">Relations and back-links</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#roles">Roles</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#presentation">Presentation</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#build-wiring">Build wiring</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#editor-support-for-the-schema-file">Editor support for the schema file</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#listing-entities">Listing entities</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#flowcharts-of-the-graph">Flowcharts of the graph</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#sequence-diagrams-of-the-graph">Sequence diagrams of the graph</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#charting-the-graph">Charting the graph</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#diagramming-entities">Diagramming entities</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#migrating-from-sphinx-needs">Migrating from sphinx-needs</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#importing-from-sphinx-needs">Importing from sphinx-needs</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#diagnostics">Diagnostics</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html">Linking between documentation sites</a>
+            
+            <ul>
+              
+          <li>
+            <a href="intersphinx.html#linking-into-another-site">Linking into another site</a>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html#writing-references">Writing references</a>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html#letting-other-sites-link-into-yours">Letting other sites link into yours</a>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html#what-the-inventory-lists">What the inventory lists</a>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html#live-preview">Live preview</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html">VS Code Extension Architecture for Rinx</a>
+            
+            <ul>
+              
+          <li>
+            <a href="vscode.html#core-philosophy">Core Philosophy</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#architecture-overview">Architecture Overview</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#caveats-required-changes">Caveats &amp; Required Changes</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#benefits">Benefits</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#future-enhancements">Future Enhancements</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#development-and-local-testing">Development and Local Testing</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="benchmark.html">Benchmarking Rinx</a>
+            
+            <ul>
+              
+          <li>
+            <a href="benchmark.html#benchmarking-rinx">Benchmarking Rinx</a>
+            
+          </li>
+        
+          <li>
+            <a href="benchmark.html#the-cpython-benchmark">The CPython benchmark</a>
+            
+          </li>
+        
+          <li>
+            <a href="benchmark.html#benchmarking-the-entity-model">Benchmarking the entity model</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="index.html">&larr; rinx</a>
+        <a class="next" href="rules.html">Bazel rules &rarr;</a>
+      </nav>
+      
+      <a id="getting-started"></a>
+<h1 id="getting-started">Getting started</h1>
+<p>rinx runs as part of a Bazel build. You need Bazel 8 or 9 (preferably through
+<a href="https://github.com/bazelbuild/bazelisk">Bazelisk</a>) and a C compiler for
+linking the Rust binary. Everything else, including the Rust, Java and Python
+toolchains, is fetched by Bazel.</p>
+<h2 id="adding-rinx-to-a-project">Adding rinx to a project</h2>
+<p>Add rinx to your <code>MODULE.bazel</code>:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bazel_dep</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">name</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">version</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">0.1.0<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<p>To follow an unreleased commit instead, override it with the repository:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bazel_dep</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">name</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">version</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">0.1.0<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">git_override</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">module_name</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">rinx<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">remote</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">https://github.com/nachstedt/rinx.git<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">commit</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;commit sha&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<h2 id="a-first-site">A first site</h2>
+<p>Write two documents. <code>index.rst</code> is the root of the site, and its toctree
+pulls in the second one:</p>
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Welcome</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">=======</span></span></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">An introduction, and a link to <span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>ref<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span><span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>the guide &lt;guide&gt;<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span>.</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> toctree<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   guide</span></span></pre></div>
+</div>
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-link hl-reference hl-def hl-restructuredtext"><span class="hl-punctuation hl-definition hl-link hl-restructuredtext">..</span> <span class="hl-punctuation hl-definition hl-string hl-restructuredtext">_</span><span class="hl-string hl-other hl-link hl-title hl-restructuredtext">guide</span><span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">:</span>
+</span></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Guide</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-heading hl-restructuredtext"><span class="hl-punctuation hl-definition hl-heading hl-restructuredtext">=====</span></span></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">Some prose, and a code block:</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> code-block<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> python</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">   print(&quot;Hello from rinx&quot;)</span></span></pre></div>
+</div>
+<p>Then declare them in a <code>BUILD.bazel</code> next to them:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">load</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">@rinx//:defs.bzl<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">rinx_library<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">rinx_site<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">rinx_library</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">name</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">docs<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">srcs</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">index.rst<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">guide.rst<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">rinx_site</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">name</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">site<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">deps</span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">:docs<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<p><code>rinx_library</code> parses its documents. <code>rinx_site</code> indexes everything its
+libraries bring in and renders one HTML page per document.</p>
+<h2 id="building-and-viewing-it">Building and viewing it</h2>
+<div class="highlight-bash notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">bazel</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> build //:site</span></span></pre></div>
+</div>
+<p>The site is written to <code>bazel-bin/site_site_out/</code>, where <code>site</code> is the
+target's name. Open its <code>index.html</code>, or serve the directory:</p>
+<div class="highlight-bash notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">python3</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"><span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> http.server<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> --</span>directory</span> bazel-bin/site_site_out</span></span></pre></div>
+</div>
+<p>A broken cross-reference is a warning by default. Set <code>strict_links = True</code>
+on the site to make it fail the build instead.</p>
+<h2 id="where-to-go-next">Where to go next</h2>
+<ul>
+<li><p><a href="rules.html#rules">Bazel rules</a> lists every attribute of the four rules. Among them are
+<code>parse_data</code> for the files <code>.. include::</code> reads, <code>images</code>,
+<code>diagrams = True</code> for PlantUML, and doctests.</p>
+</li>
+<li><p><a href="syntax.html#syntax">Supported syntax</a> lists which reStructuredText and Sphinx constructs rinx
+understands.</p>
+</li>
+<li><p>To split documentation between teams, give each team a <code>rinx_library</code> and
+list it in the <code>deps</code> of the library whose toctree includes it. The
+<a href="../example-site/examples/index.html">example site</a> is built exactly that way.</p>
+</li>
+<li><p>To give the site its own name and look, use the site's <code>config</code>,
+<code>template</code> and <code>css</code> attributes.</p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="index.html">&larr; rinx</a>
+        <a class="next" href="rules.html">Bazel rules &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

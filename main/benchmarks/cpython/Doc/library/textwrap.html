@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>textwrap — Text wrapping and filling — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="text.html">Text Processing Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Text Processing Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="string.html">string — Common string operations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="string.templatelib.html">string.templatelib — Support for template string literals</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="re.html">re — Regular expression operations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="difflib.html">difflib — Helpers for computing deltas</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="textwrap.html">textwrap — Text wrapping and filling</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unicodedata.html">unicodedata — Unicode Database</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="stringprep.html">stringprep — Internet String Preparation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="readline.html">readline — GNU readline interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="rlcompleter.html">rlcompleter — Completion function for GNU readline</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="difflib.html">&larr; difflib — Helpers for computing deltas</a>
+        <a class="next" href="unicodedata.html">unicodedata — Unicode Database &rarr;</a>
+      </nav>
+      
+      <h1 id="textwrap-text-wrapping-and-filling"><code class="xref py module docutils literal">textwrap</code> — Text wrapping and filling</h1>
+<dl class="py module">
+  <dt id="py:module:textwrap"><code class="sig-name">textwrap</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Greg Ward &lt;gward@python.net&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Greg Ward &lt;gward@python.net&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/textwrap.py`</p>
+<hr />
+<p>The <a class="reference internal" href="textwrap.html#py:module:textwrap" title="textwrap: Text wrapping and filling"><code class="xref py module docutils literal">textwrap</code></a> module provides some convenience functions,
+as well as <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a>, the class that does all the work.
+If you're just wrapping or filling one or two text strings, the convenience
+functions should be good enough; otherwise, you should use an instance of
+<a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> for efficiency.</p>
+<dl class="py function">
+  <dt id="py:function:textwrap.wrap"><code class="sig-name">wrap(text, width=70, *, initial_indent="", \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">subsequent_indent="", expand_tabs=True, \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">replace_whitespace=True, fix_sentence_endings=False, \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">break_long_words=True, drop_whitespace=True, \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">break_on_hyphens=True, tabsize=8, max_lines=None, \</code></dt>
+  <dt id="py:function:textwrap.[...]')"><code class="sig-name">placeholder=' [...]')</code></dt>
+  <dd><p>Wraps the single paragraph in <em>text</em> (a string) so every line is at most
+<em>width</em> characters long.  Returns a list of output lines, without final
+newlines.</p>
+<p>Optional keyword arguments correspond to the instance attributes of
+<a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a>, documented below.</p>
+<p>See the <a class="reference internal" href="textwrap.html#py:method:textwrap.textwrapper.wrap"><code class="xref py method docutils literal">TextWrapper.wrap</code></a> method for additional details on how
+<a class="reference internal" href="textwrap.html#py:function:textwrap.wrap"><code class="xref py function docutils literal">wrap</code></a> behaves.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:textwrap.fill"><code class="sig-name">fill(text, width=70, *, initial_indent="", \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">subsequent_indent="", expand_tabs=True, \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">replace_whitespace=True, fix_sentence_endings=False, \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">break_long_words=True, drop_whitespace=True, \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">break_on_hyphens=True, tabsize=8, \</code></dt>
+  <dt id="py:function:textwrap.[...]')"><code class="sig-name">max_lines=None, placeholder=' [...]')</code></dt>
+  <dd><p>Wraps the single paragraph in <em>text</em>, and returns a single string containing the
+wrapped paragraph.  <a class="reference internal" href="textwrap.html#py:function:textwrap.fill"><code class="xref py function docutils literal">fill</code></a> is shorthand for  :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">join</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">wrap</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">text</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-language hl-python">...</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>In particular, <a class="reference internal" href="textwrap.html#py:function:textwrap.fill"><code class="xref py function docutils literal">fill</code></a> accepts exactly the same keyword arguments as
+<a class="reference internal" href="textwrap.html#py:function:textwrap.wrap"><code class="xref py function docutils literal">wrap</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:textwrap.shorten"><code class="sig-name">shorten(text, width, *, fix_sentence_endings=False, \</code></dt>
+  <dt id="py:function:textwrap.\"><code class="sig-name">break_long_words=True, break_on_hyphens=True, \</code></dt>
+  <dt id="py:function:textwrap.[...]')"><code class="sig-name">placeholder=' [...]')</code></dt>
+  <dd><p>Collapse and truncate the given <em>text</em> to fit in the given <em>width</em>.</p>
+<p>First the whitespace in <em>text</em> is collapsed (all whitespace is replaced by
+single spaces).  If the result fits in the <em>width</em>, it is returned.
+Otherwise, enough words are dropped from the end so that the remaining words
+plus the <em>placeholder</em> fit within <em>width</em>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">textwrap</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">shorten</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello  world!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">width</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Hello world!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">textwrap</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">shorten</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello  world!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">width</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Hello [...]<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">textwrap</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">shorten</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello world<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">width</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">placeholder</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">...<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Hello...<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<p>Optional keyword arguments correspond to the instance attributes of
+<a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a>, documented below.  Note that the whitespace is
+collapsed before the text is passed to the <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> <a href="#" class="broken-link"><code class="xref py method docutils literal">fill</code></a>
+function, so changing the value of <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.tabsize"><code class="xref py attribute docutils literal">tabsize</code></a>, <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.expand_tabs"><code class="xref py attribute docutils literal">expand_tabs</code></a>,
+<a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.drop_whitespace"><code class="xref py attribute docutils literal">drop_whitespace</code></a>, and <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.replace_whitespace"><code class="xref py attribute docutils literal">replace_whitespace</code></a> will have no effect.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:textwrap.dedent"><code class="sig-name">dedent(text)</code></dt>
+  <dd><p>Remove any common leading whitespace from every line in <em>text</em>.</p>
+<p>This can be used to make triple-quoted strings line up with the left edge of the
+display, while still presenting them in the source code in indented form.</p>
+<p>Note that tabs and spaces are both treated as whitespace, but they are not
+equal: the lines <code>"  hello"</code> and <code>"\thello"</code> are considered to have no
+common leading whitespace.</p>
+<p>Lines containing only whitespace are ignored in the input and normalized to a
+single newline character in the output.</p>
+<p>For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">test</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> end first line with \ to avoid the empty line!
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-block hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;&#39;&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-block hl-python"><span class="hl-meta hl-string hl-python"></span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-block hl-python"><span class="hl-punctuation hl-separator hl-continuation hl-line hl-python">\</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-block hl-python">    hello</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-block hl-python">      world</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-block hl-python">    <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;&#39;&#39;</span></span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">repr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>          <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> prints &#39;    hello\n      world\n    &#39;
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">repr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">dedent</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> prints &#39;hello\n  world\n&#39;</span></span></pre></div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:textwrap.indent"><code class="sig-name">indent(text, prefix, predicate=None)</code></dt>
+  <dd><p>Add <em>prefix</em> to the beginning of selected lines in <em>text</em>.</p>
+<p>Lines are separated by calling <code>text.splitlines(True)</code>.</p>
+<p>By default, <em>prefix</em> is added to all lines that do not consist
+solely of whitespace (including any line endings).</p>
+<p>For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">hello<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-constant hl-character hl-escape hl-python">\n</span> <span class="hl-constant hl-character hl-escape hl-python">\n</span>world<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">indent</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">  <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">  hello<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-constant hl-character hl-escape hl-python">\n</span> <span class="hl-constant hl-character hl-escape hl-python">\n</span>  world<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<p>The optional <em>predicate</em> argument can be used to control which lines
+are indented. For example, it is easy to add <em>prefix</em> to even empty
+and whitespace-only lines:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">indent</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">+ <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-function hl-inline hl-python"><span class="hl-storage hl-type hl-function hl-inline hl-python"><span class="hl-keyword hl-declaration hl-function hl-inline hl-python">lambda</span></span></span><span class="hl-meta hl-function hl-inline hl-python"><span class="hl-meta hl-function hl-inline hl-parameters hl-python"> <span class="hl-variable hl-parameter hl-python">line</span><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span><span class="hl-meta hl-function hl-inline hl-body hl-python"> <span class="hl-constant hl-language hl-python">True</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">hello</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">world</span></span></span></pre></div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<p><a class="reference internal" href="textwrap.html#py:function:textwrap.wrap"><code class="xref py function docutils literal">wrap</code></a>, <a class="reference internal" href="textwrap.html#py:function:textwrap.fill"><code class="xref py function docutils literal">fill</code></a> and <a class="reference internal" href="textwrap.html#py:function:textwrap.shorten"><code class="xref py function docutils literal">shorten</code></a> work by creating a
+<a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> instance and calling a single method on it.  That
+instance is not reused, so for applications that process many text
+strings using <a class="reference internal" href="textwrap.html#py:function:textwrap.wrap"><code class="xref py function docutils literal">wrap</code></a> and/or <a class="reference internal" href="textwrap.html#py:function:textwrap.fill"><code class="xref py function docutils literal">fill</code></a>, it may be more efficient to
+create your own <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> object.</p>
+<p>Text is preferably wrapped on whitespaces and right after the hyphens in
+hyphenated words; only then will long words be broken if necessary, unless
+<a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.break_long_words"><code class="xref py attribute docutils literal">TextWrapper.break_long_words</code></a> is set to false.</p>
+<dl class="py class">
+  <dt id="py:class:textwrap.textwrapper"><em class="property">class</em> <code class="sig-name">TextWrapper(**kwargs)</code></dt>
+  <dd><p>The <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> constructor accepts a number of optional keyword
+arguments.  Each keyword argument corresponds to an instance attribute, so
+for example :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">wrapper</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">TextWrapper</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">initial_indent</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">* <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>is the same as  :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">wrapper</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">TextWrapper</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">wrapper</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">initial_indent</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">* <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span></pre></div>
+<p>You can reuse the same <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> object many times, and you can
+change any of its options through direct assignment to instance attributes
+between uses.</p>
+<p>The <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> instance attributes (and keyword arguments to the
+constructor) are as follows:</p>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.width"><code class="sig-name">width</code></dt>
+  <dd><p>(default: <code>70</code>) The maximum length of wrapped lines.  As long as there
+are no individual words in the input text longer than <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.width"><code class="xref py attribute docutils literal">width</code></a>,
+<a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> guarantees that no output line will be longer than
+<a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.width"><code class="xref py attribute docutils literal">width</code></a> characters.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.expand_tabs"><code class="sig-name">expand_tabs</code></dt>
+  <dd><p>(default: <code>True</code>) If true, then all tab characters in <em>text</em> will be
+expanded to spaces using the <a class="reference internal" href="stdtypes.html#py:method:str.expandtabs"><code class="xref py method docutils literal">expandtabs</code></a> method of <em>text</em>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.tabsize"><code class="sig-name">tabsize</code></dt>
+  <dd><p>(default: <code>8</code>) If <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.expand_tabs"><code class="xref py attribute docutils literal">expand_tabs</code></a> is true, then all tab characters
+in <em>text</em> will be expanded to zero or more spaces, depending on the
+current column and the given tab size.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.replace_whitespace"><code class="sig-name">replace_whitespace</code></dt>
+  <dd><p>(default: <code>True</code>) If true, after tab expansion but before wrapping,
+the <a class="reference internal" href="textwrap.html#py:method:textwrap.textwrapper.wrap"><code class="xref py method docutils literal">wrap</code></a> method will replace each whitespace character
+with a single space.  The whitespace characters replaced are
+as follows: tab, newline, vertical tab, formfeed, and carriage
+return (<code>'\t\n\v\f\r'</code>).</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.expand_tabs"><code class="xref py attribute docutils literal">expand_tabs</code></a> is false and <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.replace_whitespace"><code class="xref py attribute docutils literal">replace_whitespace</code></a> is true,
+each tab character will be replaced by a single space, which is <em>not</em>
+the same as tab expansion.</p>
+</div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.replace_whitespace"><code class="xref py attribute docutils literal">replace_whitespace</code></a> is false, newlines may appear in the
+middle of a line and cause strange output. For this reason, text should
+be split into paragraphs (using <a class="reference internal" href="stdtypes.html#py:method:str.splitlines"><code class="xref py method docutils literal">str.splitlines</code></a> or similar)
+which are wrapped separately.</p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.drop_whitespace"><code class="sig-name">drop_whitespace</code></dt>
+  <dd><p>(default: <code>True</code>) If true, whitespace at the beginning and ending of
+every line (after wrapping but before indenting) is dropped.
+Whitespace at the beginning of the paragraph, however, is not dropped
+if non-whitespace follows it.  If whitespace being dropped takes up an
+entire line, the whole line is dropped.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.initial_indent"><code class="sig-name">initial_indent</code></dt>
+  <dd><p>(default: <code>''</code>) String that will be prepended to the first line of
+wrapped output.  Counts towards the length of the first line.  The empty
+string is not indented.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.subsequent_indent"><code class="sig-name">subsequent_indent</code></dt>
+  <dd><p>(default: <code>''</code>) String that will be prepended to all lines of wrapped
+output except the first.  Counts towards the length of each line except
+the first.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.fix_sentence_endings"><code class="sig-name">fix_sentence_endings</code></dt>
+  <dd><p>(default: <code>False</code>) If true, <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> attempts to detect
+sentence endings and ensure that sentences are always separated by exactly
+two spaces.  This is generally desired for text in a monospaced font.
+However, the sentence detection algorithm is imperfect: it assumes that a
+sentence ending consists of a lowercase letter followed by one of <code>'.'</code>,
+<code>'!'</code>, or <code>'?'</code>, possibly followed by one of <code>'"'</code> or <code>"'"</code>,
+followed by a space.  One problem with this algorithm is that it is
+unable to detect the difference between "Dr." in :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-language hl-python">...</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Dr</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span> <span class="hl-meta hl-generic-name hl-python">Frankenstein</span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">s monster [...]</span></span></span></pre></div>
+<p>and "Spot." in :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-constant hl-language hl-python">...</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">See</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Spot</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span> <span class="hl-meta hl-generic-name hl-python">See</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Spot</span></span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span> <span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-language hl-python">...</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span></pre></div>
+<p><a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.fix_sentence_endings"><code class="xref py attribute docutils literal">fix_sentence_endings</code></a> is false by default.</p>
+<p>Since the sentence detection algorithm relies on <code>string.lowercase</code> for
+the definition of "lowercase letter", and a convention of using two spaces
+after a period to separate sentences on the same line, it is specific to
+English-language texts.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.break_long_words"><code class="sig-name">break_long_words</code></dt>
+  <dd><p>(default: <code>True</code>) If true, then words longer than <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.width"><code class="xref py attribute docutils literal">width</code></a> will be
+broken in order to ensure that no lines are longer than <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.width"><code class="xref py attribute docutils literal">width</code></a>.  If
+it is false, long words will not be broken, and some lines may be longer
+than <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.width"><code class="xref py attribute docutils literal">width</code></a>.  (Long words will be put on a line by themselves, in
+order to minimize the amount by which <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.width"><code class="xref py attribute docutils literal">width</code></a> is exceeded.)</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.break_on_hyphens"><code class="sig-name">break_on_hyphens</code></dt>
+  <dd><p>(default: <code>True</code>) If true, wrapping will occur preferably on whitespaces
+and right after hyphens in compound words, as it is customary in English.
+If false, only whitespaces will be considered as potentially good places
+for line breaks, but you need to set <a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.break_long_words"><code class="xref py attribute docutils literal">break_long_words</code></a> to false if
+you want truly insecable words.  Default behaviour in previous versions
+was to always allow breaking hyphenated words.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.max_lines"><code class="sig-name">max_lines</code></dt>
+  <dd><p>(default: <code>None</code>) If not <code>None</code>, then the output will contain at most
+<em>max_lines</em> lines, with <em>placeholder</em> appearing at the end of the output.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<span id="index-0"></span>
+<dl class="py attribute">
+  <dt id="py:attribute:textwrap.textwrapper.placeholder"><code class="sig-name">placeholder</code></dt>
+  <dd><p>(default: <code>' [...]'</code>) String that will appear at the end of the output
+text if it has been truncated.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<p><a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> also provides some public methods, analogous to the
+module-level convenience functions:</p>
+<dl class="py method">
+  <dt id="py:method:textwrap.textwrapper.wrap"><code class="sig-name">wrap(text)</code></dt>
+  <dd><p>Wraps the single paragraph in <em>text</em> (a string) so every line is at most
+<a class="reference internal" href="textwrap.html#py:attribute:textwrap.textwrapper.width"><code class="xref py attribute docutils literal">width</code></a> characters long.  All wrapping options are taken from
+instance attributes of the <a class="reference internal" href="textwrap.html#py:class:textwrap.textwrapper"><code class="xref py class docutils literal">TextWrapper</code></a> instance.  Returns a list
+of output lines, without final newlines.  If the wrapped output has no
+content, the returned list is empty.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:textwrap.textwrapper.fill"><code class="sig-name">fill(text)</code></dt>
+  <dd><p>Wraps the single paragraph in <em>text</em>, and returns a single string
+containing the wrapped paragraph.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="difflib.html">&larr; difflib — Helpers for computing deltas</a>
+        <a class="next" href="unicodedata.html">unicodedata — Unicode Database &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

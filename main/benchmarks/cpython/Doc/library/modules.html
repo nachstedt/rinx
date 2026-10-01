@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Importing Modules — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="modules.html">Importing Modules</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Importing Modules"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="zipimport.html">zipimport — Import modules from Zip archives</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pkgutil.html">pkgutil — Package extension utility</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="modulefinder.html">modulefinder — Find modules used by a script</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="runpy.html">runpy — Locating and executing Python modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.html">importlib — The implementation of :keyword:`!import`</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.resources.html">importlib.resources – Package resource reading, opening and access</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.resources.abc.html">importlib.resources.abc – Abstract base classes for resources</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="importlib.metadata.html">importlib.metadata – Accessing package metadata</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sys_path_init.html">The initialization of the sys.path module search path</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="codeop.html">&larr; codeop — Compile Python code</a>
+        <a class="next" href="zipimport.html">zipimport — Import modules from Zip archives &rarr;</a>
+      </nav>
+      
+      <a id="modules"></a>
+<h1 id="importing-modules">Importing Modules</h1>
+<p>The modules described in this chapter provide new ways to import other Python
+modules and hooks for customizing the import process.</p>
+<p>The full list of modules described in this chapter is:</p>
+<ul>
+  <li><a href="zipimport.html">zipimport — Import modules from Zip archives</a>
+<ul>
+  <li><a href="zipimport.html#zipimporter-objects">zipimporter Objects</a></li>
+  <li><a href="zipimport.html#examples">Examples</a></li>
+</ul>
+  </li>
+  <li><a href="pkgutil.html">pkgutil — Package extension utility</a></li>
+  <li><a href="modulefinder.html">modulefinder — Find modules used by a script</a>
+<ul>
+  <li><a href="modulefinder.html#example-usage-of-modulefinder">Example usage of ModuleFinder</a></li>
+</ul>
+  </li>
+  <li><a href="runpy.html">runpy — Locating and executing Python modules</a></li>
+  <li><a href="importlib.html">importlib — The implementation of :keyword:`!import`</a>
+<ul>
+  <li><a href="importlib.html#introduction">Introduction</a></li>
+  <li><a href="importlib.html#functions">Functions</a></li>
+  <li><a href="importlib.html#importlib-abc-abstract-base-classes-related-to-import">importlib.abc – Abstract base classes related to import</a></li>
+  <li><a href="importlib.html#importlib-machinery-importers-and-path-hooks">importlib.machinery – Importers and path hooks</a></li>
+  <li><a href="importlib.html#importlib-util-utility-code-for-importers">importlib.util – Utility code for importers</a></li>
+  <li><a href="importlib.html#examples">Examples</a>
+<ul>
+  <li><a href="importlib.html#importing-programmatically">Importing programmatically</a></li>
+  <li><a href="importlib.html#checking-if-a-module-can-be-imported">Checking if a module can be imported</a></li>
+  <li><a href="importlib.html#importing-a-source-file-directly">Importing a source file directly</a></li>
+  <li><a href="importlib.html#implementing-lazy-imports">Implementing lazy imports</a></li>
+  <li><a href="importlib.html#setting-up-an-importer">Setting up an importer</a></li>
+  <li><a href="importlib.html#approximating-importlib-import-module">Approximating importlib.import_module</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="importlib.resources.html">importlib.resources – Package resource reading, opening and access</a>
+<ul>
+  <li><a href="importlib.resources.html#functional-api">Functional API</a></li>
+</ul>
+  </li>
+  <li><a href="importlib.resources.abc.html">importlib.resources.abc – Abstract base classes for resources</a></li>
+  <li><a href="importlib.metadata.html">importlib.metadata – Accessing package metadata</a>
+<ul>
+  <li><a href="importlib.metadata.html#overview">Overview</a></li>
+  <li><a href="importlib.metadata.html#functional-api">Functional API</a>
+<ul>
+  <li><a href="importlib.metadata.html#entry-points">Entry points</a></li>
+  <li><a href="importlib.metadata.html#distribution-metadata">Distribution metadata</a></li>
+  <li><a href="importlib.metadata.html#distribution-versions">Distribution versions</a></li>
+  <li><a href="importlib.metadata.html#distribution-files">Distribution files</a></li>
+  <li><a href="importlib.metadata.html#distribution-requirements">Distribution requirements</a></li>
+  <li><a href="importlib.metadata.html#mapping-import-to-distribution-packages">Mapping import to distribution packages</a></li>
+</ul>
+  </li>
+  <li><a href="importlib.metadata.html#distributions">Distributions</a></li>
+  <li><a href="importlib.metadata.html#distribution-discovery">Distribution Discovery</a></li>
+  <li><a href="importlib.metadata.html#implementing-custom-providers">Implementing Custom Providers</a>
+<ul>
+  <li><a href="importlib.metadata.html#example">Example</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="sys_path_init.html">The initialization of the sys.path module search path</a>
+<ul>
+  <li><a href="sys_path_init.html#virtual-environments">Virtual Environments</a></li>
+  <li><a href="sys_path_init.html#pth-files">_pth files</a></li>
+  <li><a href="sys_path_init.html#embedded-python">Embedded Python</a></li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="codeop.html">&larr; codeop — Compile Python code</a>
+        <a class="next" href="zipimport.html">zipimport — Import modules from Zip archives &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

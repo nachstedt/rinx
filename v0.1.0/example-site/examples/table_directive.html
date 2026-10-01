@@ -1,0 +1,3832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CUSTOM TEMPLATE: The table Directive — Megacorp Documentation</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; color: #2c3e50; padding: 2rem; line-height: 1.6; }
+    header { border-bottom: 3px solid #3498db; margin-bottom: 2.5rem; padding-bottom: 1rem; }
+    h1 { color: #2980b9; margin: 0; }
+    .content { display: flex; gap: 3rem; max-width: 1200px; margin: 0 auto; }
+    .sidebar { flex: 0 0 280px; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: fit-content; }
+    .genindex-link { margin: 0 0 1rem 0; }
+    .genindex-link a { font-weight: 600; color: #2980b9; }
+    /* `min-width: 0` is what makes `img { max-width: 100% }` below actually
+       bind: a flex item's automatic minimum size is its content's, so without
+       it a wide picture — a generated `.. entity-flow::` over a whole project,
+       say — widens this column instead of being scaled down, and the page
+       scrolls sideways. `assets/default.css` bounds its own column with a
+       `max-width` instead. */
+    main { flex: 1; min-width: 0; background: #fff; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    
+    /* Admonitions */
+    .admonition {
+      margin: 2rem 0;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      border-left: 5px solid #bdc3c7;
+      background: #f8f9fa;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .admonition-title {
+      margin: 0 0 0.75rem 0;
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+    }
+    .admonition.note { border-left-color: #3498db; background: #ebf5fb; }
+    .admonition.warning { border-left-color: #f39c12; background: #fef9e7; }
+    .admonition.danger { border-left-color: #e74c3c; background: #fdedec; }
+    .admonition.tip { border-left-color: #2ecc71; background: #eafaf1; }
+    .admonition.important { border-left-color: #9b59b6; background: #f5eef8; }
+    .admonition.caution { border-left-color: #e67e22; background: #fdf2e9; }
+    
+    details.admonition summary {
+      cursor: pointer;
+      outline: none;
+      list-style: none;
+    }
+    details.admonition summary::-webkit-details-marker { display: none; }
+    details.admonition summary::before {
+      content: '▶';
+      display: inline-block;
+      margin-right: 0.75rem;
+      transition: transform 0.2s;
+      font-size: 0.8rem;
+    }
+    details.admonition[open] summary::before {
+      transform: rotate(90deg);
+    }
+    details.admonition[open] summary {
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* `.. dropdown::` — the other `<details>` construct, and the one that most
+       needs restating here: a template shipping no rules for it renders every
+       dropdown as a bare browser disclosure triangle with the chevron SVG
+       stranded beside the title, which looks like a broken feature rather than
+       an unstyled one. Same reasoning as the admonition and table rules above;
+       `assets/default.css` has the default theme's equivalents, written against
+       its custom properties, which is why these are transcribed with this
+       theme's own literal palette rather than copied. */
+    .sd-dropdown {
+      margin: 1.5rem 0;
+      border: 1px solid #bdc3c7;
+      border-radius: 8px;
+      background: #f8f9fa;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      overflow: hidden;
+    }
+    .sd-dropdown > .sd-summary-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      outline: none;
+      list-style: none;
+      padding: 0.85rem 1.25rem;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+    .sd-dropdown > .sd-summary-title::-webkit-details-marker { display: none; }
+    .sd-summary-text { flex: 1 1 auto; }
+    .sd-summary-icon,
+    .sd-summary-state-marker {
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+    }
+
+    /* The marker is the *closed* half of the chevron pair; opening rotates it,
+       which is why only one icon is ever embedded. */
+    .sd-summary-state-marker {
+      color: #7f8c8d;
+      transition: transform 0.2s;
+    }
+    .sd-dropdown[open] > .sd-summary-title > .sd-summary-chevron-right {
+      transform: rotate(90deg);
+    }
+    .sd-dropdown[open] > .sd-summary-title > .sd-summary-chevron-down {
+      transform: rotate(180deg);
+    }
+    .sd-summary-content {
+      padding: 1rem 1.25rem 1.25rem;
+      border-top: 1px solid #bdc3c7;
+    }
+    .sd-card-text:first-child { margin-top: 0; }
+    .sd-card-text:last-child { margin-bottom: 0; }
+
+    /* `:color:` — the eleven semantic colours, each a background/foreground
+       pair, in this theme's palette rather than the default theme's. */
+    .sd-bg-primary { background: #2980b9; }
+    .sd-bg-secondary { background: #7f8c8d; }
+    .sd-bg-success { background: #27ae60; }
+    .sd-bg-info { background: #3498db; }
+    .sd-bg-warning { background: #f39c12; }
+    .sd-bg-danger { background: #e74c3c; }
+    .sd-bg-light { background: #ecf0f1; }
+    .sd-bg-muted { background: #95a5a6; }
+    .sd-bg-dark { background: #2c3e50; }
+    .sd-bg-white { background: #ffffff; }
+    .sd-bg-black { background: #000000; }
+    .sd-dropdown > .sd-bg-text-primary,
+    .sd-dropdown > .sd-bg-text-secondary,
+    .sd-dropdown > .sd-bg-text-success,
+    .sd-dropdown > .sd-bg-text-info,
+    .sd-dropdown > .sd-bg-text-warning,
+    .sd-dropdown > .sd-bg-text-danger,
+    .sd-dropdown > .sd-bg-text-muted,
+    .sd-dropdown > .sd-bg-text-dark,
+    .sd-dropdown > .sd-bg-text-black { color: #ffffff; }
+    .sd-dropdown > .sd-bg-text-light,
+    .sd-dropdown > .sd-bg-text-white { color: #2c3e50; }
+    .sd-dropdown > [class*="sd-bg-"] .sd-summary-state-marker { color: inherit; }
+
+    /* `:margin:` — one step per side on sphinx-design's 0-5 spacing scale. */
+    .sd-m-0 { margin: 0; }
+    .sd-m-1 { margin: 0.25rem; }
+    .sd-m-2 { margin: 0.5rem; }
+    .sd-m-3 { margin: 1rem; }
+    .sd-m-4 { margin: 1.5rem; }
+    .sd-m-5 { margin: 3rem; }
+    .sd-m-auto { margin: auto; }
+    .sd-mt-0 { margin-top: 0; }
+    .sd-mt-1 { margin-top: 0.25rem; }
+    .sd-mt-2 { margin-top: 0.5rem; }
+    .sd-mt-3 { margin-top: 1rem; }
+    .sd-mt-4 { margin-top: 1.5rem; }
+    .sd-mt-5 { margin-top: 3rem; }
+    .sd-mt-auto { margin-top: auto; }
+    .sd-mb-0 { margin-bottom: 0; }
+    .sd-mb-1 { margin-bottom: 0.25rem; }
+    .sd-mb-2 { margin-bottom: 0.5rem; }
+    .sd-mb-3 { margin-bottom: 1rem; }
+    .sd-mb-4 { margin-bottom: 1.5rem; }
+    .sd-mb-5 { margin-bottom: 3rem; }
+    .sd-mb-auto { margin-bottom: auto; }
+    .sd-ml-0 { margin-left: 0; }
+    .sd-ml-1 { margin-left: 0.25rem; }
+    .sd-ml-2 { margin-left: 0.5rem; }
+    .sd-ml-3 { margin-left: 1rem; }
+    .sd-ml-4 { margin-left: 1.5rem; }
+    .sd-ml-5 { margin-left: 3rem; }
+    .sd-ml-auto { margin-left: auto; }
+    .sd-mr-0 { margin-right: 0; }
+    .sd-mr-1 { margin-right: 0.25rem; }
+    .sd-mr-2 { margin-right: 0.5rem; }
+    .sd-mr-3 { margin-right: 1rem; }
+    .sd-mr-4 { margin-right: 1.5rem; }
+    .sd-mr-5 { margin-right: 3rem; }
+    .sd-mr-auto { margin-right: auto; }
+
+    /* `:animate:` — applied to the body, which is what appears on opening. */
+    .sd-fade-in[open] > .sd-summary-content {
+      animation: sd-fade-in 0.4s ease-in-out;
+    }
+    .sd-fade-in-slide-down[open] > .sd-summary-content {
+      animation: sd-fade-in 0.4s ease-in-out, sd-slide-down 0.4s ease-in-out;
+    }
+    @keyframes sd-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes sd-slide-down {
+      from { transform: translateY(-0.5rem); }
+      to { transform: translateY(0); }
+    }
+
+    /* `.. button-link::` — sphinx-design's button, transcribed here for the
+       reason the dropdown rules above are: a template shipping no rules for it
+       renders every button as an ordinary inline link, which reads as a broken
+       feature rather than an unstyled one. This theme's own palette, not the
+       default theme's. */
+    .sd-btn {
+      display: inline-block;
+      padding: 0.4rem 0.9rem;
+      border: 1px solid #bdc3c7;
+      border-radius: 8px;
+      background: #ecf0f1;
+      color: #2c3e50;
+      line-height: 1.5;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .sd-btn:hover { filter: brightness(0.94); text-decoration: none; }
+    .sd-text-wrap { white-space: normal; }
+    .sd-shadow-sm { box-shadow: 0 2px 4px rgba(0,0,0,0.12); }
+    .sd-d-grid { display: grid; }
+    .sd-d-grid > .sd-btn { width: 100%; }
+    .sd-stretched-link::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+    /* `:align:` — written on the paragraph holding the button, not on it. */
+    .sd-text-left { text-align: left; }
+    .sd-text-right { text-align: right; }
+    .sd-text-center { text-align: center; }
+    .sd-text-justify { text-align: justify; }
+    /* `:color:` — the same eleven names the `sd-bg-*` pairs above use. */
+    .sd-btn-primary { background: #2980b9; border-color: #2980b9; color: #ffffff; }
+    .sd-btn-secondary { background: #7f8c8d; border-color: #7f8c8d; color: #ffffff; }
+    .sd-btn-success { background: #27ae60; border-color: #27ae60; color: #ffffff; }
+    .sd-btn-info { background: #3498db; border-color: #3498db; color: #ffffff; }
+    .sd-btn-warning { background: #f39c12; border-color: #f39c12; color: #ffffff; }
+    .sd-btn-danger { background: #e74c3c; border-color: #e74c3c; color: #ffffff; }
+    .sd-btn-muted { background: #95a5a6; border-color: #95a5a6; color: #ffffff; }
+    .sd-btn-dark { background: #2c3e50; border-color: #2c3e50; color: #ffffff; }
+    .sd-btn-black { background: #000000; border-color: #000000; color: #ffffff; }
+    .sd-btn-light { background: #ecf0f1; border-color: #ecf0f1; color: #2c3e50; }
+    .sd-btn-white { background: #ffffff; border-color: #bdc3c7; color: #2c3e50; }
+    /* `:outline:` — the same colour as a border and text on no fill. */
+    .sd-btn-outline-primary { background: transparent; border-color: #2980b9; color: #2980b9; }
+    .sd-btn-outline-secondary { background: transparent; border-color: #7f8c8d; color: #7f8c8d; }
+    .sd-btn-outline-success { background: transparent; border-color: #27ae60; color: #27ae60; }
+    .sd-btn-outline-info { background: transparent; border-color: #3498db; color: #3498db; }
+    .sd-btn-outline-warning { background: transparent; border-color: #f39c12; color: #b9770e; }
+    .sd-btn-outline-danger { background: transparent; border-color: #e74c3c; color: #e74c3c; }
+    .sd-btn-outline-light { background: transparent; border-color: #ecf0f1; color: #7f8c8d; }
+    .sd-btn-outline-muted { background: transparent; border-color: #95a5a6; color: #7f8c8d; }
+    .sd-btn-outline-dark { background: transparent; border-color: #2c3e50; color: #2c3e50; }
+    .sd-btn-outline-white { background: transparent; border-color: #bdc3c7; color: #7f8c8d; }
+    .sd-btn-outline-black { background: transparent; border-color: #000000; color: #000000; }
+
+    /* Glossary */
+    dl.glossary {
+      margin: 2rem 0;
+      display: block;
+    }
+    dl.glossary dt {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-top: 1.75rem;
+      padding: 0.25rem 0.5rem;
+      display: inline-block;
+      position: relative;
+      scroll-margin-top: 2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 8px;
+    }
+    dl.glossary dt:first-of-type {
+      margin-top: 0.5rem;
+    }
+    dl.glossary dd {
+      margin-left: 1.5rem;
+      margin-bottom: 1.75rem;
+      padding-left: 1rem;
+      border-left: 2px solid #bdc3c7;
+      color: #5a738e;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    dl.glossary dd p:last-child {
+      margin-bottom: 0;
+    }
+    /* Hover effect to show link anchor */
+    dl.glossary dt::after {
+      content: ' #';
+      color: #3498db;
+      opacity: 0;
+      font-size: 0.85em;
+      font-weight: 400;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      display: inline-block;
+      transform: translateX(-4px);
+      pointer-events: none;
+    }
+    dl.glossary dt:hover::after {
+      opacity: 0.6;
+      transform: translateX(2px);
+    }
+    /* Active targeted term */
+    dl.glossary dt:target {
+      color: #2980b9;
+      background-color: #ebf5fb;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    dl.glossary dt:target + dd {
+      border-left-color: #3498db;
+      background: linear-gradient(90deg, #ebf5fb 0%, transparent 100%);
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-radius: 0 8px 8px 0;
+    }
+    /* Inline term references (:term:) */
+    a .xref.std-term {
+      border-bottom: 1px dashed #3498db;
+      padding-bottom: 1px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    a:hover .xref.std-term {
+      border-bottom-style: solid;
+      border-bottom-color: #2980b9;
+      color: #2980b9;
+    }
+    a:has(.xref.std-term) {
+      text-decoration: none !important;
+    }
+    /* Broken glossary term references */
+    a.broken-link {
+      color: #e74c3c !important;
+      border-bottom: 1px dashed #e74c3c !important;
+      cursor: help;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    a.broken-link:hover {
+      border-bottom-style: solid !important;
+      border-bottom-color: #c0392b !important;
+      color: #c0392b !important;
+    }
+
+    /* Tables */
+    table {
+      border-collapse: collapse;
+      margin: 1.75rem 0;
+      width: 100%;
+    }
+    table th,
+    table td {
+      border: 1px solid #95a5a6;
+      padding: 0.6rem 0.85rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    table thead th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #2c3e50;
+      border-bottom: 2px solid #2c3e50;
+    }
+    table tbody tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    table th p:last-child,
+    table td p:last-child {
+      margin-bottom: 0;
+    }
+    table.list-table {
+      width: auto;
+    }
+    table.list-table.align-left {
+      margin-right: auto;
+    }
+    table.list-table.align-center {
+      margin-left: auto;
+      margin-right: auto;
+    }
+    table.list-table.align-right {
+      margin-left: auto;
+    }
+    table.list-table caption {
+      caption-side: top;
+      text-align: left;
+      font-style: italic;
+      color: #7f8c8d;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    /* Enumerated lists carry two classes: the enumeration sequence, which
+       picks the glyphs, and the punctuation format. A template that ships no
+       rules for these renders every list as plain decimal, losing the
+       distinction the source made — which is why this standalone theme has to
+       restate them, exactly as it restates the admonition and table rules
+       above. The equivalents for the default theme live in
+       `assets/default.css`. */
+    ol.arabic { list-style-type: decimal; }
+    ol.loweralpha { list-style-type: lower-alpha; }
+    ol.upperalpha { list-style-type: upper-alpha; }
+    ol.lowerroman { list-style-type: lower-roman; }
+    ol.upperroman { list-style-type: upper-roman; }
+
+    /* The period format is what the browser's own marker already draws, so
+       only the two parenthesised formats need counters. The `counter-reset`
+       seeding a list that does not start at 1 is emitted inline by the
+       renderer. */
+    ol.rparen,
+    ol.parens {
+      list-style: none;
+      counter-reset: rsl;
+      padding-left: 3rem;
+    }
+
+    ol.rparen > li,
+    ol.parens > li {
+      position: relative;
+      counter-increment: rsl;
+    }
+
+    /* Absolutely positioned so the marker leaves the item's normal flow: an
+       item's content is a block `<p>`, which an in-flow marker would push onto
+       the next line. */
+    ol.rparen > li::before,
+    ol.parens > li::before {
+      position: absolute;
+      right: 100%;
+      margin-right: 0.4rem;
+      white-space: nowrap;
+    }
+
+    ol.arabic.rparen > li::before { content: counter(rsl, decimal) ")"; }
+    ol.loweralpha.rparen > li::before { content: counter(rsl, lower-alpha) ")"; }
+    ol.upperalpha.rparen > li::before { content: counter(rsl, upper-alpha) ")"; }
+    ol.lowerroman.rparen > li::before { content: counter(rsl, lower-roman) ")"; }
+    ol.upperroman.rparen > li::before { content: counter(rsl, upper-roman) ")"; }
+
+    ol.arabic.parens > li::before { content: "(" counter(rsl, decimal) ")"; }
+    ol.loweralpha.parens > li::before { content: "(" counter(rsl, lower-alpha) ")"; }
+    ol.upperalpha.parens > li::before { content: "(" counter(rsl, upper-alpha) ")"; }
+    ol.lowerroman.parens > li::before { content: "(" counter(rsl, lower-roman) ")"; }
+    ol.upperroman.parens > li::before { content: "(" counter(rsl, upper-roman) ")"; }
+
+    /* Block quotes get no distinguishing style from a template that ships no
+       rules of its own beyond the browser's own default `<blockquote>`
+       indent — which happened to hide this theme never having restated it.
+       `assets/default.css` has the default theme's equivalent. */
+    blockquote {
+      margin: 1.5rem 0;
+      padding: 0.5rem 1.5rem;
+      border-left: 5px solid #bdc3c7;
+      color: #5a6b7b;
+      font-style: italic;
+    }
+    blockquote p.attribution {
+      margin-top: 0.75rem;
+      text-align: right;
+      font-style: normal;
+    }
+
+    /* Line blocks render as plain `<div>`s — docutils' own HTML5 markup —
+       which, unlike `<blockquote>` above, get no indentation at all from the
+       browser's own default stylesheet. Without this rule a nested line is
+       indistinguishable from its siblings, exactly the enumerated-list
+       problem the rules above solve. `assets/default.css` has the default
+       theme's equivalent. */
+    .line-block { margin: 1.5rem 0; }
+    .line-block .line-block { margin: 0 0 0 1.5rem; }
+
+    /* Images and figures. `<figure>` and `<figcaption>` do get *some* browser
+       defaults, but nothing that keeps a picture inside the page or that acts
+       on the `align-*` classes both image directives emit — those are ours,
+       not the browser's, so a theme that omits them silently ignores every
+       `:align:` an author wrote. Restated here for the same reason as the
+       rules above; `assets/default.css` has the default theme's equivalents. */
+    img { max-width: 100%; height: auto; }
+    figure { margin: 2rem 0; }
+    figure img { display: block; }
+    figcaption { margin-top: 0.75rem; font-size: 0.9rem; color: #5a6b7b; }
+    figcaption > p:first-child { margin-top: 0; font-weight: 600; color: #2c3e50; }
+    figcaption .legend { margin-top: 0.75rem; font-weight: 400; }
+    /* The notice under a sequence diagram `:max-items:` cut short; see
+       `assets/default.css`. */
+    .entity-sequence-truncated { font-size: 0.85rem; font-style: italic; color: #5a6b7b; text-align: center; }
+    /* `clear` on each float is what keeps two aligned images from sitting side
+       by side, and a centred one from riding up alongside a float — see
+       `assets/default.css` for the longer note. Transcribed from Sphinx's own
+       `basic.css`. */
+    img.align-left, figure.align-left { clear: left; float: left; margin-right: 1em; }
+    img.align-right, figure.align-right { clear: right; float: right; margin-left: 1em; }
+    img.align-center, figure.align-center { display: block; margin-left: auto; margin-right: auto; }
+    figure.align-center { text-align: center; }
+    h1, h2, h3 { clear: both; }
+
+    /* Syntax highlighting. Code blocks are highlighted during the build into
+       classed spans, so a theme only supplies the palette — no script is
+       loaded and no network needed at view time. Restated here for the same
+       reason as the rules above; `assets/default.css` has the default theme's
+       equivalents, generated from the same syntect theme. */
+    .code-block-caption { font-size: 0.85rem; font-weight: 600; padding: 0.4rem 0; }
+    .linenos {
+      display: inline-block;
+      width: 2.5em;
+      margin-right: 1em;
+      text-align: right;
+      color: #65737e;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    /* The band spans the block's full width, which is why the newline is
+       emitted inside the span rather than after it. */
+    .hll { display: block; background: #3b4252; }
+    /* The generated theme owns the code area's palette, so the template's
+       own `pre` colours step aside inside a highlighted block. */
+    .highlight.hl-code { border-radius: 6px; overflow-x: auto; }
+    .highlight.hl-code > pre { background: transparent; color: inherit; }
+
+    /*
+     * theme "Base16 Ocean Dark" generated by syntect
+     */
+
+    .hl-code {
+     color: #c0c5ce;
+     background-color: #2b303b;
+    }
+
+    .hl-variable.hl-parameter.hl-function {
+     color: #c0c5ce;
+    }
+    .hl-comment, .hl-punctuation.hl-definition.hl-comment {
+     color: #65737e;
+    }
+    .hl-punctuation.hl-definition.hl-string, .hl-punctuation.hl-definition.hl-variable, .hl-punctuation.hl-definition.hl-string, .hl-punctuation.hl-definition.hl-parameters, .hl-punctuation.hl-definition.hl-string, .hl-punctuation.hl-definition.hl-array {
+     color: #c0c5ce;
+    }
+    .hl-none {
+     color: #c0c5ce;
+    }
+    .hl-keyword.hl-operator {
+     color: #c0c5ce;
+    }
+    .hl-keyword {
+     color: #b48ead;
+    }
+    .hl-variable, .hl-variable.hl-other.hl-dollar.hl-only.hl-js {
+     color: #bf616a;
+    }
+    .hl-entity.hl-name.hl-function, .hl-meta.hl-require, .hl-support.hl-function.hl-any-method, .hl-variable.hl-function {
+     color: #8fa1b3;
+    }
+    .hl-support.hl-class, .hl-entity.hl-name.hl-class, .hl-entity.hl-name.hl-type.hl-class {
+     color: #ebcb8b;
+    }
+    .hl-meta.hl-class {
+     color: #eff1f5;
+    }
+    .hl-keyword.hl-other.hl-special-method {
+     color: #8fa1b3;
+    }
+    .hl-storage {
+     color: #b48ead;
+    }
+    .hl-support.hl-function {
+     color: #96b5b4;
+    }
+    .hl-string, .hl-constant.hl-other.hl-symbol, .hl-entity.hl-other.hl-inherited-class {
+     color: #a3be8c;
+    }
+    .hl-constant.hl-numeric {
+     color: #d08770;
+    }
+    .hl-none {
+     color: #d08770;
+    }
+    .hl-none {
+     color: #d08770;
+    }
+    .hl-constant {
+     color: #d08770;
+    }
+    .hl-entity.hl-name.hl-tag {
+     color: #bf616a;
+    }
+    .hl-entity.hl-other.hl-attribute-name {
+     color: #d08770;
+    }
+    .hl-entity.hl-other.hl-attribute-name.hl-id, .hl-punctuation.hl-definition.hl-entity {
+     color: #8fa1b3;
+    }
+    .hl-meta.hl-selector {
+     color: #b48ead;
+    }
+    .hl-none {
+     color: #d08770;
+    }
+    .hl-markup.hl-heading .hl-punctuation.hl-definition.hl-heading, .hl-entity.hl-name.hl-section {
+     color: #8fa1b3;
+    }
+    .hl-keyword.hl-other.hl-unit {
+     color: #d08770;
+    }
+    .hl-markup.hl-bold, .hl-punctuation.hl-definition.hl-bold {
+     color: #ebcb8b;
+    font-weight: bold;
+    }
+    .hl-markup.hl-italic, .hl-punctuation.hl-definition.hl-italic {
+     color: #b48ead;
+    font-style: italic;
+    }
+    .hl-markup.hl-raw.hl-inline {
+     color: #a3be8c;
+    }
+    .hl-string.hl-other.hl-link {
+     color: #bf616a;
+    }
+    .hl-meta.hl-link {
+     color: #d08770;
+    }
+    .hl-meta.hl-image {
+     color: #d08770;
+    }
+    .hl-markup.hl-list {
+     color: #bf616a;
+    }
+    .hl-markup.hl-quote {
+     color: #d08770;
+    }
+    .hl-meta.hl-separator {
+     color: #c0c5ce;
+     background-color: #4f5b66;
+    }
+    .hl-markup.hl-inserted, .hl-markup.hl-inserted.hl-git_gutter {
+     color: #a3be8c;
+    }
+    .hl-markup.hl-deleted, .hl-markup.hl-deleted.hl-git_gutter {
+     color: #bf616a;
+    }
+    .hl-markup.hl-changed, .hl-markup.hl-changed.hl-git_gutter {
+     color: #b48ead;
+    }
+    .hl-markup.hl-ignored, .hl-markup.hl-ignored.hl-git_gutter {
+     color: #4f5b66;
+    }
+    .hl-markup.hl-untracked, .hl-markup.hl-untracked.hl-git_gutter {
+     color: #4f5b66;
+    }
+    .hl-constant.hl-other.hl-color {
+     color: #96b5b4;
+    }
+    .hl-string.hl-regexp {
+     color: #96b5b4;
+    }
+    .hl-constant.hl-character.hl-escape {
+     color: #96b5b4;
+    }
+    .hl-punctuation.hl-section.hl-embedded, .hl-variable.hl-interpolation {
+     color: #ab7967;
+    }
+    .hl-invalid.hl-illegal {
+     color: #2b303b;
+     background-color: #bf616a;
+    }
+    .hl-markup.hl-deleted.hl-git_gutter {
+     color: #f92672;
+    }
+    .hl-markup.hl-inserted.hl-git_gutter {
+     color: #a6e22e;
+    }
+    .hl-markup.hl-changed.hl-git_gutter {
+     color: #967efb;
+    }
+    .hl-markup.hl-ignored.hl-git_gutter {
+     color: #565656;
+    }
+    .hl-markup.hl-untracked.hl-git_gutter {
+     color: #565656;
+    }
+
+    /* Math. Equations are MathML the browser draws itself — no script is
+       loaded and no webfont downloaded — so a theme only has to place them and
+       pick a math font. Restated here for the same reason as the rules above;
+       `assets/default.css` has the default theme's equivalents. */
+    .math { overflow-x: auto; overflow-y: hidden; }
+    span.math { display: inline; }
+    /* A math font is what makes brackets stretch to fit a `cases` or matrix:
+       the glyph variants live in its OpenType MATH table, which a text font
+       has not got. */
+    math {
+      font-family: "Latin Modern Math", "STIX Two Math", "XITS Math",
+        "Cambria Math", "TeX Gyre Termes Math", "DejaVu Math TeX Gyre",
+        "Noto Sans Math", math;
+      font-size: 1.05em;
+    }
+
+    div.math {
+      display: flex;
+      align-items: center;
+      margin: 1.75rem 0;
+    }
+
+    /* The equation keeps the middle and the number goes to the right margin,
+       so a numbered and an unnumbered block still align with each other. */
+    div.math math { flex: 1 1 auto; text-align: center; }
+
+    div.math .eqno {
+      order: 2;
+      flex: 0 0 auto;
+      margin-left: 1rem;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+
+    div.math .eqno .headerlink { opacity: 0; margin-left: 0.35rem; text-decoration: none; }
+    div.math:hover .eqno .headerlink { opacity: 1; }
+    a .eqno { color: inherit; }
+
+    /* LaTeX the backend could not read: the source is shown as written. */
+    .math-error {
+      color: #b91c1c;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 4px;
+      padding: 0.15rem 0.4rem;
+    }
+
+    /* A directive this build could not turn into content — an unrecognized name,
+       or a recognized one whose content it had to refuse. Loud on purpose: the
+       directive's body never reaches the page any other way, so a quiet style
+       would leave the reader with silently missing content. */
+    .directive-error {
+      margin: 1rem 0;
+      border: 1px solid #fecaca;
+      border-left: 5px solid #b91c1c;
+      border-radius: 4px;
+      background: #fef2f2;
+      padding: 0.6rem 0.9rem;
+    }
+
+    .directive-error-message {
+      margin: 0 0 0.5rem;
+      color: #b91c1c;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .directive-error-source {
+      margin: 0;
+      overflow-x: auto;
+      background: none;
+      border: 0;
+      padding: 0;
+      color: #7f1d1d;
+      font-size: 0.9em;
+      white-space: pre;
+    }
+
+    /* Entities. A project declares its own construct types, so the template
+       styles the generic shape (`.entity`, `.entity-header`, …) rather than
+       any one type — a new `.. req::` needs no CSS of its own. */
+    .entity {
+      margin: 2rem 0;
+      border: 1px solid #dfe6e9;
+      border-left: 5px solid #3498db;
+      border-radius: 8px;
+      background: #fbfcfc;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    /* A flex row, so the type, title and id separate on their own and the id
+       can sit at the far end without markup that says so. */
+    .entity-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin: 0;
+      padding: 0.875rem 1.25rem;
+      background: #fff;
+      border-bottom: 1px solid #dfe6e9;
+    }
+    .entity-type {
+      flex: none;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      background: #3498db;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .entity-title {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+    /* Monospace and muted: an id is a token to copy, not prose to read. */
+    .entity-id {
+      flex: none;
+      margin-left: auto;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.8rem;
+      color: #7f8c8d;
+    }
+    .entity:hover > .entity-header > .entity-id::after {
+      content: " \00B6";
+      color: #3498db;
+    }
+
+    /* A key/value list, not tabular data, so it opts out of the table styling
+       above: no grid, no zebra stripes, no full-bleed width. */
+    table.entity-attributes {
+      width: auto;
+      margin: 1rem 1.25rem;
+      font-size: 0.9rem;
+    }
+    table.entity-attributes tbody tr:nth-child(even) { background: none; }
+    table.entity-attributes th,
+    table.entity-attributes td {
+      border: none;
+      padding: 0.3rem 0.75rem 0.3rem 0;
+    }
+    table.entity-attributes th {
+      width: 1%;
+      white-space: nowrap;
+      font-weight: 600;
+      color: #7f8c8d;
+    }
+
+    .entity-content,
+    .entity-section { padding: 0 1.25rem; }
+    .entity-content > :first-child { margin-top: 0; }
+
+    /* A labelled sub-part, so it gets a rule above it and a heading that is
+       unmistakably a heading rather than another paragraph of body text. */
+    .entity-section {
+      margin-top: 1rem;
+      padding-top: 0.875rem;
+      border-top: 1px solid #dfe6e9;
+    }
+    .entity-section-label {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #3498db;
+    }
+    .entity-section > .entity-section-label + * { margin-top: 0; }
+
+    .entity-links {
+      margin-top: 1rem;
+      padding: 0.875rem 1.25rem 1rem;
+      border-top: 1px solid #dfe6e9;
+      background: #fff;
+    }
+    .entity-link-label {
+      margin: 0.5rem 0 0.25rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #7f8c8d;
+    }
+    .entity-link-label:first-child { margin-top: 0; }
+
+    /* Inline pills: these are short id tokens, and a bulleted column of them
+       wastes a lot of height on an entity with several relations. */
+    .entity-link-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .entity-link-list li { margin: 0; }
+    .entity-link-list a,
+    .entity-link-list .broken-link {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border: 1px solid #dfe6e9;
+      border-radius: 999px;
+      background: #fbfcfc;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+    .entity-link-list .broken-link {
+      border-style: dashed;
+      border-color: #e74c3c;
+      color: #e74c3c;
+    }
+
+    /* An anchored entity is highlighted, as a targeted glossary term is. */
+    .entity:target { border-left-color: #f39c12; }
+    .entity:target > .entity-header { background: #fef9e7; }
+
+    /* A listing (`.. entity-table::` / `.. needtable::`) is a *report* about
+       the entities, not one of them, so it keeps this theme's ordinary table
+       styling rather than the entity card's. Only the id column is restyled,
+       so a column of ids scans as ids. `assets/default.css` has the default
+       theme's equivalents, written against its custom properties, which is why
+       these are transcribed with this theme's own literal palette rather than
+       copied. */
+    table.entity-table {
+      font-size: 0.9rem;
+    }
+    table.entity-table th.head { white-space: nowrap; }
+    table.entity-table td:first-child a {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9em;
+    }
+
+    a .xref.entity {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9em;
+    }
+
+
+    /* The disclosure a collapsible type folds its detail into. Collapsed, only
+       the header and the leading prose remain. */
+    .entity-more { border-top: 1px solid #dfe6e9; }
+    .entity-more-toggle {
+      cursor: pointer;
+      padding: 0.55rem 1.25rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #7f8c8d;
+      background: #fff;
+      outline: none;
+    }
+    .entity-more-toggle:hover { color: #3498db; }
+    /* The folded children carry their own dividers, so the summary adds a rule
+       only when open, and the first of them drops its own. */
+    .entity-more[open] > .entity-more-toggle { border-bottom: 1px solid #dfe6e9; }
+    .entity-more > .entity-attributes { margin-top: 0.875rem; }
+    .entity-more > .entity-section:first-of-type,
+    .entity-more > .entity-links { border-top: none; }
+
+    /* Audit events: the counter-example to the entity box, so a rule and an
+       indent rather than a card — just enough to group each event with its
+       description. */
+    .audit-event {
+      margin: 1.5rem 0;
+      padding-left: 1rem;
+      border-left: 3px solid #dfe6e9;
+    }
+    .audit-event:first-of-type { margin-top: 2rem; }
+    .audit-event > p:first-child { margin-top: 0; }
+    .audit-event > :last-child { margin-bottom: 0; }
+    /* The name is what a reader scans for; the arguments are supporting
+       detail and stay muted. */
+    .audit-event-name { font-weight: 600; color: #3498db; }
+    .audit-event-args { color: #7f8c8d; }
+    .audit-event-version { font-size: 0.9em; color: #7f8c8d; }
+    .audit-event:target { border-left-color: #f39c12; background: #fef9e7; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Megacorp Documentation <small>v2.0-beta</small></h1>
+  </header>
+  <div class="content">
+    <aside class="sidebar">
+      <h3>Table of Contents</h3>
+      <p class="genindex-link"><a href="../genindex.html">Index</a></p>
+      
+      <ul>
+      
+        <li>
+          <a href="headings.html">Section headings</a>
+          
+          <ul>
+            
+        <li>
+          <a href="headings.html#overlined-headings">Overlined headings</a>
+          
+          <ul>
+            
+        <li>
+          <a href="headings.html#overlined-and-deep">Overlined and deep</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="headings.html#titles-wider-than-they-look">Titles wider than they look</a>
+          
+          <ul>
+            
+        <li>
+          <a href="headings.html#an-emoji-prefixed-title">🔍 An emoji-prefixed title</a>
+          
+        </li>
+      
+        <li>
+          <a href="headings.html#in-a-title">漢字 in a title</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="headings.html#inline-markup-in-a-title">Inline markup in a title</a>
+          
+          <ul>
+            
+        <li>
+          <a href="headings.html#a-bold-word-in-a-title">A bold word in a title</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="headings.html#underlines-that-are-too-short">Underlines that are too short</a>
+          
+          <ul>
+            
+        <li>
+          <a href="headings.html#a-deliberately-under-drawn-heading">A deliberately under-drawn heading</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="hyperlinks.html">Hyperlinks and Targets</a>
+          
+          <ul>
+            
+        <li>
+          <a href="hyperlinks.html#external-targets">External Targets</a>
+          
+        </li>
+      
+        <li>
+          <a href="hyperlinks.html#embedded-uris">Embedded URIs</a>
+          
+        </li>
+      
+        <li>
+          <a href="hyperlinks.html#phrased-and-simple-links">Phrased and Simple Links</a>
+          
+        </li>
+      
+        <li>
+          <a href="hyperlinks.html#case-insensitivity-and-normalization">Case Insensitivity and Normalization</a>
+          
+        </li>
+      
+        <li>
+          <a href="hyperlinks.html#internal-references">Internal References</a>
+          
+        </li>
+      
+        <li>
+          <a href="hyperlinks.html#anonymous-hyperlinks">Anonymous Hyperlinks</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="admonitions.html">Admonitions Showcase</a>
+          
+          <ul>
+            
+        <li>
+          <a href="admonitions.html#standard-admonitions">Standard Admonitions</a>
+          
+        </li>
+      
+        <li>
+          <a href="admonitions.html#generic-admonitions">Generic Admonitions</a>
+          
+        </li>
+      
+        <li>
+          <a href="admonitions.html#collapsible-admonitions">Collapsible Admonitions</a>
+          
+        </li>
+      
+        <li>
+          <a href="admonitions.html#nested-content">Nested Content</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="inline_roles.html">Inline Roles</a>
+          
+          <ul>
+            
+        <li>
+          <a href="inline_roles.html#supported-roles">Supported Roles</a>
+          
+        </li>
+      
+        <li>
+          <a href="inline_roles.html#examples">Examples</a>
+          
+        </li>
+      
+        <li>
+          <a href="inline_roles.html#term-references-term">Term References (:term:)</a>
+          
+        </li>
+      
+        <li>
+          <a href="inline_roles.html#reference-role-ref">Reference Role (:ref:)</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="version_changes.html">Version Change Directives</a>
+          
+        </li>
+      
+        <li>
+          <a href="seealso.html">See Also Directive</a>
+          
+          <ul>
+            
+        <li>
+          <a href="seealso.html#basic-usage">Basic Usage</a>
+          
+        </li>
+      
+        <li>
+          <a href="seealso.html#bullet-list-body">Bullet List Body</a>
+          
+        </li>
+      
+        <li>
+          <a href="seealso.html#multiple-paragraphs">Multiple Paragraphs</a>
+          
+        </li>
+      
+        <li>
+          <a href="seealso.html#empty-body">Empty Body</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="literal_blocks.html">Literal Blocks</a>
+          
+          <ul>
+            
+        <li>
+          <a href="literal_blocks.html#plain-introduction">Plain :: Introduction</a>
+          
+        </li>
+      
+        <li>
+          <a href="literal_blocks.html#code-block-directive">.. code-block:: Directive</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="code_blocks.html">Code Blocks</a>
+          
+          <ul>
+            
+        <li>
+          <a href="code_blocks.html#the-language-argument">The Language Argument</a>
+          
+        </li>
+      
+        <li>
+          <a href="code_blocks.html#caption-and-name">:caption: and :name:</a>
+          
+        </li>
+      
+        <li>
+          <a href="code_blocks.html#linenos-and-lineno-start">:linenos: and :lineno-start:</a>
+          
+        </li>
+      
+        <li>
+          <a href="code_blocks.html#emphasize-lines">:emphasize-lines:</a>
+          
+        </li>
+      
+        <li>
+          <a href="code_blocks.html#dedent">:dedent:</a>
+          
+        </li>
+      
+        <li>
+          <a href="code_blocks.html#class-and-force">:class: and :force:</a>
+          
+        </li>
+      
+        <li>
+          <a href="code_blocks.html#highlight">.. highlight::</a>
+          
+        </li>
+      
+        <li>
+          <a href="code_blocks.html#code">.. code::</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="glossary.html">Glossary</a>
+          
+          <ul>
+            
+        <li>
+          <a href="glossary.html#sorted-glossary">Sorted Glossary</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="definition_lists.html">Definition Lists</a>
+          
+          <ul>
+            
+        <li>
+          <a href="definition_lists.html#basic-usage">Basic Usage</a>
+          
+        </li>
+      
+        <li>
+          <a href="definition_lists.html#multi-paragraph-definition">Multi-Paragraph Definition</a>
+          
+        </li>
+      
+        <li>
+          <a href="definition_lists.html#inline-markup-in-terms">Inline Markup in Terms</a>
+          
+        </li>
+      
+        <li>
+          <a href="definition_lists.html#inside-a-seealso-directive">Inside a seealso Directive</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html">Enumerated Lists</a>
+          
+          <ul>
+            
+        <li>
+          <a href="enumerated_lists.html#enumeration-sequences">Enumeration Sequences</a>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html#enumerator-formats">Enumerator Formats</a>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html#auto-enumeration">Auto-Enumeration</a>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html#starting-at-another-number">Starting at Another Number</a>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html#multi-line-and-multi-paragraph-items">Multi-Line and Multi-Paragraph Items</a>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html#nested-lists">Nested Lists</a>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html#other-block-content-in-an-item">Other Block Content in an Item</a>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html#lists-inside-directives">Lists Inside Directives</a>
+          
+        </li>
+      
+        <li>
+          <a href="enumerated_lists.html#when-a-line-is-not-a-list">When a Line Is Not a List</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="option_lists.html">Option Lists</a>
+          
+          <ul>
+            
+        <li>
+          <a href="option_lists.html#synonyms-and-a-space-delimited-argument">Synonyms and a Space-Delimited Argument</a>
+          
+        </li>
+      
+        <li>
+          <a href="option_lists.html#an-equals-delimited-long-option">An Equals-Delimited Long Option</a>
+          
+        </li>
+      
+        <li>
+          <a href="option_lists.html#an-adjacent-short-option">An Adjacent Short Option</a>
+          
+        </li>
+      
+        <li>
+          <a href="option_lists.html#dos-style-and-old-gnu-style-markers">DOS-Style and Old GNU-Style Markers</a>
+          
+        </li>
+      
+        <li>
+          <a href="option_lists.html#a-bracketed-placeholder-argument">A Bracketed Placeholder Argument</a>
+          
+        </li>
+      
+        <li>
+          <a href="option_lists.html#description-starting-on-the-next-line">Description Starting on the Next Line</a>
+          
+        </li>
+      
+        <li>
+          <a href="option_lists.html#a-multi-paragraph-description">A Multi-Paragraph Description</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="block_quotes.html">Block Quotes</a>
+          
+          <ul>
+            
+        <li>
+          <a href="block_quotes.html#a-plain-block-quote">A Plain Block Quote</a>
+          
+        </li>
+      
+        <li>
+          <a href="block_quotes.html#with-a-single-line-attribution">With a Single-Line Attribution</a>
+          
+        </li>
+      
+        <li>
+          <a href="block_quotes.html#with-a-multi-line-attribution">With a Multi-Line Attribution</a>
+          
+        </li>
+      
+        <li>
+          <a href="block_quotes.html#nested-block-quotes">Nested Block Quotes</a>
+          
+        </li>
+      
+        <li>
+          <a href="block_quotes.html#a-block-quote-containing-a-list">A Block Quote Containing a List</a>
+          
+        </li>
+      
+        <li>
+          <a href="block_quotes.html#a-block-quote-containing-a-directive">A Block Quote Containing a Directive</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="line_blocks.html">Line Blocks</a>
+          
+          <ul>
+            
+        <li>
+          <a href="line_blocks.html#a-plain-line-block">A Plain Line Block</a>
+          
+        </li>
+      
+        <li>
+          <a href="line_blocks.html#a-deliberately-blank-line">A Deliberately Blank Line</a>
+          
+        </li>
+      
+        <li>
+          <a href="line_blocks.html#nesting">Nesting</a>
+          
+        </li>
+      
+        <li>
+          <a href="line_blocks.html#multiple-nesting-levels">Multiple Nesting Levels</a>
+          
+        </li>
+      
+        <li>
+          <a href="line_blocks.html#a-wrapped-continuation-line">A Wrapped Continuation Line</a>
+          
+        </li>
+      
+        <li>
+          <a href="line_blocks.html#a-line-block-inside-a-block-quote">A Line Block Inside a Block Quote</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="comments.html">Comments</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html">Domains</a>
+          
+          <ul>
+            
+        <li>
+          <a href="domains.html#python-domain">Python Domain</a>
+          
+          <ul>
+            
+        <li>
+          <a href="domains.html#multiple-signatures-per-directive">Multiple Signatures Per Directive</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#the-greeter-class">The Greeter Class</a>
+          
+          <ul>
+            
+        <li>
+          <a href="domains.html#legacy-classmethod-staticmethod-directives">Legacy .. classmethod:: &#x2f; .. staticmethod:: Directives</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#decorator-directives">Decorator Directives</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#custom-exceptions">Custom Exceptions</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#role-target-aliasing-class-exception">Role-Target Aliasing (class &#x2f; exception)</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#py-data-definitions-inside-a-table">py:data Definitions Inside a Table</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#the-greetings-module">The greetings Module</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#the-module-option-override">The :module: Option Override</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#c-domain">C Domain</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#c-namespaces">C Namespaces</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#cross-references">Cross-References</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#the-flat-clock-now-classmethod">The Flat clock.now Classmethod</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#target-resolution-order">Target Resolution Order</a>
+          
+        </li>
+      
+        <li>
+          <a href="domains.html#standard-domain">Standard Domain</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="current_module.html">Current Module</a>
+          
+        </li>
+      
+        <li>
+          <a href="transitions.html">Transitions</a>
+          
+        </li>
+      
+        <li>
+          <a href="typography.html">Smart Typography</a>
+          
+          <ul>
+            
+        <li>
+          <a href="typography.html#em-dash">Em Dash</a>
+          
+        </li>
+      
+        <li>
+          <a href="typography.html#en-dash">En Dash</a>
+          
+        </li>
+      
+        <li>
+          <a href="typography.html#ellipsis">Ellipsis</a>
+          
+        </li>
+      
+        <li>
+          <a href="typography.html#inside-emphasis">Inside Emphasis</a>
+          
+        </li>
+      
+        <li>
+          <a href="typography.html#not-inside-literals">Not Inside Literals</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="escapes.html">Backslash Escapes</a>
+          
+          <ul>
+            
+        <li>
+          <a href="escapes.html#escaping-markup-characters">Escaping Markup Characters</a>
+          
+        </li>
+      
+        <li>
+          <a href="escapes.html#the-escaped-space">The Escaped Space</a>
+          
+        </li>
+      
+        <li>
+          <a href="escapes.html#escapes-are-not-processed-in-literals">Escapes Are Not Processed in Literals</a>
+          
+        </li>
+      
+        <li>
+          <a href="escapes.html#escaping-typography">Escaping Typography</a>
+          
+        </li>
+      
+        <li>
+          <a href="escapes.html#escapes-in-roles">Escapes in Roles</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="tables.html">Grid Tables</a>
+          
+          <ul>
+            
+        <li>
+          <a href="tables.html#simple-table-with-a-header">Simple Table with a Header</a>
+          
+        </li>
+      
+        <li>
+          <a href="tables.html#table-without-a-header-row">Table Without a Header Row</a>
+          
+        </li>
+      
+        <li>
+          <a href="tables.html#cells-spanning-columns">Cells Spanning Columns</a>
+          
+        </li>
+      
+        <li>
+          <a href="tables.html#cells-spanning-rows">Cells Spanning Rows</a>
+          
+        </li>
+      
+        <li>
+          <a href="tables.html#hierarchical-nested-headers">Hierarchical (Nested) Headers</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="simple_tables.html">Simple Tables</a>
+          
+          <ul>
+            
+        <li>
+          <a href="simple_tables.html#table-with-a-header">Table with a Header</a>
+          
+        </li>
+      
+        <li>
+          <a href="simple_tables.html#table-without-a-header-row">Table Without a Header Row</a>
+          
+        </li>
+      
+        <li>
+          <a href="simple_tables.html#cells-as-miniature-documents">Cells as Miniature Documents</a>
+          
+        </li>
+      
+        <li>
+          <a href="simple_tables.html#cells-spanning-columns">Cells Spanning Columns</a>
+          
+        </li>
+      
+        <li>
+          <a href="simple_tables.html#the-rightmost-column-is-unbounded">The Rightmost Column Is Unbounded</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html">List Tables</a>
+          
+          <ul>
+            
+        <li>
+          <a href="list_table.html#basic-list-table">Basic List Table</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#table-with-a-title">Table with a Title</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#header-rows">:header-rows:</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#stub-columns">:stub-columns:</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#widths">:widths:</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#width">:width:</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#align">:align:</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#class">:class:</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#name-and-cross-referencing">:name: and Cross-Referencing</a>
+          
+        </li>
+      
+        <li>
+          <a href="list_table.html#domain-objects-nested-inside-a-cell">Domain Objects Nested Inside a Cell</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html">CSV Tables</a>
+          
+          <ul>
+            
+        <li>
+          <a href="csv_table.html#basic-csv-table">Basic CSV Table</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#table-with-a-title">Table with a Title</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#header-rows">:header-rows:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#header">:header:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#stub-columns">:stub-columns:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#widths">:widths:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#width">:width:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#align">:align:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#class">:class:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#name-and-cross-referencing">:name: and Cross-Referencing</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#quoting">Quoting</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#delim">:delim:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#quote">:quote:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#escape">:escape:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#keepspace">:keepspace:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#file">:file:</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#ragged-rows">Ragged Rows</a>
+          
+        </li>
+      
+        <li>
+          <a href="csv_table.html#rst-inside-a-cell">RST Inside a Cell</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html">The table Directive</a>
+          
+          <ul>
+            
+        <li>
+          <a href="table_directive.html#wrapping-a-grid-table">Wrapping a Grid Table</a>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html#wrapping-a-simple-table">Wrapping a Simple Table</a>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html#table-with-a-title">Table with a Title</a>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html#widths">:widths:</a>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html#width">:width:</a>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html#align">:align:</a>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html#class">:class:</a>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html#name-and-cross-referencing">:name: and Cross-Referencing</a>
+          
+        </li>
+      
+        <li>
+          <a href="table_directive.html#domain-objects-nested-inside-a-cell">Domain Objects Nested Inside a Cell</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="math.html">Math</a>
+          
+          <ul>
+            
+        <li>
+          <a href="math.html#the-math-role">The :math: Role</a>
+          
+        </li>
+      
+        <li>
+          <a href="math.html#the-math-directive">The .. math:: Directive</a>
+          
+        </li>
+      
+        <li>
+          <a href="math.html#several-equations-at-once">Several Equations at Once</a>
+          
+        </li>
+      
+        <li>
+          <a href="math.html#multi-line-equations">Multi-Line Equations</a>
+          
+        </li>
+      
+        <li>
+          <a href="math.html#label-and-the-eq-role">:label: and the :eq: Role</a>
+          
+        </li>
+      
+        <li>
+          <a href="math.html#name">:name:</a>
+          
+        </li>
+      
+        <li>
+          <a href="math.html#class">:class:</a>
+          
+        </li>
+      
+        <li>
+          <a href="math.html#nowrap">:nowrap:</a>
+          
+        </li>
+      
+        <li>
+          <a href="math.html#environments">Environments</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="images.html">Images</a>
+          
+          <ul>
+            
+        <li>
+          <a href="images.html#a-bare-image">A bare image</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#alternative-text">Alternative text</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#sizing">Sizing</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#alignment">Alignment</a>
+          
+          <ul>
+            
+        <li>
+          <a href="images.html#centre-alignment">Centre alignment</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#right-alignment">Right alignment</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#making-the-image-a-link">Making the image a link</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#referring-to-an-image">Referring to an image</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#classes">Classes</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#how-the-bytes-reach-the-page">How the bytes reach the page</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#an-external-image">An external image</a>
+          
+        </li>
+      
+        <li>
+          <a href="images.html#a-source-root-relative-path">A source-root-relative path</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html">Figures</a>
+          
+          <ul>
+            
+        <li>
+          <a href="figures.html#a-figure-with-a-caption">A figure with a caption</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#a-caption-and-a-legend">A caption and a legend</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#a-legend-with-no-caption">A legend with no caption</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#sizing-the-figure-box">Sizing the figure box</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#alignment">Alignment</a>
+          
+          <ul>
+            
+        <li>
+          <a href="figures.html#centre-alignment">Centre alignment</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#right-alignment">Right alignment</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#classes">Classes</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#referring-to-a-figure">Referring to a figure</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#a-figure-that-is-also-a-link">A figure that is also a link</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#an-embedded-figure">An embedded figure</a>
+          
+        </li>
+      
+        <li>
+          <a href="figures.html#a-figure-with-no-body">A figure with no body</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="substitutions.html">Substitutions</a>
+          
+          <ul>
+            
+        <li>
+          <a href="substitutions.html#simple-text-substitution">Simple text substitution</a>
+          
+        </li>
+      
+        <li>
+          <a href="substitutions.html#unicode-characters">Unicode characters</a>
+          
+        </li>
+      
+        <li>
+          <a href="substitutions.html#inline-images">Inline images</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="includes.html">Includes</a>
+          
+          <ul>
+            
+        <li>
+          <a href="includes.html#including-restructuredtext">Including reStructuredText</a>
+          
+        </li>
+      
+        <li>
+          <a href="includes.html#selecting-part-of-a-fragment">Selecting part of a fragment</a>
+          
+        </li>
+      
+        <li>
+          <a href="includes.html#including-a-file-verbatim">Including a file verbatim</a>
+          
+        </li>
+      
+        <li>
+          <a href="includes.html#including-source-files">Including source files</a>
+          
+          <ul>
+            
+        <li>
+          <a href="includes.html#selecting-lines">Selecting lines</a>
+          
+        </li>
+      
+        <li>
+          <a href="includes.html#framing-the-excerpt">Framing the excerpt</a>
+          
+        </li>
+      
+        <li>
+          <a href="includes.html#showing-a-change">Showing a change</a>
+          
+        </li>
+      
+        <li>
+          <a href="includes.html#line-numbers-and-captions">Line numbers and captions</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="index_entries.html">Index Entries</a>
+          
+          <ul>
+            
+        <li>
+          <a href="index_entries.html#single-entries">Single Entries</a>
+          
+        </li>
+      
+        <li>
+          <a href="index_entries.html#single-entries-with-a-subentry">Single Entries with a Subentry</a>
+          
+        </li>
+      
+        <li>
+          <a href="index_entries.html#pair-entries">Pair Entries</a>
+          
+        </li>
+      
+        <li>
+          <a href="index_entries.html#triple-entries">Triple Entries</a>
+          
+        </li>
+      
+        <li>
+          <a href="index_entries.html#comma-shorthand-entries">Comma-Shorthand Entries</a>
+          
+        </li>
+      
+        <li>
+          <a href="index_entries.html#main-entries">Main Entries</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="noqa.html">Suppressing diagnostics</a>
+          
+          <ul>
+            
+        <li>
+          <a href="noqa.html#suppressing-one-code">Suppressing one code</a>
+          
+        </li>
+      
+        <li>
+          <a href="noqa.html#suppressing-several-codes-at-once">Suppressing several codes at once</a>
+          
+        </li>
+      
+        <li>
+          <a href="noqa.html#suppressing-everything-in-a-block">Suppressing everything in a block</a>
+          
+        </li>
+      
+        <li>
+          <a href="noqa.html#suppressing-a-parse-time-diagnostic">Suppressing a parse-time diagnostic</a>
+          
+        </li>
+      
+        <li>
+          <a href="noqa.html#nesting">Nesting</a>
+          
+        </li>
+      
+        <li>
+          <a href="noqa.html#math-warnings">Math warnings</a>
+          
+        </li>
+      
+        <li>
+          <a href="noqa.html#mistyped-codes">Mistyped codes</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="unknown_directives.html">Unrecognized and malformed directives</a>
+          
+          <ul>
+            
+        <li>
+          <a href="unknown_directives.html#an-unrecognized-name">An unrecognized name</a>
+          
+        </li>
+      
+        <li>
+          <a href="unknown_directives.html#a-recognized-name-this-build-had-to-refuse">A recognized name this build had to refuse</a>
+          
+        </li>
+      
+        <li>
+          <a href="unknown_directives.html#the-suppression-silences-the-warning-not-the-block">The suppression silences the warning, not the block</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="if_builder.html">Conditional content by builder</a>
+          
+          <ul>
+            
+        <li>
+          <a href="if_builder.html#a-block-for-this-builder">A block for this builder</a>
+          
+        </li>
+      
+        <li>
+          <a href="if_builder.html#a-block-for-another-builder">A block for another builder</a>
+          
+        </li>
+      
+        <li>
+          <a href="if_builder.html#the-body-is-spliced-not-wrapped">The body is spliced, not wrapped</a>
+          
+        </li>
+      
+        <li>
+          <a href="if_builder.html#a-heading-written-inside-the-block">A heading written inside the block</a>
+          
+        </li>
+      
+        <li>
+          <a href="if_builder.html#nested-blocks">Nested blocks</a>
+          
+        </li>
+      
+        <li>
+          <a href="if_builder.html#what-is-reported">What is reported</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html">Doctest Directives</a>
+          
+          <ul>
+            
+        <li>
+          <a href="doctests.html#interactive-examples">Interactive examples</a>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html#separate-code-and-output">Separate code and output</a>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html#named-groups">Named groups</a>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html#setup-and-cleanup">Setup and cleanup</a>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html#hidden-blocks">Hidden blocks</a>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html#comparison-options">Comparison options</a>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html#doctest-flag-comments">Doctest flag comments</a>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html#blocks-without-a-directive">Blocks without a directive</a>
+          
+        </li>
+      
+        <li>
+          <a href="doctests.html#conditional-execution">Conditional execution</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="entities/index.html">Entities</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/requirements.html">Requirements</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/requirements.html#an-entity-with-every-kind-of-declaration">An entity with every kind of declaration</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/requirements.html#attribute-defaults-and-a-generated-id">Attribute defaults and a generated id</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/requirements.html#specifications-and-implementations">Specifications and implementations</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/requirements.html#a-one-directional-relation-and-a-required-one">A one-directional relation and a required one</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/requirements.html#referring-to-entities-from-prose">Referring to entities from prose</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="entities/audit_events.html">Audit events</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/tables.html">Listing entities</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/tables.html#every-entity-in-the-project">Every entity in the project</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/tables.html#choosing-columns">Choosing columns</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/tables.html#filtering">Filtering</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/tables.html#sorting-and-layout">Sorting and layout</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="entities/charts.html">Charting the graph</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/charts.html#counting-by-type">Counting by type</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/charts.html#a-legend-and-colours-of-your-own">A legend and colours of your own</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/charts.html#scoping-a-whole-chart-once">Scoping a whole chart once</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/charts.html#numbers-written-outright">Numbers written outright</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/charts.html#bar-charts">Bar charts</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/charts.html#labels-axis-titles-and-turned-text">Labels, axis titles and turned text</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/charts.html#horizontal-transposed-and-numbers-written-outright">Horizontal, transposed, and numbers written outright</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/charts.html#scoping-a-whole-bar-chart-once">Scoping a whole bar chart once</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="entities/charts.html#when-nothing-matches">When nothing matches</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="entities/imported.html">Importing from sphinx-needs</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/imported.html#importing-a-whole-file">Importing a whole file</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/imported.html#imported-entities-are-ordinary-entities">Imported entities are ordinary entities</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/imported.html#importing-by-name">Importing by name</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/imported.html#choosing-a-version">Choosing a version</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/imported.html#narrowing-what-is-imported">Narrowing what is imported</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/imported.html#ids-the-project-does-not-own">Ids the project does not own</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/imported.html#tagging-an-import">Tagging an import</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/imported.html#what-is-not-supported">What is not supported</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="entities/entity_update.html">Updating entities after the fact</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/entity_update.html#targeting-a-single-id-appending-and-removing-a-tag">Targeting a single id, appending and removing a tag</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/entity_update.html#targeting-a-filter-setting-a-field-on-every-match-at-once">Targeting a filter, setting a field on every match at once</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/entity_update.html#appending-and-removing-a-relation-target">Appending and removing a relation target</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/entity_update.html#a-target-matching-nothing">A target matching nothing</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/entity_update.html#rejected-mutations">Rejected mutations</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/entity_update.html#a-conflicting-pair">A conflicting pair</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html">Diagrams over the entity graph</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/diagrams.html#drawing-what-a-filter-selects">Drawing what a filter selects</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html#reading-one-entity-s-fields">Reading one entity&#x27;s fields</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html#extra-values">Extra values</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html#an-architecture-diagram-inside-an-entity">An architecture diagram inside an entity</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html#importing-another-entity-s-diagram">Importing another entity&#x27;s diagram</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html#named-plantuml-preambles">Named PlantUML preambles</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html#flowcharts-of-the-graph-itself">Flowcharts of the graph itself</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/diagrams.html#selecting-a-subgraph-and-labelling-its-edges">Selecting a subgraph, and labelling its edges</a>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html#the-generated-source-and-a-preamble">The generated source, and a preamble</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="entities/diagrams.html#sequence-diagrams-of-the-graph">Sequence diagrams of the graph</a>
+          
+          <ul>
+            
+        <li>
+          <a href="entities/diagrams.html#selecting-receivers-and-capping-the-picture">Selecting receivers, and capping the picture</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/index.html">Toctree Directives</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/index.html#numbering">Numbering</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/numbered_one.html">First Numbered Chapter</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/numbered_one.html#installing">Installing</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/numbered_one.html#from-source">From Source</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/numbered_one.html#configuring">Configuring</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/numbered_two.html">Second Numbered Chapter</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/numbered_two.html#usage">Usage</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/sectnum_ignored.html">Third Numbered Chapter</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/sectnum_ignored.html#configuring">Configuring</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/index.html#depth-limits">Depth limits</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/titles_only.html">Titles Only</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/titles_only.html#first-section">First Section</a>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/titles_only.html#second-section">Second Section</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/entry_forms.html">Entry Forms</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/entry_forms.html#relative-and-absolute">Relative and absolute</a>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/entry_forms.html#nested-sections">Nested sections</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/entry_forms.html#deeper-still">Deeper still</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/titles_only.html">Titles Only</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/titles_only.html#first-section">First Section</a>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/titles_only.html#second-section">Second Section</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/index.html#globs-and-ordering">Globs and ordering</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/globbed_beta.html">Globbed Beta</a>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/globbed_alpha.html">Globbed Alpha</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/index.html#hidden">Hidden</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/hidden_page.html">Reached Only Through a Hidden Toctree</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/index.html">Overview of this page</a>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/entry_forms.html">Entry Forms</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/entry_forms.html#relative-and-absolute">Relative and absolute</a>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/entry_forms.html#nested-sections">Nested sections</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/entry_forms.html#deeper-still">Deeper still</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/titles_only.html">Renamed in the sidebar</a>
+          
+          <ul>
+            
+        <li>
+          <a href="toctree/titles_only.html#first-section">First Section</a>
+          
+        </li>
+      
+        <li>
+          <a href="toctree/titles_only.html#second-section">Second Section</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="https://www.sphinx-doc.org/">https:&#x2f;&#x2f;www.sphinx-doc.org&#x2f;</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="contents/index.html">Contents Directives</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#explicit-title">Explicit title</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#explicit-title-target">Explicit Title Target</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="contents/index.html#depth-limit">Depth limit</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#depth-target">Depth Target</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#deeper-still">Deeper Still</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="contents/index.html#local">Local</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#nested-one">Nested One</a>
+          
+        </li>
+      
+        <li>
+          <a href="contents/index.html#nested-two">Nested Two</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="contents/index.html#backlinks">Backlinks</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#entry-the-default">Entry, the default</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#entry-target">Entry Target</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="contents/index.html#top">Top</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#top-target">Top Target</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="contents/index.html#none">None</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#none-target">None Target</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="contents/index.html#class-and-name">Class and name</a>
+          
+          <ul>
+            
+        <li>
+          <a href="contents/index.html#named-target">Named Target</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/index.html">Sectnum Directives</a>
+          
+          <ul>
+            
+        <li>
+          <a href="sectnum/index.html#default-numbering">Default numbering</a>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/index.html#depth-limit">Depth limit</a>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/index.html#start-value">Start value</a>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/index.html#prefix-and-suffix">Prefix and suffix</a>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/index.html#precedence-with-numbered">Precedence with :numbered:</a>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/default.html">Default Numbering</a>
+          
+          <ul>
+            
+        <li>
+          <a href="sectnum/default.html#installing">Installing</a>
+          
+          <ul>
+            
+        <li>
+          <a href="sectnum/default.html#from-source">From Source</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/default.html#configuring">Configuring</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/depth.html">Depth Limit</a>
+          
+          <ul>
+            
+        <li>
+          <a href="sectnum/depth.html#installing">Installing</a>
+          
+          <ul>
+            
+        <li>
+          <a href="sectnum/depth.html#from-source">From Source</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/depth.html#configuring">Configuring</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/start.html">Start Value</a>
+          
+          <ul>
+            
+        <li>
+          <a href="sectnum/start.html#installing">Installing</a>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/start.html#configuring">Configuring</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/prefix_suffix.html">Prefix and Suffix</a>
+          
+          <ul>
+            
+        <li>
+          <a href="sectnum/prefix_suffix.html#installing">Installing</a>
+          
+        </li>
+      
+        <li>
+          <a href="sectnum/prefix_suffix.html#configuring">Configuring</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/index.html">Dropdown Directives</a>
+          
+          <ul>
+            
+        <li>
+          <a href="dropdown/index.html#basics">Basics</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/index.html#colours">Colours</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/index.html#icons">Icons</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/index.html#markers-and-animation">Markers and animation</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/index.html#spacing-and-classes">Spacing and classes</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/index.html#cross-references">Cross-references</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/basics.html">Dropdown Basics</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/colors.html">Dropdown Colours</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/icons.html">Dropdown Icons</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/markers.html">Dropdown Markers and Animation</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/spacing.html">Dropdown Spacing and Classes</a>
+          
+        </li>
+      
+        <li>
+          <a href="dropdown/reference.html">Referring to a Dropdown</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="grid/index.html">Grid Directives</a>
+          
+          <ul>
+            
+        <li>
+          <a href="grid/index.html#columns">Columns</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/index.html#spacing">Spacing</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/index.html#alignment">Alignment</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/index.html#nesting">Nesting</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/columns.html">Columns</a>
+          
+          <ul>
+            
+        <li>
+          <a href="grid/columns.html#the-argument">The argument</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/columns.html#the-columns-option">The :columns: option</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="grid/spacing.html">Spacing</a>
+          
+          <ul>
+            
+        <li>
+          <a href="grid/spacing.html#gutter">:gutter:</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/spacing.html#margin-and-padding">:margin: and :padding:</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="grid/alignment.html">Alignment</a>
+          
+          <ul>
+            
+        <li>
+          <a href="grid/alignment.html#child-direction">:child-direction:</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/alignment.html#child-align">:child-align:</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/alignment.html#reverse">:reverse:</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/alignment.html#class-container-class-row-and-class">:class-container:, :class-row: and :class:</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="grid/nesting.html">Nesting</a>
+          
+          <ul>
+            
+        <li>
+          <a href="grid/nesting.html#a-diagram-in-a-cell">A diagram in a cell</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/nesting.html#other-constructs-in-a-cell">Other constructs in a cell</a>
+          
+        </li>
+      
+        <li>
+          <a href="grid/nesting.html#a-grid-inside-a-grid">A grid inside a grid</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/index.html">Button Link Directives</a>
+          
+          <ul>
+            
+        <li>
+          <a href="button_link/index.html#basics">Basics</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/index.html#colours">Colours</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/index.html#layout">Layout</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/index.html#diagnostics">Diagnostics</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/basics.html">Basics</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/colors.html">Colours</a>
+          
+          <ul>
+            
+        <li>
+          <a href="button_link/colors.html#filled">Filled</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/colors.html#outlined">Outlined</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/layout.html">Layout</a>
+          
+          <ul>
+            
+        <li>
+          <a href="button_link/layout.html#alignment">Alignment</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/layout.html#expanding">Expanding</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/layout.html#shadow-and-tooltip">Shadow and tooltip</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/layout.html#clickable-parent">Clickable parent</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/layout.html#extra-classes">Extra classes</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/diagnostics.html">Diagnostics</a>
+          
+          <ul>
+            
+        <li>
+          <a href="button_link/diagnostics.html#a-missing-argument">A missing argument</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/diagnostics.html#an-unreadable-colour">An unreadable colour</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/diagnostics.html#an-unreadable-alignment">An unreadable alignment</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/diagnostics.html#an-outline-with-no-colour">An outline with no colour</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/diagnostics.html#an-option-that-belongs-on-the-other-button">An option that belongs on the other button</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/diagnostics.html#a-reference-inside-the-label">A reference inside the label</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/diagnostics.html#an-option-with-no-value">An option with no value</a>
+          
+        </li>
+      
+        <li>
+          <a href="button_link/diagnostics.html#an-unknown-option">An unknown option</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="jinja/index.html">🧩 Templated Sources</a>
+          
+          <ul>
+            
+        <li>
+          <a href="jinja/index.html#including-a-shared-fragment">Including a shared fragment</a>
+          
+        </li>
+      
+        <li>
+          <a href="jinja/index.html#where-a-diagnostic-points">Where a diagnostic points</a>
+          
+        </li>
+      
+        <li>
+          <a href="jinja/index.html#what-is-refused">What is refused</a>
+          
+        </li>
+      
+        <li>
+          <a href="jinja/loops.html">Generating Repetitive Content</a>
+          
+        </li>
+      
+        <li>
+          <a href="jinja/literal.html">Jinja That Is Not Jinja</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="intersphinx/index.html">Linking into other sites</a>
+          
+          <ul>
+            
+        <li>
+          <a href="intersphinx/index.html#ordinary-roles-fall-back-to-the-inventory">Ordinary roles fall back to the inventory</a>
+          
+        </li>
+      
+        <li>
+          <a href="intersphinx/index.html#naming-the-inventory-in-the-target">Naming the inventory in the target</a>
+          
+        </li>
+      
+        <li>
+          <a href="intersphinx/index.html#the-external-roles">The :external: roles</a>
+          
+        </li>
+      
+        <li>
+          <a href="intersphinx/index.html#a-local-label-that-shadows-python-s">A local label that shadows Python&#x27;s</a>
+          
+        </li>
+      
+        <li>
+          <a href="intersphinx/index.html#an-inventory-that-was-never-declared">An inventory that was never declared</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="team_a/index.html">Team A: Getting Started</a>
+          
+          <ul>
+            
+        <li>
+          <a href="team_a/index.html#installation">Installation</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+        <li>
+          <a href="team_b/index.html">Team B: Infrastructure Guide</a>
+          
+          <ul>
+            
+        <li>
+          <a href="team_b/index.html#overview">Overview</a>
+          
+        </li>
+      
+        <li>
+          <a href="team_b/index.html#configuration">Configuration</a>
+          
+        </li>
+      
+          </ul>
+          
+        </li>
+      
+      </ul>
+      
+    </aside>
+    <main>
+      
+      <nav class="page-relations">
+        <a class="prev" href="csv_table.html">&larr; CSV Tables</a>
+        <a class="next" href="math.html">Math &rarr;</a>
+      </nav>
+      
+      <h1 id="the-table-directive">The <code>table</code> Directive</h1>
+<p><code>.. table::</code> wraps an existing grid or simple table (given as the
+directive's own content) with a title/caption and the presentation options
+neither ASCII-art syntax has notation of its own for.</p>
+<h2 id="wrapping-a-grid-table">Wrapping a Grid Table</h2>
+<table>
+<thead>
+<tr>
+<th><p>Fruit</p>
+</th>
+<th><p>Colour</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Apple</p>
+</td>
+<td><p>Red</p>
+</td>
+</tr>
+<tr>
+<td><p>Lemon</p>
+</td>
+<td><p>Yellow</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="wrapping-a-simple-table">Wrapping a Simple Table</h2>
+<table>
+<thead>
+<tr>
+<th><p>A</p>
+</th>
+<th><p>not A</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>False</p>
+</td>
+<td><p>True</p>
+</td>
+</tr>
+<tr>
+<td><p>True</p>
+</td>
+<td><p>False</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-with-a-title">Table with a Title</h2>
+<p>The directive's argument, if given, becomes the table's caption:</p>
+<table>
+<caption>Truth Table for "not"</caption>
+<thead>
+<tr>
+<th><p>A</p>
+</th>
+<th><p>not A</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>False</p>
+</td>
+<td><p>True</p>
+</td>
+</tr>
+<tr>
+<td><p>True</p>
+</td>
+<td><p>False</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="widths"><code>:widths:</code></h2>
+<p>Sets relative column widths — <code>auto</code> and <code>grid</code> both let the renderer
+decide, while an explicit list of integers (matching the wrapped table's own
+column count) is normalized into percentages:</p>
+<table>
+<colgroup>
+<col style="width: 20.00%" />
+<col style="width: 80.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Key</p>
+</th>
+<th><p>Description</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>name</p>
+</td>
+<td><p>A short, human-readable identifier.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="width"><code>:width:</code></h2>
+<p>Sets the overall table width:</p>
+<table style="width: 60%">
+<tbody>
+<tr>
+<td><p>Fruit</p>
+</td>
+<td><p>Colour</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="align"><code>:align:</code></h2>
+<p>Aligns the table on the page — <code>left</code>, <code>center</code>, or <code>right</code>:</p>
+<table class="align-center" style="width: 50%">
+<tbody>
+<tr>
+<td><p>Fruit</p>
+</td>
+<td><p>Colour</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="class"><code>:class:</code></h2>
+<p>Adds extra CSS classes to the rendered <code>&lt;table&gt;</code>:</p>
+<table class="compact">
+<tbody>
+<tr>
+<td><p>Fruit</p>
+</td>
+<td><p>Colour</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="name-and-cross-referencing"><code>:name:</code> and Cross-Referencing</h2>
+<p>Gives the table a hyperlink target, referenceable via <code>:ref:</code>. As with any
+other internal target in rinx today, the link resolves to this
+<em>document</em>, not precisely to the table itself.</p>
+<a id="wrapped-fruit-table"></a>
+<table>
+<tbody>
+<tr>
+<td><p>Fruit</p>
+</td>
+<td><p>Colour</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="table_directive.html#wrapped-fruit-table">wrapped-fruit-table</a> for the wrapped table above.</p>
+<h2 id="domain-objects-nested-inside-a-cell">Domain Objects Nested Inside a Cell</h2>
+<p>A wrapped table's cells are ordinary grid/simple table cells, so they parse
+as full block-level RST exactly like an unwrapped one — a cell can nest a
+domain-object definition:</p>
+<table>
+<thead>
+<tr>
+<th><p>Attribute</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:circle.radius"><code class="sig-name">Circle.radius</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The circle's radius, in pixels.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference internal" href="table_directive.html#py:attribute:circle.radius"><code class="xref py attribute docutils literal">Circle.radius</code></a> resolves correctly because the definition above was
+fully parsed rather than swallowed as opaque directive body text.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="csv_table.html">&larr; CSV Tables</a>
+        <a class="next" href="math.html">Math &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>dis — Disassembler for Python bytecode — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="language.html">Python Language Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Language Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="ast.html">ast — Abstract syntax trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="symtable.html">symtable — Access to the compiler&#x27;s symbol tables</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="token.html">token — Constants used with Python parse trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="keyword.html">keyword — Testing for Python keywords</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tokenize.html">tokenize — Tokenizer for Python source</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tabnanny.html">tabnanny — Detection of ambiguous indentation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyclbr.html">pyclbr — Python module browser support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="py_compile.html">py_compile — Compile Python source files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="compileall.html">compileall — Byte-compile Python libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="dis.html">dis — Disassembler for Python bytecode</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle dis — Disassembler for Python bytecode"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="dis.html#command-line-interface">Command-line interface</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="dis.html#bytecode-analysis">Bytecode analysis</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="dis.html#analysis-functions">Analysis functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="dis.html#python-bytecode-instructions">Python Bytecode Instructions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="dis.html#opcode-collections">Opcode collections</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pickletools.html">pickletools — Tools for pickle developers</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="compileall.html">&larr; compileall — Byte-compile Python libraries</a>
+        <a class="next" href="pickletools.html">pickletools — Tools for pickle developers &rarr;</a>
+      </nav>
+      
+      <h1 id="dis-disassembler-for-python-bytecode"><code class="xref py module docutils literal">dis</code> — Disassembler for Python bytecode</h1>
+<dl class="py module">
+  <dt id="py:module:dis"><code class="sig-name">dis</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/dis.py`</p>
+<hr />
+<p>The <a class="reference internal" href="dis.html#py:module:dis" title="dis: Disassembler for Python bytecode."><code class="xref py module docutils literal">dis</code></a> module supports the analysis of CPython <a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a> by
+disassembling it. The CPython bytecode which this module takes as an input is
+defined in the file :file:`Include/opcode.h` and used by the compiler and the
+interpreter.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   Bytecode is an implementation detail of the CPython interpreter.  No
+   guarantees are made that bytecode will not be added, removed, or changed
+   between versions of Python.  Use of this module should not be considered to
+   work across Python VMs or Python releases.
+
+   .. versionchanged:: 3.6
+      Use 2 bytes for each instruction. Previously the number of bytes varied
+      by instruction.
+
+   .. versionchanged:: 3.10
+      The argument of jump, exception handling and loop instructions is now
+      the instruction offset rather than the byte offset.
+
+   .. versionchanged:: 3.11
+      Some instructions are accompanied by one or more inline cache entries,
+      which take the form of :opcode:`CACHE` instructions. These instructions
+      are hidden by default, but can be shown by passing ``show_caches=True`` to
+      any :mod:`dis` utility. Furthermore, the interpreter now adapts the
+      bytecode to specialize it for different runtime conditions. The
+      adaptive bytecode can be shown by passing ``adaptive=True``.
+
+   .. versionchanged:: 3.12
+      The argument of a jump is the offset of the target instruction relative
+      to the instruction that appears immediately after the jump instruction's
+      :opcode:`CACHE` entries.
+
+      As a consequence, the presence of the :opcode:`CACHE` instructions is
+      transparent for forward jumps but needs to be taken into account when
+      reasoning about backward jumps.
+
+   .. versionchanged:: 3.13
+      The output shows logical labels rather than instruction offsets
+      for jump targets and exception handlers. The ``-O`` command line
+      option and the ``show_offsets`` argument were added.
+
+   .. versionchanged:: 3.14
+      The :option:`-P &lt;dis --show-positions&gt;` command-line option
+      and the ``show_positions`` argument were added.
+
+      The :option:`-S &lt;dis --specialized&gt;` command-line option is added.</pre>
+</div>
+<p>Example: Given the function <code class="xref py function docutils literal">myfunc</code>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">myfunc</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">alist</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">len</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">alist</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>the following command can be used to display the disassembly of
+<code class="xref py function docutils literal">myfunc</code>:</p>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; dis.dis(myfunc)
+  2           RESUME                   0
+
+  3           LOAD_GLOBAL              1 (len + NULL)
+              LOAD_FAST_BORROW         0 (alist)
+              CALL                     1
+              RETURN_VALUE</pre></div>
+<p>(The "2" is a line number).</p>
+<a id="dis-cli"></a>
+<h2 id="command-line-interface">Command-line interface</h2>
+<p>The <a class="reference internal" href="dis.html#py:module:dis" title="dis: Disassembler for Python bytecode."><code class="xref py module docutils literal">dis</code></a> module can be invoked as a script from the command line:</p>
+<div class="highlight-sh notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">python</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"><span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> dis <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-h<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-C<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-O<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-P<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-S<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>infile<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span></span></span></pre></div>
+</div>
+<p>The following options are accepted:</p>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:dis.-h"><a id="std:cmdoption:dis.--help"></a><code class="sig-name">-h, --help</code></dt>
+  <dd><p>Display usage and exit.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:dis.-c"><a id="std:cmdoption:dis.--show-caches"></a><code class="sig-name">-C, --show-caches</code></dt>
+  <dd><p>Show inline caches.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:dis.-o"><a id="std:cmdoption:dis.--show-offsets"></a><code class="sig-name">-O, --show-offsets</code></dt>
+  <dd><p>Show offsets of instructions.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:dis.-p"><a id="std:cmdoption:dis.--show-positions"></a><code class="sig-name">-P, --show-positions</code></dt>
+  <dd><p>Show positions of instructions in the source code.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:dis.-s"><a id="std:cmdoption:dis.--specialized"></a><code class="sig-name">-S, --specialized</code></dt>
+  <dd><p>Show specialized bytecode.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<p>If :file:`infile` is specified, its disassembled code will be written to stdout.
+Otherwise, disassembly is performed on compiled source code received from stdin.</p>
+<h2 id="bytecode-analysis">Bytecode analysis</h2>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+<p>The bytecode analysis API allows pieces of Python code to be wrapped in a
+<a class="reference internal" href="dis.html#py:class:dis.bytecode"><code class="xref py class docutils literal">Bytecode</code></a> object that provides easy access to details of the compiled
+code.</p>
+<dl class="py class">
+  <dt id="py:class:dis.bytecode"><em class="property">class</em> <code class="sig-name">Bytecode(x, *, first_line=None, current_offset=None,\</code></dt>
+  <dt id="py:class:dis.show_offsets=false,\"><em class="property">class</em> <code class="sig-name">show_caches=False, adaptive=False, show_offsets=False,\</code></dt>
+  <dt id="py:class:dis.show_positions=false)"><em class="property">class</em> <code class="sig-name">show_positions=False)</code></dt>
+  <dd><p>Analyse the bytecode corresponding to a function, generator, asynchronous
+generator, coroutine, method, string of source code, or a code object (as
+returned by <a class="reference internal" href="functions.html#py:function:compile"><code class="xref py function docutils literal">compile</code></a>).</p>
+<p>This is a convenience wrapper around many of the functions listed below, most
+notably <a class="reference internal" href="dis.html#py:function:dis.get_instructions"><code class="xref py function docutils literal">get_instructions</code></a>, as iterating over a <a class="reference internal" href="dis.html#py:class:dis.bytecode"><code class="xref py class docutils literal">Bytecode</code></a>
+instance yields the bytecode operations as <a class="reference internal" href="dis.html#py:class:dis.instruction"><code class="xref py class docutils literal">Instruction</code></a> instances.</p>
+<p>If <em>first_line</em> is not <code>None</code>, it indicates the line number that should be
+reported for the first source line in the disassembled code.  Otherwise, the
+source line information (if any) is taken directly from the disassembled code
+object.</p>
+<p>If <em>current_offset</em> is not <code>None</code>, it refers to an instruction offset in the
+disassembled code. Setting this means <a class="reference internal" href="dis.html#py:method:dis.bytecode.dis"><code class="xref py method docutils literal">dis</code></a> will display a "current
+instruction" marker against the specified opcode.</p>
+<p>If <em>show_caches</em> is <code>True</code>, <a class="reference internal" href="dis.html#py:method:dis.bytecode.dis"><code class="xref py method docutils literal">dis</code></a> will display inline cache
+entries used by the interpreter to specialize the bytecode.</p>
+<p>If <em>adaptive</em> is <code>True</code>, <a class="reference internal" href="dis.html#py:method:dis.bytecode.dis"><code class="xref py method docutils literal">dis</code></a> will display specialized bytecode
+that may be different from the original bytecode.</p>
+<p>If <em>show_offsets</em> is <code>True</code>, <a class="reference internal" href="dis.html#py:method:dis.bytecode.dis"><code class="xref py method docutils literal">dis</code></a> will include instruction
+offsets in the output.</p>
+<p>If <em>show_positions</em> is <code>True</code>, <a class="reference internal" href="dis.html#py:method:dis.bytecode.dis"><code class="xref py method docutils literal">dis</code></a> will include instruction
+source code positions in the output.</p>
+<dl class="py method">
+  <dt id="py:method:dis.bytecode.from_traceback"><em class="property">classmethod</em> <code class="sig-name">from_traceback(tb, *, show_caches=False)</code></dt>
+  <dd><p>Construct a <a class="reference internal" href="dis.html#py:class:dis.bytecode"><code class="xref py class docutils literal">Bytecode</code></a> instance from the given traceback, setting
+<em>current_offset</em> to the instruction responsible for the exception.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.bytecode.codeobj"><code class="sig-name">codeobj</code></dt>
+  <dd><p>The compiled code object.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.bytecode.first_line"><code class="sig-name">first_line</code></dt>
+  <dd><p>The first source line of the code object (if available)</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:dis.bytecode.dis"><code class="sig-name">dis()</code></dt>
+  <dd><p>Return a formatted view of the bytecode operations (the same as printed by
+<a class="reference internal" href="dis.html#py:function:dis.dis"><code class="xref py function docutils literal">dis.dis</code></a>, but returned as a multi-line string).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:dis.bytecode.info"><code class="sig-name">info()</code></dt>
+  <dd><p>Return a formatted multi-line string with detailed information about the
+code object, like <a class="reference internal" href="dis.html#py:function:dis.code_info"><code class="xref py function docutils literal">code_info</code></a>.</p>
+</dd>
+</dl>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>This can now handle coroutine and asynchronous generator objects.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Added the <em>show_caches</em> and <em>adaptive</em> parameters.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Added the <em>show_offsets</em> parameter</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Added the <em>show_positions</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; bytecode = dis.Bytecode(myfunc)
+&gt;&gt;&gt; for instr in bytecode:
+...     print(instr.opname)
+...
+RESUME
+LOAD_GLOBAL
+LOAD_FAST_BORROW
+CALL
+RETURN_VALUE</pre></div>
+<h2 id="analysis-functions">Analysis functions</h2>
+<p>The <a class="reference internal" href="dis.html#py:module:dis" title="dis: Disassembler for Python bytecode."><code class="xref py module docutils literal">dis</code></a> module also defines the following analysis functions that convert
+the input directly to the desired output. They can be useful if only a single
+operation is being performed, so the intermediate analysis object isn't useful:</p>
+<dl class="py function">
+  <dt id="py:function:dis.code_info"><code class="sig-name">code_info(x)</code></dt>
+  <dd><p>Return a formatted multi-line string with detailed code object information
+for the supplied function, generator, asynchronous generator, coroutine,
+method, source code string or code object.</p>
+<p>Note that the exact contents of code info strings are highly implementation
+dependent and they may change arbitrarily across Python VMs or Python
+releases.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>This can now handle coroutine and asynchronous generator objects.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:dis.show_code"><code class="sig-name">show_code(x, *, file=None)</code></dt>
+  <dd><p>Print detailed code object information for the supplied function, method,
+source code string or code object to <em>file</em> (or <code>sys.stdout</code> if <em>file</em>
+is not specified).</p>
+<p>This is a convenient shorthand for <code>print(code_info(x), file=file)</code>,
+intended for interactive exploration at the interpreter prompt.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added <em>file</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:dis.dis"><code class="sig-name">dis(x=None, *, file=None, depth=None, show_caches=False,\</code></dt>
+  <dt id="py:function:dis.show_positions=false)"><code class="sig-name">adaptive=False, show_offsets=False, show_positions=False)</code></dt>
+  <dd><p>Disassemble the <em>x</em> object.  <em>x</em> can denote either a module, a class, a
+method, a function, a generator, an asynchronous generator, a coroutine,
+a code object, a string of source code or a byte sequence of raw bytecode.
+For a module, it disassembles all functions. For a class, it disassembles
+all methods (including class and static methods). For a code object or
+sequence of raw bytecode, it prints one line per bytecode instruction.
+It also recursively disassembles nested code objects. These can include
+generator expressions, nested functions, the bodies of nested classes,
+and the code objects used for <a href="../reference/executionmodel.html#annotation-scopes">annotation scopes</a>.
+Strings are first compiled to code objects with the <a class="reference internal" href="functions.html#py:function:compile"><code class="xref py function docutils literal">compile</code></a>
+built-in function before being disassembled.  If no object is provided, this
+function disassembles the last traceback.</p>
+<p>The disassembly is written as text to the supplied <em>file</em> argument if
+provided and to <code>sys.stdout</code> otherwise.</p>
+<p>The maximal depth of recursion is limited by <em>depth</em> unless it is <code>None</code>.
+<code>depth=0</code> means no recursion.</p>
+<p>If <em>show_caches</em> is <code>True</code>, this function will display inline cache
+entries used by the interpreter to specialize the bytecode.</p>
+<p>If <em>adaptive</em> is <code>True</code>, this function will display specialized bytecode
+that may be different from the original bytecode.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added <em>file</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>Implemented recursive disassembling and added <em>depth</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>This can now handle coroutine and asynchronous generator objects.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Added the <em>show_caches</em> and <em>adaptive</em> parameters.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Added the <em>show_offsets</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Added the <em>show_positions</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:dis.distb"><code class="sig-name">distb(tb=None, *, file=None, show_caches=False, adaptive=False,\</code></dt>
+  <dt id="py:function:dis.show_positions=false)"><code class="sig-name">show_offset=False, show_positions=False)</code></dt>
+  <dd><p>Disassemble the top-of-stack function of a traceback, using the last
+traceback if none was passed.  The instruction causing the exception is
+indicated.</p>
+<p>The disassembly is written as text to the supplied <em>file</em> argument if
+provided and to <code>sys.stdout</code> otherwise.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added <em>file</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Added the <em>show_caches</em> and <em>adaptive</em> parameters.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Added the <em>show_offsets</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Added the <em>show_positions</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:dis.disassemble"><code class="sig-name">disassemble(code, lasti=-1, *, file=None, show_caches=False,\</code></dt>
+  <dt id="py:function:dis.show_positions=false)"><code class="sig-name">adaptive=False, show_offsets=False, show_positions=False)</code></dt>
+  <dt id="py:function:dis.disco"><code class="sig-name">disco(code, lasti=-1, *, file=None, show_caches=False, adaptive=False,\</code></dt>
+  <dt id="py:function:dis.show_positions=false)"><code class="sig-name">show_offsets=False, show_positions=False)</code></dt>
+  <dd><p>Disassemble a code object, indicating the last instruction if <em>lasti</em> was
+provided.  The output is divided in the following columns:</p>
+<ol class="arabic period">
+<li><p>the source code location of the instruction. Complete location information
+is shown if <em>show_positions</em> is true. Otherwise (the default) only the
+line number is displayed.</p>
+</li>
+<li><p>the current instruction, indicated as <code>--&gt;</code>,</p>
+</li>
+<li><p>a labelled instruction, indicated with <code>&gt;&gt;</code>,</p>
+</li>
+<li><p>the address of the instruction,</p>
+</li>
+<li><p>the operation code name,</p>
+</li>
+<li><p>operation parameters, and</p>
+</li>
+<li><p>interpretation of the parameters in parentheses.</p>
+</li>
+</ol>
+<p>The parameter interpretation recognizes local and global variable names,
+constant values, branch targets, and compare operators.</p>
+<p>The disassembly is written as text to the supplied <em>file</em> argument if
+provided and to <code>sys.stdout</code> otherwise.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added <em>file</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Added the <em>show_caches</em> and <em>adaptive</em> parameters.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Added the <em>show_offsets</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Added the <em>show_positions</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:dis.get_instructions"><code class="sig-name">get_instructions(x, *, first_line=None, show_caches=False, adaptive=False)</code></dt>
+  <dd><p>Return an iterator over the instructions in the supplied function, method,
+source code string or code object.</p>
+<p>The iterator generates a series of <a class="reference internal" href="dis.html#py:class:dis.instruction"><code class="xref py class docutils literal">Instruction</code></a> named tuples giving
+the details of each operation in the supplied code.</p>
+<p>If <em>first_line</em> is not <code>None</code>, it indicates the line number that should be
+reported for the first source line in the disassembled code.  Otherwise, the
+source line information (if any) is taken directly from the disassembled code
+object.</p>
+<p>The <em>adaptive</em> parameter works as it does in <a class="reference internal" href="dis.html#py:function:dis.dis"><code class="xref py function docutils literal">dis</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Added the <em>show_caches</em> and <em>adaptive</em> parameters.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>The <em>show_caches</em> parameter is deprecated and has no effect. The iterator
+generates the <a class="reference internal" href="dis.html#py:class:dis.instruction"><code class="xref py class docutils literal">Instruction</code></a> instances with the <em>cache_info</em>
+field populated (regardless of the value of <em>show_caches</em>) and it no longer
+generates separate items for the cache entries.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:dis.findlinestarts"><code class="sig-name">findlinestarts(code)</code></dt>
+  <dd><p>This generator function uses the <a class="reference internal" href="../reference/datamodel.html#py:method:codeobject.co_lines"><code class="xref py method docutils literal">co_lines</code></a> method
+of the <a href="../reference/datamodel.html#code-objects">code object</a> <em>code</em> to find the offsets which
+are starts of
+lines in the source code.  They are generated as <code>(offset, lineno)</code> pairs.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Line numbers can be decreasing. Before, they were always increasing.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0626/"><strong>PEP 626</strong></a> <a class="reference internal" href="../reference/datamodel.html#py:method:codeobject.co_lines"><code class="xref py method docutils literal">co_lines</code></a> method is used instead of the
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_firstlineno"><code class="xref py attribute docutils literal">co_firstlineno</code></a> and <a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_lnotab"><code class="xref py attribute docutils literal">co_lnotab</code></a>
+attributes of the <a href="../reference/datamodel.html#code-objects">code object</a>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Line numbers can be <code>None</code> for bytecode that does not map to source lines.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:dis.findlabels"><code class="sig-name">findlabels(code)</code></dt>
+  <dd><p>Detect all offsets in the raw compiled bytecode string <em>code</em> which are jump targets, and
+return a list of these offsets.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:dis.stack_effect"><code class="sig-name">stack_effect(opcode, oparg=None, *, jump=None)</code></dt>
+  <dd><p>Compute the stack effect of <em>opcode</em> with argument <em>oparg</em>.</p>
+<p>If the code has a jump target and <em>jump</em> is <code>True</code>, <a class="reference internal" href="dis.html#py:function:dis.stack_effect"><code class="xref py function docutils literal">stack_effect</code></a>
+will return the stack effect of jumping.  If <em>jump</em> is <code>False</code>,
+it will return the stack effect of not jumping. And if <em>jump</em> is
+<code>None</code> (default), it will return the maximal stack effect of both cases.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>Added <em>jump</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>If <code>oparg</code> is omitted (or <code>None</code>), the stack effect is now returned
+for <code>oparg=0</code>. Previously this was an error for opcodes that use their
+arg. It is also no longer an error to pass an integer <code>oparg</code> when
+the <code>opcode</code> does not use it; the <code>oparg</code> in this case is ignored.</p>
+</div>
+</dd>
+</dl>
+<a id="bytecodes"></a>
+<h2 id="python-bytecode-instructions">Python Bytecode Instructions</h2>
+<p>The <a class="reference internal" href="dis.html#py:function:dis.get_instructions"><code class="xref py function docutils literal">get_instructions</code></a> function and <a class="reference internal" href="dis.html#py:class:dis.bytecode"><code class="xref py class docutils literal">Bytecode</code></a> class provide
+details of bytecode instructions as <a class="reference internal" href="dis.html#py:class:dis.instruction"><code class="xref py class docutils literal">Instruction</code></a> instances:</p>
+<dl class="py class">
+  <dt id="py:class:dis.instruction"><em class="property">class</em> <code class="sig-name">Instruction</code></dt>
+  <dd><p>Details for a bytecode operation</p>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.opcode"><code class="sig-name">opcode</code></dt>
+  <dd><p>numeric code for operation, corresponding to the opcode values listed
+below and the bytecode values in the <a href="dis.html#opcode_collections">Opcode collections</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.opname"><code class="sig-name">opname</code></dt>
+  <dd><p>human readable name for operation</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.baseopcode"><code class="sig-name">baseopcode</code></dt>
+  <dd><p>numeric code for the base operation if operation is specialized;
+otherwise equal to <a class="reference internal" href="dis.html#py:data:dis.instruction.opcode"><code class="xref py data docutils literal">opcode</code></a></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.baseopname"><code class="sig-name">baseopname</code></dt>
+  <dd><p>human readable name for the base operation if operation is specialized;
+otherwise equal to <a class="reference internal" href="dis.html#py:data:dis.opname"><code class="xref py data docutils literal">opname</code></a></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.arg"><code class="sig-name">arg</code></dt>
+  <dd><p>numeric argument to operation (if any), otherwise <code>None</code></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.oparg"><code class="sig-name">oparg</code></dt>
+  <dd><p>alias for <a class="reference internal" href="dis.html#py:data:dis.instruction.arg"><code class="xref py data docutils literal">arg</code></a></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.argval"><code class="sig-name">argval</code></dt>
+  <dd><p>resolved arg value (if any), otherwise <code>None</code></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.argrepr"><code class="sig-name">argrepr</code></dt>
+  <dd><p>human readable description of operation argument (if any),
+otherwise an empty string.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.offset"><code class="sig-name">offset</code></dt>
+  <dd><p>start index of operation within bytecode sequence</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.start_offset"><code class="sig-name">start_offset</code></dt>
+  <dd><p>start index of operation within bytecode sequence, including prefixed
+<code>EXTENDED_ARG</code> operations if present; otherwise equal to <a class="reference internal" href="dis.html#py:data:dis.instruction.offset"><code class="xref py data docutils literal">offset</code></a></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.cache_offset"><code class="sig-name">cache_offset</code></dt>
+  <dd><p>start index of the cache entries following the operation</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.end_offset"><code class="sig-name">end_offset</code></dt>
+  <dd><p>end index of the cache entries following the operation</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.starts_line"><code class="sig-name">starts_line</code></dt>
+  <dd><p><code>True</code> if this opcode starts a source line, otherwise <code>False</code></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.line_number"><code class="sig-name">line_number</code></dt>
+  <dd><p>source line number associated with this opcode (if any), otherwise <code>None</code></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.is_jump_target"><code class="sig-name">is_jump_target</code></dt>
+  <dd><p><code>True</code> if other code jumps to here, otherwise <code>False</code></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.jump_target"><code class="sig-name">jump_target</code></dt>
+  <dd><p>bytecode index of the jump target if this is a jump operation,
+otherwise <code>None</code></p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.positions"><code class="sig-name">positions</code></dt>
+  <dd><p><a class="reference internal" href="dis.html#py:class:dis.positions"><code class="xref py class docutils literal">dis.Positions</code></a> object holding the
+start and end locations that are covered by this instruction.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.instruction.cache_info"><code class="sig-name">cache_info</code></dt>
+  <dd><p>Information about the cache entries of this instruction, as
+triplets of the form <code>(name, size, data)</code>, where the <code>name</code>
+and <code>size</code> describe the cache format and data is the contents
+of the cache. <code>cache_info</code> is <code>None</code> if the instruction does not have
+caches.</p>
+</dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Field <code>positions</code> is added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Changed field <code>starts_line</code>.</p>
+<p>Added fields <code>start_offset</code>, <code>cache_offset</code>, <code>end_offset</code>,
+<code>baseopname</code>, <code>baseopcode</code>, <code>jump_target</code>, <code>oparg</code>,
+<code>line_number</code> and <code>cache_info</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:dis.positions"><em class="property">class</em> <code class="sig-name">Positions</code></dt>
+  <dd><p>In case the information is not available, some fields might be <code>None</code>.</p>
+<dl class="py data">
+  <dt id="py:data:dis.positions.lineno"><code class="sig-name">lineno</code></dt>
+  <dd></dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.positions.end_lineno"><code class="sig-name">end_lineno</code></dt>
+  <dd></dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.positions.col_offset"><code class="sig-name">col_offset</code></dt>
+  <dd></dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.positions.end_col_offset"><code class="sig-name">end_col_offset</code></dt>
+  <dd></dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<p>The Python compiler currently generates the following bytecode instructions.</p>
+<p><strong>General instructions</strong></p>
+<p>In the following, We will refer to the interpreter stack as <code>STACK</code> and describe
+operations on it as if it was a Python list. The top of the stack corresponds to
+<code>STACK[-1]</code> in this language.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: NOP
+
+   Do nothing code.  Used as a placeholder by the bytecode optimizer, and to
+   generate line tracing events.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: NOT_TAKEN
+
+   Do nothing code.
+   Used by the interpreter to record :monitoring-event:`BRANCH_LEFT`
+   and :monitoring-event:`BRANCH_RIGHT` events for :mod:`sys.monitoring`.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: POP_ITER
+
+   Removes the iterator from the top of the stack.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: POP_TOP
+
+   Removes the top-of-stack item::
+
+      STACK.pop()</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: END_FOR
+
+   Removes the top-of-stack item.
+   Equivalent to ``POP_TOP``.
+   Used to clean up at the end of loops, hence the name.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: END_SEND
+
+   Implements ``del STACK[-2]``.
+   Used to clean up when a generator exits.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: COPY (i)
+
+   Push the i-th item to the top of the stack without removing it from its original
+   location::
+
+      assert i &gt; 0
+      STACK.append(STACK[-i])
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SWAP (i)
+
+   Swap the top of the stack with the i-th element::
+
+      STACK[-i], STACK[-1] = STACK[-1], STACK[-i]
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CACHE
+
+   Rather than being an actual instruction, this opcode is used to mark extra
+   space for the interpreter to cache useful data directly in the bytecode
+   itself. It is automatically hidden by all ``dis`` utilities, but can be
+   viewed with ``show_caches=True``.
+
+   Logically, this space is part of the preceding instruction. Many opcodes
+   expect to be followed by an exact number of caches, and will instruct the
+   interpreter to skip over them at runtime.
+
+   Populated caches can look like arbitrary instructions, so great care should
+   be taken when reading or modifying raw, adaptive bytecode containing
+   quickened data.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<p><strong>Unary operations</strong></p>
+<p>Unary operations take the top of the stack, apply the operation, and push the
+result back on the stack.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: UNARY_NEGATIVE
+
+   Implements ``STACK[-1] = -STACK[-1]``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: UNARY_NOT
+
+   Implements ``STACK[-1] = not STACK[-1]``.
+
+   .. versionchanged:: 3.13
+      This instruction now requires an exact :class:`bool` operand.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: UNARY_INVERT
+
+   Implements ``STACK[-1] = ~STACK[-1]``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: GET_ITER
+
+   Implements ``STACK[-1] = iter(STACK[-1])``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: GET_YIELD_FROM_ITER
+
+   If ``STACK[-1]`` is a :term:`generator iterator` or :term:`coroutine` object
+   it is left as is.  Otherwise, implements ``STACK[-1] = iter(STACK[-1])``.
+
+   .. versionadded:: 3.5</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: TO_BOOL
+
+   Implements ``STACK[-1] = bool(STACK[-1])``.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<p><strong>Binary and in-place operations</strong></p>
+<p>Binary operations remove the top two items from the stack (<code>STACK[-1]</code> and
+<code>STACK[-2]</code>). They perform the operation, then put the result back on the stack.</p>
+<p>In-place operations are like binary operations, but the operation is done in-place
+when <code>STACK[-2]</code> supports it, and the resulting <code>STACK[-1]</code> may be (but does
+not have to be) the original <code>STACK[-2]</code>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BINARY_OP (op)
+
+   Implements the binary and in-place operators (depending on the value of
+   *op*)::
+
+      rhs = STACK.pop()
+      lhs = STACK.pop()
+      STACK.append(lhs op rhs)
+
+   .. versionadded:: 3.11
+   .. versionchanged:: 3.14
+      With oparg :``NB_SUBSCR``, implements binary subscript (replaces opcode ``BINARY_SUBSCR``)</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_SUBSCR
+
+   Implements::
+
+      key = STACK.pop()
+      container = STACK.pop()
+      value = STACK.pop()
+      container[key] = value</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: DELETE_SUBSCR
+
+   Implements::
+
+      key = STACK.pop()
+      container = STACK.pop()
+      del container[key]</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BINARY_SLICE
+
+   Implements::
+
+      end = STACK.pop()
+      start = STACK.pop()
+      container = STACK.pop()
+      STACK.append(container[start:end])
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_SLICE
+
+   Implements::
+
+      end = STACK.pop()
+      start = STACK.pop()
+      container = STACK.pop()
+      values = STACK.pop()
+      container[start:end] = value
+
+   .. versionadded:: 3.12</pre>
+</div>
+<p><strong>Coroutine opcodes</strong></p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: GET_AWAITABLE (where)
+
+   Implements ``STACK[-1] = get_awaitable(STACK[-1])``, where ``get_awaitable(o)``
+   returns ``o`` if ``o`` is a coroutine object or a generator object with
+   the :data:`~inspect.CO_ITERABLE_COROUTINE` flag, or resolves
+   ``o.__await__``.
+
+    If the ``where`` operand is nonzero, it indicates where the instruction
+    occurs:
+
+    * ``1``: After a call to ``__aenter__``
+    * ``2``: After a call to ``__aexit__``
+
+   .. versionadded:: 3.5
+
+   .. versionchanged:: 3.11
+      Previously, this instruction did not have an oparg.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: GET_AITER
+
+   Implements ``STACK[-1] = STACK[-1].__aiter__()``.
+
+   .. versionadded:: 3.5
+   .. versionchanged:: 3.7
+      Returning awaitable objects from ``__aiter__`` is no longer
+      supported.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: GET_ANEXT
+
+   Implement ``STACK.append(get_awaitable(STACK[-1].__anext__()))`` to the stack.
+   See ``GET_AWAITABLE`` for details about ``get_awaitable``.
+
+   .. versionadded:: 3.5</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: END_ASYNC_FOR
+
+   Terminates an :keyword:`async for` loop.  Handles an exception raised
+   when awaiting a next item. The stack contains the async iterable in
+   ``STACK[-2]`` and the raised exception in ``STACK[-1]``. Both are popped.
+   If the exception is not :exc:`StopAsyncIteration`, it is re-raised.
+
+   .. versionadded:: 3.8
+
+   .. versionchanged:: 3.11
+      Exception representation on the stack now consist of one, not three, items.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CLEANUP_THROW
+
+   Handles an exception raised during a :meth:`~generator.throw` or
+   :meth:`~generator.close` call through the current frame.  If ``STACK[-1]`` is an
+   instance of :exc:`StopIteration`, pop three values from the stack and push
+   its ``value`` member.  Otherwise, re-raise ``STACK[-1]``.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<p><strong>Miscellaneous opcodes</strong></p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SET_ADD (i)
+
+   Implements::
+
+      item = STACK.pop()
+      set.add(STACK[-i], item)
+
+   Used to implement set comprehensions.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LIST_APPEND (i)
+
+   Implements::
+
+      item = STACK.pop()
+      list.append(STACK[-i], item)
+
+   Used to implement list comprehensions.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: MAP_ADD (i)
+
+   Implements::
+
+      value = STACK.pop()
+      key = STACK.pop()
+      dict.__setitem__(STACK[-i], key, value)
+
+   Used to implement dict comprehensions.
+
+   .. versionadded:: 3.1
+   .. versionchanged:: 3.8
+      Map value is ``STACK[-1]`` and map key is ``STACK[-2]``. Before, those
+      were reversed.</pre>
+</div>
+<p>For all of the :opcode:`SET_ADD`, :opcode:`LIST_APPEND` and :opcode:`MAP_ADD`
+instructions, while the added value or key/value pair is popped off, the
+container object remains on the stack so that it is available for further
+iterations of the loop.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: RETURN_VALUE
+
+   Returns with ``STACK[-1]`` to the caller of the function.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: YIELD_VALUE
+
+   Yields ``STACK.pop()`` from a :term:`generator`.
+
+   .. versionchanged:: 3.11
+      oparg set to be the stack depth.
+
+   .. versionchanged:: 3.12
+      oparg set to be the exception block depth, for efficient closing of generators.
+
+   .. versionchanged:: 3.13
+      oparg is ``1`` if this instruction is part of a yield-from or await, and ``0``
+      otherwise.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SETUP_ANNOTATIONS
+
+   Checks whether ``__annotations__`` is defined in ``locals()``, if not it is
+   set up to an empty ``dict``. This opcode is only emitted if a class
+   or module body contains :term:`variable annotations &lt;variable annotation&gt;`
+   statically.
+
+   .. versionadded:: 3.6</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: POP_EXCEPT
+
+   Pops a value from the stack, which is used to restore the exception state.
+
+   .. versionchanged:: 3.11
+      Exception representation on the stack now consist of one, not three, items.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: RERAISE
+
+   Re-raises the exception currently on top of the stack. If oparg is non-zero,
+   pops an additional value from the stack which is used to set
+   :attr:`~frame.f_lasti` of the current frame.
+
+   .. versionadded:: 3.9
+
+   .. versionchanged:: 3.11
+      Exception representation on the stack now consist of one, not three, items.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: PUSH_EXC_INFO
+
+   Pops a value from the stack. Pushes the current exception to the top of the stack.
+   Pushes the value originally popped back to the stack.
+   Used in exception handlers.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CHECK_EXC_MATCH
+
+   Performs exception matching for ``except``. Tests whether the ``STACK[-2]``
+   is an exception matching ``STACK[-1]``. Pops ``STACK[-1]`` and pushes the boolean
+   result of the test.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CHECK_EG_MATCH
+
+   Performs exception matching for ``except*``. Applies ``split(STACK[-1])`` on
+   the exception group representing ``STACK[-2]``.
+
+   In case of a match, pops two items from the stack and pushes the
+   non-matching subgroup (``None`` in case of full match) followed by the
+   matching subgroup. When there is no match, pops one item (the match
+   type) and pushes ``None``.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: WITH_EXCEPT_START
+
+   Calls the function in position 4 on the stack with arguments (type, val, tb)
+   representing the exception at the top of the stack.
+   Used to implement the call ``context_manager.__exit__(*exc_info())`` when an exception
+   has occurred in a :keyword:`with` statement.
+
+   .. versionadded:: 3.9
+
+   .. versionchanged:: 3.11
+      The ``__exit__`` function is in position 4 of the stack rather than 7.
+      Exception representation on the stack now consist of one, not three, items.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_COMMON_CONSTANT
+
+   Pushes a common constant onto the stack. The interpreter contains a hardcoded
+   list of constants supported by this instruction.  Used by the :keyword:`assert`
+   statement to load :exc:`AssertionError`.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_BUILD_CLASS
+
+   Pushes :func:`!builtins.__build_class__` onto the stack.  It is later called
+   to construct a class.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: GET_LEN
+
+   Perform ``STACK.append(len(STACK[-1]))``. Used in :keyword:`match` statements where
+   comparison with structure of pattern is needed.
+
+   .. versionadded:: 3.10</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: MATCH_MAPPING
+
+   If ``STACK[-1]`` is an instance of :class:`collections.abc.Mapping` (or, more
+   technically: if it has the :c:macro:`Py_TPFLAGS_MAPPING` flag set in its
+   :c:member:`~PyTypeObject.tp_flags`), push ``True`` onto the stack.  Otherwise,
+   push ``False``.
+
+   .. versionadded:: 3.10</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: MATCH_SEQUENCE
+
+   If ``STACK[-1]`` is an instance of :class:`collections.abc.Sequence` and is *not* an instance
+   of :class:`str`/:class:`bytes`/:class:`bytearray` (or, more technically: if it has
+   the :c:macro:`Py_TPFLAGS_SEQUENCE` flag set in its :c:member:`~PyTypeObject.tp_flags`),
+   push ``True`` onto the stack.  Otherwise, push ``False``.
+
+   .. versionadded:: 3.10</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: MATCH_KEYS
+
+   ``STACK[-1]`` is a tuple of mapping keys, and ``STACK[-2]`` is the match subject.
+   If ``STACK[-2]`` contains all of the keys in ``STACK[-1]``, push a :class:`tuple`
+   containing the corresponding values. Otherwise, push ``None``.
+
+   .. versionadded:: 3.10
+
+   .. versionchanged:: 3.11
+      Previously, this instruction also pushed a boolean value indicating
+      success (``True``) or failure (``False``).</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_NAME (namei)
+
+   Implements ``name = STACK.pop()``. *namei* is the index of *name* in the attribute
+   :attr:`~codeobject.co_names` of the :ref:`code object &lt;code-objects&gt;`.
+   The compiler tries to use :opcode:`STORE_FAST` or :opcode:`STORE_GLOBAL` if possible.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: DELETE_NAME (namei)
+
+   Implements ``del name``, where *namei* is the index into :attr:`~codeobject.co_names`
+   attribute of the :ref:`code object &lt;code-objects&gt;`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: UNPACK_SEQUENCE (count)
+
+   Unpacks ``STACK[-1]`` into *count* individual values, which are put onto the stack
+   right-to-left. Require there to be exactly *count* values.::
+
+      assert(len(STACK[-1]) == count)
+      STACK.extend(STACK.pop()[:-count-1:-1])</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: UNPACK_EX (counts)
+
+   Implements assignment with a starred target: Unpacks an iterable in ``STACK[-1]``
+   into individual values, where the total number of values can be smaller than the
+   number of items in the iterable: one of the new values will be a list of all
+   leftover items.
+
+   The number of values before and after the list value is limited to 255.
+
+   The number of values before the list value is encoded in the argument of the
+   opcode. The number of values after the list if any is encoded using an
+   ``EXTENDED_ARG``. As a consequence, the argument can be seen as a two bytes values
+   where the low byte of *counts* is the number of values before the list value, the
+   high byte of *counts* the number of values after it.
+
+   The extracted values are put onto the stack right-to-left, i.e. ``a, *b, c = d``
+   will be stored after execution as ``STACK.extend((a, b, c))``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_ATTR (namei)
+
+   Implements::
+
+      obj = STACK.pop()
+      value = STACK.pop()
+      obj.name = value
+
+   where *namei* is the index of name in :attr:`~codeobject.co_names` of the
+   :ref:`code object &lt;code-objects&gt;`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: DELETE_ATTR (namei)
+
+   Implements::
+
+      obj = STACK.pop()
+      del obj.name
+
+   where *namei* is the index of name into :attr:`~codeobject.co_names` of the
+   :ref:`code object &lt;code-objects&gt;`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_GLOBAL (namei)
+
+   Works as :opcode:`STORE_NAME`, but stores the name as a global.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: DELETE_GLOBAL (namei)
+
+   Works as :opcode:`DELETE_NAME`, but deletes a global name.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_CONST (consti)
+
+   Pushes ``co_consts[consti]`` onto the stack.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_SMALL_INT (i)
+
+   Pushes the integer ``i`` onto the stack.
+   ``i`` must be in ``range(256)``
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_NAME (namei)
+
+   Pushes the value associated with ``co_names[namei]`` onto the stack.
+   The name is looked up within the locals, then the globals, then the builtins.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_LOCALS
+
+   Pushes a reference to the locals dictionary onto the stack.  This is used
+   to prepare namespace dictionaries for :opcode:`LOAD_FROM_DICT_OR_DEREF`
+   and :opcode:`LOAD_FROM_DICT_OR_GLOBALS`.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_FROM_DICT_OR_GLOBALS (i)
+
+   Pops a mapping off the stack and looks up the value for ``co_names[namei]``.
+   If the name is not found there, looks it up in the globals and then the builtins,
+   similar to :opcode:`LOAD_GLOBAL`.
+   This is used for loading global variables in
+   :ref:`annotation scopes &lt;annotation-scopes&gt;` within class bodies.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BUILD_TEMPLATE
+
+   Constructs a new :class:`~string.templatelib.Template` instance from a tuple
+   of strings and a tuple of interpolations and pushes the resulting object
+   onto the stack::
+
+      interpolations = STACK.pop()
+      strings = STACK.pop()
+      STACK.append(_build_template(strings, interpolations))
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BUILD_INTERPOLATION (format)
+
+   Constructs a new :class:`~string.templatelib.Interpolation` instance from a
+   value and its source expression and pushes the resulting object onto the
+   stack.
+
+   If no conversion or format specification is present, ``format`` is set to
+   ``2``.
+
+   If the low bit of ``format`` is set, it indicates that the interpolation
+   contains a format specification.
+
+   If ``format &gt;&gt; 2`` is non-zero, it indicates that the interpolation
+   contains a conversion. The value of ``format &gt;&gt; 2`` is the conversion type
+   (``0`` for no conversion, ``1`` for ``!s``, ``2`` for ``!r``, and
+   ``3`` for ``!a``)::
+
+      conversion = format &gt;&gt; 2
+      if format &amp; 1:
+          format_spec = STACK.pop()
+      else:
+          format_spec = None
+      expression = STACK.pop()
+      value = STACK.pop()
+      STACK.append(_build_interpolation(value, expression, conversion, format_spec))
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BUILD_TUPLE (count)
+
+   Creates a tuple consuming *count* items from the stack, and pushes the
+   resulting tuple onto the stack::
+
+      if count == 0:
+          value = ()
+      else:
+          value = tuple(STACK[-count:])
+          STACK = STACK[:-count]
+
+      STACK.append(value)</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BUILD_LIST (count)
+
+   Works as :opcode:`BUILD_TUPLE`, but creates a list.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BUILD_SET (count)
+
+   Works as :opcode:`BUILD_TUPLE`, but creates a set.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BUILD_MAP (count)
+
+   Pushes a new dictionary object onto the stack.  Pops ``2 * count`` items
+   so that the dictionary holds *count* entries:
+   ``{..., STACK[-4]: STACK[-3], STACK[-2]: STACK[-1]}``.
+
+   .. versionchanged:: 3.5
+      The dictionary is created from stack items instead of creating an
+      empty dictionary pre-sized to hold *count* items.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BUILD_STRING (count)
+
+   Concatenates *count* strings from the stack and pushes the resulting string
+   onto the stack.
+
+   .. versionadded:: 3.6</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LIST_EXTEND (i)
+
+   Implements::
+
+      seq = STACK.pop()
+      list.extend(STACK[-i], seq)
+
+   Used to build lists.
+
+   .. versionadded:: 3.9</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SET_UPDATE (i)
+
+   Implements::
+
+      seq = STACK.pop()
+      set.update(STACK[-i], seq)
+
+   Used to build sets.
+
+   .. versionadded:: 3.9</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: DICT_UPDATE (i)
+
+   Implements::
+
+      map = STACK.pop()
+      dict.update(STACK[-i], map)
+
+   Used to build dicts.
+
+   .. versionadded:: 3.9</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: DICT_MERGE (i)
+
+   Like :opcode:`DICT_UPDATE` but raises an exception for duplicate keys.
+
+   .. versionadded:: 3.9</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_ATTR (namei)
+
+   If the low bit of ``namei`` is not set, this replaces ``STACK[-1]`` with
+   ``getattr(STACK[-1], co_names[namei&gt;&gt;1])``.
+
+   If the low bit of ``namei`` is set, this will attempt to load a method named
+   ``co_names[namei&gt;&gt;1]`` from the ``STACK[-1]`` object. ``STACK[-1]`` is popped.
+   This bytecode distinguishes two cases: if ``STACK[-1]`` has a method with the
+   correct name, the bytecode pushes the unbound method and ``STACK[-1]``.
+   ``STACK[-1]`` will be used as the first argument (``self``) by :opcode:`CALL`
+   or :opcode:`CALL_KW` when calling the unbound method.
+   Otherwise, ``NULL`` and the object returned by
+   the attribute lookup are pushed.
+
+   .. versionchanged:: 3.12
+      If the low bit of ``namei`` is set, then a ``NULL`` or ``self`` is
+      pushed to the stack before the attribute or unbound method respectively.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_SUPER_ATTR (namei)
+
+   This opcode implements :func:`super`, both in its zero-argument and
+   two-argument forms (e.g. ``super().method()``, ``super().attr`` and
+   ``super(cls, self).method()``, ``super(cls, self).attr``).
+
+   It pops three values from the stack (from top of stack down):
+
+   * ``self``: the first argument to the current method
+   * ``cls``: the class within which the current method was defined
+   * the global ``super``
+
+   With respect to its argument, it works similarly to :opcode:`LOAD_ATTR`,
+   except that ``namei`` is shifted left by 2 bits instead of 1.
+
+   The low bit of ``namei`` signals to attempt a method load, as with
+   :opcode:`LOAD_ATTR`, which results in pushing ``NULL`` and the loaded method.
+   When it is unset a single value is pushed to the stack.
+
+   The second-low bit of ``namei``, if set, means that this was a two-argument
+   call to :func:`super` (unset means zero-argument).
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: COMPARE_OP (opname)
+
+   Performs a Boolean operation.  The operation name can be found in
+   ``cmp_op[opname &gt;&gt; 5]``. If the fifth-lowest bit of ``opname`` is set
+   (``opname &amp; 16``), the result should be coerced to ``bool``.
+
+   .. versionchanged:: 3.13
+      The fifth-lowest bit of the oparg now indicates a forced conversion to
+      :class:`bool`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: IS_OP (invert)
+
+   Performs ``is`` comparison, or ``is not`` if ``invert`` is 1.
+
+   .. versionadded:: 3.9</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CONTAINS_OP (invert)
+
+   Performs ``in`` comparison, or ``not in`` if ``invert`` is 1.
+
+   .. versionadded:: 3.9</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: IMPORT_NAME (namei)
+
+   Imports the module ``co_names[namei]``.  ``STACK[-1]`` and ``STACK[-2]`` are
+   popped and provide the *fromlist* and *level* arguments of :func:`__import__`.
+   The module object is pushed onto the stack.  The current namespace is not affected: for a proper import statement, a subsequent :opcode:`STORE_FAST` instruction
+   modifies the namespace.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: IMPORT_FROM (namei)
+
+   Loads the attribute ``co_names[namei]`` from the module found in ``STACK[-1]``.
+   The resulting object is pushed onto the stack, to be subsequently stored by a
+   :opcode:`STORE_FAST` instruction.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: JUMP_FORWARD (delta)
+
+   Increments bytecode counter by *delta*.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: JUMP_BACKWARD (delta)
+
+   Decrements bytecode counter by *delta*. Checks for interrupts.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: JUMP_BACKWARD_NO_INTERRUPT (delta)
+
+   Decrements bytecode counter by *delta*. Does not check for interrupts.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: POP_JUMP_IF_TRUE (delta)
+
+   If ``STACK[-1]`` is true, increments the bytecode counter by *delta*.
+   ``STACK[-1]`` is popped.
+
+   .. versionchanged:: 3.11
+      The oparg is now a relative delta rather than an absolute target.
+      This opcode is a pseudo-instruction, replaced in final bytecode by
+      the directed versions (forward/backward).
+
+   .. versionchanged:: 3.12
+      This is no longer a pseudo-instruction.
+
+   .. versionchanged:: 3.13
+      This instruction now requires an exact :class:`bool` operand.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: POP_JUMP_IF_FALSE (delta)
+
+   If ``STACK[-1]`` is false, increments the bytecode counter by *delta*.
+   ``STACK[-1]`` is popped.
+
+   .. versionchanged:: 3.11
+      The oparg is now a relative delta rather than an absolute target.
+      This opcode is a pseudo-instruction, replaced in final bytecode by
+      the directed versions (forward/backward).
+
+   .. versionchanged:: 3.12
+      This is no longer a pseudo-instruction.
+
+   .. versionchanged:: 3.13
+      This instruction now requires an exact :class:`bool` operand.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: POP_JUMP_IF_NOT_NONE (delta)
+
+   If ``STACK[-1]`` is not ``None``, increments the bytecode counter by *delta*.
+   ``STACK[-1]`` is popped.
+
+   .. versionadded:: 3.11
+
+   .. versionchanged:: 3.12
+      This is no longer a pseudo-instruction.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: POP_JUMP_IF_NONE (delta)
+
+   If ``STACK[-1]`` is ``None``, increments the bytecode counter by *delta*.
+   ``STACK[-1]`` is popped.
+
+   .. versionadded:: 3.11
+
+   .. versionchanged:: 3.12
+      This is no longer a pseudo-instruction.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: FOR_ITER (delta)
+
+   ``STACK[-1]`` is an :term:`iterator`.  Call its :meth:`~iterator.__next__` method.
+   If this yields a new value, push it on the stack (leaving the iterator below
+   it).  If the iterator indicates it is exhausted then the byte code counter is
+   incremented by *delta*.
+
+   .. versionchanged:: 3.12
+      Up until 3.11 the iterator was popped when it was exhausted.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_GLOBAL (namei)
+
+   Loads the global named ``co_names[namei&gt;&gt;1]`` onto the stack.
+
+   .. versionchanged:: 3.11
+      If the low bit of ``namei`` is set, then a ``NULL`` is pushed to the
+      stack before the global variable.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_FAST (var_num)
+
+   Pushes a reference to the local ``co_varnames[var_num]`` onto the stack.
+
+   .. versionchanged:: 3.12
+      This opcode is now only used in situations where the local variable is
+      guaranteed to be initialized. It cannot raise :exc:`UnboundLocalError`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_FAST_BORROW (var_num)
+
+   Pushes a borrowed reference to the local ``co_varnames[var_num]`` onto the
+   stack.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_FAST_LOAD_FAST (var_nums)
+
+   Pushes references to ``co_varnames[var_nums &gt;&gt; 4]`` and
+   ``co_varnames[var_nums &amp; 15]`` onto the stack.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_FAST_BORROW_LOAD_FAST_BORROW (var_nums)
+
+   Pushes borrowed references to ``co_varnames[var_nums &gt;&gt; 4]`` and
+   ``co_varnames[var_nums &amp; 15]`` onto the stack.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_FAST_CHECK (var_num)
+
+   Pushes a reference to the local ``co_varnames[var_num]`` onto the stack,
+   raising an :exc:`UnboundLocalError` if the local variable has not been
+   initialized.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_FAST_AND_CLEAR (var_num)
+
+   Pushes a reference to the local ``co_varnames[var_num]`` onto the stack (or
+   pushes ``NULL`` onto the stack if the local variable has not been
+   initialized) and sets ``co_varnames[var_num]`` to ``NULL``.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_FAST (var_num)
+
+   Stores ``STACK.pop()`` into the local ``co_varnames[var_num]``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_FAST_STORE_FAST (var_nums)
+
+   Stores ``STACK[-1]`` into ``co_varnames[var_nums &gt;&gt; 4]``
+   and ``STACK[-2]`` into ``co_varnames[var_nums &amp; 15]``.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_FAST_LOAD_FAST (var_nums)
+
+   Stores ``STACK.pop()`` into the local ``co_varnames[var_nums &gt;&gt; 4]``
+   and pushes a reference to the local ``co_varnames[var_nums &amp; 15]``
+   onto the stack.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: DELETE_FAST (var_num)
+
+   Deletes local ``co_varnames[var_num]``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: MAKE_CELL (i)
+
+   Creates a new cell in slot ``i``.  If that slot is nonempty then
+   that value is stored into the new cell.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_DEREF (i)
+
+   Loads the cell contained in slot ``i`` of the "fast locals" storage.
+   Pushes a reference to the object the cell contains on the stack.
+
+   .. versionchanged:: 3.11
+      ``i`` is no longer offset by the length of :attr:`~codeobject.co_varnames`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_FROM_DICT_OR_DEREF (i)
+
+   Pops a mapping off the stack and looks up the name associated with
+   slot ``i`` of the "fast locals" storage in this mapping.
+   If the name is not found there, loads it from the cell contained in
+   slot ``i``, similar to :opcode:`LOAD_DEREF`. This is used for loading
+   :term:`closure variables &lt;closure variable&gt;` in class bodies (which previously used
+   :opcode:`!LOAD_CLASSDEREF`) and in
+   :ref:`annotation scopes &lt;annotation-scopes&gt;` within class bodies.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: STORE_DEREF (i)
+
+   Stores ``STACK.pop()`` into the cell contained in slot ``i`` of the "fast locals"
+   storage.
+
+   .. versionchanged:: 3.11
+      ``i`` is no longer offset by the length of :attr:`~codeobject.co_varnames`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: DELETE_DEREF (i)
+
+   Empties the cell contained in slot ``i`` of the "fast locals" storage.
+   Used by the :keyword:`del` statement.
+
+   .. versionadded:: 3.2
+
+   .. versionchanged:: 3.11
+      ``i`` is no longer offset by the length of :attr:`~codeobject.co_varnames`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: COPY_FREE_VARS (n)
+
+   Copies the ``n`` :term:`free (closure) variables &lt;closure variable&gt;` from the closure
+   into the frame. Removes the need for special code on the caller's side when calling
+   closures.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: RAISE_VARARGS (argc)
+
+   Raises an exception using one of the 3 forms of the ``raise`` statement,
+   depending on the value of *argc*:
+
+   * 0: ``raise`` (re-raise previous exception)
+   * 1: ``raise STACK[-1]`` (raise exception instance or type at ``STACK[-1]``)
+   * 2: ``raise STACK[-2] from STACK[-1]`` (raise exception instance or type at
+     ``STACK[-2]`` with ``__cause__`` set to ``STACK[-1]``)</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CALL (argc)
+
+   Calls a callable object with the number of arguments specified by ``argc``.
+   On the stack are (in ascending order):
+
+   * The callable
+   * ``self`` or ``NULL``
+   * The remaining positional arguments
+
+   ``argc`` is the total of the positional arguments, excluding ``self``.
+
+   ``CALL`` pops all arguments and the callable object off the stack,
+   calls the callable object with those arguments, and pushes the return value
+   returned by the callable object.
+
+   .. versionadded:: 3.11
+
+   .. versionchanged:: 3.13
+      The callable now always appears at the same position on the stack.
+
+   .. versionchanged:: 3.13
+      Calls with keyword arguments are now handled by :opcode:`CALL_KW`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CALL_KW (argc)
+
+   Calls a callable object with the number of arguments specified by ``argc``,
+   including one or more named arguments. On the stack are (in ascending order):
+
+   * The callable
+   * ``self`` or ``NULL``
+   * The remaining positional arguments
+   * The named arguments
+   * A :class:`tuple` of keyword argument names
+
+   ``argc`` is the total of the positional and named arguments, excluding ``self``.
+   The length of the tuple of keyword argument names is the number of named arguments.
+
+   ``CALL_KW`` pops all arguments, the keyword names, and the callable object
+   off the stack, calls the callable object with those arguments, and pushes the
+   return value returned by the callable object.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CALL_FUNCTION_EX (flags)
+
+   Calls a callable object with variable set of positional and keyword
+   arguments.  If the lowest bit of *flags* is set, the top of the stack
+   contains a mapping object containing additional keyword arguments.
+   Before the callable is called, the mapping object and iterable object
+   are each "unpacked" and their contents passed in as keyword and
+   positional arguments respectively.
+   ``CALL_FUNCTION_EX`` pops all arguments and the callable object off the stack,
+   calls the callable object with those arguments, and pushes the return value
+   returned by the callable object.
+
+   .. versionadded:: 3.6</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: PUSH_NULL
+
+   Pushes a ``NULL`` to the stack.
+   Used in the call sequence to match the ``NULL`` pushed by
+   :opcode:`!LOAD_METHOD` for non-method calls.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: MAKE_FUNCTION
+
+   Pushes a new function object on the stack built from the code object at ``STACK[-1]``.
+
+   .. versionchanged:: 3.10
+      Flag value ``0x04`` is a tuple of strings instead of dictionary
+
+   .. versionchanged:: 3.11
+      Qualified name at ``STACK[-1]`` was removed.
+
+   .. versionchanged:: 3.13
+      Extra function attributes on the stack, signaled by oparg flags, were
+      removed. They now use :opcode:`SET_FUNCTION_ATTRIBUTE`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SET_FUNCTION_ATTRIBUTE (flag)
+
+   Sets an attribute on a function object. Expects the function at ``STACK[-1]``
+   and the attribute value to set at ``STACK[-2]``; consumes both and leaves the
+   function at ``STACK[-1]``. The flag determines which attribute to set:
+
+   * ``0x01`` a tuple of default values for positional-only and
+     positional-or-keyword parameters in positional order
+   * ``0x02`` a dictionary of keyword-only parameters' default values
+   * ``0x04`` a tuple of strings containing parameters' annotations
+   * ``0x08`` a tuple containing cells for free variables, making a closure
+   * ``0x10`` the :term:`annotate function` for the function object
+
+   .. versionadded:: 3.13
+
+   .. versionchanged:: 3.14
+      Added ``0x10`` to indicate the annotate function for the function object.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: BUILD_SLICE (argc)
+
+   .. index:: pair: built-in function; slice
+
+   Pushes a slice object on the stack.  *argc* must be 2 or 3.  If it is 2, implements::
+
+      end = STACK.pop()
+      start = STACK.pop()
+      STACK.append(slice(start, end))
+
+   if it is 3, implements::
+
+      step = STACK.pop()
+      end = STACK.pop()
+      start = STACK.pop()
+      STACK.append(slice(start, end, step))
+
+   See the :func:`slice` built-in function for more information.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: EXTENDED_ARG (ext)
+
+   Prefixes any opcode which has an argument too big to fit into the default one
+   byte. *ext* holds an additional byte which act as higher bits in the argument.
+   For each opcode, at most three prefixal ``EXTENDED_ARG`` are allowed, forming
+   an argument from two-byte to four-byte.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CONVERT_VALUE (oparg)
+
+   Convert value to a string, depending on ``oparg``::
+
+      value = STACK.pop()
+      result = func(value)
+      STACK.append(result)
+
+   * ``oparg == 1``: call :func:`str` on *value*
+   * ``oparg == 2``: call :func:`repr` on *value*
+   * ``oparg == 3``: call :func:`ascii` on *value*
+
+   Used for implementing formatted string literals (f-strings).
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: FORMAT_SIMPLE
+
+   Formats the value on top of stack::
+
+      value = STACK.pop()
+      result = value.__format__("")
+      STACK.append(result)
+
+   Used for implementing formatted string literals (f-strings).
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: FORMAT_WITH_SPEC
+
+   Formats the given value with the given format spec::
+
+      spec = STACK.pop()
+      value = STACK.pop()
+      result = value.__format__(spec)
+      STACK.append(result)
+
+   Used for implementing formatted string literals (f-strings).
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: MATCH_CLASS (count)
+
+   ``STACK[-1]`` is a tuple of keyword attribute names, ``STACK[-2]`` is the class
+   being matched against, and ``STACK[-3]`` is the match subject.  *count* is the
+   number of positional sub-patterns.
+
+   Pop ``STACK[-1]``, ``STACK[-2]``, and ``STACK[-3]``. If ``STACK[-3]`` is an
+   instance of ``STACK[-2]`` and has the positional and keyword attributes
+   required by *count* and ``STACK[-1]``, push a tuple of extracted attributes.
+   Otherwise, push ``None``.
+
+   .. versionadded:: 3.10
+
+   .. versionchanged:: 3.11
+      Previously, this instruction also pushed a boolean value indicating
+      success (``True``) or failure (``False``).</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: RESUME (context)
+
+   A no-op. Performs internal tracing, debugging and optimization checks.
+
+   The ``context`` operand consists of two parts. The lowest two bits
+   indicate where the ``RESUME`` occurs:
+
+   * ``0`` The start of a function, which is neither a generator, coroutine
+     nor an async generator
+   * ``1`` After a ``yield`` expression
+   * ``2`` After a ``yield from`` expression
+   * ``3`` After an ``await`` expression
+
+   The next bit is ``1`` if the RESUME is at except-depth ``1``, and ``0``
+   otherwise.
+
+   .. versionadded:: 3.11
+
+   .. versionchanged:: 3.13
+      The oparg value changed to include information about except-depth</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: RETURN_GENERATOR
+
+   Create a generator, coroutine, or async generator from the current frame.
+   Used as first opcode of in code object for the above mentioned callables.
+   Clear the current frame and return the newly created generator.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SEND (delta)
+
+   Equivalent to ``STACK[-1] = STACK[-2].send(STACK[-1])``. Used in ``yield from``
+   and ``await`` statements.
+
+   If the call raises :exc:`StopIteration`, pop the top value from the stack,
+   push the exception's ``value`` attribute, and increment the bytecode counter
+   by *delta*.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: HAVE_ARGUMENT
+
+   This is not really an opcode.  It identifies the dividing line between
+   opcodes in the range [0,255] which don't use their argument and those
+   that do (``&lt; HAVE_ARGUMENT`` and ``&gt;= HAVE_ARGUMENT``, respectively).
+
+   If your application uses pseudo instructions or specialized instructions,
+   use the :data:`hasarg` collection instead.
+
+   .. versionchanged:: 3.6
+      Now every instruction has an argument, but opcodes ``&lt; HAVE_ARGUMENT``
+      ignore it. Before, only opcodes ``&gt;= HAVE_ARGUMENT`` had an argument.
+
+   .. versionchanged:: 3.12
+      Pseudo instructions were added to the :mod:`dis` module, and for them
+      it is not true that comparison with ``HAVE_ARGUMENT`` indicates whether
+      they use their arg.
+
+   .. deprecated:: 3.13
+      Use :data:`hasarg` instead.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CALL_INTRINSIC_1
+
+   Calls an intrinsic function with one argument. Passes ``STACK[-1]`` as the
+   argument and sets ``STACK[-1]`` to the result. Used to implement
+   functionality that is not performance critical.
+
+   The operand determines which intrinsic function is called:
+
+   +-----------------------------------+-----------------------------------+
+   | Operand                           | Description                       |
+   +===================================+===================================+
+   | ``INTRINSIC_1_INVALID``           | Not valid                         |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_PRINT``               | Prints the argument to standard   |
+   |                                   | out. Used in the REPL.            |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_IMPORT_STAR``         | Performs ``import *`` for the     |
+   |                                   | named module.                     |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_STOPITERATION_ERROR`` | Extracts the return value from a  |
+   |                                   | ``StopIteration`` exception.      |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_ASYNC_GEN_WRAP``      | Wraps an async generator value    |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_UNARY_POSITIVE``      | Performs the unary ``+``          |
+   |                                   | operation                         |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_LIST_TO_TUPLE``       | Converts a list to a tuple        |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_TYPEVAR``             | Creates a :class:`typing.TypeVar` |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_PARAMSPEC``           | Creates a                         |
+   |                                   | :class:`typing.ParamSpec`         |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_TYPEVARTUPLE``        | Creates a                         |
+   |                                   | :class:`typing.TypeVarTuple`      |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_SUBSCRIPT_GENERIC``   | Returns :class:`typing.Generic`   |
+   |                                   | subscripted with the argument     |
+   +-----------------------------------+-----------------------------------+
+   | ``INTRINSIC_TYPEALIAS``           | Creates a                         |
+   |                                   | :class:`typing.TypeAliasType`;    |
+   |                                   | used in the :keyword:`type`       |
+   |                                   | statement. The argument is a tuple|
+   |                                   | of the type alias's name,         |
+   |                                   | type parameters, and value.       |
+   +-----------------------------------+-----------------------------------+
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: CALL_INTRINSIC_2
+
+   Calls an intrinsic function with two arguments. Used to implement functionality
+   that is not performance critical::
+
+      arg2 = STACK.pop()
+      arg1 = STACK.pop()
+      result = intrinsic2(arg1, arg2)
+      STACK.append(result)
+
+   The operand determines which intrinsic function is called:
+
+   +----------------------------------------+-----------------------------------+
+   | Operand                                | Description                       |
+   +========================================+===================================+
+   | ``INTRINSIC_2_INVALID``                | Not valid                         |
+   +----------------------------------------+-----------------------------------+
+   | ``INTRINSIC_PREP_RERAISE_STAR``        | Calculates the                    |
+   |                                        | :exc:`ExceptionGroup` to raise    |
+   |                                        | from a ``try-except*``.           |
+   +----------------------------------------+-----------------------------------+
+   | ``INTRINSIC_TYPEVAR_WITH_BOUND``       | Creates a :class:`typing.TypeVar` |
+   |                                        | with a bound.                     |
+   +----------------------------------------+-----------------------------------+
+   | ``INTRINSIC_TYPEVAR_WITH_CONSTRAINTS`` | Creates a                         |
+   |                                        | :class:`typing.TypeVar` with      |
+   |                                        | constraints.                      |
+   +----------------------------------------+-----------------------------------+
+   | ``INTRINSIC_SET_FUNCTION_TYPE_PARAMS`` | Sets the ``__type_params__``      |
+   |                                        | attribute of a function.          |
+   +----------------------------------------+-----------------------------------+
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_SPECIAL
+
+   Performs special method lookup on ``STACK[-1]``.
+   If ``type(STACK[-1]).__xxx__`` is a method, leave
+   ``type(STACK[-1]).__xxx__; STACK[-1]`` on the stack.
+   If ``type(STACK[-1]).__xxx__`` is not a method, leave
+   ``STACK[-1].__xxx__; NULL`` on the stack.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<p><strong>Pseudo-instructions</strong></p>
+<p>These opcodes do not appear in Python bytecode. They are used by the compiler
+but are replaced by real opcodes or removed before bytecode is generated.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SETUP_FINALLY (target)
+
+   Set up an exception handler for the following code block. If an exception
+   occurs, the value stack level is restored to its current state and control
+   is transferred to the exception handler at ``target``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SETUP_CLEANUP (target)
+
+   Like ``SETUP_FINALLY``, but in case of an exception also pushes the last
+   instruction (``lasti``) to the stack so that ``RERAISE`` can restore it.
+   If an exception occurs, the value stack level and the last instruction on
+   the frame are restored to their current state, and control is transferred
+   to the exception handler at ``target``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: SETUP_WITH (target)
+
+   Like ``SETUP_CLEANUP``, but in case of an exception one more item is popped
+   from the stack before control is transferred to the exception handler at
+   ``target``.
+
+   This variant is used in :keyword:`with` and :keyword:`async with`
+   constructs, which push the return value of the context manager's
+   :meth:`~object.__enter__` or :meth:`~object.__aenter__` to the stack.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: POP_BLOCK
+
+   Marks the end of the code block associated with the last ``SETUP_FINALLY``,
+   ``SETUP_CLEANUP`` or ``SETUP_WITH``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_CONST_IMMORTAL (consti)
+
+   Works as :opcode:`LOAD_CONST`, but is more efficient for immortal objects.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: JUMP
+            JUMP_NO_INTERRUPT
+
+   Undirected relative jump instructions which are replaced by their
+   directed (forward/backward) counterparts by the assembler.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: JUMP_IF_TRUE
+            JUMP_IF_FALSE
+
+   Conditional jumps which do not impact the stack. Replaced by the sequence
+   ``COPY 1``, ``TO_BOOL``, ``POP_JUMP_IF_TRUE/FALSE``.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'opcode'</p>
+<pre class="directive-error-source">.. opcode:: LOAD_CLOSURE (i)
+
+   Pushes a reference to the cell contained in slot ``i`` of the "fast locals"
+   storage.
+
+   Note that ``LOAD_CLOSURE`` is replaced with ``LOAD_FAST`` in the assembler.
+
+   .. versionchanged:: 3.13
+      This opcode is now a pseudo-instruction.</pre>
+</div>
+<a id="opcode_collections"></a>
+<h2 id="opcode-collections">Opcode collections</h2>
+<p>These collections are provided for automatic introspection of bytecode
+instructions:</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>The collections now contain pseudo instructions and instrumented
+instructions as well. These are opcodes with values <code>&gt;= MIN_PSEUDO_OPCODE</code>
+and <code>&gt;= MIN_INSTRUMENTED_OPCODE</code>.</p>
+</div>
+<dl class="py data">
+  <dt id="py:data:dis.opname"><code class="sig-name">opname</code></dt>
+  <dd><p>Sequence of operation names, indexable using the bytecode.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.opmap"><code class="sig-name">opmap</code></dt>
+  <dd><p>Dictionary mapping operation names to bytecodes.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.cmp_op"><code class="sig-name">cmp_op</code></dt>
+  <dd><p>Sequence of all compare operation names.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hasarg"><code class="sig-name">hasarg</code></dt>
+  <dd><p>Sequence of bytecodes that use their argument.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hasconst"><code class="sig-name">hasconst</code></dt>
+  <dd><p>Sequence of bytecodes that access a constant.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hasfree"><code class="sig-name">hasfree</code></dt>
+  <dd><p>Sequence of bytecodes that access a <a class="reference internal" href="../glossary.html#term-closure-variable"><span class="xref std std-term">free (closure) variable</span></a>.
+'free' in this context refers to names in the current scope that are
+referenced by inner scopes or names in outer scopes that are referenced
+from this scope.  It does <em>not</em> include references to global or builtin scopes.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hasname"><code class="sig-name">hasname</code></dt>
+  <dd><p>Sequence of bytecodes that access an attribute by name.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hasjump"><code class="sig-name">hasjump</code></dt>
+  <dd><p>Sequence of bytecodes that have a jump target. All jumps
+are relative.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.haslocal"><code class="sig-name">haslocal</code></dt>
+  <dd><p>Sequence of bytecodes that access a local variable.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hascompare"><code class="sig-name">hascompare</code></dt>
+  <dd><p>Sequence of bytecodes of Boolean operations.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hasexc"><code class="sig-name">hasexc</code></dt>
+  <dd><p>Sequence of bytecodes that set an exception handler.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hasjrel"><code class="sig-name">hasjrel</code></dt>
+  <dd><p>Sequence of bytecodes that have a relative jump target.</p>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.13:</span></p>
+<p>All jumps are now relative. Use <a class="reference internal" href="dis.html#py:data:dis.hasjump"><code class="xref py data docutils literal">hasjump</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:dis.hasjabs"><code class="sig-name">hasjabs</code></dt>
+  <dd><p>Sequence of bytecodes that have an absolute jump target.</p>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.13:</span></p>
+<p>All jumps are now relative. This list is empty.</p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="compileall.html">&larr; compileall — Byte-compile Python libraries</a>
+        <a class="next" href="pickletools.html">pickletools — Tools for pickle developers &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>email.parser: Parsing email messages — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Data Handling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="email.html">email — An email and MIME handling package</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle email — An email and MIME handling package"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="email.message.html">email.message: Representing an email message</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="email.parser.html">email.parser: Parsing email messages</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle email.parser: Parsing email messages"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="email.parser.html#feedparser-api">FeedParser API</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="email.parser.html#parser-api">Parser API</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="email.parser.html#additional-notes">Additional notes</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.generator.html">email.generator: Generating MIME documents</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.policy.html">email.policy: Policy Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.errors.html">email.errors: Exception and Defect classes</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.headerregistry.html">email.headerregistry: Custom Header Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.contentmanager.html">email.contentmanager: Managing MIME Content</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.examples.html">email: Examples</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.compat32-message.html">email.message.Message: Representing an email message using the compat32 API</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.mime.html">email.mime: Creating email and MIME objects from scratch</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.header.html">email.header: Internationalized headers</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.charset.html">email.charset: Representing character sets</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.encoders.html">email.encoders: Encoders</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.utils.html">email.utils: Miscellaneous utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="email.iterators.html">email.iterators: Iterators</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="json.html">json — JSON encoder and decoder</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mailbox.html">mailbox — Manipulate mailboxes in various formats</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mimetypes.html">mimetypes — Map filenames to MIME types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="base64.html">base64 — Base16, Base32, Base64, Base85 Data Encodings</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="binascii.html">binascii — Convert between binary and ASCII</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="quopri.html">quopri — Encode and decode MIME quoted-printable data</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="email.message.html">&larr; email.message: Representing an email message</a>
+        <a class="next" href="email.generator.html">email.generator: Generating MIME documents &rarr;</a>
+      </nav>
+      
+      <h1 id="email-parser-parsing-email-messages"><code class="xref py module docutils literal">email.parser</code>: Parsing email messages</h1>
+<dl class="py module">
+  <dt id="py:module:email.parser"><code class="sig-name">email.parser</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/email/parser.py`</p>
+<hr />
+<p>Message object structures can be created in one of two ways: they can be
+created from whole cloth by creating an <a class="reference internal" href="email.message.html#py:class:email.message.emailmessage"><code class="xref py class docutils literal">EmailMessage</code></a>
+object, adding headers using the dictionary interface, and adding payload(s)
+using <a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.set_content"><code class="xref py method docutils literal">set_content</code></a> and related methods, or
+they can be created by parsing a serialized representation of the email
+message.</p>
+<p>The <a class="reference internal" href="email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a> package provides a standard parser that understands most email
+document structures, including MIME documents.  You can pass the parser a
+bytes, string or file object, and the parser will return to you the root
+<a class="reference internal" href="email.message.html#py:class:email.message.emailmessage"><code class="xref py class docutils literal">EmailMessage</code></a> instance of the object structure.  For
+simple, non-MIME messages the payload of this root object will likely be a
+string containing the text of the message.  For MIME messages, the root object
+will return <code>True</code> from its <a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.is_multipart"><code class="xref py method docutils literal">is_multipart</code></a>
+method, and the subparts can be accessed via the payload manipulation methods,
+such as <a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.get_body"><code class="xref py method docutils literal">get_body</code></a>,
+<a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.iter_parts"><code class="xref py method docutils literal">iter_parts</code></a>, and
+<a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.walk"><code class="xref py method docutils literal">walk</code></a>.</p>
+<p>There are actually two parser interfaces available for use, the <a class="reference internal" href="email.parser.html#py:class:email.parser.parser"><code class="xref py class docutils literal">Parser</code></a>
+API and the incremental <a class="reference internal" href="email.parser.html#py:class:email.parser.feedparser"><code class="xref py class docutils literal">FeedParser</code></a> API.  The <a class="reference internal" href="email.parser.html#py:class:email.parser.parser"><code class="xref py class docutils literal">Parser</code></a> API is
+most useful if you have the entire text of the message in memory, or if the
+entire message lives in a file on the file system.  <a class="reference internal" href="email.parser.html#py:class:email.parser.feedparser"><code class="xref py class docutils literal">FeedParser</code></a> is more
+appropriate when you are reading the message from a stream which might block
+waiting for more input (such as reading an email message from a socket).  The
+<a class="reference internal" href="email.parser.html#py:class:email.parser.feedparser"><code class="xref py class docutils literal">FeedParser</code></a> can consume and parse the message incrementally, and only
+returns the root object when you close the parser.</p>
+<p>Note that the parser can be extended in limited ways, and of course you can
+implement your own parser completely from scratch.  All of the logic that
+connects the <a class="reference internal" href="email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a> package's bundled parser and the
+<a class="reference internal" href="email.message.html#py:class:email.message.emailmessage"><code class="xref py class docutils literal">EmailMessage</code></a> class is embodied in the <a class="reference internal" href="email.policy.html#py:class:email.policy.policy"><code class="xref py class docutils literal">Policy</code></a>
+class, so a custom parser can create message object trees any way it finds
+necessary by implementing custom versions of the appropriate <code class="xref py class docutils literal">Policy</code>
+methods.</p>
+<h2 id="feedparser-api">FeedParser API</h2>
+<p>The <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesfeedparser"><code class="xref py class docutils literal">BytesFeedParser</code></a>, imported from the <a href="#" class="broken-link"><code class="xref py module docutils literal">email.feedparser</code></a> module,
+provides an API that is conducive to incremental parsing of email messages,
+such as would be necessary when reading the text of an email message from a
+source that can block (such as a socket).  The <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesfeedparser"><code class="xref py class docutils literal">BytesFeedParser</code></a> can of
+course be used to parse an email message fully contained in a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like
+object</span></a>, string, or file, but the <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesparser"><code class="xref py class docutils literal">BytesParser</code></a> API may be more
+convenient for such use cases.  The semantics and results of the two parser
+APIs are identical.</p>
+<p>The <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesfeedparser"><code class="xref py class docutils literal">BytesFeedParser</code></a>'s API is simple; you create an instance, feed it a
+bunch of bytes until there's no more to feed it, then close the parser to
+retrieve the root message object.  The <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesfeedparser"><code class="xref py class docutils literal">BytesFeedParser</code></a> is extremely
+accurate when parsing standards-compliant messages, and it does a very good job
+of parsing non-compliant messages, providing information about how a message
+was deemed broken.  It will populate a message object's
+<a class="reference internal" href="email.message.html#py:attribute:email.message.emailmessage.defects"><code class="xref py attribute docutils literal">defects</code></a> attribute with a list of any
+problems it found in a message.  See the <a class="reference internal" href="email.errors.html#py:module:email.errors" title="email.errors: The exception classes used by the email package."><code class="xref py module docutils literal">email.errors</code></a> module for the
+list of defects that it can find.</p>
+<p>Here is the API for the <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesfeedparser"><code class="xref py class docutils literal">BytesFeedParser</code></a>:</p>
+<dl class="py class">
+  <dt id="py:class:email.parser.bytesfeedparser"><em class="property">class</em> <code class="sig-name">BytesFeedParser(_factory=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>Create a <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesfeedparser"><code class="xref py class docutils literal">BytesFeedParser</code></a> instance.  Optional <em>_factory</em> is a
+no-argument callable; if not specified use the
+<a class="reference internal" href="email.policy.html#py:attribute:email.policy.policy.message_factory"><code class="xref py attribute docutils literal">message_factory</code></a> from the <em>policy</em>.  Call
+<em>_factory</em> whenever a new message object is needed.</p>
+<p>If <em>policy</em> is specified use the rules it specifies to update the
+representation of the message.  If <em>policy</em> is not set, use the
+<a class="reference internal" href="email.policy.html#py:class:email.policy.compat32"><code class="xref py class docutils literal">compat32</code></a> policy, which maintains backward
+compatibility with the Python 3.2 version of the email package and provides
+<a class="reference internal" href="email.compat32-message.html#py:class:email.message.message"><code class="xref py class docutils literal">Message</code></a> as the default factory.  All other policies
+provide <a class="reference internal" href="email.message.html#py:class:email.message.emailmessage"><code class="xref py class docutils literal">EmailMessage</code></a> as the default <em>_factory</em>. For
+more information on what else <em>policy</em> controls, see the
+<a class="reference internal" href="email.policy.html#py:module:email.policy" title="email.policy: Controlling the parsing and generating of messages"><code class="xref py module docutils literal">policy</code></a> documentation.</p>
+<p>Note: <strong>The policy keyword should always be specified</strong>; The default will
+change to <a class="reference internal" href="email.policy.html#py:data:email.policy.default"><code class="xref py data docutils literal">email.policy.default</code></a> in a future version of Python.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3 Added the *policy* keyword.:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6 *_factory* defaults to the policy ``message_factory``.:</span></p>
+</div>
+<dl class="py method">
+  <dt id="py:method:email.parser.bytesfeedparser.feed"><code class="sig-name">feed(data)</code></dt>
+  <dd><p>Feed the parser some more data.  <em>data</em> should be a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like
+object</span></a> containing one or more lines.  The lines can be partial and the
+parser will stitch such partial lines together properly.  The lines can
+have any of the three common line endings: carriage return, newline, or
+carriage return and newline (they can even be mixed).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:email.parser.bytesfeedparser.close"><code class="sig-name">close()</code></dt>
+  <dd><p>Complete the parsing of all previously fed data and return the root
+message object.  It is undefined what happens if <a class="reference internal" href="email.parser.html#py:method:email.parser.bytesfeedparser.feed"><code class="xref py method docutils literal">feed</code></a> is called
+after this method has been called.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:email.parser.feedparser"><em class="property">class</em> <code class="sig-name">FeedParser(_factory=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>Works like <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesfeedparser"><code class="xref py class docutils literal">BytesFeedParser</code></a> except that the input to the
+<a class="reference internal" href="email.parser.html#py:method:email.parser.bytesfeedparser.feed"><code class="xref py method docutils literal">feed</code></a> method must be a string.  This is of limited
+utility, since the only way for such a message to be valid is for it to
+contain only ASCII text or, if <a class="reference internal" href="email.policy.html#py:attribute:email.policy.emailpolicy.utf8"><code class="xref py attribute docutils literal">utf8</code></a> is
+<code>True</code>, no binary attachments.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3 Added the *policy* keyword.:</span></p>
+</div>
+</dd>
+</dl>
+<h2 id="parser-api">Parser API</h2>
+<p>The <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesparser"><code class="xref py class docutils literal">BytesParser</code></a> class, imported from the <a class="reference internal" href="email.parser.html#py:module:email.parser" title="email.parser: Parse flat text email messages to produce a message object structure."><code class="xref py module docutils literal">email.parser</code></a> module,
+provides an API that can be used to parse a message when the complete contents
+of the message are available in a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> or file.  The
+<a class="reference internal" href="email.parser.html#py:module:email.parser" title="email.parser: Parse flat text email messages to produce a message object structure."><code class="xref py module docutils literal">email.parser</code></a> module also provides <a class="reference internal" href="email.parser.html#py:class:email.parser.parser"><code class="xref py class docutils literal">Parser</code></a> for parsing strings,
+and header-only parsers, <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesheaderparser"><code class="xref py class docutils literal">BytesHeaderParser</code></a> and
+<a class="reference internal" href="email.parser.html#py:class:email.parser.headerparser"><code class="xref py class docutils literal">HeaderParser</code></a>, which can be used if you're only interested in the
+headers of the message.  <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesheaderparser"><code class="xref py class docutils literal">BytesHeaderParser</code></a> and <a class="reference internal" href="email.parser.html#py:class:email.parser.headerparser"><code class="xref py class docutils literal">HeaderParser</code></a>
+can be much faster in these situations, since they do not attempt to parse the
+message body, instead setting the payload to the raw body.</p>
+<dl class="py class">
+  <dt id="py:class:email.parser.bytesparser"><em class="property">class</em> <code class="sig-name">BytesParser(_class=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>Create a <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesparser"><code class="xref py class docutils literal">BytesParser</code></a> instance.  The <em>_class</em> and <em>policy</em>
+arguments have the same meaning and semantics as the <em>_factory</em>
+and <em>policy</em> arguments of <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesfeedparser"><code class="xref py class docutils literal">BytesFeedParser</code></a>.</p>
+<p>Note: <strong>The policy keyword should always be specified</strong>; The default will
+change to <a class="reference internal" href="email.policy.html#py:data:email.policy.default"><code class="xref py data docutils literal">email.policy.default</code></a> in a future version of Python.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Removed the <em>strict</em> argument that was deprecated in 2.4.  Added the
+<em>policy</em> keyword.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6 *_class* defaults to the policy ``message_factory``.:</span></p>
+</div>
+<dl class="py method">
+  <dt id="py:method:email.parser.bytesparser.parse"><code class="sig-name">parse(fp, headersonly=False)</code></dt>
+  <dd><p>Read all the data from the binary file-like object <em>fp</em>, parse the
+resulting bytes, and return the message object.  <em>fp</em> must support
+both the <a class="reference internal" href="io.html#py:method:io.iobase.readline"><code class="xref py method docutils literal">readline</code></a> and the <a href="#" class="broken-link"><code class="xref py method docutils literal">read</code></a>
+methods.</p>
+<p>The bytes contained in <em>fp</em> must be formatted as a block of :rfc:`5322`
+(or, if <a class="reference internal" href="email.policy.html#py:attribute:email.policy.emailpolicy.utf8"><code class="xref py attribute docutils literal">utf8</code></a> is <code>True</code>, :rfc:`6532`)
+style headers and header continuation lines, optionally preceded by an
+envelope header.  The header block is terminated either by the end of the
+data or by a blank line.  Following the header block is the body of the
+message (which may contain MIME-encoded subparts, including subparts
+with a :mailheader:`Content-Transfer-Encoding` of <code>8bit</code>).</p>
+<p>Optional <em>headersonly</em> is a flag specifying whether to stop parsing after
+reading the headers or not.  The default is <code>False</code>, meaning it parses
+the entire contents of the file.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:email.parser.bytesparser.parsebytes"><code class="sig-name">parsebytes(bytes, headersonly=False)</code></dt>
+  <dd><p>Similar to the <a class="reference internal" href="email.parser.html#py:method:email.parser.bytesparser.parse"><code class="xref py method docutils literal">parse</code></a> method, except it takes a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like
+object</span></a> instead of a file-like object.  Calling this method on a
+<a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> is equivalent to wrapping <em>bytes</em> in a
+<a class="reference internal" href="io.html#py:class:io.bytesio"><code class="xref py class docutils literal">BytesIO</code></a> instance first and calling <a class="reference internal" href="email.parser.html#py:method:email.parser.bytesparser.parse"><code class="xref py method docutils literal">parse</code></a>.</p>
+<p>Optional <em>headersonly</em> is as with the <a class="reference internal" href="email.parser.html#py:method:email.parser.bytesparser.parse"><code class="xref py method docutils literal">parse</code></a> method.</p>
+</dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:email.parser.bytesheaderparser"><em class="property">class</em> <code class="sig-name">BytesHeaderParser(_class=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>Exactly like <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesparser"><code class="xref py class docutils literal">BytesParser</code></a>, except that <em>headersonly</em>
+defaults to <code>True</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:email.parser.parser"><em class="property">class</em> <code class="sig-name">Parser(_class=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>This class is parallel to <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesparser"><code class="xref py class docutils literal">BytesParser</code></a>, but handles string input.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Removed the <em>strict</em> argument.  Added the <em>policy</em> keyword.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6 *_class* defaults to the policy ``message_factory``.:</span></p>
+</div>
+<dl class="py method">
+  <dt id="py:method:email.parser.parser.parse"><code class="sig-name">parse(fp, headersonly=False)</code></dt>
+  <dd><p>Read all the data from the text-mode file-like object <em>fp</em>, parse the
+resulting text, and return the root message object.  <em>fp</em> must support
+both the <a class="reference internal" href="io.html#py:method:io.textiobase.readline"><code class="xref py method docutils literal">readline</code></a> and the
+<a class="reference internal" href="io.html#py:method:io.textiobase.read"><code class="xref py method docutils literal">read</code></a> methods on file-like objects.</p>
+<p>Other than the text mode requirement, this method operates like
+<a class="reference internal" href="email.parser.html#py:method:email.parser.bytesparser.parse"><code class="xref py method docutils literal">BytesParser.parse</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:email.parser.parser.parsestr"><code class="sig-name">parsestr(text, headersonly=False)</code></dt>
+  <dd><p>Similar to the <a class="reference internal" href="email.parser.html#py:method:email.parser.parser.parse"><code class="xref py method docutils literal">parse</code></a> method, except it takes a string object
+instead of a file-like object.  Calling this method on a string is
+equivalent to wrapping <em>text</em> in a <a class="reference internal" href="io.html#py:class:io.stringio"><code class="xref py class docutils literal">StringIO</code></a> instance first
+and calling <a class="reference internal" href="email.parser.html#py:method:email.parser.parser.parse"><code class="xref py method docutils literal">parse</code></a>.</p>
+<p>Optional <em>headersonly</em> is as with the <a class="reference internal" href="email.parser.html#py:method:email.parser.parser.parse"><code class="xref py method docutils literal">parse</code></a> method.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:email.parser.headerparser"><em class="property">class</em> <code class="sig-name">HeaderParser(_class=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>Exactly like <a class="reference internal" href="email.parser.html#py:class:email.parser.parser"><code class="xref py class docutils literal">Parser</code></a>, except that <em>headersonly</em>
+defaults to <code>True</code>.</p>
+</dd>
+</dl>
+<p>Since creating a message object structure from a string or a file object is such
+a common task, four functions are provided as a convenience.  They are available
+in the top-level <a class="reference internal" href="email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a> package namespace.</p>
+<dl class="py function">
+  <dt id="py:function:email.message_from_bytes"><code class="sig-name">message_from_bytes(s, _class=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>Return a message object structure from a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>.  This is
+equivalent to <code>BytesParser().parsebytes(s)</code>.  Optional <em>_class</em> and
+<em>policy</em> are interpreted as with the <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesparser"><code class="xref py class docutils literal">BytesParser</code></a> class
+constructor.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Removed the <em>strict</em> argument.  Added the <em>policy</em> keyword.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.message_from_binary_file"><code class="sig-name">message_from_binary_file(fp, _class=None, *, \</code></dt>
+  <dt id="py:function:email.policy=policy.compat32)"><code class="sig-name">policy=policy.compat32)</code></dt>
+  <dd><p>Return a message object structure tree from an open binary <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file
+object</span></a>.  This is equivalent to <code>BytesParser().parse(fp)</code>.  <em>_class</em> and
+<em>policy</em> are interpreted as with the <a class="reference internal" href="email.parser.html#py:class:email.parser.bytesparser"><code class="xref py class docutils literal">BytesParser</code></a> class
+constructor.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Removed the <em>strict</em> argument.  Added the <em>policy</em> keyword.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.message_from_string"><code class="sig-name">message_from_string(s, _class=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>Return a message object structure from a string.  This is equivalent to
+<code>Parser().parsestr(s)</code>.  <em>_class</em> and <em>policy</em> are interpreted as
+with the <a class="reference internal" href="email.parser.html#py:class:email.parser.parser"><code class="xref py class docutils literal">Parser</code></a> class constructor.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Removed the <em>strict</em> argument.  Added the <em>policy</em> keyword.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:email.message_from_file"><code class="sig-name">message_from_file(fp, _class=None, *, policy=policy.compat32)</code></dt>
+  <dd><p>Return a message object structure tree from an open <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a>.
+This is equivalent to <code>Parser().parse(fp)</code>.  <em>_class</em> and <em>policy</em> are
+interpreted as with the <a class="reference internal" href="email.parser.html#py:class:email.parser.parser"><code class="xref py class docutils literal">Parser</code></a> class constructor.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Removed the <em>strict</em> argument.  Added the <em>policy</em> keyword.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6 *_class* defaults to the policy ``message_factory``.:</span></p>
+</div>
+</dd>
+</dl>
+<p>Here's an example of how you might use <a class="reference internal" href="email.parser.html#py:function:email.message_from_bytes"><code class="xref py function docutils literal">message_from_bytes</code></a> at an
+interactive Python prompt:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">email</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">msg</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">email</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">message_from_bytes</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">myBytes</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> doctest: +SKIP</span></span></pre></div>
+<h2 id="additional-notes">Additional notes</h2>
+<p>Here are some notes on the parsing semantics:</p>
+<ul>
+<li><p>Most non-:mimetype:`multipart` type messages are parsed as a single message
+object with a string payload.  These objects will return <code>False</code> for
+<a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.is_multipart"><code class="xref py method docutils literal">is_multipart</code></a>, and
+<a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.iter_parts"><code class="xref py method docutils literal">iter_parts</code></a> will yield an empty list.</p>
+</li>
+<li><p>All :mimetype:`multipart` type messages will be parsed as a container message
+object with a list of sub-message objects for their payload.  The outer
+container message will return <code>True</code> for
+<a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.is_multipart"><code class="xref py method docutils literal">is_multipart</code></a>, and
+<a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.iter_parts"><code class="xref py method docutils literal">iter_parts</code></a> will yield a list of subparts.</p>
+</li>
+<li><p>Most messages with a content type of :mimetype:`message/*` (such as
+:mimetype:`message/delivery-status` and :mimetype:`message/rfc822`) will also
+be parsed as container object containing a list payload of length 1.  Their
+<a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.is_multipart"><code class="xref py method docutils literal">is_multipart</code></a> method will return <code>True</code>.
+The single element yielded by <a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.iter_parts"><code class="xref py method docutils literal">iter_parts</code></a>
+will be a sub-message object.</p>
+</li>
+<li><p>Some non-standards-compliant messages may not be internally consistent about
+their :mimetype:`multipart`-edness.  Such messages may have a
+:mailheader:`Content-Type` header of type :mimetype:`multipart`, but their
+<a class="reference internal" href="email.message.html#py:method:email.message.emailmessage.is_multipart"><code class="xref py method docutils literal">is_multipart</code></a> method may return <code>False</code>.
+If such messages were parsed with the <a class="reference internal" href="email.parser.html#py:class:email.parser.feedparser"><code class="xref py class docutils literal">FeedParser</code></a>,
+they will have an instance of the
+<a class="reference internal" href="email.errors.html#py:exception:email.errors.multipartinvariantviolationdefect"><code class="xref py class docutils literal">MultipartInvariantViolationDefect</code></a> class in their
+<em>defects</em> attribute list.  See <a class="reference internal" href="email.errors.html#py:module:email.errors" title="email.errors: The exception classes used by the email package."><code class="xref py module docutils literal">email.errors</code></a> for details.</p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="email.message.html">&larr; email.message: Representing an email message</a>
+        <a class="next" href="email.generator.html">email.generator: Generating MIME documents &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

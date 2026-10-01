@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>colorsys — Conversions between color systems — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="mm.html">Multimedia Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Multimedia Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="wave.html">wave — Read and write WAV files</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="colorsys.html">colorsys — Conversions between color systems</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="wave.html">&larr; wave — Read and write WAV files</a>
+        <a class="next" href="i18n.html">Internationalization &rarr;</a>
+      </nav>
+      
+      <h1 id="colorsys-conversions-between-color-systems"><code class="xref py module docutils literal">colorsys</code> — Conversions between color systems</h1>
+<dl class="py module">
+  <dt id="py:module:colorsys"><code class="sig-name">colorsys</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: David Ascher &lt;da@python.net&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/colorsys.py`</p>
+<hr />
+<p>The <a class="reference internal" href="colorsys.html#py:module:colorsys" title="colorsys: Conversion functions between RGB and other color systems."><code class="xref py module docutils literal">colorsys</code></a> module defines bidirectional conversions of color values
+between colors expressed in the RGB (Red Green Blue) color space used in
+computer monitors and three other coordinate systems: YIQ, HLS (Hue Lightness
+Saturation) and HSV (Hue Saturation Value).  Coordinates in all of these color
+spaces are floating-point values.  In the YIQ space, the Y coordinate is between
+0 and 1, but the I and Q coordinates can be positive or negative.  In all other
+spaces, the coordinates are all between 0 and 1.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p>More information about color spaces can be found at
+https://poynton.ca/ColorFAQ.html and
+https://www.cambridgeincolour.com/tutorials/color-spaces.htm.</p>
+</div>
+<p>The <a class="reference internal" href="colorsys.html#py:module:colorsys" title="colorsys: Conversion functions between RGB and other color systems."><code class="xref py module docutils literal">colorsys</code></a> module defines the following functions:</p>
+<dl class="py function">
+  <dt id="py:function:colorsys.rgb_to_yiq"><code class="sig-name">rgb_to_yiq(r, g, b)</code></dt>
+  <dd><p>Convert the color from RGB coordinates to YIQ coordinates.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:colorsys.yiq_to_rgb"><code class="sig-name">yiq_to_rgb(y, i, q)</code></dt>
+  <dd><p>Convert the color from YIQ coordinates to RGB coordinates.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:colorsys.rgb_to_hls"><code class="sig-name">rgb_to_hls(r, g, b)</code></dt>
+  <dd><p>Convert the color from RGB coordinates to HLS coordinates.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:colorsys.hls_to_rgb"><code class="sig-name">hls_to_rgb(h, l, s)</code></dt>
+  <dd><p>Convert the color from HLS coordinates to RGB coordinates.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:colorsys.rgb_to_hsv"><code class="sig-name">rgb_to_hsv(r, g, b)</code></dt>
+  <dd><p>Convert the color from RGB coordinates to HSV coordinates.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:colorsys.hsv_to_rgb"><code class="sig-name">hsv_to_rgb(h, s, v)</code></dt>
+  <dd><p>Convert the color from HSV coordinates to RGB coordinates.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">colorsys</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">colorsys</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">rgb_to_hsv</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>4</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>4</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>5</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>5</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>4</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">colorsys</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">hsv_to_rgb</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>5</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>5</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>4</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>2</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>4</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">0<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>4</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="wave.html">&larr; wave — Read and write WAV files</a>
+        <a class="next" href="i18n.html">Internationalization &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

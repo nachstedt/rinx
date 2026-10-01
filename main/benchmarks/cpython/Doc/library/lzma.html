@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>lzma — Compression using the LZMA algorithm — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Data Compression and Archiving"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="compression.html">The compression package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="compression.zstd.html">compression.zstd — Compression compatible with the Zstandard format</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="zlib.html">zlib — Compression compatible with gzip</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="gzip.html">gzip — Support for gzip files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="bz2.html">bz2 — Support for bzip2 compression</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="lzma.html">lzma — Compression using the LZMA algorithm</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle lzma — Compression using the LZMA algorithm"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="lzma.html#reading-and-writing-compressed-files">Reading and writing compressed files</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="lzma.html#compressing-and-decompressing-data-in-memory">Compressing and decompressing data in memory</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="lzma.html#miscellaneous">Miscellaneous</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="lzma.html#specifying-custom-filter-chains">Specifying custom filter chains</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="lzma.html#examples">Examples</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="zipfile.html">zipfile — Work with ZIP archives</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tarfile.html">tarfile — Read and write tar archive files</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="bz2.html">&larr; bz2 — Support for bzip2 compression</a>
+        <a class="next" href="zipfile.html">zipfile — Work with ZIP archives &rarr;</a>
+      </nav>
+      
+      <h1 id="lzma-compression-using-the-lzma-algorithm"><code class="xref py module docutils literal">lzma</code> — Compression using the LZMA algorithm</h1>
+<dl class="py module">
+  <dt id="py:module:lzma"><code class="sig-name">lzma</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Nadeem Vawda &lt;nadeem.vawda@gmail.com&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Nadeem Vawda &lt;nadeem.vawda@gmail.com&gt;</pre>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/lzma.py`</p>
+<hr />
+<p>This module provides classes and convenience functions for compressing and
+decompressing data using the LZMA compression algorithm. Also included is a file
+interface supporting the <code>.xz</code> and legacy <code>.lzma</code> file formats used by the
+<strong class="program">xz</strong> utility, as well as raw compressed streams.</p>
+<p>The interface provided by this module is very similar to that of the <a class="reference internal" href="bz2.html#py:module:bz2" title="bz2: Interfaces for bzip2 compression and decompression."><code class="xref py module docutils literal">bz2</code></a>
+module. Note that <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a> and <a class="reference internal" href="bz2.html#py:class:bz2.bz2file"><code class="xref py class docutils literal">bz2.BZ2File</code></a> are <em>not</em>
+thread-safe, so if you need to use a single <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a> instance
+from multiple threads, it is necessary to protect it with a lock.</p>
+<p>This is an <a class="reference internal" href="../glossary.html#term-optional-module"><span class="xref std std-term">optional module</span></a>.
+If it is missing from your copy of CPython,
+look for documentation from your distributor (that is,
+whoever provided Python to you).
+If you are the distributor, see <a href="../using/configure.html#optional-module-requirements">Requirements for optional modules</a>.</p>
+<dl class="py exception">
+  <dt id="py:exception:lzma.lzmaerror"><em class="property">exception</em> <code class="sig-name">LZMAError</code></dt>
+  <dd><p>This exception is raised when an error occurs during compression or
+decompression, or while initializing the compressor/decompressor state.</p>
+</dd>
+</dl>
+<h2 id="reading-and-writing-compressed-files">Reading and writing compressed files</h2>
+<dl class="py function">
+  <dt id="py:function:lzma.open"><code class="sig-name">open(filename, mode="rb", *, format=None, check=-1, preset=None, filters=None, encoding=None, errors=None, newline=None)</code></dt>
+  <dd><p>Open an LZMA-compressed file in binary or text mode, returning a <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file
+object</span></a>.</p>
+<p>The <em>filename</em> argument can be either an actual file name (given as a
+<a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>, <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> or <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like</span></a> object), in
+which case the named file is opened, or it can be an existing file object
+to read from or write to.</p>
+<p>The <em>mode</em> argument can be any of <code>"r"</code>, <code>"rb"</code>, <code>"w"</code>, <code>"wb"</code>,
+<code>"x"</code>, <code>"xb"</code>, <code>"a"</code> or <code>"ab"</code> for binary mode, or <code>"rt"</code>,
+<code>"wt"</code>, <code>"xt"</code>, or <code>"at"</code> for text mode. The default is <code>"rb"</code>.</p>
+<p>When opening a file for reading, the <em>format</em> and <em>filters</em> arguments have
+the same meanings as for <a class="reference internal" href="lzma.html#py:class:lzma.lzmadecompressor"><code class="xref py class docutils literal">LZMADecompressor</code></a>. In this case, the <em>check</em>
+and <em>preset</em> arguments should not be used.</p>
+<p>When opening a file for writing, the <em>format</em>, <em>check</em>, <em>preset</em> and
+<em>filters</em> arguments have the same meanings as for <a class="reference internal" href="lzma.html#py:class:lzma.lzmacompressor"><code class="xref py class docutils literal">LZMACompressor</code></a>.</p>
+<p>For binary mode, this function is equivalent to the <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a>
+constructor: <code>LZMAFile(filename, mode, ...)</code>. In this case, the <em>encoding</em>,
+<em>errors</em> and <em>newline</em> arguments must not be provided.</p>
+<p>For text mode, a <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a> object is created, and wrapped in an
+<a class="reference internal" href="io.html#py:class:io.textiowrapper"><code class="xref py class docutils literal">io.TextIOWrapper</code></a> instance with the specified encoding, error
+handling behavior, and line ending(s).</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added support for the <code>"x"</code>, <code>"xb"</code> and <code>"xt"</code> modes.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Accepts a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:lzma.lzmafile"><em class="property">class</em> <code class="sig-name">LZMAFile(filename=None, mode="r", *, format=None, check=-1, preset=None, filters=None)</code></dt>
+  <dd><p>Open an LZMA-compressed file in binary mode.</p>
+<p>An <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a> can wrap an already-open <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a>, or operate
+directly on a named file. The <em>filename</em> argument specifies either the file
+object to wrap, or the name of the file to open (as a <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>,
+<a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> or <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like</span></a> object). When wrapping an
+existing file object, the wrapped file will not be closed when the
+<a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a> is closed.</p>
+<p>The <em>mode</em> argument can be either <code>"r"</code> for reading (default), <code>"w"</code> for
+overwriting, <code>"x"</code> for exclusive creation, or <code>"a"</code> for appending. These
+can equivalently be given as <code>"rb"</code>, <code>"wb"</code>, <code>"xb"</code> and <code>"ab"</code>
+respectively.</p>
+<p>If <em>filename</em> is a file object (rather than an actual file name), a mode of
+<code>"w"</code> does not truncate the file, and is instead equivalent to <code>"a"</code>.</p>
+<p>When opening a file for reading, the input file may be the concatenation of
+multiple separate compressed streams. These are transparently decoded as a
+single logical stream.</p>
+<p>When opening a file for reading, the <em>format</em> and <em>filters</em> arguments have
+the same meanings as for <a class="reference internal" href="lzma.html#py:class:lzma.lzmadecompressor"><code class="xref py class docutils literal">LZMADecompressor</code></a>. In this case, the <em>check</em>
+and <em>preset</em> arguments should not be used.</p>
+<p>When opening a file for writing, the <em>format</em>, <em>check</em>, <em>preset</em> and
+<em>filters</em> arguments have the same meanings as for <a class="reference internal" href="lzma.html#py:class:lzma.lzmacompressor"><code class="xref py class docutils literal">LZMACompressor</code></a>.</p>
+<p><a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a> supports all the members specified by
+<a class="reference internal" href="io.html#py:class:io.bufferediobase"><code class="xref py class docutils literal">io.BufferedIOBase</code></a>, except for <a class="reference internal" href="io.html#py:method:io.bufferediobase.detach"><code class="xref py method docutils literal">detach</code></a>
+and <a class="reference internal" href="io.html#py:method:io.iobase.truncate"><code class="xref py method docutils literal">truncate</code></a>.
+Iteration and the :keyword:`with` statement are supported.</p>
+<p>The following method and attributes are also provided:</p>
+<dl class="py method">
+  <dt id="py:method:lzma.lzmafile.peek"><code class="sig-name">peek(size=-1)</code></dt>
+  <dd><p>Return buffered data without advancing the file position. At least one
+byte of data will be returned, unless EOF has been reached. The exact
+number of bytes returned is unspecified (the <em>size</em> argument is ignored).</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>the <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a>, it may change the position of the underlying
+file object (e.g. if the <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a> was constructed by passing a
+file object for <em>filename</em>).</p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:lzma.lzmafile.mode"><code class="sig-name">mode</code></dt>
+  <dd><p><code>'rb'</code> for reading and <code>'wb'</code> for writing.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:lzma.lzmafile.name"><code class="sig-name">name</code></dt>
+  <dd><p>The lzma file name.  Equivalent to the <a class="reference internal" href="io.html#py:attribute:io.fileio.name"><code class="xref py attribute docutils literal">name</code></a>
+attribute of the underlying <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Added support for the <code>"x"</code> and <code>"xb"</code> modes.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>The <a class="reference internal" href="io.html#py:method:io.bufferediobase.read"><code class="xref py method docutils literal">read</code></a> method now accepts an argument of
+<code>None</code>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Accepts a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
+</div>
+</dd>
+</dl>
+<h2 id="compressing-and-decompressing-data-in-memory">Compressing and decompressing data in memory</h2>
+<dl class="py class">
+  <dt id="py:class:lzma.lzmacompressor"><em class="property">class</em> <code class="sig-name">LZMACompressor(format=FORMAT_XZ, check=-1, preset=None, filters=None)</code></dt>
+  <dd><p>Create a compressor object, which can be used to compress data incrementally.</p>
+<p>For a more convenient way of compressing a single chunk of data, see
+<a class="reference internal" href="lzma.html#py:function:lzma.compress"><code class="xref py function docutils literal">compress</code></a>.</p>
+<p>The <em>format</em> argument specifies what container format should be used.
+Possible values are:</p>
+<ul>
+<li><dl>
+<dt><a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_XZ</code></a>: The <code>.xz</code> container format.</dt>
+<dd><p>This is the default format.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_ALONE</code></a>: The legacy <code>.lzma</code> container format.</dt>
+<dd><p>This format is more limited than <code>.xz</code> – it does not support integrity
+checks or multiple filters.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_RAW</code></a>: A raw data stream, not using any container format.</dt>
+<dd><p>This format specifier does not support integrity checks, and requires that
+you always specify a custom filter chain (for both compression and
+decompression). Additionally, data compressed in this manner cannot be
+decompressed using <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_AUTO</code></a> (see <a class="reference internal" href="lzma.html#py:class:lzma.lzmadecompressor"><code class="xref py class docutils literal">LZMADecompressor</code></a>).</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The <em>check</em> argument specifies the type of integrity check to include in the
+compressed data. This check is used when decompressing, to ensure that the
+data has not been corrupted. Possible values are:</p>
+<ul>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_NONE</code></a>: No integrity check.
+This is the default (and the only acceptable value) for
+<a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_ALONE</code></a> and <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_RAW</code></a>.</p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_CRC32</code></a>: 32-bit Cyclic Redundancy Check.</p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_CRC64</code></a>: 64-bit Cyclic Redundancy Check.
+This is the default for <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_XZ</code></a>.</p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_SHA256</code></a>: 256-bit Secure Hash Algorithm.</p>
+</li>
+</ul>
+<p>If the specified check is not supported, an <a class="reference internal" href="lzma.html#py:exception:lzma.lzmaerror"><code class="xref py class docutils literal">LZMAError</code></a> is raised.</p>
+<p>The compression settings can be specified either as a preset compression
+level (with the <em>preset</em> argument), or in detail as a custom filter chain
+(with the <em>filters</em> argument).</p>
+<p>The <em>preset</em> argument (if provided) should be an integer between <code>0</code> and
+<code>9</code> (inclusive), optionally OR-ed with the constant
+<a href="#" class="broken-link"><code class="xref py data docutils literal">PRESET_EXTREME</code></a>. If neither <em>preset</em> nor <em>filters</em> are given, the
+default behavior is to use <a href="#" class="broken-link"><code class="xref py data docutils literal">PRESET_DEFAULT</code></a> (preset level <code>6</code>).
+Higher presets produce smaller output, but make the compression process
+slower.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>In addition to being more CPU-intensive, compression with higher presets
+also requires much more memory (and produces output that needs more memory
+to decompress). With preset <code>9</code> for example, the overhead for an
+<a class="reference internal" href="lzma.html#py:class:lzma.lzmacompressor"><code class="xref py class docutils literal">LZMACompressor</code></a> object can be as high as 800 MiB. For this reason,
+it is generally best to stick with the default preset.</p>
+</div>
+<p>The <em>filters</em> argument (if provided) should be a filter chain specifier.
+See <a href="lzma.html#filter-chain-specs">Specifying custom filter chains</a> for details.</p>
+<dl class="py method">
+  <dt id="py:method:lzma.lzmacompressor.compress"><code class="sig-name">compress(data)</code></dt>
+  <dd><p>Compress <em>data</em> (a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object), returning a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>
+object containing compressed data for at least part of the input. Some of
+<em>data</em> may be buffered internally, for use in later calls to
+<a class="reference internal" href="lzma.html#py:method:lzma.lzmacompressor.compress"><code class="xref py method docutils literal">compress</code></a> and <a class="reference internal" href="lzma.html#py:method:lzma.lzmacompressor.flush"><code class="xref py method docutils literal">flush</code></a>. The returned data should be
+concatenated with the output of any previous calls to <a class="reference internal" href="lzma.html#py:method:lzma.lzmacompressor.compress"><code class="xref py method docutils literal">compress</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:lzma.lzmacompressor.flush"><code class="sig-name">flush()</code></dt>
+  <dd><p>Finish the compression process, returning a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object
+containing any data stored in the compressor's internal buffers.</p>
+<p>The compressor cannot be used after this method has been called.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:lzma.lzmadecompressor"><em class="property">class</em> <code class="sig-name">LZMADecompressor(format=FORMAT_AUTO, memlimit=None, filters=None)</code></dt>
+  <dd><p>Create a decompressor object, which can be used to decompress data
+incrementally.</p>
+<p>For a more convenient way of decompressing an entire compressed stream at
+once, see <a class="reference internal" href="lzma.html#py:function:lzma.decompress"><code class="xref py function docutils literal">decompress</code></a>.</p>
+<p>The <em>format</em> argument specifies the container format that should be used. The
+default is <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_AUTO</code></a>, which can decompress both <code>.xz</code> and
+<code>.lzma</code> files. Other possible values are <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_XZ</code></a>,
+<a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_ALONE</code></a>, and <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_RAW</code></a>.</p>
+<p>The <em>memlimit</em> argument specifies a limit (in bytes) on the amount of memory
+that the decompressor can use. When this argument is used, decompression will
+fail with an <a class="reference internal" href="lzma.html#py:exception:lzma.lzmaerror"><code class="xref py class docutils literal">LZMAError</code></a> if it is not possible to decompress the input
+within the given memory limit.</p>
+<p>The <em>filters</em> argument specifies the filter chain that was used to create
+the stream being decompressed. This argument is required if <em>format</em> is
+<a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_RAW</code></a>, but should not be used for other formats.
+See <a href="lzma.html#filter-chain-specs">Specifying custom filter chains</a> for more information about filter chains.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>This class does not transparently handle inputs containing multiple
+compressed streams, unlike <a class="reference internal" href="lzma.html#py:function:lzma.decompress"><code class="xref py function docutils literal">decompress</code></a> and <a class="reference internal" href="lzma.html#py:class:lzma.lzmafile"><code class="xref py class docutils literal">LZMAFile</code></a>. To
+decompress a multi-stream input with <a class="reference internal" href="lzma.html#py:class:lzma.lzmadecompressor"><code class="xref py class docutils literal">LZMADecompressor</code></a>, you must
+create a new decompressor for each stream.</p>
+</div>
+<dl class="py method">
+  <dt id="py:method:lzma.lzmadecompressor.decompress"><code class="sig-name">decompress(data, max_length=-1)</code></dt>
+  <dd><p>Decompress <em>data</em> (a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>), returning
+uncompressed data as bytes. Some of <em>data</em> may be buffered
+internally, for use in later calls to <a class="reference internal" href="lzma.html#py:method:lzma.lzmadecompressor.decompress"><code class="xref py method docutils literal">decompress</code></a>. The
+returned data should be concatenated with the output of any
+previous calls to <a class="reference internal" href="lzma.html#py:method:lzma.lzmadecompressor.decompress"><code class="xref py method docutils literal">decompress</code></a>.</p>
+<p>If <em>max_length</em> is nonnegative, returns at most <em>max_length</em>
+bytes of decompressed data. If this limit is reached and further
+output can be produced, the <a class="reference internal" href="lzma.html#py:attribute:lzma.lzmadecompressor.needs_input"><code class="xref py attribute docutils literal">needs_input</code></a> attribute will
+be set to <code>False</code>. In this case, the next call to
+<a class="reference internal" href="lzma.html#py:method:lzma.lzmadecompressor.decompress"><code class="xref py method docutils literal">decompress</code></a> may provide <em>data</em> as <code>b''</code> to obtain
+more of the output.</p>
+<p>If all of the input data was decompressed and returned (either
+because this was less than <em>max_length</em> bytes, or because
+<em>max_length</em> was negative), the <a class="reference internal" href="lzma.html#py:attribute:lzma.lzmadecompressor.needs_input"><code class="xref py attribute docutils literal">needs_input</code></a> attribute
+will be set to <code>True</code>.</p>
+<p>Attempting to decompress data after the end of stream is reached
+raises an <a class="reference internal" href="exceptions.html#py:exception:eoferror"><code class="xref py exception docutils literal">EOFError</code></a>.  Any data found after the end of the
+stream is ignored and saved in the <a class="reference internal" href="lzma.html#py:attribute:lzma.lzmadecompressor.unused_data"><code class="xref py attribute docutils literal">unused_data</code></a> attribute.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added the <em>max_length</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:lzma.lzmadecompressor.check"><code class="sig-name">check</code></dt>
+  <dd><p>The ID of the integrity check used by the input stream. This may be
+<a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_UNKNOWN</code></a> until enough of the input has been decoded to
+determine what integrity check it uses.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:lzma.lzmadecompressor.eof"><code class="sig-name">eof</code></dt>
+  <dd><p><code>True</code> if the end-of-stream marker has been reached.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:lzma.lzmadecompressor.unused_data"><code class="sig-name">unused_data</code></dt>
+  <dd><p>Data found after the end of the compressed stream.</p>
+<p>Before the end of the stream is reached, this will be <code>b""</code>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:lzma.lzmadecompressor.needs_input"><code class="sig-name">needs_input</code></dt>
+  <dd><p><code>False</code> if the <a class="reference internal" href="lzma.html#py:method:lzma.lzmadecompressor.decompress"><code class="xref py method docutils literal">decompress</code></a> method can provide more
+decompressed data before requiring new uncompressed input.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:lzma.compress"><code class="sig-name">compress(data, format=FORMAT_XZ, check=-1, preset=None, filters=None)</code></dt>
+  <dd><p>Compress <em>data</em> (a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object), returning the compressed data as a
+<a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object.</p>
+<p>See <a class="reference internal" href="lzma.html#py:class:lzma.lzmacompressor"><code class="xref py class docutils literal">LZMACompressor</code></a> above for a description of the <em>format</em>, <em>check</em>,
+<em>preset</em> and <em>filters</em> arguments.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:lzma.decompress"><code class="sig-name">decompress(data, format=FORMAT_AUTO, memlimit=None, filters=None)</code></dt>
+  <dd><p>Decompress <em>data</em> (a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object), returning the uncompressed data
+as a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object.</p>
+<p>If <em>data</em> is the concatenation of multiple distinct compressed streams,
+decompress all of these streams, and return the concatenation of the results.</p>
+<p>See <a class="reference internal" href="lzma.html#py:class:lzma.lzmadecompressor"><code class="xref py class docutils literal">LZMADecompressor</code></a> above for a description of the <em>format</em>,
+<em>memlimit</em> and <em>filters</em> arguments.</p>
+</dd>
+</dl>
+<h2 id="miscellaneous">Miscellaneous</h2>
+<dl class="py function">
+  <dt id="py:function:lzma.is_check_supported"><code class="sig-name">is_check_supported(check)</code></dt>
+  <dd><p>Return <code>True</code> if the given integrity check is supported on this system.</p>
+<p><a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_NONE</code></a> and <a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_CRC32</code></a> are always supported.
+<a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_CRC64</code></a> and <a href="#" class="broken-link"><code class="xref py data docutils literal">CHECK_SHA256</code></a> may be unavailable if you are
+using a version of <strong class="program">liblzma</strong> that was compiled with a limited
+feature set.</p>
+</dd>
+</dl>
+<a id="filter-chain-specs"></a>
+<h2 id="specifying-custom-filter-chains">Specifying custom filter chains</h2>
+<p>A filter chain specifier is a sequence of dictionaries, where each dictionary
+contains the ID and options for a single filter. Each dictionary must contain
+the key <code>"id"</code>, and may contain additional keys to specify filter-dependent
+options. Valid filter IDs are as follows:</p>
+<ul>
+<li><p>Compression filters:</p>
+<ul>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_LZMA1</code></a> (for use with <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_ALONE</code></a>)</p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_LZMA2</code></a> (for use with <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_XZ</code></a> and <a href="#" class="broken-link"><code class="xref py data docutils literal">FORMAT_RAW</code></a>)</p>
+</li>
+</ul>
+</li>
+<li><p>Delta filter:</p>
+<ul>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_DELTA</code></a></p>
+</li>
+</ul>
+</li>
+<li><p>Branch-Call-Jump (BCJ) filters:</p>
+<ul>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_X86</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_IA64</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_ARM</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_ARMTHUMB</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_POWERPC</code></a></p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py data docutils literal">FILTER_SPARC</code></a></p>
+</li>
+</ul>
+</li>
+</ul>
+<p>A filter chain can consist of up to 4 filters, and cannot be empty. The last
+filter in the chain must be a compression filter, and any other filters must be
+delta or BCJ filters.</p>
+<p>Compression filters support the following options (specified as additional
+entries in the dictionary representing the filter):</p>
+<ul>
+<li><p><code>preset</code>: A compression preset to use as a source of default values for
+options that are not specified explicitly.</p>
+</li>
+<li><p><code>dict_size</code>: Dictionary size in bytes. This should be between 4 KiB and
+1.5 GiB (inclusive).</p>
+</li>
+<li><p><code>lc</code>: Number of literal context bits.</p>
+</li>
+<li><p><code>lp</code>: Number of literal position bits. The sum <code>lc + lp</code> must be at
+most 4.</p>
+</li>
+<li><p><code>pb</code>: Number of position bits; must be at most 4.</p>
+</li>
+<li><p><code>mode</code>: <a href="#" class="broken-link"><code class="xref py data docutils literal">MODE_FAST</code></a> or <a href="#" class="broken-link"><code class="xref py data docutils literal">MODE_NORMAL</code></a>.</p>
+</li>
+<li><p><code>nice_len</code>: What should be considered a "nice length" for a match.
+This should be 273 or less.</p>
+</li>
+<li><p><code>mf</code>: What match finder to use – <a href="#" class="broken-link"><code class="xref py data docutils literal">MF_HC3</code></a>, <a href="#" class="broken-link"><code class="xref py data docutils literal">MF_HC4</code></a>,
+<a href="#" class="broken-link"><code class="xref py data docutils literal">MF_BT2</code></a>, <a href="#" class="broken-link"><code class="xref py data docutils literal">MF_BT3</code></a>, or <a href="#" class="broken-link"><code class="xref py data docutils literal">MF_BT4</code></a>.</p>
+</li>
+<li><p><code>depth</code>: Maximum search depth used by match finder. 0 (default) means to
+select automatically based on other filter options.</p>
+</li>
+</ul>
+<p>The delta filter stores the differences between bytes, producing more repetitive
+input for the compressor in certain circumstances. It supports one option,
+<code>dist</code>. This indicates the distance between bytes to be subtracted. The
+default is 1, i.e. take the differences between adjacent bytes.</p>
+<p>The BCJ filters are intended to be applied to machine code. They convert
+relative branches, calls and jumps in the code to use absolute addressing, with
+the aim of increasing the redundancy that can be exploited by the compressor.
+These filters support one option, <code>start_offset</code>. This specifies the address
+that should be mapped to the beginning of the input data. The default is 0.</p>
+<h2 id="examples">Examples</h2>
+<p>Reading in a compressed file:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">file.xz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">file_content</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">read</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Creating a compressed file:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Insert Data Here<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">file.xz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">w<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Compressing data in memory:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data_in</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Insert Data Here<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data_out</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">compress</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data_in</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Incremental compression:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">LZMACompressor</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out1</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzc</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">compress</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Some data<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out2</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzc</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">compress</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Another piece of data<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out3</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzc</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">compress</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Even more data<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out4</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzc</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">flush</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Concatenate all the partial results:
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">result</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">join</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out1</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out2</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out3</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out4</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Writing compressed data to an already-open file:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">file.xz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">wb<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">This data will not be compressed<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">w<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">lzf</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzf</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">This *will* be compressed<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Not compressed<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Creating a compressed file using a custom filter chain:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">my_filters</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python">    <span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">id<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">FILTER_DELTA</span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">dist<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python">    <span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">id<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">FILTER_LZMA2</span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">preset<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">7</span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">PRESET_EXTREME</span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lzma</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">file.xz<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">w<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">filters</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">my_filters</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">blah blah blah<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="bz2.html">&larr; bz2 — Support for bzip2 compression</a>
+        <a class="next" href="zipfile.html">zipfile — Work with ZIP archives &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

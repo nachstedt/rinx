@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supported syntax — rinx</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">rinx</h2>
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li>
+            <a href="getting_started.html">Getting started</a>
+            
+            <ul>
+              
+          <li>
+            <a href="getting_started.html#adding-rinx-to-a-project">Adding rinx to a project</a>
+            
+          </li>
+        
+          <li>
+            <a href="getting_started.html#a-first-site">A first site</a>
+            
+          </li>
+        
+          <li>
+            <a href="getting_started.html#building-and-viewing-it">Building and viewing it</a>
+            
+          </li>
+        
+          <li>
+            <a href="getting_started.html#where-to-go-next">Where to go next</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="rules.html">Bazel rules</a>
+            
+            <ul>
+              
+          <li>
+            <a href="rules.html#rinx-library">rinx_library</a>
+            
+          </li>
+        
+          <li>
+            <a href="rules.html#rinx-site">rinx_site</a>
+            
+          </li>
+        
+          <li>
+            <a href="rules.html#rinx-inventory">rinx_inventory</a>
+            
+          </li>
+        
+          <li>
+            <a href="rules.html#rinx-doctest-tests">rinx_doctest_tests</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li class="current">
+            <a href="syntax.html">Supported syntax</a>
+            
+            <ul>
+              
+          <li>
+            <a href="syntax.html#restructuredtext">reStructuredText</a>
+            
+          </li>
+        
+          <li>
+            <a href="syntax.html#sphinx">Sphinx</a>
+            
+          </li>
+        
+          <li>
+            <a href="syntax.html#extensions">Extensions</a>
+            
+          </li>
+        
+          <li>
+            <a href="syntax.html#diagnostics">Diagnostics</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html">Entities</a>
+            
+            <ul>
+              
+          <li>
+            <a href="entities.html#the-four-kinds-of-declaration">The four kinds of declaration</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#declaring-a-type">Declaring a type</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#identity">Identity</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#cardinality">Cardinality</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#sections">Sections</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#relations-and-back-links">Relations and back-links</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#roles">Roles</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#presentation">Presentation</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#build-wiring">Build wiring</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#editor-support-for-the-schema-file">Editor support for the schema file</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#listing-entities">Listing entities</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#flowcharts-of-the-graph">Flowcharts of the graph</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#sequence-diagrams-of-the-graph">Sequence diagrams of the graph</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#charting-the-graph">Charting the graph</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#diagramming-entities">Diagramming entities</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#migrating-from-sphinx-needs">Migrating from sphinx-needs</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#importing-from-sphinx-needs">Importing from sphinx-needs</a>
+            
+          </li>
+        
+          <li>
+            <a href="entities.html#diagnostics">Diagnostics</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html">Linking between documentation sites</a>
+            
+            <ul>
+              
+          <li>
+            <a href="intersphinx.html#linking-into-another-site">Linking into another site</a>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html#writing-references">Writing references</a>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html#letting-other-sites-link-into-yours">Letting other sites link into yours</a>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html#what-the-inventory-lists">What the inventory lists</a>
+            
+          </li>
+        
+          <li>
+            <a href="intersphinx.html#live-preview">Live preview</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html">VS Code Extension Architecture for Rinx</a>
+            
+            <ul>
+              
+          <li>
+            <a href="vscode.html#core-philosophy">Core Philosophy</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#architecture-overview">Architecture Overview</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#caveats-required-changes">Caveats &amp; Required Changes</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#benefits">Benefits</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#future-enhancements">Future Enhancements</a>
+            
+          </li>
+        
+          <li>
+            <a href="vscode.html#development-and-local-testing">Development and Local Testing</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+          <li>
+            <a href="benchmark.html">Benchmarking Rinx</a>
+            
+            <ul>
+              
+          <li>
+            <a href="benchmark.html#benchmarking-rinx">Benchmarking Rinx</a>
+            
+          </li>
+        
+          <li>
+            <a href="benchmark.html#the-cpython-benchmark">The CPython benchmark</a>
+            
+          </li>
+        
+          <li>
+            <a href="benchmark.html#benchmarking-the-entity-model">Benchmarking the entity model</a>
+            
+          </li>
+        
+            </ul>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="rules.html">&larr; Bazel rules</a>
+        <a class="next" href="entities.html">Entities &rarr;</a>
+      </nav>
+      
+      <a id="syntax"></a>
+<h1 id="supported-syntax">Supported syntax</h1>
+<p>rinx implements the parts of reStructuredText and Sphinx that documentation
+projects use most, and grows from there. This page is an overview. The
+authoritative list, with notes on every partial feature, is <a href="https://github.com/nachstedt/rinx/blob/main/docs/dev/spec_gaps.md">spec_gaps.md</a> in the
+repository. The <a href="../example-site/examples/index.html">example site</a> shows each construct
+rendered.</p>
+<p>A construct rinx does not know is never dropped silently. An unknown directive
+is reported as a warning and drawn as a visible error block quoting its source.</p>
+<h2 id="restructuredtext">reStructuredText</h2>
+<p>Supported:</p>
+<ul>
+<li><p>Sections (underlined and overlined headings), paragraphs, transitions and
+comments.</p>
+</li>
+<li><p>Inline markup: emphasis, strong, inline literals, hyperlinks (named and
+anonymous), backslash escapes, and smart quotes and dashes.</p>
+</li>
+<li><p>Bullet, enumerated, definition and option lists, line blocks, block quotes,
+literal blocks and doctest blocks.</p>
+</li>
+<li><p>Grid and simple tables, <code>.. table::</code>, <code>.. list-table::</code> and
+<code>.. csv-table::</code> (the last including <code>:file:</code>).</p>
+</li>
+<li><p>Substitutions, <code>.. include::</code>, <code>.. image::</code>, <code>.. figure::</code>,
+<code>.. contents::</code> and <code>.. sectnum::</code>.</p>
+</li>
+</ul>
+<p>Not yet supported: footnotes and citations, field lists beyond a document's
+leading <code>:orphan:</code>, <code>.. raw::</code>, <code>.. class::</code>, <code>.. role::</code>,
+<code>.. topic::</code>, <code>.. sidebar::</code>, <code>.. rubric::</code> and
+<code>.. parsed-literal::</code>.</p>
+<h2 id="sphinx">Sphinx</h2>
+<p>Supported:</p>
+<ul>
+<li><p><code>.. toctree::</code> (including <code>:glob:</code>, <code>:numbered:</code>, <code>:maxdepth:</code> and
+<code>:hidden:</code>), with navigation, previous/next links and the general index.</p>
+</li>
+<li><p>The <code>:ref:</code>, <code>:term:</code> and <code>:program:</code> roles, and <code>:math:</code> and
+<code>:eq:</code>.</p>
+</li>
+<li><p>Admonitions, <code>.. seealso::</code>, <code>.. versionadded::</code>,
+<code>.. versionchanged::</code> and <code>.. deprecated::</code>.</p>
+</li>
+<li><p><code>.. code-block::</code>, <code>.. highlight::</code> and <code>.. literalinclude::</code>, all
+highlighted at build time.</p>
+</li>
+<li><p><code>.. math::</code>, rendered to MathML at build time.</p>
+</li>
+<li><p><code>.. glossary::</code> and <code>.. index::</code>.</p>
+</li>
+<li><p>The doctest directives of <code>sphinx.ext.doctest</code>, executed by
+<code>bazel test</code> (see <a href="rules.html#rules">Bazel rules</a>).</p>
+</li>
+<li><p>The Python domain (<code>py:function</code>, <code>py:class</code>, <code>py:method</code>,
+<code>py:module</code>, … and their roles), the C domain (<code>c:function</code>,
+<code>c:struct</code>, <code>c:macro</code>, …) and the standard domain's <code>.. program::</code> and
+<code>.. option::</code>.</p>
+</li>
+<li><p>Linking to other sites through their <code>objects.inv</code>, and writing one; see
+<a href="intersphinx.html#intersphinx">Linking between documentation sites</a>.</p>
+</li>
+</ul>
+<p>Not yet supported: the <code>:doc:</code>, <code>:numref:</code>, <code>:any:</code>, <code>:download:</code>
+and <code>:code:</code> roles, autodoc, <code>.. only::</code>, and the <code>:envvar:</code> and
+<code>:confval:</code> objects.</p>
+<h2 id="extensions">Extensions</h2>
+<p>These directives come from popular Sphinx extensions and are always
+available. rinx has no <code>extensions =</code> setting.</p>
+<ul>
+<li><p><strong>sphinx-design:</strong> <code>.. dropdown::</code>, <code>.. grid::</code> and
+<code>.. button-link::</code>.</p>
+</li>
+<li><p><strong>sphinx-needs:</strong> project-defined entities with <code>needtable</code>,
+<code>needflow</code>, <code>needsequence</code>, <code>needpie</code>, <code>needbar</code>, <code>needimport</code> and
+<code>needextend</code>, under their own names and rinx's. See <a href="entities.html#entities">Entities</a>.</p>
+</li>
+<li><p><strong>sphinxcontrib-plantuml:</strong> <code>.. uml::</code> and <code>.. plantuml::</code>, with
+<code>diagrams = True</code> on the library.</p>
+</li>
+<li><p><strong>sphinx-simplepdf:</strong> <code>.. if-builder::</code>.</p>
+</li>
+<li><p>Jinja-templated sources, which a Sphinx project gets from a <code>source-read</code>
+hook, with <code>jinja = True</code> on the library.</p>
+</li>
+</ul>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>Every warning names its file, line and column, and carries a stable code such
+as <code>link.broken-ref</code>. A <code>.. noqa: &lt;code&gt;</code> comment silences the codes it
+names for the block that follows it.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="rules.html">&larr; Bazel rules</a>
+        <a class="next" href="entities.html">Entities &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
