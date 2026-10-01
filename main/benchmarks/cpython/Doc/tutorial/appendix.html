@@ -298,8 +298,8 @@ in the script:</p>
 <span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">exec</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">startup_file</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <a id="tut-customize"></a>
 <h3 id="the-customization-modules"><span class="section-number">16.1.4. </span>The Customization Modules</h3>
-<p>Python provides two hooks to let you customize it: :index:`sitecustomize` and
-:index:`usercustomize`.  To see how it works, you need first to find the location
+<p>Python provides two hooks to let you customize it: <span class="target" id="index-0"></span>sitecustomize and
+<span class="target" id="index-1"></span>usercustomize.  To see how it works, you need first to find the location
 of your user site-packages directory.  Start Python and run this code:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">site</span></span></span></span>
@@ -308,9 +308,9 @@ of your user site-packages directory.  Start Python and run this code:</p>
 <p>Now you can create a file named :file:`usercustomize.py` in that directory and
 put anything you want in it.  It will affect every invocation of Python, unless
 it is started with the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-s"><code class="xref std cmdoption docutils literal">-s</code></a> option to disable the automatic import.</p>
-<p>:index:`sitecustomize` works in the same way, but is typically created by an
+<p><span class="target" id="index-2"></span>sitecustomize works in the same way, but is typically created by an
 administrator of the computer in the global site-packages directory, and is
-imported before :index:`usercustomize`.  See the documentation of the <a class="reference internal" href="../library/site.html#py:module:site" title="site: Module responsible for site-specific configuration."><code class="xref py module docutils literal">site</code></a>
+imported before <span class="target" id="index-3"></span>usercustomize.  See the documentation of the <a class="reference internal" href="../library/site.html#py:module:site" title="site: Module responsible for site-specific configuration."><code class="xref py module docutils literal">site</code></a>
 module for more details.</p>
 <div class="directive-error">
 <p class="directive-error-message">unknown directive type 'rubric'</p>

@@ -223,7 +223,17 @@ highlighted at build time.</p>
 </li>
 <li><p><code>.. math::</code>, rendered to MathML at build time.</p>
 </li>
-<li><p><code>.. glossary::</code> and <code>.. index::</code>.</p>
+<li><p><code>.. glossary::</code> and <code>.. index::</code>, whose <code>see:</code> and <code>seealso:</code>
+entries the general index lists as an unlinked "see …" or "see also …"
+under their term.</p>
+</li>
+<li><p>The <code>:index:</code> role, which indexes the place it is written and shows its
+text there: <code>:index:`interpreter`</code> is one <code>single</code> entry — commas
+included, and with <code>;</code> nesting a subentry — and a leading <code>!</code> marks it
+main without being shown. With an explicit title the target is one
+<code>.. index::</code> line, as in <code>:index:`loops &lt;pair: loop; statement&gt;`</code>. An
+entry its type cannot split is reported under the role's own codes, such as
+<code>index-role.invalid-pair</code>, and its text is still shown.</p>
 </li>
 <li><p>The doctest directives of <code>sphinx.ext.doctest</code>, executed by
 <code>bazel test</code> (see <a href="rules.html#rules">Bazel rules</a>).</p>

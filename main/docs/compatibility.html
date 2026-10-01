@@ -585,9 +585,24 @@ recognized.</p>
 <tr>
 <td><p><code>:index:</code> role</p>
 </td>
-<td><p>❌</p>
+<td><p>✅ ℹ️</p>
 </td>
-<td></td>
+<td><ul>
+<li><p>Its index anchor is numbered after the document's <code>.. index::</code>
+anchors, in document order among the registry roles' anchors, as
+for <code>:pep:</code>.</p>
+</li>
+<li><p>An entry its type cannot split is reported as
+<code>index-role.invalid-single</code>, <code>index-role.invalid-pair</code>,
+<code>index-role.invalid-triple</code>, <code>index-role.invalid-see</code> or
+<code>index-role.invalid-seealso</code> while parsing, and makes no entry;
+Sphinx warns only while building the index. The text is shown in
+both.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:Index:</code> is not recognized.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>:sub:</code>/<code>:subscript:</code> and <code>:sup:</code>/<code>:superscript:</code> roles</p>
@@ -848,13 +863,9 @@ is interpreted.</p>
 <tr>
 <td><p><code>.. index::</code> <code>see</code>/<code>seealso</code> entries</p>
 </td>
-<td><p>🔶</p>
+<td><p>✅</p>
 </td>
-<td><ul>
-<li><p>Not shown in the general index.</p>
-</li>
-</ul>
-</td>
+<td></td>
 </tr>
 <tr>
 <td><p>Admonitions (<code>.. note::</code>, <code>.. warning::</code>, …,
