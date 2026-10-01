@@ -119,9 +119,11 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         // left. A refusal's own fields were unescaped before it was refused.
         | InlineNode::NumberReference { target: text, .. }
         | InlineNode::RefusedRole { text, .. } => *text = unescape(text),
-        // The target was unescaped before it was parsed as a number (see
-        // `roles::pep`), so only the title is left.
-        InlineNode::PepReference { display, .. } => *display = display.as_deref().map(unescape),
+        // The target was unescaped before it was parsed (see
+        // `roles::registry`), so only the title is left.
+        InlineNode::RegistryReference { display, .. } => {
+            *display = display.as_deref().map(unescape);
+        }
         InlineNode::Reference {
             display, target, ..
         }
@@ -179,12 +181,15 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         // cross-reference target.
         InlineNode::EquationReference { label: name, .. }
         | InlineNode::SubstitutionReference { name, .. } => *name = unescape(name),
-        // A `:pep-reference:`'s number was unescaped before it was parsed
-        // (see `roles::pep_reference`), and it is all the node holds. An
-        // inline image is never produced by the inline scan itself — only by
-        // the whole-document substitution resolver splicing an already-built
-        // node in after this function has already run on it once.
-        InlineNode::DocutilsPepReference { .. } | InlineNode::InlineImage(_) => {}
+        // A `:pep-reference:`'s or `:rfc-reference:`'s number was unescaped
+        // before it was parsed (see `roles::pep_reference`), and it is all
+        // the node holds. An inline image is never produced by the inline
+        // scan itself — only by the whole-document substitution resolver
+        // splicing an already-built node in after this function has already
+        // run on it once.
+        InlineNode::DocutilsPepReference { .. }
+        | InlineNode::DocutilsRfcReference { .. }
+        | InlineNode::InlineImage(_) => {}
     }
     node
 }

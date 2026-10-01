@@ -59,7 +59,7 @@ pub fn analyze(doc: &Document) -> ProjectIndex {
     }
 
     index_nodes(&doc.nodes, &doc.path, &mut index, &mut Scope::default());
-    index_pep_references(&doc.nodes, &doc.path, &mut index);
+    index_registry_references(&doc.nodes, &doc.path, &mut index);
     let numbering = collect_numbering(doc);
     if !numbering.steps.is_empty() {
         index
@@ -102,23 +102,25 @@ fn index_genindex_entries(
     }
 }
 
-/// Records the general-index entry every `:pep:` role in `nodes` makes —
-/// Sphinx's `single: Python Enhancement Proposals; PEP <target>`, the target
-/// as written, fragment included — linking to the anchor the parser minted.
+/// Records the general-index entry every registry role in `nodes` makes —
+/// Sphinx's `single: <group>; <text>`, filed under the registry's group
+/// (`Python Enhancement Proposals`, `RFC`, …) with the text the link shows
+/// without a title, fragment included — linking to the anchor the parser
+/// minted.
 ///
 /// Walks with the inline walker the parser numbered the anchors with, rather
 /// than [`index_nodes`], so an entry exists for exactly the roles that have
 /// an anchor.
-fn index_pep_references(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
+fn index_registry_references(nodes: &[Node], doc_path: &str, index: &mut ProjectIndex) {
     for_each_inline_list(nodes, &mut |list| {
         for node in list {
-            if let InlineNode::PepReference {
+            if let InlineNode::RegistryReference {
                 target, index_id, ..
             } = node
             {
                 index.genindex_entries.push(GenIndexEntry {
-                    primary: "Python Enhancement Proposals".to_string(),
-                    subentry: Some(format!("PEP {}", target.as_written())),
+                    primary: target.registry().index_group().to_string(),
+                    subentry: Some(target.display_text()),
                     main: false,
                     doc_path: doc_path.to_string(),
                     anchor: index_id.clone(),

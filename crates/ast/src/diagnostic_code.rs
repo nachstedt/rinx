@@ -126,6 +126,28 @@ diagnostic_codes! {
     /// shown as its source text.
     PepReferenceInvalidNumber => "pep-reference.invalid-number",
 
+    // --- `:rfc:` -----------------------------------------------------------
+    /// An `:rfc:` whose target is not an RFC number — Sphinx's "invalid RFC
+    /// number". The role is shown as its source text.
+    RfcInvalidNumber => "rfc.invalid-number",
+
+    // --- `:rfc-reference:` -------------------------------------------------
+    /// An `:rfc-reference:` whose target is not a number of at least 1 —
+    /// docutils' "RFC number must be a number greater than or equal to 1".
+    /// The role is shown as its source text.
+    RfcReferenceInvalidNumber => "rfc-reference.invalid-number",
+
+    // --- `:cve:` -----------------------------------------------------------
+    /// A `:cve:` whose target is not a year and a sequence number, such as
+    /// `2024-3094` — a check Sphinx does not make. The role is shown as its
+    /// source text.
+    CveInvalidId => "cve.invalid-id",
+
+    // --- `:cwe:` -----------------------------------------------------------
+    /// A `:cwe:` whose target is not a CWE number — Sphinx's "invalid CWE
+    /// number". The role is shown as its source text.
+    CweInvalidNumber => "cwe.invalid-number",
+
     // --- Headings ----------------------------------------------------------
     /// A section adornment shorter than the title's display width, which
     /// docutils accepts and reports rather than rejecting.

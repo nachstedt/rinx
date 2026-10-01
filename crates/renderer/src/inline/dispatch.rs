@@ -12,6 +12,7 @@ use super::any_reference::{AnyRef, render_inline_any_reference};
 use super::code::{CodeRef, render_inline_code};
 use super::doc_reference::{DocRef, render_inline_doc_reference};
 use super::docutils_pep_reference::render_inline_docutils_pep_reference;
+use super::docutils_rfc_reference::render_inline_docutils_rfc_reference;
 use super::domain_object_reference::{
     DomainObjectDiagnostics, DomainObjectRef, render_inline_domain_object_reference,
 };
@@ -20,8 +21,8 @@ use super::hyperlink::render_inline_hyperlink;
 use super::math::{render_equation_reference, render_inline_math};
 use super::number_reference::render_number_reference_node;
 use super::option_reference::render_inline_option_reference;
-use super::pep_reference::{PepRef, render_inline_pep_reference};
 use super::reference::{LabelRef, render_inline_reference};
+use super::registry_reference::{RegistryRef, registry_base_url, render_inline_registry_reference};
 use super::term_reference::render_inline_term_reference;
 
 use super::RefText;
@@ -131,20 +132,23 @@ pub(crate) fn render_inline(
             render_refused_role(html, text, refusal);
         }
         // A page outside the site: its href follows from the target and the
-        // configured PEP index alone, so it cannot be broken while rendering.
-        rinx_ast::InlineNode::PepReference {
+        // registry's address alone, so it cannot be broken while rendering.
+        rinx_ast::InlineNode::RegistryReference {
             target,
             display,
             index_id,
             ..
-        } => render_inline_pep_reference(
+        } => render_inline_registry_reference(
             html,
-            PepRef::new(display.as_deref(), target, index_id),
-            ctx.pep_base_url,
+            RegistryRef::new(display.as_deref(), target, index_id),
+            registry_base_url(target.registry(), ctx.pep_base_url, ctx.rfc_base_url),
         ),
-        // The same, without the anchor: docutils' role makes no index entry.
+        // The same, without the anchor: docutils' roles make no index entry.
         rinx_ast::InlineNode::DocutilsPepReference { number, .. } => {
             render_inline_docutils_pep_reference(html, number, ctx.pep_base_url);
+        }
+        rinx_ast::InlineNode::DocutilsRfcReference { number, .. } => {
+            render_inline_docutils_rfc_reference(html, number, ctx.rfc_base_url);
         }
         // Listed rather than caught by a `_`, so a variant added later is a
         // compile error here and in `render_cross_reference` instead of
@@ -166,7 +170,7 @@ pub(crate) fn render_inline(
 }
 
 /// Renders a refused role as the parser would have lowered it: an unlinked
-/// `:numref:`, or a `:pep:`'s or `:pep-reference:`'s source text.
+/// `:numref:`, or any other refused role's source text.
 fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRefusal) {
     match refusal {
         rinx_ast::RoleRefusal::NumberReference(_) => {
@@ -176,8 +180,9 @@ fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRe
                 html_escape::encode_text(text)
             );
         }
-        rinx_ast::RoleRefusal::PepTarget { .. }
-        | rinx_ast::RoleRefusal::DocutilsPepNumber { .. } => {
+        rinx_ast::RoleRefusal::RegistryTarget { .. }
+        | rinx_ast::RoleRefusal::DocutilsPepNumber { .. }
+        | rinx_ast::RoleRefusal::DocutilsRfcNumber { .. } => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
         }
     }
@@ -300,8 +305,9 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::InlineImage(_)
         | rinx_ast::InlineNode::SubstitutionReference { .. }
         | rinx_ast::InlineNode::RefusedRole { .. }
-        | rinx_ast::InlineNode::PepReference { .. }
+        | rinx_ast::InlineNode::RegistryReference { .. }
         | rinx_ast::InlineNode::DocutilsPepReference { .. }
+        | rinx_ast::InlineNode::DocutilsRfcReference { .. }
         | rinx_ast::InlineNode::DownloadReference { .. }
         | rinx_ast::InlineNode::Program(_) => {
             unreachable!("render_inline routes only cross-reference variants here")
@@ -486,13 +492,32 @@ mod tests {
         render_refused_role(
             &mut html,
             ":pep:`<x>`",
-            &rinx_ast::RoleRefusal::PepTarget {
+            &rinx_ast::RoleRefusal::RegistryTarget {
+                registry: rinx_ast::Registry::Pep,
                 target: "<x>".to_string(),
             },
         );
 
         // Then
         assert_eq!(html, ":pep:`&lt;x&gt;`");
+    }
+
+    #[test]
+    fn test_render_refused_role_shows_an_rfc_reference_as_its_source() {
+        // Given
+        let mut html = String::new();
+
+        // When
+        render_refused_role(
+            &mut html,
+            ":rfc-reference:`<x>`",
+            &rinx_ast::RoleRefusal::DocutilsRfcNumber {
+                target: "<x>".to_string(),
+            },
+        );
+
+        // Then
+        assert_eq!(html, ":rfc-reference:`&lt;x&gt;`");
     }
 
     #[test]

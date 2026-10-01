@@ -267,29 +267,44 @@ things to know before touching it:
   with `rinx_ast`'s `for_each_inline_list_mut`, the traversal substitution
   resolution uses too.
 
-### The `:pep:` role (`docs/decisions/030-pep-role.md`)
+### Registry roles: `:pep:`, `:rfc:`, `:cve:`, `:cwe:` (`docs/decisions/030-pep-role.md`, `docs/decisions/034-registry-roles.md`)
 
-`InlineNode::PepReference` is one node standing for Sphinx's three: the
-general-index entry, its anchor and the link. Three things to know:
+`InlineNode::RegistryReference` is one node standing for Sphinx's three — the
+general-index entry, its anchor and the link — for all four roles, which differ
+only in their `RegistryTarget` (`ast/registry_target/`: one enum over a target
+type per registry, plus the `Registry` tag whose `role_name`/`label`/
+`index_group` are Sphinx's). Things to know:
 
+- **Per-registry behaviour lives on the target, nowhere else.**
+  `display_text()` is both the link text and the index subentry (an RFC spells
+  out `section-`/`appendix-`/`page-` anchors), `page_path()` is relative to the
+  registry's base. A new registry is a variant there and a regex alternative,
+  not a node.
 - **The anchor is minted after parsing**, by `parser/blocks/index_ids.rs`'s
-  `assign_pep_index_ids`, continuing the `.. index::` counter and running after
-  substitutions so each use of a definition gets its own id. The analyzer finds
-  the roles with `rinx_ast::for_each_inline_list` — generated from the same
-  macro body as the parser's `for_each_inline_list_mut` (`ast/inline_lists.rs`),
-  so an entry exists for exactly the roles that have an anchor.
-- **The `.ast` holds the PEP's page, not its URL.** `PepTarget` (number,
-  fragment, `page_path()`) is parsed once; the renderer prefixes
-  `rinx.toml`'s `pep_base_url` (`renderer/pep_base_url.rs`), so changing it
-  re-parses nothing.
+  `assign_registry_index_ids`, continuing the `.. index::` counter and running
+  after substitutions so each use of a definition gets its own id. The analyzer
+  finds the roles with `rinx_ast::for_each_inline_list` — generated from the
+  same macro body as the parser's `for_each_inline_list_mut`
+  (`ast/inline_lists.rs`), so an entry exists for exactly the roles that have
+  an anchor.
+- **The `.ast` holds the page, not its URL.** The renderer prefixes
+  `rinx.toml`'s `pep_base_url`/`rfc_base_url` (one `RegistryBaseUrl<S>` type,
+  `renderer/registry_base_url.rs`), so changing them re-parses nothing; CVE's
+  and CWE's addresses are constants, as Sphinx hard-codes them
+  (`renderer/inline/registry_reference.rs`).
+- **A refusal names its registry, a code names the construct**:
+  `RoleRefusal::RegistryTarget` maps to `pep.invalid-number`,
+  `rfc.invalid-number`, `cwe.invalid-number` or `cve.invalid-id`. `:cve:` is
+  validated where Sphinx accepts anything (year and sequence number; a `CVE-`
+  prefix is refused by name) — a deliberate deviation, see ADR-034.
 - **Role names stay case-sensitive** (`:PEP:` is not recognized), deliberately:
   docutils' case-insensitivity belongs to every role and is left to a change
   that introduces it for all of them.
-- **docutils' `:pep-reference:` is a sibling node, not a flag**
-  (`InlineNode::DocutilsPepReference`, `rinx_ast::DocutilsPepNumber`; see
+- **docutils' `:pep-reference:` and `:rfc-reference:` are sibling nodes, not
+  flags** (`InlineNode::DocutilsPepReference`/`DocutilsRfcReference`; see
   `docs/decisions/033-pep-reference-role.md`): no anchor, no index entry, no
-  title or fragment, `pep-%04d` with no trailing slash. It never meets the
-  anchor or index passes, and shares only the refusal pass and `pep_base_url`.
+  title. They never meet the anchor or index passes, and share only the
+  refusal pass, the digit reader and their base URL.
 
 ### Source transclusion (`docs/decisions/008-source-transclusion.md`)
 

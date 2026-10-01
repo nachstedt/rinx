@@ -192,6 +192,11 @@ freely.
      - The PEP index a ``:pep:`` role links into, docutils' setting of the
        same name. Defaults to ``https://peps.python.org/``. It must be an
        ``http(s)://`` URL or start with ``/``, and end with ``/``.
+   * - ``rfc_base_url``
+     - The RFC index an ``:rfc:`` role links into, docutils' setting of the
+       same name. Defaults to Sphinx's
+       ``https://datatracker.ietf.org/doc/html/``, and takes the same forms as
+       ``pep_base_url``.
    * - ``modindex_common_prefix``
      - Module name prefixes the Python Module Index sets aside when filing a
        module, Sphinx's setting of the same name: with ``["email."]``,

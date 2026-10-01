@@ -5,11 +5,12 @@
 //! Two walkers with one reach: [`for_each_inline_list_mut`] for the parser's
 //! whole-document passes that rewrite inline content after the parse
 //! (resolving `|name|` substitutions, reporting refused roles, numbering
-//! `:pep:` anchors), and [`for_each_inline_list`] for the analyzer, which
-//! must find exactly the inline nodes those passes reached — a `:pep:`'s
-//! general-index entry points at the anchor the parser gave it. Both are
-//! generated from one body by [`inline_list_walker`], so the two cannot
-//! disagree about which lists exist.
+//! `:pep:`/`:rfc:`/`:cve:`/`:cwe:` anchors), and [`for_each_inline_list`]
+//! for the analyzer, which must find exactly the inline nodes those passes
+//! reached — such a role's general-index entry points at the anchor the
+//! parser gave it. Both are generated from one body by
+//! [`inline_list_walker`], so the two cannot disagree about which lists
+//! exist.
 
 use crate::directive::Directive;
 use crate::inline_node::InlineNode;

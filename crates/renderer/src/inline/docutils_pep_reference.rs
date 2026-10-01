@@ -2,7 +2,7 @@
 //! below the site's PEP index, with none of `:pep:`'s anchor or emphasis.
 //!
 //! Nothing here consults the project index, for the reason
-//! [`super::pep_reference`] gives.
+//! [`super::registry_reference`] gives.
 
 use std::fmt::Write as _;
 

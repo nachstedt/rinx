@@ -5,10 +5,11 @@ use serde::{Deserialize, Serialize};
 use crate::asset_uri::AssetUri;
 use crate::code_language::ResolvedLanguage;
 use crate::docutils_pep_number::DocutilsPepNumber;
+use crate::docutils_rfc_number::DocutilsRfcNumber;
 use crate::image::ImageOptions;
 use crate::inventory_selector::InventorySelector;
 use crate::number_format::NumberFormat;
-use crate::pep_target::PepTarget;
+use crate::registry_target::{Registry, RegistryTarget};
 
 /// Why the parser refused a role — see [`InlineNode::RefusedRole`].
 ///
@@ -20,14 +21,19 @@ use crate::pep_target::PepTarget;
 pub enum RoleRefusal {
     /// A `:numref:`, lowered to an unlinked [`InlineNode::NumberReference`].
     NumberReference(NumberReferenceRefusal),
-    /// A `:pep:` whose target is not a PEP number, lowered to the role's
-    /// source text as Sphinx's `problematic` node shows it. `target` is the
-    /// target as written, from which the diagnostic re-derives its reason.
-    PepTarget { target: String },
+    /// A `:pep:`, `:rfc:`, `:cve:` or `:cwe:` whose target `registry` cannot
+    /// link, lowered to the role's source text as Sphinx's `problematic` node
+    /// shows it. `target` is the target as written, from which the
+    /// diagnostic re-derives its reason.
+    RegistryTarget { registry: Registry, target: String },
     /// A `:pep-reference:` whose target is not a number from 0 to 9999,
     /// lowered to the role's source text as docutils' `problematic` node
     /// shows it. `target` is the target as written.
     DocutilsPepNumber { target: String },
+    /// An `:rfc-reference:` whose target is not a number of at least 1,
+    /// lowered to the role's source text as docutils' `problematic` node
+    /// shows it. `target` is the target as written.
+    DocutilsRfcNumber { target: String },
 }
 
 /// Why the parser refused a `:numref:` — see [`RoleRefusal::NumberReference`].
@@ -257,22 +263,24 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
-    /// A link to a Python Enhancement Proposal, produced by the `:pep:` role.
+    /// A link to a document of a numbered registry outside the site,
+    /// produced by the `:pep:`, `:rfc:`, `:cve:` and `:cwe:` roles — the
+    /// four are one construct, differing only in their [`RegistryTarget`].
     ///
-    /// Sphinx's role yields three nodes — a general-index entry, the anchor
-    /// that entry links to, and the link — and this one node carries all
-    /// three, so nothing can separate the anchor from the entry pointing at
-    /// it. `index_id` is that anchor, minted per document once parsing ends
-    /// (`rinx_parser`'s `assign_pep_index_ids`), in the same sequence as
-    /// `.. index::` directives' ids; empty until then.
+    /// Sphinx's roles each yield three nodes — a general-index entry, the
+    /// anchor that entry links to, and the link — and this one node carries
+    /// all three, so nothing can separate the anchor from the entry pointing
+    /// at it. `index_id` is that anchor, minted per document once parsing
+    /// ends (`rinx_parser`'s `assign_registry_index_ids`), in the same
+    /// sequence as `.. index::` directives' ids; empty until then.
     ///
-    /// Only the PEP's page is stored, not its URL: the PEP index's address is
-    /// the site's `pep_base_url`, applied while rendering so changing it
-    /// re-parses nothing. `display` is the explicit title of the
-    /// angle-bracket form; without one Sphinx shows `PEP ` and the target as
-    /// written.
-    PepReference {
-        target: PepTarget,
+    /// Only the document's page is stored, not its URL: a PEP's or an RFC's
+    /// index is the site's `pep_base_url` or `rfc_base_url`, applied while
+    /// rendering so changing it re-parses nothing. `display` is the explicit
+    /// title of the angle-bracket form; without one the link shows
+    /// [`RegistryTarget::display_text`].
+    RegistryReference {
+        target: RegistryTarget,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         display: Option<String>,
         index_id: String,
@@ -282,13 +290,26 @@ pub enum InlineNode {
     /// A link to a Python Enhancement Proposal, produced by docutils' own
     /// `:pep-reference:` role, which Sphinx leaves in place beside its `:pep:`.
     ///
-    /// A sibling of [`Self::PepReference`] rather than a flag on it, because
+    /// A sibling of [`Self::RegistryReference`] rather than a flag on it, because
     /// it has none of what that node carries beyond the number: no index
     /// entry and so no anchor, no explicit title, no fragment. It shows
     /// `PEP ` and the number as written. As for `:pep:`, only the page is
     /// stored and the site's `pep_base_url` is applied while rendering.
     DocutilsPepReference {
         number: DocutilsPepNumber,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
+    /// A link to an RFC, produced by docutils' own `:rfc-reference:` role,
+    /// which Sphinx leaves in place beside its `:rfc:`.
+    ///
+    /// A sibling of [`Self::RegistryReference`] for the reason
+    /// [`Self::DocutilsPepReference`] is: no index entry, no anchor, no
+    /// explicit title. It shows `RFC ` and the number as `int()` reads it,
+    /// never the section. The site's `rfc_base_url` is applied while
+    /// rendering.
+    DocutilsRfcReference {
+        number: DocutilsRfcNumber,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
@@ -424,8 +445,9 @@ impl InlineNode {
             | Self::DownloadReference { span, .. }
             | Self::NumberReference { span, .. }
             | Self::RefusedRole { span, .. }
-            | Self::PepReference { span, .. }
+            | Self::RegistryReference { span, .. }
             | Self::DocutilsPepReference { span, .. }
+            | Self::DocutilsRfcReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::Code { span, .. }
@@ -455,8 +477,9 @@ impl InlineNode {
             | Self::DownloadReference { span, .. }
             | Self::NumberReference { span, .. }
             | Self::RefusedRole { span, .. }
-            | Self::PepReference { span, .. }
+            | Self::RegistryReference { span, .. }
             | Self::DocutilsPepReference { span, .. }
+            | Self::DocutilsRfcReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::Code { span, .. }
@@ -490,8 +513,9 @@ impl InlineNode {
             | Self::OptionReference { .. }
             | Self::EntityReference { .. }
             | Self::EquationReference { .. }
-            | Self::PepReference { .. }
-            | Self::DocutilsPepReference { .. } => true,
+            | Self::RegistryReference { .. }
+            | Self::DocutilsPepReference { .. }
+            | Self::DocutilsRfcReference { .. } => true,
             Self::DomainObjectReference { link, .. }
             | Self::AnyReference { link, .. }
             | Self::DocReference { link, .. }
@@ -542,15 +566,18 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
                 | InlineNode::OptionReference { display, .. }
                 | InlineNode::EntityReference { display, .. }
                 // What the link shows: the title, or Sphinx's `PEP <target>`.
-                | InlineNode::PepReference {
+                | InlineNode::RegistryReference {
                     display: Some(display),
                     ..
                 } => display.as_str(),
-                InlineNode::PepReference { target, .. } => {
-                    return Cow::Owned(format!("PEP {}", target.as_written()));
+                InlineNode::RegistryReference { target, .. } => {
+                    return Cow::Owned(target.display_text());
                 }
                 InlineNode::DocutilsPepReference { number, .. } => {
                     return Cow::Owned(format!("PEP {}", number.as_written()));
+                }
+                InlineNode::DocutilsRfcReference { number, .. } => {
+                    return Cow::Owned(number.display_text());
                 }
                 // The LaTeX source is the only plain text an equation has: its
                 // rendered form is markup, and its `:eq:` number isn't known
@@ -980,8 +1007,8 @@ mod tests {
     }
 
     fn pep(target: &str, display: Option<&str>) -> InlineNode {
-        InlineNode::PepReference {
-            target: PepTarget::parse(target).unwrap(),
+        InlineNode::RegistryReference {
+            target: RegistryTarget::parse(Registry::Pep, target).unwrap(),
             display: display.map(str::to_string),
             index_id: "index-0".to_string(),
             span: None,
@@ -1012,6 +1039,20 @@ mod tests {
             inline_plain_text(&[pep("8", Some("Style guide"))]),
             "Style guide"
         );
+    }
+
+    #[test]
+    fn test_inline_plain_text_shows_an_rfc_section_in_words() {
+        // Given
+        let node = InlineNode::RegistryReference {
+            target: RegistryTarget::parse(Registry::Rfc, "2324#section-2").unwrap(),
+            display: None,
+            index_id: "index-0".to_string(),
+            span: None,
+        };
+
+        // When / Then
+        assert_eq!(inline_plain_text(&[node]), "RFC 2324 Section 2");
     }
 
     #[test]
@@ -1059,6 +1100,47 @@ mod tests {
     fn test_a_docutils_pep_reference_round_trips_through_json() {
         // Given
         let node = docutils_pep("0008");
+
+        // When
+        let json = serde_json::to_string(&node).unwrap();
+
+        // Then
+        assert_eq!(serde_json::from_str::<InlineNode>(&json).unwrap(), node);
+    }
+
+    fn docutils_rfc(number: &str) -> InlineNode {
+        InlineNode::DocutilsRfcReference {
+            number: DocutilsRfcNumber::parse(number).unwrap(),
+            span: None,
+        }
+    }
+
+    #[test]
+    fn test_a_docutils_rfc_reference_carries_its_span_and_is_a_link() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(3, 1),
+            crate::span::Position::new(3, 20),
+        );
+
+        // When
+        let placed = docutils_rfc("2822").with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+        assert!(placed.renders_as_link());
+    }
+
+    #[test]
+    fn test_inline_plain_text_shows_a_docutils_rfc_reference_normalized() {
+        // Given / When / Then
+        assert_eq!(inline_plain_text(&[docutils_rfc("02822#s")]), "RFC 2822");
+    }
+
+    #[test]
+    fn test_a_docutils_rfc_reference_round_trips_through_json() {
+        // Given
+        let node = docutils_rfc("2822#section-3");
 
         // When
         let json = serde_json::to_string(&node).unwrap();

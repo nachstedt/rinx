@@ -81,12 +81,32 @@ Supported:
   to ``https://peps.python.org/`` unless the site sets ``pep_base_url`` (see
   :ref:`site-config`); a target that is not a number is shown as written and
   reported as ``pep.invalid-number``.
+- The ``:rfc:`` role, which links an IETF Request for Comments the same way:
+  ``:rfc:`2324``` shows **RFC 2324**, links ``rfc2324.html`` below
+  ``https://datatracker.ietf.org/doc/html/`` unless the site sets
+  ``rfc_base_url``, and lists the mention under *RFC*. A ``section-``,
+  ``appendix-`` or ``page-`` anchor is spelled out, so
+  ``:rfc:`2324#section-2.3``` shows **RFC 2324 Section 2.3**. A target that
+  is not a number is reported as ``rfc.invalid-number``.
+- The ``:cve:`` and ``:cwe:`` roles, which link a Common Vulnerabilities and
+  Exposures record and a Common Weakness Enumeration entry:
+  ``:cve:`2024-3094``` shows **CVE 2024-3094** and ``:cwe:`787``` shows
+  **CWE 787**, each listed in the general index under the registry's name.
+  A ``:cve:`` target is the identifier's year and sequence number; anything
+  else — including the full ``CVE-2024-3094``, whose prefix the link already
+  adds — is reported as ``cve.invalid-id``. A ``:cwe:`` target that is not a
+  number is reported as ``cwe.invalid-number``.
 - docutils' ``:pep-reference:`` role, ``:pep:``'s plainer sibling:
   ``:pep-reference:`8``` links ``pep-0008`` below the same ``pep_base_url``
   and shows *PEP 8*, with no general index entry, no bold and no trailing
   slash. Its target is a number from 0 to 9999 and nothing else — no title,
   no ``#`` anchor; anything else is shown as written and reported as
   ``pep-reference.invalid-number``.
+- docutils' ``:rfc-reference:`` role, ``:rfc:``'s plainer sibling:
+  ``:rfc-reference:`2822#section-3``` links ``rfc2822.html#section-3`` below
+  the same ``rfc_base_url`` and shows *RFC 2822*, with no general index entry
+  and no bold. Its target is a number of at least 1 with an optional ``#``
+  section; anything else is reported as ``rfc-reference.invalid-number``.
 - Admonitions, ``.. seealso::``, ``.. versionadded::``,
   ``.. versionchanged::`` and ``.. deprecated::``. As in Sphinx, text after
   the ``::`` starts the body — ``.. seealso:: :pep:`634``` is a complete
