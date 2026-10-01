@@ -4581,7 +4581,7 @@ new file descriptor is <a href="os.html#fd_inheritance">non-inheritable</a>.</p>
 <p><em>initval</em> is the initial value of the event counter. The initial value
 must be a 32 bit unsigned integer. Please note that the initial value is
 limited to a 32 bit unsigned int although the event counter is an unsigned
-64 bit integer with a maximum value of 2:sup:`64`-2.</p>
+64 bit integer with a maximum value of 2<sup>64</sup>-2.</p>
 <p><em>flags</em> can be constructed from <a class="reference internal" href="os.html#py:data:os.efd_cloexec"><code class="xref py data docutils literal">EFD_CLOEXEC</code></a>,
 <a class="reference internal" href="os.html#py:data:os.efd_nonblock"><code class="xref py data docutils literal">EFD_NONBLOCK</code></a>, and <a class="reference internal" href="os.html#py:data:os.efd_semaphore"><code class="xref py data docutils literal">EFD_SEMAPHORE</code></a>.</p>
 <p>If <a class="reference internal" href="os.html#py:data:os.efd_semaphore"><code class="xref py data docutils literal">EFD_SEMAPHORE</code></a> is specified and the event counter is non-zero,
@@ -4593,7 +4593,7 @@ resets the counter to zero.</p>
 specified, <a class="reference internal" href="os.html#py:function:os.eventfd_read"><code class="xref py function docutils literal">eventfd_read</code></a> blocks.</p>
 <p><a class="reference internal" href="os.html#py:function:os.eventfd_write"><code class="xref py function docutils literal">eventfd_write</code></a> increments the event counter. Write blocks if the
 write operation would increment the counter to a value larger than
-2:sup:`64`-2.</p>
+2<sup>64</sup>-2.</p>
 <p>Example:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span></span></span>

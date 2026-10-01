@@ -607,9 +607,17 @@ both.</p>
 <tr>
 <td><p><code>:sub:</code>/<code>:subscript:</code> and <code>:sup:</code>/<code>:superscript:</code> roles</p>
 </td>
-<td><p>❌</p>
+<td><p>✅ ℹ️</p>
 </td>
-<td></td>
+<td><ul>
+<li><p>Role names are case-sensitive, so <code>:Sub:</code> is not recognized.</p>
+</li>
+<li><p>A section title holding one shows it as plain text in the
+navigation and the page title, as for emphasis; Sphinx keeps the
+markup in its toctree.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p>Default role (single-backquoted text without a role)</p>
@@ -1088,8 +1096,10 @@ count in every directive.</p>
 </td>
 <td><ul>
 <li><p>Only a role derived from <code>code</code> (<code>.. role:: python(code)</code>), with
-<code>:language:</code> and <code>:class:</code>. Any other base, or none, is reported
-as <code>role.unsupported-base</code> and the role is not defined.</p>
+<code>:language:</code> and <code>:class:</code>, or from <code>sub</code>, <code>subscript</code>,
+<code>sup</code> or <code>superscript</code> (<code>.. role:: chem(sub)</code>), with
+<code>:class:</code>. Any other base, or none, is reported as
+<code>role.unsupported-base</code> and the role is not defined.</p>
 </li>
 <li><p>A name rinx already gives a role (<code>:ref:</code>, <code>:code:</code>, an entity
 role, …) is refused as <code>role.builtin-name</code>; docutils lets a

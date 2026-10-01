@@ -1256,14 +1256,14 @@ by system clock changes.
 <ul>
 <li><p>On Unix, <a class="reference internal" href="../library/time.html#py:function:time.sleep"><code class="xref py function docutils literal">time.sleep</code></a> now uses the <code>clock_nanosleep()</code> or
 <code>nanosleep()</code> function, if available, which has a resolution of 1 nanosecond
-(10:sup:`-9` seconds), rather than using <code>select()</code> which has a resolution
-of 1 microsecond (10:sup:`-6` seconds).
+(10<sup>-9</sup> seconds), rather than using <code>select()</code> which has a resolution
+of 1 microsecond (10<sup>-6</sup> seconds).
 (Contributed by Benjamin Szőke and Victor Stinner in :issue:`21302`.)</p>
 </li>
 <li><p>On Windows 8.1 and newer, <a class="reference internal" href="../library/time.html#py:function:time.sleep"><code class="xref py function docutils literal">time.sleep</code></a> now uses a waitable timer based
 on <a href="https://docs.microsoft.com/en-us/windows-hardware/drivers/kernel/high-resolution-timers">high-resolution timers</a>
-which has a resolution of 100 nanoseconds (10:sup:`-7` seconds). Previously,
-it had a resolution of 1 millisecond (10:sup:`-3` seconds).
+which has a resolution of 100 nanoseconds (10<sup>-7</sup> seconds). Previously,
+it had a resolution of 1 millisecond (10<sup>-3</sup> seconds).
 (Contributed by Benjamin Szőke, Donghee Na, Eryk Sun and Victor Stinner in :issue:`21302` and :issue:`45429`.)</p>
 </li>
 </ul>

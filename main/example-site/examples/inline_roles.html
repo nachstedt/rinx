@@ -63,6 +63,11 @@
             
           </li>
         
+          <li class="toctree-l2">
+            <a href="inline_roles.html#subscript-and-superscript-sub-sup">Subscript and Superscript (:sub:, :sup:)</a>
+            
+          </li>
+        
               </ul>
             </details>
             
@@ -363,6 +368,30 @@ above, as in Sphinx.</p>
 </li>
 <li><p>Custom display text: <a href="index.html#home-index">the site home</a> links back to
 the same page under different link text.</p>
+</li>
+</ul>
+<h2 id="subscript-and-superscript-sub-sup">Subscript and Superscript (<code>:sub:</code>, <code>:sup:</code>)</h2>
+<p><code>:sub:</code> and <code>:sup:</code> set their text below or above the line;
+<code>:subscript:</code> and <code>:superscript:</code> are the same roles under longer names.
+Their text is plain: no markup inside it is interpreted.</p>
+<ul>
+<li><p>Escaped spaces join a script to its word: water is H<sub>2</sub>O, and
+Einstein wrote E = mc<sup>2</sup>.</p>
+</li>
+<li><p>The long names: the 1<sup>st</sup> of x<sub>i</sub>.</p>
+</li>
+<li><p>Text that would be markup elsewhere stays text: 2<sup>*n*</sup>.</p>
+</li>
+</ul>
+<h3 id="co2-in-a-heading">CO<sub>2</sub> in a Heading</h3>
+<p>A script may be written in a section title too.</p>
+<h3 id="derived-roles">Derived Roles</h3>
+<p><code>.. role::</code> derives a role from either. Without a <code>:class:</code>, the role's
+own name is its class:</p>
+<ul>
+<li><p>A <code>chem</code> role: C<sub class="chem">6</sub>H<sub class="chem">12</sub>O<sub class="chem">6</sub>.</p>
+</li>
+<li><p>A <code>power</code> role carrying the <code>exponent</code> class: 10<sup class="exponent">-3</sup>.</p>
 </li>
 </ul>
 
