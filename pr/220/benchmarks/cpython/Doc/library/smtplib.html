@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>smtplib — SMTP protocol client — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Protocols and Support"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="webbrowser.html">webbrowser — Convenient web-browser controller</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="wsgiref.html">wsgiref — WSGI Utilities and Reference Implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.html">urllib — URL handling modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.request.html">urllib.request — Extensible library for opening URLs</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.parse.html">urllib.parse — Parse URLs into components</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.error.html">urllib.error — Exception classes raised by urllib.request</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.robotparser.html">urllib.robotparser —  Parser for robots.txt</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.html">http — HTTP modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.client.html">http.client — HTTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ftplib.html">ftplib — FTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="poplib.html">poplib — POP3 protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imaplib.html">imaplib — IMAP4 protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="smtplib.html">smtplib — SMTP protocol client</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle smtplib — SMTP protocol client"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="smtplib.html#smtp-objects">SMTP Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="smtplib.html#smtp-example">SMTP Example</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="uuid.html">uuid — UUID objects according to :rfc:`9562`</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socketserver.html">socketserver — A framework for network servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.server.html">http.server — HTTP servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.cookies.html">http.cookies — HTTP state management</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.cookiejar.html">http.cookiejar — Cookie handling for HTTP clients</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.html">xmlrpc — XMLRPC server and client modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.client.html">xmlrpc.client — XML-RPC client access</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.server.html">xmlrpc.server — Basic XML-RPC servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ipaddress.html">ipaddress — IPv4&#x2f;IPv6 manipulation library</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="imaplib.html">&larr; imaplib — IMAP4 protocol client</a>
+        <a class="next" href="uuid.html">uuid — UUID objects according to :rfc:`9562` &rarr;</a>
+      </nav>
+      
+      <h1 id="smtplib-smtp-protocol-client"><code class="xref py module docutils literal">smtplib</code> — SMTP protocol client</h1>
+<dl class="py module">
+  <dt id="py:module:smtplib"><code class="sig-name">smtplib</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Eric S. Raymond &lt;esr@snark.thyrsus.com&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/smtplib.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>The <a class="reference internal" href="smtplib.html#py:module:smtplib" title="smtplib: SMTP protocol client (requires sockets)."><code class="xref py module docutils literal">smtplib</code></a> module defines an SMTP client session object that can be used
+to send mail to any internet machine with an SMTP or ESMTP listener daemon.  For
+details of SMTP and ESMTP operation, consult :rfc:`821` (Simple Mail Transfer
+Protocol) and :rfc:`1869` (SMTP Service Extensions).</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: not WASI.
+
+   This module does not work or is not available on WebAssembly. See
+   :ref:`wasm-availability` for more information.</pre>
+</div>
+<dl class="py class">
+  <dt id="py:class:smtplib.smtp"><em class="property">class</em> <code class="sig-name">SMTP(host='', port=0, local_hostname=None[, timeout], source_address=None)</code></dt>
+  <dd><p>An <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a> instance encapsulates an SMTP connection.  It has methods
+that support a full repertoire of SMTP and ESMTP operations. If the optional
+<em>host</em> and <em>port</em> parameters are given, the SMTP <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.connect"><code class="xref py method docutils literal">connect</code></a> method is
+called with those parameters during initialization.  If specified,
+<em>local_hostname</em> is used as the FQDN of the local host in the HELO/EHLO
+command.  Otherwise, the local hostname is found using
+<a class="reference internal" href="socket.html#py:function:socket.getfqdn"><code class="xref py function docutils literal">socket.getfqdn</code></a>.  If the <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.connect"><code class="xref py method docutils literal">connect</code></a> call returns anything other
+than a success code, an <a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpconnecterror"><code class="xref py exception docutils literal">SMTPConnectError</code></a> is raised. The optional
+<em>timeout</em> parameter specifies a timeout in seconds for blocking operations
+like the connection attempt (if not specified, the global default timeout
+setting will be used).  If the timeout expires, <a class="reference internal" href="exceptions.html#py:exception:timeouterror"><code class="xref py exception docutils literal">TimeoutError</code></a> is
+raised.  The optional <em>source_address</em> parameter allows binding
+to some specific source address in a machine with multiple network
+interfaces, and/or to some specific source TCP port. It takes a 2-tuple
+<code>(host, port)</code>, for the socket to bind to as its source address before
+connecting. If omitted (or if <em>host</em> or <em>port</em> are <code>''</code> and/or <code>0</code>
+respectively) the OS default behavior will be used.</p>
+<p>For normal use, you should only require the initialization/connect,
+<a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">sendmail</code></a>, and <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.quit"><code class="xref py method docutils literal">SMTP.quit</code></a> methods.
+An example is included below.</p>
+<p>The <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a> class supports the :keyword:`with` statement.  When used
+like this, the SMTP <code>QUIT</code> command is issued automatically when the
+:keyword:`!with` statement exits.  E.g.:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">smtplib</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-variable hl-other hl-constant hl-python">SMTP</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">SMTP</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">domain.org<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">smtp</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">smtp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">noop</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">250</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Ok<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span></pre></div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: smtplib.send self,data smtplib.SMTP
+
+   All commands will raise an :ref:`auditing event &lt;auditing&gt;`
+   ``smtplib.SMTP.send`` with arguments ``self`` and ``data``,
+   where ``data`` is the bytes about to be sent to the remote host.</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Support for the :keyword:`with` statement was added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>source_address</em> argument was added.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+<p>The SMTPUTF8 extension (:rfc:`6531`) is now supported.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>If the <em>timeout</em> parameter is set to be zero, it will raise a
+<a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a> to prevent the creation of a non-blocking socket.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:smtplib.smtp_ssl"><em class="property">class</em> <code class="sig-name">SMTP_SSL(host='', port=0, local_hostname=None, * [, timeout], \</code></dt>
+  <dt id="py:class:smtplib.source_address=none)"><em class="property">class</em> <code class="sig-name">context=None, source_address=None)</code></dt>
+  <dd><p>An <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp_ssl"><code class="xref py class docutils literal">SMTP_SSL</code></a> instance behaves exactly the same as instances of
+<a class="reference internal" href="smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a>. <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp_ssl"><code class="xref py class docutils literal">SMTP_SSL</code></a> should be used for situations where SSL is
+required from the beginning of the connection and using <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.starttls"><code class="xref py method docutils literal">starttls</code></a>
+is not appropriate. If <em>host</em> is not specified, the local host is used. If
+<em>port</em> is zero, the standard SMTP-over-SSL port (465) is used.  The optional
+arguments <em>local_hostname</em>, <em>timeout</em> and <em>source_address</em> have the same
+meaning as they do in the <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a> class.  <em>context</em>, also optional,
+can contain a <a class="reference internal" href="ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">SSLContext</code></a> and allows configuring various
+aspects of the secure connection.  Please read <a href="ssl.html#ssl-security">Security considerations</a> for
+best practices.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>context</em> was added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>The <em>source_address</em> argument was added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>The class now supports hostname check with
+<a class="reference internal" href="ssl.html#py:attribute:ssl.sslcontext.check_hostname"><code class="xref py attribute docutils literal">ssl.SSLContext.check_hostname</code></a> and <em>Server Name Indication</em> (see
+<a class="reference internal" href="ssl.html#py:data:ssl.has_sni"><code class="xref py data docutils literal">ssl.HAS_SNI</code></a>).</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>If the <em>timeout</em> parameter is set to be zero, it will raise a
+<a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a> to prevent the creation of a non-blocking socket</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>The deprecated <em>keyfile</em> and <em>certfile</em> parameters have been removed.</p>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:smtplib.lmtp"><em class="property">class</em> <code class="sig-name">LMTP(host='', port=LMTP_PORT, local_hostname=None, \</code></dt>
+  <dt id="py:class:smtplib.timeout])"><em class="property">class</em> <code class="sig-name">source_address=None[, timeout])</code></dt>
+  <dd><p>The LMTP protocol, which is very similar to ESMTP, is heavily based on the
+standard SMTP client. It's common to use Unix sockets for LMTP, so our
+<a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.connect"><code class="xref py method docutils literal">connect</code></a> method must support that as well as a regular host:port
+server. The optional arguments <em>local_hostname</em> and <em>source_address</em> have the
+same meaning as they do in the <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a> class. To specify a Unix
+socket, you must use an absolute path for <em>host</em>, starting with a '/'.</p>
+<p>Authentication is supported, using the regular SMTP mechanism. When using a
+Unix socket, LMTP generally don't support or require any authentication, but
+your mileage might vary.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>The optional <em>timeout</em> parameter was added.</p>
+</div>
+</dd>
+</dl>
+<p>A nice selection of exceptions is defined as well:</p>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpexception"><em class="property">exception</em> <code class="sig-name">SMTPException</code></dt>
+  <dd><p>Subclass of <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> that is the base exception class for all
+the other exceptions provided by this module.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>SMTPException became subclass of <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a></p>
+</div>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpserverdisconnected"><em class="property">exception</em> <code class="sig-name">SMTPServerDisconnected</code></dt>
+  <dd><p>This exception is raised when the server unexpectedly disconnects, or when an
+attempt is made to use the <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a> instance before connecting it to a
+server.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpresponseexception"><em class="property">exception</em> <code class="sig-name">SMTPResponseException</code></dt>
+  <dd><p>Base class for all exceptions that include an SMTP error code. These exceptions
+are generated in some instances when the SMTP server returns an error code.</p>
+<dl class="py attribute">
+  <dt id="py:attribute:smtplib.smtpresponseexception.smtp_code"><code class="sig-name">smtp_code</code></dt>
+  <dd><p>The error code.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:smtplib.smtpresponseexception.smtp_error"><code class="sig-name">smtp_error</code></dt>
+  <dd><p>The error message.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpsenderrefused"><em class="property">exception</em> <code class="sig-name">SMTPSenderRefused</code></dt>
+  <dd><p>Sender address refused.  In addition to the attributes set by on all
+<a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpresponseexception"><code class="xref py exception docutils literal">SMTPResponseException</code></a> exceptions, this sets 'sender' to the string that
+the SMTP server refused.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtprecipientsrefused"><em class="property">exception</em> <code class="sig-name">SMTPRecipientsRefused</code></dt>
+  <dd><p>All recipient addresses refused.</p>
+<dl class="py attribute">
+  <dt id="py:attribute:smtplib.smtprecipientsrefused.recipients"><code class="sig-name">recipients</code></dt>
+  <dd><p>A dictionary of exactly the same sort as returned
+by <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">SMTP.sendmail</code></a> containing the errors for
+each recipient.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpdataerror"><em class="property">exception</em> <code class="sig-name">SMTPDataError</code></dt>
+  <dd><p>The SMTP server refused to accept the message data.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpconnecterror"><em class="property">exception</em> <code class="sig-name">SMTPConnectError</code></dt>
+  <dd><p>Error occurred during establishment of a connection  with the server.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpheloerror"><em class="property">exception</em> <code class="sig-name">SMTPHeloError</code></dt>
+  <dd><p>The server refused our <code>HELO</code> message.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpnotsupportederror"><em class="property">exception</em> <code class="sig-name">SMTPNotSupportedError</code></dt>
+  <dd><p>The command or option attempted is not supported by the server.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:smtplib.smtpauthenticationerror"><em class="property">exception</em> <code class="sig-name">SMTPAuthenticationError</code></dt>
+  <dd><p>SMTP authentication went wrong.  Most probably the server didn't accept the
+username/password combination provided.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>:rfc:`821` - Simple Mail Transfer Protocol</dt>
+<dd><p>Protocol definition for SMTP.  This document covers the model, operating
+procedure, and protocol details for SMTP.</p>
+</dd>
+<dt>:rfc:`1869` - SMTP Service Extensions</dt>
+<dd><p>Definition of the ESMTP extensions for SMTP.  This describes a framework for
+extending SMTP with new commands, supporting dynamic discovery of the commands
+provided by the server, and defines a few additional commands.</p>
+</dd>
+</dl>
+</div>
+<a id="smtp-objects"></a>
+<h2 id="smtp-objects">SMTP Objects</h2>
+<p>An <a class="reference internal" href="smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a> instance has the following methods:</p>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.set_debuglevel"><code class="sig-name">SMTP.set_debuglevel(level)</code></dt>
+  <dd><p>Set the debug output level.  A value of 1 or <code>True</code> for <em>level</em> results in
+debug messages for connection and for all messages sent to and received from
+the server.  A value of 2 for <em>level</em> results in these messages being
+timestamped.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added debuglevel 2.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.docmd"><code class="sig-name">SMTP.docmd(cmd, args='')</code></dt>
+  <dd><p>Send a command <em>cmd</em> to the server.  The optional argument <em>args</em> is simply
+concatenated to the command, separated by a space.</p>
+<p>This returns a 2-tuple composed of a numeric response code and the actual
+response line (multiline responses are joined into one long line.)</p>
+<p>In normal operation it should not be necessary to call this method explicitly.
+It is used to implement other methods and may be useful for testing private
+extensions.</p>
+<p>If the connection to the server is lost while waiting for the reply,
+<a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpserverdisconnected"><code class="xref py exception docutils literal">SMTPServerDisconnected</code></a> will be raised.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.connect"><code class="sig-name">SMTP.connect(host='localhost', port=0)</code></dt>
+  <dd><p>Connect to a host on a given port.  The defaults are to connect to the local
+host at the standard SMTP port (25). If the hostname ends with a colon (<code>':'</code>)
+followed by a number, that suffix will be stripped off and the number
+interpreted as the port number to use. This method is automatically invoked by
+the constructor if a host is specified during instantiation.  Returns a
+2-tuple of the response code and message sent by the server in its
+connection response.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: smtplib.connect self,host,port smtplib.SMTP.connect</pre>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.helo"><code class="sig-name">SMTP.helo(name='')</code></dt>
+  <dd><p>Identify yourself to the SMTP server using <code>HELO</code>.  The hostname argument
+defaults to the fully qualified domain name of the local host.
+The message returned by the server is stored as the <a class="reference internal" href="smtplib.html#py:attribute:smtplib.smtp.helo_resp"><code class="xref py attribute docutils literal">helo_resp</code></a> attribute
+of the object.</p>
+<p>In normal operation it should not be necessary to call this method explicitly.
+It will be implicitly called by the <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">sendmail</code></a> when necessary.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.ehlo"><code class="sig-name">SMTP.ehlo(name='')</code></dt>
+  <dd><p>Identify yourself to an ESMTP server using <code>EHLO</code>.  The hostname argument
+defaults to the fully qualified domain name of the local host.  Examine the
+response for ESMTP option and store them for use by <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.has_extn"><code class="xref py method docutils literal">has_extn</code></a>.
+Also sets several informational attributes: the message returned by
+the server is stored as the <a class="reference internal" href="smtplib.html#py:attribute:smtplib.smtp.ehlo_resp"><code class="xref py attribute docutils literal">ehlo_resp</code></a> attribute, <a class="reference internal" href="smtplib.html#py:attribute:smtplib.smtp.does_esmtp"><code class="xref py attribute docutils literal">does_esmtp</code></a>
+is set to <code>True</code> or <code>False</code> depending on whether the server supports
+ESMTP, and <a class="reference internal" href="smtplib.html#py:attribute:smtplib.smtp.esmtp_features"><code class="xref py attribute docutils literal">esmtp_features</code></a> will be a dictionary containing the names
+of the SMTP service extensions this server supports, and their parameters
+(if any).</p>
+<p>Unless you wish to use <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.has_extn"><code class="xref py method docutils literal">has_extn</code></a> before sending mail, it should not be
+necessary to call this method explicitly.  It will be implicitly called by
+<a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">sendmail</code></a> when necessary.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.ehlo_or_helo_if_needed"><code class="sig-name">SMTP.ehlo_or_helo_if_needed()</code></dt>
+  <dd><p>This method calls <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.ehlo"><code class="xref py method docutils literal">ehlo</code></a> and/or <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.helo"><code class="xref py method docutils literal">helo</code></a> if there has been no
+previous <code>EHLO</code> or <code>HELO</code> command this session.  It tries ESMTP <code>EHLO</code>
+first.</p>
+<dl>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpheloerror"><code class="xref py exception docutils literal">SMTPHeloError</code></a></dt>
+<dd><p>The server didn't reply properly to the <code>HELO</code> greeting.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.has_extn"><code class="sig-name">SMTP.has_extn(name)</code></dt>
+  <dd><p>Return <a class="reference internal" href="constants.html#py:data:true"><code class="xref py data docutils literal">True</code></a> if <em>name</em> is in the set of SMTP service extensions returned
+by the server, <a class="reference internal" href="constants.html#py:data:false"><code class="xref py data docutils literal">False</code></a> otherwise. Case is ignored.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.verify"><code class="sig-name">SMTP.verify(address)</code></dt>
+  <dd><p>Check the validity of an address on this server using SMTP <code>VRFY</code>. Returns a
+tuple consisting of code 250 and a full :rfc:`822` address (including human
+name) if the user address is valid. Otherwise returns an SMTP error code of 400
+or greater and an error string.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Many sites disable SMTP <code>VRFY</code> in order to foil spammers.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.login"><code class="sig-name">SMTP.login(user, password, *, initial_response_ok=True)</code></dt>
+  <dd><p>Log in on an SMTP server that requires authentication. The arguments are the
+username and the password to authenticate with. If there has been no previous
+<code>EHLO</code> or <code>HELO</code> command this session, this method tries ESMTP <code>EHLO</code>
+first. This method will return normally if the authentication was successful, or
+may raise the following exceptions:</p>
+<dl>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpheloerror"><code class="xref py exception docutils literal">SMTPHeloError</code></a></dt>
+<dd><p>The server didn't reply properly to the <code>HELO</code> greeting.</p>
+</dd>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpauthenticationerror"><code class="xref py exception docutils literal">SMTPAuthenticationError</code></a></dt>
+<dd><p>The server didn't accept the username/password combination.</p>
+</dd>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpnotsupportederror"><code class="xref py exception docutils literal">SMTPNotSupportedError</code></a></dt>
+<dd><p>The <code>AUTH</code> command is not supported by the server.</p>
+</dd>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpexception"><code class="xref py exception docutils literal">SMTPException</code></a></dt>
+<dd><p>No suitable authentication method was found.</p>
+</dd>
+</dl>
+<p>Each of the authentication methods supported by <a class="reference internal" href="smtplib.html#py:module:smtplib" title="smtplib: SMTP protocol client (requires sockets)."><code class="xref py module docutils literal">smtplib</code></a> are tried in
+turn if they are advertised as supported by the server.  See <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.auth"><code class="xref py method docutils literal">auth</code></a>
+for a list of supported authentication methods.  <em>initial_response_ok</em> is
+passed through to <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.auth"><code class="xref py method docutils literal">auth</code></a>.</p>
+<p>Optional keyword argument <em>initial_response_ok</em> specifies whether, for
+authentication methods that support it, an "initial response" as specified
+in :rfc:`4954` can be sent along with the <code>AUTH</code> command, rather than
+requiring a challenge/response.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpnotsupportederror"><code class="xref py exception docutils literal">SMTPNotSupportedError</code></a> may be raised, and the
+<em>initial_response_ok</em> parameter was added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.auth"><code class="sig-name">SMTP.auth(mechanism, authobject, *, initial_response_ok=True)</code></dt>
+  <dd><p>Issue an <code>SMTP</code> <code>AUTH</code> command for the specified authentication
+<em>mechanism</em>, and handle the challenge response via <em>authobject</em>.</p>
+<p><em>mechanism</em> specifies which authentication mechanism is to
+be used as argument to the <code>AUTH</code> command; the valid values are
+those listed in the <code>auth</code> element of <a class="reference internal" href="smtplib.html#py:attribute:smtplib.smtp.esmtp_features"><code class="xref py attribute docutils literal">esmtp_features</code></a>.</p>
+<p><em>authobject</em> must be a callable object taking an optional single argument:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">data</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">authobject</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">challenge</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-language hl-python">None</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>If optional keyword argument <em>initial_response_ok</em> is true,
+<code>authobject()</code> will be called first with no argument.  It can return the
+:rfc:`4954` "initial response" ASCII <code>str</code> which will be encoded and sent with
+the <code>AUTH</code> command as below.  If the <code>authobject()</code> does not support an
+initial response (e.g. because it requires a challenge), it should return
+<code>None</code> when called with <code>challenge=None</code>.  If <em>initial_response_ok</em> is
+false, then <code>authobject()</code> will not be called first with <code>None</code>.</p>
+<p>If the initial response check returns <code>None</code>, or if <em>initial_response_ok</em> is
+false, <code>authobject()</code> will be called to process the server's challenge
+response; the <em>challenge</em> argument it is passed will be a <code>bytes</code>.  It
+should return ASCII <code>str</code> <em>data</em> that will be base64 encoded and sent to the
+server.</p>
+<p>The <code>SMTP</code> class provides <code>authobjects</code> for the <code>CRAM-MD5</code>, <code>PLAIN</code>,
+and <code>LOGIN</code> mechanisms; they are named <code>SMTP.auth_cram_md5</code>,
+<code>SMTP.auth_plain</code>, and <code>SMTP.auth_login</code> respectively.  They all require
+that the <code>user</code> and <code>password</code> properties of the <code>SMTP</code> instance are
+set to appropriate values.</p>
+<p>User code does not normally need to call <code>auth</code> directly, but can instead
+call the <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.login"><code class="xref py method docutils literal">login</code></a> method, which will try each of the above mechanisms
+in turn, in the order listed.  <code>auth</code> is exposed to facilitate the
+implementation of authentication methods not (or not yet) supported
+directly by <a class="reference internal" href="smtplib.html#py:module:smtplib" title="smtplib: SMTP protocol client (requires sockets)."><code class="xref py module docutils literal">smtplib</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.starttls"><code class="sig-name">SMTP.starttls(*, context=None)</code></dt>
+  <dd><p>Put the SMTP connection in TLS (Transport Layer Security) mode.  All SMTP
+commands that follow will be encrypted.  You should then call <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.ehlo"><code class="xref py method docutils literal">ehlo</code></a>
+again.</p>
+<p>If <em>keyfile</em> and <em>certfile</em> are provided, they are used to create an
+<a class="reference internal" href="ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">ssl.SSLContext</code></a>.</p>
+<p>Optional <em>context</em> parameter is an <a class="reference internal" href="ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">ssl.SSLContext</code></a> object; This is
+an alternative to using a keyfile and a certfile and if specified both
+<em>keyfile</em> and <em>certfile</em> should be <code>None</code>.</p>
+<p>If there has been no previous <code>EHLO</code> or <code>HELO</code> command this session,
+this method tries ESMTP <code>EHLO</code> first.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>The deprecated <em>keyfile</em> and <em>certfile</em> parameters have been removed.</p>
+</div>
+<dl>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpheloerror"><code class="xref py exception docutils literal">SMTPHeloError</code></a></dt>
+<dd><p>The server didn't reply properly to the <code>HELO</code> greeting.</p>
+</dd>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpnotsupportederror"><code class="xref py exception docutils literal">SMTPNotSupportedError</code></a></dt>
+<dd><p>The server does not support the STARTTLS extension.</p>
+</dd>
+<dt><a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a></dt>
+<dd><p>SSL/TLS support is not available to your Python interpreter.</p>
+</dd>
+<dt>.. versionchanged:: 3.3</dt>
+<dd><p><em>context</em> was added.</p>
+</dd>
+<dt>.. versionchanged:: 3.4</dt>
+<dd><p>The method now supports hostname check with
+<a class="reference internal" href="ssl.html#py:attribute:ssl.sslcontext.check_hostname"><code class="xref py attribute docutils literal">ssl.SSLContext.check_hostname</code></a> and <em>Server Name Indicator</em> (see
+<a class="reference internal" href="ssl.html#py:data:ssl.has_sni"><code class="xref py data docutils literal">HAS_SNI</code></a>).</p>
+</dd>
+<dt>.. versionchanged:: 3.5</dt>
+<dd><p>The error raised for lack of STARTTLS support is now the
+<a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpnotsupportederror"><code class="xref py exception docutils literal">SMTPNotSupportedError</code></a> subclass instead of the base
+<a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpexception"><code class="xref py exception docutils literal">SMTPException</code></a>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.sendmail"><code class="sig-name">SMTP.sendmail(from_addr, to_addrs, msg, mail_options=(), rcpt_options=())</code></dt>
+  <dd><p>Send mail.  The required arguments are an :rfc:`822` from-address string, a list
+of :rfc:`822` to-address strings (a bare string will be treated as a list with 1
+address), and a message string.  The caller may pass a list of ESMTP options
+(such as <code>8bitmime</code>) to be used in <code>MAIL FROM</code> commands as <em>mail_options</em>.
+ESMTP options (such as <code>DSN</code> commands) that should be used with all <code>RCPT</code>
+commands can be passed as <em>rcpt_options</em>.  (If you need to use different ESMTP
+options to different recipients you have to use the low-level methods such as
+<code class="xref py method docutils literal">mail</code>, <code class="xref py method docutils literal">rcpt</code> and <code class="xref py method docutils literal">data</code> to send the message.)</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The <em>from_addr</em> and <em>to_addrs</em> parameters are used to construct the message
+envelope used by the transport agents.  <code>sendmail</code> does not modify the
+message headers in any way.</p>
+</div>
+<p><em>msg</em> may be a string containing characters in the ASCII range, or a byte
+string.  A string is encoded to bytes using the ascii codec, and lone <code>\r</code>
+and <code>\n</code> characters are converted to <code>\r\n</code> characters.  A byte string is
+not modified.</p>
+<p>If there has been no previous <code>EHLO</code> or <code>HELO</code> command this session, this
+method tries ESMTP <code>EHLO</code> first. If the server does ESMTP, message size and
+each of the specified options will be passed to it (if the option is in the
+feature set the server advertises).  If <code>EHLO</code> fails, <code>HELO</code> will be tried
+and ESMTP options suppressed.</p>
+<p>This method will return normally if the mail is accepted for at least one
+recipient. Otherwise it will raise an exception.  That is, if this method does
+not raise an exception, then someone should get your mail. If this method does
+not raise an exception, it returns a dictionary, with one entry for each
+recipient that was refused.  Each entry contains a tuple of the SMTP error code
+and the accompanying error message sent by the server.</p>
+<p>If <code>SMTPUTF8</code> is included in <em>mail_options</em>, and the server supports it,
+<em>from_addr</em> and <em>to_addrs</em> may contain non-ASCII characters.</p>
+<p>This method may raise the following exceptions:</p>
+<dl>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtprecipientsrefused"><code class="xref py exception docutils literal">SMTPRecipientsRefused</code></a></dt>
+<dd><p>All recipients were refused.  Nobody got the mail.</p>
+</dd>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpheloerror"><code class="xref py exception docutils literal">SMTPHeloError</code></a></dt>
+<dd><p>The server didn't reply properly to the <code>HELO</code> greeting.</p>
+</dd>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpsenderrefused"><code class="xref py exception docutils literal">SMTPSenderRefused</code></a></dt>
+<dd><p>The server didn't accept the <em>from_addr</em>.</p>
+</dd>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpdataerror"><code class="xref py exception docutils literal">SMTPDataError</code></a></dt>
+<dd><p>The server replied with an unexpected error code (other than a refusal of a
+recipient).</p>
+</dd>
+<dt><a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpnotsupportederror"><code class="xref py exception docutils literal">SMTPNotSupportedError</code></a></dt>
+<dd><p><code>SMTPUTF8</code> was given in the <em>mail_options</em> but is not supported by the
+server.</p>
+</dd>
+</dl>
+<p>Unless otherwise noted, the connection will be open even after an exception is
+raised.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p><em>msg</em> may be a byte string.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p><code>SMTPUTF8</code> support added, and <a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpnotsupportederror"><code class="xref py exception docutils literal">SMTPNotSupportedError</code></a> may be
+raised if <code>SMTPUTF8</code> is specified but the server does not support it.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.send_message"><code class="sig-name">SMTP.send_message(msg, from_addr=None, to_addrs=None, \</code></dt>
+  <dt id="py:method:smtplib.mail_options="><code class="sig-name">mail_options=(), rcpt_options=())</code></dt>
+  <dd><p>This is a convenience method for calling <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">sendmail</code></a> with the message
+represented by an <a class="reference internal" href="email.compat32-message.html#py:class:email.message.message"><code class="xref py class docutils literal">email.message.Message</code></a> object.  The arguments have
+the same meaning as for <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">sendmail</code></a>, except that <em>msg</em> is a <code>Message</code>
+object.</p>
+<p>If <em>from_addr</em> is <code>None</code> or <em>to_addrs</em> is <code>None</code>, <code>send_message</code> fills
+those arguments with addresses extracted from the headers of <em>msg</em> as
+specified in :rfc:`5322`: <em>from_addr</em> is set to the :mailheader:`Sender`
+field if it is present, and otherwise to the :mailheader:`From` field.
+<em>to_addrs</em> combines the values (if any) of the :mailheader:`To`,
+:mailheader:`Cc`, and :mailheader:`Bcc` fields from <em>msg</em>.  If exactly one
+set of :mailheader:`Resent-*` headers appear in the message, the regular
+headers are ignored and the :mailheader:`Resent-*` headers are used instead.
+If the message contains more than one set of :mailheader:`Resent-*` headers,
+a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> is raised, since there is no way to unambiguously detect
+the most recent set of :mailheader:`Resent-` headers.</p>
+<p><code>send_message</code> serializes <em>msg</em> using
+<a class="reference internal" href="email.generator.html#py:class:email.generator.bytesgenerator"><code class="xref py class docutils literal">BytesGenerator</code></a> with <code>\r\n</code> as the <em>linesep</em>, and
+calls <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">sendmail</code></a> to transmit the resulting message.  Regardless of the
+values of <em>from_addr</em> and <em>to_addrs</em>, <code>send_message</code> does not transmit any
+:mailheader:`Bcc` or :mailheader:`Resent-Bcc` headers that may appear
+in <em>msg</em>.  If any of the addresses in <em>from_addr</em> and <em>to_addrs</em> contain
+non-ASCII characters and the server does not advertise <code>SMTPUTF8</code> support,
+an <a class="reference internal" href="smtplib.html#py:exception:smtplib.smtpnotsupportederror"><code class="xref py exception docutils literal">SMTPNotSupportedError</code></a> is raised.  Otherwise the <code>Message</code> is
+serialized with a clone of its <a class="reference internal" href="email.policy.html#py:module:email.policy" title="email.policy: Controlling the parsing and generating of messages"><code class="xref py module docutils literal">policy</code></a> with the
+<a class="reference internal" href="email.policy.html#py:attribute:email.policy.emailpolicy.utf8"><code class="xref py attribute docutils literal">utf8</code></a> attribute set to <code>True</code>, and
+<code>SMTPUTF8</code> and <code>BODY=8BITMIME</code> are added to <em>mail_options</em>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+<p>Support for internationalized addresses (<code>SMTPUTF8</code>).</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:smtplib.smtp.quit"><code class="sig-name">SMTP.quit()</code></dt>
+  <dd><p>Terminate the SMTP session and close the connection.  Return the result of
+the SMTP <code>QUIT</code> command.</p>
+</dd>
+</dl>
+<p>Low-level methods corresponding to the standard SMTP/ESMTP commands <code>HELP</code>,
+<code>RSET</code>, <code>NOOP</code>, <code>MAIL</code>, <code>RCPT</code>, and <code>DATA</code> are also supported.
+Normally these do not need to be called directly, so they are not documented
+here.  For details, consult the module code.</p>
+<p>Additionally, an SMTP instance has the following attributes:</p>
+<dl class="py attribute">
+  <dt id="py:attribute:smtplib.smtp.helo_resp"><code class="sig-name">SMTP.helo_resp</code></dt>
+  <dd><p>The response to the <code>HELO</code> command, see <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.helo"><code class="xref py method docutils literal">helo</code></a>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:smtplib.smtp.ehlo_resp"><code class="sig-name">SMTP.ehlo_resp</code></dt>
+  <dd><p>The response to the <code>EHLO</code> command, see <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.ehlo"><code class="xref py method docutils literal">ehlo</code></a>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:smtplib.smtp.does_esmtp"><code class="sig-name">SMTP.does_esmtp</code></dt>
+  <dd><p>A boolean value indicating whether the server supports ESMTP, see
+<a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.ehlo"><code class="xref py method docutils literal">ehlo</code></a>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:smtplib.smtp.esmtp_features"><code class="sig-name">SMTP.esmtp_features</code></dt>
+  <dd><p>A dictionary of the names of SMTP service extensions supported by the server,
+see <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.ehlo"><code class="xref py method docutils literal">ehlo</code></a>.</p>
+</dd>
+</dl>
+<a id="smtp-example"></a>
+<h2 id="smtp-example">SMTP Example</h2>
+<p>This example prompts the user for addresses needed in the message envelope ('To'
+and 'From' addresses), and the message to be delivered.  Note that the headers
+to be included with the message must be included in the message as entered; this
+example doesn't do any processing of the :rfc:`822` headers.  In particular, the
+'To' and 'From' addresses must be included in the message headers explicitly:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">smtplib</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">prompt</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">title</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">input</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">title</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">strip</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">from_addr</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">prompt</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">From: <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">to_addrs</span></span>  <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">prompt</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">To: <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">split</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Enter message, end with ^D (Unix) or ^Z (Windows):<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Add the From: and To: headers at the start!
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lines</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python">From: </span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">from_addr</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python">To: </span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">, <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">join</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">to_addrs</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-loop hl-while hl-python"><span class="hl-keyword hl-control hl-loop hl-while hl-python">while</span> <span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-block hl-loop hl-while hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">input</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-keyword hl-control hl-exception hl-catch hl-python">except</span> <span class="hl-support hl-type hl-exception hl-python">EOFError</span><span class="hl-punctuation hl-section hl-block hl-exception hl-catch hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-break hl-python">break</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-conditional hl-else hl-python"><span class="hl-keyword hl-control hl-conditional hl-else hl-python">else</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-else hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lines</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">append</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">msg</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-constant hl-character hl-escape hl-python">\r</span><span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">join</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lines</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Message length is<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">len</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">msg</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">server</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">smtplib</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">SMTP</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">localhost<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">server</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">set_debuglevel</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">server</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">sendmail</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">from_addr</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">to_addrs</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">msg</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">server</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">quit</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>In general, you will want to use the <a class="reference internal" href="email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a> package's features to
+construct an email message, which you can then send
+via <a class="reference internal" href="smtplib.html#py:method:smtplib.smtp.send_message"><code class="xref py method docutils literal">send_message</code></a>; see <a href="email.examples.html#email-examples">email: Examples</a>.</p>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="imaplib.html">&larr; imaplib — IMAP4 protocol client</a>
+        <a class="next" href="uuid.html">uuid — UUID objects according to :rfc:`9562` &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

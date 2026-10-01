@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Command line and environment — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python Setup and Usage</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Setup and Usage"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2 current has-children">
+            <a href="cmdline.html"><span class="section-number">1. </span>Command line and environment</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Command line and environment"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="cmdline.html#command-line"><span class="section-number">1.1. </span>Command line</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="cmdline.html#environment-variables"><span class="section-number">1.2. </span>Environment variables</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html"><span class="section-number">2. </span>Using Python on Unix platforms</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="configure.html"><span class="section-number">3. </span>Configure Python</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html"><span class="section-number">4. </span>Using Python on Windows</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mac.html"><span class="section-number">5. </span>Using Python on macOS</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="android.html"><span class="section-number">6. </span>Using Python on Android</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ios.html"><span class="section-number">7. </span>Using Python on iOS</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="editors.html"><span class="section-number">8. </span>Editors and IDEs</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="index.html">&larr; Python Setup and Usage</a>
+        <a class="next" href="unix.html">Using Python on Unix platforms &rarr;</a>
+      </nav>
+      
+      <a id="using-on-general"></a>
+<h1 id="command-line-and-environment"><span class="section-number">1. </span>Command line and environment</h1>
+<p>The CPython interpreter scans the command line and the environment for various
+settings.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+
+   Other implementations' command line schemes may differ.  See
+   :ref:`implementations` for further resources.</pre>
+</div>
+<a id="using-on-cmdline"></a>
+<h2 id="command-line"><span class="section-number">1.1. </span>Command line</h2>
+<p>When invoking Python, you may specify any of these options:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">python</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-bBdEhiIOPqRsSuvVWx<span class="hl-keyword hl-operator hl-regexp hl-quantifier hl-shell">?</span><span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-c command | <span class="hl-keyword hl-operator hl-word hl-shell">-</span>m module<span class="hl-keyword hl-operator hl-word hl-shell">-</span>name | script | <span class="hl-keyword hl-operator hl-word hl-shell">-</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>args<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span></span></span></pre></div>
+<p>The most common use case is, of course, a simple invocation of a script:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">python</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> myscript.py</span></span></pre></div>
+<a id="using-on-interface-options"></a>
+<h3 id="interface-options"><span class="section-number">1.1.1. </span>Interface options</h3>
+<p>The interpreter interface resembles that of the UNIX shell, but provides some
+additional methods of invocation:</p>
+<ul>
+<li><p>When called with standard input connected to a tty device, it prompts for
+commands and executes them until an EOF (an end-of-file character, you can
+produce that with :kbd:`Ctrl-D` on UNIX or :kbd:`Ctrl-Z, Enter` on Windows) is read.
+For more on interactive mode, see <a href="../tutorial/appendix.html#tut-interac">Interactive Mode</a>.</p>
+</li>
+<li><p>When called with a file name argument or with a file as standard input, it
+reads and executes a script from that file.</p>
+</li>
+<li><p>When called with a directory name argument, it reads and executes an
+appropriately named script from that directory.</p>
+</li>
+<li><p>When called with <code>-c command</code>, it executes the Python statement(s) given as
+<em>command</em>.  Here <em>command</em> may contain multiple statements separated by
+newlines. Leading whitespace is significant in Python statements!</p>
+</li>
+<li><p>When called with <code>-m module-name</code>, the given module is located on the
+Python module path and executed as a script.</p>
+</li>
+</ul>
+<p>In non-interactive mode, the entire input is parsed before it is executed.</p>
+<p>An interface option terminates the list of options consumed by the interpreter,
+all consecutive arguments will end up in <a class="reference internal" href="../library/sys.html#py:data:sys.argv"><code class="xref py data docutils literal">sys.argv</code></a> – note that the first
+element, subscript zero (<code>sys.argv[0]</code>), is a string reflecting the program's
+source.</p>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-c"><code class="sig-name">-c &lt;command&gt;</code></dt>
+  <dd><p>Execute the Python code in <em>command</em>.  <em>command</em> can be one or more
+statements separated by newlines, with significant leading whitespace as in
+normal module code.</p>
+<p>If this option is given, the first element of <a class="reference internal" href="../library/sys.html#py:data:sys.argv"><code class="xref py data docutils literal">sys.argv</code></a> will be
+<code>"-c"</code> and the current directory will be added to the start of
+<a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> (allowing modules in that directory to be imported as top
+level modules).</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: cpython.run_command command cmdoption-c</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p><em>command</em> is automatically dedented before execution.</p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-m"><code class="sig-name">-m &lt;module-name&gt;</code></dt>
+  <dd><p>Search <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> for the named module and execute its contents as
+the <a class="reference internal" href="../library/__main__.html#py:module:__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py module docutils literal">__main__</code></a> module.</p>
+<p>Since the argument is a <em>module</em> name, you must not give a file extension
+(<code>.py</code>).  The module name should be a valid absolute Python module name, but
+the implementation may not always enforce this (e.g. it may allow you to
+use a name that includes a hyphen).</p>
+<p>Package names (including namespace packages) are also permitted. When a
+package name is supplied instead
+of a normal module, the interpreter will execute <code>&lt;pkg&gt;.__main__</code> as
+the main module. This behaviour is deliberately similar to the handling
+of directories and zipfiles that are passed to the interpreter as the
+script argument.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>This option cannot be used with built-in modules and extension modules
+written in C, since they do not have Python module files. However, it
+can still be used for precompiled modules, even if the original source
+file is not available.</p>
+</div>
+<p>If this option is given, the first element of <a class="reference internal" href="../library/sys.html#py:data:sys.argv"><code class="xref py data docutils literal">sys.argv</code></a> will be the
+full path to the module file (while the module file is being located, the
+first element will be set to <code>"-m"</code>). As with the <a class="reference internal" href="cmdline.html#std:cmdoption:-c"><code class="xref std cmdoption docutils literal">-c</code></a> option,
+the current directory will be added to the start of <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a>.</p>
+<p><a class="reference internal" href="cmdline.html#std:cmdoption:-i"><code class="xref std cmdoption docutils literal">-I</code></a> option can  be used to run the script in isolated mode where
+<a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> contains neither the current directory nor the user's
+site-packages directory. All <code>PYTHON*</code> environment variables are
+ignored, too.</p>
+<p>Many standard library modules contain code that is invoked on their execution
+as a script.  An example is the <a class="reference internal" href="../library/timeit.html#py:module:timeit" title="timeit: Measure the execution time of small code snippets."><code class="xref py module docutils literal">timeit</code></a> module:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">python</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"><span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> timeit<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>s</span> <span class="hl-string hl-quoted hl-double hl-shell"><span class="hl-punctuation hl-definition hl-string hl-begin hl-shell">&quot;</span>setup here<span class="hl-punctuation hl-definition hl-string hl-end hl-shell">&quot;</span></span> <span class="hl-string hl-quoted hl-double hl-shell"><span class="hl-punctuation hl-definition hl-string hl-begin hl-shell">&quot;</span>benchmarked code here<span class="hl-punctuation hl-definition hl-string hl-end hl-shell">&quot;</span></span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">python</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"><span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> timeit<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>h <span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> for details</span></span></span></span></pre></div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: cpython.run_module module-name cmdoption-m</pre>
+</div>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a class="reference internal" href="../library/runpy.html#py:function:runpy.run_module"><code class="xref py function docutils literal">runpy.run_module</code></a></dt>
+<dd><p>Equivalent functionality directly available to Python code</p>
+</dd>
+</dl>
+<p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0338/"><strong>PEP 338</strong></a> – Executing modules as scripts</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.1:</span></p>
+<p>Supply the package name to run a <code>__main__</code> submodule.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>namespace packages are also supported</p>
+</div>
+</dd>
+</dl>
+<a id="cmdarg-dash"></a>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: -
+
+   Read commands from standard input (:data:`sys.stdin`).  If standard input is
+   a terminal, :option:`-i` is implied.
+
+   If this option is given, the first element of :data:`sys.argv` will be
+   ``"-"`` and the current directory will be added to the start of
+   :data:`sys.path`.
+
+   .. audit-event:: cpython.run_stdin "" ""</pre>
+</div>
+<a id="cmdarg-script"></a>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'describe'</p>
+<pre class="directive-error-source">.. describe:: &lt;script&gt;
+
+   Execute the Python code contained in *script*, which must be a filesystem
+   path (absolute or relative) referring to either a Python file, a directory
+   containing a ``__main__.py`` file, or a zipfile containing a
+   ``__main__.py`` file.
+
+   If this option is given, the first element of :data:`sys.argv` will be the
+   script name as given on the command line.
+
+   If the script name refers directly to a Python file, the directory
+   containing that file is added to the start of :data:`sys.path`, and the
+   file is executed as the :mod:`__main__` module.
+
+   If the script name refers to a directory or zipfile, the script name is
+   added to the start of :data:`sys.path` and the ``__main__.py`` file in
+   that location is executed as the :mod:`__main__` module.
+
+   :option:`-I` option can  be used to run the script in isolated mode where
+   :data:`sys.path` contains neither the script's directory nor the user's
+   site-packages directory. All ``PYTHON*`` environment variables are
+   ignored, too.
+
+   .. audit-event:: cpython.run_file filename
+
+   .. seealso::
+      :func:`runpy.run_path`
+         Equivalent functionality directly available to Python code</pre>
+</div>
+<p>If no interface option is given, <a class="reference internal" href="cmdline.html#std:cmdoption:-i"><code class="xref std cmdoption docutils literal">-i</code></a> is implied, <code>sys.argv[0]</code> is
+an empty string (<code>""</code>) and the current directory will be added to the
+start of <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a>.  Also, tab-completion and history editing is
+automatically enabled, if available on your platform (see
+<a href="../library/site.html#rlcompleter-config">Readline configuration</a>).</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><a href="../tutorial/interpreter.html#tut-invoking">Invoking the Interpreter</a></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>Automatic enabling of tab-completion and history editing.</p>
+</div>
+<a id="using-on-generic-options"></a>
+<h3 id="generic-options"><span class="section-number">1.1.2. </span>Generic options</h3>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-?"><code class="sig-name">-?</code></dt>
+  <dt id="std:cmdoption:-h"><code class="sig-name">-h</code></dt>
+  <dt id="std:cmdoption:--help"><code class="sig-name">--help</code></dt>
+  <dd><p>Print a short description of all command line options and corresponding
+environment variables and exit.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:--help-env"><code class="sig-name">--help-env</code></dt>
+  <dd><p>Print a short description of Python-specific environment variables
+and exit.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:--help-xoptions"><code class="sig-name">--help-xoptions</code></dt>
+  <dd><p>Print a description of implementation-specific <a class="reference internal" href="cmdline.html#std:cmdoption:-x"><code class="xref std cmdoption docutils literal">-X</code></a> options
+and exit.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:--help-all"><code class="sig-name">--help-all</code></dt>
+  <dd><p>Print complete usage information and exit.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-v"><code class="sig-name">-V</code></dt>
+  <dt id="std:cmdoption:--version"><code class="sig-name">--version</code></dt>
+  <dd><p>Print the Python version number and exit.  Example output could be:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+Python 3.8.0b2+</pre></div>
+</div>
+<p>When given twice, print more information about the build, like:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+Python 3.8.0b2+ (3.8:0c076caaa8, Apr 20 2019, 21:55:00)
+[GCC 6.2.0 20161005]</pre></div>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.6:</span></p>
+<p>The <code>-VV</code> option.</p>
+</div>
+</dd>
+</dl>
+<a id="using-on-misc-options"></a>
+<h3 id="miscellaneous-options"><span class="section-number">1.1.3. </span>Miscellaneous options</h3>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-b"><code class="sig-name">-b</code></dt>
+  <dd><p>Issue a warning when converting <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> or <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> to
+<a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> without specifying encoding or comparing <code class="xref py class docutils literal">bytes</code> or
+<code class="xref py class docutils literal">bytearray</code> with <code class="xref py class docutils literal">str</code> or <code class="xref py class docutils literal">bytes</code> with <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>.
+Issue an error when the option is given twice (<a href="#" class="broken-link"><code class="xref std cmdoption docutils literal">!-bb</code></a>).</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Affects also comparisons of <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> with <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-b"><code class="sig-name">-B</code></dt>
+  <dd><p>If given, Python won't try to write <code>.pyc</code> files on the
+import of source modules.  See also :envvar:`PYTHONDONTWRITEBYTECODE`.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:--check-hash-based-pycs"><code class="sig-name">--check-hash-based-pycs default|always|never</code></dt>
+  <dd><p>Control the validation behavior of hash-based <code>.pyc</code> files. See
+<a href="../reference/import.html#pyc-invalidation">Cached bytecode invalidation</a>. When set to <code>default</code>, checked and unchecked
+hash-based bytecode cache files are validated according to their default
+semantics. When set to <code>always</code>, all hash-based <code>.pyc</code> files, whether
+checked or unchecked, are validated against their corresponding source
+file. When set to <code>never</code>, hash-based <code>.pyc</code> files are not validated
+against their corresponding source files.</p>
+<p>The semantics of timestamp-based <code>.pyc</code> files are unaffected by this
+option.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-d"><code class="sig-name">-d</code></dt>
+  <dd><p>Turn on parser debugging output (for expert only).
+See also the :envvar:`PYTHONDEBUG` environment variable.</p>
+<p>This option requires a <a href="configure.html#debug-build">debug build of Python</a>, otherwise
+it's ignored.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-e"><code class="sig-name">-E</code></dt>
+  <dd><p>Ignore all <code>PYTHON*</code> environment variables, e.g.
+:envvar:`PYTHONPATH` and :envvar:`PYTHONHOME`, that might be set.</p>
+<p>See also the <a class="reference internal" href="cmdline.html#std:cmdoption:-p"><code class="xref std cmdoption docutils literal">-P</code></a> and <a class="reference internal" href="cmdline.html#std:cmdoption:-i"><code class="xref std cmdoption docutils literal">-I</code></a> (isolated) options.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-i"><code class="sig-name">-i</code></dt>
+  <dd><p>Enter interactive mode after execution.</p>
+<p>Using the <a class="reference internal" href="cmdline.html#std:cmdoption:-i"><code class="xref std cmdoption docutils literal">-i</code></a> option will enter interactive mode in any of the following circumstances:</p>
+<ul>
+<li><p>When a script is passed as first argument</p>
+</li>
+<li><p>When the <a class="reference internal" href="cmdline.html#std:cmdoption:-c"><code class="xref std cmdoption docutils literal">-c</code></a> option is used</p>
+</li>
+<li><p>When the <a class="reference internal" href="cmdline.html#std:cmdoption:-m"><code class="xref std cmdoption docutils literal">-m</code></a> option is used</p>
+</li>
+</ul>
+<p>Interactive mode will start even when <a class="reference internal" href="../library/sys.html#py:data:sys.stdin"><code class="xref py data docutils literal">sys.stdin</code></a> does not appear to be a terminal. The
+:envvar:`PYTHONSTARTUP` file is not read.</p>
+<p>This can be useful to inspect global variables or a stack trace when a script
+raises an exception.  See also :envvar:`PYTHONINSPECT`.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-i"><code class="sig-name">-I</code></dt>
+  <dd><p>Run Python in isolated mode. This also implies <a class="reference internal" href="cmdline.html#std:cmdoption:-e"><code class="xref std cmdoption docutils literal">-E</code></a>, <a class="reference internal" href="cmdline.html#std:cmdoption:-p"><code class="xref std cmdoption docutils literal">-P</code></a>
+and <a class="reference internal" href="cmdline.html#std:cmdoption:-s"><code class="xref std cmdoption docutils literal">-s</code></a> options.</p>
+<p>In isolated mode <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> contains neither the script's directory nor
+the user's site-packages directory. All <code>PYTHON*</code> environment
+variables are ignored, too. Further restrictions may be imposed to prevent
+the user from injecting malicious code.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-o"><code class="sig-name">-O</code></dt>
+  <dd><p>Remove assert statements and any code conditional on the value of
+<a class="reference internal" href="../library/constants.html#py:data:__debug__"><code class="xref py data docutils literal">__debug__</code></a>.  Augment the filename for compiled
+(<a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a>) files by adding <code>.opt-1</code> before the <code>.pyc</code>
+extension (see <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a>).  See also :envvar:`PYTHONOPTIMIZE`.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Modify <code>.pyc</code> filenames according to <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-oo"><code class="sig-name">-OO</code></dt>
+  <dd><p>Do <a class="reference internal" href="cmdline.html#std:cmdoption:-o"><code class="xref std cmdoption docutils literal">-O</code></a> and also discard docstrings.  Augment the filename
+for compiled (<a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a>) files by adding <code>.opt-2</code> before the
+<code>.pyc</code> extension (see <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a>).</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Modify <code>.pyc</code> filenames according to <span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-p"><code class="sig-name">-P</code></dt>
+  <dd><p>Don't prepend a potentially unsafe path to <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a>:</p>
+<ul>
+<li><p><code>python -m module</code> command line: Don't prepend the current working
+directory.</p>
+</li>
+<li><p><code>python script.py</code> command line: Don't prepend the script's directory.
+If it's a symbolic link, resolve symbolic links.</p>
+</li>
+<li><p><code>python -c code</code> and <code>python</code> (REPL) command lines: Don't prepend an
+empty string, which means the current working directory.</p>
+</li>
+</ul>
+<p>See also the :envvar:`PYTHONSAFEPATH` environment variable, and <a class="reference internal" href="cmdline.html#std:cmdoption:-e"><code class="xref std cmdoption docutils literal">-E</code></a>
+and <a class="reference internal" href="cmdline.html#std:cmdoption:-i"><code class="xref std cmdoption docutils literal">-I</code></a> (isolated) options.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-q"><code class="sig-name">-q</code></dt>
+  <dd><p>Don't display the copyright and version messages even in interactive mode.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-r"><code class="sig-name">-R</code></dt>
+  <dd><p>Turn on hash randomization. This option only has an effect if the
+:envvar:`PYTHONHASHSEED` environment variable is set to anything other
+than <code>random</code>, since hash randomization is enabled by default.</p>
+<p>On previous versions of Python, this option turns on hash randomization,
+so that the <a class="reference internal" href="../reference/datamodel.html#py:method:object.__hash__"><code class="xref py method docutils literal">__hash__</code></a> values of str and bytes objects
+are "salted" with an unpredictable random value.  Although they remain
+constant within an individual Python process, they are not predictable
+between repeated invocations of Python.</p>
+<p>Hash randomization is intended to provide protection against a
+denial-of-service caused by carefully chosen inputs that exploit the worst
+case performance of a dict construction, <em>O</em>(<em>n</em>:sup:`2`) complexity.  See
+http://ocert.org/advisories/ocert-2011-003.html for details.</p>
+<p>:envvar:`PYTHONHASHSEED` allows you to set a fixed value for the hash
+seed secret.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2.3:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The option is no longer ignored.</p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-s"><code class="sig-name">-s</code></dt>
+  <dd><p>Don't add the <a class="reference internal" href="../library/site.html#py:data:site.user_site"><code class="xref py data docutils literal">user site-packages directory</code></a> to
+<a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a>.</p>
+<p>See also :envvar:`PYTHONNOUSERSITE`.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0370/"><strong>PEP 370</strong></a> – Per user site-packages directory</p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-s"><code class="sig-name">-S</code></dt>
+  <dd><p>Disable the import of the module <a class="reference internal" href="../library/site.html#py:module:site" title="site: Module responsible for site-specific configuration."><code class="xref py module docutils literal">site</code></a> and the site-dependent
+manipulations of <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> that it entails.  Also disable these
+manipulations if <a class="reference internal" href="../library/site.html#py:module:site" title="site: Module responsible for site-specific configuration."><code class="xref py module docutils literal">site</code></a> is explicitly imported later (call
+<a class="reference internal" href="../library/site.html#py:function:site.main"><code class="xref py function docutils literal">site.main</code></a> if you want them to be triggered).</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-u"><code class="sig-name">-u</code></dt>
+  <dd><p>Force the stdout and stderr streams to be unbuffered.  This option has no
+effect on the stdin stream.</p>
+<p>See also :envvar:`PYTHONUNBUFFERED`.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The text layer of the stdout and stderr streams now is unbuffered.</p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-v"><code class="sig-name">-v</code></dt>
+  <dd><p>Print a message each time a module is initialized, showing the place
+(filename or built-in module) from which it is loaded.  When given twice
+(<a href="#" class="broken-link"><code class="xref std cmdoption docutils literal">!-vv</code></a>), print a message for each file that is checked for when
+searching for a module.  Also provides information on module cleanup at exit.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The <a class="reference internal" href="../library/site.html#py:module:site" title="site: Module responsible for site-specific configuration."><code class="xref py module docutils literal">site</code></a> module reports the site-specific paths
+and :file:`.pth` files being processed.</p>
+</div>
+<p>See also :envvar:`PYTHONVERBOSE`.</p>
+</dd>
+</dl>
+<a id="using-on-warnings"></a>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-w"><code class="sig-name">-W arg</code></dt>
+  <dd><p>Warning control. Python's warning machinery by default prints warning
+messages to <a class="reference internal" href="../library/sys.html#py:data:sys.stderr"><code class="xref py data docutils literal">sys.stderr</code></a>.</p>
+<p>The simplest settings apply a particular action unconditionally to all
+warnings emitted by a process (even those that are otherwise ignored by
+default):</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">-Wdefault  <span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> Warn once per call location</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">-Werror    <span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> Convert to exceptions</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">-Walways   <span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> Warn every time</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">-Wall      <span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> Same as -Walways</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">-Wmodule   <span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> Warn once per calling module</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">-Wonce     <span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> Warn once per Python process</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span></span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">-Wignore   <span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> Never warn</span></span></span></span></pre></div>
+<p>The action names can be abbreviated as desired and the interpreter will
+resolve them to the appropriate action name. For example, <code>-Wi</code> is the
+same as <code>-Wignore</code>.</p>
+<p>The full form of argument is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">action:message:category:module:lineno</span></span></span></pre></div>
+<p>Empty fields match all values; trailing empty fields may be omitted. For
+example <code>-W ignore::DeprecationWarning</code> ignores all DeprecationWarning
+warnings.</p>
+<p>The <em>action</em> field is as explained above but only applies to warnings that
+match the remaining fields.</p>
+<p>The <em>message</em> field must match the whole warning message; this match is
+case-insensitive.</p>
+<p>The <em>category</em> field matches the warning category
+(ex: <code>DeprecationWarning</code>). This must be a class name; the match test
+whether the actual warning category of the message is a subclass of the
+specified warning category.</p>
+<p>The <em>module</em> field matches the (fully qualified) module name; this match is
+case-sensitive.</p>
+<p>The <em>lineno</em> field matches the line number, where zero matches all line
+numbers and is thus equivalent to an omitted line number.</p>
+<p>Multiple <a class="reference internal" href="cmdline.html#std:cmdoption:-w"><code class="xref std cmdoption docutils literal">-W</code></a> options can be given; when a warning matches more than
+one option, the action for the last matching option is performed. Invalid
+<a class="reference internal" href="cmdline.html#std:cmdoption:-w"><code class="xref std cmdoption docutils literal">-W</code></a> options are ignored (though, a warning message is printed about
+invalid options when the first warning is issued).</p>
+<p>Warnings can also be controlled using the :envvar:`PYTHONWARNINGS`
+environment variable and from within a Python program using the
+<a class="reference internal" href="../library/warnings.html#py:module:warnings" title="warnings: Issue warning messages and control their disposition."><code class="xref py module docutils literal">warnings</code></a> module. For example, the <a class="reference internal" href="../library/warnings.html#py:function:warnings.filterwarnings"><code class="xref py function docutils literal">warnings.filterwarnings</code></a>
+function can be used to use a regular expression on the warning message.</p>
+<p>See <a href="../library/warnings.html#warning-filter">The Warnings Filter</a> and <a href="../library/warnings.html#describing-warning-filters">Describing Warning Filters</a> for more
+details.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-x"><code class="sig-name">-x</code></dt>
+  <dd><p>Skip the first line of the source, allowing use of non-Unix forms of
+<code>#!cmd</code>.  This is intended for a DOS specific hack only.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:-x"><code class="sig-name">-X</code></dt>
+  <dd><p>Reserved for various implementation-specific options.  CPython currently
+defines the following possible values:</p>
+<ul>
+<li><p><code>-X faulthandler</code> to enable <a class="reference internal" href="../library/faulthandler.html#py:module:faulthandler" title="faulthandler: Dump the Python traceback."><code class="xref py module docutils literal">faulthandler</code></a>.
+See also :envvar:`PYTHONFAULTHANDLER`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</li>
+<li><p><code>-X showrefcount</code> to output the total reference count and number of used
+memory blocks when the program finishes or after each statement in the
+interactive interpreter. This only works on <a href="configure.html#debug-build">debug builds</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</li>
+<li><p><code>-X tracemalloc</code> to start tracing Python memory allocations using the
+<a class="reference internal" href="../library/tracemalloc.html#py:module:tracemalloc" title="tracemalloc: Trace memory allocations."><code class="xref py module docutils literal">tracemalloc</code></a> module. By default, only the most recent frame is
+stored in a traceback of a trace. Use <code>-X tracemalloc=NFRAME</code> to start
+tracing with a traceback limit of <em>NFRAME</em> frames.
+See <a class="reference internal" href="../library/tracemalloc.html#py:function:tracemalloc.start"><code class="xref py function docutils literal">tracemalloc.start</code></a> and :envvar:`PYTHONTRACEMALLOC`
+for more information.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</li>
+<li><p><code>-X int_max_str_digits</code> configures the <a href="../library/stdtypes.html#int_max_str_digits">integer string conversion
+length limitation</a>.  See also
+:envvar:`PYTHONINTMAXSTRDIGITS`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</li>
+<li><p><code>-X importtime</code> to show how long each import takes. It shows module
+name, cumulative time (including nested imports) and self time (excluding
+nested imports).  Note that its output may be broken in multi-threaded
+application.  Typical usage is <code>python -X importtime -c 'import asyncio'</code>.</p>
+<p><code>-X importtime=2</code> enables additional output that indicates when an
+imported module has already been loaded.  In such cases, the string
+<code>cached</code> will be printed in both time columns.</p>
+<p>See also :envvar:`PYTHONPROFILEIMPORTTIME`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Added <code>-X importtime=2</code> to also trace imports of loaded modules,
+and reserved values other than <code>1</code> and <code>2</code> for future use.</p>
+</div>
+</li>
+<li><p><code>-X dev</code>: enable <a href="../library/devmode.html#devmode">Python Development Mode</a>, introducing
+additional runtime checks that are too expensive to be enabled by
+default.  See also :envvar:`PYTHONDEVMODE`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</li>
+<li><p><code>-X utf8</code> enables the <a href="../library/os.html#utf8-mode">Python UTF-8 Mode</a>.
+<code>-X utf8=0</code> explicitly disables <a href="../library/os.html#utf8-mode">Python UTF-8 Mode</a>
+(even when it would otherwise activate automatically).
+See also :envvar:`PYTHONUTF8`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</li>
+<li><p><code>-X pycache_prefix=PATH</code> enables writing <code>.pyc</code> files to a parallel
+tree rooted at the given directory instead of to the code tree. See also
+:envvar:`PYTHONPYCACHEPREFIX`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+</div>
+</li>
+<li><p><code>-X warn_default_encoding</code> issues a <a class="reference internal" href="../library/exceptions.html#py:exception:encodingwarning"><code class="xref py class docutils literal">EncodingWarning</code></a> when the
+locale-specific default encoding is used for opening files.
+See also :envvar:`PYTHONWARNDEFAULTENCODING`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</li>
+<li><p><code>-X no_debug_ranges</code> disables the inclusion of the tables mapping extra
+location information (end line, start column offset and end column offset)
+to every instruction in code objects. This is useful when smaller code
+objects and pyc files are desired as well as suppressing the extra visual
+location indicators when the interpreter displays tracebacks. See also
+:envvar:`PYTHONNODEBUGRANGES`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</li>
+<li><p><code>-X frozen_modules</code> determines whether or not frozen modules are
+ignored by the import machinery.  A value of <code>on</code> means they get
+imported and <code>off</code> means they are ignored.  The default is <code>on</code>
+if this is an installed Python (the normal case).  If it's under
+development (running from the source tree) then the default is <code>off</code>.
+Note that the <code class="xref py module docutils literal">importlib_bootstrap</code> and
+<code class="xref py module docutils literal">importlib_bootstrap_external</code> frozen modules are always used, even
+if this flag is set to <code>off</code>. See also :envvar:`PYTHON_FROZEN_MODULES`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</li>
+<li><p><code>-X perf</code> enables support for the Linux <code>perf</code> profiler.
+When this option is provided, the <code>perf</code> profiler will be able to
+report Python calls. This option is only available on some platforms and
+will do nothing if is not supported on the current system. The default value
+is "off". See also :envvar:`PYTHONPERFSUPPORT` and <a href="../howto/perf_profiling.html#perf_profiling">Python support for the Linux perf profiler</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</li>
+<li><p><code>-X perf_jit</code> enables support for the Linux <code>perf</code> profiler with DWARF
+support. When this option is provided, the <code>perf</code> profiler will be able
+to report Python calls using DWARF information. This option is only available on
+some platforms and will do nothing if is not supported on the current
+system. The default value is "off". See also :envvar:`PYTHON_PERF_JIT_SUPPORT`
+and <a href="../howto/perf_profiling.html#perf_profiling">Python support for the Linux perf profiler</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</li>
+<li><p><code>-X disable_remote_debug</code> disables the remote debugging support as described
+in <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0768/"><strong>PEP 768</strong></a>.  This includes both the functionality to schedule code for
+execution in another process and the functionality to receive code for
+execution in the current process.</p>
+<p>This option is only available on some platforms and will do nothing
+if is not supported on the current system. See also
+:envvar:`PYTHON_DISABLE_REMOTE_DEBUG` and <span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0768/"><strong>PEP 768</strong></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</li>
+<li><p>:samp:`-X cpu_count={n}` overrides <a class="reference internal" href="../library/os.html#py:function:os.cpu_count"><code class="xref py function docutils literal">os.cpu_count</code></a>,
+<a class="reference internal" href="../library/os.html#py:function:os.process_cpu_count"><code class="xref py function docutils literal">os.process_cpu_count</code></a>, and <a class="reference internal" href="../library/multiprocessing.html#py:function:multiprocessing.cpu_count"><code class="xref py function docutils literal">multiprocessing.cpu_count</code></a>.
+<em>n</em> must be greater than or equal to 1.
+This option may be useful for users who need to limit CPU resources of a
+container system. See also :envvar:`PYTHON_CPU_COUNT`.
+If <em>n</em> is <code>default</code>, nothing is overridden.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</li>
+<li><p>:samp:`-X presite={package.module}` specifies a module that should be
+imported before the <a class="reference internal" href="../library/site.html#py:module:site" title="site: Module responsible for site-specific configuration."><code class="xref py module docutils literal">site</code></a> module is executed and before the
+<a class="reference internal" href="../library/__main__.html#py:module:__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py module docutils literal">__main__</code></a> module exists.  Therefore, the imported module isn't
+<a class="reference internal" href="../library/__main__.html#py:module:__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py module docutils literal">__main__</code></a>. This can be used to execute code early during Python
+initialization. Python needs to be <a href="configure.html#debug-build">built in debug mode</a>
+for this option to exist.  See also :envvar:`PYTHON_PRESITE`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</li>
+<li><p>:samp:`-X gil={0,1}` forces the GIL to be disabled or enabled,
+respectively. Setting to <code>0</code> is only available in builds configured with
+<a class="reference internal" href="configure.html#std:cmdoption:--disable-gil"><code class="xref std cmdoption docutils literal">--disable-gil</code></a>. See also :envvar:`PYTHON_GIL` and
+<a href="../whatsnew/3.13.html#whatsnew313-free-threaded-cpython">Free-threaded CPython</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</li>
+<li><p>:samp:`-X thread_inherit_context={0,1}` causes <a class="reference internal" href="../library/threading.html#py:class:threading.thread"><code class="xref py class docutils literal">Thread</code></a>
+to, by default, use a copy of context of the caller of
+<code>Thread.start()</code> when starting.  Otherwise, threads will start
+with an empty context.  If unset, the value of this option defaults
+to <code>1</code> on free-threaded builds and to <code>0</code> otherwise.  See also
+:envvar:`PYTHON_THREAD_INHERIT_CONTEXT`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</li>
+<li><p>:samp:`-X context_aware_warnings={0,1}` causes the
+<a class="reference internal" href="../library/warnings.html#py:class:warnings.catch_warnings"><code class="xref py class docutils literal">warnings.catch_warnings</code></a> context manager to use a
+<a class="reference internal" href="../library/contextvars.html#py:class:contextvars.contextvar"><code class="xref py class docutils literal">ContextVar</code></a> to store warnings filter state.  If
+unset, the value of this option defaults to <code>1</code> on free-threaded builds
+and to <code>0</code> otherwise.  See also :envvar:`PYTHON_CONTEXT_AWARE_WARNINGS`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</li>
+<li><p>:samp:`-X tlbc={0,1}` enables (1, the default) or disables (0) thread-local
+bytecode in builds configured with <a class="reference internal" href="configure.html#std:cmdoption:--disable-gil"><code class="xref std cmdoption docutils literal">--disable-gil</code></a>.  When disabled,
+this also disables the specializing interpreter.  See also
+:envvar:`PYTHON_TLBC`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</li>
+</ul>
+<p>It also allows passing arbitrary values and retrieving them through the
+<a class="reference internal" href="../library/sys.html#py:data:sys._xoptions"><code class="xref py data docutils literal">sys._xoptions</code></a> dictionary.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>Removed the <code>-X showalloccount</code> option.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Removed the <code>-X oldparser</code> option.</p>
+</div>
+</dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'versionremoved'</p>
+<pre class="directive-error-source">.. versionremoved:: 3.14
+
+   :option:`!-J` is no longer reserved for use by Jython_,
+   and now has no special meaning.
+
+   .. _Jython: https://www.jython.org/</pre>
+</div>
+<a id="using-on-controlling-color"></a>
+<h3 id="controlling-color"><span class="section-number">1.1.4. </span>Controlling color</h3>
+<p>The Python interpreter is configured by default to use colors to highlight
+output in certain situations such as when displaying tracebacks. This
+behavior can be controlled by setting different environment variables.</p>
+<p>Setting the environment variable <code>TERM</code> to <code>dumb</code> will disable color.</p>
+<p>If the |FORCE_COLOR|_ environment variable is set, then color will be
+enabled regardless of the value of TERM. This is useful on CI systems which
+aren’t terminals but can still display ANSI escape sequences.</p>
+<p>If the |NO_COLOR|_ environment variable is set, Python will disable all color
+in the output. This takes precedence over <code>FORCE_COLOR</code>.</p>
+<p>All these environment variables are used also by other tools to control color
+output. To control the color output only in the Python interpreter, the
+:envvar:`PYTHON_COLORS` environment variable can be used. This variable takes
+precedence over <code>NO_COLOR</code>, which in turn takes precedence over
+<code>FORCE_COLOR</code>.</p>
+<a id="using-on-envvars"></a>
+<h2 id="environment-variables"><span class="section-number">1.2. </span>Environment variables</h2>
+<p>These environment variables influence Python's behavior, they are processed
+before the command-line switches other than -E or -I.  It is customary that
+command-line switches override environmental variables where there is a
+conflict.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONHOME
+
+   Change the location of the standard Python libraries.  By default, the
+   libraries are searched in :file:`{prefix}/lib/python{version}` and
+   :file:`{exec_prefix}/lib/python{version}`, where :file:`{prefix}` and
+   :file:`{exec_prefix}` are installation-dependent directories, both defaulting
+   to :file:`/usr/local`.
+
+   When :envvar:`PYTHONHOME` is set to a single directory, its value replaces
+   both :file:`{prefix}` and :file:`{exec_prefix}`.  To specify different values
+   for these, set :envvar:`PYTHONHOME` to :file:`{prefix}:{exec_prefix}`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONPATH
+
+   Augment the default search path for module files.  The format is the same as
+   the shell's :envvar:`PATH`: one or more directory pathnames separated by
+   :data:`os.pathsep` (e.g. colons on Unix or semicolons on Windows).
+   Non-existent directories are silently ignored.
+
+   In addition to normal directories, individual :envvar:`PYTHONPATH` entries
+   may refer to zipfiles containing pure Python modules (in either source or
+   compiled form). Extension modules cannot be imported from zipfiles.
+
+   The default search path is installation dependent, but generally begins with
+   :file:`{prefix}/lib/python{version}` (see :envvar:`PYTHONHOME` above).  It
+   is *always* appended to :envvar:`PYTHONPATH`.
+
+   An additional directory will be inserted in the search path in front of
+   :envvar:`PYTHONPATH` as described above under
+   :ref:`using-on-interface-options`. The search path can be manipulated from
+   within a Python program as the variable :data:`sys.path`.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONSAFEPATH
+
+   If this is set to a non-empty string, don't prepend a potentially unsafe
+   path to :data:`sys.path`: see the :option:`-P` option for details.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONPLATLIBDIR
+
+   If this is set to a non-empty string, it overrides the :data:`sys.platlibdir`
+   value.
+
+   .. versionadded:: 3.9</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONSTARTUP
+
+   If this is the name of a readable file, the Python commands in that file are
+   executed before the first prompt is displayed in interactive mode.  The file
+   is executed in the same namespace where interactive commands are executed so
+   that objects defined or imported in it can be used without qualification in
+   the interactive session.  You can also change the prompts :data:`sys.ps1` and
+   :data:`sys.ps2` and the hook :data:`sys.__interactivehook__` in this file.
+
+   .. audit-event:: cpython.run_startup filename envvar-PYTHONSTARTUP
+
+      Raises an :ref:`auditing event &lt;auditing&gt;` ``cpython.run_startup`` with
+      the filename as the argument when called on startup.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONOPTIMIZE
+
+   If this is set to a non-empty string it is equivalent to specifying the
+   :option:`-O` option.  If set to an integer, it is equivalent to specifying
+   :option:`-O` multiple times.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONBREAKPOINT
+
+   If this is set, it names a callable using dotted-path notation.  The module
+   containing the callable will be imported and then the callable will be run
+   by the default implementation of :func:`sys.breakpointhook` which itself is
+   called by built-in :func:`breakpoint`.  If not set, or set to the empty
+   string, it is equivalent to the value "pdb.set_trace".  Setting this to the
+   string "0" causes the default implementation of :func:`sys.breakpointhook`
+   to do nothing but return immediately.
+
+   .. versionadded:: 3.7</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONDEBUG
+
+   If this is set to a non-empty string it is equivalent to specifying the
+   :option:`-d` option.  If set to an integer, it is equivalent to specifying
+   :option:`-d` multiple times.
+
+   This environment variable requires a :ref:`debug build of Python
+   &lt;debug-build&gt;`, otherwise it's ignored.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONINSPECT
+
+   If this is set to a non-empty string it is equivalent to specifying the
+   :option:`-i` option.
+
+   This variable can also be modified by Python code using :data:`os.environ`
+   to force inspect mode on program termination.
+
+   .. audit-event:: cpython.run_stdin "" ""
+
+   .. versionchanged:: 3.12.5 (also 3.11.10, 3.10.15, 3.9.20, and 3.8.20)
+      Emits audit events.
+
+   .. versionchanged:: 3.13
+      Uses PyREPL if possible, in which case :envvar:`PYTHONSTARTUP` is
+      also executed. Emits audit events.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONUNBUFFERED
+
+   If this is set to a non-empty string it is equivalent to specifying the
+   :option:`-u` option.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONVERBOSE
+
+   If this is set to a non-empty string it is equivalent to specifying the
+   :option:`-v` option.  If set to an integer, it is equivalent to specifying
+   :option:`-v` multiple times.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONCASEOK
+
+   If this is set, Python ignores case in :keyword:`import` statements.  This
+   only works on Windows and macOS.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONDONTWRITEBYTECODE
+
+   If this is set to a non-empty string, Python won't try to write ``.pyc``
+   files on the import of source modules.  This is equivalent to
+   specifying the :option:`-B` option.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONPYCACHEPREFIX
+
+   If this is set, Python will write ``.pyc`` files in a mirror directory tree
+   at this path, instead of in ``__pycache__`` directories within the source
+   tree. This is equivalent to specifying the :option:`-X`
+   ``pycache_prefix=PATH`` option.
+
+   .. versionadded:: 3.8</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONHASHSEED
+
+   If this variable is not set or set to ``random``, a random value is used
+   to seed the hashes of str and bytes objects.
+
+   If :envvar:`PYTHONHASHSEED` is set to an integer value, it is used as a fixed
+   seed for generating the hash() of the types covered by the hash
+   randomization.
+
+   Its purpose is to allow repeatable hashing, such as for selftests for the
+   interpreter itself, or to allow a cluster of python processes to share hash
+   values.
+
+   The integer must be a decimal number in the range [0,4294967295].  Specifying
+   the value 0 will disable hash randomization.
+
+   .. versionadded:: 3.2.3</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONINTMAXSTRDIGITS
+
+   If this variable is set to an integer, it is used to configure the
+   interpreter's global :ref:`integer string conversion length limitation
+   &lt;int_max_str_digits&gt;`.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONIOENCODING
+
+   If this is set before running the interpreter, it overrides the encoding used
+   for stdin/stdout/stderr, in the syntax ``encodingname:errorhandler``.  Both
+   the ``encodingname`` and the ``:errorhandler`` parts are optional and have
+   the same meaning as in :func:`str.encode`.
+
+   For stderr, the ``:errorhandler`` part is ignored; the handler will always be
+   ``'backslashreplace'``.
+
+   .. versionchanged:: 3.4
+      The ``encodingname`` part is now optional.
+
+   .. versionchanged:: 3.6
+      On Windows, the encoding specified by this variable is ignored for interactive
+      console buffers unless :envvar:`PYTHONLEGACYWINDOWSSTDIO` is also specified.
+      Files and pipes redirected through the standard streams are not affected.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONNOUSERSITE
+
+   If this is set, Python won't add the :data:`user site-packages directory
+   &lt;site.USER_SITE&gt;` to :data:`sys.path`.
+
+   .. seealso::
+
+      :pep:`370` -- Per user site-packages directory</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONUSERBASE
+
+   Defines the :data:`user base directory &lt;site.USER_BASE&gt;`, which is used to
+   compute the path of the :data:`user site-packages directory &lt;site.USER_SITE&gt;`
+   and :ref:`installation paths &lt;sysconfig-user-scheme&gt;` for
+   ``python -m pip install --user``.
+
+   .. seealso::
+
+      :pep:`370` -- Per user site-packages directory</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONEXECUTABLE
+
+   If this environment variable is set, ``sys.argv[0]`` will be set to its
+   value instead of the value got through the C runtime.  Only works on
+   macOS.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONWARNINGS
+
+   This is equivalent to the :option:`-W` option. If set to a comma
+   separated string, it is equivalent to specifying :option:`-W` multiple
+   times, with filters later in the list taking precedence over those earlier
+   in the list.
+
+   The simplest settings apply a particular action unconditionally to all
+   warnings emitted by a process (even those that are otherwise ignored by
+   default)::
+
+       PYTHONWARNINGS=default  # Warn once per call location
+       PYTHONWARNINGS=error    # Convert to exceptions
+       PYTHONWARNINGS=always   # Warn every time
+       PYTHONWARNINGS=all      # Same as PYTHONWARNINGS=always
+       PYTHONWARNINGS=module   # Warn once per calling module
+       PYTHONWARNINGS=once     # Warn once per Python process
+       PYTHONWARNINGS=ignore   # Never warn
+
+   See :ref:`warning-filter` and :ref:`describing-warning-filters` for more
+   details.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONFAULTHANDLER
+
+   If this environment variable is set to a non-empty string,
+   :func:`faulthandler.enable` is called at startup: install a handler for
+   :const:`~signal.SIGSEGV`, :const:`~signal.SIGFPE`,
+   :const:`~signal.SIGABRT`, :const:`~signal.SIGBUS` and
+   :const:`~signal.SIGILL` signals to dump the Python traceback.
+   This is equivalent to :option:`-X` ``faulthandler`` option.
+
+   .. versionadded:: 3.3</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONTRACEMALLOC
+
+   If this environment variable is set to a non-empty string, start tracing
+   Python memory allocations using the :mod:`tracemalloc` module. The value of
+   the variable is the maximum number of frames stored in a traceback of a
+   trace. For example, ``PYTHONTRACEMALLOC=1`` stores only the most recent
+   frame.
+   See the :func:`tracemalloc.start` function for more information.
+   This is equivalent to setting the :option:`-X` ``tracemalloc`` option.
+
+   .. versionadded:: 3.4</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONPROFILEIMPORTTIME
+
+   If this environment variable is set to ``1``, Python will show
+   how long each import takes. If set to ``2``, Python will include output for
+   imported modules that have already been loaded.
+   This is equivalent to setting the :option:`-X` ``importtime`` option.
+
+   .. versionadded:: 3.7
+
+   .. versionchanged:: 3.14
+
+      Added ``PYTHONPROFILEIMPORTTIME=2`` to also trace imports of loaded modules.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONASYNCIODEBUG
+
+   If this environment variable is set to a non-empty string, enable the
+   :ref:`debug mode &lt;asyncio-debug-mode&gt;` of the :mod:`asyncio` module.
+
+   .. versionadded:: 3.4</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONMALLOC
+
+   Set the Python memory allocators and/or install debug hooks.
+
+   Set the family of memory allocators used by Python:
+
+   * ``default``: use the :ref:`default memory allocators
+     &lt;default-memory-allocators&gt;`.
+   * ``malloc``: use the :c:func:`malloc` function of the C library
+     for all domains (:c:macro:`PYMEM_DOMAIN_RAW`, :c:macro:`PYMEM_DOMAIN_MEM`,
+     :c:macro:`PYMEM_DOMAIN_OBJ`).
+   * ``pymalloc``: use the :ref:`pymalloc allocator &lt;pymalloc&gt;` for
+     :c:macro:`PYMEM_DOMAIN_MEM` and :c:macro:`PYMEM_DOMAIN_OBJ` domains and use
+     the :c:func:`malloc` function for the :c:macro:`PYMEM_DOMAIN_RAW` domain.
+   * ``mimalloc``: use the :ref:`mimalloc allocator &lt;mimalloc&gt;` for
+     :c:macro:`PYMEM_DOMAIN_MEM` and :c:macro:`PYMEM_DOMAIN_OBJ` domains and use
+     the :c:func:`malloc` function for the :c:macro:`PYMEM_DOMAIN_RAW` domain.
+
+   Install :ref:`debug hooks &lt;pymem-debug-hooks&gt;`:
+
+   * ``debug``: install debug hooks on top of the :ref:`default memory
+     allocators &lt;default-memory-allocators&gt;`.
+   * ``malloc_debug``: same as ``malloc`` but also install debug hooks.
+   * ``pymalloc_debug``: same as ``pymalloc`` but also install debug hooks.
+   * ``mimalloc_debug``: same as ``mimalloc`` but also install debug hooks.
+
+   .. versionadded:: 3.6
+
+   .. versionchanged:: 3.7
+      Added the ``"default"`` allocator.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONMALLOCSTATS
+
+   If set to a non-empty string, Python will print statistics of the
+   :ref:`pymalloc memory allocator &lt;pymalloc&gt;` every time a new pymalloc object
+   arena is created, and on shutdown.
+
+   This variable is ignored if the :envvar:`PYTHONMALLOC` environment variable
+   is used to force the :c:func:`malloc` allocator of the C library, or if
+   Python is configured without ``pymalloc`` support.
+
+   .. versionchanged:: 3.6
+      This variable can now also be used on Python compiled in release mode.
+      It now has no effect if set to an empty string.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONLEGACYWINDOWSFSENCODING
+
+   If set to a non-empty string, the default :term:`filesystem encoding and
+   error handler` mode will revert to their pre-3.6 values of 'mbcs' and
+   'replace', respectively.  Otherwise, the new defaults 'utf-8' and
+   'surrogatepass' are used.
+
+   This may also be enabled at runtime with
+   :func:`sys._enablelegacywindowsfsencoding`.
+
+   .. availability:: Windows.
+
+   .. versionadded:: 3.6
+      See :pep:`529` for more details.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONLEGACYWINDOWSSTDIO
+
+   If set to a non-empty string, does not use the new console reader and
+   writer. This means that Unicode characters will be encoded according to
+   the active console code page, rather than using utf-8.
+
+   This variable is ignored if the standard streams are redirected (to files
+   or pipes) rather than referring to console buffers.
+
+   .. availability:: Windows.
+
+   .. versionadded:: 3.6</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONCOERCECLOCALE
+
+   If set to the value ``0``, causes the main Python command line application
+   to skip coercing the legacy ASCII-based C and POSIX locales to a more
+   capable UTF-8 based alternative.
+
+   If this variable is *not* set (or is set to a value other than ``0``), the
+   ``LC_ALL`` locale override environment variable is also not set, and the
+   current locale reported for the ``LC_CTYPE`` category is either the default
+   ``C`` locale, or else the explicitly ASCII-based ``POSIX`` locale, then the
+   Python CLI will attempt to configure the following locales for the
+   ``LC_CTYPE`` category in the order listed before loading the interpreter
+   runtime:
+
+   * ``C.UTF-8``
+   * ``C.utf8``
+   * ``UTF-8``
+
+   If setting one of these locale categories succeeds, then the ``LC_CTYPE``
+   environment variable will also be set accordingly in the current process
+   environment before the Python runtime is initialized. This ensures that in
+   addition to being seen by both the interpreter itself and other locale-aware
+   components running in the same process (such as the GNU ``readline``
+   library), the updated setting is also seen in subprocesses (regardless of
+   whether or not those processes are running a Python interpreter), as well as
+   in operations that query the environment rather than the current C locale
+   (such as Python's own :func:`locale.getdefaultlocale`).
+
+   Configuring one of these locales (either explicitly or via the above
+   implicit locale coercion) automatically enables the ``surrogateescape``
+   :ref:`error handler &lt;error-handlers&gt;` for :data:`sys.stdin` and
+   :data:`sys.stdout` (:data:`sys.stderr` continues to use ``backslashreplace``
+   as it does in any other locale). This stream handling behavior can be
+   overridden using :envvar:`PYTHONIOENCODING` as usual.
+
+   For debugging purposes, setting ``PYTHONCOERCECLOCALE=warn`` will cause
+   Python to emit warning messages on ``stderr`` if either the locale coercion
+   activates, or else if a locale that *would* have triggered coercion is
+   still active when the Python runtime is initialized.
+
+   Also note that even when locale coercion is disabled, or when it fails to
+   find a suitable target locale, :envvar:`PYTHONUTF8` will still activate by
+   default in legacy ASCII-based locales. Both features must be disabled in
+   order to force the interpreter to use ``ASCII`` instead of ``UTF-8`` for
+   system interfaces.
+
+   .. availability:: Unix.
+
+   .. versionadded:: 3.7
+      See :pep:`538` for more details.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONDEVMODE
+
+   If this environment variable is set to a non-empty string, enable
+   :ref:`Python Development Mode &lt;devmode&gt;`, introducing additional runtime
+   checks that are too expensive to be enabled by default.
+   This is equivalent to setting the :option:`-X` ``dev`` option.
+
+   .. versionadded:: 3.7</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONUTF8
+
+   If set to ``1``, enable the :ref:`Python UTF-8 Mode &lt;utf8-mode&gt;`.
+
+   If set to ``0``, disable the :ref:`Python UTF-8 Mode &lt;utf8-mode&gt;`.
+
+   Setting any other non-empty string causes an error during interpreter
+   initialisation.
+
+   .. versionadded:: 3.7</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONWARNDEFAULTENCODING
+
+   If this environment variable is set to a non-empty string, issue a
+   :class:`EncodingWarning` when the locale-specific default encoding is used.
+
+   See :ref:`io-encoding-warning` for details.
+
+   .. versionadded:: 3.10</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONNODEBUGRANGES
+
+   If this variable is set, it disables the inclusion of the tables mapping
+   extra location information (end line, start column offset and end column
+   offset) to every instruction in code objects. This is useful when smaller
+   code objects and pyc files are desired as well as suppressing the extra visual
+   location indicators when the interpreter displays tracebacks.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONPERFSUPPORT
+
+   If this variable is set to a nonzero value, it enables support for
+   the Linux ``perf`` profiler so Python calls can be detected by it.
+
+   If set to ``0``, disable Linux ``perf`` profiler support.
+
+   See also the :option:`-X perf &lt;-X&gt;` command-line option
+   and :ref:`perf_profiling`.
+
+   .. versionadded:: 3.12</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_PERF_JIT_SUPPORT
+
+   If this variable is set to a nonzero value, it enables support for
+   the Linux ``perf`` profiler so Python calls can be detected by it
+   using DWARF information.
+
+   If set to ``0``, disable Linux ``perf`` profiler support.
+
+   See also the :option:`-X perf_jit &lt;-X&gt;` command-line option
+   and :ref:`perf_profiling`.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_DISABLE_REMOTE_DEBUG
+
+   If this variable is set to a non-empty string, it disables the remote
+   debugging feature described in :pep:`768`. This includes both the functionality
+   to schedule code for execution in another process and the functionality to
+   receive code for execution in the current process.
+
+   See also the :option:`-X disable_remote_debug` command-line option.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_CPU_COUNT
+
+   If this variable is set to a positive integer, it overrides the return
+   values of :func:`os.cpu_count` and :func:`os.process_cpu_count`.
+
+   See also the :option:`-X cpu_count &lt;-X&gt;` command-line option.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_FROZEN_MODULES
+
+   If this variable is set to ``on`` or ``off``, it determines whether or not
+   frozen modules are ignored by the import machinery.  A value of ``on`` means
+   they get imported and ``off`` means they are ignored.  The default is ``on``
+   for non-debug builds (the normal case) and ``off`` for debug builds.
+   Note that the :mod:`!importlib_bootstrap` and
+   :mod:`!importlib_bootstrap_external` frozen modules are always used, even
+   if this flag is set to ``off``.
+
+   See also the :option:`-X frozen_modules &lt;-X&gt;` command-line option.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_COLORS
+
+   If this variable is set to ``1``, the interpreter will colorize various kinds
+   of output. Setting it to ``0`` deactivates this behavior.
+   See also :ref:`using-on-controlling-color`.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_BASIC_REPL
+
+   If this variable is set to any value, the interpreter will not attempt to
+   load the Python-based :term:`REPL` that requires :mod:`readline`, and will
+   instead use the traditional parser-based :term:`REPL`.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_HISTORY
+
+   This environment variable can be used to set the location of a
+   ``.python_history`` file (by default, it is ``.python_history`` in the
+   user's home directory).
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_GIL
+
+   If this variable is set to ``1``, the global interpreter lock (GIL) will be
+   forced on. Setting it to ``0`` forces the GIL off (needs Python configured with
+   the :option:`--disable-gil` build option).
+
+   See also the :option:`-X gil &lt;-X&gt;` command-line option, which takes
+   precedence over this variable, and :ref:`whatsnew313-free-threaded-cpython`.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_THREAD_INHERIT_CONTEXT
+
+   If this variable is set to ``1`` then :class:`~threading.Thread` will,
+   by default, use a copy of context of the caller of ``Thread.start()``
+   when starting.  Otherwise, new threads will start with an empty context.
+   If unset, this variable defaults to ``1`` on free-threaded builds and to
+   ``0`` otherwise.  See also :option:`-X thread_inherit_context&lt;-X&gt;`.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_CONTEXT_AWARE_WARNINGS
+
+   If set to ``1`` then the :class:`warnings.catch_warnings` context
+   manager will use a :class:`~contextvars.ContextVar` to store warnings
+   filter state.  If unset, this variable defaults to ``1`` on
+   free-threaded builds and to ``0`` otherwise.  See :option:`-X
+   context_aware_warnings&lt;-X&gt;`.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_JIT
+
+   On builds where experimental just-in-time compilation is available, this
+   variable can force the JIT to be disabled (``0``) or enabled (``1``) at
+   interpreter startup.
+
+   .. versionadded:: 3.13</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_TLBC
+
+   If set to ``1`` enables thread-local bytecode. If set to ``0`` thread-local
+   bytecode and the specializing interpreter are disabled.  Only applies to
+   builds configured with :option:`--disable-gil`.
+
+   See also the :option:`-X tlbc &lt;-X&gt;` command-line option.
+
+   .. versionadded:: 3.14</pre>
+</div>
+<h3 id="debug-mode-variables"><span class="section-number">1.2.1. </span>Debug-mode variables</h3>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONDUMPREFS
+
+   If set, Python will dump objects and reference counts still alive after
+   shutting down the interpreter.
+
+   Needs Python configured with the :option:`--with-trace-refs` build option.</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONDUMPREFSFILE
+
+   If set, Python will dump objects and reference counts still alive
+   after shutting down the interpreter into a file under the path given
+   as the value to this environment variable.
+
+   Needs Python configured with the :option:`--with-trace-refs` build option.
+
+   .. versionadded:: 3.11</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHON_PRESITE
+
+   If this variable is set to a module, that module will be imported
+   early in the interpreter lifecycle, before the :mod:`site` module is
+   executed, and before the :mod:`__main__` module is created.
+   Therefore, the imported module is not treated as :mod:`__main__`.
+
+   This can be used to execute code early during Python initialization.
+
+   To import a submodule, use ``package.module`` as the value, like in
+   an import statement.
+
+   See also the :option:`-X presite &lt;-X&gt;` command-line option,
+   which takes precedence over this variable.
+
+   Needs Python configured with the :option:`--with-pydebug` build option.
+
+   .. versionadded:: 3.13</pre>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="index.html">&larr; Python Setup and Usage</a>
+        <a class="next" href="unix.html">Using Python on Unix platforms &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

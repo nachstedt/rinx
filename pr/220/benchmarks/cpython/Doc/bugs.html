@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dealing with Bugs — CPython Benchmark</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="bugs.html">Dealing with Bugs</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Dealing with Bugs"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="bugs.html#documentation-bugs">Documentation bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="bugs.html#using-the-python-issue-tracker">Using the Python issue tracker</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="bugs.html#getting-started-contributing-to-python-yourself">Getting started contributing to Python yourself</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="about.html">&larr; About this documentation</a>
+        <a class="next" href="copyright.html">Copyright &rarr;</a>
+      </nav>
+      
+      <a id="reporting-bugs"></a>
+<h1 id="dealing-with-bugs">Dealing with Bugs</h1>
+<p>Python is a mature programming language which has established a reputation for
+stability.  In order to maintain this reputation, the developers would like to
+know of any deficiencies you find in Python.</p>
+<p>It can be sometimes faster to fix bugs yourself and contribute patches to
+Python as it streamlines the process and involves less people. Learn how to
+<a href="bugs.html#contributing-to-python">contribute</a>.</p>
+<h2 id="documentation-bugs">Documentation bugs</h2>
+<p>If you find a bug in this documentation or would like to propose an improvement,
+please submit a bug report on the <a href="bugs.html#using-the-tracker">issue tracker</a>.  If you
+have a suggestion on how to fix it, include that as well.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'only'</p>
+<pre class="directive-error-source">.. only:: translation
+
+   If the bug or suggested improvement concerns the translation of this
+   documentation, submit the report to the
+   `translation’s repository &lt;TRANSLATION_REPO_&gt;`_ instead.</pre>
+</div>
+<p>You can also open a discussion item on our
+<a href="https://discuss.python.org/c/documentation/26">Documentation Discourse forum</a>.</p>
+<p>If you find a bug in the theme (HTML / CSS / JavaScript) of the
+documentation, please submit a bug report on the <a href="#" class="broken-link">python-doc-theme issue
+tracker &lt;https://github.com/python/python-docs-theme&gt;</a>.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a href="https://github.com/python/cpython/issues?q=is%3Aissue+is%3Aopen+label%3Adocs">Documentation bugs</a></dt>
+<dd><p>A list of documentation bugs that have been submitted to the Python issue tracker.</p>
+</dd>
+<dt><a href="https://devguide.python.org/tracker/">Issue Tracking</a></dt>
+<dd><p>Overview of the process involved in reporting an improvement on the tracker.</p>
+</dd>
+<dt><a href="https://devguide.python.org/docquality/#helping-with-documentation">Helping with Documentation</a></dt>
+<dd><p>Comprehensive guide for individuals that are interested in contributing to Python documentation.</p>
+</dd>
+<dt><a href="https://devguide.python.org/documentation/translating/">Documentation Translations</a></dt>
+<dd><p>A list of GitHub pages for documentation translation and their primary contacts.</p>
+</dd>
+</dl>
+</div>
+<a id="using-the-tracker"></a>
+<h2 id="using-the-python-issue-tracker">Using the Python issue tracker</h2>
+<p>Issue reports for Python itself should be submitted via the GitHub issues
+tracker (https://github.com/python/cpython/issues).
+The GitHub issues tracker offers a web form which allows pertinent information
+to be entered and submitted to the developers.</p>
+<p>The first step in filing a report is to determine whether the problem has
+already been reported.  The advantage in doing so, aside from saving the
+developers' time, is that you learn what has been done to fix it; it may be that
+the problem has already been fixed for the next release, or additional
+information is needed (in which case you are welcome to provide it if you can!).
+To do this, search the tracker using the search box at the top of the page.</p>
+<p>If the problem you're reporting is not already in the list, log in to GitHub.
+If you don't already have a GitHub account, create a new account using the
+"Sign up" link.
+It is not possible to submit a bug report anonymously.</p>
+<p>Being now logged in, you can submit an issue.
+Click on the "New issue" button in the top bar to report a new issue.</p>
+<p>The submission form has two fields, "Title" and "Comment".</p>
+<p>For the "Title" field, enter a <em>very</em> short description of the problem;
+fewer than ten words is good.</p>
+<p>In the "Comment" field, describe the problem in detail, including what you
+expected to happen and what did happen.  Be sure to include whether any
+extension modules were involved, and what hardware and software platform you
+were using (including version information as appropriate).</p>
+<p>Each issue report will be reviewed by a developer who will determine what needs to
+be done to correct the problem. You will receive an update each time an action is
+taken on the issue.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a href="https://www.chiark.greenend.org.uk/~sgtatham/bugs.html">How to Report Bugs Effectively</a></dt>
+<dd><p>Article which goes into some detail about how to create a useful bug report.
+This describes what kind of information is useful and why it is useful.</p>
+</dd>
+<dt><a href="https://bugzilla.mozilla.org/page.cgi?id=bug-writing.html">Bug Writing Guidelines</a></dt>
+<dd><p>Information about writing a good bug report.  Some of this is specific to the
+Mozilla project, but describes general good practices.</p>
+</dd>
+</dl>
+</div>
+<a id="contributing-to-python"></a>
+<h2 id="getting-started-contributing-to-python-yourself">Getting started contributing to Python yourself</h2>
+<p>Beyond just reporting bugs that you find, you are also welcome to submit
+patches to fix them.  You can find more information on how to get started
+patching Python in the <a href="https://devguide.python.org/">Python Developer's Guide</a>.  If you have questions,
+the <a href="https://mail.python.org/mailman3/lists/core-mentorship.python.org/">core-mentorship mailing list</a> is a friendly place to get answers to
+any and all questions pertaining to the process of fixing issues in Python.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="about.html">&larr; About this documentation</a>
+        <a class="next" href="copyright.html">Copyright &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

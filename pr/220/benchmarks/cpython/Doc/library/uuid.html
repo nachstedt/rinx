@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>uuid — UUID objects according to :rfc:`9562` — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Protocols and Support"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="webbrowser.html">webbrowser — Convenient web-browser controller</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="wsgiref.html">wsgiref — WSGI Utilities and Reference Implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.html">urllib — URL handling modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.request.html">urllib.request — Extensible library for opening URLs</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.parse.html">urllib.parse — Parse URLs into components</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.error.html">urllib.error — Exception classes raised by urllib.request</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.robotparser.html">urllib.robotparser —  Parser for robots.txt</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.html">http — HTTP modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.client.html">http.client — HTTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ftplib.html">ftplib — FTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="poplib.html">poplib — POP3 protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imaplib.html">imaplib — IMAP4 protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="smtplib.html">smtplib — SMTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="uuid.html">uuid — UUID objects according to :rfc:`9562`</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle uuid — UUID objects according to :rfc:`9562`"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="uuid.html#command-line-usage">Command-Line Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="uuid.html#example">Example</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="uuid.html#command-line-example">Command-Line Example</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socketserver.html">socketserver — A framework for network servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.server.html">http.server — HTTP servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.cookies.html">http.cookies — HTTP state management</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.cookiejar.html">http.cookiejar — Cookie handling for HTTP clients</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.html">xmlrpc — XMLRPC server and client modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.client.html">xmlrpc.client — XML-RPC client access</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.server.html">xmlrpc.server — Basic XML-RPC servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ipaddress.html">ipaddress — IPv4&#x2f;IPv6 manipulation library</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="smtplib.html">&larr; smtplib — SMTP protocol client</a>
+        <a class="next" href="socketserver.html">socketserver — A framework for network servers &rarr;</a>
+      </nav>
+      
+      <h1 id="uuid-uuid-objects-according-to-rfc-9562"><code class="xref py module docutils literal">uuid</code> — UUID objects according to :rfc:`9562`</h1>
+<dl class="py module">
+  <dt id="py:module:uuid"><code class="sig-name">uuid</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Ka-Ping Yee &lt;ping@zesty.ca&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: George Yoshida &lt;quiver@users.sourceforge.net&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/uuid.py`</p>
+<hr />
+<p>This module provides immutable <a class="reference internal" href="uuid.html#py:class:uuid.uuid"><code class="xref py class docutils literal">UUID</code></a> objects (the <a class="reference internal" href="uuid.html#py:class:uuid.uuid"><code class="xref py class docutils literal">UUID</code></a> class)
+and <a href="uuid.html#uuid-factory-functions">functions</a> for generating UUIDs corresponding
+to a specific UUID version as specified in :rfc:`9562` (which supersedes :rfc:`4122`),
+for example, <a class="reference internal" href="uuid.html#py:function:uuid.uuid1"><code class="xref py function docutils literal">uuid1</code></a> for UUID version 1, <a class="reference internal" href="uuid.html#py:function:uuid.uuid3"><code class="xref py function docutils literal">uuid3</code></a> for UUID version 3, and so on.
+Note that UUID version 2 is deliberately omitted as it is outside the scope of the RFC.</p>
+<p>If all you want is a unique ID, you should probably call <a class="reference internal" href="uuid.html#py:function:uuid.uuid1"><code class="xref py function docutils literal">uuid1</code></a> or
+<a class="reference internal" href="uuid.html#py:function:uuid.uuid4"><code class="xref py function docutils literal">uuid4</code></a>.  Note that <a class="reference internal" href="uuid.html#py:function:uuid.uuid1"><code class="xref py function docutils literal">uuid1</code></a> may compromise privacy since it creates
+a UUID containing the computer's network address.  <a class="reference internal" href="uuid.html#py:function:uuid.uuid4"><code class="xref py function docutils literal">uuid4</code></a> creates a
+random UUID.</p>
+<p>Depending on support from the underlying platform, <a class="reference internal" href="uuid.html#py:function:uuid.uuid1"><code class="xref py function docutils literal">uuid1</code></a> may or may
+not return a "safe" UUID.  A safe UUID is one which is generated using
+synchronization methods that ensure no two processes can obtain the same
+UUID.  All instances of <a class="reference internal" href="uuid.html#py:class:uuid.uuid"><code class="xref py class docutils literal">UUID</code></a> have an <a class="reference internal" href="uuid.html#py:attribute:uuid.uuid.is_safe"><code class="xref py attribute docutils literal">is_safe</code></a> attribute
+which relays any information about the UUID's safety, using this enumeration:</p>
+<dl class="py class">
+  <dt id="py:class:uuid.safeuuid"><em class="property">class</em> <code class="sig-name">SafeUUID</code></dt>
+  <dd><div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.safeuuid.safe"><code class="sig-name">SafeUUID.safe</code></dt>
+  <dd><p>The UUID was generated by the platform in a multiprocessing-safe way.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.safeuuid.unsafe"><code class="sig-name">SafeUUID.unsafe</code></dt>
+  <dd><p>The UUID was not generated in a multiprocessing-safe way.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.safeuuid.unknown"><code class="sig-name">SafeUUID.unknown</code></dt>
+  <dd><p>The platform does not provide information on whether the UUID was
+generated safely or not.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:uuid.uuid"><em class="property">class</em> <code class="sig-name">UUID(hex=None, bytes=None, bytes_le=None, fields=None, int=None, version=None, *, is_safe=SafeUUID.unknown)</code></dt>
+  <dd><p>Create a UUID from either a string of 32 hexadecimal digits, a string of 16
+bytes in big-endian order as the <em>bytes</em> argument, a string of 16 bytes in
+little-endian order as the <em>bytes_le</em> argument, a tuple of six integers
+(32-bit <em>time_low</em>, 16-bit <em>time_mid</em>, 16-bit <em>time_hi_version</em>,
+8-bit <em>clock_seq_hi_variant</em>, 8-bit <em>clock_seq_low</em>, 48-bit <em>node</em>) as the
+<em>fields</em> argument, or a single 128-bit integer as the <em>int</em> argument.
+When a string of hex digits is given, curly braces, hyphens,
+and a URN prefix are all optional.  For example, these
+expressions all yield the same UUID:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">{12345678-1234-5678-1234-567812345678}<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">12345678123456781234567812345678<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">urn:uuid:12345678-1234-5678-1234-567812345678<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">bytes</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x12</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x34</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x56</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x78</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">bytes_le</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x78</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x56</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x34</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x12</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x34</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x12</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x78</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x56</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">              <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x12</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x34</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x56</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x78</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x12</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x34</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x56</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x78</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">fields</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-group hl-python"><span class="hl-punctuation hl-section hl-group hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>12345678</span><span class="hl-punctuation hl-separator hl-tuple hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>1234</span><span class="hl-punctuation hl-separator hl-tuple hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>5678</span><span class="hl-punctuation hl-separator hl-tuple hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>12</span><span class="hl-punctuation hl-separator hl-tuple hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>34</span><span class="hl-punctuation hl-separator hl-tuple hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>567812345678</span><span class="hl-punctuation hl-section hl-group hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">int</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>12345678123456781234567812345678</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>Exactly one of <em>hex</em>, <em>bytes</em>, <em>bytes_le</em>, <em>fields</em>, or <em>int</em> must be given.
+The <em>version</em> argument is optional; if given, the resulting UUID will have its
+variant and version number set according to :rfc:`9562`, overriding bits in the
+given <em>hex</em>, <em>bytes</em>, <em>bytes_le</em>, <em>fields</em>, or <em>int</em>.</p>
+<p>Comparison of UUID objects are made by way of comparing their
+<a class="reference internal" href="uuid.html#py:attribute:uuid.uuid.int"><code class="xref py attribute docutils literal">UUID.int</code></a> attributes.  Comparison with a non-UUID object
+raises a <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a>.</p>
+<p><code>str(uuid)</code> returns a string in the form
+<code>12345678-1234-5678-1234-567812345678</code> where the 32 hexadecimal digits
+represent the UUID.</p>
+</dd>
+</dl>
+<p><a class="reference internal" href="uuid.html#py:class:uuid.uuid"><code class="xref py class docutils literal">UUID</code></a> instances have these read-only attributes:</p>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.bytes"><code class="sig-name">UUID.bytes</code></dt>
+  <dd><p>The UUID as a 16-byte string (containing the six integer fields in big-endian
+byte order).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.bytes_le"><code class="sig-name">UUID.bytes_le</code></dt>
+  <dd><p>The UUID as a 16-byte string (with <em>time_low</em>, <em>time_mid</em>, and <em>time_hi_version</em>
+in little-endian byte order).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.fields"><code class="sig-name">UUID.fields</code></dt>
+  <dd><p>A tuple of the six integer fields of the UUID, which are also available as six
+individual attributes and two derived attributes:</p>
+</dd>
+</dl>
+<table class="list-table">
+<tbody>
+<tr>
+<td><p>Field</p>
+</td>
+<td><p>Meaning</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.time_low"><code class="sig-name">UUID.time_low</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The first 32 bits of the UUID. Only relevant to version 1.</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.time_mid"><code class="sig-name">UUID.time_mid</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The next 16 bits of the UUID. Only relevant to version 1.</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.time_hi_version"><code class="sig-name">UUID.time_hi_version</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The next 16 bits of the UUID. Only relevant to version 1.</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.clock_seq_hi_variant"><code class="sig-name">UUID.clock_seq_hi_variant</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The next 8 bits of the UUID. Only relevant to versions 1 and 6.</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.clock_seq_low"><code class="sig-name">UUID.clock_seq_low</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The next 8 bits of the UUID. Only relevant to versions 1 and 6.</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.node"><code class="sig-name">UUID.node</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The last 48 bits of the UUID. Only relevant to version 1.</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.time"><code class="sig-name">UUID.time</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The 60-bit timestamp as a count of 100-nanosecond intervals since
+Gregorian epoch (1582-10-15 00:00:00) for versions 1 and 6, or the
+48-bit timestamp in milliseconds since Unix epoch (1970-01-01 00:00:00)
+for version 7.</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.clock_seq"><code class="sig-name">UUID.clock_seq</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The 14-bit sequence number. Only relevant to versions 1 and 6.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.hex"><code class="sig-name">UUID.hex</code></dt>
+  <dd><p>The UUID as a 32-character lowercase hexadecimal string.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.int"><code class="sig-name">UUID.int</code></dt>
+  <dd><p>The UUID as a 128-bit integer.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.urn"><code class="sig-name">UUID.urn</code></dt>
+  <dd><p>The UUID as a URN as specified in :rfc:`9562`.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.variant"><code class="sig-name">UUID.variant</code></dt>
+  <dd><p>The UUID variant, which determines the internal layout of the UUID. This will be
+one of the constants <a class="reference internal" href="uuid.html#py:data:uuid.reserved_ncs"><code class="xref py data docutils literal">RESERVED_NCS</code></a>, <a class="reference internal" href="uuid.html#py:data:uuid.rfc_4122"><code class="xref py data docutils literal">RFC_4122</code></a>,
+<a class="reference internal" href="uuid.html#py:data:uuid.reserved_microsoft"><code class="xref py data docutils literal">RESERVED_MICROSOFT</code></a>, or <a class="reference internal" href="uuid.html#py:data:uuid.reserved_future"><code class="xref py data docutils literal">RESERVED_FUTURE</code></a>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.version"><code class="sig-name">UUID.version</code></dt>
+  <dd><p>The UUID version number (1 through 8, meaningful only when the variant is
+<a class="reference internal" href="uuid.html#py:data:uuid.rfc_4122"><code class="xref py data docutils literal">RFC_4122</code></a>).</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Added UUID versions 6, 7 and 8.</p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:uuid.uuid.is_safe"><code class="sig-name">UUID.is_safe</code></dt>
+  <dd><p>An enumeration of <a class="reference internal" href="uuid.html#py:class:uuid.safeuuid"><code class="xref py class docutils literal">SafeUUID</code></a> which indicates whether the platform
+generated the UUID in a multiprocessing-safe way.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.7:</span></p>
+</div>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="uuid.html#py:module:uuid" title="uuid: UUID objects (universally unique identifiers) according to RFC 9562"><code class="xref py module docutils literal">uuid</code></a> module defines the following functions:</p>
+<dl class="py function">
+  <dt id="py:function:uuid.getnode"><code class="sig-name">getnode()</code></dt>
+  <dd><p>Get the hardware address as a 48-bit positive integer.  The first time this
+runs, it may launch a separate program, which could be quite slow.  If all
+attempts to obtain the hardware address fail, we choose a random 48-bit
+number with the multicast bit (least significant bit of the first octet)
+set to 1 as recommended in :rfc:`4122`.  "Hardware address" means the MAC
+address of a network interface.  On a machine with multiple network
+interfaces, universally administered MAC addresses (i.e. where the second
+least significant bit of the first octet is <em>unset</em>) will be preferred over
+locally administered MAC addresses, but with no other ordering guarantees.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>Universally administered MAC addresses are preferred over locally
+administered MAC addresses, since the former are guaranteed to be
+globally unique, while the latter are not.</p>
+</div>
+</dd>
+</dl>
+<a id="uuid-factory-functions"></a>
+<dl class="py function">
+  <dt id="py:function:uuid.uuid1"><code class="sig-name">uuid1(node=None, clock_seq=None)</code></dt>
+  <dd><p>Generate a UUID from a host ID, sequence number, and the current time
+according to :rfc:`RFC 9562, §5.1 &lt;9562#section-5.1&gt;`.</p>
+<p>When <em>node</em> is not specified, <a class="reference internal" href="uuid.html#py:function:uuid.getnode"><code class="xref py function docutils literal">getnode</code></a> is used to obtain the hardware
+address as a 48-bit positive integer. When a sequence number <em>clock_seq</em> is
+not specified, a pseudo-random 14-bit positive integer is generated.</p>
+<p>If <em>node</em> or <em>clock_seq</em> exceed their expected bit count,
+only their least significant bits are kept.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:uuid.uuid3"><code class="sig-name">uuid3(namespace, name)</code></dt>
+  <dd><p>Generate a UUID based on the MD5 hash of a namespace identifier (which is a
+UUID) and a name (which is a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object or a string
+that will be encoded using UTF-8)
+according to :rfc:`RFC 9562, §5.3 &lt;9562#section-5.3&gt;`.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:uuid.uuid4"><code class="sig-name">uuid4()</code></dt>
+  <dd><p>Generate a random UUID in a cryptographically-secure method
+according to :rfc:`RFC 9562, §5.4 &lt;9562#section-5.4&gt;`.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:uuid.uuid5"><code class="sig-name">uuid5(namespace, name)</code></dt>
+  <dd><p>Generate a UUID based on the SHA-1 hash of a namespace identifier (which is a
+UUID) and a name (which is a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object or a string
+that will be encoded using UTF-8)
+according to :rfc:`RFC 9562, §5.5 &lt;9562#section-5.5&gt;`.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:uuid.uuid6"><code class="sig-name">uuid6(node=None, clock_seq=None)</code></dt>
+  <dd><p>Generate a UUID from a sequence number and the current time according to
+:rfc:`RFC 9562, §5.6 &lt;9562#section-5.6&gt;`.</p>
+<p>This is an alternative to <a class="reference internal" href="uuid.html#py:function:uuid.uuid1"><code class="xref py function docutils literal">uuid1</code></a> to improve database locality.</p>
+<p>When <em>node</em> is not specified, <a class="reference internal" href="uuid.html#py:function:uuid.getnode"><code class="xref py function docutils literal">getnode</code></a> is used to obtain the hardware
+address as a 48-bit positive integer. When a sequence number <em>clock_seq</em> is
+not specified, a pseudo-random 14-bit positive integer is generated.</p>
+<p>If <em>node</em> or <em>clock_seq</em> exceed their expected bit count,
+only their least significant bits are kept.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:uuid.uuid7"><code class="sig-name">uuid7()</code></dt>
+  <dd><p>Generate a time-based UUID according to
+:rfc:`RFC 9562, §5.7 &lt;9562#section-5.7&gt;`.</p>
+<p>For portability across platforms lacking sub-millisecond precision, UUIDs
+produced by this function embed a 48-bit timestamp and use a 42-bit counter
+to guarantee monotonicity within a millisecond.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:uuid.uuid8"><code class="sig-name">uuid8(a=None, b=None, c=None)</code></dt>
+  <dd><p>Generate a pseudo-random UUID according to
+:rfc:`RFC 9562, §5.8 &lt;9562#section-5.8&gt;`.</p>
+<p>When specified, the parameters <em>a</em>, <em>b</em> and <em>c</em> are expected to be
+positive integers of 48, 12 and 62 bits respectively. If they exceed
+their expected bit count, only their least significant bits are kept;
+non-specified arguments are substituted for a pseudo-random integer of
+appropriate size.</p>
+<p>By default, <em>a</em>, <em>b</em> and <em>c</em> are not generated by a cryptographically
+secure pseudo-random number generator (CSPRNG). Use <a class="reference internal" href="uuid.html#py:function:uuid.uuid4"><code class="xref py function docutils literal">uuid4</code></a> when
+a UUID needs to be used in a security-sensitive context.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="uuid.html#py:module:uuid" title="uuid: UUID objects (universally unique identifiers) according to RFC 9562"><code class="xref py module docutils literal">uuid</code></a> module defines the following namespace identifiers for use with
+<a class="reference internal" href="uuid.html#py:function:uuid.uuid3"><code class="xref py function docutils literal">uuid3</code></a> or <a class="reference internal" href="uuid.html#py:function:uuid.uuid5"><code class="xref py function docutils literal">uuid5</code></a>.</p>
+<dl class="py data">
+  <dt id="py:data:uuid.namespace_dns"><code class="sig-name">NAMESPACE_DNS</code></dt>
+  <dd><p>When this namespace is specified, the <em>name</em> string is a fully qualified domain
+name.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:uuid.namespace_url"><code class="sig-name">NAMESPACE_URL</code></dt>
+  <dd><p>When this namespace is specified, the <em>name</em> string is a URL.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:uuid.namespace_oid"><code class="sig-name">NAMESPACE_OID</code></dt>
+  <dd><p>When this namespace is specified, the <em>name</em> string is an ISO OID.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:uuid.namespace_x500"><code class="sig-name">NAMESPACE_X500</code></dt>
+  <dd><p>When this namespace is specified, the <em>name</em> string is an X.500 DN in DER or a
+text output format.</p>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="uuid.html#py:module:uuid" title="uuid: UUID objects (universally unique identifiers) according to RFC 9562"><code class="xref py module docutils literal">uuid</code></a> module defines the following constants for the possible values
+of the <a class="reference internal" href="uuid.html#py:attribute:uuid.uuid.variant"><code class="xref py attribute docutils literal">variant</code></a> attribute:</p>
+<dl class="py data">
+  <dt id="py:data:uuid.reserved_ncs"><code class="sig-name">RESERVED_NCS</code></dt>
+  <dd><p>Reserved for NCS compatibility.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:uuid.rfc_4122"><code class="sig-name">RFC_4122</code></dt>
+  <dd><p>Specifies the UUID layout given in :rfc:`4122`. This constant is kept
+for backward compatibility even though :rfc:`4122` has been superseded
+by :rfc:`9562`.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:uuid.reserved_microsoft"><code class="sig-name">RESERVED_MICROSOFT</code></dt>
+  <dd><p>Reserved for Microsoft compatibility.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:uuid.reserved_future"><code class="sig-name">RESERVED_FUTURE</code></dt>
+  <dd><p>Reserved for future definition.</p>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="uuid.html#py:module:uuid" title="uuid: UUID objects (universally unique identifiers) according to RFC 9562"><code class="xref py module docutils literal">uuid</code></a> module defines the special Nil and Max UUID values:</p>
+<dl class="py data">
+  <dt id="py:data:uuid.nil"><code class="sig-name">NIL</code></dt>
+  <dd><p>A special form of UUID that is specified to have all 128 bits set to zero
+according to :rfc:`RFC 9562, §5.9 &lt;9562#section-5.9&gt;`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:uuid.max"><code class="sig-name">MAX</code></dt>
+  <dd><p>A special form of UUID that is specified to have all 128 bits set to one
+according to :rfc:`RFC 9562, §5.10 &lt;9562#section-5.10&gt;`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>:rfc:`9562` - A Universally Unique IDentifier (UUID) URN Namespace</dt>
+<dd><p>This specification defines a Uniform Resource Name namespace for UUIDs, the
+internal format of UUIDs, and methods of generating UUIDs.</p>
+</dd>
+</dl>
+</div>
+<a id="uuid-cli"></a>
+<h2 id="command-line-usage">Command-Line Usage</h2>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+<p>The <a class="reference internal" href="uuid.html#py:module:uuid" title="uuid: UUID objects (universally unique identifiers) according to RFC 9562"><code class="xref py module docutils literal">uuid</code></a> module can be executed as a script from the command line.</p>
+<div class="highlight-sh notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">python</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"><span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> uuid <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-h<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-u <span class="hl-meta hl-group hl-expansion hl-brace hl-shell"><span class="hl-punctuation hl-section hl-expansion hl-brace hl-begin hl-shell">{</span>uuid1<span class="hl-punctuation hl-separator hl-shell">,</span>uuid3<span class="hl-punctuation hl-separator hl-shell">,</span>uuid4<span class="hl-punctuation hl-separator hl-shell">,</span>uuid5<span class="hl-punctuation hl-separator hl-shell">,</span>uuid6<span class="hl-punctuation hl-separator hl-shell">,</span>uuid7<span class="hl-punctuation hl-separator hl-shell">,</span>uuid8<span class="hl-punctuation hl-section hl-expansion hl-brace hl-end hl-shell">}</span></span><span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-n NAMESPACE<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span> <span class="hl-keyword hl-control hl-regexp hl-set hl-begin hl-shell">[</span>-N NAME<span class="hl-keyword hl-control hl-regexp hl-set hl-end hl-shell">]</span></span></span></pre></div>
+</div>
+<p>The following options are accepted:</p>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:uuid.-h"><a id="std:cmdoption:uuid.--help"></a><code class="sig-name">-h, --help</code></dt>
+  <dd><p>Show the help message and exit.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:uuid.-u"><code class="sig-name">-u &lt;uuid&gt;</code></dt>
+  <dt id="std:cmdoption:uuid.--uuid"><code class="sig-name">--uuid &lt;uuid&gt;</code></dt>
+  <dd><p>Specify the function name to use to generate the uuid. By default <a class="reference internal" href="uuid.html#py:function:uuid.uuid4"><code class="xref py function docutils literal">uuid4</code></a>
+is used.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>Allow generating UUID versions 6, 7 and 8.</p>
+</div>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:uuid.-n"><code class="sig-name">-n &lt;namespace&gt;</code></dt>
+  <dt id="std:cmdoption:uuid.--namespace"><code class="sig-name">--namespace &lt;namespace&gt;</code></dt>
+  <dd><p>The namespace is a <code>UUID</code>, or <code>@ns</code> where <code>ns</code> is a well-known predefined UUID
+addressed by namespace name. Such as <code>@dns</code>, <code>@url</code>, <code>@oid</code>, and <code>@x500</code>.
+Only required for <a class="reference internal" href="uuid.html#py:function:uuid.uuid3"><code class="xref py function docutils literal">uuid3</code></a> / <a class="reference internal" href="uuid.html#py:function:uuid.uuid5"><code class="xref py function docutils literal">uuid5</code></a> functions.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:uuid.-n"><code class="sig-name">-N &lt;name&gt;</code></dt>
+  <dt id="std:cmdoption:uuid.--name"><code class="sig-name">--name &lt;name&gt;</code></dt>
+  <dd><p>The name used as part of generating the uuid. Only required for
+<a class="reference internal" href="uuid.html#py:function:uuid.uuid3"><code class="xref py function docutils literal">uuid3</code></a> / <a class="reference internal" href="uuid.html#py:function:uuid.uuid5"><code class="xref py function docutils literal">uuid5</code></a> functions.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:uuid.-c"><code class="sig-name">-C &lt;num&gt;</code></dt>
+  <dt id="std:cmdoption:uuid.--count"><code class="sig-name">--count &lt;num&gt;</code></dt>
+  <dd><p>Generate <em>num</em> fresh UUIDs.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+</dd>
+</dl>
+<a id="uuid-example"></a>
+<h2 id="example">Example</h2>
+<p>Here are some examples of typical usage of the <a class="reference internal" href="uuid.html#py:module:uuid" title="uuid: UUID objects (universally unique identifiers) according to RFC 9562"><code class="xref py module docutils literal">uuid</code></a> module:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> make a UUID based on the host ID and current time
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">uuid1</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> doctest: +SKIP
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">a8098c1a-f86e-11da-bd1a-00112444be1e<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> make a UUID using an MD5 hash of a namespace UUID and a name
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">uuid3</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">NAMESPACE_DNS</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">python.org<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">6fa459ea-ee8a-3ca4-894e-db77e160355e<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> make a random UUID
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">uuid4</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">16fd2706-8baf-433b-82eb-8c7fada847da<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> make a UUID using a SHA-1 hash of a namespace UUID and a name
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">uuid5</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">NAMESPACE_DNS</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">python.org<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">886313e1-3b8a-5372-9b90-0c9aee199e5d<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> make a UUID from a string of hex digits (braces and hyphens ignored)
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">{00010203-0405-0607-0809-0a0b0c0d0e0f}<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> convert a UUID to a string of hex digits in standard form
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">str</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">00010203-0405-0607-0809-0a0b0c0d0e0f<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> get the raw 16 bytes of the UUID
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">bytes</span></span></span>
+<span class="hl-source hl-python"><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x00</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x01</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x02</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x03</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x04</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x05</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x06</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x07</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x08</span><span class="hl-constant hl-character hl-escape hl-python">\t</span><span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x0b</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x0c</span><span class="hl-constant hl-character hl-escape hl-python">\r</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x0e</span><span class="hl-constant hl-character hl-escape hl-hex hl-python">\x0f</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> make a UUID from a 16-byte string
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">bytes</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">bytes</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">00010203-0405-0607-0809-0a0b0c0d0e0f<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> get the Nil UUID
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">NIL</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">00000000-0000-0000-0000-000000000000<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> get the Max UUID
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">MAX</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ffffffff-ffff-ffff-ffff-ffffffffffff<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> same as UUIDv1 but with fields reordered to improve DB locality
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">uuid6</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> doctest: +SKIP
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">1f0799c0-98b9-62db-92c6-a0d365b91053<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> get UUIDv7 creation (local) time as a timestamp in milliseconds
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">u</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">uuid7</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">u</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">time</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> doctest: +SKIP
+</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1743936859822</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> get UUIDv7 creation (local) time as a datetime object
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span> <span class="hl-keyword hl-control hl-import hl-as hl-python">as</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">datetime</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">fromtimestamp</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">u</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">time</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1000</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> doctest: +SKIP
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-language hl-python">...</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> make a UUID with custom blocks
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">uuid</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">uuid8</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>12345678</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>9abcdef0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>11223344</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">00001234-5678-8ef0-8000-000011223344<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<a id="uuid-cli-example"></a>
+<h2 id="command-line-example">Command-Line Example</h2>
+<p>Here are some examples of typical usage of the <a class="reference internal" href="uuid.html#py:module:uuid" title="uuid: UUID objects (universally unique identifiers) according to RFC 9562"><code class="xref py module docutils literal">uuid</code></a> command-line interface:</p>
+<div class="highlight-shell notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-shell hl-bash"><span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> generate a random UUID - by default uuid4() is used</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">$</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> python<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> uuid</span></span>
+<span class="hl-source hl-shell hl-bash"></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> generate a UUID using uuid1()</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">$</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> python<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> uuid<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>u</span> uuid1</span></span>
+<span class="hl-source hl-shell hl-bash"></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> generate a UUID using uuid5</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">$</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> python<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> uuid<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>u</span> uuid5<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>n</span> @url<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>N</span> example.com</span></span>
+<span class="hl-source hl-shell hl-bash"></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-comment hl-line hl-number-sign hl-shell"><span class="hl-punctuation hl-definition hl-comment hl-begin hl-shell">#</span></span><span class="hl-comment hl-line hl-number-sign hl-shell"> generate 42 random UUIDs</span><span class="hl-comment hl-line hl-number-sign hl-shell">
+</span></span>
+<span class="hl-source hl-shell hl-bash"><span class="hl-meta hl-function-call hl-shell"><span class="hl-variable hl-function hl-shell">$</span></span><span class="hl-meta hl-function-call hl-arguments hl-shell"> python<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>m</span> uuid<span class="hl-variable hl-parameter hl-option hl-shell"><span class="hl-punctuation hl-definition hl-parameter hl-shell"> -</span>C</span> 42</span></span></pre></div>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="smtplib.html">&larr; smtplib — SMTP protocol client</a>
+        <a class="next" href="socketserver.html">socketserver — A framework for network servers &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
