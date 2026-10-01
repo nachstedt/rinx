@@ -486,9 +486,24 @@ anchors rather than in document order among them.</p>
 <tr>
 <td><p>docutils' <code>:pep-reference:</code> role</p>
 </td>
-<td><p>❌</p>
+<td><p>✅ ℹ️</p>
 </td>
-<td></td>
+<td><ul>
+<li><p>Only ASCII digits are a number, as for <code>:pep:</code>.</p>
+</li>
+<li><p>A target that is not a number from 0 to 9999 is reported as
+<code>pep-reference.invalid-number</code> and shown as its source text;
+docutils reports an error and shows a <code>problematic</code> node.</p>
+</li>
+<li><p>The PEP index is <code>rinx.toml</code>'s <code>pep_base_url</code>, and the page is
+always <code>pep-%04d</code>: docutils' <code>pep_file_url_template</code> cannot be
+changed.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:PEP-Reference:</code> is not
+recognized.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>:rfc:</code>, <code>:cve:</code> and <code>:cwe:</code> roles</p>

@@ -182,6 +182,13 @@ to <code>https://peps.python.org/</code> unless the site sets <code>pep_base_url
 <a href="rules.html#site-config">The configuration file</a>); a target that is not a number is shown as written and
 reported as <code>pep.invalid-number</code>.</p>
 </li>
+<li><p>docutils' <code>:pep-reference:</code> role, <code>:pep:</code>'s plainer sibling:
+<code>:pep-reference:`8`</code> links <code>pep-0008</code> below the same <code>pep_base_url</code>
+and shows <em>PEP 8</em>, with no general index entry, no bold and no trailing
+slash. Its target is a number from 0 to 9999 and nothing else — no title,
+no <code>#</code> anchor; anything else is shown as written and reported as
+<code>pep-reference.invalid-number</code>.</p>
+</li>
 <li><p>Admonitions, <code>.. seealso::</code>, <code>.. versionadded::</code>,
 <code>.. versionchanged::</code> and <code>.. deprecated::</code>. As in Sphinx, text after
 the <code>::</code> starts the body — <code>.. seealso:: :pep:`634`</code> is a complete
