@@ -20,7 +20,8 @@ use super::roles::c::macro_::handle_macro_match;
 use super::roles::c::struct_::handle_struct_match;
 use super::roles::c::type_::handle_type_match;
 use super::roles::c::union::handle_union_match;
-use super::roles::code::{handle_code_match, handle_custom_role_match};
+use super::roles::code::handle_code_match;
+use super::roles::custom::handle_custom_role_match;
 use super::roles::doc::handle_doc_match;
 use super::roles::download::handle_download_match;
 use super::roles::index::handle_index_match;
@@ -36,6 +37,7 @@ use super::roles::py::meth::handle_meth_match;
 use super::roles::py::mod_::handle_mod_match;
 use super::roles::registry::handle_registry_match;
 use super::roles::rfc_reference::handle_rfc_reference_match;
+use super::roles::script::handle_script_match;
 use super::roles::std_::option::handle_option_match;
 
 pub(super) fn handle_inline_match(
@@ -214,6 +216,7 @@ fn build_inline_node(
         "option" => handle_option_match(m_str),
         "math" => handle_math_match(m_str),
         "code" => handle_code_match(m_str),
+        "script" => handle_script_match(m_str),
         "eq" => handle_eq_match(m_str),
         "phrased" => handle_phrased_link_match(m_str),
         "simple" => {

@@ -11,6 +11,7 @@ use crate::index_entry::{IndexEntry, InvalidIndexEntry};
 use crate::inventory_selector::InventorySelector;
 use crate::number_format::NumberFormat;
 use crate::registry_target::{Registry, RegistryTarget};
+use crate::script_position::ScriptPosition;
 
 /// Why the parser refused a role — see [`InlineNode::RefusedRole`].
 ///
@@ -98,6 +99,18 @@ pub enum InlineNode {
     Strong(String),
     Literal(String),
     Program(String),
+    /// Text set below or above the line, from `:sub:`/`:subscript:`,
+    /// `:sup:`/`:superscript:` or a role derived from one with `.. role::`.
+    ///
+    /// The text is plain, as docutils' generic roles give it: never parsed
+    /// for nested markup and never split into a title. `classes` are a
+    /// derived role's, already normalized; the built-in roles carry none.
+    Script {
+        position: ScriptPosition,
+        text: String,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        classes: Vec<String>,
+    },
     /// An inline cross-reference produced by the term role, linking to a glossary entry.
     ///
     /// The `display` field is the visible link text and `term` is the glossary key.
@@ -569,6 +582,7 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
                 | InlineNode::Strong(text)
                 | InlineNode::Literal(text)
                 | InlineNode::Program(text)
+                | InlineNode::Script { text, .. }
                 | InlineNode::Code { text, .. }
                 | InlineNode::AnonymousReference { text, .. }
                 | InlineNode::RefusedRole { text, .. }
@@ -697,6 +711,11 @@ mod tests {
             InlineNode::Strong("t".to_string()),
             InlineNode::Literal("t".to_string()),
             InlineNode::Program("t".to_string()),
+            InlineNode::Script {
+                position: ScriptPosition::Subscript,
+                text: "t".to_string(),
+                classes: Vec::new(),
+            },
         ];
 
         // When / Then
@@ -1403,6 +1422,26 @@ mod tests {
 
         // Then
         assert_eq!(text, "Hello world");
+    }
+
+    #[test]
+    fn test_inline_plain_text_keeps_a_subscript_as_its_text() {
+        // Given — `H\ :sub:`2`\ O`
+        let nodes = vec![
+            InlineNode::Text("H".to_string()),
+            InlineNode::Script {
+                position: ScriptPosition::Subscript,
+                text: "2".to_string(),
+                classes: Vec::new(),
+            },
+            InlineNode::Text("O".to_string()),
+        ];
+
+        // When
+        let text = inline_plain_text(&nodes);
+
+        // Then
+        assert_eq!(text, "H2O");
     }
 
     #[test]

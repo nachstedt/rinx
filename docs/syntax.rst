@@ -37,13 +37,25 @@ Supported:
      Call :python:`print("hi")`, or write :code:`x = 1` unhighlighted.
 
   A role applies from its definition to the end of the document, and its
-  ``:class:`` names are added to the rendered ``<code>``. Only ``code`` can be
-  a base role: any other, or none, is reported as ``role.unsupported-base``,
-  and a name rinx already gives a role as ``role.builtin-name``.
+  ``:class:`` names are added to the rendered ``<code>``.
+- The ``:sub:``/``:subscript:`` and ``:sup:``/``:superscript:`` roles, whose
+  text is set below or above the line. Escaped spaces join one to its word:
+
+  .. code-block:: rst
+
+     .. role:: chem(sub)
+
+     Water is H\ :sub:`2`\ O, E = mc\ :sup:`2`, and glucose
+     C\ :chem:`6`\ H\ :chem:`12`\ O\ :chem:`6`.
+
+  A role derived from one takes ``:class:``, and without it has its own name
+  as its class. These four and ``code`` are the only base roles: any other,
+  or none, is reported as ``role.unsupported-base``, and a name rinx already
+  gives a role as ``role.builtin-name``.
 
 Not yet supported: footnotes and citations, field lists beyond a document's
 leading ``:orphan:``, ``.. raw::``, ``.. class::``, ``.. role::`` with a base
-other than ``code``, ``.. default-role::``, ``.. topic::``,
+other than ``code``, ``sub`` or ``sup``, ``.. default-role::``, ``.. topic::``,
 ``.. sidebar::``, ``.. rubric::`` and ``.. parsed-literal::``.
 
 Sphinx

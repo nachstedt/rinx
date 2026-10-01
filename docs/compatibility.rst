@@ -221,8 +221,11 @@ Inline markup
          both.
        - Role names are case-sensitive, so ``:Index:`` is not recognized.
    * - ``:sub:``/``:subscript:`` and ``:sup:``/``:superscript:`` roles
-     - ❌
-     -
+     - ✅ ℹ️
+     - - Role names are case-sensitive, so ``:Sub:`` is not recognized.
+       - A section title holding one shows it as plain text in the
+         navigation and the page title, as for emphasis; Sphinx keeps the
+         markup in its toctree.
    * - Default role (single-backquoted text without a role)
      - ❌
      -
@@ -422,8 +425,10 @@ Directives
    * - ``.. role::``
      - 🔶
      - - Only a role derived from ``code`` (``.. role:: python(code)``), with
-         ``:language:`` and ``:class:``. Any other base, or none, is reported
-         as ``role.unsupported-base`` and the role is not defined.
+         ``:language:`` and ``:class:``, or from ``sub``, ``subscript``,
+         ``sup`` or ``superscript`` (``.. role:: chem(sub)``), with
+         ``:class:``. Any other base, or none, is reported as
+         ``role.unsupported-base`` and the role is not defined.
        - A name rinx already gives a role (``:ref:``, ``:code:``, an entity
          role, …) is refused as ``role.builtin-name``; docutils lets a
          document replace it.

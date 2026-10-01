@@ -83,6 +83,7 @@ mod option_list_item;
 mod path_normalization;
 mod py_version_spec;
 mod registry_target;
+mod script_position;
 mod section_id;
 mod sectnum;
 mod spacing;
@@ -166,6 +167,7 @@ pub use registry_target::{
     RegistryTarget, RfcTarget,
 };
 pub use rinx_inventory::InventoryName;
+pub use script_position::ScriptPosition;
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
 pub use sectnum::SectnumOptions;
 pub use spacing::{InvalidSpacing, Spacing, SpacingKind, SpacingValue};

@@ -16,7 +16,21 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use rinx_ast::ResolvedLanguage;
+use rinx_ast::{ResolvedLanguage, ScriptPosition};
+
+/// What a `.. role::` defined a role as: one variant per base role a custom
+/// role may derive from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum CustomRole {
+    /// Derived from `code`.
+    Code(CodeRole),
+    /// Derived from `sub`/`subscript` or `sup`/`superscript`, carrying the
+    /// classes the rendered `<sub>`/`<sup>` carries, already normalized.
+    Script {
+        position: ScriptPosition,
+        classes: Vec<String>,
+    },
+}
 
 /// What a role derived from `code` was defined with.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,19 +45,19 @@ pub(crate) struct CodeRole {
 /// The custom roles defined so far in one document, by lowercased name.
 #[derive(Debug, Default)]
 pub(crate) struct CustomRoles {
-    roles: RefCell<BTreeMap<String, CodeRole>>,
+    roles: RefCell<BTreeMap<String, CustomRole>>,
 }
 
 impl CustomRoles {
     /// Defines `name`, replacing an earlier definition of it — docutils lets a
     /// document redefine its own role, and the later one wins from there on.
-    pub(crate) fn define(&self, name: &str, role: CodeRole) {
+    pub(crate) fn define(&self, name: &str, role: CustomRole) {
         self.roles.borrow_mut().insert(name.to_lowercase(), role);
     }
 
     /// The role `name` was defined as, if it has been by now. Role names are
     /// case-insensitive, as docutils normalizes them.
-    pub(crate) fn lookup(&self, name: &str) -> Option<CodeRole> {
+    pub(crate) fn lookup(&self, name: &str) -> Option<CustomRole> {
         self.roles.borrow().get(&name.to_lowercase()).cloned()
     }
 }
@@ -52,17 +66,24 @@ impl CustomRoles {
 mod tests {
     use super::*;
 
-    fn plain() -> CodeRole {
-        CodeRole {
+    fn plain() -> CustomRole {
+        CustomRole::Code(CodeRole {
             language: ResolvedLanguage::None,
             classes: vec!["plain".to_string()],
-        }
+        })
     }
 
-    fn python() -> CodeRole {
-        CodeRole {
+    fn python() -> CustomRole {
+        CustomRole::Code(CodeRole {
             language: ResolvedLanguage::parse("python").unwrap(),
             classes: Vec::new(),
+        })
+    }
+
+    fn chem() -> CustomRole {
+        CustomRole::Script {
+            position: ScriptPosition::Subscript,
+            classes: vec!["chem".to_string()],
         }
     }
 
@@ -109,5 +130,18 @@ mod tests {
 
         // Then
         assert_eq!(roles.lookup("x"), Some(plain()));
+    }
+
+    #[test]
+    fn test_define_replaces_a_code_role_with_a_script_role() {
+        // Given
+        let roles = CustomRoles::default();
+        roles.define("x", python());
+
+        // When — the later definition derives from another base
+        roles.define("x", chem());
+
+        // Then
+        assert_eq!(roles.lookup("x"), Some(chem()));
     }
 }
