@@ -1,5 +1,6 @@
 //! Assigns anchor ids to `.. index::` directives in document order, and then
-//! to the `:pep:` roles, whose general-index entries need an anchor too.
+//! to the registry roles (`:pep:`, `:rfc:`, `:cve:`, `:cwe:`), whose
+//! general-index entries need an anchor too.
 //!
 //! A `.. index::` directive marks a bare location with no content-derived
 //! identity (unlike a glossary term or a domain object's name), so an id is
@@ -74,7 +75,7 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
     }
 }
 
-/// Gives every `:pep:` role in `nodes` its anchor id, continuing the
+/// Gives every registry role in `nodes` its anchor id, continuing the
 /// numbering [`assign_index_ids`] left in `counter`.
 ///
 /// Sphinx numbers both kinds from one per-document counter, so the two
@@ -87,10 +88,10 @@ pub(super) fn assign_index_ids(nodes: &mut [Node], counter: &mut usize) {
 ///
 /// Runs after substitutions are resolved, so each use of a `replace`
 /// definition holding a `:pep:` gets an anchor of its own.
-pub(super) fn assign_pep_index_ids(nodes: &mut [Node], counter: &mut usize) {
+pub(super) fn assign_registry_index_ids(nodes: &mut [Node], counter: &mut usize) {
     for_each_inline_list_mut(nodes, &mut |list| {
         for node in list.iter_mut() {
-            if let InlineNode::PepReference { index_id, .. } = node {
+            if let InlineNode::RegistryReference { index_id, .. } = node {
                 *index_id = format!("index-{counter}");
                 *counter += 1;
             }
@@ -260,8 +261,8 @@ mod tests {
     }
 
     fn pep_paragraph() -> Node {
-        Node::Paragraph(vec![InlineNode::PepReference {
-            target: rinx_ast::PepTarget::parse("8").unwrap(),
+        Node::Paragraph(vec![InlineNode::RegistryReference {
+            target: rinx_ast::RegistryTarget::parse(rinx_ast::Registry::Pep, "8").unwrap(),
             display: None,
             index_id: String::new(),
             span: None,
@@ -272,21 +273,21 @@ mod tests {
         let Node::Paragraph(inlines) = node else {
             panic!("Expected Paragraph")
         };
-        let InlineNode::PepReference { index_id, .. } = &inlines[0] else {
-            panic!("Expected PepReference")
+        let InlineNode::RegistryReference { index_id, .. } = &inlines[0] else {
+            panic!("Expected RegistryReference")
         };
         index_id
     }
 
     #[test]
-    fn test_assign_pep_index_ids_continues_the_directive_counter() {
+    fn test_assign_registry_index_ids_continues_the_directive_counter() {
         // Given a directive and two roles
         let mut nodes = vec![pep_paragraph(), index_directive(), pep_paragraph()];
         let mut counter = 0;
 
         // When
         assign_index_ids(&mut nodes, &mut counter);
-        assign_pep_index_ids(&mut nodes, &mut counter);
+        assign_registry_index_ids(&mut nodes, &mut counter);
 
         // Then — no id repeats
         assert_eq!(id_of(&nodes[1]), "index-0");
@@ -295,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    fn test_assign_pep_index_ids_reaches_a_glossary_definition() {
+    fn test_assign_registry_index_ids_reaches_a_glossary_definition() {
         // Given a role where `assign_index_ids` does not look
         let mut nodes = vec![Node::Directive(Directive::Glossary {
             entries: vec![rinx_ast::GlossaryEntry {
@@ -307,7 +308,7 @@ mod tests {
         let mut counter = 0;
 
         // When
-        assign_pep_index_ids(&mut nodes, &mut counter);
+        assign_registry_index_ids(&mut nodes, &mut counter);
 
         // Then
         let Node::Directive(Directive::Glossary { entries, .. }) = &nodes[0] else {

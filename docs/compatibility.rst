@@ -172,9 +172,42 @@ Inline markup
          changed.
        - Role names are case-sensitive, so ``:PEP-Reference:`` is not
          recognized.
-   * - ``:rfc:``, ``:cve:`` and ``:cwe:`` roles
-     - ❌
-     -
+   * - ``:rfc:`` role
+     - ✅ ℹ️
+     - - Only ASCII digits are a number, as for ``:pep:``.
+       - A target that is not a number is reported as ``rfc.invalid-number``
+         and shown as its source text; Sphinx reports an error and shows a
+         ``problematic`` node.
+       - The RFC index is ``rinx.toml``'s ``rfc_base_url``, not a
+         ``docutils.conf`` setting.
+       - Role names are case-sensitive, so ``:RFC:`` is not recognized.
+       - Its index anchor is numbered after the document's ``.. index::``
+         anchors, as for ``:pep:``.
+   * - ``:cve:`` role
+     - ✅ ℹ️
+     - - A target must be a year and a sequence number (``2024-3094``),
+         optionally followed by ``#`` and an anchor; anything else is
+         reported as ``cve.invalid-id`` and shown as its source text.
+         Sphinx accepts any target, so a full ``CVE-2024-3094`` links
+         ``id=CVE-CVE-2024-3094`` there without a warning; here it is
+         refused with a hint to drop the prefix.
+       - Role names are case-sensitive, and the index anchor is numbered as
+         for ``:pep:``.
+   * - ``:cwe:`` role
+     - ✅ ℹ️
+     - - Only ASCII digits are a number, as for ``:pep:``; anything else is
+         reported as ``cwe.invalid-number`` and shown as its source text.
+       - Role names are case-sensitive, and the index anchor is numbered as
+         for ``:pep:``.
+   * - docutils' ``:rfc-reference:`` role
+     - ✅ ℹ️
+     - - Only ASCII digits are a number, as for ``:pep:``.
+       - A target that is not a number of at least 1 is reported as
+         ``rfc-reference.invalid-number`` and shown as its source text;
+         docutils reports an error and shows a ``problematic`` node.
+       - The RFC index is ``rinx.toml``'s ``rfc_base_url``.
+       - Role names are case-sensitive, so ``:RFC-Reference:`` is not
+         recognized.
    * - ``:index:`` role
      - ❌
      -

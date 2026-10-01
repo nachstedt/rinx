@@ -1,4 +1,5 @@
-//! `.. index::` directive, `:pep:` and `:pep-reference:` role tests for [`super::analyze`]:
+//! `.. index::` directive, registry role (`:pep:`, `:rfc:`, …) and
+//! `:pep-reference:`/`:rfc-reference:` role tests for [`super::analyze`]:
 //! which general-index entries they register, and where in the node tree they
 //! are found.
 
@@ -136,8 +137,12 @@ fn test_analyze_registers_genindex_entry_for_index_directive_nested_in_admonitio
 }
 
 fn pep(target: &str, index_id: &str) -> InlineNode {
-    InlineNode::PepReference {
-        target: rinx_ast::PepTarget::parse(target).unwrap(),
+    registry_reference(rinx_ast::Registry::Pep, target, index_id)
+}
+
+fn registry_reference(registry: rinx_ast::Registry, target: &str, index_id: &str) -> InlineNode {
+    InlineNode::RegistryReference {
+        target: rinx_ast::RegistryTarget::parse(registry, target).unwrap(),
         display: Some("ignored for the entry".to_string()),
         index_id: index_id.to_string(),
         span: None,
@@ -189,6 +194,58 @@ fn test_analyze_finds_a_pep_role_in_a_dropdown_title() {
         .map(|entry| entry.anchor.as_str())
         .collect();
     assert_eq!(anchors, vec!["index-0", "index-1"]);
+}
+
+#[test]
+fn test_analyze_files_each_registry_under_its_own_group() {
+    // Given
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Paragraph(vec![
+            registry_reference(rinx_ast::Registry::Rfc, "2324#section-2.3", "index-0"),
+            registry_reference(rinx_ast::Registry::Cve, "2024-3094", "index-1"),
+            registry_reference(rinx_ast::Registry::Cwe, "787", "index-2"),
+        ])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then — Sphinx's groups, and an RFC section spelled out
+    let entries: Vec<(&str, Option<&str>)> = index
+        .genindex_entries
+        .iter()
+        .map(|entry| (entry.primary.as_str(), entry.subentry.as_deref()))
+        .collect();
+    assert_eq!(
+        entries,
+        vec![
+            ("RFC", Some("RFC 2324 Section 2.3")),
+            (
+                "Common Vulnerabilities and Exposures",
+                Some("CVE 2024-3094")
+            ),
+            ("Common Weakness Enumeration", Some("CWE 787")),
+        ]
+    );
+}
+
+#[test]
+fn test_analyze_registers_no_genindex_entry_for_an_rfc_reference_role() {
+    // Given — docutils' role makes no index entry, unlike Sphinx's `:rfc:`
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Paragraph(vec![InlineNode::DocutilsRfcReference {
+            number: rinx_ast::DocutilsRfcNumber::parse("2822").unwrap(),
+            span: None,
+        }])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(index.genindex_entries.is_empty());
 }
 
 #[test]

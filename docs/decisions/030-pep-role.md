@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted.
+Accepted. Its node and passes were generalized to `:rfc:`, `:cve:` and
+`:cwe:` by ADR-034: `PepReference` is now `RegistryReference`, and
+`assign_pep_index_ids` is `assign_registry_index_ids`.
 
 ## Context
 
@@ -89,7 +91,8 @@ will be) adds a variant, not a node and a pass.
 ## Consequences
 
 - `:rfc:` can reuse all of it: the refusal pass, the anchor pass, the inline
-  walkers and the render shape. It is left for its own change.
+  walkers and the render shape. It is left for its own change — made in
+  ADR-034, together with `:cve:` and `:cwe:`.
 - docutils matches role names case-insensitively, so `:PEP:` reaches Sphinx's
   role; here it does not. That is a property of every role, not this one, and
   belongs in a change that introduces it for all of them.

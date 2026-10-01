@@ -27,7 +27,7 @@ mod numbering;
 mod numfig_format;
 mod octicon;
 mod page;
-mod pep_base_url;
+mod registry_base_url;
 mod resolution;
 #[cfg(test)]
 mod test_support;
@@ -163,6 +163,8 @@ pub(crate) struct RenderCtx<'a> {
     pub uml_configs: &'a std::collections::BTreeMap<String, String>,
     /// The PEP index a `:pep:` links into, from the site config.
     pub pep_base_url: &'a config::PepBaseUrl,
+    /// The RFC index an `:rfc:` links into, from the site config.
+    pub rfc_base_url: &'a config::RfcBaseUrl,
     /// `:linenothreshold:` from the `.. highlight::` in force: a block at
     /// least this many lines long gets line numbers without asking for them.
     pub linenothreshold: Option<std::num::NonZeroU32>,
@@ -318,6 +320,7 @@ pub fn render_with_assets(
         show_entity_updates: EntityUpdateVisibility::from_config(config.show_entity_updates),
         uml_configs: &config.uml_configs,
         pep_base_url: &config.pep_base_url,
+        rfc_base_url: &config.rfc_base_url,
         linenothreshold: None,
         highlight_force: false,
         section_ids: &section_ids,

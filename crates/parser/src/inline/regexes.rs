@@ -55,15 +55,20 @@ pub(super) static MATH_ROLE_REGEX: LazyLock<Regex> =
 /// document knows, so it is matched by [`NAMED_ROLE_REGEX`]'s shape instead.
 pub(super) static CODE_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":code:`(?P<code>[^`]+)`").unwrap());
-/// `:pep:`. No [`EXTERNAL_PREFIX`] and no domain: it links outside the site
-/// by construction, through the site's `pep_base_url` rather than an
-/// inventory.
-pub(super) static PEP_ROLE_REGEX: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r":pep:`(?P<target>[^`]+)`").unwrap());
+/// `:pep:`, `:rfc:`, `:cve:` and `:cwe:`, the registry roles: one pattern,
+/// since they are one construct whose `registry` capture names the registry.
+/// No [`EXTERNAL_PREFIX`] and no domain: they link outside the site by
+/// construction, through a registry's own address rather than an inventory.
+pub(super) static REGISTRY_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?P<registry>pep|rfc|cve|cwe):`(?P<target>[^`]+)`").unwrap());
 /// docutils' `:pep-reference:`, `:pep:`'s plain sibling. No
 /// [`EXTERNAL_PREFIX`] and no domain, for the reason `:pep:` has none.
 pub(super) static PEP_REFERENCE_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":pep-reference:`(?P<target>[^`]+)`").unwrap());
+/// docutils' `:rfc-reference:`, `:rfc:`'s plain sibling, for the same reason
+/// without a prefix or a domain.
+pub(super) static RFC_REFERENCE_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":rfc-reference:`(?P<target>[^`]+)`").unwrap());
 pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
 pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -161,8 +166,9 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&MATH_ROLE_REGEX, "math"),
     (&EQ_ROLE_REGEX, "eq"),
     (&CODE_ROLE_REGEX, "code"),
-    (&PEP_ROLE_REGEX, "pep"),
+    (&REGISTRY_ROLE_REGEX, "registry"),
     (&PEP_REFERENCE_ROLE_REGEX, "pep-reference"),
+    (&RFC_REFERENCE_ROLE_REGEX, "rfc-reference"),
     (&OPTION_ROLE_REGEX, "option"),
     (&FUNC_ROLE_REGEX, "func"),
     (&MOD_ROLE_REGEX, "mod"),
@@ -256,6 +262,10 @@ mod tests {
             "numref",
             "pep",
             "pep-reference",
+            "rfc",
+            "rfc-reference",
+            "cve",
+            "cwe",
         ] {
             assert!(is_fixed_role_name(name), "{name}");
         }

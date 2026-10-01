@@ -1,5 +1,6 @@
-//! `:pep:` and docutils' `:pep-reference:` end to end: one document parsed, indexed and rendered, and its
-//! general index. The page markup follows what `sphinx-build` 9.1 emits for
+//! The registry roles — `:pep:`, `:rfc:`, `:cve:`, `:cwe:` — and docutils'
+//! `:pep-reference:` and `:rfc-reference:` end to end: one document parsed,
+//! indexed and rendered, and its general index. The page markup follows what `sphinx-build` 9.1 emits for
 //! the same source.
 
 use rinx_analyzer as analyzer;
@@ -176,4 +177,124 @@ fn test_e2e_pep_reference_role_out_of_range_is_reported_and_shown_as_written() {
         "{}",
         output.html
     );
+}
+
+#[test]
+fn test_e2e_rfc_cve_and_cwe_roles_link_and_index_under_their_groups() {
+    // Given
+    let source = "\
+Registries
+==========
+
+See :pep:`8`, :rfc:`2324#section-2.3.2`, :cve:`2024-3094` and
+:cwe:`Out-of-bounds Write <787>`.
+";
+
+    // When
+    let (doc, index) = build(source);
+    let output = renderer::render(&doc, &index, &doc.path);
+    let genindex = renderer::render_genindex(
+        &index,
+        &renderer::config::SiteConfig::default(),
+        "{{ body }}",
+    )
+    .unwrap();
+
+    // Then — the page, one anchor sequence across every registry
+    assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+    let html = &output.html;
+    for expected in [
+        "<span class=\"target\" id=\"index-1\"></span>\
+         <a class=\"rfc reference external\" \
+         href=\"https://datatracker.ietf.org/doc/html/rfc2324.html#section-2.3.2\">\
+         <strong>RFC 2324 Section 2.3.2</strong></a>",
+        "<span class=\"target\" id=\"index-2\"></span>\
+         <a class=\"cve reference external\" \
+         href=\"https://www.cve.org/CVERecord?id=CVE-2024-3094\">\
+         <strong>CVE 2024-3094</strong></a>",
+        "<span class=\"target\" id=\"index-3\"></span>\
+         <a class=\"cwe reference external\" \
+         href=\"https://cwe.mitre.org/data/definitions/787.html\">\
+         <strong>Out-of-bounds Write</strong></a>",
+    ] {
+        assert!(html.contains(expected), "{expected}\n{html}");
+    }
+    // Then — the general index files each under Sphinx's group
+    for text in [
+        "Python Enhancement Proposals",
+        "RFC 2324 Section 2.3.2",
+        "Common Vulnerabilities and Exposures",
+        "CVE 2024-3094",
+        "Common Weakness Enumeration",
+        "CWE 787",
+    ] {
+        assert!(genindex.contains(text), "{text}: {genindex}");
+    }
+}
+
+#[test]
+fn test_e2e_rfc_role_links_below_a_configured_base_url() {
+    // Given
+    let (doc, index) = build("See :rfc:`2324` and :rfc-reference:`2822`.\n");
+    let config: renderer::config::SiteConfig =
+        toml::from_str("rfc_base_url = \"https://www.rfc-editor.org/rfc/\"\n").unwrap();
+
+    // When
+    let output = renderer::render_with_config(&doc, &index, &doc.path, &config);
+
+    // Then
+    for href in [
+        "href=\"https://www.rfc-editor.org/rfc/rfc2324.html\"",
+        "href=\"https://www.rfc-editor.org/rfc/rfc2822.html\"",
+    ] {
+        assert!(output.html.contains(href), "{href}: {}", output.html);
+    }
+}
+
+#[test]
+fn test_e2e_cve_role_with_a_prefixed_id_is_reported_and_shown_as_written() {
+    // Given
+    let (doc, index) = build("See :cve:`CVE-2024-3094`.\n");
+
+    // When
+    let output = renderer::render(&doc, &index, &doc.path);
+
+    // Then
+    assert_eq!(doc.diagnostics.len(), 1, "{:?}", doc.diagnostics);
+    assert_eq!(doc.diagnostics[0].code, ast::DiagnosticCode::CveInvalidId);
+    assert!(
+        doc.diagnostics[0]
+            .message
+            .contains("drop the 'CVE-' prefix"),
+        "{}",
+        doc.diagnostics[0].message
+    );
+    assert!(
+        output.html.contains(":cve:`CVE-2024-3094`"),
+        "{}",
+        output.html
+    );
+    assert!(index.genindex_entries.is_empty());
+}
+
+#[test]
+fn test_e2e_rfc_reference_role_links_the_rfc_without_an_index_entry() {
+    // Given
+    let (doc, index) = build("See :rfc-reference:`02822#section-3`.\n");
+
+    // When
+    let output = renderer::render(&doc, &index, &doc.path);
+
+    // Then — docutils' plain link: the number normalized, the section only
+    // in the href
+    assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+    assert!(
+        output.html.contains(
+            "<a class=\"reference external\" \
+             href=\"https://datatracker.ietf.org/doc/html/rfc2822.html#section-3\">RFC 2822</a>"
+        ),
+        "{}",
+        output.html
+    );
+    assert!(index.genindex_entries.is_empty());
 }

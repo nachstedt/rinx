@@ -49,6 +49,7 @@ mod directive;
 mod doctest;
 mod document;
 mod docutils_pep_number;
+mod docutils_rfc_number;
 mod domain;
 mod domain_object_body;
 mod dropdown;
@@ -80,8 +81,8 @@ mod object_naming;
 mod object_type;
 mod option_list_item;
 mod path_normalization;
-mod pep_target;
 mod py_version_spec;
+mod registry_target;
 mod section_id;
 mod sectnum;
 mod spacing;
@@ -114,6 +115,7 @@ pub use doctest::{
 };
 pub use document::Document;
 pub use docutils_pep_number::{DocutilsPepNumber, InvalidDocutilsPepNumber};
+pub use docutils_rfc_number::{DocutilsRfcNumber, InvalidDocutilsRfcNumber};
 pub use domain::Domain;
 pub use domain_object_body::DomainObjectBody;
 pub use dropdown::{Animation, Chevron, Dropdown, InvalidOcticonName, OcticonName, SemanticColor};
@@ -158,8 +160,11 @@ pub use object_naming::{
 pub use object_type::{CObjectType, ObjectType, PyObjectType, StdObjectType};
 pub use option_list_item::{OptionArgument, OptionArgumentDelimiter, OptionListItem, OptionSpec};
 pub use path_normalization::{normalize_path, resolve_from_document};
-pub use pep_target::{InvalidPepTarget, PepTarget};
 pub use py_version_spec::{PyVersionClause, PyVersionSpec, PythonVersion, VersionComparison};
+pub use registry_target::{
+    CveTarget, CweTarget, InvalidRegistryTarget, InvalidRegistryTargetReason, PepTarget, Registry,
+    RegistryTarget, RfcTarget,
+};
 pub use rinx_inventory::InventoryName;
 pub use section_id::{SectionId, SectionIdAllocator, allocate_section_ids, section_slug};
 pub use sectnum::SectnumOptions;

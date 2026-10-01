@@ -15,7 +15,7 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::pep_target::{PepDigitsError, read_pep_digits};
+use crate::registry_target::{NumberError, read_ascii_number};
 
 /// The largest number docutils' `:pep-reference:` links.
 const MAX_PEP_NUMBER: u32 = 9999;
@@ -59,12 +59,12 @@ impl DocutilsPepNumber {
     /// Returns [`InvalidDocutilsPepNumber`] when the text is not a number
     /// from 0 to 9999.
     pub fn parse(written: &str) -> Result<Self, InvalidDocutilsPepNumber> {
-        let number = match read_pep_digits(written) {
+        let number = match read_ascii_number(written) {
             Ok(number) if number <= MAX_PEP_NUMBER => number,
-            Ok(_) | Err(PepDigitsError::TooLarge) => {
+            Ok(_) | Err(NumberError::TooLarge) => {
                 return Err(InvalidDocutilsPepNumber::OutOfRange(written.to_string()));
             }
-            Err(PepDigitsError::NotDigits) => {
+            Err(NumberError::NotDigits) => {
                 return Err(InvalidDocutilsPepNumber::NotANumber(written.to_string()));
             }
         };

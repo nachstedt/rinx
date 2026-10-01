@@ -105,7 +105,7 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     super::substitutions::resolve_substitutions(&mut nodes, &mut diagnostics);
     // After substitutions, so every use of a definition holding a `:pep:`
     // gets an anchor of its own.
-    super::index_ids::assign_pep_index_ids(&mut nodes, &mut index_id_counter);
+    super::index_ids::assign_registry_index_ids(&mut nodes, &mut index_id_counter);
     // After substitutions, so a refused role spliced in from a `replace`
     // definition is reported where it is used, like any other.
     super::refused_roles::report_refused_roles(&mut nodes, &mut diagnostics);

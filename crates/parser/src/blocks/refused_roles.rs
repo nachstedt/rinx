@@ -4,13 +4,15 @@
 //! A whole-document pass for the reason substitution resolution is one: the
 //! inline scan builds nodes and has nowhere to report, while every refusal —
 //! a `:numref:` title Sphinx could not apply, an `:external:` prefix, a
-//! `:pep:` or `:pep-reference:` naming no number — belongs at the role the author wrote. The
-//! refusal travels on the node as an [`InlineNode::RefusedRole`] until this
-//! pass reaches it.
+//! registry role (`:pep:`, `:rfc:`, `:cve:`, `:cwe:`) or docutils'
+//! `:pep-reference:`/`:rfc-reference:` naming nothing it can link — belongs
+//! at the role the author wrote. The refusal travels on the node as an
+//! [`InlineNode::RefusedRole`] until this pass reaches it.
 
 use rinx_ast::{
-    Diagnostic, DiagnosticCode, DocutilsPepNumber, InlineNode, Node, NumberFormat,
-    NumberReferenceRefusal, PepTarget, RoleRefusal, Span, for_each_inline_list_mut,
+    Diagnostic, DiagnosticCode, DocutilsPepNumber, DocutilsRfcNumber, InlineNode, Node,
+    NumberFormat, NumberReferenceRefusal, Registry, RegistryTarget, RoleRefusal, Span,
+    for_each_inline_list_mut,
 };
 
 use crate::diagnostics::Diagnostics;
@@ -34,8 +36,8 @@ pub(super) fn report_refused_roles(nodes: &mut [Node], diagnostics: &mut Diagnos
 }
 
 /// What a refused role is shown as: an unlinked reference for a `:numref:`,
-/// and the source text for a `:pep:` or a `:pep-reference:`, as their
-/// `problematic` node shows it.
+/// and the source text for every other role, as its `problematic` node shows
+/// it.
 fn lowered(text: String, refusal: &RoleRefusal, span: Option<Span>) -> InlineNode {
     match refusal {
         RoleRefusal::NumberReference(_) => InlineNode::NumberReference {
@@ -44,9 +46,9 @@ fn lowered(text: String, refusal: &RoleRefusal, span: Option<Span>) -> InlineNod
             link: false,
             span,
         },
-        RoleRefusal::PepTarget { .. } | RoleRefusal::DocutilsPepNumber { .. } => {
-            InlineNode::Text(text)
-        }
+        RoleRefusal::RegistryTarget { .. }
+        | RoleRefusal::DocutilsPepNumber { .. }
+        | RoleRefusal::DocutilsRfcNumber { .. } => InlineNode::Text(text),
     }
 }
 
@@ -54,13 +56,13 @@ fn lowered(text: String, refusal: &RoleRefusal, span: Option<Span>) -> InlineNod
 fn refusal_diagnostic(text: &str, refusal: &RoleRefusal, span: Option<Span>) -> Diagnostic {
     match refusal {
         RoleRefusal::NumberReference(refusal) => number_reference_diagnostic(text, *refusal, span),
-        RoleRefusal::PepTarget { target } => Diagnostic::at(
-            DiagnosticCode::PepInvalidNumber,
+        RoleRefusal::RegistryTarget { registry, target } => Diagnostic::at(
+            invalid_target_code(*registry),
             // As for a `:numref:` title, the reason is re-derived from the
             // text rather than stored beside it.
-            PepTarget::parse(target).err().map_or_else(
-                || format!("invalid PEP number '{target}'"),
-                |error| format!(":pep: {error}"),
+            RegistryTarget::parse(*registry, target).err().map_or_else(
+                || format!("invalid {} number '{target}'", registry.label()),
+                |error| format!(":{}: {error}", registry.role_name()),
             ),
             span,
         ),
@@ -72,6 +74,25 @@ fn refusal_diagnostic(text: &str, refusal: &RoleRefusal, span: Option<Span>) -> 
             ),
             span,
         ),
+        RoleRefusal::DocutilsRfcNumber { target } => Diagnostic::at(
+            DiagnosticCode::RfcReferenceInvalidNumber,
+            DocutilsRfcNumber::parse(target).err().map_or_else(
+                || format!("invalid RFC number '{target}'"),
+                |error| format!(":rfc-reference: {error}"),
+            ),
+            span,
+        ),
+    }
+}
+
+/// The code a registry role's refused target is reported as — one per
+/// registry, since a code names the construct and each has its own rule.
+const fn invalid_target_code(registry: Registry) -> DiagnosticCode {
+    match registry {
+        Registry::Pep => DiagnosticCode::PepInvalidNumber,
+        Registry::Rfc => DiagnosticCode::RfcInvalidNumber,
+        Registry::Cve => DiagnosticCode::CveInvalidId,
+        Registry::Cwe => DiagnosticCode::CweInvalidNumber,
     }
 }
 
@@ -221,7 +242,8 @@ mod tests {
         let at = Span::new(Position::new(2, 1), Position::new(2, 12));
         let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
             text: ":pep:`abc`".to_string(),
-            refusal: RoleRefusal::PepTarget {
+            refusal: RoleRefusal::RegistryTarget {
+                registry: Registry::Pep,
                 target: "abc".to_string(),
             },
             span: Some(at),
@@ -279,6 +301,91 @@ mod tests {
         assert_eq!(
             entries[0].message,
             ":pep-reference: PEP number must be a number from 0 to 9999; \"10000\" is invalid"
+        );
+    }
+
+    #[test]
+    fn test_reports_a_refused_cve_with_its_own_code() {
+        // Given
+        let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
+            text: ":cve:`CVE-2024-3094`".to_string(),
+            refusal: RoleRefusal::RegistryTarget {
+                registry: Registry::Cve,
+                target: "CVE-2024-3094".to_string(),
+            },
+            span: None,
+        }])];
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_refused_roles(&mut nodes, &mut diagnostics);
+
+        // Then
+        assert_eq!(
+            nodes,
+            vec![Node::Paragraph(vec![InlineNode::Text(
+                ":cve:`CVE-2024-3094`".to_string()
+            )])]
+        );
+        let (entries, _, _) = diagnostics.into_parts();
+        assert_eq!(entries[0].code, DiagnosticCode::CveInvalidId);
+        assert!(
+            entries[0]
+                .message
+                .starts_with(":cve: invalid CVE number 'CVE-2024-3094': drop the 'CVE-' prefix"),
+            "{}",
+            entries[0].message
+        );
+    }
+
+    #[test]
+    fn test_reports_a_refused_rfc_reference_in_docutils_wording() {
+        // Given
+        let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
+            text: ":rfc-reference:`0`".to_string(),
+            refusal: RoleRefusal::DocutilsRfcNumber {
+                target: "0".to_string(),
+            },
+            span: None,
+        }])];
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_refused_roles(&mut nodes, &mut diagnostics);
+
+        // Then
+        assert_eq!(
+            nodes,
+            vec![Node::Paragraph(vec![InlineNode::Text(
+                ":rfc-reference:`0`".to_string()
+            )])]
+        );
+        let (entries, _, _) = diagnostics.into_parts();
+        assert_eq!(entries[0].code, DiagnosticCode::RfcReferenceInvalidNumber);
+        assert_eq!(
+            entries[0].message,
+            ":rfc-reference: RFC number must be a number greater than or equal to 1; \"0\" is invalid"
+        );
+    }
+
+    #[test]
+    fn test_invalid_target_code_names_each_registry() {
+        // Given / When / Then
+        assert_eq!(
+            invalid_target_code(Registry::Pep),
+            DiagnosticCode::PepInvalidNumber
+        );
+        assert_eq!(
+            invalid_target_code(Registry::Rfc),
+            DiagnosticCode::RfcInvalidNumber
+        );
+        assert_eq!(
+            invalid_target_code(Registry::Cve),
+            DiagnosticCode::CveInvalidId
+        );
+        assert_eq!(
+            invalid_target_code(Registry::Cwe),
+            DiagnosticCode::CweInvalidNumber
         );
     }
 

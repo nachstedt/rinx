@@ -92,6 +92,7 @@ pub(super) fn with_ctx_for<R>(
         show_entity_updates: crate::blocks::EntityUpdateVisibility::Show,
         uml_configs: &std::collections::BTreeMap::new(),
         pep_base_url: &config.pep_base_url,
+        rfc_base_url: &config.rfc_base_url,
         linenothreshold: None,
         highlight_force: false,
         section_ids: &section_ids,

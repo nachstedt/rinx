@@ -172,7 +172,7 @@ mod tests {
         let [Node::Paragraph(inlines)] = &body[..] else {
             panic!("Expected one paragraph, got {body:?}");
         };
-        assert!(matches!(inlines[0], InlineNode::PepReference { .. }));
+        assert!(matches!(inlines[0], InlineNode::RegistryReference { .. }));
     }
 
     #[test]

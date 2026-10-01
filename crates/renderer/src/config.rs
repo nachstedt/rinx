@@ -10,7 +10,7 @@ use rinx_ast::ResolvedLanguage;
 
 use crate::nav::SidebarTree;
 pub use crate::numfig_format::NumfigFormat;
-pub use crate::pep_base_url::PepBaseUrl;
+pub use crate::registry_base_url::{PepBaseUrl, RfcBaseUrl};
 use serde::Deserialize;
 
 /// Site-level configuration loaded from a TOML file.
@@ -164,6 +164,14 @@ pub struct SiteConfig {
     #[serde(default)]
     pub pep_base_url: PepBaseUrl,
 
+    /// The RFC index an `:rfc:` role links into — docutils' `rfc_base_url`,
+    /// defaulting to Sphinx's `https://datatracker.ietf.org/doc/html/`. Each
+    /// RFC's page, such as `rfc2324.html`, is appended to it.
+    ///
+    /// Read while rendering, for the reason `pep_base_url` is.
+    #[serde(default)]
+    pub rfc_base_url: RfcBaseUrl,
+
     /// Module name prefixes the Python Module Index sets aside when filing a
     /// module under a letter and a package — Sphinx's
     /// `modindex_common_prefix`, so `["email."]` files `email.message` under
@@ -309,6 +317,7 @@ impl Default for SiteConfig {
             numfig_format: NumfigFormat::default(),
             version_switcher: None,
             pep_base_url: PepBaseUrl::default(),
+            rfc_base_url: RfcBaseUrl::default(),
             modindex_common_prefix: Vec::new(),
         }
     }
@@ -373,6 +382,42 @@ mod tests {
 
         // Then
         assert!(error.contains("invalid pep_base_url"), "{error}");
+    }
+
+    #[test]
+    fn test_deserialize_defaults_rfc_base_url() {
+        // Given / When
+        let config: SiteConfig = toml::from_str("").unwrap();
+
+        // Then
+        assert_eq!(
+            config.rfc_base_url.as_str(),
+            "https://datatracker.ietf.org/doc/html/"
+        );
+    }
+
+    #[test]
+    fn test_deserialize_reads_rfc_base_url() {
+        // Given / When
+        let config: SiteConfig =
+            toml::from_str("rfc_base_url = \"https://www.rfc-editor.org/rfc/\"\n").unwrap();
+
+        // Then
+        assert_eq!(
+            config.rfc_base_url.as_str(),
+            "https://www.rfc-editor.org/rfc/"
+        );
+    }
+
+    #[test]
+    fn test_deserialize_refuses_an_rfc_base_url_without_trailing_slash() {
+        // Given / When
+        let error = toml::from_str::<SiteConfig>("rfc_base_url = \"https://x.org/rfc\"\n")
+            .unwrap_err()
+            .to_string();
+
+        // Then
+        assert!(error.contains("invalid rfc_base_url"), "{error}");
     }
 
     #[test]

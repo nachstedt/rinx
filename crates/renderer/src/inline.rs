@@ -18,9 +18,11 @@
 //! [`math`] and [`code`] are the two non-reference roles with a module of
 //! their own, each because it calls a backend: the math renderer for
 //! `:math:`, the syntax highlighter for `:code:` and the roles derived from
-//! it. [`pep_reference`] is a reference that needs no index either: `:pep:`
-//! links outside the site, below its configured PEP index — as does
-//! [`docutils_pep_reference`], docutils' plainer `:pep-reference:`.
+//! it. [`registry_reference`] is a reference that needs no index either:
+//! `:pep:`, `:rfc:`, `:cve:` and `:cwe:` link outside the site, below their
+//! registry's address — as do [`docutils_pep_reference`] and
+//! [`docutils_rfc_reference`], docutils' plainer `:pep-reference:` and
+//! `:rfc-reference:`.
 //!
 //! [`RefText`] is the one shape they all share: the visible text, the target
 //! to resolve, and where the role was written.
@@ -31,6 +33,7 @@ mod code;
 mod dispatch;
 mod doc_reference;
 mod docutils_pep_reference;
+mod docutils_rfc_reference;
 mod domain_object_reference;
 mod download_reference;
 pub(crate) mod entity_reference;
@@ -39,9 +42,9 @@ mod hyperlink;
 mod math;
 mod number_reference;
 mod option_reference;
-mod pep_reference;
 mod ref_text;
 mod reference;
+mod registry_reference;
 mod term_reference;
 
 pub(crate) use dispatch::render_inline;
