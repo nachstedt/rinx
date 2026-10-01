@@ -179,10 +179,12 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         // cross-reference target.
         InlineNode::EquationReference { label: name, .. }
         | InlineNode::SubstitutionReference { name, .. } => *name = unescape(name),
-        // Never produced by the inline scan itself — only by the
-        // whole-document substitution resolver splicing an already-built
+        // A `:pep-reference:`'s number was unescaped before it was parsed
+        // (see `roles::pep_reference`), and it is all the node holds. An
+        // inline image is never produced by the inline scan itself — only by
+        // the whole-document substitution resolver splicing an already-built
         // node in after this function has already run on it once.
-        InlineNode::InlineImage(_) => {}
+        InlineNode::DocutilsPepReference { .. } | InlineNode::InlineImage(_) => {}
     }
     node
 }

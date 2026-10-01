@@ -94,4 +94,5 @@ will be) adds a variant, not a node and a pass.
   role; here it does not. That is a property of every role, not this one, and
   belongs in a change that introduces it for all of them.
 - docutils' own `:pep-reference:` role, which Sphinx does not override and
-  which renders without the index entry and the `<strong>`, is not supported.
+  which renders without the index entry and the `<strong>`, is supported
+  since ADR-033 by a node of its own.

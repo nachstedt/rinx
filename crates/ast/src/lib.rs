@@ -48,6 +48,7 @@ mod diagnostic_code;
 mod directive;
 mod doctest;
 mod document;
+mod docutils_pep_number;
 mod domain;
 mod domain_object_body;
 mod dropdown;
@@ -112,6 +113,7 @@ pub use doctest::{
     DocTestBlock, DocTestFlag, DocTestFlagName, DocTestGroup, DocTestGroupSelector, DocTestTrim,
 };
 pub use document::Document;
+pub use docutils_pep_number::{DocutilsPepNumber, InvalidDocutilsPepNumber};
 pub use domain::Domain;
 pub use domain_object_body::DomainObjectBody;
 pub use dropdown::{Animation, Chevron, Dropdown, InvalidOcticonName, OcticonName, SemanticColor};

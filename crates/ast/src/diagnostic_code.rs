@@ -120,6 +120,12 @@ diagnostic_codes! {
     /// number". The role is shown as its source text.
     PepInvalidNumber => "pep.invalid-number",
 
+    // --- `:pep-reference:` -------------------------------------------------
+    /// A `:pep-reference:` whose target is not a number from 0 to 9999 —
+    /// docutils' "PEP number must be a number from 0 to 9999". The role is
+    /// shown as its source text.
+    PepReferenceInvalidNumber => "pep-reference.invalid-number",
+
     // --- Headings ----------------------------------------------------------
     /// A section adornment shorter than the title's display width, which
     /// docutils accepts and reports rather than rejecting.

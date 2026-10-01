@@ -26,6 +26,7 @@ use super::roles::download::handle_download_match;
 use super::roles::math::{handle_eq_match, handle_math_match};
 use super::roles::numref::handle_numref_match;
 use super::roles::pep::handle_pep_match;
+use super::roles::pep_reference::handle_pep_reference_match;
 use super::roles::py::attr::handle_attr_match;
 use super::roles::py::class::handle_class_match;
 use super::roles::py::data::handle_data_match;
@@ -180,6 +181,7 @@ fn build_inline_node(
         "download" => handle_download_match(m_str),
         "numref" => handle_numref_match(m_str),
         "pep" => handle_pep_match(m_str),
+        "pep-reference" => handle_pep_reference_match(m_str),
         "program" => {
             let caps = PROGRAM_ROLE_REGEX.captures(m_str).unwrap();
             InlineNode::Program(caps["name"].to_string())
@@ -209,23 +211,7 @@ fn build_inline_node(
         "math" => handle_math_match(m_str),
         "code" => handle_code_match(m_str),
         "eq" => handle_eq_match(m_str),
-        "phrased" => {
-            let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
-            let text_full = &caps["text"];
-            if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
-                InlineNode::Hyperlink {
-                    text: embedded["text"].trim().to_string(),
-                    target: embedded["uri"].to_string(),
-                    span: None,
-                }
-            } else {
-                InlineNode::Hyperlink {
-                    text: text_full.to_string(),
-                    target: text_full.to_string(),
-                    span: None,
-                }
-            }
-        }
+        "phrased" => handle_phrased_link_match(m_str),
         "simple" => {
             let caps = SIMPLE_LINK_REGEX.captures(m_str).unwrap();
             let name = &caps["name"];
@@ -259,6 +245,26 @@ fn build_inline_node(
             }
         }
         _ => unreachable!(),
+    }
+}
+
+/// Builds the hyperlink for a matched `` `text <uri>`_ `` or `` `name`_ ``:
+/// an embedded URI is the target, else the phrase names one.
+fn handle_phrased_link_match(m_str: &str) -> InlineNode {
+    let caps = PHRASED_LINK_REGEX.captures(m_str).unwrap();
+    let text_full = &caps["text"];
+    if let Some(embedded) = EMBEDDED_URI_REGEX.captures(text_full) {
+        InlineNode::Hyperlink {
+            text: embedded["text"].trim().to_string(),
+            target: embedded["uri"].to_string(),
+            span: None,
+        }
+    } else {
+        InlineNode::Hyperlink {
+            text: text_full.to_string(),
+            target: text_full.to_string(),
+            span: None,
+        }
     }
 }
 
@@ -490,6 +496,38 @@ mod tests {
             result,
             InlineNode::AnonymousReference {
                 text: "anon_name".to_string(),
+                span: None,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_phrased_link_match_links_an_embedded_uri() {
+        // Given / When
+        let node = handle_phrased_link_match("`Rust <https://rust-lang.org>`_");
+
+        // Then
+        assert_eq!(
+            node,
+            InlineNode::Hyperlink {
+                text: "Rust".to_string(),
+                target: "https://rust-lang.org".to_string(),
+                span: None,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_phrased_link_match_names_a_target_without_a_uri() {
+        // Given / When
+        let node = handle_phrased_link_match("`my target`_");
+
+        // Then
+        assert_eq!(
+            node,
+            InlineNode::Hyperlink {
+                text: "my target".to_string(),
+                target: "my target".to_string(),
                 span: None,
             }
         );

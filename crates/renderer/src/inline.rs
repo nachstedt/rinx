@@ -19,7 +19,8 @@
 //! their own, each because it calls a backend: the math renderer for
 //! `:math:`, the syntax highlighter for `:code:` and the roles derived from
 //! it. [`pep_reference`] is a reference that needs no index either: `:pep:`
-//! links outside the site, below its configured PEP index.
+//! links outside the site, below its configured PEP index — as does
+//! [`docutils_pep_reference`], docutils' plainer `:pep-reference:`.
 //!
 //! [`RefText`] is the one shape they all share: the visible text, the target
 //! to resolve, and where the role was written.
@@ -29,6 +30,7 @@ mod any_reference;
 mod code;
 mod dispatch;
 mod doc_reference;
+mod docutils_pep_reference;
 mod domain_object_reference;
 mod download_reference;
 pub(crate) mod entity_reference;

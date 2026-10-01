@@ -1,5 +1,5 @@
-//! Where a `:pep:` role's link points: the PEP index every PEP's page sits
-//! below, as `rinx.toml`'s `pep_base_url` names it — docutils'
+//! Where a `:pep:` or `:pep-reference:` role's link points: the PEP index
+//! every PEP's page sits below, as `rinx.toml`'s `pep_base_url` names it — docutils'
 //! `pep_base_url` setting, which a Sphinx project can only change in a
 //! `docutils.conf`.
 //!

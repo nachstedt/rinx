@@ -60,6 +60,10 @@ pub(super) static CODE_ROLE_REGEX: LazyLock<Regex> =
 /// inventory.
 pub(super) static PEP_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":pep:`(?P<target>[^`]+)`").unwrap());
+/// docutils' `:pep-reference:`, `:pep:`'s plain sibling. No
+/// [`EXTERNAL_PREFIX`] and no domain, for the reason `:pep:` has none.
+pub(super) static PEP_REFERENCE_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":pep-reference:`(?P<target>[^`]+)`").unwrap());
 pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
 pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -158,6 +162,7 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&EQ_ROLE_REGEX, "eq"),
     (&CODE_ROLE_REGEX, "code"),
     (&PEP_ROLE_REGEX, "pep"),
+    (&PEP_REFERENCE_ROLE_REGEX, "pep-reference"),
     (&OPTION_ROLE_REGEX, "option"),
     (&FUNC_ROLE_REGEX, "func"),
     (&MOD_ROLE_REGEX, "mod"),
@@ -242,7 +247,15 @@ mod tests {
     fn test_is_fixed_role_name_knows_the_built_in_roles() {
         // Given / When / Then
         for name in [
-            "code", "ref", "math", "func", "doc", "download", "numref", "pep",
+            "code",
+            "ref",
+            "math",
+            "func",
+            "doc",
+            "download",
+            "numref",
+            "pep",
+            "pep-reference",
         ] {
             assert!(is_fixed_role_name(name), "{name}");
         }

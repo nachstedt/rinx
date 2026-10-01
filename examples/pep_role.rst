@@ -38,3 +38,19 @@ The PEP index
 
 Links go to ``https://peps.python.org/`` unless the site's ``rinx.toml`` sets
 ``pep_base_url``, for example to a mirror.
+
+docutils' ``:pep-reference:``
+-----------------------------
+
+docutils' own role, which Sphinx leaves in place beside ``:pep:``, links the
+PEP and nothing more: :pep-reference:`8`, written as ``:pep-reference:`8```.
+It makes no general index entry, shows no bold text, and its link,
+``https://peps.python.org/pep-0008``, has no trailing slash.
+
+Its target is the number alone, from 0 to 9999: an explicit title or a ``#``
+anchor is not a number, so it is shown as written and reported as
+``pep-reference.invalid-number``; the comment below silences that here.
+
+.. noqa: pep-reference.invalid-number
+
+:pep-reference:`8#naming`

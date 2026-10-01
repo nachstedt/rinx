@@ -81,6 +81,12 @@ Supported:
   to ``https://peps.python.org/`` unless the site sets ``pep_base_url`` (see
   :ref:`site-config`); a target that is not a number is shown as written and
   reported as ``pep.invalid-number``.
+- docutils' ``:pep-reference:`` role, ``:pep:``'s plainer sibling:
+  ``:pep-reference:`8``` links ``pep-0008`` below the same ``pep_base_url``
+  and shows *PEP 8*, with no general index entry, no bold and no trailing
+  slash. Its target is a number from 0 to 9999 and nothing else — no title,
+  no ``#`` anchor; anything else is shown as written and reported as
+  ``pep-reference.invalid-number``.
 - Admonitions, ``.. seealso::``, ``.. versionadded::``,
   ``.. versionchanged::`` and ``.. deprecated::``. As in Sphinx, text after
   the ``::`` starts the body — ``.. seealso:: :pep:`634``` is a complete

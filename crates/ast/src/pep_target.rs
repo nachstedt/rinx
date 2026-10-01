@@ -62,12 +62,10 @@ impl PepTarget {
             Some((digits, _)) => (digits, Some(digits.len() + 1)),
             None => (written, None),
         };
-        if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
-            return Err(InvalidPepTarget::NotANumber(written.to_string()));
-        }
-        let number = digits
-            .parse()
-            .map_err(|_| InvalidPepTarget::TooLarge(written.to_string()))?;
+        let number = read_pep_digits(digits).map_err(|error| match error {
+            PepDigitsError::NotDigits => InvalidPepTarget::NotANumber(written.to_string()),
+            PepDigitsError::TooLarge => InvalidPepTarget::TooLarge(written.to_string()),
+        })?;
         Ok(Self {
             written: written.to_string(),
             number,
@@ -103,6 +101,25 @@ impl PepTarget {
             None => format!("pep-{:04}/", self.number),
         }
     }
+}
+
+/// Why [`read_pep_digits`] refused a number.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum PepDigitsError {
+    /// Empty, or holding anything but ASCII digits.
+    NotDigits,
+    /// A run of digits too long for a `u32`.
+    TooLarge,
+}
+
+/// Reads a PEP number written as a run of ASCII digits — the one spelling of
+/// a number both `:pep:` and `:pep-reference:` accept, kept in one place so
+/// the two roles cannot disagree about what a number is.
+pub(crate) fn read_pep_digits(digits: &str) -> Result<u32, PepDigitsError> {
+    if digits.is_empty() || !digits.bytes().all(|byte| byte.is_ascii_digit()) {
+        return Err(PepDigitsError::NotDigits);
+    }
+    digits.parse().map_err(|_| PepDigitsError::TooLarge)
 }
 
 impl Serialize for PepTarget {
@@ -178,6 +195,29 @@ mod tests {
         assert_eq!(
             PepTarget::parse("99999999999"),
             Err(InvalidPepTarget::TooLarge("99999999999".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_read_pep_digits_reads_ascii_digits() {
+        // Given / When / Then
+        assert_eq!(read_pep_digits("0008"), Ok(8));
+        assert_eq!(read_pep_digits("0"), Ok(0));
+    }
+
+    #[test]
+    fn test_read_pep_digits_refuses_anything_else() {
+        // Given / When / Then
+        for digits in ["", "+8", "8 ", "8#a", "٨"] {
+            assert_eq!(
+                read_pep_digits(digits),
+                Err(PepDigitsError::NotDigits),
+                "{digits:?}"
+            );
+        }
+        assert_eq!(
+            read_pep_digits("99999999999"),
+            Err(PepDigitsError::TooLarge)
         );
     }
 
