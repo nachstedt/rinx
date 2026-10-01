@@ -974,7 +974,7 @@ connection. It should
 be a floating-point number representing the amount of time in seconds
 to wait for a connection attempt to complete, before starting the next
 attempt in parallel. This is the "Connection Attempt Delay" as defined
-in :rfc:`8305`. A sensible default value recommended by the RFC is <code>0.25</code>
+in <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8305.html"><strong>RFC 8305</strong></a>. A sensible default value recommended by the RFC is <code>0.25</code>
 (250 milliseconds).</p>
 </li>
 <li><p><em>interleave</em> controls address reordering when a host name resolves to
@@ -983,7 +983,7 @@ If <code>0</code> or unspecified, no reordering is done, and addresses are
 tried in the order returned by <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.getaddrinfo"><code class="xref py method docutils literal">getaddrinfo</code></a>. If a positive integer
 is specified, the addresses are interleaved by address family, and the
 given integer is interpreted as "First Address Family Count" as defined
-in :rfc:`8305`. The default is <code>0</code> if <em>happy_eyeballs_delay</em> is not
+in <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8305.html"><strong>RFC 8305</strong></a>. The default is <code>0</code> if <em>happy_eyeballs_delay</em> is not
 specified, and <code>1</code> if it is.</p>
 </li>
 <li><p><em>sock</em>, if given, should be an existing, already connected

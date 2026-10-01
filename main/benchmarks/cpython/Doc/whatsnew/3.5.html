@@ -1211,7 +1211,7 @@ method provides easy access to a canonical value for the
 <p>A new policy option <a class="reference internal" href="../library/email.policy.html#py:attribute:email.policy.emailpolicy.utf8"><code class="xref py attribute docutils literal">EmailPolicy.utf8</code></a>
 can be set to <code>True</code> to encode email headers using the UTF-8 charset instead
 of using encoded words.  This allows <code>Messages</code> to be formatted according to
-:rfc:`6532` and used with an SMTP server that supports the :rfc:`6531`
+<span class="target" id="index-31"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6532.html"><strong>RFC 6532</strong></a> and used with an SMTP server that supports the <span class="target" id="index-32"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6531.html"><strong>RFC 6531</strong></a>
 <code>SMTPUTF8</code> extension.  (Contributed by R. David Murray in
 :issue:`24211`.)</p>
 <p>The <a class="reference internal" href="../library/email.mime.html#py:class:email.mime.text.mimetext"><code class="xref py class docutils literal">mime.text.MIMEText</code></a> constructor now
@@ -1292,10 +1292,10 @@ from the IDLE :menuselection:`Help --&gt; About IDLE` dialog.</p>
 When used in a :keyword:`with` statement, the IMAP4 <code>LOGOUT</code>
 command will be called automatically at the end of the block.
 (Contributed by Tarek Ziadé and Serhiy Storchaka in :issue:`4972`.)</p>
-<p>The <a class="reference internal" href="../library/imaplib.html#py:module:imaplib" title="imaplib: IMAP4 protocol client (requires sockets)."><code class="xref py module docutils literal">imaplib</code></a> module now supports :rfc:`5161` (ENABLE Extension)
-and :rfc:`6855` (UTF-8 Support) via the <a class="reference internal" href="../library/imaplib.html#py:method:imaplib.imap4.enable"><code class="xref py method docutils literal">IMAP4.enable()</code></a>
+<p>The <a class="reference internal" href="../library/imaplib.html#py:module:imaplib" title="imaplib: IMAP4 protocol client (requires sockets)."><code class="xref py module docutils literal">imaplib</code></a> module now supports <span class="target" id="index-33"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5161.html"><strong>RFC 5161</strong></a> (ENABLE Extension)
+and <span class="target" id="index-34"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6855.html"><strong>RFC 6855</strong></a> (UTF-8 Support) via the <a class="reference internal" href="../library/imaplib.html#py:method:imaplib.imap4.enable"><code class="xref py method docutils literal">IMAP4.enable()</code></a>
 method.  A new <a class="reference internal" href="../library/imaplib.html#py:attribute:imaplib.imap4.utf8_enabled"><code class="xref py attribute docutils literal">IMAP4.utf8_enabled</code></a>
-attribute tracks whether or not :rfc:`6855` support is enabled.
+attribute tracks whether or not <span class="target" id="index-35"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6855.html"><strong>RFC 6855</strong></a> support is enabled.
 (Contributed by Milan Oberkirch, R. David Murray, and Maciej Szulik in
 :issue:`21800`.)</p>
 <p>The <a class="reference internal" href="../library/imaplib.html#py:module:imaplib" title="imaplib: IMAP4 protocol client (requires sockets)."><code class="xref py module docutils literal">imaplib</code></a> module now automatically encodes non-ASCII string usernames
@@ -1529,7 +1529,7 @@ using <a href="../library/pickle.html#pickle-protocols">pickle protocols</a> old
 Protocol version 4 already supports these cases.  (Contributed by Serhiy
 Storchaka in :issue:`23611`.)</p>
 <h3 id="poplib">poplib</h3>
-<p>A new <a class="reference internal" href="../library/poplib.html#py:method:poplib.pop3.utf8"><code class="xref py method docutils literal">POP3.utf8()</code></a> command enables :rfc:`6856`
+<p>A new <a class="reference internal" href="../library/poplib.html#py:method:poplib.pop3.utf8"><code class="xref py method docutils literal">POP3.utf8()</code></a> command enables <span class="target" id="index-36"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6856.html"><strong>RFC 6856</strong></a>
 (Internationalized Email) support, if a POP server supports it.
 (Contributed by Milan OberKirch in :issue:`21804`.)</p>
 <h3 id="re">re</h3>
@@ -1597,13 +1597,13 @@ to <code>False</code>, the <code>process_message</code> method must be prepared 
 arguments.
 (Contributed by Maciej Szulik in :issue:`19662`.)</p>
 <p>The <code class="xref py class docutils literal">SMTPServer</code> class now advertises the <code>8BITMIME</code> extension
-(:rfc:`6152`) if <em>decode_data</em> has been set <code>True</code>.  If the client
+(<span class="target" id="index-37"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6152.html"><strong>RFC 6152</strong></a>) if <em>decode_data</em> has been set <code>True</code>.  If the client
 specifies <code>BODY=8BITMIME</code> on the <code>MAIL</code> command, it is passed to
 <code class="xref py method docutils literal">SMTPServer.process_message</code>
 via the <em>mail_options</em> keyword.
 (Contributed by Milan Oberkirch and R.  David Murray in :issue:`21795`.)</p>
 <p>The <code class="xref py class docutils literal">SMTPServer</code> class now also supports the <code>SMTPUTF8</code>
-extension (:rfc:`6531`: Internationalized Email).  If the client specified
+extension (<span class="target" id="index-38"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6531.html"><strong>RFC 6531</strong></a>: Internationalized Email).  If the client specified
 <code>SMTPUTF8 BODY=8BITMIME</code> on the <code>MAIL</code> command, they are passed to
 <code class="xref py method docutils literal">SMTPServer.process_message</code>
 via the <em>mail_options</em> keyword.  It is the responsibility of the
@@ -1621,7 +1621,7 @@ accepts an additional debuglevel (2), which enables timestamps in debug
 messages. (Contributed by Gavin Chappell and Maciej Szulik in :issue:`16914`.)</p>
 <p>Both the <a class="reference internal" href="../library/smtplib.html#py:method:smtplib.smtp.sendmail"><code class="xref py method docutils literal">SMTP.sendmail()</code></a> and
 <a class="reference internal" href="../library/smtplib.html#py:method:smtplib.smtp.send_message"><code class="xref py method docutils literal">SMTP.send_message()</code></a> methods now
-support :rfc:`6531` (SMTPUTF8).
+support <span class="target" id="index-39"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6531.html"><strong>RFC 6531</strong></a> (SMTPUTF8).
 (Contributed by Milan Oberkirch and R. David Murray in :issue:`22027`.)</p>
 <h3 id="sndhdr">sndhdr</h3>
 <p>The <code class="xref py function docutils literal">what</code> and <code class="xref py function docutils literal">whathdr</code> functions  now return
@@ -1662,7 +1662,7 @@ to create a new <code>SSLObject</code> instance.</p>
 <p>(Contributed by Benjamin Peterson in :issue:`20188`.)</p>
 <p>Where OpenSSL support is present, the <a class="reference internal" href="../library/ssl.html#py:module:ssl" title="ssl: TLS/SSL wrapper for socket objects"><code class="xref py module docutils literal">ssl</code></a> module now implements
 the <em>Application-Layer Protocol Negotiation</em> TLS extension as described
-in :rfc:`7301`.</p>
+in <span class="target" id="index-40"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc7301.html"><strong>RFC 7301</strong></a>.</p>
 <p>The new <a class="reference internal" href="../library/ssl.html#py:method:ssl.sslcontext.set_alpn_protocols"><code class="xref py method docutils literal">SSLContext.set_alpn_protocols()</code></a>
 can be used to specify which protocols a socket should advertise during
 the TLS handshake.</p>
@@ -1682,7 +1682,7 @@ the <a class="reference internal" href="../library/ssl.html#py:exception:ssl.ssl
 non-blocking socket if the operation would block. Previously, it would return
 <code>0</code>.  (Contributed by Nikolaus Rath in :issue:`20951`.)</p>
 <p>The <a class="reference internal" href="../library/ssl.html#py:function:ssl.cert_time_to_seconds"><code class="xref py function docutils literal">cert_time_to_seconds</code></a> function now interprets the input time
-as UTC and not as local time, per :rfc:`5280`.  Additionally, the return
+as UTC and not as local time, per <span class="target" id="index-41"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5280.html"><strong>RFC 5280</strong></a>.  Additionally, the return
 value is always an <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>. (Contributed by Akira Li in :issue:`19940`.)</p>
 <p>New <code class="xref py method docutils literal">SSLObject.shared_ciphers</code> and
 <a class="reference internal" href="../library/ssl.html#py:method:ssl.sslsocket.shared_ciphers"><code class="xref py method docutils literal">SSLSocket.shared_ciphers()</code></a> methods return
@@ -1848,8 +1848,8 @@ function provides a way to control the encoding of query parts if needed.
 <a class="reference internal" href="../library/ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">ssl.SSLContext</code></a> object as a <em>context</em> argument, which will be used for
 the HTTPS connection.  (Contributed by Alex Gaynor in :issue:`22366`.)</p>
 <p>The <a class="reference internal" href="../library/urllib.parse.html#py:function:urllib.parse.urljoin"><code class="xref py function docutils literal">parse.urljoin()</code></a> was updated to use the
-:rfc:`3986` semantics for the resolution of relative URLs, rather than
-:rfc:`1808` and :rfc:`2396`.
+<span class="target" id="index-42"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3986.html"><strong>RFC 3986</strong></a> semantics for the resolution of relative URLs, rather than
+<span class="target" id="index-43"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1808.html"><strong>RFC 1808</strong></a> and <span class="target" id="index-44"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2396.html"><strong>RFC 2396</strong></a>.
 (Contributed by Demian Brecht and Senthil Kumaran in :issue:`22118`.)</p>
 <h3 id="wsgiref">wsgiref</h3>
 <p>The <em>headers</em> argument of the <a class="reference internal" href="../library/wsgiref.html#py:class:wsgiref.headers.headers"><code class="xref py class docutils literal">headers.Headers</code></a>
@@ -1957,13 +1957,13 @@ but accepts a <a href="#" class="broken-link"><code class="xref c type docutils 
 <p>A new <a class="reference internal" href="../c-api/exceptions.html#c:member:pyexc_recursionerror"><code class="xref c member docutils literal">PyExc_RecursionError</code></a> exception.
 (Contributed by Georg Brandl in :issue:`19235`.)</p>
 <p>New <a class="reference internal" href="../c-api/module.html#c:function:pymodule_fromdefandspec"><code class="xref c function docutils literal">PyModule_FromDefAndSpec</code></a>, <a class="reference internal" href="../c-api/module.html#c:function:pymodule_fromdefandspec2"><code class="xref c function docutils literal">PyModule_FromDefAndSpec2</code></a>,
-and <a class="reference internal" href="../c-api/module.html#c:function:pymodule_execdef"><code class="xref c function docutils literal">PyModule_ExecDef</code></a> functions introduced by <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> –
+and <a class="reference internal" href="../c-api/module.html#c:function:pymodule_execdef"><code class="xref c function docutils literal">PyModule_ExecDef</code></a> functions introduced by <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> –
 multi-phase extension module initialization.
 (Contributed by Petr Viktorin in :issue:`24268`.)</p>
 <p>New <a class="reference internal" href="../c-api/number.html#c:function:pynumber_matrixmultiply"><code class="xref c function docutils literal">PyNumber_MatrixMultiply</code></a> and
 <a class="reference internal" href="../c-api/number.html#c:function:pynumber_inplacematrixmultiply"><code class="xref c function docutils literal">PyNumber_InPlaceMatrixMultiply</code></a> functions to perform matrix
 multiplication.
-(Contributed by Benjamin Peterson in :issue:`21176`.  See also <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0465/"><strong>PEP 465</strong></a>
+(Contributed by Benjamin Peterson in :issue:`21176`.  See also <span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0465/"><strong>PEP 465</strong></a>
 for details.)</p>
 <p>The <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_finalize"><code class="xref c member docutils literal">PyTypeObject.tp_finalize</code></a> slot is now part of the stable ABI.</p>
 <p>Windows builds now require Microsoft Visual C++ 14.0, which
@@ -2019,7 +2019,7 @@ with Python 3.4.</p>
 <h2 id="deprecated">Deprecated</h2>
 <h3 id="new-keywords">New Keywords</h3>
 <p><code>async</code> and <code>await</code> are not recommended to be used as variable, class,
-function or module names.  Introduced by <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0492/"><strong>PEP 492</strong></a> in Python 3.5, they will
+function or module names.  Introduced by <span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0492/"><strong>PEP 492</strong></a> in Python 3.5, they will
 become proper keywords in Python 3.7.</p>
 <h3 id="deprecated-python-behavior">Deprecated Python Behavior</h3>
 <p>Raising the <a class="reference internal" href="../library/exceptions.html#py:exception:stopiteration"><code class="xref py exception docutils literal">StopIteration</code></a> exception inside a generator will now generate a silent
@@ -2112,7 +2112,7 @@ expressions must be put in parentheses if not a sole argument to a function.</p>
 </ul>
 <h3 id="changes-in-the-python-api">Changes in the Python API</h3>
 <ul>
-<li><p><span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0475/"><strong>PEP 475</strong></a>: System calls are now retried when interrupted by a signal instead
+<li><p><span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0475/"><strong>PEP 475</strong></a>: System calls are now retried when interrupted by a signal instead
 of raising <a class="reference internal" href="../library/exceptions.html#py:exception:interruptederror"><code class="xref py exception docutils literal">InterruptedError</code></a> if the Python signal handler does not
 raise an exception.</p>
 </li>
@@ -2182,7 +2182,7 @@ keys in the update dictionary are invalid.  In addition, the undocumented
 <em>LegalChars</em> parameter of <a href="#" class="broken-link"><code class="xref py function docutils literal">set</code></a> is deprecated and
 is now ignored.  (Contributed by Demian Brecht in :issue:`2211`.)</p>
 </li>
-<li><p><span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a> has removed <code>.pyo</code> files from Python and introduced the optional
+<li><p><span class="target" id="index-49"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a> has removed <code>.pyo</code> files from Python and introduced the optional
 <code>opt-</code> tag in <code>.pyc</code> file names. The
 <a class="reference internal" href="../library/importlib.html#py:function:importlib.util.cache_from_source"><code class="xref py function docutils literal">importlib.util.cache_from_source</code></a> has gained an <em>optimization</em>
 parameter to help control the <code>opt-</code> tag. Because of this, the
@@ -2197,7 +2197,7 @@ invalid regardless of this PEP.</p>
 constant on linux 3.6 and greater.</p>
 </li>
 <li><p>The <a class="reference internal" href="../library/ssl.html#py:function:ssl.cert_time_to_seconds"><code class="xref py function docutils literal">ssl.cert_time_to_seconds</code></a> function now interprets the input time
-as UTC and not as local time, per :rfc:`5280`.  Additionally, the return
+as UTC and not as local time, per <span class="target" id="index-50"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5280.html"><strong>RFC 5280</strong></a>.  Additionally, the return
 value is always an <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>. (Contributed by Akira Li in :issue:`19940`.)</p>
 </li>
 <li><p>The <code>pygettext.py</code> Tool now uses the standard +NNNN format for timezones in
@@ -2248,7 +2248,7 @@ the <a class="reference internal" href="../reference/datamodel.html#py:attribute
 the future.
 (Contributed by Serhiy Storchaka in :issue:`20204`.)</p>
 </li>
-<li><p>As part of the <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0492/"><strong>PEP 492</strong></a> implementation, the <code>tp_reserved</code> slot of
+<li><p>As part of the <span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0492/"><strong>PEP 492</strong></a> implementation, the <code>tp_reserved</code> slot of
 <a class="reference internal" href="../c-api/type.html#c:type:pytypeobject"><code class="xref c type docutils literal">PyTypeObject</code></a> was replaced with a
 <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_as_async"><code class="xref c member docutils literal">tp_as_async</code></a> slot.  Refer to <a href="../c-api/coro.html#coro-objects">Coroutine Objects</a> for
 new types, structures and functions.</p>

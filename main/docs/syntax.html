@@ -182,12 +182,35 @@ to <code>https://peps.python.org/</code> unless the site sets <code>pep_base_url
 <a href="rules.html#site-config">The configuration file</a>); a target that is not a number is shown as written and
 reported as <code>pep.invalid-number</code>.</p>
 </li>
+<li><p>The <code>:rfc:</code> role, which links an IETF Request for Comments the same way:
+<code>:rfc:`2324`</code> shows <strong>RFC 2324</strong>, links <code>rfc2324.html</code> below
+<code>https://datatracker.ietf.org/doc/html/</code> unless the site sets
+<code>rfc_base_url</code>, and lists the mention under <em>RFC</em>. A <code>section-</code>,
+<code>appendix-</code> or <code>page-</code> anchor is spelled out, so
+<code>:rfc:`2324#section-2.3`</code> shows <strong>RFC 2324 Section 2.3</strong>. A target that
+is not a number is reported as <code>rfc.invalid-number</code>.</p>
+</li>
+<li><p>The <code>:cve:</code> and <code>:cwe:</code> roles, which link a Common Vulnerabilities and
+Exposures record and a Common Weakness Enumeration entry:
+<code>:cve:`2024-3094`</code> shows <strong>CVE 2024-3094</strong> and <code>:cwe:`787`</code> shows
+<strong>CWE 787</strong>, each listed in the general index under the registry's name.
+A <code>:cve:</code> target is the identifier's year and sequence number; anything
+else — including the full <code>CVE-2024-3094</code>, whose prefix the link already
+adds — is reported as <code>cve.invalid-id</code>. A <code>:cwe:</code> target that is not a
+number is reported as <code>cwe.invalid-number</code>.</p>
+</li>
 <li><p>docutils' <code>:pep-reference:</code> role, <code>:pep:</code>'s plainer sibling:
 <code>:pep-reference:`8`</code> links <code>pep-0008</code> below the same <code>pep_base_url</code>
 and shows <em>PEP 8</em>, with no general index entry, no bold and no trailing
 slash. Its target is a number from 0 to 9999 and nothing else — no title,
 no <code>#</code> anchor; anything else is shown as written and reported as
 <code>pep-reference.invalid-number</code>.</p>
+</li>
+<li><p>docutils' <code>:rfc-reference:</code> role, <code>:rfc:</code>'s plainer sibling:
+<code>:rfc-reference:`2822#section-3`</code> links <code>rfc2822.html#section-3</code> below
+the same <code>rfc_base_url</code> and shows <em>RFC 2822</em>, with no general index entry
+and no bold. Its target is a number of at least 1 with an optional <code>#</code>
+section; anything else is reported as <code>rfc-reference.invalid-number</code>.</p>
 </li>
 <li><p>Admonitions, <code>.. seealso::</code>, <code>.. versionadded::</code>,
 <code>.. versionchanged::</code> and <code>.. deprecated::</code>. As in Sphinx, text after

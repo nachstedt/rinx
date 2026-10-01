@@ -763,7 +763,7 @@ and with the new <a class="reference internal" href="../using/cmdline.html#std:c
 (binary), 4, 8 (octal), 16 (hexadecimal), or 32 such as base 10 (decimal)
 now raises a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if the number of digits in string form is
 above a limit to avoid potential denial of service attacks due to the
-algorithmic complexity. This is a mitigation for :cve:`2020-10735`.
+algorithmic complexity. This is a mitigation for <span class="target" id="index-21"></span><a class="cve reference external" href="https://www.cve.org/CVERecord?id=CVE-2020-10735"><strong>CVE 2020-10735</strong></a>.
 This limit can be configured or disabled by environment variable, command
 line flag, or <a class="reference internal" href="../library/sys.html#py:module:sys" title="sys: Access system-specific parameters and functions."><code class="xref py module docutils literal">sys</code></a> APIs. See the <a href="../library/stdtypes.html#int_max_str_digits">integer string conversion
 length limitation</a> documentation.  The default limit
@@ -774,11 +774,11 @@ is 4300 digits in string form.</p>
 <h2 id="new-modules">New Modules</h2>
 <ul>
 <li><p><a class="reference internal" href="../library/tomllib.html#py:module:tomllib" title="tomllib: Parse TOML files."><code class="xref py module docutils literal">tomllib</code></a>: For parsing <a href="https://toml.io/">TOML</a>.
-See <span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0680/"><strong>PEP 680</strong></a> for more details.
+See <span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0680/"><strong>PEP 680</strong></a> for more details.
 (Contributed by Taneli Hukkinen in :issue:`40059`.)</p>
 </li>
 <li><p><a class="reference internal" href="../library/wsgiref.html#py:module:wsgiref.types" title="wsgiref.types: WSGI types for static type checking"><code class="xref py module docutils literal">wsgiref.types</code></a>:
-<span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-3333/"><strong>WSGI</strong></a>-specific types for static type checking.
+<span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-3333/"><strong>WSGI</strong></a>-specific types for static type checking.
 (Contributed by Sebastian Rittau in :issue:`42012`.)</p>
 </li>
 </ul>
@@ -1022,7 +1022,7 @@ for checking if the type of an object is a <a href="#" class="broken-link"><code
 <li><p>Change the frame-related functions in the <a class="reference internal" href="../library/inspect.html#py:module:inspect" title="inspect: Extract information and source code from live objects."><code class="xref py module docutils literal">inspect</code></a> module to return new
 <a class="reference internal" href="../library/inspect.html#py:class:inspect.frameinfo"><code class="xref py class docutils literal">FrameInfo</code></a> and <a class="reference internal" href="../library/inspect.html#py:class:inspect.traceback"><code class="xref py class docutils literal">Traceback</code></a> class instances
 (backwards compatible with the previous <a class="reference internal" href="../glossary.html#term-named-tuple"><span class="xref std std-term">named tuple</span></a>-like interfaces)
-that includes the extended <span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0657/"><strong>PEP 657</strong></a> position information (end
+that includes the extended <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0657/"><strong>PEP 657</strong></a> position information (end
 line number, column and end column). The affected functions are:</p>
 <ul>
 <li><p><a class="reference internal" href="../library/inspect.html#py:function:inspect.getframeinfo"><code class="xref py function docutils literal">inspect.getframeinfo</code></a></p>
@@ -1538,7 +1538,7 @@ We measured a 1-3% improvement in pyperformance.</p>
 <p>(Contributed by Pablo Galindo and Mark Shannon in :issue:`45256`.)</p>
 <a id="whatsnew311-pep659"></a>
 <h4 id="pep-659-specializing-adaptive-interpreter">PEP 659: Specializing Adaptive Interpreter</h4>
-<p><span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0659/"><strong>PEP 659</strong></a> is one of the key parts of the Faster CPython project. The general
+<p><span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0659/"><strong>PEP 659</strong></a> is one of the key parts of the Faster CPython project. The general
 idea is that while Python is a dynamic language, most code has regions where
 objects and types rarely change. This concept is known as <em>type stability</em>.</p>
 <p>At runtime, Python will try to look for common patterns and type stability
@@ -1557,7 +1557,7 @@ too dynamic or when the use changes. Specialization is attempted periodically,
 and specialization attempts are not too expensive,
 allowing specialization to adapt to new circumstances.</p>
 <p>(PEP written by Mark Shannon, with ideas inspired by Stefan Brunthaler.
-See <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0659/"><strong>PEP 659</strong></a> for more information. Implementation by Mark Shannon and Brandt
+See <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0659/"><strong>PEP 659</strong></a> for more information. Implementation by Mark Shannon and Brandt
 Bucher, with additional help from Irit Katriel and Dennis Sweeney.)</p>
 <table>
 <thead>
@@ -1801,7 +1801,7 @@ for use in certain loops where handling interrupts is undesirable.</p>
 </li>
 <li><p>:opcode:`CHECK_EG_MATCH`  and  :opcode:`!PREP_RERAISE_STAR`,
 to handle the <a href="3.11.html#whatsnew311-pep654">new exception groups and except*</a>
-added in <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0654/"><strong>PEP 654</strong></a>.</p>
+added in <span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0654/"><strong>PEP 654</strong></a>.</p>
 </li>
 <li><p>:opcode:`PUSH_EXC_INFO`, for use in exception handlers.</p>
 </li>
@@ -1968,7 +1968,7 @@ a <a class="reference internal" href="../library/exceptions.html#py:exception:de
 <h3 id="modules">Modules</h3>
 <a id="whatsnew311-pep594"></a>
 <ul>
-<li><p><span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a> led to the deprecations of the following modules
+<li><p><span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a> led to the deprecations of the following modules
 slated for removal in Python 3.13:</p>
 <table>
 <tbody>
@@ -2031,7 +2031,7 @@ warnings have now been updated to note they will be removed in Python 3.12.
 </li>
 <li><p>The <code class="xref py module docutils literal">lib2to3</code> package and <code>2to3</code> tool
 are now deprecated and may not be able to parse Python 3.10 or newer.
-See <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0617/"><strong>PEP 617</strong></a>, introducing the new PEG parser, for details.
+See <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0617/"><strong>PEP 617</strong></a>, introducing the new PEG parser, for details.
 (Contributed by Victor Stinner in :issue:`40360`.)</p>
 </li>
 <li><p>Undocumented modules <code class="xref py module docutils literal">sre_compile</code>, <code class="xref py module docutils literal">sre_constants</code>
@@ -2527,7 +2527,7 @@ Therefore, this could change the captured output in these cases.
 <a id="whatsnew311-build-changes"></a>
 <h2 id="build-changes">Build Changes</h2>
 <ul>
-<li><p>CPython now has <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/#tier-3"><strong>Tier 3 support</strong></a> for
+<li><p>CPython now has <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/"><strong>PEP 11</strong></a> <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0011/#tier-3"><strong>Tier 3 support</strong></a> for
 cross compiling to the <a href="https://webassembly.org/">WebAssembly</a> platforms
 <a href="https://emscripten.org/">Emscripten</a>
 (<code>wasm32-unknown-emscripten</code>, i.e. Python in the browser)
@@ -2704,7 +2704,7 @@ to avoid compiler warnings due to static type checks.
 However, when the limited C API is set to &gt;=3.11,
 these casts are not done,
 and callers will need to cast arguments to their expected types.
-See <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0670/"><strong>PEP 670</strong></a> for more details.
+See <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0670/"><strong>PEP 670</strong></a> for more details.
 (Contributed by Victor Stinner and Erlend E. Aasland in :gh:`89653`.)</p>
 </li>
 <li><p><a class="reference internal" href="../c-api/exceptions.html#c:function:pyerr_setexcinfo"><code class="xref c function docutils literal">PyErr_SetExcInfo()</code></a> no longer uses the <code>type</code> and <code>traceback</code>
@@ -2725,7 +2725,7 @@ be used for <code>size</code>.
 </li>
 <li><p><a href="#" class="broken-link"><code class="xref c function docutils literal">_PyFrameEvalFunction</code></a> now takes <code>_PyInterpreterFrame*</code>
 as its second parameter, instead of <code>PyFrameObject*</code>.
-See <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a> for more details of how to use this function pointer type.</p>
+See <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a> for more details of how to use this function pointer type.</p>
 </li>
 <li><p><code class="xref c function docutils literal">PyCode_New</code> and <code class="xref c function docutils literal">PyCode_NewWithPosOnlyArgs</code> now take
 an additional <code>exception_table</code> argument.
@@ -2790,7 +2790,7 @@ with the <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tp
 (Contributed by Victor Stinner in :issue:`44263`.)</p>
 </li>
 <li><p>Heap types with the <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_immutabletype"><code class="xref c macro docutils literal">Py_TPFLAGS_IMMUTABLETYPE</code></a> flag can now inherit
-the <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0590/"><strong>PEP 590</strong></a> vectorcall protocol.  Previously, this was only possible for
+the <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0590/"><strong>PEP 590</strong></a> vectorcall protocol.  Previously, this was only possible for
 <a href="../c-api/typeobj.html#static-types">static types</a>.
 (Contributed by Erlend E. Aasland in :issue:`43908`)</p>
 </li>
@@ -3055,7 +3055,7 @@ to retrieve <a class="reference internal" href="../library/sys.html#py:data:sys.
 <li><p><code class="xref c function docutils literal">_Py_SetProgramFullPath</code></p>
 </li>
 </ul>
-<p>Use the new <a class="reference internal" href="../c-api/init_config.html#c:type:pyconfig"><code class="xref c type docutils literal">PyConfig</code></a> API of the <a href="../c-api/init_config.html#init-config">Python Initialization Configuration</a> instead (<span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a>).
+<p>Use the new <a class="reference internal" href="../c-api/init_config.html#c:type:pyconfig"><code class="xref c type docutils literal">PyConfig</code></a> API of the <a href="../c-api/init_config.html#init-config">Python Initialization Configuration</a> instead (<span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0587/"><strong>PEP 587</strong></a>).
 (Contributed by Victor Stinner in :gh:`88279`.)</p>
 </li>
 <li><p>Deprecate the <code>ob_shash</code> member of the <a class="reference internal" href="../c-api/bytes.html#c:type:pybytesobject"><code class="xref c type docutils literal">PyBytesObject</code></a>. Use <a class="reference internal" href="../c-api/object.html#c:function:pyobject_hash"><code class="xref c function docutils literal">PyObject_Hash</code></a> instead.
@@ -3202,8 +3202,8 @@ and are inefficient relative to the recommended alternatives.</p>
 <li><p><code class="xref py function docutils literal">PyUnicode_TransformDecimalToASCII</code></p>
 </li>
 </ul>
-<p>See <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0624/"><strong>PEP 624</strong></a> for details and
-<span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0624/#alternative-apis"><strong>migration guidance</strong></a>.
+<p>See <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0624/"><strong>PEP 624</strong></a> for details and
+<span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0624/#alternative-apis"><strong>migration guidance</strong></a>.
 (Contributed by Inada Naoki in :issue:`44029`.)</p>
 </li>
 </ul>
@@ -3218,7 +3218,7 @@ See <a href="../library/tarfile.html#tarfile-extraction-filter">Extraction filte
 In Python 3.12, use without the <em>filter</em> argument will show a
 <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>.
 In Python 3.14, the default will switch to <code>'data'</code>.
-(Contributed by Petr Viktorin in <span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p>
+(Contributed by Petr Viktorin in <span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p>
 </li>
 </ul>
 <h2 id="notable-changes-in-3-11-5">Notable changes in 3.11.5</h2>

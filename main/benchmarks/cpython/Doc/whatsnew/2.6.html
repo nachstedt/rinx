@@ -2513,11 +2513,11 @@ interface identical to the existing <a href="#" class="broken-link"><code class=
 optional <code>timeout</code> parameter that specifies a timeout for the
 initial connection attempt, measured in seconds.  (Contributed by
 Facundo Batista.)</p>
-<p>An implementation of the LMTP protocol (:rfc:`2033`) was also added
+<p>An implementation of the LMTP protocol (<span class="target" id="index-17"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2033.html"><strong>RFC 2033</strong></a>) was also added
 to the module.  LMTP is used in place of SMTP when transferring
 e-mail between agents that don't manage a mail queue.  (LMTP
 implemented by Leif Hedstrom; :issue:`957003`.)</p>
-<p><a href="#" class="broken-link"><code class="xref py method docutils literal">SMTP.starttls</code></a> now complies with :rfc:`3207` and forgets any
+<p><a href="#" class="broken-link"><code class="xref py method docutils literal">SMTP.starttls</code></a> now complies with <span class="target" id="index-18"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3207.html"><strong>RFC 3207</strong></a> and forgets any
 knowledge obtained from the server not obtained from the TLS
 negotiation itself.  (Patch contributed by Bill Fenner;
 :issue:`829951`.)</p>
@@ -3017,7 +3017,7 @@ obtain certificate info by calling the <a href="#" class="broken-link"><code cla
 <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a>.</p>
 </li>
 <li><p>Changes to the <a class="reference internal" href="../library/exceptions.html#py:exception:exception"><code class="xref py class docutils literal">Exception</code></a> interface
-as dictated by <span class="target" id="index-17"></span><a class="pep reference external" href="https://peps.python.org/pep-0352/"><strong>PEP 352</strong></a> continue to be made.  For 2.6,
+as dictated by <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0352/"><strong>PEP 352</strong></a> continue to be made.  For 2.6,
 the <code class="xref py attribute docutils literal">message</code> attribute is being deprecated in favor of the
 <a class="reference internal" href="../library/exceptions.html#py:attribute:baseexception.args"><code class="xref py attribute docutils literal">args</code></a> attribute.</p>
 </li>
@@ -3114,7 +3114,7 @@ have to continue working with earlier versions, you can leave
 the call to <code class="xref c function docutils literal">PySys_SetArgv</code> alone and call
 <code>PyRun_SimpleString("sys.path.pop(0)\n")</code> afterwards to discard
 the first <code>sys.path</code> component.</p>
-<p>Security issue reported as :cve:`2008-5983`;
+<p>Security issue reported as <span class="target" id="index-20"></span><a class="cve reference external" href="https://www.cve.org/CVERecord?id=CVE-2008-5983"><strong>CVE 2008-5983</strong></a>;
 discussed in :gh:`50003`, and fixed by Antoine Pitrou.</p>
 </li>
 <li><p>The BerkeleyDB module now has a C API object, available as

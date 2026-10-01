@@ -387,17 +387,17 @@
 <p>This module provides functions for encoding binary data to printable
 ASCII characters and decoding such encodings back to binary data.
 This includes the <a href="base64.html#base64-rfc-4648">encodings specified in</a>
-:rfc:`4648` (Base64, Base32 and Base16)
+<span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4648.html"><strong>RFC 4648</strong></a> (Base64, Base32 and Base16)
 and the non-standard <a href="base64.html#base64-base-85">Base85 encodings</a>.</p>
 <p>There are two interfaces provided by this module.  The modern interface
 supports encoding <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like objects</span></a> to ASCII
 <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, and decoding <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like objects</span></a> or
 strings containing ASCII to <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>.  Both base-64 alphabets
-defined in :rfc:`4648` (normal, and URL- and filesystem-safe) are supported.</p>
+defined in <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4648.html"><strong>RFC 4648</strong></a> (normal, and URL- and filesystem-safe) are supported.</p>
 <p>The <a href="base64.html#base64-legacy">legacy interface</a> does not support decoding from strings, but it does
 provide functions for encoding and decoding to and from <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file objects</span></a>.  It only supports the Base64 standard alphabet, and it adds
-newlines every 76 characters as per :rfc:`2045`.  Note that if you are looking
-for :rfc:`2045` support you probably want to be looking at the <a class="reference internal" href="email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a>
+newlines every 76 characters as per <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a>.  Note that if you are looking
+for <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a> support you probably want to be looking at the <a class="reference internal" href="email.html#py:module:email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py module docutils literal">email</code></a>
 package instead.</p>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
@@ -411,7 +411,7 @@ encoding and decoding functions in this module.  Ascii85/Base85 support added.</
 </div>
 <a id="base64-rfc-4648"></a>
 <h2 id="rfc-4648-encodings">RFC 4648 Encodings</h2>
-<p>The :rfc:`4648` encodings are suitable for encoding binary data so that it can be
+<p>The <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4648.html"><strong>RFC 4648</strong></a> encodings are suitable for encoding binary data so that it can be
 safely sent by email, used as parts of URLs, or included as part of an HTTP
 POST request.</p>
 <dl class="py function">
@@ -487,7 +487,7 @@ return the decoded <a class="reference internal" href="stdtypes.html#py:class:by
 <p>Optional <em>casefold</em> is a flag specifying
 whether a lowercase alphabet is acceptable as input.  For security purposes,
 the default is <code>False</code>.</p>
-<p>:rfc:`4648` allows for optional mapping of the digit 0 (zero) to the letter O
+<p><span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4648.html"><strong>RFC 4648</strong></a> allows for optional mapping of the digit 0 (zero) to the letter O
 (oh), and for optional mapping of the digit 1 (one) to either the letter I (eye)
 or letter L (el).  The optional argument <em>map01</em> when not <code>None</code>, specifies
 which letter the digit 1 should be mapped to (when <em>map01</em> is not <code>None</code>, the
@@ -501,7 +501,7 @@ input.</p>
 <dl class="py function">
   <dt id="py:function:base64.b32hexencode"><code class="sig-name">b32hexencode(s)</code></dt>
   <dd><p>Similar to <a class="reference internal" href="base64.html#py:function:base64.b32encode"><code class="xref py function docutils literal">b32encode</code></a> but uses the Extended Hex Alphabet, as defined in
-:rfc:`4648`.</p>
+<span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4648.html"><strong>RFC 4648</strong></a>.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
 </div>
@@ -510,7 +510,7 @@ input.</p>
 <dl class="py function">
   <dt id="py:function:base64.b32hexdecode"><code class="sig-name">b32hexdecode(s, casefold=False)</code></dt>
   <dd><p>Similar to <a class="reference internal" href="base64.html#py:function:base64.b32decode"><code class="xref py function docutils literal">b32decode</code></a> but uses the Extended Hex Alphabet, as defined in
-:rfc:`4648`.</p>
+<span class="target" id="index-8"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4648.html"><strong>RFC 4648</strong></a>.</p>
 <p>This version does not allow the digit 0 (zero) to the letter O (oh) and digit
 1 (one) to either the letter I (eye) or letter L (el) mappings, all these
 characters are included in the Extended Hex Alphabet and are not
@@ -658,7 +658,7 @@ encoded data to the <em>output</em> file. <em>input</em> and <em>output</em> mus
 objects</span></a>. <em>input</em> will be read until <code>input.read()</code> returns
 an empty bytes object. <a class="reference internal" href="base64.html#py:function:base64.encode"><code class="xref py function docutils literal">encode</code></a> inserts a newline character (<code>b'\n'</code>)
 after every 76 bytes of the output, as well as ensuring that the output
-always ends with a newline, as per :rfc:`2045` (MIME).</p>
+always ends with a newline, as per <span class="target" id="index-9"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a> (MIME).</p>
 </dd>
 </dl>
 <dl class="py function">
@@ -666,7 +666,7 @@ always ends with a newline, as per :rfc:`2045` (MIME).</p>
   <dd><p>Encode the <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> <em>s</em>, which can contain arbitrary binary
 data, and return <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> containing the base64-encoded data, with newlines
 (<code>b'\n'</code>) inserted after every 76 bytes of output, and ensuring that
-there is a trailing newline, as per :rfc:`2045` (MIME).</p>
+there is a trailing newline, as per <span class="target" id="index-10"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a> (MIME).</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.1:</span></p>
 </div>
@@ -685,7 +685,7 @@ b'data to be encoded'</pre></div>
 </blockquote>
 <a id="base64-security"></a>
 <h2 id="security-considerations">Security Considerations</h2>
-<p>A new security considerations section was added to :rfc:`4648` (section 12); it's
+<p>A new security considerations section was added to <span class="target" id="index-11"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4648.html"><strong>RFC 4648</strong></a> (section 12); it's
 recommended to review the security section for any code deployed to production.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
@@ -693,7 +693,7 @@ recommended to review the security section for any code deployed to production.<
 <dt>Module <a class="reference internal" href="binascii.html#py:module:binascii" title="binascii: Tools for converting between binary and various ASCII-encoded binary representations."><code class="xref py module docutils literal">binascii</code></a></dt>
 <dd><p>Support module containing ASCII-to-binary and binary-to-ASCII conversions.</p>
 </dd>
-<dt>:rfc:`1521` - MIME (Multipurpose Internet Mail Extensions) Part One: Mechanisms for Specifying and Describing the Format of Internet Message Bodies</dt>
+<dt><span class="target" id="index-12"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc1521.html"><strong>RFC 1521</strong></a> - MIME (Multipurpose Internet Mail Extensions) Part One: Mechanisms for Specifying and Describing the Format of Internet Message Bodies</dt>
 <dd><p>Section 5.2, "Base64 Content-Transfer-Encoding," provides the definition of the
 base64 encoding.</p>
 </dd>

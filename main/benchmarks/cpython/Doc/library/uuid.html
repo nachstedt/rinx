@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>uuid — UUID objects according to :rfc:`9562` — CPython Benchmark</title>
+  <title>uuid — UUID objects according to RFC 9562 — CPython Benchmark</title>
   <link rel="stylesheet" href="../../default.css">
 </head>
 <body>
@@ -224,10 +224,10 @@
           </li>
         
           <li class="toctree-l3 current has-children">
-            <a href="uuid.html">uuid — UUID objects according to :rfc:`9562`</a>
+            <a href="uuid.html">uuid — UUID objects according to RFC 9562</a>
             
             <details open>
-              <summary><span class="toctree-toggle" role="img" aria-label="Toggle uuid — UUID objects according to :rfc:`9562`"></span></summary>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle uuid — UUID objects according to RFC 9562"></span></summary>
               <ul>
                 
           <li class="toctree-l4">
@@ -446,7 +446,7 @@
         <a class="next" href="socketserver.html">socketserver — A framework for network servers &rarr;</a>
       </nav>
       
-      <h1 id="uuid-uuid-objects-according-to-rfc-9562"><code class="xref py module docutils literal">uuid</code> — UUID objects according to :rfc:`9562`</h1>
+      <h1 id="uuid-uuid-objects-according-to-rfc-9562"><code class="xref py module docutils literal">uuid</code> — UUID objects according to <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html"><strong>RFC 9562</strong></a></h1>
 <dl class="py module">
   <dt id="py:module:uuid"><code class="sig-name">uuid</code></dt>
   <dd></dd>
@@ -463,7 +463,7 @@
 <hr />
 <p>This module provides immutable <a class="reference internal" href="uuid.html#py:class:uuid.uuid"><code class="xref py class docutils literal">UUID</code></a> objects (the <a class="reference internal" href="uuid.html#py:class:uuid.uuid"><code class="xref py class docutils literal">UUID</code></a> class)
 and <a href="uuid.html#uuid-factory-functions">functions</a> for generating UUIDs corresponding
-to a specific UUID version as specified in :rfc:`9562` (which supersedes :rfc:`4122`),
+to a specific UUID version as specified in <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html"><strong>RFC 9562</strong></a> (which supersedes <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4122.html"><strong>RFC 4122</strong></a>),
 for example, <a class="reference internal" href="uuid.html#py:function:uuid.uuid1"><code class="xref py function docutils literal">uuid1</code></a> for UUID version 1, <a class="reference internal" href="uuid.html#py:function:uuid.uuid3"><code class="xref py function docutils literal">uuid3</code></a> for UUID version 3, and so on.
 Note that UUID version 2 is deliberately omitted as it is outside the scope of the RFC.</p>
 <p>If all you want is a unique ID, you should probably call <a class="reference internal" href="uuid.html#py:function:uuid.uuid1"><code class="xref py function docutils literal">uuid1</code></a> or
@@ -520,7 +520,7 @@ expressions all yield the same UUID:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">UUID</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">int</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0x</span>12345678123456781234567812345678</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <p>Exactly one of <em>hex</em>, <em>bytes</em>, <em>bytes_le</em>, <em>fields</em>, or <em>int</em> must be given.
 The <em>version</em> argument is optional; if given, the resulting UUID will have its
-variant and version number set according to :rfc:`9562`, overriding bits in the
+variant and version number set according to <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html"><strong>RFC 9562</strong></a>, overriding bits in the
 given <em>hex</em>, <em>bytes</em>, <em>bytes_le</em>, <em>fields</em>, or <em>int</em>.</p>
 <p>Comparison of UUID objects are made by way of comparing their
 <a class="reference internal" href="uuid.html#py:attribute:uuid.uuid.int"><code class="xref py attribute docutils literal">UUID.int</code></a> attributes.  Comparison with a non-UUID object
@@ -646,7 +646,7 @@ for version 7.</p>
 </dl>
 <dl class="py attribute">
   <dt id="py:attribute:uuid.uuid.urn"><code class="sig-name">UUID.urn</code></dt>
-  <dd><p>The UUID as a URN as specified in :rfc:`9562`.</p>
+  <dd><p>The UUID as a URN as specified in <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html"><strong>RFC 9562</strong></a>.</p>
 </dd>
 </dl>
 <dl class="py attribute">
@@ -682,7 +682,7 @@ generated the UUID in a multiprocessing-safe way.</p>
 runs, it may launch a separate program, which could be quite slow.  If all
 attempts to obtain the hardware address fail, we choose a random 48-bit
 number with the multicast bit (least significant bit of the first octet)
-set to 1 as recommended in :rfc:`4122`.  "Hardware address" means the MAC
+set to 1 as recommended in <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4122.html"><strong>RFC 4122</strong></a>.  "Hardware address" means the MAC
 address of a network interface.  On a machine with multiple network
 interfaces, universally administered MAC addresses (i.e. where the second
 least significant bit of the first octet is <em>unset</em>) will be preferred over
@@ -699,7 +699,7 @@ globally unique, while the latter are not.</p>
 <dl class="py function">
   <dt id="py:function:uuid.uuid1"><code class="sig-name">uuid1(node=None, clock_seq=None)</code></dt>
   <dd><p>Generate a UUID from a host ID, sequence number, and the current time
-according to :rfc:`RFC 9562, §5.1 &lt;9562#section-5.1&gt;`.</p>
+according to <span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.1"><strong>RFC 9562, §5.1</strong></a>.</p>
 <p>When <em>node</em> is not specified, <a class="reference internal" href="uuid.html#py:function:uuid.getnode"><code class="xref py function docutils literal">getnode</code></a> is used to obtain the hardware
 address as a 48-bit positive integer. When a sequence number <em>clock_seq</em> is
 not specified, a pseudo-random 14-bit positive integer is generated.</p>
@@ -712,13 +712,13 @@ only their least significant bits are kept.</p>
   <dd><p>Generate a UUID based on the MD5 hash of a namespace identifier (which is a
 UUID) and a name (which is a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object or a string
 that will be encoded using UTF-8)
-according to :rfc:`RFC 9562, §5.3 &lt;9562#section-5.3&gt;`.</p>
+according to <span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.3"><strong>RFC 9562, §5.3</strong></a>.</p>
 </dd>
 </dl>
 <dl class="py function">
   <dt id="py:function:uuid.uuid4"><code class="sig-name">uuid4()</code></dt>
   <dd><p>Generate a random UUID in a cryptographically-secure method
-according to :rfc:`RFC 9562, §5.4 &lt;9562#section-5.4&gt;`.</p>
+according to <span class="target" id="index-8"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.4"><strong>RFC 9562, §5.4</strong></a>.</p>
 </dd>
 </dl>
 <dl class="py function">
@@ -726,13 +726,13 @@ according to :rfc:`RFC 9562, §5.4 &lt;9562#section-5.4&gt;`.</p>
   <dd><p>Generate a UUID based on the SHA-1 hash of a namespace identifier (which is a
 UUID) and a name (which is a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> object or a string
 that will be encoded using UTF-8)
-according to :rfc:`RFC 9562, §5.5 &lt;9562#section-5.5&gt;`.</p>
+according to <span class="target" id="index-9"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.5"><strong>RFC 9562, §5.5</strong></a>.</p>
 </dd>
 </dl>
 <dl class="py function">
   <dt id="py:function:uuid.uuid6"><code class="sig-name">uuid6(node=None, clock_seq=None)</code></dt>
   <dd><p>Generate a UUID from a sequence number and the current time according to
-:rfc:`RFC 9562, §5.6 &lt;9562#section-5.6&gt;`.</p>
+<span class="target" id="index-10"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.6"><strong>RFC 9562, §5.6</strong></a>.</p>
 <p>This is an alternative to <a class="reference internal" href="uuid.html#py:function:uuid.uuid1"><code class="xref py function docutils literal">uuid1</code></a> to improve database locality.</p>
 <p>When <em>node</em> is not specified, <a class="reference internal" href="uuid.html#py:function:uuid.getnode"><code class="xref py function docutils literal">getnode</code></a> is used to obtain the hardware
 address as a 48-bit positive integer. When a sequence number <em>clock_seq</em> is
@@ -747,7 +747,7 @@ only their least significant bits are kept.</p>
 <dl class="py function">
   <dt id="py:function:uuid.uuid7"><code class="sig-name">uuid7()</code></dt>
   <dd><p>Generate a time-based UUID according to
-:rfc:`RFC 9562, §5.7 &lt;9562#section-5.7&gt;`.</p>
+<span class="target" id="index-11"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.7"><strong>RFC 9562, §5.7</strong></a>.</p>
 <p>For portability across platforms lacking sub-millisecond precision, UUIDs
 produced by this function embed a 48-bit timestamp and use a 42-bit counter
 to guarantee monotonicity within a millisecond.</p>
@@ -759,7 +759,7 @@ to guarantee monotonicity within a millisecond.</p>
 <dl class="py function">
   <dt id="py:function:uuid.uuid8"><code class="sig-name">uuid8(a=None, b=None, c=None)</code></dt>
   <dd><p>Generate a pseudo-random UUID according to
-:rfc:`RFC 9562, §5.8 &lt;9562#section-5.8&gt;`.</p>
+<span class="target" id="index-12"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.8"><strong>RFC 9562, §5.8</strong></a>.</p>
 <p>When specified, the parameters <em>a</em>, <em>b</em> and <em>c</em> are expected to be
 positive integers of 48, 12 and 62 bits respectively. If they exceed
 their expected bit count, only their least significant bits are kept;
@@ -806,9 +806,9 @@ of the <a class="reference internal" href="uuid.html#py:attribute:uuid.uuid.vari
 </dl>
 <dl class="py data">
   <dt id="py:data:uuid.rfc_4122"><code class="sig-name">RFC_4122</code></dt>
-  <dd><p>Specifies the UUID layout given in :rfc:`4122`. This constant is kept
-for backward compatibility even though :rfc:`4122` has been superseded
-by :rfc:`9562`.</p>
+  <dd><p>Specifies the UUID layout given in <span class="target" id="index-13"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4122.html"><strong>RFC 4122</strong></a>. This constant is kept
+for backward compatibility even though <span class="target" id="index-14"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4122.html"><strong>RFC 4122</strong></a> has been superseded
+by <span class="target" id="index-15"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html"><strong>RFC 9562</strong></a>.</p>
 </dd>
 </dl>
 <dl class="py data">
@@ -825,7 +825,7 @@ by :rfc:`9562`.</p>
 <dl class="py data">
   <dt id="py:data:uuid.nil"><code class="sig-name">NIL</code></dt>
   <dd><p>A special form of UUID that is specified to have all 128 bits set to zero
-according to :rfc:`RFC 9562, §5.9 &lt;9562#section-5.9&gt;`.</p>
+according to <span class="target" id="index-16"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.9"><strong>RFC 9562, §5.9</strong></a>.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
 </div>
@@ -834,7 +834,7 @@ according to :rfc:`RFC 9562, §5.9 &lt;9562#section-5.9&gt;`.</p>
 <dl class="py data">
   <dt id="py:data:uuid.max"><code class="sig-name">MAX</code></dt>
   <dd><p>A special form of UUID that is specified to have all 128 bits set to one
-according to :rfc:`RFC 9562, §5.10 &lt;9562#section-5.10&gt;`.</p>
+according to <span class="target" id="index-17"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html#section-5.10"><strong>RFC 9562, §5.10</strong></a>.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
 </div>
@@ -843,7 +843,7 @@ according to :rfc:`RFC 9562, §5.10 &lt;9562#section-5.10&gt;`.</p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
 <dl>
-<dt>:rfc:`9562` - A Universally Unique IDentifier (UUID) URN Namespace</dt>
+<dt><span class="target" id="index-18"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc9562.html"><strong>RFC 9562</strong></a> - A Universally Unique IDentifier (UUID) URN Namespace</dt>
 <dd><p>This specification defines a Uniform Resource Name namespace for UUIDs, the
 internal format of UUIDs, and methods of generating UUIDs.</p>
 </dd>

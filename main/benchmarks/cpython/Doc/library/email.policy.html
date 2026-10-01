@@ -564,7 +564,7 @@ following may be passed in the constructor of any policy class:</p>
 <dl class="py attribute">
   <dt id="py:attribute:email.policy.policy.max_line_length"><code class="sig-name">max_line_length</code></dt>
   <dd><p>The maximum length of any line in the serialized output, not counting the
-end of line character(s).  Default is 78, per :rfc:`5322`.  A value of
+end of line character(s).  Default is 78, per <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>.  A value of
 <code>0</code> or <a class="reference internal" href="constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a> indicates that no line wrapping should be
 done at all.</p>
 </dd>
@@ -759,7 +759,7 @@ surrogateescaped binary data in the value returned by the method.</p>
 stored in the <code>Message</code> for a given header.  The method should return a
 string that represents that header "folded" correctly (according to the
 policy settings) by composing the <em>name</em> with the <em>value</em> and inserting
-<a class="reference internal" href="email.policy.html#py:attribute:email.policy.policy.linesep"><code class="xref py attribute docutils literal">linesep</code></a> characters at the appropriate places.  See :rfc:`5322`
+<a class="reference internal" href="email.policy.html#py:attribute:email.policy.policy.linesep"><code class="xref py attribute docutils literal">linesep</code></a> characters at the appropriate places.  See <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>
 for a discussion of the rules for folding email headers.</p>
 <p><em>value</em> may contain surrogateescaped binary data.  There should be no
 surrogateescaped binary data in the string returned by the method.</p>
@@ -779,11 +779,11 @@ converted back into binary data in the returned bytes object.</p>
   <dt id="py:class:email.policy.emailpolicy"><em class="property">class</em> <code class="sig-name">EmailPolicy(**kw)</code></dt>
   <dd><p>This concrete <a class="reference internal" href="email.policy.html#py:class:email.policy.policy"><code class="xref py class docutils literal">Policy</code></a> provides behavior that is intended to be fully
 compliant with the current email RFCs.  These include (but are not limited
-to) :rfc:`5322`, :rfc:`2047`, and the current MIME RFCs.</p>
+to) <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>, <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2047.html"><strong>RFC 2047</strong></a>, and the current MIME RFCs.</p>
 <p>This policy adds new header parsing and folding algorithms.  Instead of
 simple strings, headers are <code>str</code> subclasses with attributes that depend
 on the type of the field.  The parsing and folding algorithm fully implement
-:rfc:`2047` and :rfc:`5322`.</p>
+<span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2047.html"><strong>RFC 2047</strong></a> and <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>.</p>
 <p>The default value for the <a class="reference internal" href="email.policy.html#py:attribute:email.policy.policy.message_factory"><code class="xref py attribute docutils literal">message_factory</code></a>
 attribute is <a class="reference internal" href="email.message.html#py:class:email.message.emailmessage"><code class="xref py class docutils literal">EmailMessage</code></a>.</p>
 <p>In addition to the settable attributes listed above that apply to all
@@ -794,11 +794,11 @@ policies, this policy adds the following additional attributes:</p>
 </div>
 <dl class="py attribute">
   <dt id="py:attribute:email.policy.emailpolicy.utf8"><code class="sig-name">utf8</code></dt>
-  <dd><p>If <code>False</code>, follow :rfc:`5322`, supporting non-ASCII characters in
+  <dd><p>If <code>False</code>, follow <span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>, supporting non-ASCII characters in
 headers by encoding them as "encoded words".  If <code>True</code>, follow
-:rfc:`6532` and use <code>utf-8</code> encoding for headers.  Messages
+<span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6532.html"><strong>RFC 6532</strong></a> and use <code>utf-8</code> encoding for headers.  Messages
 formatted in this way may be passed to SMTP servers that support
-the <code>SMTPUTF8</code> extension (:rfc:`6531`).</p>
+the <code>SMTPUTF8</code> extension (<span class="target" id="index-8"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc6531.html"><strong>RFC 6531</strong></a>).</p>
 </dd>
 </dl>
 <dl class="py attribute">

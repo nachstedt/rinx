@@ -1192,7 +1192,7 @@ options are being used.</p>
 </li>
 <li><p>The <em>encoding</em> parameter has been added to the classes <a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">ftplib.FTP</code></a> and
 <a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp_tls"><code class="xref py class docutils literal">ftplib.FTP_TLS</code></a> as a keyword-only parameter, and the default encoding
-is changed from Latin-1 to UTF-8 to follow :rfc:`2640`.</p>
+is changed from Latin-1 to UTF-8 to follow <span class="target" id="index-21"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2640.html"><strong>RFC 2640</strong></a>.</p>
 </li>
 <li><p><a class="reference internal" href="../library/asyncio-eventloop.html#py:method:asyncio.loop.shutdown_default_executor"><code class="xref py method docutils literal">asyncio.loop.shutdown_default_executor</code></a> has been added to
 <a class="reference internal" href="../library/asyncio-eventloop.html#py:class:asyncio.abstracteventloop"><code class="xref py class docutils literal">AbstractEventLoop</code></a>, meaning alternative event loops that
@@ -1367,7 +1367,7 @@ environment, workload, and compiler tool chain.
 <h2 id="c-api-changes">C API Changes</h2>
 <h3 id="new-features-1">New Features</h3>
 <ul>
-<li><p><span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0573/"><strong>PEP 573</strong></a>: Added <a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a> to associate
+<li><p><span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0573/"><strong>PEP 573</strong></a>: Added <a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a> to associate
 a module with a class; <a class="reference internal" href="../c-api/type.html#c:function:pytype_getmodule"><code class="xref c function docutils literal">PyType_GetModule</code></a> and
 <a class="reference internal" href="../c-api/type.html#c:function:pytype_getmodulestate"><code class="xref c function docutils literal">PyType_GetModuleState</code></a> to retrieve the module and its state; and
 <a class="reference internal" href="../c-api/structures.html#c:type:pycmethod"><code class="xref c type docutils literal">PyCMethod</code></a> and <a class="reference internal" href="../c-api/structures.html#c:macro:meth_method"><code class="xref c macro docutils literal">METH_METHOD</code></a> to allow a method to
@@ -1429,7 +1429,7 @@ positional argument
 </ul>
 <h3 id="porting-to-python-3-9-1">Porting to Python 3.9</h3>
 <ul>
-<li><p><code>PyInterpreterState.eval_frame</code> (<span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a>) now requires a new mandatory
+<li><p><code>PyInterpreterState.eval_frame</code> (<span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a>) now requires a new mandatory
 <em>tstate</em> parameter (<code>PyThreadState*</code>).
 (Contributed by Victor Stinner in :issue:`38500`.)</p>
 </li>
@@ -1465,7 +1465,7 @@ internal C API (<code>pycore_gc.h</code>).
 <li><p>The <code>Py_UNICODE_COPY</code>, <code>Py_UNICODE_FILL</code>, <code>PyUnicode_WSTR_LENGTH</code>,
 <code class="xref c function docutils literal">PyUnicode_FromUnicode</code>, <code class="xref c function docutils literal">PyUnicode_AsUnicode</code>,
 <code>_PyUnicode_AsUnicode</code>, and <code class="xref c function docutils literal">PyUnicode_AsUnicodeAndSize</code> are
-marked as deprecated in C.  They have been deprecated by <span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a> since
+marked as deprecated in C.  They have been deprecated by <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a> since
 Python 3.3.
 (Contributed by Inada Naoki in :issue:`36346`.)</p>
 </li>
@@ -1600,7 +1600,7 @@ Python 3.3.</p>
 <li><p>Removed <code>_PyUnicode_ClearStaticStrings()</code> function.
 (Contributed by Victor Stinner in :issue:`39465`.)</p>
 </li>
-<li><p>Removed <code>Py_UNICODE_MATCH</code>. It has been deprecated by <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a>, and
+<li><p>Removed <code>Py_UNICODE_MATCH</code>. It has been deprecated by <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a>, and
 broken since Python 3.3. The <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_tailmatch"><code class="xref c function docutils literal">PyUnicode_Tailmatch</code></a> function can be
 used instead.
 (Contributed by Inada Naoki in :issue:`36346`.)</p>
@@ -1618,7 +1618,7 @@ The public API symbols being removed are:
 </ul>
 <h2 id="notable-changes-in-python-3-9-1">Notable changes in Python 3.9.1</h2>
 <h3 id="typing-1">typing</h3>
-<p>The behavior of <a href="#" class="broken-link"><code class="xref py class docutils literal">typing.Literal</code></a> was changed to conform with <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0586/"><strong>PEP 586</strong></a>
+<p>The behavior of <a href="#" class="broken-link"><code class="xref py class docutils literal">typing.Literal</code></a> was changed to conform with <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0586/"><strong>PEP 586</strong></a>
 and to match the behavior of static type checkers specified in the PEP.</p>
 <ol class="arabic period">
 <li><p><code>Literal</code> now de-duplicates parameters.</p>
@@ -1687,7 +1687,7 @@ attribute on your FTP instance to <code>True</code>.  (See :gh:`87451`)</p>
 <h2 id="notable-changes-in-python-3-9-5">Notable changes in Python 3.9.5</h2>
 <h3 id="urllib-parse-1">urllib.parse</h3>
 <p>The presence of newline or tab characters in parts of a URL allows for some
-forms of attacks. Following the WHATWG specification that updates :rfc:`3986`,
+forms of attacks. Following the WHATWG specification that updates <span class="target" id="index-27"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3986.html"><strong>RFC 3986</strong></a>,
 ASCII newline <code>\n</code>, <code>\r</code> and tab <code>\t</code> characters are stripped from the
 URL by the parser in <a class="reference internal" href="../library/urllib.parse.html#py:module:urllib.parse" title="urllib.parse: Parse URLs into or assemble them from components."><code class="xref py module docutils literal">urllib.parse</code></a> preventing such attacks. The removal
 characters are controlled by a new module level variable
@@ -1697,7 +1697,7 @@ characters are controlled by a new module level variable
 (binary), 4, 8 (octal), 16 (hexadecimal), or 32 such as base 10 (decimal)
 now raises a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if the number of digits in string form is
 above a limit to avoid potential denial of service attacks due to the
-algorithmic complexity. This is a mitigation for :cve:`2020-10735`.
+algorithmic complexity. This is a mitigation for <span class="target" id="index-28"></span><a class="cve reference external" href="https://www.cve.org/CVERecord?id=CVE-2020-10735"><strong>CVE 2020-10735</strong></a>.
 This limit can be configured or disabled by environment variable, command
 line flag, or <a class="reference internal" href="../library/sys.html#py:module:sys" title="sys: Access system-specific parameters and functions."><code class="xref py module docutils literal">sys</code></a> APIs. See the <a href="../library/stdtypes.html#int_max_str_digits">integer string conversion
 length limitation</a> documentation.  The default limit
@@ -1713,7 +1713,7 @@ See <a href="../library/tarfile.html#tarfile-extraction-filter">Extraction filte
 In Python 3.12, use without the <em>filter</em> argument will show a
 <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>.
 In Python 3.14, the default will switch to <code>'data'</code>.
-(Contributed by Petr Viktorin in <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p>
+(Contributed by Petr Viktorin in <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p>
 </li>
 </ul>
 

@@ -251,7 +251,7 @@
           </li>
         
           <li class="toctree-l3">
-            <a href="uuid.html">uuid — UUID objects according to :rfc:`9562`</a>
+            <a href="uuid.html">uuid — UUID objects according to RFC 9562</a>
             
           </li>
         
@@ -582,7 +582,7 @@ no longer supported.</p>
   <dt id="py:function:http.client.parse_headers"><code class="sig-name">parse_headers(fp)</code></dt>
   <dd><p>Parse the headers from a file pointer <em>fp</em> representing a HTTP
 request/response. The file has to be a <a class="reference internal" href="io.html#py:class:io.bufferediobase"><code class="xref py class docutils literal">BufferedIOBase</code></a> reader
-(i.e. not text) and must provide a valid :rfc:`5322` style header.</p>
+(i.e. not text) and must provide a valid <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a> style header.</p>
 <p>This function returns an instance of <a class="reference internal" href="http.client.html#py:class:http.client.httpmessage"><code class="xref py class docutils literal">http.client.HTTPMessage</code></a>
 that holds the header fields, but no payload
 (the same as <a class="reference internal" href="http.client.html#py:attribute:http.client.httpresponse.msg"><code class="xref py attribute docutils literal">HTTPResponse.msg</code></a>
@@ -706,7 +706,7 @@ available in this module as constants.</p>
   <dt id="py:method:http.client.encode_chunked=false)"><code class="sig-name">encode_chunked=False)</code></dt>
   <dd><p>This will send a request to the server using the HTTP request
 method <em>method</em> and the request URI <em>url</em>. The provided <em>url</em> must be
-an absolute path to conform with :rfc:`RFC 2616 §5.1.2 &lt;2616#section-5.1.2&gt;`
+an absolute path to conform with <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2616.html#section-5.1.2"><strong>RFC 2616 §5.1.2</strong></a>
 (unless connecting to an HTTP proxy server or using the <code>OPTIONS</code> or
 <code>CONNECT</code> methods).</p>
 <p>If <em>body</em> is specified, the specified data is sent after the headers are
@@ -721,8 +721,8 @@ method will be encoded as ISO-8859-1, otherwise the data returned by
 <code>read()</code> is sent as is.  If <em>body</em> is an iterable, the elements of the
 iterable are sent as is until the iterable is exhausted.</p>
 <p>The <em>headers</em> argument should be a mapping of extra HTTP headers to send
-with the request. A :rfc:`Host header &lt;2616#section-14.23&gt;`
-must be provided to conform with :rfc:`RFC 2616 §5.1.2 &lt;2616#section-5.1.2&gt;`
+with the request. A <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2616.html#section-14.23"><strong>Host header</strong></a>
+must be provided to conform with <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2616.html#section-5.1.2"><strong>RFC 2616 §5.1.2</strong></a>
 (unless connecting to an HTTP proxy server or using the <code>OPTIONS</code> or
 <code>CONNECT</code> methods).</p>
 <p>If <em>headers</em> contains neither Content-Length nor Transfer-Encoding,
@@ -883,7 +883,7 @@ with non-False values.</p>
 </dl>
 <dl class="py method">
   <dt id="py:method:http.client.httpconnection.putheader"><code class="sig-name">HTTPConnection.putheader(header, argument[, ...])</code></dt>
-  <dd><p>Send an :rfc:`822`-style header to the server.  It sends a line to the server
+  <dd><p>Send an <span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc822.html"><strong>RFC 822</strong></a>-style header to the server.  It sends a line to the server
 consisting of the header, a colon and a space, and the first argument.  If more
 arguments are given, continuation lines are sent, each consisting of a tab and
 an argument.</p>
@@ -895,7 +895,7 @@ an argument.</p>
 optional <em>message_body</em> argument can be used to pass a message body
 associated with the request.</p>
 <p>If <em>encode_chunked</em> is <code>True</code>, the result of each iteration of
-<em>message_body</em> will be chunk-encoded as specified in :rfc:`7230`,
+<em>message_body</em> will be chunk-encoded as specified in <span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc7230.html"><strong>RFC 7230</strong></a>,
 Section 3.3.1.  How the data is encoded is dependent on the type of
 <em>message_body</em>.  If <em>message_body</em> implements the <a href="../c-api/buffer.html#bufferobjects">buffer interface</a> the encoding will result in a single chunk.
 If <em>message_body</em> is a <a class="reference internal" href="collections.abc.html#py:class:collections.abc.iterable"><code class="xref py class docutils literal">collections.abc.Iterable</code></a>, each iteration

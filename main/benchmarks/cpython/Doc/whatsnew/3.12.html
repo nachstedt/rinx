@@ -2594,7 +2594,7 @@ hostname matching since Python 3.7, Python no longer uses the
 instead, create a <a class="reference internal" href="../library/ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">ssl.SSLContext</code></a> object and call its
 <a href="#" class="broken-link"><code class="xref py class docutils literal">ssl.SSLContext.wrap_socket</code></a> method. Any package that still uses
 <code class="xref py function docutils literal">ssl.wrap_socket</code> is broken and insecure. The function neither sends a
-SNI TLS extension nor validates the server hostname. Code is subject to :cwe:`295`
+SNI TLS extension nor validates the server hostname. Code is subject to <span class="target" id="index-40"></span><a class="cwe reference external" href="https://cwe.mitre.org/data/definitions/295.html"><strong>CWE 295</strong></a>
 (Improper Certificate Validation).
 (Contributed by Victor Stinner in :gh:`94199`.)</p>
 </li>
@@ -2775,7 +2775,7 @@ has no <code>copy()</code> method, only a <code>__copy__()</code> method.
 <ul>
 <li><p>Remove <a class="reference internal" href="../library/zipimport.html#py:module:zipimport" title="zipimport: Support for importing Python modules from ZIP archives."><code class="xref py module docutils literal">zipimport</code></a>'s <code>find_loader()</code> and <code>find_module()</code> methods,
 deprecated in Python 3.10: use the <code>find_spec()</code> method instead.  See
-<span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a> for the rationale.
+<span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a> for the rationale.
 (Contributed by Victor Stinner in :gh:`94379`.)</p>
 </li>
 </ul>
@@ -2870,9 +2870,9 @@ that may be surprising or dangerous.
 See <a href="../library/tarfile.html#tarfile-extraction-filter">Extraction filters</a> for details.</p>
 </li>
 <li><p>The output of the <a class="reference internal" href="../library/tokenize.html#py:function:tokenize.tokenize"><code class="xref py function docutils literal">tokenize.tokenize</code></a> and <a class="reference internal" href="../library/tokenize.html#py:function:tokenize.generate_tokens"><code class="xref py function docutils literal">tokenize.generate_tokens</code></a>
-functions is now changed due to the changes introduced in <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. This
+functions is now changed due to the changes introduced in <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. This
 means that <code>STRING</code> tokens are not emitted any more for f-strings and the
-tokens described in <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> are now produced instead: <code>FSTRING_START</code>,
+tokens described in <span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> are now produced instead: <code>FSTRING_START</code>,
 <code>FSTRING_MIDDLE</code> and <code>FSTRING_END</code> are now emitted for f-string "string"
 parts in addition to the appropriate tokens for the tokenization in the
 expression components. For example for the f-string <code>f"start {1+1} end"</code>
@@ -2891,7 +2891,7 @@ the old version of the tokenizer emitted:</p>
 <span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span>,<span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">13</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span>,<span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">17</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span>          <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">FSTRING_MIDDLE</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"> end<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
 <span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span>,<span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">17</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span>,<span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">18</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span>          <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">FSTRING_END</span></span>    <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&quot;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
 <p>Additionally, there may be some minor behavioral changes as a consequence of the
-changes required to support <span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. Some of these changes include:</p>
+changes required to support <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. Some of these changes include:</p>
 <ul>
 <li><p>The <code>type</code> attribute of the tokens emitted when tokenizing some invalid Python
 characters such as <code>!</code> has changed from <code>ERRORTOKEN</code> to <code>OP</code>.</p>
@@ -2963,7 +2963,7 @@ optimization levels (0, 1, 2) at once.
 <h3 id="new-features-1">New Features</h3>
 <a id="whatsnew312-pep697"></a>
 <ul>
-<li><p><span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Introduce the <a href="../c-api/stable.html#unstable-c-api">Unstable C API tier</a>,
+<li><p><span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Introduce the <a href="../c-api/stable.html#unstable-c-api">Unstable C API tier</a>,
 intended for low-level tools like debuggers and JIT compilers.
 This API may change in each minor release of CPython without deprecation
 warnings.
@@ -2975,7 +2975,7 @@ Its contents are marked by the <code>PyUnstable_</code> prefix in names.</p>
 <li><p><code>PyUnstable_Code_NewWithPosOnlyArgs()</code> (renamed from <code>PyCode_NewWithPosOnlyArgs</code>)</p>
 </li>
 </ul>
-<p>Extra storage for code objects (<span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a>):</p>
+<p>Extra storage for code objects (<span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a>):</p>
 <ul>
 <li><p><code>PyUnstable_Eval_RequestCodeExtraIndex()</code> (renamed from <code>_PyEval_RequestCodeExtraIndex</code>)</p>
 </li>
@@ -2988,7 +2988,7 @@ Its contents are marked by the <code>PyUnstable_</code> prefix in names.</p>
 API changes.</p>
 <p>(Contributed by Petr Viktorin in :gh:`101101`.)</p>
 </li>
-<li><p><span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Add an API for extending types whose instance memory layout is
+<li><p><span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Add an API for extending types whose instance memory layout is
 opaque:</p>
 <ul>
 <li><p><a class="reference internal" href="../c-api/type.html#c:member:pytype_spec.basicsize"><code class="xref c member docutils literal">PyType_Spec.basicsize</code></a> can be zero or negative to specify
@@ -3105,7 +3105,7 @@ Irit Katriel in :gh:`102755`).</p>
 </ul>
 <a id="whatsnew312-pep683"></a>
 <ul>
-<li><p><span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0683/"><strong>PEP 683</strong></a>: Introduce <em>Immortal Objects</em>, which allows objects
+<li><p><span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0683/"><strong>PEP 683</strong></a>: Introduce <em>Immortal Objects</em>, which allows objects
 to bypass reference counts, and related changes to the C-API:</p>
 <ul>
 <li><dl>
@@ -3144,7 +3144,7 @@ correctly track reference counts and allocated blocks</p>
 </ul>
 <p>(Contributed by Eddie Elizondo in :gh:`84436`.)</p>
 </li>
-<li><p><span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a>: Add the new <a class="reference internal" href="../c-api/init.html#c:function:py_newinterpreterfromconfig"><code class="xref c function docutils literal">Py_NewInterpreterFromConfig</code></a>
+<li><p><span class="target" id="index-49"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a>: Add the new <a class="reference internal" href="../c-api/init.html#c:function:py_newinterpreterfromconfig"><code class="xref c function docutils literal">Py_NewInterpreterFromConfig</code></a>
 function and <a class="reference internal" href="../c-api/init.html#c:type:pyinterpreterconfig"><code class="xref c type docutils literal">PyInterpreterConfig</code></a>, which may be used
 to create sub-interpreters with their own GILs.
 (See <a href="3.12.html#whatsnew312-pep684">PEP 684: A Per-Interpreter GIL</a> for more info.)
@@ -3305,7 +3305,7 @@ and CC <code>@ericsnowcurrently</code>.</p>
 </ul>
 <h3 id="deprecated-1">Deprecated</h3>
 <ul>
-<li><p>In accordance with <span class="target" id="index-49"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>, the <code>ma_version_tag</code> field in <a class="reference internal" href="../c-api/dict.html#c:type:pydictobject"><code class="xref c type docutils literal">PyDictObject</code></a>
+<li><p>In accordance with <span class="target" id="index-50"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>, the <code>ma_version_tag</code> field in <a class="reference internal" href="../c-api/dict.html#c:type:pydictobject"><code class="xref c type docutils literal">PyDictObject</code></a>
 is deprecated for extension modules. Accessing this field will generate a compiler
 warning at compile time. This field will be removed in Python 3.14.
 (Contributed by Ramvikrams and Kumar Aditya in :gh:`101193`. PEP by Ken Jin.)</p>
@@ -3420,7 +3420,7 @@ Call the metaclass instead.</p>
 <h4 id="pending-removal-in-python-3-14-1">Pending removal in Python 3.14</h4>
 <ul>
 <li><p>The <code>ma_version_tag</code> field in <a class="reference internal" href="../c-api/dict.html#c:type:pydictobject"><code class="xref c type docutils literal">PyDictObject</code></a> for extension modules
-(<span class="target" id="index-50"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>; :gh:`101193`).</p>
+(<span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>; :gh:`101193`).</p>
 </li>
 <li><p>Creating <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_immutabletype"><code class="xref c member docutils literal">immutable types</code></a> with mutable
 bases (:gh:`95388`).</p>
@@ -3668,7 +3668,7 @@ API. The :file:`token.h` header file was only designed to be used by Python
 internals.
 (Contributed by Victor Stinner in :gh:`92651`.)</p>
 </li>
-<li><p>Legacy Unicode APIs have been removed. See <span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a> for detail.</p>
+<li><p>Legacy Unicode APIs have been removed. See <span class="target" id="index-52"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a> for detail.</p>
 <ul>
 <li><p><code class="xref c macro docutils literal">PyUnicode_WCHAR_KIND</code></p>
 </li>

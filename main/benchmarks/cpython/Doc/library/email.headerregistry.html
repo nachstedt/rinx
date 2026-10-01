@@ -512,7 +512,7 @@ characters as required to correctly fold the header according to
 <em>policy</em>.  A <a class="reference internal" href="email.policy.html#py:attribute:email.policy.policy.cte_type"><code class="xref py attribute docutils literal">cte_type</code></a> of <code>8bit</code> will be
 treated as if it were <code>7bit</code>, since headers may not contain arbitrary
 binary data.  If <a class="reference internal" href="email.policy.html#py:attribute:email.policy.emailpolicy.utf8"><code class="xref py attribute docutils literal">utf8</code></a> is <code>False</code>,
-non-ASCII data will be :rfc:`2047` encoded.</p>
+non-ASCII data will be <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2047.html"><strong>RFC 2047</strong></a> encoded.</p>
 </dd>
 </dl>
 <p><code>BaseHeader</code> by itself cannot be used to create a header object.  It
@@ -545,16 +545,16 @@ dictionary should be removed and handled, and the remaining contents of
 </dl>
 <dl class="py class">
   <dt id="py:class:email.headerregistry.unstructuredheader"><em class="property">class</em> <code class="sig-name">UnstructuredHeader</code></dt>
-  <dd><p>An "unstructured" header is the default type of header in :rfc:`5322`.
+  <dd><p>An "unstructured" header is the default type of header in <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>.
 Any header that does not have a specified syntax is treated as
 unstructured.  The classic example of an unstructured header is the
 :mailheader:`Subject` header.</p>
-<p>In :rfc:`5322`, an unstructured header is a run of arbitrary text in the
-ASCII character set.  :rfc:`2047`, however, has an :rfc:`5322` compatible
+<p>In <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>, an unstructured header is a run of arbitrary text in the
+ASCII character set.  <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2047.html"><strong>RFC 2047</strong></a>, however, has an <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a> compatible
 mechanism for encoding non-ASCII text as ASCII characters within a header
 value.  When a <em>value</em> containing encoded words is passed to the
 constructor, the <code>UnstructuredHeader</code> parser converts such encoded words
-into unicode, following the :rfc:`2047` rules for unstructured text.  The
+into unicode, following the <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2047.html"><strong>RFC 2047</strong></a> rules for unstructured text.  The
 parser uses heuristics to attempt to decode certain non-compliant encoded
 words.  Defects are registered in such cases, as well as defects for issues
 such as invalid characters within the encoded words or the non-encoded text.</p>
@@ -563,7 +563,7 @@ such as invalid characters within the encoded words or the non-encoded text.</p>
 </dl>
 <dl class="py class">
   <dt id="py:class:email.headerregistry.dateheader"><em class="property">class</em> <code class="sig-name">DateHeader</code></dt>
-  <dd><p>:rfc:`5322` specifies a very specific format for dates within email headers.
+  <dd><p><span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a> specifies a very specific format for dates within email headers.
 The <code>DateHeader</code> parser recognizes that date format, as well as
 recognizing a number of variant forms that are sometimes found "in the
 wild".</p>
@@ -582,7 +582,7 @@ offset.</p>
 </dd>
 </dl>
 <p>The <code>decoded</code> value of the header is determined by formatting the
-<code>datetime</code> according to the :rfc:`5322` rules; that is, it is set to:</p>
+<code>datetime</code> according to the <span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a> rules; that is, it is set to:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">email</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">utils</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">format_datetime</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">datetime</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <p>When creating a <code>DateHeader</code>, <em>value</em> may be
@@ -657,7 +657,7 @@ variant, <a class="reference internal" href="email.headerregistry.html#py:attrib
   <dd><p>There is really only one valid value for the :mailheader:`MIME-Version`
 header, and that is <code>1.0</code>.  For future proofing, this header class
 supports other valid version numbers.  If a version number has a valid value
-per :rfc:`2045`, then the header object will have non-<code>None</code> values for
+per <span class="target" id="index-8"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a>, then the header object will have non-<code>None</code> values for
 the following attributes:</p>
 <dl class="py attribute">
   <dt id="py:attribute:email.headerregistry.mimeversionheader.version"><code class="sig-name">version</code></dt>
@@ -726,7 +726,7 @@ This class serves as a base for all the MIME headers that take parameters.</p>
 <dl class="py attribute">
   <dt id="py:attribute:email.headerregistry.contenttransferencodingheader.cte"><code class="sig-name">cte</code></dt>
   <dd><p>Valid values are <code>7bit</code>, <code>8bit</code>, <code>base64</code>, and
-<code>quoted-printable</code>.  See :rfc:`2045` for more information.</p>
+<code>quoted-printable</code>.  See <span class="target" id="index-9"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a> for more information.</p>
 </dd>
 </dl>
 </dd>
@@ -805,7 +805,7 @@ address is:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">username</span></span><span class="hl-keyword hl-operator hl-matrix hl-python">@</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">domain</span></span></span></pre></div>
 <p>where each part must conform to specific syntax rules spelled out in
-:rfc:`5322`.</p>
+<span class="target" id="index-10"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>.</p>
 <p>As a convenience <em>addr_spec</em> can be specified instead of <em>username</em> and
 <em>domain</em>, in which case <em>username</em> and <em>domain</em> will be parsed from the
 <em>addr_spec</em>.  An <em>addr_spec</em> must be a properly RFC quoted string; if it is
@@ -839,11 +839,11 @@ attribute is not mutable.</p>
 <dl class="py method">
   <dt id="py:method:email.headerregistry.address.__str__"><code class="sig-name">__str__()</code></dt>
   <dd><p>The <code>str</code> value of the object is the address quoted according to
-:rfc:`5322` rules, but with no Content Transfer Encoding of any non-ASCII
+<span class="target" id="index-11"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a> rules, but with no Content Transfer Encoding of any non-ASCII
 characters.</p>
 </dd>
 </dl>
-<p>To support SMTP (:rfc:`5321`), <code>Address</code> handles one special case: if
+<p>To support SMTP (<span class="target" id="index-12"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5321.html"><strong>RFC 5321</strong></a>), <code>Address</code> handles one special case: if
 <code>username</code> and <code>domain</code> are both the empty string (or <code>None</code>), then
 the string value of the <code>Address</code> is <code>&lt;&gt;</code>.</p>
 </dd>
@@ -873,7 +873,7 @@ addresses in the group.</p>
 </dl>
 <dl class="py method">
   <dt id="py:method:email.headerregistry.group.__str__"><code class="sig-name">__str__()</code></dt>
-  <dd><p>The <code>str</code> value of a <code>Group</code> is formatted according to :rfc:`5322`,
+  <dd><p>The <code>str</code> value of a <code>Group</code> is formatted according to <span class="target" id="index-13"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a>,
 but with no Content Transfer Encoding of any non-ASCII characters.  If
 <code>display_name</code> is none and there is a single <code>Address</code> in the
 <code>addresses</code> list, the <code>str</code> value will be the same as the <code>str</code> of

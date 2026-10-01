@@ -2883,11 +2883,11 @@ works:</p>
 <span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-variable hl-magic hl-python">__name__</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">__main__<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span></span>
 <span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 <h2 id="inserting-a-bom-into-messages-sent-to-a-sysloghandler">Inserting a BOM into messages sent to a SysLogHandler</h2>
-<p>:rfc:`5424` requires that a
+<p><span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5424.html"><strong>RFC 5424</strong></a> requires that a
 Unicode message be sent to a syslog daemon as a set of bytes which have the
 following structure: an optional pure-ASCII component, followed by a UTF-8 Byte
 Order Mark (BOM), followed by Unicode encoded using UTF-8. (See the
-:rfc:`relevant section of the specification &lt;5424#section-6&gt;`.)</p>
+<span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5424.html#section-6"><strong>relevant section of the specification</strong></a>.)</p>
 <p>In Python 3.1, code was added to
 <a class="reference internal" href="../library/logging.handlers.html#py:class:logging.handlers.sysloghandler"><code class="xref py class docutils literal">SysLogHandler</code></a> to insert a BOM into the message, but
 unfortunately, it was implemented incorrectly, with the BOM appearing at the
@@ -2895,7 +2895,7 @@ beginning of the message and hence not allowing any pure-ASCII component to
 appear before it.</p>
 <p>As this behaviour is broken, the incorrect BOM insertion code is being removed
 from Python 3.2.4 and later. However, it is not being replaced, and if you
-want to produce :rfc:`5424`-compliant messages which include a BOM, an optional
+want to produce <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5424.html"><strong>RFC 5424</strong></a>-compliant messages which include a BOM, an optional
 pure-ASCII sequence before it and arbitrary Unicode after it, encoded using
 UTF-8, then you need to do the following:</p>
 <ol class="arabic period">
@@ -2918,7 +2918,7 @@ range, that's fine – it will be encoded using UTF-8.</p>
 </ol>
 <p>The formatted message <em>will</em> be encoded using UTF-8 encoding by
 <code>SysLogHandler</code>. If you follow the above rules, you should be able to produce
-:rfc:`5424`-compliant messages. If you don't, logging may not complain, but your
+<span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5424.html"><strong>RFC 5424</strong></a>-compliant messages. If you don't, logging may not complain, but your
 messages will not be RFC 5424-compliant, and your syslog daemon may complain.</p>
 <h2 id="implementing-structured-logging">Implementing structured logging</h2>
 <p>Although most logging messages are intended for reading by humans, and thus not
@@ -4238,8 +4238,8 @@ detailed information.</p>
 <span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">main</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
 </div>
 <h2 id="logging-to-syslog-with-rfc5424-support">Logging to syslog with RFC5424 support</h2>
-<p>Although :rfc:`5424` dates from 2009, most syslog servers are configured by default to
-use the older :rfc:`3164`, which hails from 2001. When <code>logging</code> was added to Python
+<p>Although <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5424.html"><strong>RFC 5424</strong></a> dates from 2009, most syslog servers are configured by default to
+use the older <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3164.html"><strong>RFC 3164</strong></a>, which hails from 2001. When <code>logging</code> was added to Python
 in 2003, it supported the earlier (and only existing) protocol at the time. Since
 RFC5424 came out, as there has not been widespread deployment of it in syslog
 servers, the <a class="reference internal" href="../library/logging.handlers.html#py:class:logging.handlers.sysloghandler"><code class="xref py class docutils literal">SysLogHandler</code></a> functionality has not been

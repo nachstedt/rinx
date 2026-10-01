@@ -506,11 +506,81 @@ recognized.</p>
 </td>
 </tr>
 <tr>
-<td><p><code>:rfc:</code>, <code>:cve:</code> and <code>:cwe:</code> roles</p>
+<td><p><code>:rfc:</code> role</p>
 </td>
-<td><p>❌</p>
+<td><p>✅ ℹ️</p>
 </td>
-<td></td>
+<td><ul>
+<li><p>Only ASCII digits are a number, as for <code>:pep:</code>.</p>
+</li>
+<li><p>A target that is not a number is reported as <code>rfc.invalid-number</code>
+and shown as its source text; Sphinx reports an error and shows a
+<code>problematic</code> node.</p>
+</li>
+<li><p>The RFC index is <code>rinx.toml</code>'s <code>rfc_base_url</code>, not a
+<code>docutils.conf</code> setting.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:RFC:</code> is not recognized.</p>
+</li>
+<li><p>Its index anchor is numbered after the document's <code>.. index::</code>
+anchors, as for <code>:pep:</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:cve:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A target must be a year and a sequence number (<code>2024-3094</code>),
+optionally followed by <code>#</code> and an anchor; anything else is
+reported as <code>cve.invalid-id</code> and shown as its source text.
+Sphinx accepts any target, so a full <code>CVE-2024-3094</code> links
+<code>id=CVE-CVE-2024-3094</code> there without a warning; here it is
+refused with a hint to drop the prefix.</p>
+</li>
+<li><p>Role names are case-sensitive, and the index anchor is numbered as
+for <code>:pep:</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:cwe:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Only ASCII digits are a number, as for <code>:pep:</code>; anything else is
+reported as <code>cwe.invalid-number</code> and shown as its source text.</p>
+</li>
+<li><p>Role names are case-sensitive, and the index anchor is numbered as
+for <code>:pep:</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>docutils' <code>:rfc-reference:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Only ASCII digits are a number, as for <code>:pep:</code>.</p>
+</li>
+<li><p>A target that is not a number of at least 1 is reported as
+<code>rfc-reference.invalid-number</code> and shown as its source text;
+docutils reports an error and shows a <code>problematic</code> node.</p>
+</li>
+<li><p>The RFC index is <code>rinx.toml</code>'s <code>rfc_base_url</code>.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:RFC-Reference:</code> is not
+recognized.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>:index:</code> role</p>

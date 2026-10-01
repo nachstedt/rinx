@@ -448,7 +448,7 @@ dealing with legacy code.</p>
 policy <a href="#" class="broken-link"><code class="xref py attribute docutils literal">Compat32</code></a>.  If you are going to use another policy,
 you should be using the <a class="reference internal" href="email.message.html#py:class:email.message.emailmessage"><code class="xref py class docutils literal">EmailMessage</code></a> class instead.</p>
 <p>An email message consists of <em>headers</em> and a <em>payload</em>.  Headers must be
-:rfc:`5322` style names and values, where the field name and value are
+<span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc5322.html"><strong>RFC 5322</strong></a> style names and values, where the field name and value are
 separated by a colon.  The colon is not part of either the field name or the
 field value.  The payload may be a simple text message, or a binary object, or
 a structured sequence of sub-messages each with their own set of headers and
@@ -689,7 +689,7 @@ message's payload.</p>
 </dd>
 </dl>
 <p>The following methods implement a mapping-like interface for accessing the
-message's :rfc:`2822` headers.  Note that there are some semantic differences
+message's <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a> headers.  Note that there are some semantic differences
 between these methods and a normal mapping (i.e. dictionary) interface.  For
 example, in a dictionary there are no duplicate keys, but here there may be
 duplicate message headers.  Also, in dictionaries there is no guaranteed
@@ -795,10 +795,10 @@ only the key will be added.  If the value contains non-ASCII characters,
 it can be specified as a three tuple in the format
 <code>(CHARSET, LANGUAGE, VALUE)</code>, where <code>CHARSET</code> is a string naming the
 charset to be used to encode the value, <code>LANGUAGE</code> can usually be set
-to <code>None</code> or the empty string (see :rfc:`2231` for other possibilities),
+to <code>None</code> or the empty string (see <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a> for other possibilities),
 and <code>VALUE</code> is the string value containing non-ASCII code points.  If
 a three tuple is not passed and the value contains non-ASCII characters,
-it is automatically encoded in :rfc:`2231` format using a <code>CHARSET</code>
+it is automatically encoded in <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a> format using a <code>CHARSET</code>
 of <code>utf-8</code> and a <code>LANGUAGE</code> of <code>None</code>.</p>
 <p>Here's an example:</p>
 <div class="highlight hl-code"><pre>
@@ -828,13 +828,13 @@ matching header was found, a <a class="reference internal" href="exceptions.html
 lower case of the form :mimetype:`maintype/subtype`.  If there was no
 :mailheader:`Content-Type` header in the message the default type as given
 by <a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.get_default_type"><code class="xref py method docutils literal">get_default_type</code></a> will be returned.  Since according to
-:rfc:`2045`, messages always have a default type, <a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.get_content_type"><code class="xref py method docutils literal">get_content_type</code></a>
+<span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a>, messages always have a default type, <a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.get_content_type"><code class="xref py method docutils literal">get_content_type</code></a>
 will always return a value.</p>
-<p>:rfc:`2045` defines a message's default type to be :mimetype:`text/plain`
+<p><span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a> defines a message's default type to be :mimetype:`text/plain`
 unless it appears inside a :mimetype:`multipart/digest` container, in
 which case it would be :mimetype:`message/rfc822`.  If the
 :mailheader:`Content-Type` header has an invalid type specification,
-:rfc:`2045` mandates that the default type be :mimetype:`text/plain`.</p>
+<span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a> mandates that the default type be :mimetype:`text/plain`.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -892,14 +892,14 @@ header or if there is no such parameter, then <em>failobj</em> is returned
 <p>Optional <em>header</em> if given, specifies the message header to use instead of
 :mailheader:`Content-Type`.</p>
 <p>Parameter keys are always compared case insensitively.  The return value
-can either be a string, or a 3-tuple if the parameter was :rfc:`2231`
+can either be a string, or a 3-tuple if the parameter was <span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>
 encoded.  When it's a 3-tuple, the elements of the value are of the form
 <code>(CHARSET, LANGUAGE, VALUE)</code>.  Note that both <code>CHARSET</code> and
 <code>LANGUAGE</code> can be <code>None</code>, in which case you should consider <code>VALUE</code>
 to be encoded in the <code>us-ascii</code> charset.  You can usually ignore
 <code>LANGUAGE</code>.</p>
 <p>If your application doesn't care whether the parameter was encoded as in
-:rfc:`2231`, you can collapse the parameter value by calling
+<span class="target" id="index-8"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>, you can collapse the parameter value by calling
 <a class="reference internal" href="email.utils.html#py:function:email.utils.collapse_rfc2231_value"><code class="xref py function docutils literal">email.utils.collapse_rfc2231_value</code></a>, passing in the return value
 from <a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.get_param"><code class="xref py method docutils literal">get_param</code></a>.  This will return a suitably decoded Unicode
 string when the value is a tuple, or the original string unquoted if it
@@ -923,12 +923,12 @@ returned by the header access methods.</p>
 parameter already exists in the header, its value will be replaced with
 <em>value</em>.  If the :mailheader:`Content-Type` header as not yet been defined
 for this message, it will be set to :mimetype:`text/plain` and the new
-parameter value will be appended as per :rfc:`2045`.</p>
+parameter value will be appended as per <span class="target" id="index-9"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2045.html"><strong>RFC 2045</strong></a>.</p>
 <p>Optional <em>header</em> specifies an alternative header to
 :mailheader:`Content-Type`, and all parameters will be quoted as necessary
 unless optional <em>requote</em> is <code>False</code> (the default is <code>True</code>).</p>
 <p>If optional <em>charset</em> is specified, the parameter will be encoded
-according to :rfc:`2231`. Optional <em>language</em> specifies the RFC 2231
+according to <span class="target" id="index-10"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>. Optional <em>language</em> specifies the RFC 2231
 language, defaulting to the empty string.  Both <em>charset</em> and <em>language</em>
 should be strings.</p>
 <p>If <em>replace</em> is <code>False</code> (the default) the header is moved to the
@@ -1026,7 +1026,7 @@ will be <em>failobj</em>.</p>
   <dd><p>Return the lowercased value (without parameters) of the message's
 :mailheader:`Content-Disposition` header if it has one, or <code>None</code>.  The
 possible values for this method are <em>inline</em>, <em>attachment</em> or <code>None</code>
-if the message follows :rfc:`2183`.</p>
+if the message follows <span class="target" id="index-11"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2183.html"><strong>RFC 2183</strong></a>.</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
 </div>

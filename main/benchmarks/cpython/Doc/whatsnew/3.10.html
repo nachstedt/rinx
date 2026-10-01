@@ -1486,7 +1486,7 @@ functions internally.  For more details, please see their respective
 documentation.
 (Contributed by Adam Goldschmidt, Senthil Kumaran and Ken Jin in :issue:`42967`.)</p>
 <p>The presence of newline or tab characters in parts of a URL allows for some
-forms of attacks. Following the WHATWG specification that updates :rfc:`3986`,
+forms of attacks. Following the WHATWG specification that updates <span class="target" id="index-31"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3986.html"><strong>RFC 3986</strong></a>,
 ASCII newline <code>\n</code>, <code>\r</code> and tab <code>\t</code> characters are stripped from the
 URL by the parser in <a class="reference internal" href="../library/urllib.parse.html#py:module:urllib.parse" title="urllib.parse: Parse URLs into or assemble them from components."><code class="xref py module docutils literal">urllib.parse</code></a> preventing such attacks. The removal
 characters are controlled by a new module level variable
@@ -1496,7 +1496,7 @@ characters are controlled by a new module level variable
 <a class="reference internal" href="../library/xml.sax.handler.html#py:module:xml.sax.handler" title="xml.sax.handler: Base classes for SAX event handlers."><code class="xref py module docutils literal">xml.sax.handler</code></a> module.
 (Contributed by Jonathan Gossage and Zackery Spytz in :issue:`35018`.)</p>
 <h3 id="zipimport">zipimport</h3>
-<p>Add methods related to <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a>: <a class="reference internal" href="../library/zipimport.html#py:method:zipimport.zipimporter.find_spec"><code class="xref py method docutils literal">find_spec</code></a>,
+<p>Add methods related to <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a>: <a class="reference internal" href="../library/zipimport.html#py:method:zipimport.zipimporter.find_spec"><code class="xref py method docutils literal">find_spec</code></a>,
 <a class="reference internal" href="../library/zipimport.html#py:method:zipimport.zipimporter.create_module"><code class="xref py method docutils literal">zipimport.zipimporter.create_module</code></a>, and
 <a class="reference internal" href="../library/zipimport.html#py:method:zipimport.zipimporter.exec_module"><code class="xref py method docutils literal">zipimport.zipimporter.exec_module</code></a>.
 (Contributed by Brett Cannon in :issue:`42131`.)</p>
@@ -1549,7 +1549,7 @@ by Dennis Sweeney in :issue:`41972`)</p>
 performance in the common case of cache hits. This makes the interpreter 1.04 times faster
 on average. (Contributed by Dino Viehland in :issue:`43452`.)</p>
 </li>
-<li><p>The following built-in functions now support the faster <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0590/"><strong>PEP 590</strong></a> vectorcall calling convention:
+<li><p>The following built-in functions now support the faster <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0590/"><strong>PEP 590</strong></a> vectorcall calling convention:
 <a class="reference internal" href="../library/functions.html#py:function:map"><code class="xref py function docutils literal">map</code></a>, <a class="reference internal" href="../library/functions.html#py:function:filter"><code class="xref py function docutils literal">filter</code></a>, <a class="reference internal" href="../library/functions.html#py:function:reversed"><code class="xref py function docutils literal">reversed</code></a>, <a href="#" class="broken-link"><code class="xref py function docutils literal">bool</code></a> and <a href="#" class="broken-link"><code class="xref py function docutils literal">float</code></a>.
 (Contributed by Donghee Na and Jeroen Demeyer in :issue:`43575`, :issue:`43287`, :issue:`41922`, :issue:`41873` and :issue:`41870`.)</p>
 </li>
@@ -1937,7 +1937,7 @@ strings as the function's annotations.
 </ul>
 <h2 id="build-changes">Build Changes</h2>
 <ul>
-<li><p><span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0644/"><strong>PEP 644</strong></a>: Python now requires OpenSSL 1.1.1 or newer. OpenSSL 1.0.2 is no
+<li><p><span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0644/"><strong>PEP 644</strong></a>: Python now requires OpenSSL 1.1.1 or newer. OpenSSL 1.0.2 is no
 longer supported.
 (Contributed by Christian Heimes in :issue:`43669`.)</p>
 </li>
@@ -1988,7 +1988,7 @@ simplifies building Python with a custom OpenSSL installation, e.g.
 embedding Python is now explicitly defined.
 <a href="../c-api/stable.html#stable">C API Stability</a> describes C API and ABI stability guarantees along with best
 practices for using the Stable ABI.</p>
-<p>(Contributed by Petr Viktorin in <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0652/"><strong>PEP 652</strong></a> and :issue:`43795`.)</p>
+<p>(Contributed by Petr Viktorin in <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0652/"><strong>PEP 652</strong></a> and :issue:`43795`.)</p>
 <h3 id="new-features-1">New Features</h3>
 <ul>
 <li><p>The result of <a class="reference internal" href="../c-api/number.html#c:function:pynumber_index"><code class="xref c function docutils literal">PyNumber_Index</code></a> now always has exact type <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>.
@@ -2086,7 +2086,7 @@ type objects: type attributes cannot be set nor deleted.
 <li><p>The <code>PY_SSIZE_T_CLEAN</code> macro must now be defined to use
 <a class="reference internal" href="../c-api/arg.html#c:function:pyarg_parsetuple"><code class="xref c function docutils literal">PyArg_ParseTuple</code></a> and <a class="reference internal" href="../c-api/arg.html#c:function:py_buildvalue"><code class="xref c function docutils literal">Py_BuildValue</code></a> formats which use
 <code>#</code>: <code>es#</code>, <code>et#</code>, <code>s#</code>, <code>u#</code>, <code>y#</code>, <code>z#</code>, <code>U#</code> and <code>Z#</code>.
-See <a href="../c-api/arg.html#arg-parsing">Parsing arguments and building values</a> and <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0353/"><strong>PEP 353</strong></a>.
+See <a href="../c-api/arg.html#arg-parsing">Parsing arguments and building values</a> and <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0353/"><strong>PEP 353</strong></a>.
 (Contributed by Victor Stinner in :issue:`40943`.)</p>
 </li>
 <li><p>Since <a class="reference internal" href="../c-api/refcounting.html#c:function:py_refcnt"><code class="xref c function docutils literal">Py_REFCNT()</code></a> is changed to the inline static function,
@@ -2178,7 +2178,7 @@ instead.
 </li>
 </ul>
 </li>
-<li><p>Removed <code>PyUnicode_GetMax()</code>. Please migrate to new (<span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a>) APIs.
+<li><p>Removed <code>PyUnicode_GetMax()</code>. Please migrate to new (<span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a>) APIs.
 (Contributed by Inada Naoki in :issue:`41103`.)</p>
 </li>
 <li><p>Removed <code>PyLong_FromUnicode()</code>. Please migrate to <a class="reference internal" href="../c-api/long.html#c:function:pylong_fromunicodeobject"><code class="xref c function docutils literal">PyLong_FromUnicodeObject</code></a>.
@@ -2204,7 +2204,7 @@ Python already implicitly installs signal handlers: see
 </li>
 <li><p>Remove the <code>PyAST_Validate()</code> function. It is no longer possible to build a
 AST object (<code>mod_ty</code> type) with the public C API. The function was already
-excluded from the limited C API (<span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0384/"><strong>PEP 384</strong></a>).
+excluded from the limited C API (<span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0384/"><strong>PEP 384</strong></a>).
 (Contributed by Victor Stinner in :issue:`43244`.)</p>
 </li>
 <li><p>Remove the <code>symtable.h</code> header file and the undocumented functions:</p>
@@ -2293,7 +2293,7 @@ only used internally by the compiler.
 (binary), 4, 8 (octal), 16 (hexadecimal), or 32 such as base 10 (decimal)
 now raises a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if the number of digits in string form is
 above a limit to avoid potential denial of service attacks due to the
-algorithmic complexity. This is a mitigation for :cve:`2020-10735`.
+algorithmic complexity. This is a mitigation for <span class="target" id="index-39"></span><a class="cve reference external" href="https://www.cve.org/CVERecord?id=CVE-2020-10735"><strong>CVE 2020-10735</strong></a>.
 This limit can be configured or disabled by environment variable, command
 line flag, or <a class="reference internal" href="../library/sys.html#py:module:sys" title="sys: Access system-specific parameters and functions."><code class="xref py module docutils literal">sys</code></a> APIs. See the <a href="../library/stdtypes.html#int_max_str_digits">integer string conversion
 length limitation</a> documentation.  The default limit
@@ -2315,7 +2315,7 @@ See <a href="../library/tarfile.html#tarfile-extraction-filter">Extraction filte
 In Python 3.12, use without the <em>filter</em> argument will show a
 <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>.
 In Python 3.14, the default will switch to <code>'data'</code>.
-(Contributed by Petr Viktorin in <span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p>
+(Contributed by Petr Viktorin in <span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p>
 </li>
 </ul>
 

@@ -459,7 +459,7 @@ is, <code>dt.tzinfo</code> is <code>None</code>), it is assumed to be in local t
 </dl>
 <dl class="py function">
   <dt id="py:function:email.utils.make_msgid"><code class="sig-name">make_msgid(idstring=None, domain=None)</code></dt>
-  <dd><p>Returns a string suitable for an :rfc:`2822`-compliant
+  <dd><p>Returns a string suitable for an <span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a>-compliant
 :mailheader:`Message-ID` header.  Optional <em>idstring</em> if given, is a string
 used to strengthen the uniqueness of the message id.  Optional <em>domain</em> if
 given provides the portion of the msgid after the '@'.  The default is the
@@ -508,7 +508,7 @@ fails, in which case a 2-tuple of <code>('', '')</code> is returned.</p>
 email_address)</code> and returns the string value suitable for a :mailheader:`To` or
 :mailheader:`Cc` header.  If the first element of <em>pair</em> is false, then the
 second element is returned unmodified.</p>
-<p>Optional <em>charset</em> is the character set that will be used in the :rfc:`2047`
+<p>Optional <em>charset</em> is the character set that will be used in the <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2047.html"><strong>RFC 2047</strong></a>
 encoding of the <code>realname</code> if the <code>realname</code> contains non-ASCII
 characters.  Can be an instance of <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> or a
 <a class="reference internal" href="email.charset.html#py:class:email.charset.charset"><code class="xref py class docutils literal">Charset</code></a>.  Defaults to <code>utf-8</code>.</p>
@@ -541,9 +541,9 @@ characters.  Can be an instance of <a class="reference internal" href="stdtypes.
 </dl>
 <dl class="py function">
   <dt id="py:function:email.utils.parsedate"><code class="sig-name">parsedate(date)</code></dt>
-  <dd><p>Attempts to parse a date according to the rules in :rfc:`2822`. however, some
+  <dd><p>Attempts to parse a date according to the rules in <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a>. however, some
 mailers don't follow that format as specified, so <a class="reference internal" href="email.utils.html#py:function:email.utils.parsedate"><code class="xref py function docutils literal">parsedate</code></a> tries to
-guess correctly in such cases.  <em>date</em> is a string containing an :rfc:`2822`
+guess correctly in such cases.  <em>date</em> is a string containing an <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a>
 date, such as  <code>"Mon, 20 Nov 1995 19:12:08 -0500"</code>.  If it succeeds in parsing
 the date, <a class="reference internal" href="email.utils.html#py:function:email.utils.parsedate"><code class="xref py function docutils literal">parsedate</code></a> returns a 9-tuple that can be passed directly to
 <a class="reference internal" href="time.html#py:function:time.mktime"><code class="xref py function docutils literal">time.mktime</code></a>; otherwise <code>None</code> will be returned.  Note that indexes 6,
@@ -586,7 +586,7 @@ tuple is <code>None</code>, assume local time.</p>
 </dl>
 <dl class="py function">
   <dt id="py:function:email.utils.formatdate"><code class="sig-name">formatdate(timeval=None, localtime=False, usegmt=False)</code></dt>
-  <dd><p>Returns a date string as per :rfc:`2822`, e.g.:</p>
+  <dd><p>Returns a date string as per <span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2822.html"><strong>RFC 2822</strong></a>, e.g.:</p>
 <div class="highlight hl-code"><pre>
 <span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Fri</span></span>, 09 <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Nov</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2001</span> <span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span>08<span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">47</span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>000</span></span></pre></div>
 <p>Optional <em>timeval</em> if given is a floating-point time value as accepted by
@@ -619,12 +619,12 @@ date headers.</p>
 </dl>
 <dl class="py function">
   <dt id="py:function:email.utils.decode_rfc2231"><code class="sig-name">decode_rfc2231(s)</code></dt>
-  <dd><p>Decode the string <em>s</em> according to :rfc:`2231`.</p>
+  <dd><p>Decode the string <em>s</em> according to <span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>.</p>
 </dd>
 </dl>
 <dl class="py function">
   <dt id="py:function:email.utils.encode_rfc2231"><code class="sig-name">encode_rfc2231(s, charset=None, language=None)</code></dt>
-  <dd><p>Encode the string <em>s</em> according to :rfc:`2231`.  Optional <em>charset</em> and
+  <dd><p>Encode the string <em>s</em> according to <span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>.  Optional <em>charset</em> and
 <em>language</em>, if given is the character set name and language name to use.  If
 neither is given, <em>s</em> is returned as-is.  If <em>charset</em> is given but <em>language</em>
 is not, the string is encoded using the empty string for <em>language</em>.</p>
@@ -632,21 +632,21 @@ is not, the string is encoded using the empty string for <em>language</em>.</p>
 </dl>
 <dl class="py function">
   <dt id="py:function:email.utils.collapse_rfc2231_value"><code class="sig-name">collapse_rfc2231_value(value, errors='replace', fallback_charset='us-ascii')</code></dt>
-  <dd><p>When a header parameter is encoded in :rfc:`2231` format,
+  <dd><p>When a header parameter is encoded in <span class="target" id="index-7"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a> format,
 <a class="reference internal" href="email.compat32-message.html#py:method:email.message.message.get_param"><code class="xref py method docutils literal">Message.get_param</code></a> may return a
 3-tuple containing the character set,
 language, and value.  <a class="reference internal" href="email.utils.html#py:function:email.utils.collapse_rfc2231_value"><code class="xref py function docutils literal">collapse_rfc2231_value</code></a> turns this into a unicode
 string.  Optional <em>errors</em> is passed to the <em>errors</em> argument of <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>'s
 <a href="#" class="broken-link"><code class="xref py function docutils literal">encode</code></a> method; it defaults to <code>'replace'</code>.  Optional
 <em>fallback_charset</em> specifies the character set to use if the one in the
-:rfc:`2231` header is not known by Python; it defaults to <code>'us-ascii'</code>.</p>
+<span class="target" id="index-8"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a> header is not known by Python; it defaults to <code>'us-ascii'</code>.</p>
 <p>For convenience, if the <em>value</em> passed to <a class="reference internal" href="email.utils.html#py:function:email.utils.collapse_rfc2231_value"><code class="xref py function docutils literal">collapse_rfc2231_value</code></a> is not
 a tuple, it should be a string and it is returned unquoted.</p>
 </dd>
 </dl>
 <dl class="py function">
   <dt id="py:function:email.utils.decode_params"><code class="sig-name">decode_params(params)</code></dt>
-  <dd><p>Decode parameters list according to :rfc:`2231`.  <em>params</em> is a sequence of
+  <dd><p>Decode parameters list according to <span class="target" id="index-9"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2231.html"><strong>RFC 2231</strong></a>.  <em>params</em> is a sequence of
 2-tuples containing elements of the form <code>(content-type, string-value)</code>.</p>
 </dd>
 </dl>

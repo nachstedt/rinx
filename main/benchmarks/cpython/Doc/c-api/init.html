@@ -1111,7 +1111,7 @@ members of the <a href="init_config.html#init-config">Python Initialization Conf
 <p>It is recommended that applications embedding the Python interpreter
 for purposes other than executing a single script pass <code>0</code> as <em>updatepath</em>,
 and update <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> themselves if desired.
-See :cve:`2008-5983`.</p>
+See <span class="target" id="index-24"></span><a class="cve reference external" href="https://www.cve.org/CVERecord?id=CVE-2008-5983"><strong>CVE 2008-5983</strong></a>.</p>
 <p>On versions before 3.1.3, you can achieve the same effect by manually
 popping the first <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> element after having called
 <a class="reference internal" href="init.html#c:function:pysys_setargv"><code class="xref c function docutils literal">PySys_SetArgv</code></a>, for example using:</p>
@@ -1393,7 +1393,7 @@ interpreter lock is also shared by all threads, regardless of to which
 interpreter they belong.</p>
 <div class="versionchanged">
   <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
-<p><span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a> introduced the possibility
+<p><span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a> introduced the possibility
 of a <a href="init.html#per-interpreter-gil">per-interpreter GIL</a>.
 See <a class="reference internal" href="init.html#c:function:py_newinterpreterfromconfig"><code class="xref c function docutils literal">Py_NewInterpreterFromConfig</code></a>.</p>
 </div>
@@ -1859,7 +1859,7 @@ if non-zero, handle the current exception.</p>
 <dl class="c function">
   <dt id="c:function:_pyinterpreterstate_getevalframefunc"><code class="sig-name">_PyFrameEvalFunction _PyInterpreterState_GetEvalFrameFunc(PyInterpreterState *interp)</code></dt>
   <dd><p>Get the frame evaluation function.</p>
-<p>See the <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a> "Adding a frame evaluation API to CPython".</p>
+<p>See the <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a> "Adding a frame evaluation API to CPython".</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
 </div>
@@ -1868,7 +1868,7 @@ if non-zero, handle the current exception.</p>
 <dl class="c function">
   <dt id="c:function:_pyinterpreterstate_setevalframefunc"><code class="sig-name">void _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState *interp, _PyFrameEvalFunction eval_frame)</code></dt>
   <dd><p>Set the frame evaluation function.</p>
-<p>See the <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a> "Adding a frame evaluation API to CPython".</p>
+<p>See the <span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a> "Adding a frame evaluation API to CPython".</p>
 <div class="versionadded">
   <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
 </div>
@@ -2012,7 +2012,7 @@ Otherwise daemon threads are allowed (as long as
 including legacy (single-phase init) modules,
 in any thread where the sub-interpreter is currently active.
 Otherwise only multi-phase init extension modules
-(see <span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a>) may be imported.
+(see <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a>) may be imported.
 (Also see <a class="reference internal" href="module.html#c:macro:py_mod_multiple_interpreters"><code class="xref c macro docutils literal">Py_mod_multiple_interpreters</code></a>.)</p>
 <p>This must be <code>1</code> (non-zero) if
 <a class="reference internal" href="init.html#c:member:pyinterpreterconfig.use_main_obmalloc"><code class="xref c member docutils literal">use_main_obmalloc</code></a> is <code>0</code>.</p>
@@ -2159,7 +2159,7 @@ being blocked by other interpreters or blocking any others.  Thus a
 single Python process can truly take advantage of multiple CPU cores
 when running Python code.  The isolation also encourages a different
 approach to concurrency than that of just using threads.
-(See <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0554/"><strong>PEP 554</strong></a> and <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a>.)</p>
+(See <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0554/"><strong>PEP 554</strong></a> and <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a>.)</p>
 <p>Using an isolated interpreter requires vigilance in preserving that
 isolation.  That especially means not sharing any objects or mutable
 state without guarantees about thread-safety.  Even objects that are
@@ -2598,7 +2598,7 @@ CPython interpreter.  This API uses a new type <a class="reference internal" hre
 </div>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
-<p>"A New C-API for Thread-Local Storage in CPython" (<span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0539/"><strong>PEP 539</strong></a>)</p>
+<p>"A New C-API for Thread-Local Storage in CPython" (<span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0539/"><strong>PEP 539</strong></a>)</p>
 </div>
 <dl class="c type">
   <dt id="c:type:py_tss_t"><code class="sig-name">Py_tss_t</code></dt>
