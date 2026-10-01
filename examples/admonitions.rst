@@ -44,6 +44,20 @@ Generic Admonitions
 
    This is a generic admonition with a custom title provided as an argument.
 
+Content on the Directive Line
+-----------------------------
+
+Every admonition but the generic one reads text after the ``::`` as the first
+line of its body:
+
+.. note:: A one-line note.
+
+.. warning:: A warning starting on the directive line,
+   continued below it.
+   :collapsible: open
+
+   Options may follow that first block, and the body after a blank line.
+
 Collapsible Admonitions
 -----------------------
 

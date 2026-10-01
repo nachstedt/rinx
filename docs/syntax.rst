@@ -82,7 +82,10 @@ Supported:
   :ref:`site-config`); a target that is not a number is shown as written and
   reported as ``pep.invalid-number``.
 - Admonitions, ``.. seealso::``, ``.. versionadded::``,
-  ``.. versionchanged::`` and ``.. deprecated::``.
+  ``.. versionchanged::`` and ``.. deprecated::``. As in Sphinx, text after
+  the ``::`` starts the body — ``.. seealso:: :pep:`634``` is a complete
+  directive — except for the generic ``.. admonition::``, whose argument is
+  its title, and a version change's version, which is its first word.
 - ``.. code-block::``, ``.. highlight::`` and ``.. literalinclude::``, all
   highlighted at build time.
 - ``.. math::``, rendered to MathML at build time.
