@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extending — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle asyncio — Asynchronous I&#x2f;O"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="asyncio-runner.html">Runners</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-task.html">Coroutines and Tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-stream.html">Streams</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-sync.html">Synchronization Primitives</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-subprocess.html">Subprocesses</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-queue.html">Queues</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-exceptions.html">Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-graph.html">Call Graph Introspection</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-eventloop.html">Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-future.html">Futures</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-protocol.html">Transports and Protocols</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-policy.html">Policies</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-platforms.html">Platform Support</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="asyncio-extending.html">Extending</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Extending"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="asyncio-extending.html#writing-a-custom-event-loop">Writing a Custom Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-extending.html#future-and-task-private-constructors">Future and Task private constructors</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-extending.html#task-lifetime-support">Task lifetime support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-api-index.html">High-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-llapi-index.html">Low-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-dev.html">Developing with asyncio</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-platforms.html">&larr; Platform Support</a>
+        <a class="next" href="asyncio-api-index.html">High-level API Index &rarr;</a>
+      </nav>
+      
+      <h1 id="extending">Extending</h1>
+<p>The main direction for <a class="reference internal" href="asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> extending is writing custom <em>event loop</em>
+classes. Asyncio has helpers that could be used to simplify this task.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Third-parties should reuse existing asyncio code with caution,
+a new Python version is free to break backward compatibility
+in <em>internal</em> part of API.</p>
+</div>
+<h2 id="writing-a-custom-event-loop">Writing a Custom Event Loop</h2>
+<p><a class="reference internal" href="asyncio-eventloop.html#py:class:asyncio.abstracteventloop"><code class="xref py class docutils literal">asyncio.AbstractEventLoop</code></a> declares very many methods.  Implementing all them
+from scratch is a tedious job.</p>
+<p>A loop can get many common methods implementation for free by inheriting from
+<a href="#" class="broken-link"><code class="xref py class docutils literal">asyncio.BaseEventLoop</code></a>.</p>
+<p>In turn, the successor should implement a bunch of <em>private</em> methods declared but not
+implemented in <a href="#" class="broken-link"><code class="xref py class docutils literal">asyncio.BaseEventLoop</code></a>.</p>
+<p>For example, <code>loop.create_connection()</code> checks arguments, resolves DNS addresses, and
+calls <code>loop._make_socket_transport()</code> that should be implemented by inherited class.
+The <code>_make_socket_transport()</code> method is not documented and is considered as an
+<em>internal</em> API.</p>
+<h2 id="future-and-task-private-constructors">Future and Task private constructors</h2>
+<p><a class="reference internal" href="asyncio-future.html#py:class:asyncio.future"><code class="xref py class docutils literal">asyncio.Future</code></a> and <a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">asyncio.Task</code></a> should be never created directly,
+please use corresponding <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_future"><code class="xref py method docutils literal">loop.create_future</code></a> and <a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_task"><code class="xref py method docutils literal">loop.create_task</code></a>,
+or <a class="reference internal" href="asyncio-task.html#py:function:asyncio.create_task"><code class="xref py function docutils literal">asyncio.create_task</code></a> factories instead.</p>
+<p>However, third-party <em>event loops</em> may <em>reuse</em> built-in future and task implementations
+for the sake of getting a complex and highly optimized code for free.</p>
+<p>For this purpose the following, <em>private</em> constructors are listed:</p>
+<dl class="py method">
+  <dt id="py:method:asyncio.future.__init__"><code class="sig-name">Future.__init__(*, loop=None)</code></dt>
+  <dd><p>Create a built-in future instance.</p>
+<p><em>loop</em> is an optional event loop instance.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:asyncio.task.__init__"><code class="sig-name">Task.__init__(coro, *, loop=None, name=None, context=None)</code></dt>
+  <dd><p>Create a built-in task instance.</p>
+<p><em>loop</em> is an optional event loop instance. The rest of arguments are described in
+<a class="reference internal" href="asyncio-eventloop.html#py:method:asyncio.loop.create_task"><code class="xref py method docutils literal">loop.create_task</code></a> description.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p><em>context</em> argument is added.</p>
+</div>
+</dd>
+</dl>
+<h2 id="task-lifetime-support">Task lifetime support</h2>
+<p>A third party task implementation should call the following functions to keep a task
+visible by <a class="reference internal" href="asyncio-task.html#py:function:asyncio.all_tasks"><code class="xref py function docutils literal">asyncio.all_tasks</code></a> and <a class="reference internal" href="asyncio-task.html#py:function:asyncio.current_task"><code class="xref py function docutils literal">asyncio.current_task</code></a>:</p>
+<dl class="py function">
+  <dt id="py:function:asyncio._register_task"><code class="sig-name">_register_task(task)</code></dt>
+  <dd><p>Register a new <em>task</em> as managed by <em>asyncio</em>.</p>
+<p>Call the function from a task constructor.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio._unregister_task"><code class="sig-name">_unregister_task(task)</code></dt>
+  <dd><p>Unregister a <em>task</em> from <em>asyncio</em> internal structures.</p>
+<p>The function should be called when a task is about to finish.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio._enter_task"><code class="sig-name">_enter_task(loop, task)</code></dt>
+  <dd><p>Switch the current task to the <em>task</em> argument.</p>
+<p>Call the function just before executing a portion of embedded <em>coroutine</em>
+(<a class="reference internal" href="../reference/datamodel.html#py:method:coroutine.send"><code class="xref py method docutils literal">coroutine.send</code></a> or <a class="reference internal" href="../reference/datamodel.html#py:method:coroutine.throw"><code class="xref py method docutils literal">coroutine.throw</code></a>).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:asyncio._leave_task"><code class="sig-name">_leave_task(loop, task)</code></dt>
+  <dd><p>Switch the current task back from <em>task</em> to <code>None</code>.</p>
+<p>Call the function just after <a class="reference internal" href="../reference/datamodel.html#py:method:coroutine.send"><code class="xref py method docutils literal">coroutine.send</code></a> or <a class="reference internal" href="../reference/datamodel.html#py:method:coroutine.throw"><code class="xref py method docutils literal">coroutine.throw</code></a>
+execution.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-platforms.html">&larr; Platform Support</a>
+        <a class="next" href="asyncio-api-index.html">High-level API Index &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

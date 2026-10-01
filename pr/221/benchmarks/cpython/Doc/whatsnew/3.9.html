@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What&#x27;s New In Python 3.9 — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">What&#x27;s New in Python</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle What&#x27;s New in Python"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="3.14.html">What&#x27;s new in Python 3.14</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.13.html">What&#x27;s New In Python 3.13</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.12.html">What&#x27;s New In Python 3.12</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.11.html">What&#x27;s New In Python 3.11</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.10.html">What&#x27;s New In Python 3.10</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="3.9.html">What&#x27;s New In Python 3.9</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle What&#x27;s New In Python 3.9"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="3.9.html#summary-release-highlights">Summary – Release highlights</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#you-should-check-for-deprecationwarning-in-your-code">You should check for DeprecationWarning in your code</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#new-features">New Features</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#other-language-changes">Other Language Changes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#new-modules">New Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#improved-modules">Improved Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#optimizations">Optimizations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#deprecated">Deprecated</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#removed">Removed</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#porting-to-python-3-9">Porting to Python 3.9</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#build-changes">Build Changes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#c-api-changes">C API Changes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#notable-changes-in-python-3-9-1">Notable changes in Python 3.9.1</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#notable-changes-in-python-3-9-2">Notable changes in Python 3.9.2</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#notable-changes-in-python-3-9-3">Notable changes in Python 3.9.3</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#notable-changes-in-python-3-9-5">Notable changes in Python 3.9.5</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#notable-security-feature-in-3-9-14">Notable security feature in 3.9.14</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="3.9.html#notable-changes-in-3-9-17">Notable changes in 3.9.17</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.8.html">What&#x27;s New In Python 3.8</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.7.html">What&#x27;s New In Python 3.7</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.6.html">What&#x27;s New In Python 3.6</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.5.html">What&#x27;s New In Python 3.5</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.4.html">What&#x27;s New In Python 3.4</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.3.html">What&#x27;s New In Python 3.3</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.2.html">What&#x27;s New In Python 3.2</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.1.html">What&#x27;s New In Python 3.1</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="3.0.html">What&#x27;s New In Python 3.0</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="2.7.html">What&#x27;s New in Python 2.7</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="2.6.html">What&#x27;s New in Python 2.6</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="2.5.html">What&#x27;s New in Python 2.5</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="2.4.html">What&#x27;s New in Python 2.4</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="2.3.html">What&#x27;s New in Python 2.3</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="2.2.html">What&#x27;s New in Python 2.2</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="2.1.html">What&#x27;s New in Python 2.1</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="2.0.html">What&#x27;s New in Python 2.0</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="changelog.html">Changelog</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="3.10.html">&larr; What&#x27;s New In Python 3.10</a>
+        <a class="next" href="3.8.html">What&#x27;s New In Python 3.8 &rarr;</a>
+      </nav>
+      
+      <h1 id="what-s-new-in-python-3-9">What's New In Python 3.9</h1>
+<p>:Editor: Łukasz Langa</p>
+<p>This article explains the new features in Python 3.9, compared to 3.8.
+Python 3.9 was released on October 5, 2020.
+For full details, see the <a href="changelog.html#changelog">changelog</a>.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0596/"><strong>PEP 596</strong></a> - Python 3.9 Release Schedule</p>
+</div>
+<h2 id="summary-release-highlights">Summary – Release highlights</h2>
+<p>New syntax features:</p>
+<ul>
+<li><p><span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0584/"><strong>PEP 584</strong></a>, union operators added to <code>dict</code>;</p>
+</li>
+<li><p><span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a>, type hinting generics in standard collections;</p>
+</li>
+<li><p><span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0614/"><strong>PEP 614</strong></a>, relaxed grammar restrictions on decorators.</p>
+</li>
+</ul>
+<p>New built-in features:</p>
+<ul>
+<li><p><span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0616/"><strong>PEP 616</strong></a>, string methods to remove prefixes and suffixes.</p>
+</li>
+</ul>
+<p>New features in the standard library:</p>
+<ul>
+<li><p><span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0593/"><strong>PEP 593</strong></a>, flexible function and variable annotations;</p>
+</li>
+<li><p><a class="reference internal" href="../library/os.html#py:function:os.pidfd_open"><code class="xref py function docutils literal">os.pidfd_open</code></a> added that allows process management without races
+and signals.</p>
+</li>
+</ul>
+<p>Interpreter improvements:</p>
+<ul>
+<li><p><span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0573/"><strong>PEP 573</strong></a>, fast access to module state from methods of C extension
+types;</p>
+</li>
+<li><p><span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0617/"><strong>PEP 617</strong></a>, CPython now uses a new parser based on PEG;</p>
+</li>
+<li><p>a number of Python builtins (range, tuple, set, frozenset, list, dict) are
+now sped up using <span class="target" id="index-8"></span><a class="pep reference external" href="https://peps.python.org/pep-0590/"><strong>PEP 590</strong></a> vectorcall;</p>
+</li>
+<li><p>garbage collection does not block on resurrected objects;</p>
+</li>
+<li><p>a number of Python modules (<code class="xref py module docutils literal">_abc</code>, <code class="xref py module docutils literal">audioop</code>, <code class="xref py module docutils literal">_bz2</code>,
+<code class="xref py module docutils literal">_codecs</code>, <code class="xref py module docutils literal">_contextvars</code>, <code class="xref py module docutils literal">_crypt</code>, <code class="xref py module docutils literal">_functools</code>,
+<code class="xref py module docutils literal">_json</code>, <code class="xref py module docutils literal">_locale</code>, <a class="reference internal" href="../library/math.html#py:module:math" title="math: Mathematical functions (sin() etc.)."><code class="xref py module docutils literal">math</code></a>, <a class="reference internal" href="../library/operator.html#py:module:operator" title="operator: Functions corresponding to the standard operators."><code class="xref py module docutils literal">operator</code></a>, <a class="reference internal" href="../library/resource.html#py:module:resource" title="resource: An interface to provide resource usage information on the current process. (Unix)"><code class="xref py module docutils literal">resource</code></a>,
+<a class="reference internal" href="../library/time.html#py:module:time" title="time: Time access and conversions."><code class="xref py module docutils literal">time</code></a>, <code class="xref py module docutils literal">_weakref</code>) now use multiphase initialization as defined
+by PEP 489;</p>
+</li>
+<li><p>a number of standard library modules (<code class="xref py module docutils literal">audioop</code>, <a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a>, <a class="reference internal" href="../library/grp.html#py:module:grp" title="grp: The group database (getgrnam() and friends). (Unix)"><code class="xref py module docutils literal">grp</code></a>,
+<code class="xref py module docutils literal">_hashlib</code>, <a class="reference internal" href="../library/pwd.html#py:module:pwd" title="pwd: The password database (getpwnam() and friends). (Unix)"><code class="xref py module docutils literal">pwd</code></a>, <code class="xref py module docutils literal">_posixsubprocess</code>, <a class="reference internal" href="../library/random.html#py:module:random" title="random: Generate pseudo-random numbers with various common distributions."><code class="xref py module docutils literal">random</code></a>,
+<a class="reference internal" href="../library/select.html#py:module:select" title="select: Wait for I/O completion on multiple streams."><code class="xref py module docutils literal">select</code></a>, <a class="reference internal" href="../library/struct.html#py:module:struct" title="struct: Interpret bytes as packed binary data."><code class="xref py module docutils literal">struct</code></a>, <a class="reference internal" href="../library/termios.html#py:module:termios" title="termios: POSIX style tty control. (Unix)"><code class="xref py module docutils literal">termios</code></a>, <a class="reference internal" href="../library/zlib.html#py:module:zlib" title="zlib: Low-level interface to compression and decompression routines compatible with gzip."><code class="xref py module docutils literal">zlib</code></a>) are now using
+the stable ABI defined by PEP 384.</p>
+</li>
+</ul>
+<p>New library modules:</p>
+<ul>
+<li><p><span class="target" id="index-9"></span><a class="pep reference external" href="https://peps.python.org/pep-0615/"><strong>PEP 615</strong></a>, the IANA Time Zone Database is now present in the standard
+library in the <a class="reference internal" href="../library/zoneinfo.html#py:module:zoneinfo" title="zoneinfo: IANA time zone support"><code class="xref py module docutils literal">zoneinfo</code></a> module;</p>
+</li>
+<li><p>an implementation of a topological sort of a graph is now provided in
+the new <a class="reference internal" href="../library/graphlib.html#py:module:graphlib" title="graphlib: Functionality to operate with graph-like structures"><code class="xref py module docutils literal">graphlib</code></a> module.</p>
+</li>
+</ul>
+<p>Release process changes:</p>
+<ul>
+<li><p><span class="target" id="index-10"></span><a class="pep reference external" href="https://peps.python.org/pep-0602/"><strong>PEP 602</strong></a>, CPython adopts an annual release cycle.</p>
+</li>
+</ul>
+<h2 id="you-should-check-for-deprecationwarning-in-your-code">You should check for DeprecationWarning in your code</h2>
+<p>When Python 2.7 was still supported, a lot of functionality in Python 3
+was kept for backward compatibility with Python 2.7. With the end of Python
+2 support, these backward compatibility layers have been removed, or will
+be removed soon. Most of them emitted a <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> warning for
+several years. For example, using <code>collections.Mapping</code> instead of
+<code>collections.abc.Mapping</code> emits a <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> since Python
+3.3, released in 2012.</p>
+<p>Test your application with the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-w"><code class="xref std cmdoption docutils literal">-W</code></a> <code>default</code> command-line option to see
+<a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> and <a class="reference internal" href="../library/exceptions.html#py:exception:pendingdeprecationwarning"><code class="xref py exception docutils literal">PendingDeprecationWarning</code></a>, or even with
+<a class="reference internal" href="../using/cmdline.html#std:cmdoption:-w"><code class="xref std cmdoption docutils literal">-W</code></a> <code>error</code> to treat them as errors. <a href="../library/warnings.html#warning-filter">Warnings Filter</a> can be used to ignore warnings from third-party code.</p>
+<p>Python 3.9 is the last version providing those Python 2 backward compatibility
+layers, to give more time to Python projects maintainers to organize the
+removal of the Python 2 support and add support for Python 3.9.</p>
+<p>Aliases to <a href="../library/collections.abc.html#collections-abstract-base-classes">Abstract Base Classes</a> in
+the <a class="reference internal" href="../library/collections.html#py:module:collections" title="collections: Container datatypes"><code class="xref py module docutils literal">collections</code></a> module, like <code>collections.Mapping</code> alias to
+<a class="reference internal" href="../library/collections.abc.html#py:class:collections.abc.mapping"><code class="xref py class docutils literal">collections.abc.Mapping</code></a>, are kept for one last release for backward
+compatibility. They will be removed from Python 3.10.</p>
+<p>More generally, try to run your tests in the <a href="../library/devmode.html#devmode">Python Development Mode</a> which helps to prepare your code to make it compatible with the
+next Python version.</p>
+<p>Note: a number of pre-existing deprecations were removed in this version of
+Python as well. Consult the <a href="3.9.html#removed-in-python-39">Removed</a> section.</p>
+<h2 id="new-features">New Features</h2>
+<h3 id="dictionary-merge-update-operators">Dictionary Merge &amp; Update Operators</h3>
+<p>Merge (<code>|</code>) and update (<code>|=</code>) operators have been added to the built-in
+<a class="reference internal" href="../library/stdtypes.html#py:class:dict"><code class="xref py class docutils literal">dict</code></a> class. Those complement the existing <code>dict.update</code> and
+<code>{**d1, **d2}</code> methods of merging dictionaries.</p>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">key1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">value1 from x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">key2<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">value2 from x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">y</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">key2<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">value2 from y<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">key3<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">value3 from y<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">y</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">key1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">value1 from x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">key2<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">value2 from y<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">key3<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">value3 from y<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">y</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">|</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">key2<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">value2 from x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">key3<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">value3 from y<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-python">,</span> </span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">key1<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">value1 from x<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span></pre></div>
+<p>See <span class="target" id="index-11"></span><a class="pep reference external" href="https://peps.python.org/pep-0584/"><strong>PEP 584</strong></a> for a full description.
+(Contributed by Brandt Bucher in :issue:`36144`.)</p>
+<h3 id="new-string-methods-to-remove-prefixes-and-suffixes">New String Methods to Remove Prefixes and Suffixes</h3>
+<p><a class="reference internal" href="../library/stdtypes.html#py:method:str.removeprefix"><code class="xref py method docutils literal">str.removeprefix(prefix)</code></a> and
+<a class="reference internal" href="../library/stdtypes.html#py:method:str.removesuffix"><code class="xref py method docutils literal">str.removesuffix(suffix)</code></a> have been added
+to easily remove an unneeded prefix or a suffix from a string. Corresponding
+<code>bytes</code>, <code>bytearray</code>, and <code>collections.UserString</code> methods have also been
+added. See <span class="target" id="index-12"></span><a class="pep reference external" href="https://peps.python.org/pep-0616/"><strong>PEP 616</strong></a> for a full description. (Contributed by Dennis Sweeney in
+:issue:`39939`.)</p>
+<h3 id="type-hinting-generics-in-standard-collections">Type Hinting Generics in Standard Collections</h3>
+<p>In type annotations you can now use built-in collection types such as
+<code>list</code> and <code>dict</code> as generic types instead of importing the
+corresponding capitalized types (e.g. <code>List</code> or <code>Dict</code>) from
+<code>typing</code>.  Some other types in the standard library are also now generic,
+for example <code>queue.Queue</code>.</p>
+<p>Example:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">greet_all</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">names</span></span><span class="hl-meta hl-function hl-parameters hl-annotation hl-python"><span class="hl-punctuation hl-separator hl-annotation hl-parameter hl-python">:</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">list</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">str</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"> </span><span class="hl-meta hl-function hl-annotation hl-return hl-python"><span class="hl-punctuation hl-separator hl-annotation hl-return hl-python">-&gt;</span> <span class="hl-constant hl-language hl-python">None</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">name</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">names</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">name</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+</div>
+<p>See <span class="target" id="index-13"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> for more details.  (Contributed by Guido van Rossum,
+Ethan Smith, and Batuhan Taşkaya in :issue:`39481`.)</p>
+<h3 id="new-parser">New Parser</h3>
+<p>Python 3.9 uses a new parser, based on <a href="https://en.wikipedia.org/wiki/Parsing_expression_grammar">PEG</a> instead
+of <a href="https://en.wikipedia.org/wiki/LL_parser">LL(1)</a>.  The new
+parser's performance is roughly comparable to that of the old parser,
+but the PEG formalism is more flexible than LL(1) when it comes to
+designing new language features.  We'll start using this flexibility
+in Python 3.10 and later.</p>
+<p>The <a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a> module uses the new parser and produces the same AST as
+the old parser.</p>
+<p>In Python 3.10, the old parser will be deleted and so will all
+functionality that depends on it (primarily the <code class="xref py module docutils literal">parser</code> module,
+which has long been deprecated).  In Python 3.9 <em>only</em>, you can switch
+back to the LL(1) parser using a command line switch (<code>-X
+oldparser</code>) or an environment variable (<code>PYTHONOLDPARSER=1</code>).</p>
+<p>See <span class="target" id="index-14"></span><a class="pep reference external" href="https://peps.python.org/pep-0617/"><strong>PEP 617</strong></a> for more details.  (Contributed by Guido van Rossum,
+Pablo Galindo and Lysandros Nikolaou in :issue:`40334`.)</p>
+<h2 id="other-language-changes">Other Language Changes</h2>
+<ul>
+<li><p><a class="reference internal" href="../library/functions.html#py:function:__import__"><code class="xref py function docutils literal">__import__</code></a> now raises <a class="reference internal" href="../library/exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a> instead of
+<a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a>, which used to occur when a relative import went past
+its top-level package.
+(Contributed by Ngalim Siregar in :issue:`37444`.)</p>
+</li>
+<li><p>Python now gets the absolute path of the script filename specified on
+the command line (ex: <code>python3 script.py</code>): the <code>__file__</code> attribute of
+the <a class="reference internal" href="../library/__main__.html#py:module:__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py module docutils literal">__main__</code></a> module became an absolute path, rather than a relative
+path. These paths now remain valid after the current directory is changed
+by <a class="reference internal" href="../library/os.html#py:function:os.chdir"><code class="xref py function docutils literal">os.chdir</code></a>. As a side effect, the traceback also displays the
+absolute path for <a class="reference internal" href="../library/__main__.html#py:module:__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py module docutils literal">__main__</code></a> module frames in this case.
+(Contributed by Victor Stinner in :issue:`20443`.)</p>
+</li>
+<li><p>In the <a href="../library/devmode.html#devmode">Python Development Mode</a> and in <a href="../using/configure.html#debug-build">debug build</a>, the
+<em>encoding</em> and <em>errors</em> arguments are now checked for string encoding and
+decoding operations. Examples: <a class="reference internal" href="../library/functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:method:str.encode"><code class="xref py method docutils literal">str.encode</code></a> and
+<a class="reference internal" href="../library/stdtypes.html#py:method:bytes.decode"><code class="xref py method docutils literal">bytes.decode</code></a>.</p>
+<p>By default, for best performance, the <em>errors</em> argument is only checked at
+the first encoding/decoding error and the <em>encoding</em> argument is sometimes
+ignored for empty strings.
+(Contributed by Victor Stinner in :issue:`37388`.)</p>
+</li>
+<li><p><code>"".replace("", s, n)</code> now returns <code>s</code> instead of an empty string for
+all non-zero <code>n</code>.  It is now consistent with <code>"".replace("", s)</code>.
+There are similar changes for <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> and <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> objects.
+(Contributed by Serhiy Storchaka in :issue:`28029`.)</p>
+</li>
+<li><p>Any valid expression can now be used as a <a class="reference internal" href="../glossary.html#term-decorator"><span class="xref std std-term">decorator</span></a>.  Previously, the
+grammar was much more restrictive.  See <span class="target" id="index-15"></span><a class="pep reference external" href="https://peps.python.org/pep-0614/"><strong>PEP 614</strong></a> for details.
+(Contributed by Brandt Bucher in :issue:`39702`.)</p>
+</li>
+<li><p>Improved help for the <a class="reference internal" href="../library/typing.html#py:module:typing" title="typing: Support for type hints (see :pep:`484`)."><code class="xref py module docutils literal">typing</code></a> module. Docstrings are now shown for
+all special forms and special generic aliases (like <code>Union</code> and <code>List</code>).
+Using <a class="reference internal" href="../library/functions.html#py:function:help"><code class="xref py function docutils literal">help</code></a> with generic alias like <code>List[int]</code> will show the help
+for the correspondent concrete type (<code>list</code> in this case).
+(Contributed by Serhiy Storchaka in :issue:`40257`.)</p>
+</li>
+<li><p>Parallel running of <a class="reference internal" href="../reference/expressions.html#py:method:agen.aclose"><code class="xref py method docutils literal">aclose</code></a> / <a class="reference internal" href="../reference/expressions.html#py:method:agen.asend"><code class="xref py method docutils literal">asend</code></a> /
+<a class="reference internal" href="../reference/expressions.html#py:method:agen.athrow"><code class="xref py method docutils literal">athrow</code></a> is now prohibited, and <code>ag_running</code> now reflects
+the actual running status of the async generator.
+(Contributed by Yury Selivanov in :issue:`30773`.)</p>
+</li>
+<li><p>Unexpected errors in calling the <code>__iter__</code> method are no longer masked by
+<code>TypeError</code> in the :keyword:`in` operator and functions
+<a class="reference internal" href="../library/operator.html#py:function:operator.contains"><code class="xref py function docutils literal">contains</code></a>, <a class="reference internal" href="../library/operator.html#py:function:operator.indexof"><code class="xref py function docutils literal">indexOf</code></a> and
+<a class="reference internal" href="../library/operator.html#py:function:operator.countof"><code class="xref py function docutils literal">countOf</code></a> of the <a class="reference internal" href="../library/operator.html#py:module:operator" title="operator: Functions corresponding to the standard operators."><code class="xref py module docutils literal">operator</code></a> module.
+(Contributed by Serhiy Storchaka in :issue:`40824`.)</p>
+</li>
+<li><p>Unparenthesized lambda expressions can no longer be the expression part in an
+<code>if</code> clause in comprehensions and generator expressions. See :issue:`41848`
+and :issue:`43755` for details.</p>
+</li>
+</ul>
+<h2 id="new-modules">New Modules</h2>
+<h3 id="zoneinfo">zoneinfo</h3>
+<p>The <a class="reference internal" href="../library/zoneinfo.html#py:module:zoneinfo" title="zoneinfo: IANA time zone support"><code class="xref py module docutils literal">zoneinfo</code></a> module brings support for the IANA time zone database to
+the standard library. It adds <a class="reference internal" href="../library/zoneinfo.html#py:class:zoneinfo.zoneinfo"><code class="xref py class docutils literal">zoneinfo.ZoneInfo</code></a>, a concrete
+<a class="reference internal" href="../library/datetime.html#py:class:datetime.tzinfo"><code class="xref py class docutils literal">datetime.tzinfo</code></a> implementation backed by the system's time zone data.</p>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">zoneinfo</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">datetime</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">datetime</span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">timedelta</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Daylight saving time
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">31</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">tzinfo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">America/Los_Angeles<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">31</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>7</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">tzname</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">PDT<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Standard time
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span> <span class="hl-keyword hl-operator hl-assignment hl-augmented hl-python">+=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">timedelta</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">days</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">7</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>7</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span>08<span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">tzname</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">PST</span></span></span></pre></div>
+<p>As a fall-back source of data for platforms that don't ship the IANA database,
+the :pypi:`tzdata` module was released as a first-party package – distributed via
+PyPI and maintained by the CPython core team.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><span class="target" id="index-16"></span><a class="pep reference external" href="https://peps.python.org/pep-0615/"><strong>PEP 615</strong></a> – Support for the IANA Time Zone Database in the Standard Library</dt>
+<dd><p>PEP written and implemented by Paul Ganssle</p>
+</dd>
+</dl>
+</div>
+<h3 id="graphlib">graphlib</h3>
+<p>A new module, <a class="reference internal" href="../library/graphlib.html#py:module:graphlib" title="graphlib: Functionality to operate with graph-like structures"><code class="xref py module docutils literal">graphlib</code></a>, was added that contains the
+<a class="reference internal" href="../library/graphlib.html#py:class:graphlib.topologicalsorter"><code class="xref py class docutils literal">graphlib.TopologicalSorter</code></a> class to offer functionality to perform
+topological sorting of graphs. (Contributed by Pablo Galindo, Tim Peters and
+Larry Hastings in :issue:`17005`.)</p>
+<h2 id="improved-modules">Improved Modules</h2>
+<h3 id="ast">ast</h3>
+<p>Added the <em>indent</em> option to <a class="reference internal" href="../library/ast.html#py:function:ast.dump"><code class="xref py function docutils literal">dump</code></a> which allows it to produce a
+multiline indented output.
+(Contributed by Serhiy Storchaka in :issue:`37995`.)</p>
+<p>Added <a class="reference internal" href="../library/ast.html#py:function:ast.unparse"><code class="xref py function docutils literal">ast.unparse</code></a> as a function in the <a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a> module that can
+be used to unparse an <a class="reference internal" href="../library/ast.html#py:class:ast.ast"><code class="xref py class docutils literal">ast.AST</code></a> object and produce a string with code
+that would produce an equivalent <a class="reference internal" href="../library/ast.html#py:class:ast.ast"><code class="xref py class docutils literal">ast.AST</code></a> object when parsed.
+(Contributed by Pablo Galindo and Batuhan Taskaya in :issue:`38870`.)</p>
+<p>Added docstrings to AST nodes that contains the ASDL signature used to
+construct that node. (Contributed by Batuhan Taskaya in :issue:`39638`.)</p>
+<h3 id="asyncio">asyncio</h3>
+<p>Due to significant security concerns, the <em>reuse_address</em> parameter of
+<a class="reference internal" href="../library/asyncio-eventloop.html#py:method:asyncio.loop.create_datagram_endpoint"><code class="xref py method docutils literal">asyncio.loop.create_datagram_endpoint</code></a> is no longer supported. This is
+because of the behavior of the socket option <code>SO_REUSEADDR</code> in UDP. For more
+details, see the documentation for <code>loop.create_datagram_endpoint()</code>.
+(Contributed by Kyle Stanley, Antoine Pitrou, and Yury Selivanov in
+:issue:`37228`.)</p>
+<p>Added a new <a class="reference internal" href="../glossary.html#term-coroutine"><span class="xref std std-term">coroutine</span></a> <a class="reference internal" href="../library/asyncio-eventloop.html#py:method:asyncio.loop.shutdown_default_executor"><code class="xref py method docutils literal">shutdown_default_executor</code></a>
+that schedules a shutdown for the default executor that waits on the
+<a class="reference internal" href="../library/concurrent.futures.html#py:class:concurrent.futures.threadpoolexecutor"><code class="xref py class docutils literal">ThreadPoolExecutor</code></a> to finish closing. Also,
+<a class="reference internal" href="../library/asyncio-runner.html#py:function:asyncio.run"><code class="xref py function docutils literal">asyncio.run</code></a> has been updated to use the new <a class="reference internal" href="../glossary.html#term-coroutine"><span class="xref std std-term">coroutine</span></a>.
+(Contributed by Kyle Stanley in :issue:`34037`.)</p>
+<p>Added <code class="xref py class docutils literal">asyncio.PidfdChildWatcher</code>, a Linux-specific child watcher
+implementation that polls process file descriptors. (:issue:`38692`)</p>
+<p>Added a new <a class="reference internal" href="../glossary.html#term-coroutine"><span class="xref std std-term">coroutine</span></a> <a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.to_thread"><code class="xref py function docutils literal">asyncio.to_thread</code></a>. It is mainly used for
+running IO-bound functions in a separate thread to avoid blocking the event
+loop, and essentially works as a high-level version of
+<a href="#" class="broken-link"><code class="xref py method docutils literal">run_in_executor</code></a> that can directly take keyword arguments.
+(Contributed by Kyle Stanley and Yury Selivanov in :issue:`32309`.)</p>
+<p>When cancelling the task due to a timeout, <a href="#" class="broken-link"><code class="xref py method docutils literal">asyncio.wait_for</code></a> will now
+wait until the cancellation is complete also in the case when <em>timeout</em> is
+&lt;= 0, like it does with positive timeouts.
+(Contributed by Elvis Pranskevichus in :issue:`32751`.)</p>
+<p><a class="reference internal" href="../library/asyncio.html#py:module:asyncio" title="asyncio: Asynchronous I/O."><code class="xref py module docutils literal">asyncio</code></a> now raises <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> when calling incompatible
+methods with an <a class="reference internal" href="../library/ssl.html#py:class:ssl.sslsocket"><code class="xref py class docutils literal">ssl.SSLSocket</code></a> socket.
+(Contributed by Ido Michael in :issue:`37404`.)</p>
+<h3 id="compileall">compileall</h3>
+<p>Added new possibility to use hardlinks for duplicated <code>.pyc</code> files: <em>hardlink_dupes</em> parameter and –hardlink-dupes command line option.
+(Contributed by  Lumír 'Frenzy' Balhar in :issue:`40495`.)</p>
+<p>Added new options for path manipulation in resulting <code>.pyc</code> files: <em>stripdir</em>, <em>prependdir</em>, <em>limit_sl_dest</em> parameters and -s, -p, -e command line options.
+Added the possibility to specify the option for an optimization level multiple times.
+(Contributed by Lumír 'Frenzy' Balhar in :issue:`38112`.)</p>
+<h3 id="concurrent-futures">concurrent.futures</h3>
+<p>Added a new <em>cancel_futures</em> parameter to
+<a class="reference internal" href="../library/concurrent.futures.html#py:method:concurrent.futures.executor.shutdown"><code class="xref py method docutils literal">concurrent.futures.Executor.shutdown</code></a> that cancels all pending futures
+which have not started running, instead of waiting for them to complete before
+shutting down the executor.
+(Contributed by Kyle Stanley in :issue:`39349`.)</p>
+<p>Removed daemon threads from <a class="reference internal" href="../library/concurrent.futures.html#py:class:concurrent.futures.threadpoolexecutor"><code class="xref py class docutils literal">ThreadPoolExecutor</code></a>
+and <a class="reference internal" href="../library/concurrent.futures.html#py:class:concurrent.futures.processpoolexecutor"><code class="xref py class docutils literal">ProcessPoolExecutor</code></a>. This improves
+compatibility with subinterpreters and predictability in their shutdown
+processes. (Contributed by Kyle Stanley in :issue:`39812`.)</p>
+<p>Workers in <a class="reference internal" href="../library/concurrent.futures.html#py:class:concurrent.futures.processpoolexecutor"><code class="xref py class docutils literal">ProcessPoolExecutor</code></a> are now spawned on
+demand, only when there are no available idle workers to reuse. This optimizes
+startup overhead and reduces the amount of lost CPU time to idle workers.
+(Contributed by Kyle Stanley in :issue:`39207`.)</p>
+<h3 id="curses">curses</h3>
+<p>Added <a class="reference internal" href="../library/curses.html#py:function:curses.get_escdelay"><code class="xref py function docutils literal">curses.get_escdelay</code></a>, <a class="reference internal" href="../library/curses.html#py:function:curses.set_escdelay"><code class="xref py function docutils literal">curses.set_escdelay</code></a>,
+<a class="reference internal" href="../library/curses.html#py:function:curses.get_tabsize"><code class="xref py function docutils literal">curses.get_tabsize</code></a>, and <a class="reference internal" href="../library/curses.html#py:function:curses.set_tabsize"><code class="xref py function docutils literal">curses.set_tabsize</code></a> functions.
+(Contributed by Anthony Sottile in :issue:`38312`.)</p>
+<h3 id="datetime">datetime</h3>
+<p>The <a class="reference internal" href="../library/datetime.html#py:method:datetime.date.isocalendar"><code class="xref py method docutils literal">isocalendar</code></a> of <a class="reference internal" href="../library/datetime.html#py:class:datetime.date"><code class="xref py class docutils literal">datetime.date</code></a>
+and <a class="reference internal" href="../library/datetime.html#py:method:datetime.datetime.isocalendar"><code class="xref py method docutils literal">isocalendar</code></a> of <a class="reference internal" href="../library/datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime.datetime</code></a>
+methods now returns a <a class="reference internal" href="../library/collections.html#py:function:collections.namedtuple"><code class="xref py function docutils literal">namedtuple</code></a> instead of a <a class="reference internal" href="../library/stdtypes.html#py:class:tuple"><code class="xref py class docutils literal">tuple</code></a>.
+(Contributed by Donghee Na in :issue:`24416`.)</p>
+<h3 id="distutils">distutils</h3>
+<p>The :command:`upload` command now creates SHA2-256 and Blake2b-256 hash
+digests. It skips MD5 on platforms that block MD5 digest.
+(Contributed by Christian Heimes in :issue:`40698`.)</p>
+<h3 id="fcntl">fcntl</h3>
+<p>Added constants <code class="xref py data docutils literal">fcntl.F_OFD_GETLK</code>, <code class="xref py data docutils literal">fcntl.F_OFD_SETLK</code>
+and <code class="xref py data docutils literal">fcntl.F_OFD_SETLKW</code>.
+(Contributed by Donghee Na in :issue:`38602`.)</p>
+<h3 id="ftplib">ftplib</h3>
+<p><a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> and <a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp_tls"><code class="xref py class docutils literal">FTP_TLS</code></a> now raise a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a>
+if the given timeout for their constructor is zero to prevent the creation of
+a non-blocking socket. (Contributed by Donghee Na in :issue:`39259`.)</p>
+<h3 id="gc">gc</h3>
+<p>When the garbage collector makes a collection in which some objects resurrect
+(they are reachable from outside the isolated cycles after the finalizers have
+been executed), do not block the collection of all objects that are still
+unreachable. (Contributed by Pablo Galindo and Tim Peters in :issue:`38379`.)</p>
+<p>Added a new function <a class="reference internal" href="../library/gc.html#py:function:gc.is_finalized"><code class="xref py function docutils literal">gc.is_finalized</code></a> to check if an object has been
+finalized by the garbage collector. (Contributed by Pablo Galindo in
+:issue:`39322`.)</p>
+<h3 id="hashlib">hashlib</h3>
+<p>The <a class="reference internal" href="../library/hashlib.html#py:module:hashlib" title="hashlib: Secure hash and message digest algorithms."><code class="xref py module docutils literal">hashlib</code></a> module can now use SHA3 hashes and SHAKE XOF from OpenSSL
+when available.
+(Contributed by Christian Heimes in :issue:`37630`.)</p>
+<p>Builtin hash modules can now be disabled with
+<code>./configure --without-builtin-hashlib-hashes</code> or selectively enabled with
+e.g. <code>./configure --with-builtin-hashlib-hashes=sha3,blake2</code> to force use
+of OpenSSL based implementation.
+(Contributed by Christian Heimes in :issue:`40479`)</p>
+<h3 id="http">http</h3>
+<p>HTTP status codes <code>103 EARLY_HINTS</code>, <code>418 IM_A_TEAPOT</code> and <code>425 TOO_EARLY</code> are added to
+<a class="reference internal" href="../library/http.html#py:class:http.httpstatus"><code class="xref py class docutils literal">http.HTTPStatus</code></a>. (Contributed by Donghee Na in :issue:`39509` and Ross Rhodes in :issue:`39507`.)</p>
+<h3 id="idle-and-idlelib">IDLE and idlelib</h3>
+<p>Added option to toggle cursor blink off.  (Contributed by Zackery Spytz
+in :issue:`4603`.)</p>
+<p>Escape key now closes IDLE completion windows.  (Contributed by Johnny
+Najera in :issue:`38944`.)</p>
+<p>Added keywords to module name completion list.  (Contributed by Terry J.
+Reedy in :issue:`37765`.)</p>
+<p>New in 3.9 maintenance releases</p>
+<p>Make IDLE invoke <a class="reference internal" href="../library/sys.html#py:function:sys.excepthook"><code class="xref py function docutils literal">sys.excepthook</code></a> (when started without '-n').
+User hooks were previously ignored.  (Contributed by Ken Hilton in
+:issue:`43008`.)</p>
+<p>The changes above have been backported to 3.8 maintenance releases.</p>
+<p>Rearrange the settings dialog.  Split the General tab into Windows
+and Shell/Ed tabs.  Move help sources, which extend the Help menu, to the
+Extensions tab.  Make space for new options and shorten the dialog. The
+latter makes the dialog better fit small screens.  (Contributed by Terry Jan
+Reedy in :issue:`40468`.)  Move the indent space setting from the Font tab to
+the new Windows tab.  (Contributed by Mark Roseman and Terry Jan Reedy in
+:issue:`33962`.)</p>
+<p>Apply syntax highlighting to <code>.pyi</code> files. (Contributed by Alex
+Waygood and Terry Jan Reedy in :issue:`45447`.)</p>
+<h3 id="imaplib">imaplib</h3>
+<p><a class="reference internal" href="../library/imaplib.html#py:class:imaplib.imap4"><code class="xref py class docutils literal">IMAP4</code></a> and <a class="reference internal" href="../library/imaplib.html#py:class:imaplib.imap4_ssl"><code class="xref py class docutils literal">IMAP4_SSL</code></a> now have
+an optional <em>timeout</em> parameter for their constructors.
+Also, the <a class="reference internal" href="../library/imaplib.html#py:method:imaplib.imap4.open"><code class="xref py method docutils literal">open</code></a> method now has an optional <em>timeout</em> parameter
+with this change. The overridden methods of <a class="reference internal" href="../library/imaplib.html#py:class:imaplib.imap4_ssl"><code class="xref py class docutils literal">IMAP4_SSL</code></a> and
+<a class="reference internal" href="../library/imaplib.html#py:class:imaplib.imap4_stream"><code class="xref py class docutils literal">IMAP4_stream</code></a> were applied to this change.
+(Contributed by Donghee Na in :issue:`38615`.)</p>
+<p><a class="reference internal" href="../library/imaplib.html#py:method:imaplib.imap4.unselect"><code class="xref py method docutils literal">imaplib.IMAP4.unselect</code></a> is added.
+<a class="reference internal" href="../library/imaplib.html#py:method:imaplib.imap4.unselect"><code class="xref py method docutils literal">imaplib.IMAP4.unselect</code></a> frees server's resources associated with the
+selected mailbox and returns the server to the authenticated
+state. This command performs the same actions as <a class="reference internal" href="../library/imaplib.html#py:method:imaplib.imap4.close"><code class="xref py method docutils literal">imaplib.IMAP4.close</code></a>, except
+that no messages are permanently removed from the currently
+selected mailbox. (Contributed by Donghee Na in :issue:`40375`.)</p>
+<h3 id="importlib">importlib</h3>
+<p>To improve consistency with import statements, <a class="reference internal" href="../library/importlib.html#py:function:importlib.util.resolve_name"><code class="xref py function docutils literal">importlib.util.resolve_name</code></a>
+now raises <a class="reference internal" href="../library/exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a> instead of <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> for invalid relative
+import attempts.
+(Contributed by Ngalim Siregar in :issue:`37444`.)</p>
+<p>Import loaders which publish immutable module objects can now publish
+immutable packages in addition to individual modules.
+(Contributed by Dino Viehland in :issue:`39336`.)</p>
+<p>Added <a class="reference internal" href="../library/importlib.resources.html#py:function:importlib.resources.files"><code class="xref py function docutils literal">importlib.resources.files</code></a> function with support for
+subdirectories in package data, matching backport in <code>importlib_resources</code>
+version 1.5.
+(Contributed by Jason R. Coombs in :issue:`39791`.)</p>
+<p>Refreshed <code>importlib.metadata</code> from <code>importlib_metadata</code> version 1.6.1.</p>
+<h3 id="inspect">inspect</h3>
+<p><a class="reference internal" href="../library/inspect.html#py:attribute:inspect.boundarguments.arguments"><code class="xref py attribute docutils literal">inspect.BoundArguments.arguments</code></a> is changed from <code>OrderedDict</code> to regular
+dict.  (Contributed by Inada Naoki in :issue:`36350` and :issue:`39775`.)</p>
+<h3 id="ipaddress">ipaddress</h3>
+<p><a class="reference internal" href="../library/ipaddress.html#py:module:ipaddress" title="ipaddress: IPv4/IPv6 manipulation library."><code class="xref py module docutils literal">ipaddress</code></a> now supports IPv6 Scoped Addresses (IPv6 address with suffix <code>%&lt;scope_id&gt;</code>).</p>
+<p>Scoped IPv6 addresses can be parsed using <a class="reference internal" href="../library/ipaddress.html#py:class:ipaddress.ipv6address"><code class="xref py class docutils literal">ipaddress.IPv6Address</code></a>.
+If present, scope zone ID is available through the <a class="reference internal" href="../library/ipaddress.html#py:attribute:ipaddress.ipv6address.scope_id"><code class="xref py attribute docutils literal">scope_id</code></a> attribute.
+(Contributed by Oleksandr Pavliuk in :issue:`34788`.)</p>
+<p>Starting with Python 3.9.5 the <a class="reference internal" href="../library/ipaddress.html#py:module:ipaddress" title="ipaddress: IPv4/IPv6 manipulation library."><code class="xref py module docutils literal">ipaddress</code></a> module no longer
+accepts any leading zeros in IPv4 address strings.
+(Contributed by Christian Heimes in :issue:`36384`).</p>
+<h3 id="math">math</h3>
+<p>Expanded the <a class="reference internal" href="../library/math.html#py:function:math.gcd"><code class="xref py function docutils literal">math.gcd</code></a> function to handle multiple arguments.
+Formerly, it only supported two arguments.
+(Contributed by Serhiy Storchaka in :issue:`39648`.)</p>
+<p>Added <a class="reference internal" href="../library/math.html#py:function:math.lcm"><code class="xref py function docutils literal">math.lcm</code></a>: return the least common multiple of specified arguments.
+(Contributed by Mark Dickinson, Ananthakrishnan and Serhiy Storchaka in
+:issue:`39479` and :issue:`39648`.)</p>
+<p>Added <a class="reference internal" href="../library/math.html#py:function:math.nextafter"><code class="xref py function docutils literal">math.nextafter</code></a>: return the next floating-point value after <em>x</em>
+towards <em>y</em>.
+(Contributed by Victor Stinner in :issue:`39288`.)</p>
+<p>Added <a class="reference internal" href="../library/math.html#py:function:math.ulp"><code class="xref py function docutils literal">math.ulp</code></a>: return the value of the least significant bit
+of a float.
+(Contributed by Victor Stinner in :issue:`39310`.)</p>
+<h3 id="multiprocessing">multiprocessing</h3>
+<p>The <a class="reference internal" href="../library/multiprocessing.html#py:class:multiprocessing.simplequeue"><code class="xref py class docutils literal">multiprocessing.SimpleQueue</code></a> class has a new
+<a class="reference internal" href="../library/multiprocessing.html#py:method:multiprocessing.simplequeue.close"><code class="xref py method docutils literal">close</code></a> method to explicitly close the
+queue.
+(Contributed by Victor Stinner in :issue:`30966`.)</p>
+<h3 id="nntplib">nntplib</h3>
+<p><code class="xref py class docutils literal">NNTP</code> and <code class="xref py class docutils literal">NNTP_SSL</code> now raise a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a>
+if the given timeout for their constructor is zero to prevent the creation of
+a non-blocking socket. (Contributed by Donghee Na in :issue:`39259`.)</p>
+<h3 id="os">os</h3>
+<p>Added <a class="reference internal" href="../library/os.html#py:data:os.cld_killed"><code class="xref py data docutils literal">CLD_KILLED</code></a> and <a class="reference internal" href="../library/os.html#py:data:os.cld_stopped"><code class="xref py data docutils literal">CLD_STOPPED</code></a> for <code class="xref py attribute docutils literal">si_code</code>.
+(Contributed by Donghee Na in :issue:`38493`.)</p>
+<p>Exposed the Linux-specific <a class="reference internal" href="../library/os.html#py:function:os.pidfd_open"><code class="xref py function docutils literal">os.pidfd_open</code></a> (:issue:`38692`) and
+<a class="reference internal" href="../library/os.html#py:data:os.p_pidfd"><code class="xref py data docutils literal">os.P_PIDFD</code></a> (:issue:`38713`) for process management with file
+descriptors.</p>
+<p>The <a class="reference internal" href="../library/os.html#py:function:os.unsetenv"><code class="xref py function docutils literal">os.unsetenv</code></a> function is now also available on Windows.
+(Contributed by Victor Stinner in :issue:`39413`.)</p>
+<p>The <a class="reference internal" href="../library/os.html#py:function:os.putenv"><code class="xref py function docutils literal">os.putenv</code></a> and <a class="reference internal" href="../library/os.html#py:function:os.unsetenv"><code class="xref py function docutils literal">os.unsetenv</code></a> functions are now always
+available.
+(Contributed by Victor Stinner in :issue:`39395`.)</p>
+<p>Added <a class="reference internal" href="../library/os.html#py:function:os.waitstatus_to_exitcode"><code class="xref py function docutils literal">os.waitstatus_to_exitcode</code></a> function:
+convert a wait status to an exit code.
+(Contributed by Victor Stinner in :issue:`40094`.)</p>
+<h3 id="pathlib">pathlib</h3>
+<p>Added <a class="reference internal" href="../library/pathlib.html#py:method:pathlib.path.readlink"><code class="xref py method docutils literal">pathlib.Path.readlink</code></a> which acts similarly to
+<a class="reference internal" href="../library/os.html#py:function:os.readlink"><code class="xref py function docutils literal">os.readlink</code></a>.
+(Contributed by Girts Folkmanis in :issue:`30618`)</p>
+<h3 id="pdb">pdb</h3>
+<p>On Windows now <a class="reference internal" href="../library/pdb.html#py:class:pdb.pdb"><code class="xref py class docutils literal">Pdb</code></a> supports <code>~/.pdbrc</code>.
+(Contributed by Tim Hopper and Dan Lidral-Porter in :issue:`20523`.)</p>
+<h3 id="poplib">poplib</h3>
+<p><a class="reference internal" href="../library/poplib.html#py:class:poplib.pop3"><code class="xref py class docutils literal">POP3</code></a> and <a class="reference internal" href="../library/poplib.html#py:class:poplib.pop3_ssl"><code class="xref py class docutils literal">POP3_SSL</code></a> now raise a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a>
+if the given timeout for their constructor is zero to prevent the creation of
+a non-blocking socket. (Contributed by Donghee Na in :issue:`39259`.)</p>
+<h3 id="pprint">pprint</h3>
+<p><a class="reference internal" href="../library/pprint.html#py:module:pprint" title="pprint: Data pretty printer."><code class="xref py module docutils literal">pprint</code></a> can now pretty-print <a class="reference internal" href="../library/types.html#py:class:types.simplenamespace"><code class="xref py class docutils literal">types.SimpleNamespace</code></a>.
+(Contributed by Carl Bordum Hansen in :issue:`37376`.)</p>
+<h3 id="pydoc">pydoc</h3>
+<p>The documentation string is now shown not only for class, function,
+method etc, but for any object that has its own <a class="reference internal" href="../library/stdtypes.html#py:attribute:definition.__doc__"><code class="xref py attribute docutils literal">__doc__</code></a>
+attribute.
+(Contributed by Serhiy Storchaka in :issue:`40257`.)</p>
+<h3 id="random">random</h3>
+<p>Added a new <a class="reference internal" href="../library/random.html#py:method:random.random.randbytes"><code class="xref py method docutils literal">random.Random.randbytes</code></a> method: generate random bytes.
+(Contributed by Victor Stinner in :issue:`40286`.)</p>
+<h3 id="signal">signal</h3>
+<p>Exposed the Linux-specific <a class="reference internal" href="../library/signal.html#py:function:signal.pidfd_send_signal"><code class="xref py function docutils literal">signal.pidfd_send_signal</code></a> for sending to
+signals to a process using a file descriptor instead of a pid. (:issue:`38712`)</p>
+<h3 id="smtplib">smtplib</h3>
+<p><a class="reference internal" href="../library/smtplib.html#py:class:smtplib.smtp"><code class="xref py class docutils literal">SMTP</code></a> and <a class="reference internal" href="../library/smtplib.html#py:class:smtplib.smtp_ssl"><code class="xref py class docutils literal">SMTP_SSL</code></a> now raise a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a>
+if the given timeout for their constructor is zero to prevent the creation of
+a non-blocking socket. (Contributed by Donghee Na in :issue:`39259`.)</p>
+<p><a class="reference internal" href="../library/smtplib.html#py:class:smtplib.lmtp"><code class="xref py class docutils literal">LMTP</code></a> constructor  now has an optional <em>timeout</em> parameter.
+(Contributed by Donghee Na in :issue:`39329`.)</p>
+<h3 id="socket">socket</h3>
+<p>The <a class="reference internal" href="../library/socket.html#py:module:socket" title="socket: Low-level networking interface."><code class="xref py module docutils literal">socket</code></a> module now exports the <a class="reference internal" href="../library/socket.html#py:data:socket.can_raw_join_filters"><code class="xref py data docutils literal">CAN_RAW_JOIN_FILTERS</code></a>
+constant on Linux 4.1 and greater.
+(Contributed by Stefan Tatschner and Zackery Spytz in :issue:`25780`.)</p>
+<p>The socket module now supports the <a class="reference internal" href="../library/socket.html#py:data:socket.can_j1939"><code class="xref py data docutils literal">CAN_J1939</code></a> protocol on
+platforms that support it.  (Contributed by Karl Ding in :issue:`40291`.)</p>
+<p>The socket module now has the <a class="reference internal" href="../library/socket.html#py:function:socket.send_fds"><code class="xref py function docutils literal">socket.send_fds</code></a> and
+<a class="reference internal" href="../library/socket.html#py:function:socket.recv_fds"><code class="xref py function docutils literal">socket.recv_fds</code></a> functions. (Contributed by Joannah Nanjekye, Shinya
+Okano and Victor Stinner in :issue:`28724`.)</p>
+<h3 id="time">time</h3>
+<p>On AIX, <a class="reference internal" href="../library/time.html#py:function:time.thread_time"><code class="xref py function docutils literal">thread_time</code></a> is now implemented with <code>thread_cputime()</code>
+which has nanosecond resolution, rather than
+<code>clock_gettime(CLOCK_THREAD_CPUTIME_ID)</code> which has a resolution of 10 milliseconds.
+(Contributed by Batuhan Taskaya in :issue:`40192`)</p>
+<h3 id="sys">sys</h3>
+<p>Added a new <a class="reference internal" href="../library/sys.html#py:data:sys.platlibdir"><code class="xref py data docutils literal">sys.platlibdir</code></a> attribute: name of the platform-specific
+library directory. It is used to build the path of standard library and the
+paths of installed extension modules. It is equal to <code>"lib"</code> on most
+platforms.  On Fedora and SuSE, it is equal to <code>"lib64"</code> on 64-bit platforms.
+(Contributed by Jan Matějek, Matěj Cepl, Charalampos Stratakis and Victor Stinner in :issue:`1294959`.)</p>
+<p>Previously, <a class="reference internal" href="../library/sys.html#py:data:sys.stderr"><code class="xref py data docutils literal">sys.stderr</code></a> was block-buffered when non-interactive. Now
+<code>stderr</code> defaults to always being line-buffered.
+(Contributed by Jendrik Seipp in :issue:`13601`.)</p>
+<h3 id="tracemalloc">tracemalloc</h3>
+<p>Added <a class="reference internal" href="../library/tracemalloc.html#py:function:tracemalloc.reset_peak"><code class="xref py function docutils literal">tracemalloc.reset_peak</code></a> to set the peak size of traced memory
+blocks to the current size, to measure the peak of specific pieces of code.
+(Contributed by Huon Wilson in :issue:`40630`.)</p>
+<h3 id="typing">typing</h3>
+<p><span class="target" id="index-17"></span><a class="pep reference external" href="https://peps.python.org/pep-0593/"><strong>PEP 593</strong></a> introduced an <a class="reference internal" href="../library/typing.html#py:data:typing.annotated"><code class="xref py data docutils literal">typing.Annotated</code></a> type to decorate existing
+types with context-specific metadata and new <code>include_extras</code> parameter to
+<a class="reference internal" href="../library/typing.html#py:function:typing.get_type_hints"><code class="xref py function docutils literal">typing.get_type_hints</code></a> to access the metadata at runtime. (Contributed
+by Till Varoquaux and Konstantin Kashin.)</p>
+<h3 id="unicodedata">unicodedata</h3>
+<p>The Unicode database has been updated to version 13.0.0. (:issue:`39926`).</p>
+<h3 id="venv">venv</h3>
+<p>The activation scripts provided by <a class="reference internal" href="../library/venv.html#py:module:venv" title="venv: Creation of virtual environments."><code class="xref py module docutils literal">venv</code></a> now all specify their prompt
+customization consistently by always using the value specified by
+<code>__VENV_PROMPT__</code>. Previously some scripts unconditionally used
+<code>__VENV_PROMPT__</code>, others only if it happened to be set (which was the default
+case), and one used <code>__VENV_NAME__</code> instead.
+(Contributed by Brett Cannon in :issue:`37663`.)</p>
+<h3 id="xml">xml</h3>
+<p>White space characters within attributes are now preserved when serializing
+<a class="reference internal" href="../library/xml.etree.elementtree.html#py:module:xml.etree.elementtree" title="xml.etree.ElementTree: Implementation of the ElementTree API."><code class="xref py module docutils literal">xml.etree.ElementTree</code></a> to XML file. EOLNs are no longer normalized
+to "n". This is the result of discussion about how to interpret
+section 2.11 of XML spec.
+(Contributed by Mefistotelis in :issue:`39011`.)</p>
+<h2 id="optimizations">Optimizations</h2>
+<ul>
+<li><p>Optimized the idiom for assignment a temporary variable in comprehensions.
+Now <code>for y in [expr]</code> in comprehensions is as fast as a simple assignment
+<code>y = expr</code>.  For example:</p>
+<blockquote>
+<p>sums = [s for s in [0] for x in data for s in [s + x]]</p>
+</blockquote>
+<p>Unlike the <code>:=</code> operator this idiom does not leak a variable to the
+outer scope.</p>
+<p>(Contributed by Serhiy Storchaka in :issue:`32856`.)</p>
+</li>
+<li><p>Optimized signal handling in multithreaded applications. If a thread different
+than the main thread gets a signal, the bytecode evaluation loop is no longer
+interrupted at each bytecode instruction to check for pending signals which
+cannot be handled. Only the main thread of the main interpreter can handle
+signals.</p>
+<p>Previously, the bytecode evaluation loop was interrupted at each instruction
+until the main thread handles signals.
+(Contributed by Victor Stinner in :issue:`40010`.)</p>
+</li>
+<li><p>Optimized the <a class="reference internal" href="../library/subprocess.html#py:module:subprocess" title="subprocess: Subprocess management."><code class="xref py module docutils literal">subprocess</code></a> module on FreeBSD using <code>closefrom()</code>.
+(Contributed by Ed Maste, Conrad Meyer, Kyle Evans, Kubilay Kocak and Victor
+Stinner in :issue:`38061`.)</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/long.html#c:function:pylong_fromdouble"><code class="xref c function docutils literal">PyLong_FromDouble</code></a> is now up to 1.87x faster for values that
+fit into :c:expr:`long`.
+(Contributed by Sergey Fedoseev in :issue:`37986`.)</p>
+</li>
+<li><p>A number of Python builtins (<a class="reference internal" href="../library/stdtypes.html#py:class:range"><code class="xref py class docutils literal">range</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:tuple"><code class="xref py class docutils literal">tuple</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:set"><code class="xref py class docutils literal">set</code></a>,
+<a class="reference internal" href="../library/stdtypes.html#py:class:frozenset"><code class="xref py class docutils literal">frozenset</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:list"><code class="xref py class docutils literal">list</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:dict"><code class="xref py class docutils literal">dict</code></a>) are now sped up by using
+<span class="target" id="index-18"></span><a class="pep reference external" href="https://peps.python.org/pep-0590/"><strong>PEP 590</strong></a> vectorcall protocol.
+(Contributed by Donghee Na, Mark Shannon, Jeroen Demeyer and Petr Viktorin in :issue:`37207`.)</p>
+</li>
+<li><p>Optimized <code class="xref py method docutils literal">set.difference_update</code> for the case when the other set
+is much larger than the base set.
+(Suggested by Evgeny Kapun with code contributed by Michele Orrù in :issue:`8425`.)</p>
+</li>
+<li><p>Python's small object allocator (<code>obmalloc.c</code>) now allows (no more than)
+one empty arena to remain available for immediate reuse, without returning
+it to the OS.  This prevents thrashing in simple loops where an arena could
+be created and destroyed anew on each iteration.
+(Contributed by Tim Peters in :issue:`37257`.)</p>
+</li>
+<li><p><a class="reference internal" href="../glossary.html#term-floor-division"><span class="xref std std-term">floor division</span></a> of float operation now has a better performance. Also
+the message of <a class="reference internal" href="../library/exceptions.html#py:exception:zerodivisionerror"><code class="xref py exception docutils literal">ZeroDivisionError</code></a> for this operation is updated.
+(Contributed by Donghee Na in :issue:`39434`.)</p>
+</li>
+<li><p>Decoding short ASCII strings with UTF-8 and ascii codecs is now about
+15% faster.  (Contributed by Inada Naoki in :issue:`37348`.)</p>
+</li>
+</ul>
+<p>Here's a summary of performance improvements from Python 3.4 through Python 3.9:</p>
+<div class="highlight-none notranslate">
+<div class="highlight hl-code"><pre>
+Python version                       3.4     3.5     3.6     3.7     3.8    3.9
+--------------                       ---     ---     ---     ---     ---    ---
+
+Variable and attribute read access:
+    read_local                       7.1     7.1     5.4     5.1     3.9    3.9
+    read_nonlocal                    7.1     8.1     5.8     5.4     4.4    4.5
+    read_global                     15.5    19.0    14.3    13.6     7.6    7.8
+    read_builtin                    21.1    21.6    18.5    19.0     7.5    7.8
+    read_classvar_from_class        25.6    26.5    20.7    19.5    18.4   17.9
+    read_classvar_from_instance     22.8    23.5    18.8    17.1    16.4   16.9
+    read_instancevar                32.4    33.1    28.0    26.3    25.4   25.3
+    read_instancevar_slots          27.8    31.3    20.8    20.8    20.2   20.5
+    read_namedtuple                 73.8    57.5    45.0    46.8    18.4   18.7
+    read_boundmethod                37.6    37.9    29.6    26.9    27.7   41.1
+
+Variable and attribute write access:
+    write_local                      8.7     9.3     5.5     5.3     4.3    4.3
+    write_nonlocal                  10.5    11.1     5.6     5.5     4.7    4.8
+    write_global                    19.7    21.2    18.0    18.0    15.8   16.7
+    write_classvar                  92.9    96.0   104.6   102.1    39.2   39.8
+    write_instancevar               44.6    45.8    40.0    38.9    35.5   37.4
+    write_instancevar_slots         35.6    36.1    27.3    26.6    25.7   25.8
+
+Data structure read access:
+    read_list                       24.2    24.5    20.8    20.8    19.0   19.5
+    read_deque                      24.7    25.5    20.2    20.6    19.8   20.2
+    read_dict                       24.3    25.7    22.3    23.0    21.0   22.4
+    read_strdict                    22.6    24.3    19.5    21.2    18.9   21.5
+
+Data structure write access:
+    write_list                      27.1    28.5    22.5    21.6    20.0   20.0
+    write_deque                     28.7    30.1    22.7    21.8    23.5   21.7
+    write_dict                      31.4    33.3    29.3    29.2    24.7   25.4
+    write_strdict                   28.4    29.9    27.5    25.2    23.1   24.5
+
+Stack (or queue) operations:
+    list_append_pop                 93.4   112.7    75.4    74.2    50.8   50.6
+    deque_append_pop                43.5    57.0    49.4    49.2    42.5   44.2
+    deque_append_popleft            43.7    57.3    49.7    49.7    42.8   46.4
+
+Timing loop:
+    loop_overhead                    0.5     0.6     0.4     0.3     0.3    0.3</pre></div>
+</div>
+<p>These results were generated from the variable access benchmark script at:
+<code>Tools/scripts/var_access_benchmark.py</code>. The benchmark script displays timings
+in nanoseconds.  The benchmarks were measured on an
+<a href="https://ark.intel.com/content/www/us/en/ark/products/76088/intel-core-i7-4960hq-processor-6m-cache-up-to-3-80-ghz.html">Intel® Core™ i7-4960HQ processor</a>
+running the macOS 64-bit builds found at
+<a href="https://www.python.org/downloads/macos/">python.org</a>.</p>
+<h2 id="deprecated">Deprecated</h2>
+<ul>
+<li><p>The distutils <code>bdist_msi</code> command is now deprecated, use
+<code>bdist_wheel</code> (wheel packages) instead.
+(Contributed by Hugo van Kemenade in :issue:`39586`.)</p>
+</li>
+<li><p>Currently <a class="reference internal" href="../library/math.html#py:function:math.factorial"><code class="xref py function docutils literal">math.factorial</code></a> accepts <a class="reference internal" href="../library/functions.html#py:class:float"><code class="xref py class docutils literal">float</code></a> instances with
+non-negative integer values (like <code>5.0</code>).  It raises a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a>
+for non-integral and negative floats.  It is now deprecated.  In future
+Python versions it will raise a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> for all floats.
+(Contributed by Serhiy Storchaka in :issue:`37315`.)</p>
+</li>
+<li><p>The <code class="xref py module docutils literal">parser</code> and <code class="xref py module docutils literal">symbol</code> modules are deprecated and will be
+removed in future versions of Python. For the majority of use cases,
+users can leverage the Abstract Syntax Tree (AST) generation and compilation
+stage, using the <a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a> module.</p>
+</li>
+<li><p>The Public C API functions <code class="xref c function docutils literal">PyParser_SimpleParseStringFlags</code>,
+<code class="xref c function docutils literal">PyParser_SimpleParseStringFlagsFilename</code>,
+<code class="xref c function docutils literal">PyParser_SimpleParseFileFlags</code> and <code class="xref c function docutils literal">PyNode_Compile</code>
+are deprecated and will be removed in Python 3.10 together with the old parser.</p>
+</li>
+<li><p>Using <a class="reference internal" href="../library/constants.html#py:data:notimplemented"><code class="xref py data docutils literal">NotImplemented</code></a> in a boolean context has been deprecated,
+as it is almost exclusively the result of incorrect rich comparator
+implementations. It will be made a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> in a future version
+of Python.
+(Contributed by Josh Rosenberg in :issue:`35712`.)</p>
+</li>
+<li><p>The <a class="reference internal" href="../library/random.html#py:module:random" title="random: Generate pseudo-random numbers with various common distributions."><code class="xref py module docutils literal">random</code></a> module currently accepts any hashable type as a
+possible seed value.  Unfortunately, some of those types are not
+guaranteed to have a deterministic hash value.  After Python 3.9,
+the module will restrict its seeds to <a class="reference internal" href="../library/constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a>, <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>,
+<a class="reference internal" href="../library/functions.html#py:class:float"><code class="xref py class docutils literal">float</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>, <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>, and <a class="reference internal" href="../library/stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a>.</p>
+</li>
+<li><p>Opening the <a class="reference internal" href="../library/gzip.html#py:class:gzip.gzipfile"><code class="xref py class docutils literal">GzipFile</code></a> file for writing without specifying
+the <em>mode</em> argument is deprecated.  In future Python versions it will always
+be opened for reading by default.  Specify the <em>mode</em> argument for opening
+it for writing and silencing a warning.
+(Contributed by Serhiy Storchaka in :issue:`28286`.)</p>
+</li>
+<li><p>Deprecated the <code>split()</code> method of <code class="xref py class docutils literal">_tkinter.TkappType</code> in
+favour of the <code>splitlist()</code> method which has more consistent and
+predictable behavior.
+(Contributed by Serhiy Storchaka in :issue:`38371`.)</p>
+</li>
+<li><p>The explicit passing of coroutine objects to <a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.wait"><code class="xref py function docutils literal">asyncio.wait</code></a> has been
+deprecated and will be removed in version 3.11.
+(Contributed by Yury Selivanov and Kyle Stanley in :issue:`34790`.)</p>
+</li>
+<li><p>binhex4 and hexbin4 standards are now deprecated. The <code class="xref py module docutils literal">binhex</code> module
+and the following <a class="reference internal" href="../library/binascii.html#py:module:binascii" title="binascii: Tools for converting between binary and various ASCII-encoded binary representations."><code class="xref py module docutils literal">binascii</code></a> functions are now deprecated:</p>
+<ul>
+<li><p><code class="xref py function docutils literal">b2a_hqx</code>, <code class="xref py function docutils literal">a2b_hqx</code></p>
+</li>
+<li><p><code class="xref py function docutils literal">rlecode_hqx</code>, <code class="xref py function docutils literal">rledecode_hqx</code></p>
+</li>
+</ul>
+<p>(Contributed by Victor Stinner in :issue:`39353`.)</p>
+</li>
+<li><p><a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a> classes <code>slice</code>, <code>Index</code> and <code>ExtSlice</code> are considered deprecated
+and will be removed in future Python versions.  <code>value</code> itself should be
+used instead of <code>Index(value)</code>.  <code>Tuple(slices, Load())</code> should be
+used instead of <code>ExtSlice(slices)</code>.
+(Contributed by Serhiy Storchaka in :issue:`34822`.)</p>
+</li>
+<li><p><a class="reference internal" href="../library/ast.html#py:module:ast" title="ast: Abstract Syntax Tree classes and manipulation."><code class="xref py module docutils literal">ast</code></a> classes <code>Suite</code>, <code>Param</code>, <code>AugLoad</code> and <code>AugStore</code>
+are considered deprecated and will be removed in future Python versions.
+They were not generated by the parser and not accepted by the code
+generator in Python 3.
+(Contributed by Batuhan Taskaya in :issue:`39639` and :issue:`39969`
+and Serhiy Storchaka in :issue:`39988`.)</p>
+</li>
+<li><p>The <code class="xref c function docutils literal">PyEval_InitThreads</code> and <code class="xref c function docutils literal">PyEval_ThreadsInitialized</code>
+functions are now deprecated and will be removed in Python 3.11. Calling
+<code class="xref c function docutils literal">PyEval_InitThreads</code> now does nothing. The <a class="reference internal" href="../glossary.html#term-gil"><span class="xref std std-term">GIL</span></a> is initialized
+by <a class="reference internal" href="../c-api/init.html#c:function:py_initialize"><code class="xref c function docutils literal">Py_Initialize</code></a> since Python 3.7.
+(Contributed by Victor Stinner in :issue:`39877`.)</p>
+</li>
+<li><p>Passing <code>None</code> as the first argument to the <a class="reference internal" href="../library/shlex.html#py:function:shlex.split"><code class="xref py function docutils literal">shlex.split</code></a> function
+has been deprecated.  (Contributed by Zackery Spytz in :issue:`33262`.)</p>
+</li>
+<li><p><code class="xref py function docutils literal">smtpd.MailmanProxy</code> is now deprecated as it is unusable without
+an external module, <code>mailman</code>.  (Contributed by Samuel Colvin in :issue:`35800`.)</p>
+</li>
+<li><p>The <code class="xref py module docutils literal">lib2to3</code> module now emits a <a class="reference internal" href="../library/exceptions.html#py:exception:pendingdeprecationwarning"><code class="xref py exception docutils literal">PendingDeprecationWarning</code></a>.
+Python 3.9 switched to a PEG parser (see <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0617/"><strong>PEP 617</strong></a>), and Python 3.10 may
+include new language syntax that is not parsable by lib2to3's LL(1) parser.
+The <code class="xref py module docutils literal">lib2to3</code> module may be removed from the standard library in a future
+Python version. Consider third-party alternatives such as <a href="https://libcst.readthedocs.io/">LibCST</a> or
+<a href="https://parso.readthedocs.io/">parso</a>.
+(Contributed by Carl Meyer in :issue:`40360`.)</p>
+</li>
+<li><p>The <em>random</em> parameter of <a class="reference internal" href="../library/random.html#py:function:random.shuffle"><code class="xref py function docutils literal">random.shuffle</code></a> has been deprecated.
+(Contributed by Raymond Hettinger in :issue:`40465`)</p>
+</li>
+</ul>
+<a id="removed-in-python-39"></a>
+<h2 id="removed">Removed</h2>
+<ul>
+<li><p>The erroneous version at <code class="xref py data docutils literal">unittest.mock.__version__</code> has been removed.</p>
+</li>
+<li><p><code class="xref py class docutils literal">nntplib.NNTP</code>: <code>xpath()</code> and <code>xgtitle()</code> methods have been removed.
+These methods are deprecated since Python 3.3. Generally, these extensions
+are not supported or not enabled by NNTP server administrators.
+For <code>xgtitle()</code>, please use <code class="xref py method docutils literal">nntplib.NNTP.descriptions</code> or
+<code class="xref py method docutils literal">nntplib.NNTP.description</code> instead.
+(Contributed by Donghee Na in :issue:`39366`.)</p>
+</li>
+<li><p><a class="reference internal" href="../library/array.html#py:class:array.array"><code class="xref py class docutils literal">array.array</code></a>: <code>tostring()</code> and <code>fromstring()</code> methods have been
+removed. They were aliases to <code>tobytes()</code> and <code>frombytes()</code>, deprecated
+since Python 3.2.
+(Contributed by Victor Stinner in :issue:`38916`.)</p>
+</li>
+<li><p>The undocumented <code>sys.callstats()</code> function has been removed. Since Python
+3.7, it was deprecated and always returned <a class="reference internal" href="../library/constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a>. It required a special
+build option <code>CALL_PROFILE</code> which was already removed in Python 3.7.
+(Contributed by Victor Stinner in :issue:`37414`.)</p>
+</li>
+<li><p>The <code>sys.getcheckinterval()</code> and <code>sys.setcheckinterval()</code> functions have
+been removed. They were deprecated since Python 3.2. Use
+<a class="reference internal" href="../library/sys.html#py:function:sys.getswitchinterval"><code class="xref py function docutils literal">sys.getswitchinterval</code></a> and <a class="reference internal" href="../library/sys.html#py:function:sys.setswitchinterval"><code class="xref py function docutils literal">sys.setswitchinterval</code></a> instead.
+(Contributed by Victor Stinner in :issue:`37392`.)</p>
+</li>
+<li><p>The C function <code>PyImport_Cleanup()</code> has been removed. It was documented as:
+"Empty the module table.  For internal use only."
+(Contributed by Victor Stinner in :issue:`36710`.)</p>
+</li>
+<li><p><code>_dummy_thread</code> and <code>dummy_threading</code> modules have been removed. These
+modules were deprecated since Python 3.7 which requires threading support.
+(Contributed by Victor Stinner in :issue:`37312`.)</p>
+</li>
+<li><p><code>aifc.openfp()</code> alias to <code>aifc.open()</code>, <code>sunau.openfp()</code> alias to
+<code>sunau.open()</code>, and <code>wave.openfp()</code> alias to <a class="reference internal" href="../library/wave.html#py:function:wave.open"><code class="xref py function docutils literal">wave.open</code></a> have been
+removed. They were deprecated since Python 3.7.
+(Contributed by Victor Stinner in :issue:`37320`.)</p>
+</li>
+<li><p>The <code class="xref py method docutils literal">isAlive</code> method of <a class="reference internal" href="../library/threading.html#py:class:threading.thread"><code class="xref py class docutils literal">threading.Thread</code></a>
+has been removed. It was deprecated since Python 3.8.
+Use <a class="reference internal" href="../library/threading.html#py:method:threading.thread.is_alive"><code class="xref py method docutils literal">is_alive</code></a> instead.
+(Contributed by Donghee Na in :issue:`37804`.)</p>
+</li>
+<li><p>Methods <code>getchildren()</code> and <code>getiterator()</code> of classes
+<a class="reference internal" href="../library/xml.etree.elementtree.html#py:class:xml.etree.elementtree.elementtree"><code class="xref py class docutils literal">ElementTree</code></a> and
+<a class="reference internal" href="../library/xml.etree.elementtree.html#py:class:xml.etree.elementtree.element"><code class="xref py class docutils literal">Element</code></a> in the <a class="reference internal" href="../library/xml.etree.elementtree.html#py:module:xml.etree.elementtree" title="xml.etree.ElementTree: Implementation of the ElementTree API."><code class="xref py module docutils literal">ElementTree</code></a>
+module have been removed.  They were deprecated in Python 3.2.
+Use <code>iter(x)</code> or <code>list(x)</code> instead of <code>x.getchildren()</code> and
+<code>x.iter()</code> or <code>list(x.iter())</code> instead of <code>x.getiterator()</code>.
+(Contributed by Serhiy Storchaka in :issue:`36543`.)</p>
+</li>
+<li><p>The old <a class="reference internal" href="../library/plistlib.html#py:module:plistlib" title="plistlib: Generate and parse Apple plist files."><code class="xref py module docutils literal">plistlib</code></a> API has been removed, it was deprecated since Python
+3.4. Use the <a class="reference internal" href="../library/plistlib.html#py:function:plistlib.load"><code class="xref py function docutils literal">load</code></a>, <a class="reference internal" href="../library/plistlib.html#py:function:plistlib.loads"><code class="xref py function docutils literal">loads</code></a>, <a class="reference internal" href="../library/plistlib.html#py:function:plistlib.dump"><code class="xref py function docutils literal">dump</code></a>, and
+<a class="reference internal" href="../library/plistlib.html#py:function:plistlib.dumps"><code class="xref py function docutils literal">dumps</code></a> functions. Additionally, the <em>use_builtin_types</em> parameter was
+removed, standard <a class="reference internal" href="../library/stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> objects are always used instead.
+(Contributed by Jon Janzen in :issue:`36409`.)</p>
+</li>
+<li><p>The C function <code>PyGen_NeedsFinalizing</code> has been removed. It was not
+documented, tested, or used anywhere within CPython after the implementation
+of <span class="target" id="index-20"></span><a class="pep reference external" href="https://peps.python.org/pep-0442/"><strong>PEP 442</strong></a>. Patch by Joannah Nanjekye.
+(Contributed by Joannah Nanjekye in :issue:`15088`)</p>
+</li>
+<li><p><code>base64.encodestring()</code> and <code>base64.decodestring()</code>, aliases deprecated
+since Python 3.1, have been removed: use <a class="reference internal" href="../library/base64.html#py:function:base64.encodebytes"><code class="xref py function docutils literal">base64.encodebytes</code></a> and
+<a class="reference internal" href="../library/base64.html#py:function:base64.decodebytes"><code class="xref py function docutils literal">base64.decodebytes</code></a> instead.
+(Contributed by Victor Stinner in :issue:`39351`.)</p>
+</li>
+<li><p><code>fractions.gcd()</code> function has been removed, it was deprecated since Python
+3.5 (:issue:`22486`): use <a class="reference internal" href="../library/math.html#py:function:math.gcd"><code class="xref py function docutils literal">math.gcd</code></a> instead.
+(Contributed by Victor Stinner in :issue:`39350`.)</p>
+</li>
+<li><p>The <em>buffering</em> parameter of <a class="reference internal" href="../library/bz2.html#py:class:bz2.bz2file"><code class="xref py class docutils literal">bz2.BZ2File</code></a> has been removed. Since
+Python 3.0, it was ignored and using it emitted a <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>.
+Pass an open file object to control how the file is opened.
+(Contributed by Victor Stinner in :issue:`39357`.)</p>
+</li>
+<li><p>The <em>encoding</em> parameter of <a class="reference internal" href="../library/json.html#py:function:json.loads"><code class="xref py function docutils literal">json.loads</code></a> has been removed.
+As of Python 3.1, it was deprecated and ignored; using it has emitted a
+<a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> since Python 3.8.
+(Contributed by Inada Naoki in :issue:`39377`)</p>
+</li>
+<li><p><code>with (await asyncio.lock):</code> and <code>with (yield from asyncio.lock):</code> statements are
+not longer supported, use <code>async with lock</code> instead.  The same is correct for
+<code>asyncio.Condition</code> and <code>asyncio.Semaphore</code>.
+(Contributed by Andrew Svetlov in :issue:`34793`.)</p>
+</li>
+<li><p>The <code class="xref py function docutils literal">sys.getcounts</code> function, the <code>-X showalloccount</code> command line
+option and the <code>show_alloc_count</code> field of the C structure
+<a class="reference internal" href="../c-api/init_config.html#c:type:pyconfig"><code class="xref c type docutils literal">PyConfig</code></a> have been removed. They required a special Python build by
+defining <code>COUNT_ALLOCS</code> macro.
+(Contributed by Victor Stinner in :issue:`39489`.)</p>
+</li>
+<li><p>The <code>_field_types</code> attribute of the <a class="reference internal" href="../library/typing.html#py:class:typing.namedtuple"><code class="xref py class docutils literal">typing.NamedTuple</code></a> class
+has been removed.  It was deprecated since Python 3.8.  Use
+the <code>__annotations__</code> attribute instead.
+(Contributed by Serhiy Storchaka in :issue:`40182`.)</p>
+</li>
+<li><p>The <code class="xref py method docutils literal">symtable.SymbolTable.has_exec</code> method has been removed. It was
+deprecated since 2006, and only returning <code>False</code> when it's called.
+(Contributed by Batuhan Taskaya in :issue:`40208`)</p>
+</li>
+<li><p>The <code class="xref py method docutils literal">asyncio.Task.current_task</code> and <code class="xref py method docutils literal">asyncio.Task.all_tasks</code>
+have been removed. They were deprecated since Python 3.7 and you can use
+<a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.current_task"><code class="xref py function docutils literal">asyncio.current_task</code></a> and <a class="reference internal" href="../library/asyncio-task.html#py:function:asyncio.all_tasks"><code class="xref py function docutils literal">asyncio.all_tasks</code></a> instead.
+(Contributed by Rémi Lapeyre in :issue:`40967`)</p>
+</li>
+<li><p>The <code>unescape()</code> method in the <a class="reference internal" href="../library/html.parser.html#py:class:html.parser.htmlparser"><code class="xref py class docutils literal">html.parser.HTMLParser</code></a> class
+has been removed (it was deprecated since Python 3.4).  <a class="reference internal" href="../library/html.html#py:function:html.unescape"><code class="xref py function docutils literal">html.unescape</code></a>
+should be used for converting character references to the corresponding
+unicode characters.</p>
+</li>
+</ul>
+<h2 id="porting-to-python-3-9">Porting to Python 3.9</h2>
+<p>This section lists previously described changes and other bugfixes
+that may require changes to your code.</p>
+<h3 id="changes-in-the-python-api">Changes in the Python API</h3>
+<ul>
+<li><p><a class="reference internal" href="../library/functions.html#py:function:__import__"><code class="xref py function docutils literal">__import__</code></a> and <a class="reference internal" href="../library/importlib.html#py:function:importlib.util.resolve_name"><code class="xref py function docutils literal">importlib.util.resolve_name</code></a> now raise
+<a class="reference internal" href="../library/exceptions.html#py:exception:importerror"><code class="xref py exception docutils literal">ImportError</code></a> where it previously raised <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a>. Callers
+catching the specific exception type and supporting both Python 3.9 and
+earlier versions will need to catch both using <code>except (ImportError, ValueError):</code>.</p>
+</li>
+<li><p>The <a class="reference internal" href="../library/venv.html#py:module:venv" title="venv: Creation of virtual environments."><code class="xref py module docutils literal">venv</code></a> activation scripts no longer special-case when
+<code>__VENV_PROMPT__</code> is set to <code>""</code>.</p>
+</li>
+<li><p>The <a class="reference internal" href="../library/select.html#py:method:select.epoll.unregister"><code class="xref py method docutils literal">select.epoll.unregister</code></a> method no longer ignores the
+<a class="reference internal" href="../library/errno.html#py:data:errno.ebadf"><code class="xref py data docutils literal">EBADF</code></a> error.
+(Contributed by Victor Stinner in :issue:`39239`.)</p>
+</li>
+<li><p>The <em>compresslevel</em> parameter of <a class="reference internal" href="../library/bz2.html#py:class:bz2.bz2file"><code class="xref py class docutils literal">bz2.BZ2File</code></a> became keyword-only,
+since the <em>buffering</em> parameter has been removed.
+(Contributed by Victor Stinner in :issue:`39357`.)</p>
+</li>
+<li><p>Simplified AST for subscription. Simple indices will be represented by
+their value, extended slices will be represented as tuples.
+<code>Index(value)</code> will return a <code>value</code> itself, <code>ExtSlice(slices)</code>
+will return <code>Tuple(slices, Load())</code>.
+(Contributed by Serhiy Storchaka in :issue:`34822`.)</p>
+</li>
+<li><p>The <a class="reference internal" href="../library/importlib.html#py:module:importlib" title="importlib: The implementation of the import machinery."><code class="xref py module docutils literal">importlib</code></a> module now ignores the :envvar:`PYTHONCASEOK`
+environment variable when the <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-e"><code class="xref std cmdoption docutils literal">-E</code></a> or <a class="reference internal" href="../using/cmdline.html#std:cmdoption:-i"><code class="xref std cmdoption docutils literal">-I</code></a> command line
+options are being used.</p>
+</li>
+<li><p>The <em>encoding</em> parameter has been added to the classes <a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">ftplib.FTP</code></a> and
+<a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp_tls"><code class="xref py class docutils literal">ftplib.FTP_TLS</code></a> as a keyword-only parameter, and the default encoding
+is changed from Latin-1 to UTF-8 to follow <span class="target" id="index-21"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2640.html"><strong>RFC 2640</strong></a>.</p>
+</li>
+<li><p><a class="reference internal" href="../library/asyncio-eventloop.html#py:method:asyncio.loop.shutdown_default_executor"><code class="xref py method docutils literal">asyncio.loop.shutdown_default_executor</code></a> has been added to
+<a class="reference internal" href="../library/asyncio-eventloop.html#py:class:asyncio.abstracteventloop"><code class="xref py class docutils literal">AbstractEventLoop</code></a>, meaning alternative event loops that
+inherit from it should have this method defined.
+(Contributed by Kyle Stanley in :issue:`34037`.)</p>
+</li>
+<li><p>The constant values of future flags in the <a class="reference internal" href="../library/__future__.html#py:module:__future__" title="__future__: Future statement definitions"><code class="xref py module docutils literal">__future__</code></a> module
+is updated in order to prevent collision with compiler flags. Previously
+<code>PyCF_ALLOW_TOP_LEVEL_AWAIT</code> was clashing with <code>CO_FUTURE_DIVISION</code>.
+(Contributed by Batuhan Taskaya in :issue:`39562`)</p>
+</li>
+<li><p><code>array('u')</code> now uses <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> as C type instead of <code>Py_UNICODE</code>.
+This change doesn't affect to its behavior because <code>Py_UNICODE</code> is alias
+of <a href="#" class="broken-link"><code class="xref c type docutils literal">wchar_t</code></a> since Python 3.3.
+(Contributed by Inada Naoki in :issue:`34538`.)</p>
+</li>
+<li><p>The <a class="reference internal" href="../library/logging.html#py:function:logging.getlogger"><code class="xref py function docutils literal">logging.getLogger</code></a> API now returns the root logger when passed
+the name <code>'root'</code>, whereas previously it returned a non-root logger named
+<code>'root'</code>. This could affect cases where user code explicitly wants a
+non-root logger named <code>'root'</code>, or instantiates a logger using
+<code>logging.getLogger(__name__)</code> in some top-level module called <code>'root.py'</code>.
+(Contributed by Vinay Sajip in :issue:`37742`.)</p>
+</li>
+<li><p>Division handling of <a class="reference internal" href="../library/pathlib.html#py:class:pathlib.purepath"><code class="xref py class docutils literal">PurePath</code></a> now returns <a class="reference internal" href="../library/constants.html#py:data:notimplemented"><code class="xref py data docutils literal">NotImplemented</code></a>
+instead of raising a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> when passed something other than an
+instance of <code>str</code> or <a class="reference internal" href="../library/pathlib.html#py:class:pathlib.purepath"><code class="xref py class docutils literal">PurePath</code></a>.  This allows creating
+compatible classes that don't inherit from those mentioned types.
+(Contributed by Roger Aiudi in :issue:`34775`).</p>
+</li>
+<li><p>Starting with Python 3.9.5 the <a class="reference internal" href="../library/ipaddress.html#py:module:ipaddress" title="ipaddress: IPv4/IPv6 manipulation library."><code class="xref py module docutils literal">ipaddress</code></a> module no longer
+accepts any leading zeros in IPv4 address strings. Leading zeros are
+ambiguous and interpreted as octal notation by some libraries. For example
+the legacy function <a class="reference internal" href="../library/socket.html#py:function:socket.inet_aton"><code class="xref py function docutils literal">socket.inet_aton</code></a> treats leading zeros as octal
+notatation. glibc implementation of modern <a class="reference internal" href="../library/socket.html#py:function:socket.inet_pton"><code class="xref py function docutils literal">inet_pton</code></a> does
+not accept any leading zeros.
+(Contributed by Christian Heimes in :issue:`36384`).</p>
+</li>
+<li><p><a class="reference internal" href="../library/codecs.html#py:function:codecs.lookup"><code class="xref py function docutils literal">codecs.lookup</code></a> now normalizes the encoding name the same way as
+<a class="reference internal" href="../library/codecs.html#py:function:encodings.normalize_encoding"><code class="xref py function docutils literal">encodings.normalize_encoding</code></a>, except that <a class="reference internal" href="../library/codecs.html#py:function:codecs.lookup"><code class="xref py function docutils literal">codecs.lookup</code></a> also
+converts the name to lower case. For example, <code>"latex+latin1"</code> encoding
+name is now normalized to <code>"latex_latin1"</code>.
+(Contributed by Jordon Xu in :issue:`37751`.)</p>
+</li>
+</ul>
+<h3 id="changes-in-the-c-api">Changes in the C API</h3>
+<ul>
+<li><p>Instances of <a href="../c-api/typeobj.html#heap-types">heap-allocated types</a> (such as those created with
+<a class="reference internal" href="../c-api/type.html#c:function:pytype_fromspec"><code class="xref c function docutils literal">PyType_FromSpec</code></a> and similar APIs) hold a reference to their type
+object since Python 3.8. As indicated in the "Changes in the C API" of Python
+3.8, for the vast majority of cases, there should be no side effect but for
+types that have a custom <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_traverse"><code class="xref c member docutils literal">tp_traverse</code></a> function,
+ensure that all custom <code>tp_traverse</code> functions of heap-allocated types
+visit the object's type.</p>
+<blockquote>
+<p>Example:</p>
+<div class="highlight-c notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-storage hl-type hl-c">int</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">foo_traverse</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span> visitproc <span class="hl-variable hl-parameter hl-c">visit</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-storage hl-type hl-c">void</span> <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">arg</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> Rest of the traverse function
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-preprocessor hl-c"><span class="hl-keyword hl-control hl-import hl-c">#if</span> PY_VERSION_HEX &gt;= 0x03090000
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> This was not needed before Python 3.9 (Python issue 35810 and 40217)
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_VISIT</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_TYPE</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-preprocessor hl-c"><span class="hl-keyword hl-control hl-import hl-c">#endif</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></pre></div>
+</div>
+</blockquote>
+<p>If your traverse function delegates to <code>tp_traverse</code> of its base class
+(or another type), ensure that <code>Py_TYPE(self)</code> is visited only once.
+Note that only <a href="../c-api/typeobj.html#heap-types">heap type</a> are expected to visit the type
+in <code>tp_traverse</code>.</p>
+<blockquote>
+<p>For example, if your <code>tp_traverse</code> function includes:</p>
+<div class="highlight-c notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">base<span class="hl-punctuation hl-accessor hl-c">-&gt;</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">tp_traverse</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self<span class="hl-punctuation hl-separator hl-c">,</span> visit<span class="hl-punctuation hl-separator hl-c">,</span> arg</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span></pre></div>
+</div>
+<p>then add:</p>
+<div class="highlight-c notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-c"><span class="hl-keyword hl-control hl-import hl-c">#if</span> PY_VERSION_HEX &gt;= 0x03090000
+</span></span>
+<span class="hl-source hl-c">    <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> This was not needed before Python 3.9 (bpo-35810 and bpo-40217)
+</span></span>
+<span class="hl-source hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>base<span class="hl-punctuation hl-accessor hl-c">-&gt;</span>tp_flags <span class="hl-keyword hl-operator hl-c">&amp;</span> Py_TPFLAGS_HEAPTYPE<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> a heap type&#39;s tp_traverse already visited Py_TYPE(self)
+</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span> <span class="hl-keyword hl-control hl-c">else</span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_VISIT</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_TYPE</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-c"><span class="hl-keyword hl-control hl-import hl-c">#else</span></span></span></pre></div>
+</div>
+</blockquote>
+<p>(See :issue:`35810` and :issue:`40217` for more information.)</p>
+</li>
+<li><p>The functions <code>PyEval_CallObject</code>, <code>PyEval_CallFunction</code>,
+<code>PyEval_CallMethod</code> and <code>PyEval_CallObjectWithKeywords</code> are deprecated.
+Use <a class="reference internal" href="../c-api/call.html#c:function:pyobject_call"><code class="xref c function docutils literal">PyObject_Call</code></a> and its variants instead.
+(See more details in :issue:`29548`.)</p>
+</li>
+</ul>
+<h3 id="cpython-bytecode-changes">CPython bytecode changes</h3>
+<ul>
+<li><p>The :opcode:`!LOAD_ASSERTION_ERROR` opcode was added for handling the
+:keyword:`assert` statement. Previously, the assert statement would not work
+correctly if the <a class="reference internal" href="../library/exceptions.html#py:exception:assertionerror"><code class="xref py exception docutils literal">AssertionError</code></a> exception was being shadowed.
+(Contributed by Zackery Spytz in :issue:`34880`.)</p>
+</li>
+<li><p>The :opcode:`COMPARE_OP` opcode was split into four distinct instructions:</p>
+<ul>
+<li><p><code>COMPARE_OP</code> for rich comparisons</p>
+</li>
+<li><p><code>IS_OP</code> for 'is' and 'is not' tests</p>
+</li>
+<li><p><code>CONTAINS_OP</code> for 'in' and 'not in' tests</p>
+</li>
+<li><p><code>JUMP_IF_NOT_EXC_MATCH</code> for checking exceptions in 'try-except'
+statements.</p>
+</li>
+</ul>
+<p>(Contributed by Mark Shannon in :issue:`39156`.)</p>
+</li>
+</ul>
+<h2 id="build-changes">Build Changes</h2>
+<ul>
+<li><p>Added <code>--with-platlibdir</code> option to the <code>configure</code> script: name of the
+platform-specific library directory, stored in the new <a class="reference internal" href="../library/sys.html#py:data:sys.platlibdir"><code class="xref py data docutils literal">sys.platlibdir</code></a>
+attribute. See <a class="reference internal" href="../library/sys.html#py:data:sys.platlibdir"><code class="xref py data docutils literal">sys.platlibdir</code></a> attribute for more information.
+(Contributed by Jan Matějek, Matěj Cepl, Charalampos Stratakis
+and Victor Stinner in :issue:`1294959`.)</p>
+</li>
+<li><p>The <code>COUNT_ALLOCS</code> special build macro has been removed.
+(Contributed by Victor Stinner in :issue:`39489`.)</p>
+</li>
+<li><p>On non-Windows platforms, the <code class="xref c function docutils literal">setenv</code> and <code class="xref c function docutils literal">unsetenv</code>
+functions are now required to build Python.
+(Contributed by Victor Stinner in :issue:`39395`.)</p>
+</li>
+<li><p>On non-Windows platforms, creating <code>bdist_wininst</code> installers is now
+officially unsupported.  (See :issue:`10945` for more details.)</p>
+</li>
+<li><p>When building Python on macOS from source, <code>_tkinter</code> now links with
+non-system Tcl and Tk frameworks if they are installed in
+<code>/Library/Frameworks</code>, as had been the case on older releases
+of macOS. If a macOS SDK is explicitly configured, by using
+<a class="reference internal" href="../using/configure.html#std:cmdoption:--enable-universalsdk"><code class="xref std cmdoption docutils literal">--enable-universalsdk</code></a> or <code>-isysroot</code>, only the SDK itself is
+searched. The default behavior can still be overridden with
+<code>--with-tcltk-includes</code> and <code>--with-tcltk-libs</code>.
+(Contributed by Ned Deily in :issue:`34956`.)</p>
+</li>
+<li><p>Python can now be built for Windows 10 ARM64.
+(Contributed by Steve Dower in :issue:`33125`.)</p>
+</li>
+<li><p>Some individual tests are now skipped when <code>--pgo</code> is used.  The tests
+in question increased the PGO task time significantly and likely
+didn't help improve optimization of the final executable. This
+speeds up the task by a factor of about 15x.  Running the full unit test
+suite is slow.  This change may result in a slightly less optimized build
+since not as many code branches will be executed.  If you are willing to
+wait for the much slower build, the old behavior can be restored using
+<code>./configure [..] PROFILE_TASK="-m test --pgo-extended"</code>.  We make no
+guarantees as to which PGO task set produces a faster build.  Users who care
+should run their own relevant benchmarks as results can depend on the
+environment, workload, and compiler tool chain.
+(See :issue:`36044` and :issue:`37707` for more details.)</p>
+</li>
+</ul>
+<h2 id="c-api-changes">C API Changes</h2>
+<h3 id="new-features-1">New Features</h3>
+<ul>
+<li><p><span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0573/"><strong>PEP 573</strong></a>: Added <a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a> to associate
+a module with a class; <a class="reference internal" href="../c-api/type.html#c:function:pytype_getmodule"><code class="xref c function docutils literal">PyType_GetModule</code></a> and
+<a class="reference internal" href="../c-api/type.html#c:function:pytype_getmodulestate"><code class="xref c function docutils literal">PyType_GetModuleState</code></a> to retrieve the module and its state; and
+<a class="reference internal" href="../c-api/structures.html#c:type:pycmethod"><code class="xref c type docutils literal">PyCMethod</code></a> and <a class="reference internal" href="../c-api/structures.html#c:macro:meth_method"><code class="xref c macro docutils literal">METH_METHOD</code></a> to allow a method to
+access the class it was defined in.
+(Contributed by Marcel Plch and Petr Viktorin in :issue:`38787`.)</p>
+</li>
+<li><p>Added <a class="reference internal" href="../c-api/frame.html#c:function:pyframe_getcode"><code class="xref c function docutils literal">PyFrame_GetCode</code></a> function: get a frame code.
+Added <a class="reference internal" href="../c-api/frame.html#c:function:pyframe_getback"><code class="xref c function docutils literal">PyFrame_GetBack</code></a> function: get the frame next outer frame.
+(Contributed by Victor Stinner in :issue:`40421`.)</p>
+</li>
+<li><p>Added <a class="reference internal" href="../c-api/frame.html#c:function:pyframe_getlinenumber"><code class="xref c function docutils literal">PyFrame_GetLineNumber</code></a> to the limited C API.
+(Contributed by Victor Stinner in :issue:`40421`.)</p>
+</li>
+<li><p>Added <a class="reference internal" href="../c-api/init.html#c:function:pythreadstate_getinterpreter"><code class="xref c function docutils literal">PyThreadState_GetInterpreter</code></a> and
+<a class="reference internal" href="../c-api/init.html#c:function:pyinterpreterstate_get"><code class="xref c function docutils literal">PyInterpreterState_Get</code></a> functions to get the interpreter.
+Added <a class="reference internal" href="../c-api/init.html#c:function:pythreadstate_getframe"><code class="xref c function docutils literal">PyThreadState_GetFrame</code></a> function to get the current frame of a
+Python thread state.
+Added <a class="reference internal" href="../c-api/init.html#c:function:pythreadstate_getid"><code class="xref c function docutils literal">PyThreadState_GetID</code></a> function: get the unique identifier of a
+Python thread state.
+(Contributed by Victor Stinner in :issue:`39947`.)</p>
+</li>
+<li><p>Added a new public <a class="reference internal" href="../c-api/call.html#c:function:pyobject_callnoargs"><code class="xref c function docutils literal">PyObject_CallNoArgs</code></a> function to the C API, which
+calls a callable Python object without any arguments. It is the most efficient
+way to call a callable Python object without any argument.
+(Contributed by Victor Stinner in :issue:`37194`.)</p>
+</li>
+<li><p>Changes in the limited C API (if <code>Py_LIMITED_API</code> macro is defined):</p>
+<ul>
+<li><p>Provide <a class="reference internal" href="../c-api/exceptions.html#c:function:py_enterrecursivecall"><code class="xref c function docutils literal">Py_EnterRecursiveCall</code></a> and <a class="reference internal" href="../c-api/exceptions.html#c:function:py_leaverecursivecall"><code class="xref c function docutils literal">Py_LeaveRecursiveCall</code></a>
+as regular functions for the limited API. Previously, there were defined as
+macros, but these macros didn't compile with the limited C API which cannot
+access <code>PyThreadState.recursion_depth</code> field (the structure is opaque in
+the limited C API).</p>
+</li>
+<li><p><code>PyObject_INIT()</code> and <code>PyObject_INIT_VAR()</code> become regular "opaque"
+function to hide implementation details.</p>
+</li>
+</ul>
+<p>(Contributed by Victor Stinner in :issue:`38644` and :issue:`39542`.)</p>
+</li>
+<li><p>The <a class="reference internal" href="../c-api/module.html#c:function:pymodule_addtype"><code class="xref c function docutils literal">PyModule_AddType</code></a> function is added to help adding a type
+to a module.
+(Contributed by Donghee Na in :issue:`40024`.)</p>
+</li>
+<li><p>Added the functions <a class="reference internal" href="../c-api/gcsupport.html#c:function:pyobject_gc_istracked"><code class="xref c function docutils literal">PyObject_GC_IsTracked</code></a> and
+<a class="reference internal" href="../c-api/gcsupport.html#c:function:pyobject_gc_isfinalized"><code class="xref c function docutils literal">PyObject_GC_IsFinalized</code></a> to the public API to allow to query if
+Python objects are being currently tracked or have been already finalized by
+the garbage collector respectively.
+(Contributed by Pablo Galindo Salgado in :issue:`40241`.)</p>
+</li>
+<li><p>Added <code class="xref c function docutils literal">_PyObject_FunctionStr</code> to get a user-friendly string
+representation of a function-like object.
+(Patch by Jeroen Demeyer in :issue:`37645`.)</p>
+</li>
+<li><p>Added <a class="reference internal" href="../c-api/call.html#c:function:pyobject_callonearg"><code class="xref c function docutils literal">PyObject_CallOneArg</code></a> for calling an object with one
+positional argument
+(Patch by Jeroen Demeyer in :issue:`37483`.)</p>
+</li>
+</ul>
+<h3 id="porting-to-python-3-9-1">Porting to Python 3.9</h3>
+<ul>
+<li><p><code>PyInterpreterState.eval_frame</code> (<span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a>) now requires a new mandatory
+<em>tstate</em> parameter (<code>PyThreadState*</code>).
+(Contributed by Victor Stinner in :issue:`38500`.)</p>
+</li>
+<li><p>Extension modules: <a class="reference internal" href="../c-api/module.html#c:member:pymoduledef.m_traverse"><code class="xref c member docutils literal">m_traverse</code></a>,
+<a class="reference internal" href="../c-api/module.html#c:member:pymoduledef.m_clear"><code class="xref c member docutils literal">m_clear</code></a> and <a class="reference internal" href="../c-api/module.html#c:member:pymoduledef.m_free"><code class="xref c member docutils literal">m_free</code></a>
+functions of <a class="reference internal" href="../c-api/module.html#c:type:pymoduledef"><code class="xref c type docutils literal">PyModuleDef</code></a> are no longer called if the module state
+was requested but is not allocated yet. This is the case immediately after
+the module is created and before the module is executed
+(<a class="reference internal" href="../c-api/module.html#c:macro:py_mod_exec"><code class="xref c member docutils literal">Py_mod_exec</code></a> function). More precisely, these functions are not called
+if <a class="reference internal" href="../c-api/module.html#c:member:pymoduledef.m_size"><code class="xref c member docutils literal">m_size</code></a> is greater than 0 and the module state (as
+returned by <a class="reference internal" href="../c-api/module.html#c:function:pymodule_getstate"><code class="xref c function docutils literal">PyModule_GetState</code></a>) is <code>NULL</code>.</p>
+<p>Extension modules without module state (<code>m_size &lt;= 0</code>) are not affected.</p>
+</li>
+<li><p>If <a class="reference internal" href="../c-api/init.html#c:function:py_addpendingcall"><code class="xref c function docutils literal">Py_AddPendingCall</code></a> is called in a subinterpreter, the function is
+now scheduled to be called from the subinterpreter, rather than being called
+from the main interpreter. Each subinterpreter now has its own list of
+scheduled calls.
+(Contributed by Victor Stinner in :issue:`39984`.)</p>
+</li>
+<li><p>The Windows registry is no longer used to initialize <a class="reference internal" href="../library/sys.html#py:data:sys.path"><code class="xref py data docutils literal">sys.path</code></a> when
+the <code>-E</code> option is used (if <a class="reference internal" href="../c-api/init_config.html#c:member:pyconfig.use_environment"><code class="xref c member docutils literal">PyConfig.use_environment</code></a> is set to
+<code>0</code>). This is significant when embedding Python on Windows.
+(Contributed by Zackery Spytz in :issue:`8901`.)</p>
+</li>
+<li><p>The global variable <a class="reference internal" href="../c-api/tuple.html#c:member:pystructsequence_unnamedfield"><code class="xref c member docutils literal">PyStructSequence_UnnamedField</code></a> is now a constant
+and refers to a constant string.
+(Contributed by Serhiy Storchaka in :issue:`38650`.)</p>
+</li>
+<li><p>The <code class="xref c type docutils literal">PyGC_Head</code> structure is now opaque. It is only defined in the
+internal C API (<code>pycore_gc.h</code>).
+(Contributed by Victor Stinner in :issue:`40241`.)</p>
+</li>
+<li><p>The <code>Py_UNICODE_COPY</code>, <code>Py_UNICODE_FILL</code>, <code>PyUnicode_WSTR_LENGTH</code>,
+<code class="xref c function docutils literal">PyUnicode_FromUnicode</code>, <code class="xref c function docutils literal">PyUnicode_AsUnicode</code>,
+<code>_PyUnicode_AsUnicode</code>, and <code class="xref c function docutils literal">PyUnicode_AsUnicodeAndSize</code> are
+marked as deprecated in C.  They have been deprecated by <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a> since
+Python 3.3.
+(Contributed by Inada Naoki in :issue:`36346`.)</p>
+</li>
+<li><p>The <a class="reference internal" href="../c-api/sys.html#c:function:py_fatalerror"><code class="xref c function docutils literal">Py_FatalError</code></a> function is replaced with a macro which logs
+automatically the name of the current function, unless the
+<code>Py_LIMITED_API</code> macro is defined.
+(Contributed by Victor Stinner in :issue:`39882`.)</p>
+</li>
+<li><p>The vectorcall protocol now requires that the caller passes only strings as
+keyword names. (See :issue:`37540` for more information.)</p>
+</li>
+<li><p>Implementation details of a number of macros and functions are now hidden:</p>
+<ul>
+<li><p><a class="reference internal" href="../c-api/gcsupport.html#c:function:pyobject_is_gc"><code class="xref c function docutils literal">PyObject_IS_GC</code></a> macro was converted to a function.</p>
+</li>
+<li><p>The <code class="xref c function docutils literal">PyObject_NEW</code> macro becomes an alias to the
+<a class="reference internal" href="../c-api/allocation.html#c:macro:pyobject_new"><code class="xref c macro docutils literal">PyObject_New</code></a> macro, and the <code class="xref c function docutils literal">PyObject_NEW_VAR</code> macro
+becomes an alias to the <a class="reference internal" href="../c-api/allocation.html#c:macro:pyobject_newvar"><code class="xref c macro docutils literal">PyObject_NewVar</code></a> macro. They no longer
+access directly the <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_basicsize"><code class="xref c member docutils literal">PyTypeObject.tp_basicsize</code></a> member.</p>
+</li>
+<li><p><code class="xref c function docutils literal">PyObject_GET_WEAKREFS_LISTPTR</code> macro was converted to a function:
+the macro accessed directly the <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_weaklistoffset"><code class="xref c member docutils literal">PyTypeObject.tp_weaklistoffset</code></a>
+member.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/buffer.html#c:function:pyobject_checkbuffer"><code class="xref c function docutils literal">PyObject_CheckBuffer</code></a> macro was converted to a function: the macro
+accessed directly the <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_as_buffer"><code class="xref c member docutils literal">PyTypeObject.tp_as_buffer</code></a> member.</p>
+</li>
+<li><p><a class="reference internal" href="../c-api/number.html#c:function:pyindex_check"><code class="xref c function docutils literal">PyIndex_Check</code></a> is now always declared as an opaque function to hide
+implementation details: removed the <code>PyIndex_Check()</code> macro. The macro accessed
+directly the <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_as_number"><code class="xref c member docutils literal">PyTypeObject.tp_as_number</code></a> member.</p>
+</li>
+</ul>
+<p>(See :issue:`40170` for more details.)</p>
+</li>
+</ul>
+<h3 id="removed-1">Removed</h3>
+<ul>
+<li><p>Excluded <code>PyFPE_START_PROTECT()</code> and <code>PyFPE_END_PROTECT()</code> macros of
+<code>pyfpe.h</code> from the limited C API.
+(Contributed by Victor Stinner in :issue:`38835`.)</p>
+</li>
+<li><p>The <code>tp_print</code> slot of <a href="../c-api/typeobj.html#type-structs">PyTypeObject</a> has been removed.
+It was used for printing objects to files in Python 2.7 and before. Since
+Python 3.0, it has been ignored and unused.
+(Contributed by Jeroen Demeyer in :issue:`36974`.)</p>
+</li>
+<li><p>Changes in the limited C API (if <code>Py_LIMITED_API</code> macro is defined):</p>
+<ul>
+<li><p>Excluded the following functions from the limited C API:</p>
+<ul>
+<li><p><code>PyThreadState_DeleteCurrent()</code>
+(Contributed by Joannah Nanjekye in :issue:`37878`.)</p>
+</li>
+<li><p><code>_Py_CheckRecursionLimit</code></p>
+</li>
+<li><p><code>_Py_NewReference()</code></p>
+</li>
+<li><p><code>_Py_ForgetReference()</code></p>
+</li>
+<li><p><code>_PyTraceMalloc_NewReference()</code></p>
+</li>
+<li><p><code>_Py_GetRefTotal()</code></p>
+</li>
+<li><p>The trashcan mechanism which never worked in the limited C API.</p>
+</li>
+<li><p><code>PyTrash_UNWIND_LEVEL</code></p>
+</li>
+<li><p><code>Py_TRASHCAN_BEGIN_CONDITION</code></p>
+</li>
+<li><p><code>Py_TRASHCAN_BEGIN</code></p>
+</li>
+<li><p><code>Py_TRASHCAN_END</code></p>
+</li>
+<li><p><code>Py_TRASHCAN_SAFE_BEGIN</code></p>
+</li>
+<li><p><code>Py_TRASHCAN_SAFE_END</code></p>
+</li>
+</ul>
+</li>
+<li><p>Moved following functions and definitions to the internal C API:</p>
+<ul>
+<li><p><code>_PyDebug_PrintTotalRefs()</code></p>
+</li>
+<li><p><code>_Py_PrintReferences()</code></p>
+</li>
+<li><p><code>_Py_PrintReferenceAddresses()</code></p>
+</li>
+<li><p><code>_Py_tracemalloc_config</code></p>
+</li>
+<li><p><code>_Py_AddToAllObjects()</code> (specific to <code>Py_TRACE_REFS</code> build)</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>(Contributed by Victor Stinner in :issue:`38644` and :issue:`39542`.)</p>
+</li>
+<li><p>Removed <code>_PyRuntime.getframe</code> hook and removed <code>_PyThreadState_GetFrame</code>
+macro which was an alias to <code>_PyRuntime.getframe</code>. They were only exposed
+by the internal C API. Removed also <code>PyThreadFrameGetter</code> type.
+(Contributed by Victor Stinner in :issue:`39946`.)</p>
+</li>
+<li><p>Removed the following functions from the C API. Call <a class="reference internal" href="../c-api/gcsupport.html#c:function:pygc_collect"><code class="xref c function docutils literal">PyGC_Collect</code></a>
+explicitly to clear all free lists.
+(Contributed by Inada Naoki and Victor Stinner in :issue:`37340`,
+:issue:`38896` and :issue:`40428`.)</p>
+<ul>
+<li><p><code>PyAsyncGen_ClearFreeLists()</code></p>
+</li>
+<li><p><code>PyContext_ClearFreeList()</code></p>
+</li>
+<li><p><code>PyDict_ClearFreeList()</code></p>
+</li>
+<li><p><code>PyFloat_ClearFreeList()</code></p>
+</li>
+<li><p><code>PyFrame_ClearFreeList()</code></p>
+</li>
+<li><p><code>PyList_ClearFreeList()</code></p>
+</li>
+<li><p><code>PyMethod_ClearFreeList()</code> and <code>PyCFunction_ClearFreeList()</code>:
+the free lists of bound method objects have been removed.</p>
+</li>
+<li><p><code>PySet_ClearFreeList()</code>: the set free list has been removed
+in Python 3.4.</p>
+</li>
+<li><p><code>PyTuple_ClearFreeList()</code></p>
+</li>
+<li><p><code>PyUnicode_ClearFreeList()</code>: the Unicode free list has been removed in
+Python 3.3.</p>
+</li>
+</ul>
+</li>
+<li><p>Removed <code>_PyUnicode_ClearStaticStrings()</code> function.
+(Contributed by Victor Stinner in :issue:`39465`.)</p>
+</li>
+<li><p>Removed <code>Py_UNICODE_MATCH</code>. It has been deprecated by <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0393/"><strong>PEP 393</strong></a>, and
+broken since Python 3.3. The <a class="reference internal" href="../c-api/unicode.html#c:function:pyunicode_tailmatch"><code class="xref c function docutils literal">PyUnicode_Tailmatch</code></a> function can be
+used instead.
+(Contributed by Inada Naoki in :issue:`36346`.)</p>
+</li>
+<li><p>Cleaned header files of interfaces defined but with no implementation.
+The public API symbols being removed are:
+<code>_PyBytes_InsertThousandsGroupingLocale</code>,
+<code>_PyBytes_InsertThousandsGrouping</code>, <code>_Py_InitializeFromArgs</code>,
+<code>_Py_InitializeFromWideArgs</code>, <code>_PyFloat_Repr</code>, <code>_PyFloat_Digits</code>,
+<code>_PyFloat_DigitsInit</code>, <code>PyFrame_ExtendStack</code>, <code>_PyAIterWrapper_Type</code>,
+<code>PyNullImporter_Type</code>, <code>PyCmpWrapper_Type</code>, <code>PySortWrapper_Type</code>,
+<code>PyNoArgsFunction</code>.
+(Contributed by Pablo Galindo Salgado in :issue:`39372`.)</p>
+</li>
+</ul>
+<h2 id="notable-changes-in-python-3-9-1">Notable changes in Python 3.9.1</h2>
+<h3 id="typing-1">typing</h3>
+<p>The behavior of <a href="#" class="broken-link"><code class="xref py class docutils literal">typing.Literal</code></a> was changed to conform with <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0586/"><strong>PEP 586</strong></a>
+and to match the behavior of static type checkers specified in the PEP.</p>
+<ol class="arabic period">
+<li><p><code>Literal</code> now de-duplicates parameters.</p>
+</li>
+<li><p>Equality comparisons between <code>Literal</code> objects are now order independent.</p>
+</li>
+<li><p><code>Literal</code> comparisons now respect types.  For example,
+<code>Literal[0] == Literal[False]</code> previously evaluated to <code>True</code>.  It is
+now <code>False</code>.  To support this change, the internally used type cache now
+supports differentiating types.</p>
+</li>
+<li><p><code>Literal</code> objects will now raise a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> exception during
+equality comparisons if any of their parameters are not <a class="reference internal" href="../glossary.html#term-hashable"><span class="xref std std-term">hashable</span></a>.
+Note that declaring <code>Literal</code> with mutable parameters will not throw
+an error:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">typing</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">Literal</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Literal</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-set hl-python"><span class="hl-punctuation hl-section hl-set hl-begin hl-python">{</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-set hl-end hl-python">}</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Literal</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-set hl-python"><span class="hl-punctuation hl-section hl-set hl-begin hl-python">{</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-set hl-end hl-python">}</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Literal</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-meta hl-set hl-python"><span class="hl-punctuation hl-section hl-set hl-begin hl-python">{</span><span class="hl-constant hl-language hl-python">False</span><span class="hl-punctuation hl-section hl-set hl-end hl-python">}</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;stdin&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">module</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">TypeError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">unhashable</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">type</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">set<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+</li>
+</ol>
+<p>(Contributed by Yurii Karabas in :issue:`42345`.)</p>
+<h3 id="macos-11-0-big-sur-and-apple-silicon-mac-support">macOS 11.0 (Big Sur) and Apple Silicon Mac support</h3>
+<p>As of 3.9.1, Python now fully supports building and running on macOS 11.0
+(Big Sur) and on Apple Silicon Macs (based on the <code>ARM64</code> architecture).
+A new universal build variant, <code>universal2</code>, is now available to natively
+support both <code>ARM64</code> and <code>Intel 64</code> in one set of executables. Binaries
+can also now be built on current versions of macOS to be deployed on a range
+of older macOS versions (tested to 10.9) while making some newer OS
+functions and options conditionally available based on the operating system
+version in use at runtime ("weaklinking").</p>
+<p>(Contributed by Ronald Oussoren and Lawrence D'Anna in :issue:`41100`.)</p>
+<h2 id="notable-changes-in-python-3-9-2">Notable changes in Python 3.9.2</h2>
+<h3 id="collections-abc">collections.abc</h3>
+<p><a class="reference internal" href="../library/collections.abc.html#py:class:collections.abc.callable"><code class="xref py class docutils literal">collections.abc.Callable</code></a> generic now flattens type parameters, similar
+to what <a class="reference internal" href="../library/typing.html#py:data:typing.callable"><code class="xref py data docutils literal">typing.Callable</code></a> currently does.  This means that
+<code>collections.abc.Callable[[int, str], str]</code> will have <code>__args__</code> of
+<code>(int, str, str)</code>; previously this was <code>([int, str], str)</code>.  To allow this
+change, <a class="reference internal" href="../library/types.html#py:class:types.genericalias"><code class="xref py class docutils literal">types.GenericAlias</code></a> can now be subclassed, and a subclass will
+be returned when subscripting the <a class="reference internal" href="../library/collections.abc.html#py:class:collections.abc.callable"><code class="xref py class docutils literal">collections.abc.Callable</code></a> type.
+Code which accesses the arguments via <a class="reference internal" href="../library/typing.html#py:function:typing.get_args"><code class="xref py function docutils literal">typing.get_args</code></a> or <code>__args__</code>
+need to account for this change.  A <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> may be emitted for
+invalid forms of parameterizing <a class="reference internal" href="../library/collections.abc.html#py:class:collections.abc.callable"><code class="xref py class docutils literal">collections.abc.Callable</code></a> which may have
+passed silently in Python 3.9.1.  This <a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a> will
+become a <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> in Python 3.10.
+(Contributed by Ken Jin in :issue:`42195`.)</p>
+<h3 id="urllib-parse">urllib.parse</h3>
+<p>Earlier Python versions allowed using both <code>;</code> and <code>&amp;</code> as
+query parameter separators in <a class="reference internal" href="../library/urllib.parse.html#py:function:urllib.parse.parse_qs"><code class="xref py function docutils literal">urllib.parse.parse_qs</code></a> and
+<a class="reference internal" href="../library/urllib.parse.html#py:function:urllib.parse.parse_qsl"><code class="xref py function docutils literal">urllib.parse.parse_qsl</code></a>.  Due to security concerns, and to conform with
+newer W3C recommendations, this has been changed to allow only a single
+separator key, with <code>&amp;</code> as the default.  This change also affects
+<code class="xref py function docutils literal">cgi.parse</code> and <code class="xref py function docutils literal">cgi.parse_multipart</code> as they use the affected
+functions internally. For more details, please see their respective
+documentation.
+(Contributed by Adam Goldschmidt, Senthil Kumaran and Ken Jin in :issue:`42967`.)</p>
+<h2 id="notable-changes-in-python-3-9-3">Notable changes in Python 3.9.3</h2>
+<p>A security fix alters the <a class="reference internal" href="../library/ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">ftplib.FTP</code></a> behavior to not trust the
+IPv4 address sent from the remote server when setting up a passive data
+channel.  We reuse the ftp server IP address instead.  For unusual code
+requiring the old behavior, set a <code>trust_server_pasv_ipv4_address</code>
+attribute on your FTP instance to <code>True</code>.  (See :gh:`87451`)</p>
+<h2 id="notable-changes-in-python-3-9-5">Notable changes in Python 3.9.5</h2>
+<h3 id="urllib-parse-1">urllib.parse</h3>
+<p>The presence of newline or tab characters in parts of a URL allows for some
+forms of attacks. Following the WHATWG specification that updates <span class="target" id="index-27"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3986.html"><strong>RFC 3986</strong></a>,
+ASCII newline <code>\n</code>, <code>\r</code> and tab <code>\t</code> characters are stripped from the
+URL by the parser in <a class="reference internal" href="../library/urllib.parse.html#py:module:urllib.parse" title="urllib.parse: Parse URLs into or assemble them from components."><code class="xref py module docutils literal">urllib.parse</code></a> preventing such attacks. The removal
+characters are controlled by a new module level variable
+<code>urllib.parse._UNSAFE_URL_BYTES_TO_REMOVE</code>. (See :gh:`88048`)</p>
+<h2 id="notable-security-feature-in-3-9-14">Notable security feature in 3.9.14</h2>
+<p>Converting between <a class="reference internal" href="../library/functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a> and <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> in bases other than 2
+(binary), 4, 8 (octal), 16 (hexadecimal), or 32 such as base 10 (decimal)
+now raises a <a class="reference internal" href="../library/exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if the number of digits in string form is
+above a limit to avoid potential denial of service attacks due to the
+algorithmic complexity. This is a mitigation for <span class="target" id="index-28"></span><a class="cve reference external" href="https://www.cve.org/CVERecord?id=CVE-2020-10735"><strong>CVE 2020-10735</strong></a>.
+This limit can be configured or disabled by environment variable, command
+line flag, or <a class="reference internal" href="../library/sys.html#py:module:sys" title="sys: Access system-specific parameters and functions."><code class="xref py module docutils literal">sys</code></a> APIs. See the <a href="../library/stdtypes.html#int_max_str_digits">integer string conversion
+length limitation</a> documentation.  The default limit
+is 4300 digits in string form.</p>
+<h2 id="notable-changes-in-3-9-17">Notable changes in 3.9.17</h2>
+<h3 id="tarfile">tarfile</h3>
+<ul>
+<li><p>The extraction methods in <a class="reference internal" href="../library/tarfile.html#py:module:tarfile" title="tarfile: Read and write tar-format archive files."><code class="xref py module docutils literal">tarfile</code></a>, and <a class="reference internal" href="../library/shutil.html#py:function:shutil.unpack_archive"><code class="xref py function docutils literal">shutil.unpack_archive</code></a>,
+have a new a <em>filter</em> argument that allows limiting tar features than may be
+surprising or dangerous, such as creating files outside the destination
+directory.
+See <a href="../library/tarfile.html#tarfile-extraction-filter">Extraction filters</a> for details.
+In Python 3.12, use without the <em>filter</em> argument will show a
+<a class="reference internal" href="../library/exceptions.html#py:exception:deprecationwarning"><code class="xref py exception docutils literal">DeprecationWarning</code></a>.
+In Python 3.14, the default will switch to <code>'data'</code>.
+(Contributed by Petr Viktorin in <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="3.10.html">&larr; What&#x27;s New In Python 3.10</a>
+        <a class="next" href="3.8.html">What&#x27;s New In Python 3.8 &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

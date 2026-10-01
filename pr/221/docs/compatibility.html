@@ -1,0 +1,2201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compatibility status — rinx</title>
+  <link rel="stylesheet" href="../default.css">
+  <script defer src="../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">rinx</h2>
+        
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="getting_started.html">Getting started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="rules.html">Bazel rules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="syntax.html">Supported syntax</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="compatibility.html">Compatibility status</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Compatibility status"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="compatibility.html#heading-adornments">Heading adornments</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#inline-markup">Inline markup</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#block-level-elements">Block-level elements</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#tables">Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#directives">Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#extension-directives">Extension directives</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#domains">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#linking-between-sites-intersphinx">Linking between sites (intersphinx)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#document-structure">Document structure</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#diagnostics">Diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="compatibility.html#entities-rinx-extension">Entities (rinx extension)</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="entities.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="intersphinx.html">Linking between documentation sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="vscode.html">VS Code Extension Architecture for Rinx</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="benchmark.html">Benchmarking Rinx</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="syntax.html">&larr; Supported syntax</a>
+        <a class="next" href="entities.html">Entities &rarr;</a>
+      </nav>
+      
+      <a id="compatibility"></a>
+<h1 id="compatibility-status">Compatibility status</h1>
+<p>How rinx relates to <a href="https://docutils.sourceforge.io/rst.html">reStructuredText</a>, <a href="https://www.sphinx-doc.org/">Sphinx</a> and the Sphinx extensions it supports,
+construct by construct. <a href="syntax.html#syntax">Supported syntax</a> is the overview; this page is the full
+list. Notes only name what is missing or behaves differently.</p>
+<table class="list-table">
+<thead>
+<tr>
+<th><p>Status</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>✅</p>
+</td>
+<td><p>Supported.</p>
+</td>
+</tr>
+<tr>
+<td><p>✅ ℹ️</p>
+</td>
+<td><p>Supported, with deliberate deviations listed in the notes.</p>
+</td>
+</tr>
+<tr>
+<td><p>🔶</p>
+</td>
+<td><p>Partially supported: the notes list what is still missing.</p>
+</td>
+</tr>
+<tr>
+<td><p>❌</p>
+</td>
+<td><p>Not supported.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="heading-adornments">Heading adornments</h2>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Underline-only headings</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>An underline shorter than four characters silently degrades to
+text; docutils reports it at info level.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Overlined headings (<code>===</code> above <strong>and</strong> below the text)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A mismatched overline stays text and the rest reads as an underlined
+heading; docutils drops the block with a severe error.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Per-document level reset vs. project-wide level tracking</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Heading levels are assigned per document.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Inline markup and roles inside heading text</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="inline-markup">Inline markup</h2>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Bold (<code>**text**</code>) and italic (<code>*text*</code>)</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Inline literals (double-backquoted text)</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>:ref:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A label on a figure, table or code block without a caption shows
+the label; Sphinx warns.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:term:</code> role</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>:program:</code> role</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Domain-object role target modifiers: <code>!target</code>, <code>~target</code>,
+<code>.target</code>, trailing <code>target()</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Named and anonymous hyperlink references</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Smart typography (<code>---</code>, <code>--</code>, <code>...</code>)</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Inline-markup recognition rules (start/end-string context)</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>docutils' rule 5 (a marker inside a matching quote pair, e.g.
+<code>"*"</code>) is not implemented.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Backslash escapes</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>:math:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Rendered to MathML at build time, not by MathJax in the browser.</p>
+</li>
+<li><p>Stretchy brackets need a locally installed math font.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:eq:</code> role</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>:any:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A target naming several things is reported as
+<code>link.ambiguous-any</code> and not linked; Sphinx warns and links the
+first.</p>
+</li>
+<li><p>Glossary terms are found; Sphinx 9's <code>:any:</code> misses them.</p>
+</li>
+<li><p>A label above no heading is found, showing the label, as <code>:ref:</code>
+does here; Sphinx's <code>:any:</code> does not find it.</p>
+</li>
+<li><p>Entities are found, since each is a label.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:doc:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A leading <code>/</code> resolves from the Bazel workspace root, where every
+document's path starts, not from the directory holding the site's
+sources — as a toctree entry's does.</p>
+</li>
+<li><p>A target ending in <code>.rst</code> is found; Sphinx looks for a document
+named <code>….rst</code> and finds nothing.</p>
+</li>
+<li><p>An unknown document is drawn as a broken link and reported as
+<code>link.broken-doc</code>; Sphinx shows the target as plain text.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:download:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A file keeps its path from the Bazel workspace root under
+<code>_downloads/</code>; Sphinx copies it to <code>_downloads/&lt;hash&gt;/&lt;name&gt;</code>.</p>
+</li>
+<li><p>A leading <code>/</code> resolves from the Bazel workspace root, as
+<code>:doc:</code>'s does.</p>
+</li>
+<li><p>A file not declared in the library's <code>downloads</code> fails the build
+as <code>download.undeclared</code>; Sphinx warns and shows the text unlinked.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:numref:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A title Sphinx could not apply, such as one with no <code>%s</code> or
+<code>{number}</code>, is reported while parsing as
+<code>numref.invalid-format</code>; Sphinx warns while resolving it, and
+crashes on an unbalanced brace.</p>
+</li>
+<li><p>An unknown label is drawn as a broken link and reported as
+<code>link.broken-numref</code>; Sphinx shows the text.</p>
+</li>
+<li><p>A section numbered by <code>.. sectnum::</code> shows its number; Sphinx
+numbers only sections a <code>:numbered:</code> toctree reaches.</p>
+</li>
+<li><p><code>numfig_format</code> accepts <code>{number}</code>, which Sphinx cannot write
+in front of a caption, and refuses <code>{name}</code> when the site config
+loads.</p>
+</li>
+<li><p><code>:external:numref:</code> is refused as <code>numref.external</code>, since an
+<code>objects.inv</code> holds no numbers.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:code:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Rendered as <code>&lt;code class="code"&gt;</code>, without docutils'
+<code>docutils literal notranslate</code> classes or the
+<code>&lt;span class="pre"&gt;</code> around each word, as an inline literal is.</p>
+</li>
+<li><p>Highlighted by syntect's grammars rather than Pygments, as a code
+block is. A language no grammar highlights is reported as
+<code>code-role.unknown-language</code>; Sphinx warns as
+<code>misc.highlighting_failure</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:pep:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Only ASCII digits are a number: <code>+8</code>, <code>8_0</code> and non-ASCII
+digits, which Python's <code>int()</code> accepts, are refused.</p>
+</li>
+<li><p>A target that is not a number is reported as <code>pep.invalid-number</code>
+and shown as its source text; Sphinx reports an error and shows a
+<code>problematic</code> node.</p>
+</li>
+<li><p>The PEP index is <code>rinx.toml</code>'s <code>pep_base_url</code>, not a
+<code>docutils.conf</code> setting.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:PEP:</code> is not recognized;
+docutils matches role names case-insensitively.</p>
+</li>
+<li><p>Its index anchor is numbered after the document's <code>.. index::</code>
+anchors rather than in document order among them.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>docutils' <code>:pep-reference:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Only ASCII digits are a number, as for <code>:pep:</code>.</p>
+</li>
+<li><p>A target that is not a number from 0 to 9999 is reported as
+<code>pep-reference.invalid-number</code> and shown as its source text;
+docutils reports an error and shows a <code>problematic</code> node.</p>
+</li>
+<li><p>The PEP index is <code>rinx.toml</code>'s <code>pep_base_url</code>, and the page is
+always <code>pep-%04d</code>: docutils' <code>pep_file_url_template</code> cannot be
+changed.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:PEP-Reference:</code> is not
+recognized.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:rfc:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Only ASCII digits are a number, as for <code>:pep:</code>.</p>
+</li>
+<li><p>A target that is not a number is reported as <code>rfc.invalid-number</code>
+and shown as its source text; Sphinx reports an error and shows a
+<code>problematic</code> node.</p>
+</li>
+<li><p>The RFC index is <code>rinx.toml</code>'s <code>rfc_base_url</code>, not a
+<code>docutils.conf</code> setting.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:RFC:</code> is not recognized.</p>
+</li>
+<li><p>Its index anchor is numbered after the document's <code>.. index::</code>
+anchors, as for <code>:pep:</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:cve:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A target must be a year and a sequence number (<code>2024-3094</code>),
+optionally followed by <code>#</code> and an anchor; anything else is
+reported as <code>cve.invalid-id</code> and shown as its source text.
+Sphinx accepts any target, so a full <code>CVE-2024-3094</code> links
+<code>id=CVE-CVE-2024-3094</code> there without a warning; here it is
+refused with a hint to drop the prefix.</p>
+</li>
+<li><p>Role names are case-sensitive, and the index anchor is numbered as
+for <code>:pep:</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:cwe:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Only ASCII digits are a number, as for <code>:pep:</code>; anything else is
+reported as <code>cwe.invalid-number</code> and shown as its source text.</p>
+</li>
+<li><p>Role names are case-sensitive, and the index anchor is numbered as
+for <code>:pep:</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>docutils' <code>:rfc-reference:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Only ASCII digits are a number, as for <code>:pep:</code>.</p>
+</li>
+<li><p>A target that is not a number of at least 1 is reported as
+<code>rfc-reference.invalid-number</code> and shown as its source text;
+docutils reports an error and shows a <code>problematic</code> node.</p>
+</li>
+<li><p>The RFC index is <code>rinx.toml</code>'s <code>rfc_base_url</code>.</p>
+</li>
+<li><p>Role names are case-sensitive, so <code>:RFC-Reference:</code> is not
+recognized.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:index:</code> role</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>:sub:</code>/<code>:subscript:</code> and <code>:sup:</code>/<code>:superscript:</code> roles</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Default role (single-backquoted text without a role)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Semantic markup roles (<code>:abbr:</code>, <code>:command:</code>, <code>:dfn:</code>,
+<code>:file:</code>, <code>:guilabel:</code>, <code>:kbd:</code>, <code>:mailheader:</code>,
+<code>:makevar:</code>, <code>:manpage:</code>, <code>:menuselection:</code>, <code>:mimetype:</code>,
+<code>:newsgroup:</code>, <code>:regexp:</code>, <code>:samp:</code>)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Domain-object roles are listed under their domain in
+<a href="compatibility.html#compatibility-domains">Domains</a> below.</p>
+<h2 id="block-level-elements">Block-level elements</h2>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Bullet lists</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Enumerated lists</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>The prefix and suffix are rendered, so <code>(a)</code> and <code>a.</code> differ in
+the HTML; Sphinx drops them.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Definition lists</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Term classifiers (<code>term : classifier</code>) are not supported.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Field lists</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Only a document's leading field list is read, and only <code>:orphan:</code>
+is interpreted.</p>
+</li>
+<li><p>Field lists are not rendered.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Option lists</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Literal blocks</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Block quotes and attributions</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>An indented comment does not nest into a block quote.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Line blocks</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="tables">Tables</h2>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Grid tables</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Simple tables</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. table::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. list-table::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. csv-table::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:url:</code> is not supported: the build never fetches.</p>
+</li>
+<li><p><code>:encoding:</code> is UTF-8 only.</p>
+</li>
+<li><p><code>:delim:</code>, <code>:quote:</code> and <code>:escape:</code> must be ASCII.</p>
+</li>
+<li><p>A <code>:file:</code> must be declared in <code>parse_data</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="directives">Directives</h2>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>.. toctree::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. code-block::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:caption:</code> is plain text, not inline markup.</p>
+</li>
+<li><p>Session and traceback languages (<code>pycon</code>, <code>console</code>, <code>pytb</code>,
+…) render unhighlighted.</p>
+</li>
+<li><p>A few grammars (e.g. <code>powershell</code>) fall back to plain text with
+<code>code-block.highlight-failed</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. code::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. highlight::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Applies to the rest of the document, not just the enclosing block.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. index::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. index::</code> <code>see</code>/<code>seealso</code> entries</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Not shown in the general index.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Admonitions (<code>.. note::</code>, <code>.. warning::</code>, …,
+<code>.. admonition::</code>)</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. seealso::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. versionadded::</code>, <code>.. versionchanged::</code>,
+<code>.. deprecated::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. versionremoved::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. image::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A <code>:scale:</code> without <code>:width:</code> or <code>:height:</code> is dropped with
+<code>image.scale-no-dimensions</code>.</p>
+</li>
+<li><p><code>:loading: embed</code> on an external URL links it instead.</p>
+</li>
+<li><p>The <code>logo.*</code> wildcard is not supported.</p>
+</li>
+<li><p>Images keep their source path under <code>_images/</code> instead of being
+flattened.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. figure::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>As <code>.. image::</code>.</p>
+</li>
+<li><p><code>:figwidth: image</code> becomes CSS <code>width: fit-content</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. include::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:parser:</code> is not supported.</p>
+</li>
+<li><p><code>:encoding:</code> is UTF-8 only.</p>
+</li>
+<li><p>The file must be declared in <code>parse_data</code>, and not in <code>srcs</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. literalinclude::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:pyobject:</code> is refused; use <code>:start-after:</code>/<code>:end-before:</code>.</p>
+</li>
+<li><p><code>:lineno-match:</code> is refused with <code>:diff:</code> or a discontinuous
+<code>:lines:</code>.</p>
+</li>
+<li><p><code>:encoding:</code> is UTF-8 only.</p>
+</li>
+<li><p>The file must be declared in <code>parse_data</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>sphinx.ext.doctest</code> directives (<code>.. doctest::</code>,
+<code>.. testcode::</code>, …)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Executed by the opt-in <code>rinx_doctest_tests</code> target, not by the
+site build (see <a href="rules.html#rules">Bazel rules</a>).</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Doctest blocks (<code>&gt;&gt;&gt;</code> without a directive)</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. contents::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Cannot backlink sections that come before it.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. sectnum::</code> / <code>.. section-numbering::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:depth: 0</code> means unlimited.</p>
+</li>
+<li><p><code>:start: 0</code> is refused.</p>
+</li>
+<li><p>An unset <code>:suffix:</code> is empty, not a non-breaking space.</p>
+</li>
+<li><p><code>:prefix:</code> and <code>:suffix:</code> are trimmed of whitespace.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. math::</code></p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Multi-line equations use <code>aligned</code> instead of <code>split</code> (same
+layout).</p>
+</li>
+<li><p><code>math_number_all</code> and <code>math_numfig</code> are not supported: only
+labelled equations are numbered, per document.</p>
+</li>
+<li><p>Under <code>:nowrap:</code>, environments such as <code>align</code> restart their
+count in every directive.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>autodoc (<code>.. automodule::</code>, <code>.. autofunction::</code>, …)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td><ul>
+<li><p>Out of scope: it would import user code.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. topic::</code>, <code>.. sidebar::</code>, <code>.. rubric::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. epigraph::</code>, <code>.. highlights::</code>, <code>.. pull-quote::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. compound::</code>, <code>.. container::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. parsed-literal::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. raw::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. class::</code> / <code>.. rst-class::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. role::</code></p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Only a role derived from <code>code</code> (<code>.. role:: python(code)</code>), with
+<code>:language:</code> and <code>:class:</code>. Any other base, or none, is reported
+as <code>role.unsupported-base</code> and the role is not defined.</p>
+</li>
+<li><p>A name rinx already gives a role (<code>:ref:</code>, <code>:code:</code>, an entity
+role, …) is refused as <code>role.builtin-name</code>; docutils lets a
+document replace it.</p>
+</li>
+<li><p><code>:class:</code> names are normalized as docutils does, except that a
+non-ASCII letter is not reduced to its ASCII base first.</p>
+</li>
+<li><p><code>:language: none</code> highlights nothing and adds no <code>highlight</code>
+class; Sphinx adds <code>highlight none</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. default-role::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. meta::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. centered::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. hlist::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. productionlist::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. only::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td><ul>
+<li><p><code>.. if-builder::</code> covers the builder case.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. sectionauthor::</code>, <code>.. moduleauthor::</code>, <code>.. codeauthor::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. target-notes::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="extension-directives">Extension directives</h2>
+<p>rinx has no <code>extensions =</code> setting: a supported extension directive is
+always available, and its name cannot be used by an entity schema.</p>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>.. dropdown::</code> (sphinx-design)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>The bundled octicons are newer than sphinx-design's: <code>commit</code> is
+unknown, 57 newer names are accepted.</p>
+</li>
+<li><p><code>sd_custom_directives</code> and per-directive option defaults are not
+supported.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. grid::</code> / <code>.. grid-item::</code> (sphinx-design)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>sd_custom_directives</code> and per-directive option defaults are not
+supported.</p>
+</li>
+<li><p>Breakpoints use Bootstrap's widths; sphinx-design's stylesheet is
+not bundled.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. button-link::</code> (sphinx-design)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>No <code>reference external</code> classes on the link.</p>
+</li>
+<li><p><code>:ref-type:</code> is refused.</p>
+</li>
+<li><p><code>:outline:</code> without <code>:color:</code> warns.</p>
+</li>
+<li><p>A reference inside the label renders as its text.</p>
+</li>
+<li><p>The URL argument does not continue onto the next line.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:octicon:</code> role, material icons, <code>.. button-ref::</code>,
+<code>.. card::</code>, <code>.. grid-item-card::</code>, <code>.. tab-set::</code>
+(sphinx-design)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. needtable::</code> (sphinx-needs), as <code>.. entity-table::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:style: datatables</code> is refused.</p>
+</li>
+<li><p><code>:show_filters:</code>, <code>:show_parts:</code>, <code>:layout:</code> and
+<code>:filter-func:</code> are not supported.</p>
+</li>
+<li><p>Rows are ordered by id unless <code>:sort:</code> is given.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. needflow::</code> (sphinx-needs), as <code>.. entity-flow::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Without <code>:relations:</code>, every declared relation is drawn, not just
+<code>links</code>.</p>
+</li>
+<li><p>Edges to entities outside the filter are not drawn.</p>
+</li>
+<li><p><code>:direction:</code> is <code>TB</code> or <code>LR</code> only.</p>
+</li>
+<li><p><code>:show_filters:</code>, <code>:show_legend:</code>, <code>:highlight:</code>,
+<code>:border_color:</code>, <code>:filter-func:</code>, <code>:engine:</code>, the
+<code>:root_id:</code> family and <code>:tags:</code>/<code>:status:</code>/<code>:types:</code> are
+refused.</p>
+</li>
+<li><p>Needs <code>diagrams = True</code> on the library.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. needsequence::</code> (sphinx-needs), as <code>.. entity-sequence::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:relations:</code> is mandatory.</p>
+</li>
+<li><p>Several starts share one visited set: nothing is drawn twice.</p>
+</li>
+<li><p>Every lifeline is declared with its title.</p>
+</li>
+<li><p>An unknown start warns; the other starts are still drawn.</p>
+</li>
+<li><p><code>:show_filters:</code>, <code>:show_legend:</code>, <code>:show_link_names:</code>,
+<code>:highlight:</code>, <code>:filter-func:</code>, <code>:sort_by:</code>, <code>:export_id:</code>,
+<code>:filter_warning:</code>, <code>:height:</code>, <code>:engine:</code> and
+<code>:tags:</code>/<code>:status:</code>/<code>:types:</code> are refused.</p>
+</li>
+<li><p>Needs <code>diagrams = True</code> on the library.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. needpie::</code> (sphinx-needs), as <code>.. entity-pie::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:labels:</code> of the wrong length warns; the wedges are still drawn.</p>
+</li>
+<li><p><code>:explode:</code>, <code>:shadow:</code>, <code>:style:</code> and <code>:filter-func:</code> are
+refused.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. needbar::</code> (sphinx-needs), as <code>.. entity-bar::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A ragged row is padded with zeros and warns.</p>
+</li>
+<li><p>A label list of the wrong length keeps the data and warns.</p>
+</li>
+<li><p>A rotation that is not whole degrees is refused.</p>
+</li>
+<li><p><code>:style:</code> and <code>:status:</code>/<code>:tags:</code>/<code>:types:</code>/<code>:cypher:</code>
+are refused.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. needlist::</code> (sphinx-needs)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. needimport::</code> (sphinx-needs)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>The file must be declared in <code>parse_data</code>; a URL is refused.</p>
+</li>
+<li><p><code>needs_import_keys</code> is the <code>[import_keys]</code> table of the entity
+schema; an undeclared key is refused.</p>
+</li>
+<li><p><code>:hide:</code>, <code>:collapse:</code>, <code>:layout:</code>, <code>:style:</code>, <code>:setup:</code>,
+<code>:pre_template:</code> and <code>:post_template:</code> are refused.</p>
+</li>
+<li><p>Named sections cannot be imported.</p>
+</li>
+<li><p>Warnings from imported prose carry no position.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. needextend::</code> (sphinx-needs), as <code>.. entity-update::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Renders a box by default; set <code>show_entity_updates</code> to hide it.</p>
+</li>
+<li><p>The original value and every change stay traceable.</p>
+</li>
+<li><p>Conflicting updates warn.</p>
+</li>
+<li><p><code>id</code>, <code>type</code>, <code>type_name</code>, <code>docname</code>, <code>title</code> and
+sections cannot be changed.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. needservice::</code> (sphinx-needs)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td><ul>
+<li><p>Refused: the build never queries external services. Import a
+<code>needs.json</code> with <code>.. needimport::</code> instead.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Dynamic functions (<code>[[copy('id')]]</code>, sphinx-needs)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. uml::</code> / <code>.. plantuml::</code> (sphinxcontrib-plantuml)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Needs <code>diagrams = True</code> on the library.</p>
+</li>
+<li><p>Laid out by the ELK engine bundled in PlantUML, never a Graphviz
+<code>dot</code> on the host, so layouts differ from a Sphinx build's.</p>
+</li>
+<li><p><code>:scale:</code> without <code>:width:</code> warns.</p>
+</li>
+<li><p><code>:save:</code> is refused.</p>
+</li>
+<li><p><code>:config:</code> names a preamble in <code>rinx.toml</code>'s <code>[uml_configs]</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. needuml::</code> / <code>.. needarch::</code> (sphinx-needs), as
+<code>.. entity-diagram::</code> / <code>.. entity-arch::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>As <code>.. uml::</code>.</p>
+</li>
+<li><p><code>imports()</code> takes an explicit id.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. if-builder::</code> (sphinx-simplepdf)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>No <code>&lt;div class="docutils container"&gt;</code> wrapper, so headings inside
+stay sections.</p>
+</li>
+<li><p>An unknown builder name warns.</p>
+</li>
+<li><p>An empty selected body warns.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. ifinclude::</code>, <code>.. pdfinclude::</code> (sphinx-simplepdf)</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<a id="compatibility-domains"></a>
+<h2 id="domains">Domains</h2>
+<h3 id="python-py">Python (<code>py</code>)</h3>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>.. py:function::</code> and <code>:func:</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. py:module::</code> and <code>:mod:</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p><code>:synopsis:</code>, <code>:platform:</code> and <code>:deprecated:</code> are shown only
+in the Python Module Index and a <code>:mod:</code> link's tooltip, as in
+Sphinx; a synopsis wrapped over several lines is joined with a
+space, where Sphinx keeps the line break in the tooltip.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Python Module Index (<code>py-modindex.html</code>)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Opt-in with <code>domain_indices = ["py-modindex"]</code> on <code>rinx_site</code>,
+where Sphinx writes it whenever a module is documented.</p>
+</li>
+<li><p>Submodules fold without JavaScript, behind a checkbox toggle.</p>
+</li>
+<li><p><code>:ref:`modindex`</code> and <code>:ref:`py-modindex`</code> are broken links on
+a site without the index, where Sphinx links a page it never wrote.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. py:currentmodule::</code> and the <code>:module:</code> option</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. py:data::</code> and <code>:data:</code>/<code>:const:</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. py:method::</code> and <code>:meth:</code></p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p><code>:property:</code> and <code>:no-index:</code> are not supported.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. classmethod::</code> / <code>.. staticmethod::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. py:class::</code> and <code>:class:</code></p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p><code>:canonical:</code>, <code>:no-index:</code> and other options are not
+supported.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. py:attribute::</code> and <code>:attr:</code></p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p><code>:canonical:</code> is shown but creates no alias.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. py:exception::</code> and <code>:exc:</code></p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Signature wrapping options (<code>:single-line-parameter-list:</code>, …)
+are not supported.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:exc:</code>/<code>:class:</code> resolving to either kind</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p><code>:obj:</code> is not supported.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Qualification by nesting and by <code>.. py:module::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="c-c">C (<code>c</code>)</h3>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>.. c:function::</code> and <code>:func:</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. c:macro::</code> and <code>:macro:</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. c:struct::</code>, <code>.. c:union::</code>, <code>.. c:member::</code>,
+<code>.. c:var::</code> and their roles</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p><code>:no-contents-entry:</code> has no effect.</p>
+</li>
+<li><p><code>:no-typesetting:</code> is not supported.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:data:</code> role</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. c:type::</code> and <code>:type:</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. c:enum::</code> / <code>.. c:enumerator::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. c:namespace::</code>, <code>.. c:namespace-push::</code>,
+<code>.. c:namespace-pop::</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>An unmatched push inside a body ends with that body.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Name extraction from C declarations</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Multiple declarators, K&amp;R definitions, expressions in array sizes
+and macro wrappers such as <code>PyAPI_FUNC(...)</code> fall back to a
+heuristic with a warning.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="standard-std">Standard (<code>std</code>)</h3>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>.. option::</code> / <code>.. cmdoption::</code> and <code>:option:</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Keys are case-insensitive, so <code>-X</code> and <code>-x</code> collide.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. program::</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. glossary::</code> and <code>:term:</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. envvar::</code> and <code>:envvar:</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. confval::</code> and <code>:confval:</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>.. describe::</code> / <code>.. object::</code></p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p><code>:token:</code> role</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="across-domains">Across domains</h3>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Several signatures per directive</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Default domain for unprefixed directives and roles</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>The VS Code preview always uses <code>py</code>, ignoring the library's
+<code>default_domain</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Target resolution order</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>The requested object type is checked in every search tier.</p>
+</li>
+<li><p>An ambiguous suffix match does not resolve; Sphinx links the first.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Explicit <code>title &lt;target&gt;</code> in domain roles</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Targets nested in tables, lists and directive bodies</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>General-index entries for domain objects</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Simplified entry text, e.g. <code>Greeter.greet (method)</code>.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="linking-between-sites-intersphinx">Linking between sites (intersphinx)</h2>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Writing <code>objects.inv</code></p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Labels without a title are listed too.</p>
+</li>
+<li><p>Anchors are rinx's own.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Reading inventories (<code>intersphinx_mapping</code>)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>An inventory is a pinned build input, never fetched (see
+<a href="intersphinx.html#intersphinx">Linking between documentation sites</a>).</p>
+</li>
+<li><p>Version 1 inventories are refused.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:external:</code> / <code>:external+name:</code></p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="document-structure">Document structure</h2>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Nested sections</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Sections are not nested in the document tree.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Transitions</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Not validated against section boundaries.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Comments</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Substitutions</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p><code>raw</code> substitutions are not supported.</p>
+</li>
+<li><p><code>date</code> is refused: it would make the build depend on the clock.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Footnotes and citations</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Jinja-templated sources (a <code>source-read</code> hook in <code>conf.py</code>)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Opt-in with <code>jinja = True</code>; <code>jinja_context</code> replaces
+<code>html_context</code>.</p>
+</li>
+<li><p>Whitespace control, computed template names and undefined values
+are refused.</p>
+</li>
+<li><p>Template names resolve from the source root.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Site-wide general index (<code>genindex.html</code>)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Own markup, not Sphinx's.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="diagnostics">Diagnostics</h2>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>path:line:column</code> on every warning</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Positions for <code>.. math::</code> LaTeX errors</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Point at the body's first line, not the offending character.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Positions inside <code>.. csv-table::</code> cells</p>
+</td>
+<td><p>🔶</p>
+</td>
+<td><ul>
+<li><p>Reported without a position.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Stable diagnostic codes</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>rinx extension.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>.. noqa:</code> suppression comments</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>rinx extension; <code>noqa.unknown-code</code> reports a mistyped code.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Unknown directives</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>A warning and a visible error block quoting the source; Sphinx
+errors.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>noqa.unused</code> for a suppression that matched nothing</p>
+</td>
+<td><p>❌</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="entities-rinx-extension">Entities (rinx extension)</h2>
+<p>A project-declared construct vocabulary covering the ground of <a href="https://sphinx-needs.com/">sphinx-needs</a>; see <a href="entities.html#entities">Entities</a>.</p>
+<table class="list-table">
+<colgroup>
+<col style="width: 40.00%" />
+<col style="width: 8.00%" />
+<col style="width: 52.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Feature</p>
+</th>
+<th><p>Status</p>
+</th>
+<th><p>Notes</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>User-declared entity types (<code>.. req::</code>, …)</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Typed attributes</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Named prose sections</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Typed relations and derived back-links</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Entity roles</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Explicit, derived and generated ids</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><p>Value patterns (sphinx-needs' <code>schemas.json</code> <code>pattern</code>)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Rust <code>regex</code> dialect: no lookaround or backreferences.</p>
+</li>
+<li><p>Conditional and network rules are not converted.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Filter strings</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Arithmetic, ordering comparisons, attribute access, calls other
+than <code>startswith</code>/<code>endswith</code> and <code>filter_func</code> are refused.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>JSON Schema for the entity schema file</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Checks structure only; the build checks references.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Per-type presentation templates</p>
+</td>
+<td><p>✅</p>
+</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="syntax.html">&larr; Supported syntax</a>
+        <a class="next" href="entities.html">Entities &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
