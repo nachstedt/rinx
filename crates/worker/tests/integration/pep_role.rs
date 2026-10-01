@@ -1,4 +1,4 @@
-//! `:pep:` end to end: one document parsed, indexed and rendered, and its
+//! `:pep:` and docutils' `:pep-reference:` end to end: one document parsed, indexed and rendered, and its
 //! general index. The page markup follows what `sphinx-build` 9.1 emits for
 //! the same source.
 
@@ -108,4 +108,72 @@ fn test_e2e_pep_role_with_an_invalid_number_is_reported_and_shown_as_written() {
     );
     assert!(output.html.contains(":pep:`eight`"), "{}", output.html);
     assert!(index.genindex_entries.is_empty());
+}
+
+#[test]
+fn test_e2e_pep_reference_role_links_the_pep_without_an_index_entry() {
+    // Given — docutils' role between two of Sphinx's
+    let (doc, index) = build("See :pep:`8`, :pep-reference:`08` and :pep:`20`.\n");
+
+    // When
+    let output = renderer::render(&doc, &index, &doc.path);
+
+    // Then — docutils' plain link, no `<strong>`, no trailing slash
+    assert!(doc.diagnostics.is_empty(), "{:?}", doc.diagnostics);
+    let html = &output.html;
+    assert!(
+        html.contains(
+            ", <a class=\"reference external\" href=\"https://peps.python.org/pep-0008\">\
+             PEP 08</a> and "
+        ),
+        "{html}"
+    );
+    // Then — only the two `:pep:`s are indexed, numbered without a gap
+    let anchors: Vec<&str> = index
+        .genindex_entries
+        .iter()
+        .map(|entry| entry.anchor.as_str())
+        .collect();
+    assert_eq!(anchors, vec!["index-0", "index-1"]);
+}
+
+#[test]
+fn test_e2e_pep_reference_role_links_below_a_configured_base_url() {
+    // Given
+    let (doc, index) = build("See :pep-reference:`8`.\n");
+    let config: renderer::config::SiteConfig =
+        toml::from_str("pep_base_url = \"https://mirror.example/peps/\"\n").unwrap();
+
+    // When
+    let output = renderer::render_with_config(&doc, &index, &doc.path, &config);
+
+    // Then
+    assert!(
+        output
+            .html
+            .contains("href=\"https://mirror.example/peps/pep-0008\""),
+        "{}",
+        output.html
+    );
+}
+
+#[test]
+fn test_e2e_pep_reference_role_out_of_range_is_reported_and_shown_as_written() {
+    // Given
+    let (doc, index) = build("See :pep-reference:`10000`.\n");
+
+    // When
+    let output = renderer::render(&doc, &index, &doc.path);
+
+    // Then
+    assert_eq!(doc.diagnostics.len(), 1, "{:?}", doc.diagnostics);
+    assert_eq!(
+        doc.diagnostics[0].code,
+        ast::DiagnosticCode::PepReferenceInvalidNumber
+    );
+    assert!(
+        output.html.contains(":pep-reference:`10000`"),
+        "{}",
+        output.html
+    );
 }

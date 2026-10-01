@@ -11,6 +11,7 @@ use super::anonymous_reference::{
 use super::any_reference::{AnyRef, render_inline_any_reference};
 use super::code::{CodeRef, render_inline_code};
 use super::doc_reference::{DocRef, render_inline_doc_reference};
+use super::docutils_pep_reference::render_inline_docutils_pep_reference;
 use super::domain_object_reference::{
     DomainObjectDiagnostics, DomainObjectRef, render_inline_domain_object_reference,
 };
@@ -136,16 +137,14 @@ pub(crate) fn render_inline(
             display,
             index_id,
             ..
-        } => {
-            render_inline_pep_reference(
-                html,
-                PepRef {
-                    title: display.as_deref(),
-                    target,
-                    index_id,
-                },
-                ctx.pep_base_url,
-            );
+        } => render_inline_pep_reference(
+            html,
+            PepRef::new(display.as_deref(), target, index_id),
+            ctx.pep_base_url,
+        ),
+        // The same, without the anchor: docutils' role makes no index entry.
+        rinx_ast::InlineNode::DocutilsPepReference { number, .. } => {
+            render_inline_docutils_pep_reference(html, number, ctx.pep_base_url);
         }
         // Listed rather than caught by a `_`, so a variant added later is a
         // compile error here and in `render_cross_reference` instead of
@@ -167,7 +166,7 @@ pub(crate) fn render_inline(
 }
 
 /// Renders a refused role as the parser would have lowered it: an unlinked
-/// `:numref:`, or a `:pep:`'s source text.
+/// `:numref:`, or a `:pep:`'s or `:pep-reference:`'s source text.
 fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRefusal) {
     match refusal {
         rinx_ast::RoleRefusal::NumberReference(_) => {
@@ -177,7 +176,8 @@ fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRe
                 html_escape::encode_text(text)
             );
         }
-        rinx_ast::RoleRefusal::PepTarget { .. } => {
+        rinx_ast::RoleRefusal::PepTarget { .. }
+        | rinx_ast::RoleRefusal::DocutilsPepNumber { .. } => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
         }
     }
@@ -301,6 +301,7 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::SubstitutionReference { .. }
         | rinx_ast::InlineNode::RefusedRole { .. }
         | rinx_ast::InlineNode::PepReference { .. }
+        | rinx_ast::InlineNode::DocutilsPepReference { .. }
         | rinx_ast::InlineNode::DownloadReference { .. }
         | rinx_ast::InlineNode::Program(_) => {
             unreachable!("render_inline routes only cross-reference variants here")
@@ -492,5 +493,23 @@ mod tests {
 
         // Then
         assert_eq!(html, ":pep:`&lt;x&gt;`");
+    }
+
+    #[test]
+    fn test_render_refused_role_shows_a_pep_reference_as_its_source() {
+        // Given
+        let mut html = String::new();
+
+        // When
+        render_refused_role(
+            &mut html,
+            ":pep-reference:`<x>`",
+            &rinx_ast::RoleRefusal::DocutilsPepNumber {
+                target: "<x>".to_string(),
+            },
+        );
+
+        // Then
+        assert_eq!(html, ":pep-reference:`&lt;x&gt;`");
     }
 }

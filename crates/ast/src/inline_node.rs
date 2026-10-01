@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::asset_uri::AssetUri;
 use crate::code_language::ResolvedLanguage;
+use crate::docutils_pep_number::DocutilsPepNumber;
 use crate::image::ImageOptions;
 use crate::inventory_selector::InventorySelector;
 use crate::number_format::NumberFormat;
@@ -23,6 +24,10 @@ pub enum RoleRefusal {
     /// source text as Sphinx's `problematic` node shows it. `target` is the
     /// target as written, from which the diagnostic re-derives its reason.
     PepTarget { target: String },
+    /// A `:pep-reference:` whose target is not a number from 0 to 9999,
+    /// lowered to the role's source text as docutils' `problematic` node
+    /// shows it. `target` is the target as written.
+    DocutilsPepNumber { target: String },
 }
 
 /// Why the parser refused a `:numref:` — see [`RoleRefusal::NumberReference`].
@@ -274,6 +279,19 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
+    /// A link to a Python Enhancement Proposal, produced by docutils' own
+    /// `:pep-reference:` role, which Sphinx leaves in place beside its `:pep:`.
+    ///
+    /// A sibling of [`Self::PepReference`] rather than a flag on it, because
+    /// it has none of what that node carries beyond the number: no index
+    /// entry and so no anchor, no explicit title, no fragment. It shows
+    /// `PEP ` and the number as written. As for `:pep:`, only the page is
+    /// stored and the site's `pep_base_url` is applied while rendering.
+    DocutilsPepReference {
+        number: DocutilsPepNumber,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
     /// A link to a file the site serves for download, produced by the
     /// `:download:` (or `:std:download:`) role.
     ///
@@ -407,6 +425,7 @@ impl InlineNode {
             | Self::NumberReference { span, .. }
             | Self::RefusedRole { span, .. }
             | Self::PepReference { span, .. }
+            | Self::DocutilsPepReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::Code { span, .. }
@@ -437,6 +456,7 @@ impl InlineNode {
             | Self::NumberReference { span, .. }
             | Self::RefusedRole { span, .. }
             | Self::PepReference { span, .. }
+            | Self::DocutilsPepReference { span, .. }
             | Self::EntityReference { span, .. }
             | Self::Math { span, .. }
             | Self::Code { span, .. }
@@ -470,7 +490,8 @@ impl InlineNode {
             | Self::OptionReference { .. }
             | Self::EntityReference { .. }
             | Self::EquationReference { .. }
-            | Self::PepReference { .. } => true,
+            | Self::PepReference { .. }
+            | Self::DocutilsPepReference { .. } => true,
             Self::DomainObjectReference { link, .. }
             | Self::AnyReference { link, .. }
             | Self::DocReference { link, .. }
@@ -527,6 +548,9 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
                 } => display.as_str(),
                 InlineNode::PepReference { target, .. } => {
                     return Cow::Owned(format!("PEP {}", target.as_written()));
+                }
+                InlineNode::DocutilsPepReference { number, .. } => {
+                    return Cow::Owned(format!("PEP {}", number.as_written()));
                 }
                 // The LaTeX source is the only plain text an equation has: its
                 // rendered form is markup, and its `:eq:` number isn't known
@@ -994,6 +1018,47 @@ mod tests {
     fn test_a_pep_reference_round_trips_through_json() {
         // Given
         let node = pep("0008#naming", Some("naming"));
+
+        // When
+        let json = serde_json::to_string(&node).unwrap();
+
+        // Then
+        assert_eq!(serde_json::from_str::<InlineNode>(&json).unwrap(), node);
+    }
+
+    fn docutils_pep(number: &str) -> InlineNode {
+        InlineNode::DocutilsPepReference {
+            number: DocutilsPepNumber::parse(number).unwrap(),
+            span: None,
+        }
+    }
+
+    #[test]
+    fn test_a_docutils_pep_reference_carries_its_span_and_is_a_link() {
+        // Given
+        let at = Span::new(
+            crate::span::Position::new(3, 1),
+            crate::span::Position::new(3, 20),
+        );
+
+        // When
+        let placed = docutils_pep("8").with_span(Some(at));
+
+        // Then
+        assert_eq!(placed.span(), Some(at));
+        assert!(placed.renders_as_link());
+    }
+
+    #[test]
+    fn test_inline_plain_text_shows_a_docutils_pep_reference_as_written() {
+        // Given / When / Then
+        assert_eq!(inline_plain_text(&[docutils_pep("08")]), "PEP 08");
+    }
+
+    #[test]
+    fn test_a_docutils_pep_reference_round_trips_through_json() {
+        // Given
+        let node = docutils_pep("0008");
 
         // When
         let json = serde_json::to_string(&node).unwrap();

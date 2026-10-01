@@ -285,6 +285,11 @@ general-index entry, its anchor and the link. Three things to know:
 - **Role names stay case-sensitive** (`:PEP:` is not recognized), deliberately:
   docutils' case-insensitivity belongs to every role and is left to a change
   that introduces it for all of them.
+- **docutils' `:pep-reference:` is a sibling node, not a flag**
+  (`InlineNode::DocutilsPepReference`, `rinx_ast::DocutilsPepNumber`; see
+  `docs/decisions/033-pep-reference-role.md`): no anchor, no index entry, no
+  title or fragment, `pep-%04d` with no trailing slash. It never meets the
+  anchor or index passes, and shares only the refusal pass and `pep_base_url`.
 
 ### Source transclusion (`docs/decisions/008-source-transclusion.md`)
 

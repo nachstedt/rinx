@@ -1,4 +1,4 @@
-//! `.. index::` directive and `:pep:` role tests for [`super::analyze`]:
+//! `.. index::` directive, `:pep:` and `:pep-reference:` role tests for [`super::analyze`]:
 //! which general-index entries they register, and where in the node tree they
 //! are found.
 
@@ -189,4 +189,26 @@ fn test_analyze_finds_a_pep_role_in_a_dropdown_title() {
         .map(|entry| entry.anchor.as_str())
         .collect();
     assert_eq!(anchors, vec!["index-0", "index-1"]);
+}
+
+#[test]
+fn test_analyze_registers_no_genindex_entry_for_a_pep_reference_role() {
+    // Given — docutils' role makes no index entry, unlike Sphinx's `:pep:`
+    let doc = Document::new(
+        "guide.rst".to_string(),
+        vec![Node::Paragraph(vec![InlineNode::DocutilsPepReference {
+            number: rinx_ast::DocutilsPepNumber::parse("8").unwrap(),
+            span: None,
+        }])],
+    );
+
+    // When
+    let index = analyze(&doc);
+
+    // Then
+    assert!(
+        index.genindex_entries.is_empty(),
+        "{:?}",
+        index.genindex_entries
+    );
 }

@@ -162,8 +162,16 @@ Inline markup
        - Its index anchor is numbered after the document's ``.. index::``
          anchors rather than in document order among them.
    * - docutils' ``:pep-reference:`` role
-     - ❌
-     -
+     - ✅ ℹ️
+     - - Only ASCII digits are a number, as for ``:pep:``.
+       - A target that is not a number from 0 to 9999 is reported as
+         ``pep-reference.invalid-number`` and shown as its source text;
+         docutils reports an error and shows a ``problematic`` node.
+       - The PEP index is ``rinx.toml``'s ``pep_base_url``, and the page is
+         always ``pep-%04d``: docutils' ``pep_file_url_template`` cannot be
+         changed.
+       - Role names are case-sensitive, so ``:PEP-Reference:`` is not
+         recognized.
    * - ``:rfc:``, ``:cve:`` and ``:cwe:`` roles
      - ❌
      -

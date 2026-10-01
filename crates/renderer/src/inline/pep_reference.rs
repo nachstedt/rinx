@@ -20,6 +20,22 @@ pub(super) struct PepRef<'a> {
     pub index_id: &'a str,
 }
 
+impl<'a> PepRef<'a> {
+    /// Gathers what a `:pep:` node carries for rendering, the title first as
+    /// it is written first in the `Title <8>` form.
+    pub(super) const fn new(
+        title: Option<&'a str>,
+        target: &'a PepTarget,
+        index_id: &'a str,
+    ) -> Self {
+        Self {
+            title,
+            target,
+            index_id,
+        }
+    }
+}
+
 /// Renders a `:pep:` as Sphinx 9.1's HTML builder does: an empty
 /// `<span class="target">` carrying the index anchor, then an
 /// `<a class="pep reference external">` around a `<strong>` showing the
@@ -53,15 +69,7 @@ mod tests {
     fn render(title: Option<&str>, target: &str, base_url: &PepBaseUrl) -> String {
         let target = PepTarget::parse(target).unwrap();
         let mut html = String::new();
-        render_inline_pep_reference(
-            &mut html,
-            PepRef {
-                title,
-                target: &target,
-                index_id: "index-0",
-            },
-            base_url,
-        );
+        render_inline_pep_reference(&mut html, PepRef::new(title, &target, "index-0"), base_url);
         html
     }
 
