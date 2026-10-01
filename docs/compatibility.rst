@@ -209,8 +209,17 @@ Inline markup
        - Role names are case-sensitive, so ``:RFC-Reference:`` is not
          recognized.
    * - ``:index:`` role
-     - ❌
-     -
+     - ✅ ℹ️
+     - - Its index anchor is numbered after the document's ``.. index::``
+         anchors, in document order among the registry roles' anchors, as
+         for ``:pep:``.
+       - An entry its type cannot split is reported as
+         ``index-role.invalid-single``, ``index-role.invalid-pair``,
+         ``index-role.invalid-triple``, ``index-role.invalid-see`` or
+         ``index-role.invalid-seealso`` while parsing, and makes no entry;
+         Sphinx warns only while building the index. The text is shown in
+         both.
+       - Role names are case-sensitive, so ``:Index:`` is not recognized.
    * - ``:sub:``/``:subscript:`` and ``:sup:``/``:superscript:`` roles
      - ❌
      -
@@ -324,8 +333,8 @@ Directives
      - ✅
      -
    * - ``.. index::`` ``see``/``seealso`` entries
-     - 🔶
-     - - Not shown in the general index.
+     - ✅
+     -
    * - Admonitions (``.. note::``, ``.. warning::``, …,
        ``.. admonition::``)
      - ✅

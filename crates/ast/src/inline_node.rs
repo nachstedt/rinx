@@ -7,6 +7,7 @@ use crate::code_language::ResolvedLanguage;
 use crate::docutils_pep_number::DocutilsPepNumber;
 use crate::docutils_rfc_number::DocutilsRfcNumber;
 use crate::image::ImageOptions;
+use crate::index_entry::{IndexEntry, InvalidIndexEntry};
 use crate::inventory_selector::InventorySelector;
 use crate::number_format::NumberFormat;
 use crate::registry_target::{Registry, RegistryTarget};
@@ -34,6 +35,13 @@ pub enum RoleRefusal {
     /// lowered to the role's source text as docutils' `problematic` node
     /// shows it. `target` is the target as written.
     DocutilsRfcNumber { target: String },
+    /// An `:index:` whose entry its type cannot split, lowered to an
+    /// [`InlineNode::IndexReference`] showing `title` and making no entry —
+    /// Sphinx warns and still shows the text.
+    IndexEntry {
+        title: String,
+        entry: InvalidIndexEntry,
+    },
 }
 
 /// Why the parser refused a `:numref:` — see [`RoleRefusal::NumberReference`].
@@ -313,6 +321,23 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         span: Option<Span>,
     },
+    /// The `:index:` role: general-index entries, the anchor they link to,
+    /// and the text written in the paragraph — the three nodes Sphinx's
+    /// `IndexRole` yields, held together for the reason
+    /// [`Self::RegistryReference`] holds its three.
+    ///
+    /// `title` is plain text, never markup, and already final: the explicit
+    /// title, or the target with a leading `!` main marker removed. `entries`
+    /// are parsed in the `.. index::` grammar; `index_id` is minted per
+    /// document once parsing ends, in the sequence the registry roles' anchors
+    /// share, and is empty until then.
+    IndexReference {
+        title: String,
+        entries: Vec<IndexEntry>,
+        index_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<Span>,
+    },
     /// A link to a file the site serves for download, produced by the
     /// `:download:` (or `:std:download:`) role.
     ///
@@ -446,6 +471,7 @@ impl InlineNode {
             | Self::NumberReference { span, .. }
             | Self::RefusedRole { span, .. }
             | Self::RegistryReference { span, .. }
+            | Self::IndexReference { span, .. }
             | Self::DocutilsPepReference { span, .. }
             | Self::DocutilsRfcReference { span, .. }
             | Self::EntityReference { span, .. }
@@ -478,6 +504,7 @@ impl InlineNode {
             | Self::NumberReference { span, .. }
             | Self::RefusedRole { span, .. }
             | Self::RegistryReference { span, .. }
+            | Self::IndexReference { span, .. }
             | Self::DocutilsPepReference { span, .. }
             | Self::DocutilsRfcReference { span, .. }
             | Self::EntityReference { span, .. }
@@ -545,6 +572,7 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
                 | InlineNode::Code { text, .. }
                 | InlineNode::AnonymousReference { text, .. }
                 | InlineNode::RefusedRole { text, .. }
+                | InlineNode::IndexReference { title: text, .. }
                 | InlineNode::Hyperlink { text, .. }
                 | InlineNode::AnonymousHyperlink { text, .. } => text.as_str(),
                 // Without the index, a bare label's section title is unknown, so

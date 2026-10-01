@@ -142,7 +142,7 @@ pub use image::{
     Figure, FigureWidth, ImageAlign, ImageLoading, ImageOptions, ImageTarget, InvalidLength,
     Length, LengthOrPercentage, LengthUnit, Percentage, is_vertical_name, scaled_width,
 };
-pub use index_entry::IndexEntry;
+pub use index_entry::{IndexEntry, IndexEntryType, InvalidIndexEntry};
 pub use inline_lists::{for_each_inline_list, for_each_inline_list_mut};
 pub use inline_node::{InlineNode, NumberReferenceRefusal, RoleRefusal, inline_plain_text};
 pub use inventory_selector::InventorySelector;

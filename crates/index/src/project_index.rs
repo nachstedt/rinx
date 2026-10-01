@@ -1,7 +1,7 @@
 use crate::{
     DocumentNumbers, DocumentOutline, DocumentToctree, DomainIndex, ElementNumbers,
     EntityFieldHistory, EntityRecord, EntityUpdateRecord, EquationLocation, ExternalInventory,
-    GenIndexEntry, ModuleEntry, NumberingStep, NumrefTarget, TargetLocation,
+    GenIndexEntry, GenIndexRedirect, ModuleEntry, NumberingStep, NumrefTarget, TargetLocation,
 };
 use rinx_ast::{AttributeValue, EntityId, ObjectType, SectnumOptions, TargetName};
 use serde::{Deserialize, Serialize};
@@ -110,6 +110,10 @@ pub struct ProjectIndex {
     /// appearing from multiple locations is expected, not an error.
     #[serde(default)]
     pub genindex_entries: Vec<GenIndexEntry>,
+    /// The general index's `see:`/`seealso:` entries, which link nowhere and
+    /// so are kept apart from `genindex_entries`. Accumulated like them.
+    #[serde(default)]
+    pub genindex_redirects: Vec<GenIndexRedirect>,
     /// Maps a `.. math::` label to the document defining it and the equation
     /// number it was given, so an `:eq:` in any document can render that
     /// number as its link text. See [`EquationLocation`] for the numbering
@@ -295,6 +299,13 @@ impl ProjectIndex {
         self.entities.get(id).map_or(&[], |r| r.targets(relation))
     }
 
+    /// Whether the general index lists anything — a linked entry or a
+    /// `see:`/`seealso:` redirect — and so whether pages link to it.
+    #[must_use]
+    pub fn has_genindex_entries(&self) -> bool {
+        !self.genindex_entries.is_empty() || !self.genindex_redirects.is_empty()
+    }
+
     /// Merge another `ProjectIndex` into this one.
     ///
     /// Emits a diagnostic string for each glossary term defined in both indices
@@ -317,6 +328,7 @@ impl ProjectIndex {
             .extend(other.domain_object_spellings);
         self.modules.extend(other.modules);
         self.genindex_entries.extend(other.genindex_entries);
+        self.genindex_redirects.extend(other.genindex_redirects);
         self.equations.extend(other.equations);
         self.sectnum.extend(other.sectnum);
         self.numbering_steps.extend(other.numbering_steps);
@@ -899,6 +911,52 @@ mod tests {
         // Then — both locations kept, no dedup/diagnostics
         assert!(diagnostics.is_empty());
         assert_eq!(idx1.genindex_entries.len(), 2);
+    }
+
+    #[test]
+    fn test_has_genindex_entries_counts_entries_and_redirects() {
+        // Given
+        let empty = ProjectIndex::default();
+        let mut with_redirect = ProjectIndex::default();
+        with_redirect.genindex_redirects.push(GenIndexRedirect {
+            primary: "goto".to_string(),
+            kind: crate::GenIndexRedirectKind::See,
+            target: "jump".to_string(),
+        });
+        let mut with_entry = ProjectIndex::default();
+        with_entry.genindex_entries.push(GenIndexEntry {
+            primary: "foo".to_string(),
+            subentry: None,
+            main: false,
+            doc_path: "a.rst".to_string(),
+            anchor: "index-0".to_string(),
+        });
+
+        // When / Then
+        assert!(!empty.has_genindex_entries());
+        assert!(with_redirect.has_genindex_entries());
+        assert!(with_entry.has_genindex_entries());
+    }
+
+    #[test]
+    fn test_merge_accumulates_genindex_redirects_from_two_documents() {
+        // Given
+        let redirect = GenIndexRedirect {
+            primary: "goto".to_string(),
+            kind: crate::GenIndexRedirectKind::See,
+            target: "jump".to_string(),
+        };
+        let mut idx1 = ProjectIndex::default();
+        idx1.genindex_redirects.push(redirect.clone());
+        let mut idx2 = ProjectIndex::default();
+        idx2.genindex_redirects.push(redirect);
+
+        // When
+        let diagnostics = idx1.merge(idx2);
+
+        // Then — both kept, as entries are
+        assert!(diagnostics.is_empty());
+        assert_eq!(idx1.genindex_redirects.len(), 2);
     }
 
     #[test]

@@ -25,6 +25,8 @@ mod typography;
 #[cfg(test)]
 mod code_pipeline_tests;
 #[cfg(test)]
+mod index_pipeline_tests;
+#[cfg(test)]
 mod pipeline_tests;
 #[cfg(test)]
 mod registry_pipeline_tests;

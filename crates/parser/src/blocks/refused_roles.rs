@@ -5,13 +5,14 @@
 //! inline scan builds nodes and has nowhere to report, while every refusal —
 //! a `:numref:` title Sphinx could not apply, an `:external:` prefix, a
 //! registry role (`:pep:`, `:rfc:`, `:cve:`, `:cwe:`) or docutils'
-//! `:pep-reference:`/`:rfc-reference:` naming nothing it can link — belongs
+//! `:pep-reference:`/`:rfc-reference:` naming nothing it can link, an
+//! `:index:` entry its type cannot split — belongs
 //! at the role the author wrote. The refusal travels on the node as an
 //! [`InlineNode::RefusedRole`] until this pass reaches it.
 
 use rinx_ast::{
-    Diagnostic, DiagnosticCode, DocutilsPepNumber, DocutilsRfcNumber, InlineNode, Node,
-    NumberFormat, NumberReferenceRefusal, Registry, RegistryTarget, RoleRefusal, Span,
+    Diagnostic, DiagnosticCode, DocutilsPepNumber, DocutilsRfcNumber, IndexEntryType, InlineNode,
+    Node, NumberFormat, NumberReferenceRefusal, Registry, RegistryTarget, RoleRefusal, Span,
     for_each_inline_list_mut,
 };
 
@@ -36,8 +37,9 @@ pub(super) fn report_refused_roles(nodes: &mut [Node], diagnostics: &mut Diagnos
 }
 
 /// What a refused role is shown as: an unlinked reference for a `:numref:`,
-/// and the source text for every other role, as its `problematic` node shows
-/// it.
+/// an `:index:`'s text with no entries — Sphinx's warning leaves the text in
+/// place — and the source text for every other role, as its `problematic`
+/// node shows it.
 fn lowered(text: String, refusal: &RoleRefusal, span: Option<Span>) -> InlineNode {
     match refusal {
         RoleRefusal::NumberReference(_) => InlineNode::NumberReference {
@@ -49,6 +51,12 @@ fn lowered(text: String, refusal: &RoleRefusal, span: Option<Span>) -> InlineNod
         RoleRefusal::RegistryTarget { .. }
         | RoleRefusal::DocutilsPepNumber { .. }
         | RoleRefusal::DocutilsRfcNumber { .. } => InlineNode::Text(text),
+        RoleRefusal::IndexEntry { title, .. } => InlineNode::IndexReference {
+            title: title.clone(),
+            entries: Vec::new(),
+            index_id: String::new(),
+            span,
+        },
     }
 }
 
@@ -82,6 +90,24 @@ fn refusal_diagnostic(text: &str, refusal: &RoleRefusal, span: Option<Span>) -> 
             ),
             span,
         ),
+        RoleRefusal::IndexEntry { entry, .. } => Diagnostic::at(
+            index_role_code(entry.entry_type),
+            format!(":index: {entry}"),
+            span,
+        ),
+    }
+}
+
+/// The code an `:index:` role's malformed entry is reported as: the role's
+/// own family, not the `.. index::` directive's, since a code names the
+/// construct the author wrote rather than the grammar both share.
+const fn index_role_code(entry_type: IndexEntryType) -> DiagnosticCode {
+    match entry_type {
+        IndexEntryType::Single => DiagnosticCode::IndexRoleInvalidSingle,
+        IndexEntryType::Pair => DiagnosticCode::IndexRoleInvalidPair,
+        IndexEntryType::Triple => DiagnosticCode::IndexRoleInvalidTriple,
+        IndexEntryType::See => DiagnosticCode::IndexRoleInvalidSee,
+        IndexEntryType::SeeAlso => DiagnosticCode::IndexRoleInvalidSeeAlso,
     }
 }
 
@@ -408,5 +434,58 @@ mod tests {
                 span: None,
             }
         );
+    }
+
+    #[test]
+    fn test_reports_a_malformed_index_entry_and_keeps_the_title() {
+        // Given
+        let at = Span::new(Position::new(1, 1), Position::new(1, 28));
+        let mut nodes = vec![Node::Paragraph(vec![InlineNode::RefusedRole {
+            text: ":index:`loops <pair: loop>`".to_string(),
+            refusal: RoleRefusal::IndexEntry {
+                title: "loops".to_string(),
+                entry: rinx_ast::InvalidIndexEntry {
+                    entry_type: IndexEntryType::Pair,
+                    value: "loop".to_string(),
+                },
+            },
+            span: Some(at),
+        }])];
+        let mut diagnostics = Diagnostics::default();
+
+        // When
+        report_refused_roles(&mut nodes, &mut diagnostics);
+
+        // Then
+        assert_eq!(
+            nodes[0],
+            Node::Paragraph(vec![InlineNode::IndexReference {
+                title: "loops".to_string(),
+                entries: Vec::new(),
+                index_id: String::new(),
+                span: Some(at),
+            }])
+        );
+        let (entries, _, _) = diagnostics.into_parts();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].code, DiagnosticCode::IndexRoleInvalidPair);
+        assert_eq!(
+            entries[0].message,
+            ":index: invalid pair index entry 'loop'"
+        );
+        assert_eq!(entries[0].span, Some(at));
+    }
+
+    #[test]
+    fn test_index_role_code_names_the_role_family_for_every_type() {
+        // Given / When / Then
+        for entry_type in IndexEntryType::ALL {
+            assert!(
+                index_role_code(entry_type)
+                    .as_str()
+                    .starts_with("index-role."),
+                "{entry_type:?}"
+            );
+        }
     }
 }

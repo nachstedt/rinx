@@ -76,7 +76,7 @@ The analyzer finds the roles with `for_each_inline_list`, and the parser
 numbers them with `for_each_inline_list_mut`. Both moved from the parser into
 `rinx_ast` for this, and one macro generates both from one body, so an entry
 exists for exactly the roles that have an anchor. The future `:index:` role
-needs the same reach.
+needs the same reach (it got it in ADR-035).
 
 ### A refused role is one node for every role
 

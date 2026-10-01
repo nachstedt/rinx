@@ -148,6 +148,22 @@ diagnostic_codes! {
     /// number". The role is shown as its source text.
     CweInvalidNumber => "cwe.invalid-number",
 
+    // --- `:index:` ---------------------------------------------------------
+    // The role writes its entries in the `.. index::` grammar, but is its own
+    // construct, so it reports under its own codes: a `.. noqa:` names what
+    // the author wrote. Each makes no entry; the role's text is still shown.
+    /// An `:index:` whose entry is empty — `:index:`!``, or an explicit
+    /// `single:` with no value.
+    IndexRoleInvalidSingle => "index-role.invalid-single",
+    /// An `:index:` whose `pair:` entry has no two `;`-separated parts.
+    IndexRoleInvalidPair => "index-role.invalid-pair",
+    /// An `:index:` whose `triple:` entry has no three `;`-separated parts.
+    IndexRoleInvalidTriple => "index-role.invalid-triple",
+    /// An `:index:` whose `see:` entry has no two `;`-separated parts.
+    IndexRoleInvalidSee => "index-role.invalid-see",
+    /// An `:index:` whose `seealso:` entry has no two `;`-separated parts.
+    IndexRoleInvalidSeeAlso => "index-role.invalid-seealso",
+
     // --- Headings ----------------------------------------------------------
     /// A section adornment shorter than the title's display width, which
     /// docutils accepts and reports rather than rejecting.
@@ -527,6 +543,9 @@ diagnostic_codes! {
     SectnumUnexpectedArgument => "sectnum.unexpected-argument",
 
     // --- `.. index::` ------------------------------------------------------
+    /// A `single:` entry with no value — Sphinx's "invalid single index
+    /// entry". No entry is made.
+    IndexInvalidSingle => "index.invalid-single",
     IndexInvalidPair => "index.invalid-pair",
     IndexInvalidTriple => "index.invalid-triple",
     IndexInvalidSee => "index.invalid-see",

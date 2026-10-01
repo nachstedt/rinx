@@ -300,6 +300,15 @@ type per registry, plus the `Registry` tag whose `role_name`/`label`/
 - **Role names stay case-sensitive** (`:PEP:` is not recognized), deliberately:
   docutils' case-insensitivity belongs to every role and is left to a change
   that introduces it for all of them.
+- **`:index:` shares the anchor pass, not the node** (`InlineNode::IndexReference`;
+  `docs/decisions/035-index-role.md`): `assign_inline_index_ids` numbers it
+  among the registry roles, and its target is parsed by the `.. index::`
+  directive's own `parse_index_line`/`parse_typed_entry`, which return
+  `InvalidIndexEntry` rather than reporting — the directive reports it as
+  `index.*`, the role as `index-role.*`. A refused one lowers to its title
+  with no entries, so the refusal pass runs before the anchor pass.
+  `see:`/`seealso:` entries become `ProjectIndex::genindex_redirects`, kept
+  apart from the linked `genindex_entries`.
 - **docutils' `:pep-reference:` and `:rfc-reference:` are sibling nodes, not
   flags** (`InlineNode::DocutilsPepReference`/`DocutilsRfcReference`; see
   `docs/decisions/033-pep-reference-role.md`): no anchor, no index entry, no

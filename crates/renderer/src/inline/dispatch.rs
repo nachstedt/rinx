@@ -18,6 +18,7 @@ use super::domain_object_reference::{
 };
 use super::download_reference::{DownloadRef, render_inline_download_reference};
 use super::hyperlink::render_inline_hyperlink;
+use super::index_reference::render_inline_index_reference;
 use super::math::{render_equation_reference, render_inline_math};
 use super::number_reference::render_number_reference_node;
 use super::option_reference::render_inline_option_reference;
@@ -133,23 +134,15 @@ pub(crate) fn render_inline(
         }
         // A page outside the site: its href follows from the target and the
         // registry's address alone, so it cannot be broken while rendering.
-        rinx_ast::InlineNode::RegistryReference {
-            target,
-            display,
-            index_id,
-            ..
-        } => render_inline_registry_reference(
-            html,
-            RegistryRef::new(display.as_deref(), target, index_id),
-            registry_base_url(target.registry(), ctx.pep_base_url, ctx.rfc_base_url),
-        ),
-        // The same, without the anchor: docutils' roles make no index entry.
-        rinx_ast::InlineNode::DocutilsPepReference { number, .. } => {
-            render_inline_docutils_pep_reference(html, number, ctx.pep_base_url);
+        rinx_ast::InlineNode::RegistryReference { .. }
+        | rinx_ast::InlineNode::DocutilsPepReference { .. }
+        | rinx_ast::InlineNode::DocutilsRfcReference { .. } => {
+            render_registry_role(html, inline, ctx);
         }
-        rinx_ast::InlineNode::DocutilsRfcReference { number, .. } => {
-            render_inline_docutils_rfc_reference(html, number, ctx.rfc_base_url);
-        }
+        // Links nowhere: the general index links here.
+        rinx_ast::InlineNode::IndexReference {
+            title, index_id, ..
+        } => render_inline_index_reference(html, title, index_id),
         // Listed rather than caught by a `_`, so a variant added later is a
         // compile error here and in `render_cross_reference` instead of
         // silently rendering as nothing.
@@ -169,8 +162,36 @@ pub(crate) fn render_inline(
     }
 }
 
+/// Renders the roles linking a numbered document in a registry outside the
+/// site — Sphinx's `:pep:`/`:rfc:`/`:cve:`/`:cwe:` and docutils'
+/// `:pep-reference:`/`:rfc-reference:` — which need only the site's
+/// registry addresses.
+fn render_registry_role(html: &mut String, inline: &rinx_ast::InlineNode, ctx: &RenderCtx<'_>) {
+    match inline {
+        rinx_ast::InlineNode::RegistryReference {
+            target,
+            display,
+            index_id,
+            ..
+        } => render_inline_registry_reference(
+            html,
+            RegistryRef::new(display.as_deref(), target, index_id),
+            registry_base_url(target.registry(), ctx.pep_base_url, ctx.rfc_base_url),
+        ),
+        // The same, without the anchor: docutils' roles make no index entry.
+        rinx_ast::InlineNode::DocutilsPepReference { number, .. } => {
+            render_inline_docutils_pep_reference(html, number, ctx.pep_base_url);
+        }
+        rinx_ast::InlineNode::DocutilsRfcReference { number, .. } => {
+            render_inline_docutils_rfc_reference(html, number, ctx.rfc_base_url);
+        }
+        _ => unreachable!("render_inline routes only registry roles here"),
+    }
+}
+
 /// Renders a refused role as the parser would have lowered it: an unlinked
-/// `:numref:`, or any other refused role's source text.
+/// `:numref:`, an `:index:`'s title, or any other refused role's source
+/// text.
 fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRefusal) {
     match refusal {
         rinx_ast::RoleRefusal::NumberReference(_) => {
@@ -184,6 +205,9 @@ fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRe
         | rinx_ast::RoleRefusal::DocutilsPepNumber { .. }
         | rinx_ast::RoleRefusal::DocutilsRfcNumber { .. } => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
+        }
+        rinx_ast::RoleRefusal::IndexEntry { title, .. } => {
+            let _ = write!(html, "{}", html_escape::encode_text(title));
         }
     }
 }
@@ -306,6 +330,7 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::SubstitutionReference { .. }
         | rinx_ast::InlineNode::RefusedRole { .. }
         | rinx_ast::InlineNode::RegistryReference { .. }
+        | rinx_ast::InlineNode::IndexReference { .. }
         | rinx_ast::InlineNode::DocutilsPepReference { .. }
         | rinx_ast::InlineNode::DocutilsRfcReference { .. }
         | rinx_ast::InlineNode::DownloadReference { .. }
@@ -536,5 +561,85 @@ mod tests {
 
         // Then
         assert_eq!(html, ":pep-reference:`&lt;x&gt;`");
+    }
+
+    #[test]
+    fn test_render_refused_role_shows_an_index_role_as_its_title() {
+        // Given
+        let mut html = String::new();
+
+        // When
+        render_refused_role(
+            &mut html,
+            ":index:`a <b> <pair: x>`",
+            &rinx_ast::RoleRefusal::IndexEntry {
+                title: "a <b>".to_string(),
+                entry: rinx_ast::InvalidIndexEntry {
+                    entry_type: rinx_ast::IndexEntryType::Pair,
+                    value: "x".to_string(),
+                },
+            },
+        );
+
+        // Then
+        assert_eq!(html, "a &lt;b&gt;");
+    }
+
+    fn render_paragraph(inlines: Vec<rinx_ast::InlineNode>) -> String {
+        let doc = rinx_ast::Document::new(
+            "guide.rst".to_string(),
+            vec![rinx_ast::Node::Paragraph(inlines)],
+        );
+        crate::render(&doc, &rinx_index::ProjectIndex::default(), &doc.path).html
+    }
+
+    #[test]
+    fn test_render_inline_writes_an_index_role_anchor_and_text() {
+        // Given / When
+        let html = render_paragraph(vec![
+            rinx_ast::InlineNode::Text("The ".to_string()),
+            rinx_ast::InlineNode::IndexReference {
+                title: "loop".to_string(),
+                entries: Vec::new(),
+                index_id: "index-2".to_string(),
+                span: None,
+            },
+            rinx_ast::InlineNode::Text(" statement.".to_string()),
+        ]);
+
+        // Then
+        assert!(
+            html.contains("The <span class=\"target\" id=\"index-2\"></span>loop statement."),
+            "{html}"
+        );
+    }
+
+    #[test]
+    fn test_render_registry_role_links_each_registry_role_below_its_base_url() {
+        // Given
+        let inlines = vec![
+            rinx_ast::InlineNode::RegistryReference {
+                target: rinx_ast::RegistryTarget::parse(rinx_ast::Registry::Pep, "8").unwrap(),
+                display: None,
+                index_id: "index-0".to_string(),
+                span: None,
+            },
+            rinx_ast::InlineNode::DocutilsPepReference {
+                number: rinx_ast::DocutilsPepNumber::parse("20").unwrap(),
+                span: None,
+            },
+            rinx_ast::InlineNode::DocutilsRfcReference {
+                number: rinx_ast::DocutilsRfcNumber::parse("2822").unwrap(),
+                span: None,
+            },
+        ];
+
+        // When
+        let html = render_paragraph(inlines);
+
+        // Then
+        assert!(html.contains("pep-0008/"), "{html}");
+        assert!(html.contains("pep-0020\""), "{html}");
+        assert!(html.contains("rfc2822.html"), "{html}");
     }
 }
