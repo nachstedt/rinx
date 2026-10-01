@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mmap — Memory-mapped file support — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle mmap — Memory-mapped file support"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="mmap.html#madv-constants">MADV* Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="mmap.html#map-constants">MAP* Constants</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="signal.html">&larr; signal — Set handlers for asynchronous events</a>
+        <a class="next" href="netdata.html">Internet Data Handling &rarr;</a>
+      </nav>
+      
+      <h1 id="mmap-memory-mapped-file-support"><code class="xref py module docutils literal">mmap</code> — Memory-mapped file support</h1>
+<dl class="py module">
+  <dt id="py:module:mmap"><code class="sig-name">mmap</code></dt>
+  <dd></dd>
+</dl>
+<hr />
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: not WASI.
+
+   This module does not work or is not available on WebAssembly. See
+   :ref:`wasm-availability` for more information.</pre>
+</div>
+<p>Memory-mapped file objects behave like both <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> and like
+<a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file objects</span></a>.  You can use mmap objects in most places
+where <a class="reference internal" href="stdtypes.html#py:class:bytearray"><code class="xref py class docutils literal">bytearray</code></a> are expected; for example, you can use the <a class="reference internal" href="re.html#py:module:re" title="re: Regular expression operations."><code class="xref py module docutils literal">re</code></a>
+module to search through a memory-mapped file.  You can also change a single
+byte by doing <code>obj[index] = 97</code>, or change a subsequence by assigning to a
+slice: <code>obj[i1:i2] = b'...'</code>.  You can also read and write data starting at
+the current file position, and <a href="#" class="broken-link"><code class="xref py method docutils literal">seek</code></a> through the file to different positions.</p>
+<p>A memory-mapped file is created by the <a class="reference internal" href="mmap.html#py:class:mmap.mmap"><code class="xref py class docutils literal">mmap</code></a> constructor, which is
+different on Unix and on Windows.  In either case you must provide a file
+descriptor for a file opened for update. If you wish to map an existing Python
+file object, use its <a class="reference internal" href="io.html#py:method:io.iobase.fileno"><code class="xref py method docutils literal">fileno</code></a> method to obtain the correct value for the
+<em>fileno</em> parameter.  Otherwise, you can open the file using the
+<a class="reference internal" href="os.html#py:function:os.open"><code class="xref py function docutils literal">os.open</code></a> function, which returns a file descriptor directly (the file
+still needs to be closed when done).</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If you want to create a memory-mapping for a writable, buffered file, you
+should <a href="#" class="broken-link"><code class="xref py function docutils literal">flush</code></a> the file first.  This is necessary to ensure
+that local modifications to the buffers are actually available to the
+mapping.</p>
+</div>
+<p>For both the Unix and Windows versions of the constructor, <em>access</em> may be
+specified as an optional keyword parameter. <em>access</em> accepts one of four
+values: <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_READ</code></a>, <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_WRITE</code></a>, or <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_COPY</code></a> to
+specify read-only, write-through or copy-on-write memory respectively, or
+<a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_DEFAULT</code></a> to defer to <em>prot</em>.  <em>access</em> can be used on both Unix
+and Windows.  If <em>access</em> is not specified, Windows mmap returns a
+write-through mapping.  The initial memory values for all three access types
+are taken from the specified file.  Assignment to an <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_READ</code></a>
+memory map raises a <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> exception.  Assignment to an
+<a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_WRITE</code></a> memory map affects both memory and the underlying file.
+Assignment to an <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_COPY</code></a> memory map affects memory but does not
+update the underlying file.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>Added <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_DEFAULT</code></a> constant.</p>
+</div>
+<p>To map anonymous memory, -1 should be passed as the fileno along with the length.</p>
+<dl class="py class">
+  <dt id="py:class:mmap.mmap"><em class="property">class</em> <code class="sig-name">mmap(fileno, length, tagname=None, access=ACCESS_DEFAULT, offset=0)</code></dt>
+  <dd><p><strong>(Windows version)</strong> Maps <em>length</em> bytes from the file specified by the
+file handle <em>fileno</em>, and creates a mmap object.  If <em>length</em> is larger
+than the current size of the file, the file is extended to contain <em>length</em>
+bytes.  If <em>length</em> is <code>0</code>, the maximum length of the map is the current
+size of the file, except that if the file is empty Windows raises an
+exception (you cannot create an empty mapping on Windows).</p>
+<p><em>tagname</em>, if specified and not <code>None</code>, is a string giving a tag name for
+the mapping.  Windows allows you to have many different mappings against
+the same file.  If you specify the name of an existing tag, that tag is
+opened, otherwise a new tag of this name is created.  If this parameter is
+omitted or <code>None</code>, the mapping is created without a name.  Avoiding the
+use of the <em>tagname</em> parameter will assist in keeping your code portable
+between Unix and Windows.</p>
+<p><em>offset</em> may be specified as a non-negative integer offset. mmap references
+will be relative to the offset from the beginning of the file. <em>offset</em>
+defaults to 0.  <em>offset</em> must be a multiple of the <a href="#" class="broken-link"><code class="xref py data docutils literal">ALLOCATIONGRANULARITY</code></a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: mmap.__new__ fileno,length,access,offset mmap.mmap</pre>
+</div>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:mmap.mmap"><em class="property">class</em> <code class="sig-name">mmap(fileno, length, flags=MAP_SHARED, prot=PROT_WRITE|PROT_READ, \</code></dt>
+  <dt id="py:class:mmap.trackfd=true)"><em class="property">class</em> <code class="sig-name">access=ACCESS_DEFAULT, offset=0, *, trackfd=True)</code></dt>
+  <dd><p>:noindex:</p>
+<p><strong>(Unix version)</strong> Maps <em>length</em> bytes from the file specified by the file
+descriptor <em>fileno</em>, and returns a mmap object.  If <em>length</em> is <code>0</code>, the
+maximum length of the map will be the current size of the file when
+<a class="reference internal" href="mmap.html#py:class:mmap.mmap"><code class="xref py class docutils literal">mmap</code></a> is called.</p>
+<p><em>flags</em> specifies the nature of the mapping. <a class="reference internal" href="mmap.html#py:data:mmap.map_private"><code class="xref py data docutils literal">MAP_PRIVATE</code></a> creates a
+private copy-on-write mapping, so changes to the contents of the mmap
+object will be private to this process, and <a class="reference internal" href="mmap.html#py:data:mmap.map_shared"><code class="xref py data docutils literal">MAP_SHARED</code></a> creates a
+mapping that's shared with all other processes mapping the same areas of
+the file.  The default value is <a class="reference internal" href="mmap.html#py:data:mmap.map_shared"><code class="xref py data docutils literal">MAP_SHARED</code></a>. Some systems have
+additional possible flags with the full list specified in
+<a href="mmap.html#map-constants">MAP_* constants</a>.</p>
+<p><em>prot</em>, if specified, gives the desired memory protection; the two most
+useful values are <a href="#" class="broken-link"><code class="xref py data docutils literal">PROT_READ</code></a> and <a href="#" class="broken-link"><code class="xref py data docutils literal">PROT_WRITE</code></a>, to specify
+that the pages may be read or written.  <em>prot</em> defaults to
+<a href="#" class="broken-link"><code class="xref py data docutils literal">PROT_READ | PROT_WRITE</code></a>.</p>
+<p><em>access</em> may be specified in lieu of <em>flags</em> and <em>prot</em> as an optional
+keyword parameter.  It is an error to specify both <em>flags</em>, <em>prot</em> and
+<em>access</em>.  See the description of <em>access</em> above for information on how to
+use this parameter.</p>
+<p><em>offset</em> may be specified as a non-negative integer offset. mmap references
+will be relative to the offset from the beginning of the file. <em>offset</em>
+defaults to 0. <em>offset</em> must be a multiple of <a href="#" class="broken-link"><code class="xref py data docutils literal">ALLOCATIONGRANULARITY</code></a>
+which is equal to <a href="#" class="broken-link"><code class="xref py data docutils literal">PAGESIZE</code></a> on Unix systems.</p>
+<p>If <em>trackfd</em> is <code>False</code>, the file descriptor specified by <em>fileno</em> will
+not be duplicated, and the resulting <code class="xref py class docutils literal">mmap</code> object will not
+be associated with the map's underlying file.
+This means that the <a class="reference internal" href="mmap.html#py:method:mmap.mmap.size"><code class="xref py method docutils literal">size</code></a> and <a class="reference internal" href="mmap.html#py:method:mmap.mmap.resize"><code class="xref py method docutils literal">resize</code></a>
+methods will fail.
+This mode is useful to limit the number of open file descriptors.</p>
+<p>To ensure validity of the created memory mapping the file specified
+by the descriptor <em>fileno</em> is internally automatically synchronized
+with the physical backing store on macOS.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>The <em>trackfd</em> parameter was added.</p>
+</div>
+<p>This example shows a simple way of using <a class="reference internal" href="mmap.html#py:class:mmap.mmap"><code class="xref py class docutils literal">mmap</code></a>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> write a simple example file
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">hello.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">wb<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello Python!<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">hello.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">r+b<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> memory-map the file, size 0 means whole file
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">fileno</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> read content via standard file methods
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">readline</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> prints b&quot;Hello Python!\n&quot;
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> read content via slice notation
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-punctuation hl-separator hl-slice hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> prints b&quot;Hello&quot;
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> update content using slice notation;
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> note that new content must have same size
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">6</span><span class="hl-punctuation hl-separator hl-slice hl-python">:</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"> world!<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> ... and read again using standard file methods
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">seek</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">readline</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> prints b&quot;Hello  world!\n&quot;
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> close the map
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p><a class="reference internal" href="mmap.html#py:class:mmap.mmap"><code class="xref py class docutils literal">mmap</code></a> can also be used as a context manager in a :keyword:`with`
+statement:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">13</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">mm</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello world!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+<p>Context manager support.</p>
+</div>
+<p>The next example demonstrates how to create an anonymous map and exchange
+data between the parent and child processes:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">mmap</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">13</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-storage hl-type hl-string hl-python">b</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Hello world!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pid</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">os</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">fork</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-conditional hl-if hl-python"><span class="hl-keyword hl-control hl-conditional hl-if hl-python">if</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pid</span></span> <span class="hl-keyword hl-operator hl-comparison hl-python">==</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-block hl-conditional hl-if hl-python">:</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> In a child process
+</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">seek</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">readline</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">mm</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">close</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: mmap.__new__ fileno,length,access,offset mmap.mmap</pre>
+</div>
+<p>Memory-mapped file objects support the following methods:</p>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.close"><code class="sig-name">close()</code></dt>
+  <dd><p>Closes the mmap. Subsequent calls to other methods of the object will
+result in a ValueError exception being raised. This will not close
+the open file.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:mmap.mmap.closed"><code class="sig-name">closed</code></dt>
+  <dd><p><code>True</code> if the file is closed.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.find"><code class="sig-name">find(sub[, start[, end]])</code></dt>
+  <dd><p>Returns the lowest index in the object where the subsequence <em>sub</em> is
+found, such that <em>sub</em> is contained in the range [<em>start</em>, <em>end</em>].
+Optional arguments <em>start</em> and <em>end</em> are interpreted as in slice notation.
+Returns <code>-1</code> on failure.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Writable <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> is now accepted.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.flush"><code class="sig-name">flush()</code></dt>
+  <dt id="py:method:mmap.mmap.flush"><code class="sig-name">flush(offset, size, /)</code></dt>
+  <dd><p>Flushes changes made to the in-memory copy of a file back to disk. Without
+use of this call there is no guarantee that changes are written back before
+the object is destroyed.  If <em>offset</em> and <em>size</em> are specified, only
+changes to the given range of bytes will be flushed to disk; otherwise, the
+whole extent of the mapping is flushed.  <em>offset</em> must be a multiple of the
+<a href="#" class="broken-link"><code class="xref py data docutils literal">PAGESIZE</code></a> or <a href="#" class="broken-link"><code class="xref py data docutils literal">ALLOCATIONGRANULARITY</code></a>.</p>
+<p><code>None</code> is returned to indicate success.  An exception is raised when the
+call failed.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>Previously, a nonzero value was returned on success; zero was returned
+on error under Windows.  A zero value was returned on success; an
+exception was raised on error under Unix.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.madvise"><code class="sig-name">madvise(option[, start[, length]])</code></dt>
+  <dd><p>Send advice <em>option</em> to the kernel about the memory region beginning at
+<em>start</em> and extending <em>length</em> bytes.  <em>option</em> must be one of the
+<a href="mmap.html#madvise-constants">MADV_* constants</a> available on the system.  If
+<em>start</em> and <em>length</em> are omitted, the entire mapping is spanned.  On
+some systems (including Linux), <em>start</em> must be a multiple of the
+<a href="#" class="broken-link"><code class="xref py data docutils literal">PAGESIZE</code></a>.</p>
+<p>Availability: Systems with the <code>madvise()</code> system call.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.move"><code class="sig-name">move(dest, src, count)</code></dt>
+  <dd><p>Copy the <em>count</em> bytes starting at offset <em>src</em> to the destination index
+<em>dest</em>.  If the mmap was created with <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_READ</code></a>, then calls to
+move will raise a <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> exception.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.read"><code class="sig-name">read([n])</code></dt>
+  <dd><p>Return a <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a> containing up to <em>n</em> bytes starting from the
+current file position. If the argument is omitted, <code>None</code> or negative,
+return all bytes from the current file position to the end of the
+mapping. The file position is updated to point after the bytes that were
+returned.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Argument can be omitted or <code>None</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.read_byte"><code class="sig-name">read_byte()</code></dt>
+  <dd><p>Returns a byte at the current file position as an integer, and advances
+the file position by 1.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.readline"><code class="sig-name">readline()</code></dt>
+  <dd><p>Returns a single line, starting at the current file position and up to the
+next newline. The file position is updated to point after the bytes that were
+returned.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.resize"><code class="sig-name">resize(newsize)</code></dt>
+  <dd><p>Resizes the map and the underlying file, if any.</p>
+<p>Resizing a map created with <em>access</em> of <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_READ</code></a> or
+<a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_COPY</code></a>, will raise a <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> exception.
+Resizing a map created with <em>trackfd</em> set to <code>False</code>,
+will raise a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> exception.</p>
+<p><strong>On Windows</strong>: Resizing the map will raise an <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> if there are other
+maps against the same named file. Resizing an anonymous map (ie against the
+pagefile) will silently create a new map with the original data copied over
+up to the length of the new size.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Correctly fails if attempting to resize when another map is held
+Allows resize against an anonymous map on Windows</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.rfind"><code class="sig-name">rfind(sub[, start[, end]])</code></dt>
+  <dd><p>Returns the highest index in the object where the subsequence <em>sub</em> is
+found, such that <em>sub</em> is contained in the range [<em>start</em>, <em>end</em>].
+Optional arguments <em>start</em> and <em>end</em> are interpreted as in slice notation.
+Returns <code>-1</code> on failure.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Writable <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> is now accepted.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.seek"><code class="sig-name">seek(pos[, whence])</code></dt>
+  <dd><p>Set the file's current position.  <em>whence</em> argument is optional and
+defaults to <code>os.SEEK_SET</code> or <code>0</code> (absolute file positioning); other
+values are <code>os.SEEK_CUR</code> or <code>1</code> (seek relative to the current
+position) and <code>os.SEEK_END</code> or <code>2</code> (seek relative to the file's end).</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Return the new absolute position instead of <code>None</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.seekable"><code class="sig-name">seekable()</code></dt>
+  <dd><p>Return whether the file supports seeking, and the return value is always <code>True</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.size"><code class="sig-name">size()</code></dt>
+  <dd><p>Return the length of the file, which can be larger than the size of the
+memory-mapped area.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.tell"><code class="sig-name">tell()</code></dt>
+  <dd><p>Returns the current position of the file pointer.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.write"><code class="sig-name">write(bytes)</code></dt>
+  <dd><p>Write the bytes in <em>bytes</em> into memory at the current position of the
+file pointer and return the number of bytes written (never less than
+<code>len(bytes)</code>, since if the write fails, a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> will be
+raised).  The file position is updated to point after the bytes that
+were written.  If the mmap was created with <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_READ</code></a>, then
+writing to it will raise a <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> exception.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Writable <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> is now accepted.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>The number of bytes written is now returned.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:mmap.mmap.write_byte"><code class="sig-name">write_byte(byte)</code></dt>
+  <dd><p>Write the integer <em>byte</em> into memory at the current
+position of the file pointer; the file position is advanced by <code>1</code>. If
+the mmap was created with <a href="#" class="broken-link"><code class="xref py data docutils literal">ACCESS_READ</code></a>, then writing to it will
+raise a <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> exception.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<a id="madvise-constants"></a>
+<h2 id="madv-constants"><a href="#" class="broken-link">MADV</a>* Constants</h2>
+<dl class="py data">
+  <dt id="py:data:mmap.madv_normal"><code class="sig-name">MADV_NORMAL</code></dt>
+  <dt id="py:data:mmap.madv_random"><code class="sig-name">MADV_RANDOM</code></dt>
+  <dt id="py:data:mmap.madv_sequential"><code class="sig-name">MADV_SEQUENTIAL</code></dt>
+  <dt id="py:data:mmap.madv_willneed"><code class="sig-name">MADV_WILLNEED</code></dt>
+  <dt id="py:data:mmap.madv_dontneed"><code class="sig-name">MADV_DONTNEED</code></dt>
+  <dt id="py:data:mmap.madv_remove"><code class="sig-name">MADV_REMOVE</code></dt>
+  <dt id="py:data:mmap.madv_dontfork"><code class="sig-name">MADV_DONTFORK</code></dt>
+  <dt id="py:data:mmap.madv_dofork"><code class="sig-name">MADV_DOFORK</code></dt>
+  <dt id="py:data:mmap.madv_hwpoison"><code class="sig-name">MADV_HWPOISON</code></dt>
+  <dt id="py:data:mmap.madv_mergeable"><code class="sig-name">MADV_MERGEABLE</code></dt>
+  <dt id="py:data:mmap.madv_unmergeable"><code class="sig-name">MADV_UNMERGEABLE</code></dt>
+  <dt id="py:data:mmap.madv_soft_offline"><code class="sig-name">MADV_SOFT_OFFLINE</code></dt>
+  <dt id="py:data:mmap.madv_hugepage"><code class="sig-name">MADV_HUGEPAGE</code></dt>
+  <dt id="py:data:mmap.madv_nohugepage"><code class="sig-name">MADV_NOHUGEPAGE</code></dt>
+  <dt id="py:data:mmap.madv_dontdump"><code class="sig-name">MADV_DONTDUMP</code></dt>
+  <dt id="py:data:mmap.madv_dodump"><code class="sig-name">MADV_DODUMP</code></dt>
+  <dt id="py:data:mmap.madv_free"><code class="sig-name">MADV_FREE</code></dt>
+  <dt id="py:data:mmap.madv_nosync"><code class="sig-name">MADV_NOSYNC</code></dt>
+  <dt id="py:data:mmap.madv_autosync"><code class="sig-name">MADV_AUTOSYNC</code></dt>
+  <dt id="py:data:mmap.madv_nocore"><code class="sig-name">MADV_NOCORE</code></dt>
+  <dt id="py:data:mmap.madv_core"><code class="sig-name">MADV_CORE</code></dt>
+  <dt id="py:data:mmap.madv_protect"><code class="sig-name">MADV_PROTECT</code></dt>
+  <dt id="py:data:mmap.madv_free_reusable"><code class="sig-name">MADV_FREE_REUSABLE</code></dt>
+  <dt id="py:data:mmap.madv_free_reuse"><code class="sig-name">MADV_FREE_REUSE</code></dt>
+  <dd><p>These options can be passed to <a class="reference internal" href="mmap.html#py:method:mmap.mmap.madvise"><code class="xref py method docutils literal">mmap.madvise</code></a>.  Not every option will
+be present on every system.</p>
+<p>Availability: Systems with the madvise() system call.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+</div>
+</dd>
+</dl>
+<a id="map-constants"></a>
+<h2 id="map-constants"><a href="#" class="broken-link">MAP</a>* Constants</h2>
+<dl class="py data">
+  <dt id="py:data:mmap.map_shared"><code class="sig-name">MAP_SHARED</code></dt>
+  <dt id="py:data:mmap.map_private"><code class="sig-name">MAP_PRIVATE</code></dt>
+  <dt id="py:data:mmap.map_32bit"><code class="sig-name">MAP_32BIT</code></dt>
+  <dt id="py:data:mmap.map_aligned_super"><code class="sig-name">MAP_ALIGNED_SUPER</code></dt>
+  <dt id="py:data:mmap.map_anon"><code class="sig-name">MAP_ANON</code></dt>
+  <dt id="py:data:mmap.map_anonymous"><code class="sig-name">MAP_ANONYMOUS</code></dt>
+  <dt id="py:data:mmap.map_conceal"><code class="sig-name">MAP_CONCEAL</code></dt>
+  <dt id="py:data:mmap.map_denywrite"><code class="sig-name">MAP_DENYWRITE</code></dt>
+  <dt id="py:data:mmap.map_executable"><code class="sig-name">MAP_EXECUTABLE</code></dt>
+  <dt id="py:data:mmap.map_hassemaphore"><code class="sig-name">MAP_HASSEMAPHORE</code></dt>
+  <dt id="py:data:mmap.map_jit"><code class="sig-name">MAP_JIT</code></dt>
+  <dt id="py:data:mmap.map_nocache"><code class="sig-name">MAP_NOCACHE</code></dt>
+  <dt id="py:data:mmap.map_noextend"><code class="sig-name">MAP_NOEXTEND</code></dt>
+  <dt id="py:data:mmap.map_noreserve"><code class="sig-name">MAP_NORESERVE</code></dt>
+  <dt id="py:data:mmap.map_populate"><code class="sig-name">MAP_POPULATE</code></dt>
+  <dt id="py:data:mmap.map_resilient_codesign"><code class="sig-name">MAP_RESILIENT_CODESIGN</code></dt>
+  <dt id="py:data:mmap.map_resilient_media"><code class="sig-name">MAP_RESILIENT_MEDIA</code></dt>
+  <dt id="py:data:mmap.map_stack"><code class="sig-name">MAP_STACK</code></dt>
+  <dt id="py:data:mmap.map_tpro"><code class="sig-name">MAP_TPRO</code></dt>
+  <dt id="py:data:mmap.map_translated_allow_execute"><code class="sig-name">MAP_TRANSLATED_ALLOW_EXECUTE</code></dt>
+  <dt id="py:data:mmap.map_unix03"><code class="sig-name">MAP_UNIX03</code></dt>
+  <dd><p>These are the various flags that can be passed to <a href="#" class="broken-link"><code class="xref py method docutils literal">mmap.mmap</code></a>.  <a class="reference internal" href="mmap.html#py:data:mmap.map_aligned_super"><code class="xref py data docutils literal">MAP_ALIGNED_SUPER</code></a>
+is only available at FreeBSD and <a class="reference internal" href="mmap.html#py:data:mmap.map_conceal"><code class="xref py data docutils literal">MAP_CONCEAL</code></a> is only available at OpenBSD.  Note
+that some options might not be present on some systems.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Added <a class="reference internal" href="mmap.html#py:data:mmap.map_populate"><code class="xref py data docutils literal">MAP_POPULATE</code></a> constant.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+<p>Added <a class="reference internal" href="mmap.html#py:data:mmap.map_stack"><code class="xref py data docutils literal">MAP_STACK</code></a> constant.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+<p>Added <a class="reference internal" href="mmap.html#py:data:mmap.map_aligned_super"><code class="xref py data docutils literal">MAP_ALIGNED_SUPER</code></a> and <a class="reference internal" href="mmap.html#py:data:mmap.map_conceal"><code class="xref py data docutils literal">MAP_CONCEAL</code></a> constants.</p>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+<p>Added <a class="reference internal" href="mmap.html#py:data:mmap.map_32bit"><code class="xref py data docutils literal">MAP_32BIT</code></a>, <a class="reference internal" href="mmap.html#py:data:mmap.map_hassemaphore"><code class="xref py data docutils literal">MAP_HASSEMAPHORE</code></a>, <a class="reference internal" href="mmap.html#py:data:mmap.map_jit"><code class="xref py data docutils literal">MAP_JIT</code></a>,
+<a class="reference internal" href="mmap.html#py:data:mmap.map_nocache"><code class="xref py data docutils literal">MAP_NOCACHE</code></a>, <a class="reference internal" href="mmap.html#py:data:mmap.map_noextend"><code class="xref py data docutils literal">MAP_NOEXTEND</code></a>, <a class="reference internal" href="mmap.html#py:data:mmap.map_noreserve"><code class="xref py data docutils literal">MAP_NORESERVE</code></a>,
+<a class="reference internal" href="mmap.html#py:data:mmap.map_resilient_codesign"><code class="xref py data docutils literal">MAP_RESILIENT_CODESIGN</code></a>, <a class="reference internal" href="mmap.html#py:data:mmap.map_resilient_media"><code class="xref py data docutils literal">MAP_RESILIENT_MEDIA</code></a>,
+<a class="reference internal" href="mmap.html#py:data:mmap.map_tpro"><code class="xref py data docutils literal">MAP_TPRO</code></a>, <a class="reference internal" href="mmap.html#py:data:mmap.map_translated_allow_execute"><code class="xref py data docutils literal">MAP_TRANSLATED_ALLOW_EXECUTE</code></a>, and
+<a class="reference internal" href="mmap.html#py:data:mmap.map_unix03"><code class="xref py data docutils literal">MAP_UNIX03</code></a> constants.</p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="signal.html">&larr; signal — Set handlers for asynchronous events</a>
+        <a class="next" href="netdata.html">Internet Data Handling &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

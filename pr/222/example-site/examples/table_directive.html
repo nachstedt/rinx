@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The table Directive — Megacorp Documentation</title>
+  <link rel="stylesheet" href="../default.css">
+  <script defer src="../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Megacorp Documentation</h2>
+        <p class="project-version">v2.0-beta</p>
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        <p class="sidebar-index-link"><a href="../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="headings.html">Section headings</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="hyperlinks.html">Hyperlinks and Targets</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="admonitions.html">Admonitions Showcase</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="inline_roles.html">Inline Roles</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="any_role.html">The :any: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="doc_role.html">The :doc: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="numref.html">The :numref: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="downloads.html">The :download: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="version_changes.html">Version Change Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="seealso.html">See Also Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="literal_blocks.html">Literal Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="code_blocks.html">Code Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="definition_lists.html">Definition Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="enumerated_lists.html">Enumerated Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="option_lists.html">Option Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="block_quotes.html">Block Quotes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="line_blocks.html">Line Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="comments.html">Comments</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="domains.html">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="current_module.html">Current Module</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="transitions.html">Transitions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="typography.html">Smart Typography</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="escapes.html">Backslash Escapes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="tables.html">Grid Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="simple_tables.html">Simple Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="list_table.html">List Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="csv_table.html">CSV Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="table_directive.html">The table Directive</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The table Directive"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="table_directive.html#wrapping-a-grid-table">Wrapping a Grid Table</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="table_directive.html#wrapping-a-simple-table">Wrapping a Simple Table</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="table_directive.html#table-with-a-title">Table with a Title</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="table_directive.html#widths">:widths:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="table_directive.html#width">:width:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="table_directive.html#align">:align:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="table_directive.html#class">:class:</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="table_directive.html#name-and-cross-referencing">:name: and Cross-Referencing</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="table_directive.html#domain-objects-nested-inside-a-cell">Domain Objects Nested Inside a Cell</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="math.html">Math</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="code_role.html">The :code: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="registry_roles.html">Registry Roles: :pep:, :rfc:, :cve: and :cwe:</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="images.html">Images</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="figures.html">Figures</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="substitutions.html">Substitutions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="includes.html">Includes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="index_entries.html">Index Entries</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="noqa.html">Suppressing diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="unknown_directives.html">Unrecognized and malformed directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="if_builder.html">Conditional content by builder</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="doctests.html">Doctest Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="entities/index.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="toctree/index.html">Toctree Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="contents/index.html">Contents Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="sectnum/index.html">Sectnum Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="dropdown/index.html">Dropdown Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="grid/index.html">Grid Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="button_link/index.html">Button Link Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="jinja/index.html">🧩 Templated Sources</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="intersphinx/index.html">Linking into other sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="team_a/index.html">Team A: Getting Started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="team_b/index.html">Team B: Infrastructure Guide</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="csv_table.html">&larr; CSV Tables</a>
+        <a class="next" href="math.html">Math &rarr;</a>
+      </nav>
+      
+      <h1 id="the-table-directive">The <code>table</code> Directive</h1>
+<p><code>.. table::</code> wraps an existing grid or simple table (given as the
+directive's own content) with a title/caption and the presentation options
+neither ASCII-art syntax has notation of its own for.</p>
+<h2 id="wrapping-a-grid-table">Wrapping a Grid Table</h2>
+<table>
+<thead>
+<tr>
+<th><p>Fruit</p>
+</th>
+<th><p>Colour</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>Apple</p>
+</td>
+<td><p>Red</p>
+</td>
+</tr>
+<tr>
+<td><p>Lemon</p>
+</td>
+<td><p>Yellow</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="wrapping-a-simple-table">Wrapping a Simple Table</h2>
+<table>
+<thead>
+<tr>
+<th><p>A</p>
+</th>
+<th><p>not A</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>False</p>
+</td>
+<td><p>True</p>
+</td>
+</tr>
+<tr>
+<td><p>True</p>
+</td>
+<td><p>False</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-with-a-title">Table with a Title</h2>
+<p>The directive's argument, if given, becomes the table's caption:</p>
+<table>
+<caption><span class="caption-number">Table 5 </span>Truth Table for "not"</caption>
+<thead>
+<tr>
+<th><p>A</p>
+</th>
+<th><p>not A</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>False</p>
+</td>
+<td><p>True</p>
+</td>
+</tr>
+<tr>
+<td><p>True</p>
+</td>
+<td><p>False</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="widths"><code>:widths:</code></h2>
+<p>Sets relative column widths — <code>auto</code> and <code>grid</code> both let the renderer
+decide, while an explicit list of integers (matching the wrapped table's own
+column count) is normalized into percentages:</p>
+<table>
+<colgroup>
+<col style="width: 20.00%" />
+<col style="width: 80.00%" />
+</colgroup>
+<thead>
+<tr>
+<th><p>Key</p>
+</th>
+<th><p>Description</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>name</p>
+</td>
+<td><p>A short, human-readable identifier.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="width"><code>:width:</code></h2>
+<p>Sets the overall table width:</p>
+<table style="width: 60%">
+<tbody>
+<tr>
+<td><p>Fruit</p>
+</td>
+<td><p>Colour</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="align"><code>:align:</code></h2>
+<p>Aligns the table on the page — <code>left</code>, <code>center</code>, or <code>right</code>:</p>
+<table class="align-center" style="width: 50%">
+<tbody>
+<tr>
+<td><p>Fruit</p>
+</td>
+<td><p>Colour</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="class"><code>:class:</code></h2>
+<p>Adds extra CSS classes to the rendered <code>&lt;table&gt;</code>:</p>
+<table class="compact">
+<tbody>
+<tr>
+<td><p>Fruit</p>
+</td>
+<td><p>Colour</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h2 id="name-and-cross-referencing"><code>:name:</code> and Cross-Referencing</h2>
+<p>Gives the table a hyperlink target, referenceable via <code>:ref:</code>. As with any
+other internal target in rinx today, the link resolves to this
+<em>document</em>, not precisely to the table itself.</p>
+<a id="wrapped-fruit-table"></a>
+<table>
+<tbody>
+<tr>
+<td><p>Fruit</p>
+</td>
+<td><p>Colour</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="table_directive.html#wrapped-fruit-table">wrapped-fruit-table</a> for the wrapped table above.</p>
+<h2 id="domain-objects-nested-inside-a-cell">Domain Objects Nested Inside a Cell</h2>
+<p>A wrapped table's cells are ordinary grid/simple table cells, so they parse
+as full block-level RST exactly like an unwrapped one — a cell can nest a
+domain-object definition:</p>
+<table>
+<thead>
+<tr>
+<th><p>Attribute</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="py attribute">
+  <dt id="py:attribute:circle.radius"><code class="sig-name">Circle.radius</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>The circle's radius, in pixels.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference internal" href="table_directive.html#py:attribute:circle.radius"><code class="xref py attribute docutils literal">Circle.radius</code></a> resolves correctly because the definition above was
+fully parsed rather than swallowed as opaque directive body text.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="csv_table.html">&larr; CSV Tables</a>
+        <a class="next" href="math.html">Math &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

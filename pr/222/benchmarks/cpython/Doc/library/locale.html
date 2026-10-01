@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>locale — Internationalization services — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="i18n.html">Internationalization</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internationalization"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="gettext.html">gettext — Multilingual internationalization services</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="locale.html">locale — Internationalization services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle locale — Internationalization services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="locale.html#background-details-hints-tips-and-caveats">Background, details, hints, tips and caveats</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="locale.html#locale-names">Locale names</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="locale.html#for-extension-writers-and-programs-that-embed-python">For extension writers and programs that embed Python</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="locale.html#access-to-message-catalogs">Access to message catalogs</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="gettext.html">&larr; gettext — Multilingual internationalization services</a>
+        <a class="next" href="tk.html">Graphical user interfaces with Tk &rarr;</a>
+      </nav>
+      
+      <h1 id="locale-internationalization-services"><code class="xref py module docutils literal">locale</code> — Internationalization services</h1>
+<dl class="py module">
+  <dt id="py:module:locale"><code class="sig-name">locale</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Martin von Löwis &lt;martin@v.loewis.de&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Martin von Löwis &lt;martin@v.loewis.de&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/locale.py`</p>
+<hr />
+<p>The <a class="reference internal" href="locale.html#py:module:locale" title="locale: Internationalization services."><code class="xref py module docutils literal">locale</code></a> module opens access to the POSIX locale database and
+functionality. The POSIX locale mechanism allows programmers to deal with
+certain cultural issues in an application, without requiring the programmer to
+know all the specifics of each country where the software is executed.</p>
+<span id="index-0"></span>
+<p>The <a class="reference internal" href="locale.html#py:module:locale" title="locale: Internationalization services."><code class="xref py module docutils literal">locale</code></a> module is implemented on top of the <code class="xref py module docutils literal">_locale</code> module,
+which in turn uses an ANSI C locale implementation if available.</p>
+<p>The <a class="reference internal" href="locale.html#py:module:locale" title="locale: Internationalization services."><code class="xref py module docutils literal">locale</code></a> module defines the following exception and functions:</p>
+<dl class="py exception">
+  <dt id="py:exception:locale.error"><em class="property">exception</em> <code class="sig-name">Error</code></dt>
+  <dd><p>Exception raised when the locale passed to <a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a> is not
+recognized.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.setlocale"><code class="sig-name">setlocale(category, locale=None)</code></dt>
+  <dd><p>If <em>locale</em> is given and not <code>None</code>, <a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a> modifies the locale
+setting for the <em>category</em>. The available categories are listed in the data
+description below. <em>locale</em> may be a <a href="locale.html#locale_name">string</a>, or a pair,
+language code and encoding. An empty string specifies the user's
+default settings. If the modification of the locale fails, the exception
+<a class="reference internal" href="locale.html#py:exception:locale.error"><code class="xref py exception docutils literal">Error</code></a> is raised. If successful, the new locale setting is returned.</p>
+<p>If <em>locale</em> is a pair, it is converted to a locale name using
+the locale aliasing engine.
+The language code has the same format as a <a href="locale.html#locale_name">locale name</a>,
+but without encoding and <code>@</code>-modifier.
+The language code and encoding can be <code>None</code>.</p>
+<p>If <em>locale</em> is omitted or <code>None</code>, the current setting for <em>category</em> is
+returned.</p>
+<p><a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a> is not thread-safe on most systems. Applications typically
+start with a call of :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setlocale</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">LC_ALL</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>This sets the locale for all categories to the user's default setting (typically
+specified in the :envvar:`LANG` environment variable).  If the locale is not
+changed thereafter, using multithreading should not cause problems.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.localeconv"><code class="sig-name">localeconv()</code></dt>
+  <dd><p>Returns the database of the local conventions as a dictionary. This dictionary
+has the following strings as keys:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'tabularcolumns'</p>
+<pre class="directive-error-source">.. tabularcolumns:: |l|l|L|</pre>
+</div>
+<table>
+<thead>
+<tr>
+<th><p>Category</p>
+</th>
+<th><p>Key</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="locale.html#py:data:locale.lc_numeric"><code class="xref py data docutils literal">LC_NUMERIC</code></a></p>
+</td>
+<td><p><code>'decimal_point'</code></p>
+</td>
+<td><p>Decimal point character.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'grouping'</code></p>
+</td>
+<td><p>Sequence of numbers specifying
+which relative positions the
+<code>'thousands_sep'</code> is
+expected.  If the sequence is
+terminated with
+<a class="reference internal" href="locale.html#py:data:locale.char_max"><code class="xref py data docutils literal">CHAR_MAX</code></a>, no further
+grouping is performed. If the
+sequence terminates with a
+<code>0</code>,  the last group size is
+repeatedly used.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'thousands_sep'</code></p>
+</td>
+<td><p>Character used between groups.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="locale.html#py:data:locale.lc_monetary"><code class="xref py data docutils literal">LC_MONETARY</code></a></p>
+</td>
+<td><p><code>'int_curr_symbol'</code></p>
+</td>
+<td><p>International currency symbol.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'currency_symbol'</code></p>
+</td>
+<td><p>Local currency symbol.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'p_cs_precedes/n_cs_precedes'</code></p>
+</td>
+<td><p>Whether the currency symbol
+precedes the value (for
+positive resp. negative
+values).</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'p_sep_by_space/n_sep_by_space'</code></p>
+</td>
+<td><p>Whether the currency symbol is
+separated from the value  by a
+space (for positive resp.
+negative values).</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'mon_decimal_point'</code></p>
+</td>
+<td><p>Decimal point used for
+monetary values.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'frac_digits'</code></p>
+</td>
+<td><p>Number of fractional digits
+used in local formatting of
+monetary values.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'int_frac_digits'</code></p>
+</td>
+<td><p>Number of fractional digits
+used in international
+formatting of monetary values.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'mon_thousands_sep'</code></p>
+</td>
+<td><p>Group separator used for
+monetary values.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'mon_grouping'</code></p>
+</td>
+<td><p>Equivalent to <code>'grouping'</code>,
+used for monetary values.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'positive_sign'</code></p>
+</td>
+<td><p>Symbol used to annotate a
+positive monetary value.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'negative_sign'</code></p>
+</td>
+<td><p>Symbol used to annotate a
+negative monetary value.</p>
+</td>
+</tr>
+<tr>
+<td></td>
+<td><p><code>'p_sign_posn/n_sign_posn'</code></p>
+</td>
+<td><p>The position of the sign (for
+positive resp. negative
+values), see below.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>All numeric values can be set to <a class="reference internal" href="locale.html#py:data:locale.char_max"><code class="xref py data docutils literal">CHAR_MAX</code></a> to indicate that there is no
+value specified in this locale.</p>
+<p>The possible values for <code>'p_sign_posn'</code> and <code>'n_sign_posn'</code> are given below.</p>
+<table>
+<thead>
+<tr>
+<th><p>Value</p>
+</th>
+<th><p>Explanation</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>0</code></p>
+</td>
+<td><p>Currency and value are surrounded by
+parentheses.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>1</code></p>
+</td>
+<td><p>The sign should precede the value and
+currency symbol.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>2</code></p>
+</td>
+<td><p>The sign should follow the value and
+currency symbol.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>3</code></p>
+</td>
+<td><p>The sign should immediately precede the
+value.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>4</code></p>
+</td>
+<td><p>The sign should immediately follow the
+value.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>CHAR_MAX</code></p>
+</td>
+<td><p>Nothing is specified in this locale.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The function temporarily sets the <code>LC_CTYPE</code> locale to the <code>LC_NUMERIC</code>
+locale or the <code>LC_MONETARY</code> locale if locales are different and numeric or
+monetary strings are non-ASCII. This temporary change affects other threads.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The function now temporarily sets the <code>LC_CTYPE</code> locale to the
+<code>LC_NUMERIC</code> locale in some cases.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.nl_langinfo"><code class="sig-name">nl_langinfo(option)</code></dt>
+  <dd><p>Return some locale-specific information as a string.  This function is not
+available on all systems, and the set of possible options might also vary
+across platforms.  The possible argument values are numbers, for which
+symbolic constants are available in the locale module.</p>
+<p>The <a class="reference internal" href="locale.html#py:function:locale.nl_langinfo"><code class="xref py function docutils literal">nl_langinfo</code></a> function accepts one of the following keys.  Most
+descriptions are taken from the corresponding description in the GNU C
+library.</p>
+<dl class="py data">
+  <dt id="py:data:locale.codeset"><code class="sig-name">CODESET</code></dt>
+  <dd><p>Get a string with the name of the character encoding used in the
+selected locale.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.d_t_fmt"><code class="sig-name">D_T_FMT</code></dt>
+  <dd><p>Get a string that can be used as a format string for <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a> to
+represent date and time in a locale-specific way.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.d_fmt"><code class="sig-name">D_FMT</code></dt>
+  <dd><p>Get a string that can be used as a format string for <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a> to
+represent a date in a locale-specific way.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.t_fmt"><code class="sig-name">T_FMT</code></dt>
+  <dd><p>Get a string that can be used as a format string for <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a> to
+represent a time in a locale-specific way.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.t_fmt_ampm"><code class="sig-name">T_FMT_AMPM</code></dt>
+  <dd><p>Get a format string for <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a> to represent time in the am/pm
+format.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.day_1"><code class="sig-name">DAY_1</code></dt>
+  <dt id="py:data:locale.day_2"><code class="sig-name">DAY_2</code></dt>
+  <dt id="py:data:locale.day_3"><code class="sig-name">DAY_3</code></dt>
+  <dt id="py:data:locale.day_4"><code class="sig-name">DAY_4</code></dt>
+  <dt id="py:data:locale.day_5"><code class="sig-name">DAY_5</code></dt>
+  <dt id="py:data:locale.day_6"><code class="sig-name">DAY_6</code></dt>
+  <dt id="py:data:locale.day_7"><code class="sig-name">DAY_7</code></dt>
+  <dd><p>Get the name of the n-th day of the week.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>This follows the US convention of <a class="reference internal" href="locale.html#py:data:locale.day_1"><code class="xref py data docutils literal">DAY_1</code></a> being Sunday, not the
+international convention (ISO 8601) that Monday is the first day of the
+week.</p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.abday_1"><code class="sig-name">ABDAY_1</code></dt>
+  <dt id="py:data:locale.abday_2"><code class="sig-name">ABDAY_2</code></dt>
+  <dt id="py:data:locale.abday_3"><code class="sig-name">ABDAY_3</code></dt>
+  <dt id="py:data:locale.abday_4"><code class="sig-name">ABDAY_4</code></dt>
+  <dt id="py:data:locale.abday_5"><code class="sig-name">ABDAY_5</code></dt>
+  <dt id="py:data:locale.abday_6"><code class="sig-name">ABDAY_6</code></dt>
+  <dt id="py:data:locale.abday_7"><code class="sig-name">ABDAY_7</code></dt>
+  <dd><p>Get the abbreviated name of the n-th day of the week.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.mon_1"><code class="sig-name">MON_1</code></dt>
+  <dt id="py:data:locale.mon_2"><code class="sig-name">MON_2</code></dt>
+  <dt id="py:data:locale.mon_3"><code class="sig-name">MON_3</code></dt>
+  <dt id="py:data:locale.mon_4"><code class="sig-name">MON_4</code></dt>
+  <dt id="py:data:locale.mon_5"><code class="sig-name">MON_5</code></dt>
+  <dt id="py:data:locale.mon_6"><code class="sig-name">MON_6</code></dt>
+  <dt id="py:data:locale.mon_7"><code class="sig-name">MON_7</code></dt>
+  <dt id="py:data:locale.mon_8"><code class="sig-name">MON_8</code></dt>
+  <dt id="py:data:locale.mon_9"><code class="sig-name">MON_9</code></dt>
+  <dt id="py:data:locale.mon_10"><code class="sig-name">MON_10</code></dt>
+  <dt id="py:data:locale.mon_11"><code class="sig-name">MON_11</code></dt>
+  <dt id="py:data:locale.mon_12"><code class="sig-name">MON_12</code></dt>
+  <dd><p>Get the name of the n-th month.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.abmon_1"><code class="sig-name">ABMON_1</code></dt>
+  <dt id="py:data:locale.abmon_2"><code class="sig-name">ABMON_2</code></dt>
+  <dt id="py:data:locale.abmon_3"><code class="sig-name">ABMON_3</code></dt>
+  <dt id="py:data:locale.abmon_4"><code class="sig-name">ABMON_4</code></dt>
+  <dt id="py:data:locale.abmon_5"><code class="sig-name">ABMON_5</code></dt>
+  <dt id="py:data:locale.abmon_6"><code class="sig-name">ABMON_6</code></dt>
+  <dt id="py:data:locale.abmon_7"><code class="sig-name">ABMON_7</code></dt>
+  <dt id="py:data:locale.abmon_8"><code class="sig-name">ABMON_8</code></dt>
+  <dt id="py:data:locale.abmon_9"><code class="sig-name">ABMON_9</code></dt>
+  <dt id="py:data:locale.abmon_10"><code class="sig-name">ABMON_10</code></dt>
+  <dt id="py:data:locale.abmon_11"><code class="sig-name">ABMON_11</code></dt>
+  <dt id="py:data:locale.abmon_12"><code class="sig-name">ABMON_12</code></dt>
+  <dd><p>Get the abbreviated name of the n-th month.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.radixchar"><code class="sig-name">RADIXCHAR</code></dt>
+  <dd><p>Get the radix character (decimal dot, decimal comma, etc.).</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.thousep"><code class="sig-name">THOUSEP</code></dt>
+  <dd><p>Get the separator character for thousands (groups of three digits).</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.yesexpr"><code class="sig-name">YESEXPR</code></dt>
+  <dd><p>Get a regular expression that can be used with the regex function to
+recognize a positive response to a yes/no question.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.noexpr"><code class="sig-name">NOEXPR</code></dt>
+  <dd><p>Get a regular expression that can be used with the <code>regex(3)</code> function to
+recognize a negative response to a yes/no question.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The regular expressions for <a class="reference internal" href="locale.html#py:data:locale.yesexpr"><code class="xref py data docutils literal">YESEXPR</code></a> and
+<a class="reference internal" href="locale.html#py:data:locale.noexpr"><code class="xref py data docutils literal">NOEXPR</code></a> use syntax suitable for the
+<code>regex</code> function from the C library, which might
+differ from the syntax used in <a class="reference internal" href="re.html#py:module:re" title="re: Regular expression operations."><code class="xref py module docutils literal">re</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.crncystr"><code class="sig-name">CRNCYSTR</code></dt>
+  <dd><p>Get the currency symbol, preceded by "-" if the symbol should appear before
+the value, "+" if the symbol should appear after the value, or "." if the
+symbol should replace the radix character.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.era"><code class="sig-name">ERA</code></dt>
+  <dd><p>Get a string which describes how years are counted and displayed for
+each era in a locale.</p>
+<p>Most locales do not define this value.  An example of a locale which does
+define this value is the Japanese one.  In Japan, the traditional
+representation of dates includes the name of the era corresponding to the
+then-emperor's reign.</p>
+<p>Normally it should not be necessary to use this value directly. Specifying
+the <code>E</code> modifier in their format strings causes the <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a>
+function to use this information.
+The format of the returned string is specified in <em>The Open Group Base
+Specifications Issue 8</em>, paragraph <a href="https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap07.html#tag_07_03_05_02">7.3.5.2 LC_TIME C-Language Access</a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.era_d_t_fmt"><code class="sig-name">ERA_D_T_FMT</code></dt>
+  <dd><p>Get a format string for <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a> to represent date and time in a
+locale-specific era-based way.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.era_d_fmt"><code class="sig-name">ERA_D_FMT</code></dt>
+  <dd><p>Get a format string for <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a> to represent a date in a
+locale-specific era-based way.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.era_t_fmt"><code class="sig-name">ERA_T_FMT</code></dt>
+  <dd><p>Get a format string for <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a> to represent a time in a
+locale-specific era-based way.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.alt_digits"><code class="sig-name">ALT_DIGITS</code></dt>
+  <dd><p>Get a string consisting of up to 100 semicolon-separated symbols used
+to represent the values 0 to 99 in a locale-specific way.
+In most locales this is an empty string.</p>
+</dd>
+</dl>
+<p>The function temporarily sets the <code>LC_CTYPE</code> locale to the locale
+of the category that determines the requested value (<code>LC_TIME</code>,
+<code>LC_NUMERIC</code>, <code>LC_MONETARY</code> or <code>LC_MESSAGES</code>) if locales are
+different and the resulting string is non-ASCII.
+This temporary change affects other threads.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>The function now temporarily sets the <code>LC_CTYPE</code> locale in some cases.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.getdefaultlocale"><code class="sig-name">getdefaultlocale([envvars])</code></dt>
+  <dd><p>Tries to determine the default locale settings and returns them as a tuple of
+the form <code>(language code, encoding)</code>.</p>
+<p>According to POSIX, a program which has not called <code>setlocale(LC_ALL, '')</code>
+runs using the portable <code>'C'</code> locale.  Calling <code>setlocale(LC_ALL, '')</code> lets
+it use the default locale as defined by the :envvar:`LANG` variable.  Since we
+do not want to interfere with the current locale setting we thus emulate the
+behavior in the way described above.</p>
+<p>To maintain compatibility with other platforms, not only the :envvar:`LANG`
+variable is tested, but a list of variables given as envvars parameter.  The
+first found to be defined will be used.  <em>envvars</em> defaults to the search
+path used in GNU gettext; it must always contain the variable name
+<code>'LANG'</code>.  The GNU gettext search path contains <code>'LC_ALL'</code>,
+<code>'LC_CTYPE'</code>, <code>'LANG'</code> and <code>'LANGUAGE'</code>, in that order.</p>
+<p>The language code has the same format as a <a href="locale.html#locale_name">locale name</a>,
+but without encoding and <code>@</code>-modifier.
+The language code and encoding may be <code>None</code> if their values cannot be
+determined.
+The "C" locale is represented as <code>(None, None)</code>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'deprecated-removed'</p>
+<pre class="directive-error-source">.. deprecated-removed:: 3.11 3.15</pre>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.getlocale"><code class="sig-name">getlocale(category=LC_CTYPE)</code></dt>
+  <dd><p>Returns the current setting for the given locale category as a tuple containing
+the language code and encoding. <em>category</em> may be one of the <code class="xref py data docutils literal">LC_*</code>
+values except <a class="reference internal" href="locale.html#py:data:locale.lc_all"><code class="xref py data docutils literal">LC_ALL</code></a>.  It defaults to <a class="reference internal" href="locale.html#py:data:locale.lc_ctype"><code class="xref py data docutils literal">LC_CTYPE</code></a>.</p>
+<p>The language code has the same format as a <a href="locale.html#locale_name">locale name</a>,
+but without encoding and <code>@</code>-modifier.
+The language code and encoding may be <code>None</code> if their values cannot be
+determined.
+The "C" locale is represented as <code>(None, None)</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.getpreferredencoding"><code class="sig-name">getpreferredencoding(do_setlocale=True)</code></dt>
+  <dd><p>Return the <a class="reference internal" href="../glossary.html#term-locale-encoding"><span class="xref std std-term">locale encoding</span></a> used for text data, according to user
+preferences.  User preferences are expressed differently on different
+systems, and might not be available programmatically on some systems, so
+this function only returns a guess.</p>
+<p>On some systems, it is necessary to invoke <a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a> to obtain the
+user preferences, so this function is not thread-safe. If invoking setlocale
+is not necessary or desired, <em>do_setlocale</em> should be set to <code>False</code>.</p>
+<p>On Android or if the <a href="os.html#utf8-mode">Python UTF-8 Mode</a> is enabled, always
+return <code>'utf-8'</code>, the <a class="reference internal" href="../glossary.html#term-locale-encoding"><span class="xref std std-term">locale encoding</span></a> and the <em>do_setlocale</em>
+argument are ignored.</p>
+<p>The <a href="../c-api/init_config.html#c-preinit">Python preinitialization</a> configures the LC_CTYPE
+locale. See also the <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and error handler</span></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The function now always returns <code>"utf-8"</code> on Android or if the
+<a href="os.html#utf8-mode">Python UTF-8 Mode</a> is enabled.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.getencoding"><code class="sig-name">getencoding()</code></dt>
+  <dd><p>Get the current <a class="reference internal" href="../glossary.html#term-locale-encoding"><span class="xref std std-term">locale encoding</span></a>:</p>
+<ul>
+<li><p>On Android and VxWorks, return <code>"utf-8"</code>.</p>
+</li>
+<li><p>On Unix, return the encoding of the current <a class="reference internal" href="locale.html#py:data:locale.lc_ctype"><code class="xref py data docutils literal">LC_CTYPE</code></a> locale.
+Return <code>"utf-8"</code> if <code>nl_langinfo(CODESET)</code> returns an empty string:
+for example, if the current LC_CTYPE locale is not supported.</p>
+</li>
+<li><p>On Windows, return the ANSI code page.</p>
+</li>
+</ul>
+<p>The <a href="../c-api/init_config.html#c-preinit">Python preinitialization</a> configures the LC_CTYPE
+locale. See also the <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and error handler</span></a>.</p>
+<p>This function is similar to
+<a class="reference internal" href="locale.html#py:function:locale.getpreferredencoding"><code class="xref py function docutils literal">getpreferredencoding(False)</code></a> except this
+function ignores the <a href="os.html#utf8-mode">Python UTF-8 Mode</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.normalize"><code class="sig-name">normalize(localename)</code></dt>
+  <dd><p>Returns a normalized locale code for the given locale name.  The returned locale
+code is formatted for use with <a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a>.  If normalization fails, the
+original name is returned unchanged.</p>
+<p>If the given encoding is not known, the function defaults to the default
+encoding for the locale code just like <a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.strcoll"><code class="sig-name">strcoll(string1, string2)</code></dt>
+  <dd><p>Compares two strings according to the current <a class="reference internal" href="locale.html#py:data:locale.lc_collate"><code class="xref py data docutils literal">LC_COLLATE</code></a> setting. As
+any other compare function, returns a negative, or a positive value, or <code>0</code>,
+depending on whether <em>string1</em> collates before or after <em>string2</em> or is equal to
+it.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.strxfrm"><code class="sig-name">strxfrm(string)</code></dt>
+  <dd><p>Transforms a string to one that can be used in locale-aware
+comparisons.  For example, <code>strxfrm(s1) &lt; strxfrm(s2)</code> is
+equivalent to <code>strcoll(s1, s2) &lt; 0</code>.  This function can be used
+when the same string is compared repeatedly, e.g. when collating a
+sequence of strings.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.format_string"><code class="sig-name">format_string(format, val, grouping=False, monetary=False)</code></dt>
+  <dd><p>Formats a number <em>val</em> according to the current <a class="reference internal" href="locale.html#py:data:locale.lc_numeric"><code class="xref py data docutils literal">LC_NUMERIC</code></a> setting.
+The format follows the conventions of the <code>%</code> operator.  For floating-point
+values, the decimal point is modified if appropriate.  If <em>grouping</em> is <code>True</code>,
+also takes the grouping into account.</p>
+<p>If <em>monetary</em> is true, the conversion uses monetary thousands separator and
+grouping strings.</p>
+<p>Processes formatting specifiers as in <code>format % val</code>, but takes the current
+locale settings into account.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.7:</span></p>
+<p>The <em>monetary</em> keyword parameter was added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.currency"><code class="sig-name">currency(val, symbol=True, grouping=False, international=False)</code></dt>
+  <dd><p>Formats a number <em>val</em> according to the current <a class="reference internal" href="locale.html#py:data:locale.lc_monetary"><code class="xref py data docutils literal">LC_MONETARY</code></a> settings.</p>
+<p>The returned string includes the currency symbol if <em>symbol</em> is true, which is
+the default. If <em>grouping</em> is <code>True</code> (which is not the default), grouping is done
+with the value. If <em>international</em> is <code>True</code> (which is not the default), the
+international currency symbol is used.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>This function will not work with the 'C' locale, so you have to set a
+locale via <a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a> first.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.str"><code class="sig-name">str(float)</code></dt>
+  <dd><p>Formats a floating-point number using the same format as the built-in function
+<code>str(float)</code>, but takes the decimal point into account.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.delocalize"><code class="sig-name">delocalize(string)</code></dt>
+  <dd><p>Converts a string into a normalized number string, following the
+<a class="reference internal" href="locale.html#py:data:locale.lc_numeric"><code class="xref py data docutils literal">LC_NUMERIC</code></a> settings.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.localize"><code class="sig-name">localize(string, grouping=False, monetary=False)</code></dt>
+  <dd><p>Converts a normalized number string into a formatted string following the
+<a class="reference internal" href="locale.html#py:data:locale.lc_numeric"><code class="xref py data docutils literal">LC_NUMERIC</code></a> settings.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.atof"><code class="sig-name">atof(string, func=float)</code></dt>
+  <dd><p>Converts a string to a number, following the <a class="reference internal" href="locale.html#py:data:locale.lc_numeric"><code class="xref py data docutils literal">LC_NUMERIC</code></a> settings,
+by calling <em>func</em> on the result of calling <a class="reference internal" href="locale.html#py:function:locale.delocalize"><code class="xref py function docutils literal">delocalize</code></a> on <em>string</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.atoi"><code class="sig-name">atoi(string)</code></dt>
+  <dd><p>Converts a string to an integer, following the <a class="reference internal" href="locale.html#py:data:locale.lc_numeric"><code class="xref py data docutils literal">LC_NUMERIC</code></a> conventions.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.lc_ctype"><code class="sig-name">LC_CTYPE</code></dt>
+  <dd><p>Locale category for the character type functions.  Most importantly, this
+category defines the text encoding, i.e. how bytes are interpreted as
+Unicode codepoints.  See <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0538/"><strong>PEP 538</strong></a> and <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0540/"><strong>PEP 540</strong></a> for how this variable
+might be automatically coerced to <code>C.UTF-8</code> to avoid issues created by
+invalid settings in containers or incompatible settings passed over remote
+SSH connections.</p>
+<p>Python doesn't internally use locale-dependent character transformation functions
+from <code>ctype.h</code>. Instead, <code>pyctype.h</code> provides locale-independent
+equivalents like <a class="reference internal" href="../c-api/conversion.html#c:macro:py_tolower"><code class="xref c macro docutils literal">Py_TOLOWER</code></a>.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.lc_collate"><code class="sig-name">LC_COLLATE</code></dt>
+  <dd><p>Locale category for sorting strings.  The functions <a class="reference internal" href="locale.html#py:function:locale.strcoll"><code class="xref py function docutils literal">strcoll</code></a> and
+<a class="reference internal" href="locale.html#py:function:locale.strxfrm"><code class="xref py function docutils literal">strxfrm</code></a> of the <a class="reference internal" href="locale.html#py:module:locale" title="locale: Internationalization services."><code class="xref py module docutils literal">locale</code></a> module are affected.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.lc_time"><code class="sig-name">LC_TIME</code></dt>
+  <dd><p>Locale category for the formatting of time.  The function <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a>
+follows these conventions.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.lc_monetary"><code class="sig-name">LC_MONETARY</code></dt>
+  <dd><p>Locale category for formatting of monetary values.  The available options are
+available from the <a class="reference internal" href="locale.html#py:function:locale.localeconv"><code class="xref py function docutils literal">localeconv</code></a> function.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.lc_messages"><code class="sig-name">LC_MESSAGES</code></dt>
+  <dd><p>Locale category for message display. Python currently does not support
+application specific locale-aware messages.  Messages displayed by the operating
+system, like those returned by <a class="reference internal" href="os.html#py:function:os.strerror"><code class="xref py function docutils literal">os.strerror</code></a> might be affected by this
+category.</p>
+<p>This value may not be available on operating systems not conforming to the
+POSIX standard, most notably Windows.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.lc_numeric"><code class="sig-name">LC_NUMERIC</code></dt>
+  <dd><p>Locale category for formatting numbers.  The functions <a class="reference internal" href="locale.html#py:function:locale.format_string"><code class="xref py function docutils literal">format_string</code></a>,
+<a class="reference internal" href="locale.html#py:function:locale.atoi"><code class="xref py function docutils literal">atoi</code></a>, <a class="reference internal" href="locale.html#py:function:locale.atof"><code class="xref py function docutils literal">atof</code></a> and <a class="reference internal" href="locale.html#py:function:locale.str"><code class="xref py function docutils literal">str</code></a> of the <a class="reference internal" href="locale.html#py:module:locale" title="locale: Internationalization services."><code class="xref py module docutils literal">locale</code></a> module are
+affected by that category.  All other numeric formatting operations are not
+affected.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.lc_all"><code class="sig-name">LC_ALL</code></dt>
+  <dd><p>Combination of all locale settings.  If this flag is used when the locale is
+changed, setting the locale for all categories is attempted. If that fails for
+any category, no category is changed at all.  When the locale is retrieved using
+this flag, a string indicating the setting for all categories is returned. This
+string can be later used to restore the settings.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:locale.char_max"><code class="sig-name">CHAR_MAX</code></dt>
+  <dd><p>This is a symbolic constant used for different values returned by
+<a class="reference internal" href="locale.html#py:function:locale.localeconv"><code class="xref py function docutils literal">localeconv</code></a>.</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">loc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">getlocale</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> get current locale
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> use German locale; name might vary with platform
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setlocale</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">LC_ALL</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">de_DE<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">strcoll</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">f<span class="hl-constant hl-character hl-escape hl-hex hl-python">\xe4</span>n<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">foo<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> compare a string containing an umlaut
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setlocale</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">LC_ALL</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>   <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> use user&#39;s preferred locale
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setlocale</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">LC_ALL</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">C<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> use default (C) locale
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">setlocale</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">locale</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-variable hl-other hl-constant hl-python">LC_ALL</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">loc</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> restore saved locale</span></span></pre></div>
+<h2 id="background-details-hints-tips-and-caveats">Background, details, hints, tips and caveats</h2>
+<p>The C standard defines the locale as a program-wide property that may be
+relatively expensive to change.  On top of that, some implementations are broken
+in such a way that frequent locale changes may cause core dumps.  This makes the
+locale somewhat painful to use correctly.</p>
+<p>Initially, when a program is started, the locale is the <code>C</code> locale, no matter
+what the user's preferred locale is.  There is one exception: the
+<a class="reference internal" href="locale.html#py:data:locale.lc_ctype"><code class="xref py data docutils literal">LC_CTYPE</code></a> category is changed at startup to set the current locale
+encoding to the user's preferred locale encoding. The program must explicitly
+say that it wants the user's preferred locale settings for other categories by
+calling <code>setlocale(LC_ALL, '')</code>.</p>
+<p>It is generally a bad idea to call <a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a> in some library routine,
+since as a side effect it affects the entire program.  Saving and restoring it
+is almost as bad: it is expensive and affects other threads that happen to run
+before the settings have been restored.</p>
+<p>If, when coding a module for general use, you need a locale independent version
+of an operation that is affected by the locale (such as
+certain formats used with <a class="reference internal" href="time.html#py:function:time.strftime"><code class="xref py function docutils literal">time.strftime</code></a>), you will have to find a way to
+do it without using the standard library routine.  Even better is convincing
+yourself that using locale settings is okay.  Only as a last resort should you
+document that your module is not compatible with non-<code>C</code> locale settings.</p>
+<p>The only way to perform numeric operations according to the locale is to use the
+special functions defined by this module: <a class="reference internal" href="locale.html#py:function:locale.atof"><code class="xref py function docutils literal">atof</code></a>, <a class="reference internal" href="locale.html#py:function:locale.atoi"><code class="xref py function docutils literal">atoi</code></a>,
+<a class="reference internal" href="locale.html#py:function:locale.format_string"><code class="xref py function docutils literal">format_string</code></a>, <a class="reference internal" href="locale.html#py:function:locale.str"><code class="xref py function docutils literal">str</code></a>.</p>
+<p>There is no way to perform case conversions and character classifications
+according to the locale.  For (Unicode) text strings these are done according
+to the character value only, while for byte strings, the conversions and
+classifications are done according to the ASCII value of the byte, and bytes
+whose high bit is set (i.e., non-ASCII bytes) are never converted or considered
+part of a character class such as letter or whitespace.</p>
+<a id="locale_name"></a>
+<h2 id="locale-names">Locale names</h2>
+<p>The format of the locale name is platform dependent, and the set of supported
+locales can depend on the system configuration.</p>
+<p>On Posix platforms, it usually has the format [1]_:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'productionlist'</p>
+<pre class="directive-error-source">.. productionlist:: locale_name
+   : language ["_" territory] ["." charset] ["@" modifier]</pre>
+</div>
+<p>where <em>language</em> is a two- or three-letter language code from <a href="https://www.iso.org/iso-639-language-code">ISO 639</a>,
+<em>territory</em> is a two-letter country or region code from <a href="https://www.iso.org/iso-3166-country-codes.html">ISO 3166</a>,
+<em>charset</em> is a locale encoding, and <em>modifier</em> is a script name,
+a language subtag, a sort order identifier, or other locale modifier
+(for example, "latin", "valencia", "stroke" and "euro").</p>
+<p>On Windows, several formats are supported. [2]_ [3]_
+A subset of <a href="https://www.rfc-editor.org/info/bcp47">IETF BCP 47</a> tags:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'productionlist'</p>
+<pre class="directive-error-source">.. productionlist:: locale_name
+   : language ["-" script] ["-" territory] ["." charset]
+   : language ["-" script] "-" territory "-" modifier</pre>
+</div>
+<p>where <em>language</em> and <em>territory</em> have the same meaning as in Posix,
+<em>script</em> is a four-letter script code from <a href="https://www.unicode.org/iso15924/">ISO 15924</a>,
+and <em>modifier</em> is a language subtag, a sort order identifier
+or custom modifier (for example, "valencia", "stroke" or "x-python").
+Both hyphen (<code>'-'</code>) and underscore (<code>'_'</code>) separators are supported.
+Only UTF-8 encoding is allowed for BCP 47 tags.</p>
+<p>Windows also supports locale names in the format:</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'productionlist'</p>
+<pre class="directive-error-source">.. productionlist:: locale_name
+   : language ["_" territory] ["." charset]</pre>
+</div>
+<p>where <em>language</em> and <em>territory</em> are full names, such as "English" and
+"United States", and <em>charset</em> is either a code page number (for example, "1252")
+or UTF-8.
+Only the underscore separator is supported in this format.</p>
+<p>The "C" locale is supported on all platforms.</p>
+<a id="embedding-locale"></a>
+<h2 id="for-extension-writers-and-programs-that-embed-python">For extension writers and programs that embed Python</h2>
+<p>Extension modules should never call <a class="reference internal" href="locale.html#py:function:locale.setlocale"><code class="xref py function docutils literal">setlocale</code></a>, except to find out what
+the current locale is.  But since the return value can only be used portably to
+restore it, that is not very useful (except perhaps to find out whether or not
+the locale is <code>C</code>).</p>
+<p>When Python code uses the <a class="reference internal" href="locale.html#py:module:locale" title="locale: Internationalization services."><code class="xref py module docutils literal">locale</code></a> module to change the locale, this also
+affects the embedding application.  If the embedding application doesn't want
+this to happen, it should remove the <code class="xref py module docutils literal">_locale</code> extension module (which does
+all the work) from the table of built-in modules in the :file:`config.c` file,
+and make sure that the <code class="xref py module docutils literal">_locale</code> module is not accessible as a shared
+library.</p>
+<a id="locale-gettext"></a>
+<h2 id="access-to-message-catalogs">Access to message catalogs</h2>
+<dl class="py function">
+  <dt id="py:function:locale.gettext"><code class="sig-name">gettext(msg)</code></dt>
+  <dd></dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.dgettext"><code class="sig-name">dgettext(domain, msg)</code></dt>
+  <dd></dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.dcgettext"><code class="sig-name">dcgettext(domain, msg, category)</code></dt>
+  <dd></dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.textdomain"><code class="sig-name">textdomain(domain)</code></dt>
+  <dd></dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.bindtextdomain"><code class="sig-name">bindtextdomain(domain, dir)</code></dt>
+  <dd></dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:locale.bind_textdomain_codeset"><code class="sig-name">bind_textdomain_codeset(domain, codeset)</code></dt>
+  <dd></dd>
+</dl>
+<p>The locale module exposes the C library's gettext interface on systems that
+provide this interface.  It consists of the functions <a class="reference internal" href="locale.html#py:function:locale.gettext"><code class="xref py function docutils literal">gettext</code></a>,
+<a class="reference internal" href="locale.html#py:function:locale.dgettext"><code class="xref py function docutils literal">dgettext</code></a>, <a class="reference internal" href="locale.html#py:function:locale.dcgettext"><code class="xref py function docutils literal">dcgettext</code></a>, <a class="reference internal" href="locale.html#py:function:locale.textdomain"><code class="xref py function docutils literal">textdomain</code></a>, <a class="reference internal" href="locale.html#py:function:locale.bindtextdomain"><code class="xref py function docutils literal">bindtextdomain</code></a>,
+and <a class="reference internal" href="locale.html#py:function:locale.bind_textdomain_codeset"><code class="xref py function docutils literal">bind_textdomain_codeset</code></a>.  These are similar to the same functions in
+the <a class="reference internal" href="gettext.html#py:module:gettext" title="gettext: Multilingual internationalization services."><code class="xref py module docutils literal">gettext</code></a> module, but use the C library's binary format for message
+catalogs, and the C library's search algorithms for locating message catalogs.</p>
+<p>Python applications should normally find no need to invoke these functions, and
+should use <a class="reference internal" href="gettext.html#py:module:gettext" title="gettext: Multilingual internationalization services."><code class="xref py module docutils literal">gettext</code></a> instead.  A known exception to this rule are
+applications that link with additional C libraries which internally invoke
+C functions <code>gettext</code> or <code>dcgettext</code>.  For these applications, it may be
+necessary to bind the text domain, so that the libraries can properly locate
+their message catalogs.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="gettext.html">&larr; gettext — Multilingual internationalization services</a>
+        <a class="next" href="tk.html">Graphical user interfaces with Tk &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
