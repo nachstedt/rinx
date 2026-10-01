@@ -7,8 +7,11 @@ use crate::diagnostics::Diagnostics;
 use crate::headings::Adornment;
 use crate::indent::indent_width;
 
-use super::admonitions::{parse_admonition, parse_seealso, parse_version_change};
-use super::body::{collect_argument_continuation_lines, collect_directive_body};
+use super::admonitions::try_parse_admonition_family;
+use super::body::{
+    MarkerLine, MarkerText, body_indent, collect_argument_continuation_lines,
+    collect_directive_body,
+};
 use super::button_link::parse_button_link;
 use super::code_block::{parse_code_block, parse_highlight, parse_literal_include};
 use super::contents::parse_contents;
@@ -43,20 +46,6 @@ use super::table::parse_table_directive;
 use super::toctree::parse_toctree;
 use super::uml::parse_uml;
 use rinx_ast::{CodeBlockSource, Directive, Node};
-
-/// The indentation every directive-body parser strips before parsing, so a
-/// `ParseCtx` can be shifted by the same amount.
-///
-/// Mirrors [`crate::indent::unindent_body_lines`]'s rule exactly — the first
-/// non-blank line's indent — because that is the function whose effect this
-/// compensates for. Without it every position inside a directive body would
-/// be short by the body's indent.
-fn body_indent(body_lines: &[&str]) -> usize {
-    body_lines
-        .iter()
-        .find(|line| !line.trim().is_empty())
-        .map_or(0, |line| indent_width(line))
-}
 
 pub(crate) fn try_parse_directive(
     lines: &[&str],
@@ -149,6 +138,23 @@ pub(crate) fn try_parse_directive(
     let (body_lines, first_line_offset) = body.for_directive();
     let body_ctx = ctx.nested(i + 1 + first_line_offset, body_indent(&body.lines));
     let consumed_lines = body.consumed;
+
+    // Checked before the chain below, because these are the directives whose
+    // content may begin on the marker line — above the body context.
+    if let Some(directive) = try_parse_admonition_family(
+        &name,
+        &MarkerLine {
+            index: i,
+            span: directive_span,
+            argument: MarkerText::after_marker(line),
+        },
+        &body,
+        adornment_order,
+        diagnostics,
+        ctx,
+    ) {
+        return Some((1 + consumed_lines, vec![Node::Directive(directive)]));
+    }
 
     // Checked before the one-node chain below, because these are the
     // directives that answer with any number of nodes rather than exactly one.
@@ -441,17 +447,6 @@ fn parse_remaining_body_directive(
     if let Some(directive) = parse_code_family(&name, &argument, body_lines, diagnostics, ctx) {
         return Node::Directive(directive);
     }
-    if let Ok(kind) = name.parse::<rinx_ast::VersionChangeKind>() {
-        let directive = parse_version_change(
-            kind,
-            argument,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        );
-        return Node::Directive(directive);
-    }
     if let Some(directive) = try_parse_extension_directive(
         &name,
         &argument,
@@ -461,21 +456,6 @@ fn parse_remaining_body_directive(
         diagnostics,
         ctx,
     ) {
-        return Node::Directive(directive);
-    }
-    if name == "seealso" {
-        let directive = parse_seealso(body_lines, adornment_order, diagnostics, ctx);
-        return Node::Directive(directive);
-    }
-    if let Ok(kind) = name.parse::<rinx_ast::AdmonitionKind>() {
-        let directive = parse_admonition(
-            kind,
-            argument,
-            body_lines,
-            adornment_order,
-            diagnostics,
-            ctx,
-        );
         return Node::Directive(directive);
     }
     if name == "glossary" {
@@ -896,16 +876,13 @@ mod tests {
     #[test]
     fn test_parse_body_directive_dispatches_a_known_directive() {
         // Given
-        let body = ["   Careful."];
+        let body = ["   term", "      Definition."];
 
         // When
-        let (node, _) = dispatch("note", "", &body);
+        let (node, _) = dispatch("glossary", "", &body);
 
         // Then
-        assert!(matches!(
-            node,
-            Node::Directive(Directive::Admonition { .. })
-        ));
+        assert!(matches!(node, Node::Directive(Directive::Glossary { .. })));
     }
 
     #[test]

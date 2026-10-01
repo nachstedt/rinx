@@ -532,6 +532,30 @@ fn test_e2e_unknown_code_block_language_still_shows_the_source() {
 }
 
 #[test]
+fn test_e2e_content_on_an_admonition_marker_line_reaches_the_page() {
+    // Given the one-line forms docutils reads as the first content line
+    let input = "\
+.. seealso:: See-also text.
+
+.. note:: Note text.
+
+.. versionchanged:: 3.1 Version text.
+";
+
+    // When
+    let result = process_rst("test.rst", input);
+
+    // Then
+    for text in ["See-also text.", "Note text.", "Version text."] {
+        assert!(result.contains(text), "{text} is missing from:\n{result}");
+    }
+    assert!(
+        !result.contains("3.1 Version"),
+        "the explanation leaked into the version:\n{result}"
+    );
+}
+
+#[test]
 fn test_e2e_unknown_directive_shows_its_source_instead_of_vanishing() {
     // Given a directive name this build does not implement, holding content
     // that would otherwise be lost with it — an unknown directive's body is

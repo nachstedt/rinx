@@ -15,6 +15,13 @@ Version Change Directives
 
    Use :program:`new-tool` instead. This will be removed in version 4.0.
 
+Text after the version starts the body, as in Sphinx:
+
+.. versionadded:: 1.2 The ``--fast`` flag.
+
+.. versionchanged:: 2.4 Accepts a path as well as a string,
+   continued on the next line.
+
 Body-less variants (version string only):
 
 .. versionadded:: 1.5

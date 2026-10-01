@@ -10,9 +10,12 @@
 //! same `.. ` explicit-markup construct and its body is delimited by exactly
 //! the same rule.
 
+use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
-use crate::indent::{indent_width, strip_indent};
-use rinx_ast::Span;
+use crate::diagnostics::Diagnostics;
+use crate::headings::Adornment;
+use crate::indent::{indent_width, strip_indent, unindent_body_lines};
+use rinx_ast::{Node, Span};
 
 /// Collects the indented body belonging to a directive/comment whose own
 /// intro line has `min_indent` leading whitespace characters.
@@ -166,6 +169,141 @@ pub(in crate::directives) fn body_span(body_lines: &[&str], ctx: &ParseCtx<'_>) 
         }
     });
     ctx.line_span(0, first)
+}
+
+/// The indentation every directive-body parser strips before parsing, so a
+/// `ParseCtx` can be shifted by the same amount.
+///
+/// Mirrors [`crate::indent::unindent_body_lines`]'s rule exactly — the first
+/// non-blank line's indent — because that is the function whose effect this
+/// compensates for. Without it every position inside a directive body would
+/// be short by the body's indent.
+pub(in crate::directives) fn body_indent(body_lines: &[&str]) -> usize {
+    body_lines
+        .iter()
+        .find(|line| !line.trim().is_empty())
+        .map_or(0, |line| indent_width(line))
+}
+
+/// Text written on a directive's marker line, after its `::`, and the column
+/// it starts at.
+///
+/// What that text *is* depends on the directive: an argument for most, but
+/// the first line of the content for one that takes none — docutils reads
+/// `.. seealso:: text` exactly as if `text` had been the body's first line.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(in crate::directives) struct MarkerText<'t> {
+    /// The text, trimmed on both sides; empty when the marker carries none.
+    pub(in crate::directives) text: &'t str,
+    /// The character column, within the marker line, `text` starts at.
+    pub(in crate::directives) column: usize,
+}
+
+impl<'t> MarkerText<'t> {
+    /// No text at all — for a directive whose marker-line text is not
+    /// content, such as the title `.. admonition::` takes.
+    pub(in crate::directives) const NONE: Self = Self {
+        text: "",
+        column: 0,
+    };
+
+    /// The text after the first `::` of `line`, a directive's marker line.
+    pub(in crate::directives) fn after_marker(line: &'t str) -> Self {
+        let Some(end) = line.find("::").map(|at| at + 2) else {
+            return Self::NONE;
+        };
+        let rest = &line[end..];
+        let leading = rest.len() - rest.trim_start().len();
+        Self {
+            text: rest.trim(),
+            column: line[..end + leading].chars().count(),
+        }
+    }
+
+    /// Splits off the first whitespace-delimited word, returning it and the
+    /// text after it — how a version change separates its version from the
+    /// explanation Sphinx lets follow it on the same line.
+    pub(in crate::directives) fn split_first_word(&self) -> (&'t str, Self) {
+        let word_end = self
+            .text
+            .find(char::is_whitespace)
+            .unwrap_or(self.text.len());
+        let (word, rest) = self.text.split_at(word_end);
+        let leading = rest.len() - rest.trim_start().len();
+        let rest = Self {
+            text: rest.trim_start(),
+            column: self.column + self.text[..word_end + leading].chars().count(),
+        };
+        (word, rest)
+    }
+}
+
+/// A directive's marker line, as seen by a parser whose content may begin on
+/// it.
+pub(in crate::directives) struct MarkerLine<'t> {
+    /// The marker's index within the slice the directive was found in.
+    pub(in crate::directives) index: usize,
+    /// The whole marker line, for a diagnostic about the directive itself.
+    pub(in crate::directives) span: Option<Span>,
+    /// What follows its `::`.
+    pub(in crate::directives) argument: MarkerText<'t>,
+}
+
+/// A directive's content, unindented, with the context positioned on its
+/// first line.
+pub(in crate::directives) struct DirectiveContent<'c> {
+    /// One entry per source line, blank lines included, so that a line's index
+    /// is its offset from the content's first line.
+    pub(in crate::directives) lines: Vec<String>,
+    /// The context `lines[0]` is positioned by.
+    pub(in crate::directives) ctx: ParseCtx<'c>,
+}
+
+impl DirectiveContent<'_> {
+    /// Parses the content as body elements, under its own context.
+    pub(in crate::directives) fn parse(
+        &self,
+        adornment_order: &mut Vec<Adornment>,
+        diagnostics: &mut Diagnostics,
+    ) -> Vec<Node> {
+        let lines: Vec<&str> = self.lines.iter().map(String::as_str).collect();
+        parse_blocks(&lines, adornment_order, diagnostics, &self.ctx)
+    }
+}
+
+/// The content of the directive whose marker is line `marker_index` of `ctx`'s
+/// slice: `first_line`, when it is not empty, followed by the indented body.
+///
+/// This is docutils' rule for a directive taking no argument: text after the
+/// `::` is the content's first line, and lines indented below it continue it
+/// — `.. seealso:: a` over an indented `b` is the one paragraph "a b". The two
+/// start at different columns, which is why the context *hangs* its first
+/// line rather than shifting every line alike.
+///
+/// With no `first_line`, this is the body exactly as
+/// [`DirectiveBody::for_directive`] hands it over, keeping the blank line that
+/// tells an option scan there are no options.
+pub(in crate::directives) fn directive_content<'c>(
+    first_line: &MarkerText<'_>,
+    marker_index: usize,
+    body: &DirectiveBody<'_>,
+    ctx: &ParseCtx<'c>,
+) -> DirectiveContent<'c> {
+    let indent = body_indent(&body.lines);
+    if first_line.text.is_empty() {
+        let (lines, offset) = body.for_directive();
+        return DirectiveContent {
+            lines: unindent_body_lines(&lines),
+            ctx: ctx.nested(marker_index + 1 + offset, indent),
+        };
+    }
+    let mut lines = vec![first_line.text.to_string()];
+    lines.extend(std::iter::repeat_n(String::new(), body.first_line_offset));
+    lines.extend(unindent_body_lines(&body.lines));
+    DirectiveContent {
+        lines,
+        ctx: ctx.hanging(marker_index, first_line.column, indent),
+    }
 }
 
 /// Flattens a directive body back to plain text, one line per source line
@@ -483,5 +621,176 @@ mod tests {
 
         // Then it degenerates to a zero-width span rather than panicking
         assert_eq!(span.start, span.end);
+    }
+
+    // --- marker text and directive content ---
+
+    #[test]
+    fn test_after_marker_finds_the_text_and_its_column() {
+        // Given
+        let line = "   .. seealso::  Plain text  ";
+
+        // When
+        let marker = MarkerText::after_marker(line);
+
+        // Then
+        assert_eq!(marker.text, "Plain text");
+        assert_eq!(marker.column, 17);
+    }
+
+    #[test]
+    fn test_after_marker_counts_characters_not_bytes() {
+        // Given a marker line with a multi-byte character before the text
+        let line = ".. é:: text";
+
+        // When
+        let marker = MarkerText::after_marker(line);
+
+        // Then
+        assert_eq!(marker.column, 7);
+    }
+
+    #[test]
+    fn test_after_marker_without_text_is_empty() {
+        // Given / When
+        let marker = MarkerText::after_marker(".. seealso::");
+
+        // Then
+        assert_eq!(marker.text, "");
+    }
+
+    #[test]
+    fn test_split_first_word_moves_the_column_past_the_word() {
+        // Given
+        let marker = MarkerText::after_marker(".. versionchanged:: 3.1   Some text");
+
+        // When
+        let (word, rest) = marker.split_first_word();
+
+        // Then
+        assert_eq!(word, "3.1");
+        assert_eq!(rest.text, "Some text");
+        assert_eq!(rest.column, 26);
+    }
+
+    #[test]
+    fn test_split_first_word_of_a_single_word_leaves_nothing() {
+        // Given
+        let marker = MarkerText::after_marker(".. versionchanged:: 3.1");
+
+        // When
+        let (word, rest) = marker.split_first_word();
+
+        // Then
+        assert_eq!(word, "3.1");
+        assert_eq!(rest.text, "");
+    }
+
+    #[test]
+    fn test_directive_content_of_marker_text_alone() {
+        // Given
+        let lines = vec![".. seealso:: Plain text"];
+        let body = collect_directive_body(&lines, 1, 0);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
+
+        // When
+        let content = directive_content(&MarkerText::after_marker(lines[0]), 0, &body, &ctx);
+
+        // Then
+        assert_eq!(content.lines, ["Plain text"]);
+        let point = content.ctx.position(0, 0).expect("positioned");
+        assert_eq!(point.position, rinx_ast::Position::new(1, 14));
+    }
+
+    #[test]
+    fn test_directive_content_continues_marker_text_with_the_body() {
+        // Given
+        let lines = vec![".. seealso:: First", "   second"];
+        let body = collect_directive_body(&lines, 1, 0);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
+
+        // When
+        let content = directive_content(&MarkerText::after_marker(lines[0]), 0, &body, &ctx);
+
+        // Then
+        assert_eq!(content.lines, ["First", "second"]);
+        let point = content.ctx.position(1, 0).expect("positioned");
+        assert_eq!(point.position, rinx_ast::Position::new(2, 4));
+    }
+
+    #[test]
+    fn test_directive_content_keeps_the_blank_lines_before_the_body() {
+        // Given
+        let lines = vec!["Intro", "", ".. note:: First", "", "", "   Body"];
+        let body = collect_directive_body(&lines, 3, 0);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
+
+        // When
+        let content = directive_content(&MarkerText::after_marker(lines[2]), 2, &body, &ctx);
+
+        // Then
+        assert_eq!(content.lines, ["First", "", "", "Body"]);
+        let point = content.ctx.position(3, 0).expect("positioned");
+        assert_eq!(point.position, rinx_ast::Position::new(6, 4));
+    }
+
+    #[test]
+    fn test_directive_content_without_marker_text_is_the_body() {
+        // Given
+        let lines = vec![".. seealso::", "", "   Body"];
+        let body = collect_directive_body(&lines, 1, 0);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
+
+        // When
+        let content = directive_content(&MarkerText::NONE, 0, &body, &ctx);
+
+        // Then the blank line marking "no options" is kept
+        assert_eq!(content.lines, ["", "Body"]);
+        let point = content.ctx.position(1, 0).expect("positioned");
+        assert_eq!(point.position, rinx_ast::Position::new(3, 4));
+    }
+
+    #[test]
+    fn test_directive_content_does_not_panic_on_a_short_multi_byte_line() {
+        // Given a body whose second line is less indented than the first and
+        // holds a multi-byte character where byte slicing would have panicked
+        let lines = vec![".. seealso::", "   First line normal indent.", "  éfoo"];
+        let body = collect_directive_body(&lines, 1, 0);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
+
+        // When
+        let content = directive_content(&MarkerText::NONE, 0, &body, &ctx);
+
+        // Then it does not panic, and keeps both lines
+        assert_eq!(content.lines.len(), 2);
+    }
+
+    #[test]
+    fn test_body_indent_is_the_first_non_blank_lines_indent() {
+        // Given / When / Then
+        assert_eq!(body_indent(&["", "    x", "  y"]), 4);
+        assert_eq!(body_indent(&[]), 0);
+    }
+
+    #[test]
+    fn test_directive_content_parse_joins_marker_text_and_continuation() {
+        // Given
+        let lines = vec![".. seealso:: First", "   second"];
+        let body = collect_directive_body(&lines, 1, 0);
+        let ctx = ParseCtx::with_domain(rinx_ast::Domain::Py);
+        let content = directive_content(&MarkerText::after_marker(lines[0]), 0, &body, &ctx);
+
+        // When
+        let nodes = content.parse(&mut Vec::new(), &mut Diagnostics::default());
+
+        // Then
+        assert_eq!(nodes.len(), 1);
+        let Node::Paragraph(inlines) = &nodes[0] else {
+            panic!("Expected a paragraph, got {:?}", nodes[0]);
+        };
+        assert_eq!(
+            inlines,
+            &[rinx_ast::InlineNode::Text("First\nsecond".to_string())]
+        );
     }
 }
