@@ -24,6 +24,9 @@
 //! [`docutils_rfc_reference`], docutils' plainer `:pep-reference:` and
 //! `:rfc-reference:`. [`index_reference`] is no reference at all: `:index:`
 //! writes the anchor its general-index entries link to and shows its text.
+//! [`script`] is plain markup with a module of its own only because it
+//! serves six spellings: `:sub:`/`:subscript:`, `:sup:`/`:superscript:` and
+//! the roles derived from them with `.. role::`.
 //!
 //! [`RefText`] is the one shape they all share: the visible text, the target
 //! to resolve, and where the role was written.
@@ -47,6 +50,7 @@ mod option_reference;
 mod ref_text;
 mod reference;
 mod registry_reference;
+mod script;
 mod term_reference;
 
 pub(crate) use dispatch::render_inline;

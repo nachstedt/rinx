@@ -44,3 +44,34 @@ elsewhere in the site.
   above, as in Sphinx.
 * Custom display text: :ref:`the site home <home-index>` links back to
   the same page under different link text.
+
+Subscript and Superscript (``:sub:``, ``:sup:``)
+-------------------------------------------------
+
+``:sub:`` and ``:sup:`` set their text below or above the line;
+``:subscript:`` and ``:superscript:`` are the same roles under longer names.
+Their text is plain: no markup inside it is interpreted.
+
+* Escaped spaces join a script to its word: water is H\ :sub:`2`\ O, and
+  Einstein wrote E = mc\ :sup:`2`.
+* The long names: the 1\ :superscript:`st` of x\ :subscript:`i`.
+* Text that would be markup elsewhere stays text: 2\ :sup:`*n*`.
+
+CO\ :sub:`2` in a Heading
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A script may be written in a section title too.
+
+Derived Roles
+~~~~~~~~~~~~~
+
+``.. role::`` derives a role from either. Without a ``:class:``, the role's
+own name is its class:
+
+.. role:: chem(sub)
+
+.. role:: power(sup)
+   :class: exponent
+
+* A ``chem`` role: C\ :chem:`6`\ H\ :chem:`12`\ O\ :chem:`6`.
+* A ``power`` role carrying the ``exponent`` class: 10\ :power:`-3`.

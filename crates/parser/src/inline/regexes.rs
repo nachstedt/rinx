@@ -73,6 +73,12 @@ pub(super) static RFC_REFERENCE_ROLE_REGEX: LazyLock<Regex> =
 /// [`EXTERNAL_PREFIX`] and no domain: it names no target to look up.
 pub(super) static INDEX_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":index:`(?P<content>[^`]+)`").unwrap());
+/// `:sub:`/`:subscript:` and `:sup:`/`:superscript:`: one pattern, since
+/// they are one construct whose `role` capture says which side of the line.
+/// No [`EXTERNAL_PREFIX`] and no domain: they are markup, not a reference.
+pub(super) static SCRIPT_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r":(?P<role>sub|subscript|sup|superscript):`(?P<text>[^`]+)`").unwrap()
+});
 pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
 pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -170,6 +176,7 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&MATH_ROLE_REGEX, "math"),
     (&EQ_ROLE_REGEX, "eq"),
     (&CODE_ROLE_REGEX, "code"),
+    (&SCRIPT_ROLE_REGEX, "script"),
     (&REGISTRY_ROLE_REGEX, "registry"),
     (&PEP_REFERENCE_ROLE_REGEX, "pep-reference"),
     (&RFC_REFERENCE_ROLE_REGEX, "rfc-reference"),
@@ -272,6 +279,10 @@ mod tests {
             "cve",
             "cwe",
             "index",
+            "sub",
+            "subscript",
+            "sup",
+            "superscript",
         ] {
             assert!(is_fixed_role_name(name), "{name}");
         }
@@ -283,5 +294,6 @@ mod tests {
         assert!(!is_fixed_role_name("python"));
         assert!(!is_fixed_role_name("codex"));
         assert!(!is_fixed_role_name("red"));
+        assert!(!is_fixed_role_name("subs"));
     }
 }

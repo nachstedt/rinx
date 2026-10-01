@@ -5,9 +5,11 @@
 //! (`:option:`), plus the domain-agnostic target-parsing logic shared by all
 //! of them.
 //!
-//! [`math`], [`code`], [`any`], [`doc`], [`download`], [`registry`],
-//! [`pep_reference`], [`rfc_reference`] and [`index`] are the exceptions to
-//! the per-domain grouping: `:math:`/`:eq:` and `:code:` belong to no domain,
+//! [`math`], [`code`], [`script`], [`custom`], [`any`], [`doc`],
+//! [`download`], [`registry`], [`pep_reference`], [`rfc_reference`] and
+//! [`index`] are the exceptions to the per-domain grouping: `:math:`/`:eq:`,
+//! `:code:`, `:sub:`/`:sup:` and the roles a `.. role::` derives from the
+//! last two belong to no domain,
 //! `:any:` searches every one, `:doc:` names a document rather than an
 //! object, `:download:` a file, `:pep:`/`:rfc:`/`:cve:`/`:cwe:` and
 //! docutils' `:pep-reference:`/`:rfc-reference:` a page outside the site, and
@@ -16,6 +18,7 @@
 pub(super) mod any;
 pub(super) mod c;
 pub(super) mod code;
+pub(super) mod custom;
 pub(super) mod doc;
 pub(super) mod download;
 pub(super) mod entity;
@@ -26,5 +29,6 @@ pub(super) mod pep_reference;
 pub(super) mod py;
 pub(super) mod registry;
 pub(super) mod rfc_reference;
+pub(super) mod script;
 pub(super) mod std_;
 pub(super) mod target;

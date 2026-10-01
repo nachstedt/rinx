@@ -109,6 +109,7 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         | InlineNode::Emphasis(text)
         | InlineNode::Strong(text)
         | InlineNode::Program(text)
+        | InlineNode::Script { text, .. }
         // Unlike an inline literal, `:code:` is interpreted text: Sphinx's
         // `code_role` is handed it escaped, so `\*` shows `*` and `\\` a
         // single backslash.

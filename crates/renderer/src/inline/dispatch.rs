@@ -24,6 +24,7 @@ use super::number_reference::render_number_reference_node;
 use super::option_reference::render_inline_option_reference;
 use super::reference::{LabelRef, render_inline_reference};
 use super::registry_reference::{RegistryRef, registry_base_url, render_inline_registry_reference};
+use super::script::render_inline_script;
 use super::term_reference::render_inline_term_reference;
 
 use super::RefText;
@@ -63,6 +64,11 @@ pub(crate) fn render_inline(
                 html_escape::encode_text(text)
             );
         }
+        rinx_ast::InlineNode::Script {
+            position,
+            text,
+            classes,
+        } => render_inline_script(html, *position, text, classes),
         rinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
             render_inline_anonymous_hyperlink(html, text, target);
         }
@@ -334,7 +340,8 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::DocutilsPepReference { .. }
         | rinx_ast::InlineNode::DocutilsRfcReference { .. }
         | rinx_ast::InlineNode::DownloadReference { .. }
-        | rinx_ast::InlineNode::Program(_) => {
+        | rinx_ast::InlineNode::Program(_)
+        | rinx_ast::InlineNode::Script { .. } => {
             unreachable!("render_inline routes only cross-reference variants here")
         }
     }
@@ -591,6 +598,23 @@ mod tests {
             vec![rinx_ast::Node::Paragraph(inlines)],
         );
         crate::render(&doc, &rinx_index::ProjectIndex::default(), &doc.path).html
+    }
+
+    #[test]
+    fn test_render_inline_writes_a_script_inside_its_word() {
+        // Given / When — `H\ :sub:`2`\ O`
+        let html = render_paragraph(vec![
+            rinx_ast::InlineNode::Text("H".to_string()),
+            rinx_ast::InlineNode::Script {
+                position: rinx_ast::ScriptPosition::Subscript,
+                text: "2".to_string(),
+                classes: Vec::new(),
+            },
+            rinx_ast::InlineNode::Text("O".to_string()),
+        ]);
+
+        // Then
+        assert!(html.contains("H<sub>2</sub>O"), "{html}");
     }
 
     #[test]

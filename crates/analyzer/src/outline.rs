@@ -434,6 +434,32 @@ mod tests {
     }
 
     #[test]
+    fn test_build_document_outline_flattens_a_subscript_in_a_title() {
+        // Given — `CO\ :sub:`2` levels`
+        let nodes = vec![
+            heading(1, "Guide"),
+            Node::Heading {
+                level: 2,
+                text: vec![
+                    InlineNode::Text("CO".to_string()),
+                    InlineNode::Script {
+                        position: rinx_ast::ScriptPosition::Subscript,
+                        text: "2".to_string(),
+                        classes: Vec::new(),
+                    },
+                    InlineNode::Text(" levels".to_string()),
+                ],
+            },
+        ];
+
+        // When
+        let outline = build_document_outline(&nodes).outline;
+
+        // Then
+        assert_eq!(outline.sections[0].title, "CO2 levels");
+    }
+
+    #[test]
     fn test_build_document_outline_ignores_a_heading_inside_a_directive_body() {
         // Given — reStructuredText has no section inside a directive body, so
         // this heading is ordinary content.

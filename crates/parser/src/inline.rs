@@ -30,6 +30,8 @@ mod index_pipeline_tests;
 mod pipeline_tests;
 #[cfg(test)]
 mod registry_pipeline_tests;
+#[cfg(test)]
+mod script_pipeline_tests;
 
 pub(crate) use regexes::{is_fixed_role_name, is_writable_role_name};
 pub(super) use source_map::SourceMap;
