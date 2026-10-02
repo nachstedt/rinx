@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cryptographic Services — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Cryptographic Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="hashlib.html">hashlib — Secure hashes and message digests</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="hmac.html">hmac — Keyed-Hashing for Message Authentication</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="secrets.html">secrets — Generate secure random numbers for managing secrets</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="plistlib.html">&larr; plistlib — Generate and parse Apple .plist files</a>
+        <a class="next" href="hashlib.html">hashlib — Secure hashes and message digests &rarr;</a>
+      </nav>
+      
+      <a id="crypto"></a>
+<h1 id="cryptographic-services">Cryptographic Services</h1>
+<span id="index-0"></span>
+<p>The modules described in this chapter implement various algorithms of a
+cryptographic nature.  They are available at the discretion of the installation.
+Here's an overview:</p>
+<ul>
+  <li><a href="hashlib.html">hashlib — Secure hashes and message digests</a>
+<ul>
+  <li><a href="hashlib.html#hash-algorithms">Hash algorithms</a></li>
+  <li><a href="hashlib.html#usage">Usage</a></li>
+  <li><a href="hashlib.html#constructors">Constructors</a></li>
+  <li><a href="hashlib.html#attributes">Attributes</a></li>
+  <li><a href="hashlib.html#hash-objects">Hash Objects</a></li>
+  <li><a href="hashlib.html#shake-variable-length-digests">SHAKE variable length digests</a></li>
+  <li><a href="hashlib.html#file-hashing">File hashing</a></li>
+  <li><a href="hashlib.html#key-derivation">Key derivation</a></li>
+  <li><a href="hashlib.html#blake2">BLAKE2</a>
+<ul>
+  <li><a href="hashlib.html#creating-hash-objects">Creating hash objects</a></li>
+  <li><a href="hashlib.html#constants">Constants</a></li>
+  <li><a href="hashlib.html#examples">Examples</a>
+<ul>
+  <li><a href="hashlib.html#simple-hashing">Simple hashing</a></li>
+  <li><a href="hashlib.html#using-different-digest-sizes">Using different digest sizes</a></li>
+  <li><a href="hashlib.html#keyed-hashing">Keyed hashing</a></li>
+  <li><a href="hashlib.html#randomized-hashing">Randomized hashing</a></li>
+  <li><a href="hashlib.html#personalization">Personalization</a></li>
+  <li><a href="hashlib.html#tree-mode">Tree mode</a></li>
+</ul>
+  </li>
+  <li><a href="hashlib.html#credits">Credits</a></li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li><a href="hmac.html">hmac — Keyed-Hashing for Message Authentication</a></li>
+  <li><a href="secrets.html">secrets — Generate secure random numbers for managing secrets</a>
+<ul>
+  <li><a href="secrets.html#random-numbers">Random numbers</a></li>
+  <li><a href="secrets.html#generating-tokens">Generating tokens</a>
+<ul>
+  <li><a href="secrets.html#how-many-bytes-should-tokens-use">How many bytes should tokens use?</a></li>
+</ul>
+  </li>
+  <li><a href="secrets.html#other-functions">Other functions</a></li>
+  <li><a href="secrets.html#recipes-and-best-practices">Recipes and best practices</a></li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="plistlib.html">&larr; plistlib — Generate and parse Apple .plist files</a>
+        <a class="next" href="hashlib.html">hashlib — Secure hashes and message digests &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
