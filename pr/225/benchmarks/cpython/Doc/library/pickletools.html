@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pickletools — Tools for pickle developers — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="language.html">Python Language Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Language Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="ast.html">ast — Abstract syntax trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="symtable.html">symtable — Access to the compiler&#x27;s symbol tables</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="token.html">token — Constants used with Python parse trees</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="keyword.html">keyword — Testing for Python keywords</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tokenize.html">tokenize — Tokenizer for Python source</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tabnanny.html">tabnanny — Detection of ambiguous indentation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pyclbr.html">pyclbr — Python module browser support</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="py_compile.html">py_compile — Compile Python source files</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="compileall.html">compileall — Byte-compile Python libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="dis.html">dis — Disassembler for Python bytecode</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="pickletools.html">pickletools — Tools for pickle developers</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle pickletools — Tools for pickle developers"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="pickletools.html#command-line-usage">Command-line usage</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="pickletools.html#programmatic-interface">Programmatic interface</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="dis.html">&larr; dis — Disassembler for Python bytecode</a>
+        <a class="next" href="windows.html">MS Windows Specific Services &rarr;</a>
+      </nav>
+      
+      <h1 id="pickletools-tools-for-pickle-developers"><code class="xref py module docutils literal">pickletools</code> — Tools for pickle developers</h1>
+<dl class="py module">
+  <dt id="py:module:pickletools"><code class="sig-name">pickletools</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/pickletools.py`</p>
+<hr />
+<p>This module contains various constants relating to the intimate details of the
+<a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a> module, some lengthy comments about the implementation, and a
+few useful functions for analyzing pickled data.  The contents of this module
+are useful for Python core developers who are working on the <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a>;
+ordinary users of the <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a> module probably won't find the
+<a class="reference internal" href="pickletools.html#py:module:pickletools" title="pickletools: Contains extensive comments about the pickle protocols and pickle-machine opcodes, as well as some useful functions."><code class="xref py module docutils literal">pickletools</code></a> module relevant.</p>
+<a id="pickletools-cli"></a>
+<h2 id="command-line-usage">Command-line usage</h2>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<p>When invoked from the command line, <code>python -m pickletools</code> will
+disassemble the contents of one or more pickle files.  Note that if
+you want to see the Python object stored in the pickle rather than the
+details of pickle format, you may want to use <code>-m pickle</code> instead.
+However, when the pickle file that you want to examine comes from an
+untrusted source, <code>-m pickletools</code> is a safer option because it does
+not execute pickle bytecode.</p>
+<p>For example, with a tuple <code>(1, 2)</code> pickled in file <code>x.pickle</code>:</p>
+<div class="highlight-shell-session notranslate">
+<div class="highlight hl-code"><pre>
+$ python -m pickle x.pickle
+(1, 2)
+
+$ python -m pickletools x.pickle
+    0: \x80 PROTO      3
+    2: K    BININT1    1
+    4: K    BININT1    2
+    6: \x86 TUPLE2
+    7: q    BINPUT     0
+    9: .    STOP
+highest protocol among opcodes = 2</pre></div>
+</div>
+<h3 id="command-line-options">Command-line options</h3>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:pickletools.-a"><a id="std:cmdoption:pickletools.--annotate"></a><code class="sig-name">-a, --annotate</code></dt>
+  <dd><p>Annotate each line with a short opcode description.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:pickletools.-o"><a id="std:cmdoption:pickletools.--output"></a><code class="sig-name">-o, --output=&lt;file&gt;</code></dt>
+  <dd><p>Name of a file where the output should be written.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:pickletools.-l"><a id="std:cmdoption:pickletools.--indentlevel"></a><code class="sig-name">-l, --indentlevel=&lt;num&gt;</code></dt>
+  <dd><p>The number of blanks by which to indent a new MARK level.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:pickletools.-m"><a id="std:cmdoption:pickletools.--memo"></a><code class="sig-name">-m, --memo</code></dt>
+  <dd><p>When multiple objects are disassembled, preserve memo between
+disassemblies.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:pickletools.-p"><a id="std:cmdoption:pickletools.--preamble"></a><code class="sig-name">-p, --preamble=&lt;preamble&gt;</code></dt>
+  <dd><p>When more than one pickle file is specified, print given preamble
+before each disassembly.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:pickletools.pickle_file"><code class="sig-name">pickle_file</code></dt>
+  <dd><p>A pickle file to read, or <code>-</code> to indicate reading from standard input.</p>
+</dd>
+</dl>
+<h2 id="programmatic-interface">Programmatic interface</h2>
+<dl class="py function">
+  <dt id="py:function:pickletools.dis"><code class="sig-name">dis(pickle, out=None, memo=None, indentlevel=4, annotate=0)</code></dt>
+  <dd><p>Outputs a symbolic disassembly of the pickle to the file-like
+object <em>out</em>, defaulting to <code>sys.stdout</code>.  <em>pickle</em> can be a
+string or a file-like object.  <em>memo</em> can be a Python dictionary
+that will be used as the pickle's memo; it can be used to perform
+disassemblies across multiple pickles created by the same
+pickler. Successive levels, indicated by <code>MARK</code> opcodes in the
+stream, are indented by <em>indentlevel</em> spaces.  If a nonzero value
+is given to <em>annotate</em>, each opcode in the output is annotated with
+a short description.  The value of <em>annotate</em> is used as a hint for
+the column where annotation should start.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Added the <em>annotate</em> parameter.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pickletools.genops"><code class="sig-name">genops(pickle)</code></dt>
+  <dd><p>Provides an <a class="reference internal" href="../glossary.html#term-iterator"><span class="xref std std-term">iterator</span></a> over all of the opcodes in a pickle, returning a
+sequence of <code>(opcode, arg, pos)</code> triples.  <em>opcode</em> is an instance of an
+<a href="#" class="broken-link"><code class="xref py class docutils literal">OpcodeInfo</code></a> class; <em>arg</em> is the decoded value, as a Python object, of
+the opcode's argument; <em>pos</em> is the position at which this opcode is located.
+<em>pickle</em> can be a string or a file-like object.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:pickletools.optimize"><code class="sig-name">optimize(picklestring)</code></dt>
+  <dd><p>Returns a new equivalent pickle string after eliminating unused <code>PUT</code>
+opcodes. The optimized pickle is shorter, takes less transmission time,
+requires less storage space, and unpickles more efficiently.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="dis.html">&larr; dis — Disassembler for Python bytecode</a>
+        <a class="next" href="windows.html">MS Windows Specific Services &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
