@@ -2,9 +2,10 @@
 
 pub(crate) mod blocks;
 pub(crate) mod context;
-pub(crate) mod custom_roles;
+pub(crate) mod default_role;
 pub(crate) mod diagnostics;
 pub(crate) mod directives;
+pub(crate) mod document_roles;
 pub(crate) mod explicit_title;
 pub(crate) mod headings;
 pub(crate) mod indent;
@@ -14,5 +15,6 @@ pub(crate) mod width;
 
 pub use blocks::{parse, parse_with_ctx, parse_with_domain};
 pub use context::{LoadedFile, ParseCtx, ParseFileLoader, RejectParseFiles};
+pub use default_role::{DefaultRole, UnknownRole};
 pub use directives::is_builtin_directive_name;
 pub use templating::rendered_source;

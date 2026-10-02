@@ -52,10 +52,27 @@ Supported:
   as its class. These four and ``code`` are the only base roles: any other,
   or none, is reported as ``role.unsupported-base``, and a name rinx already
   gives a role as ``role.builtin-name``.
+- Interpreted text: text in single backquotes with no role, read as the
+  *default role*. That is ``title-reference`` (``:title-reference:``,
+  ``:title:`` or ``:t:``), shown as a citation, unless a library's
+  ``default_role`` or a ``.. default-role::`` chooses another — any role rinx
+  knows. A role may also be written after the text:
+
+  .. code-block:: rst
+
+     `Dune` is a novel; water is H\ `2`:sub:\ O.
+
+     .. default-role:: any
+
+     See `the syntax page <syntax>`.
+
+  ``.. default-role::`` applies to the rest of the document; without an
+  argument it restores ``title-reference``. A name no role answers to is
+  reported as ``default-role.unknown-role``.
 
 Not yet supported: footnotes and citations, field lists beyond a document's
 leading ``:orphan:``, ``.. raw::``, ``.. class::``, ``.. role::`` with a base
-other than ``code``, ``sub`` or ``sup``, ``.. default-role::``, ``.. topic::``,
+other than ``code``, ``sub`` or ``sup``, ``.. topic::``,
 ``.. sidebar::``, ``.. rubric::`` and ``.. parsed-literal::``.
 
 Sphinx

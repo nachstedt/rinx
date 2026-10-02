@@ -3,9 +3,9 @@
 //! every line that matches nothing else lands in.
 
 use crate::context::ParseCtx;
-use crate::custom_roles::CustomRoles;
 use crate::diagnostics::Diagnostics;
 use crate::directives::try_parse_directive;
+use crate::document_roles::DocumentRoles;
 use crate::headings::{Adornment, detect_adornment, try_parse_heading};
 use crate::inline::{SourceMap, parse_inline_text_mapped};
 use rinx_ast::{
@@ -90,8 +90,8 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     // One table per document: Sphinx forgets a `.. role::` when the document
     // ends, and it applies only from its definition onwards, which the
     // sequential block parse below gives for free.
-    let custom_roles = CustomRoles::default();
-    let ctx = &document_ctx.with_custom_roles(&custom_roles);
+    let document_roles = DocumentRoles::default();
+    let ctx = &document_ctx.with_document_roles(&document_roles);
 
     let mut adornment_order: Vec<Adornment> = Vec::new();
 

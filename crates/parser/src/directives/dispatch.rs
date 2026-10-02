@@ -16,6 +16,7 @@ use super::button_link::parse_button_link;
 use super::code_block::{parse_code_block, parse_highlight, parse_literal_include};
 use super::contents::parse_contents;
 use super::data_table::{parse_csv_table, parse_list_table};
+use super::default_role::parse_default_role;
 use super::doctest::{DocTestDirectiveKind, parse_doctest_directive};
 use super::domains::object_type::{DirectiveObjectType, resolve_domain_object_type};
 use super::domains::{DirectiveSignatures, parse_domain_object};
@@ -233,6 +234,14 @@ fn try_parse_splicing_directive(
         // document, which only the parse itself reads. It sits here because
         // this is the one dispatcher allowed to answer with *no* node.
         "role" => Some(parse_role(
+            argument,
+            directive_span,
+            body_lines,
+            diagnostics,
+            ctx,
+        )),
+        // The same for the role interpreted text without one is read as.
+        "default-role" => Some(parse_default_role(
             argument,
             directive_span,
             body_lines,
@@ -1279,6 +1288,7 @@ const BUILTIN_DIRECTIVE_NAMES: &[&str] = &[
     "section-numbering",
     "include",
     "role",
+    "default-role",
     "glossary",
     "index",
     // Other content

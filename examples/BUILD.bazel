@@ -90,6 +90,7 @@ rinx_library(
         "//examples/entities:docs",
         "//examples/toctree:docs",
         "//examples/contents:docs",
+        "//examples/default_role:docs",
         "//examples/sectnum:docs",
         "//examples/dropdown:docs",
         "//examples/grid:docs",

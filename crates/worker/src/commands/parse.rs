@@ -9,7 +9,7 @@ use super::cli_args::{flag_value, flag_value_opt};
 use super::diagnostics::{WarningOrigin, format_error_diagnostic, report_diagnostic};
 use super::entity_schema::{import_keys_from_args, load_entity_schema};
 use super::parse_files::DocumentRelativeFiles;
-use super::parse_inputs::{ParseInputs, jinja_from_args};
+use super::parse_inputs::{ParseInputs, default_role_from_args, jinja_from_args};
 use super::suppression::retain_reportable;
 
 /// Whether the library a document belongs to opted in to diagrams.
@@ -186,8 +186,10 @@ pub(crate) fn cmd_parse(args: &[String]) -> Result<()> {
     let schema = load_entity_schema(args)?;
     let import_keys = import_keys_from_args(args, &schema);
     let jinja = jinja_from_args(args)?;
+    let default_role = default_role_from_args(args, &schema)?;
     let inputs = ParseInputs {
         default_domain,
+        default_role: &default_role,
         files: &parse_files,
         schema: &schema,
         jinja: jinja.as_deref(),
@@ -238,6 +240,7 @@ mod tests {
             rst,
             &ParseInputs {
                 default_domain: ast::Domain::Py,
+                default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
                 files: &no_parse_files(),
                 schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
@@ -259,6 +262,7 @@ mod tests {
             rst,
             &ParseInputs {
                 default_domain: ast::Domain::Py,
+                default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
                 files: &no_parse_files(),
                 schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
@@ -415,6 +419,7 @@ mod tests {
             rst,
             &ParseInputs {
                 default_domain: ast::Domain::C,
+                default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
                 files: &no_parse_files(),
                 schema: &rinx_entity::EntitySchema::empty(),
                 jinja: None,
@@ -466,6 +471,35 @@ mod tests {
         assert!(result.is_ok(), "{result:?}");
         let ast = std::fs::read_to_string(&args[3]).expect("read ast");
         assert!(ast.contains("Apple"), "{ast}");
+    }
+
+    #[test]
+    fn test_cmd_parse_reads_bare_text_with_the_libraries_default_role() {
+        // Given
+        let args = parse_args_for("rinx_cmd_parse_default_role", "See `intro`.\n");
+        let args = [args, vec!["--default-role".to_string(), "ref".to_string()]].concat();
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then
+        assert!(result.is_ok(), "{result:?}");
+        let ast = std::fs::read_to_string(&args[3]).expect("read ast");
+        assert!(ast.contains(r#""Reference""#), "{ast}");
+    }
+
+    #[test]
+    fn test_cmd_parse_fails_on_an_unknown_default_role() {
+        // Given
+        let args = parse_args_for("rinx_cmd_parse_default_role_unknown", "See `intro`.\n");
+        let args = [args, vec!["--default-role".to_string(), "nope".to_string()]].concat();
+
+        // When
+        let result = cmd_parse(&args);
+
+        // Then
+        let error = result.expect_err("an unknown default role must fail the parse");
+        assert!(error.to_string().contains("default_role"), "{error}");
     }
 
     #[test]

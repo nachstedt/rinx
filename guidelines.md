@@ -197,6 +197,7 @@ entry under the heading it belongs to, as a single short sentence.
 
 ## Workflow and commits
 
+- Ship a construct together with any sibling syntax whose absence would make existing input render worse than before the change, rather than deferring that sibling to a follow-up.
 - When a feature brushes against behaviour that should hold for every construct of its kind (case-insensitive role names), leave it out of that feature and introduce it as one general concept in a follow-up change, rather than special-casing the first construct that needed it.
 
 - After every code modification session, run `cargo clippy --tests` and resolve all warnings before finishing.

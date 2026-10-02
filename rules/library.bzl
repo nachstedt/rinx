@@ -36,6 +36,10 @@ def _rinx_library_impl(ctx):
     # diagram written in it fails its parse on the directive's own line rather
     # than shipping a page with a picture nothing compiled.
     diagram_args = ["--diagrams"] if ctx.attr.diagrams else []
+
+    # Sphinx's `default_role`: the role bare `text` in backquotes is read as.
+    # Left off, the worker keeps docutils' own default, `title-reference`.
+    default_role_args = ["--default-role", ctx.attr.default_role] if ctx.attr.default_role else []
     ast_files = []
     doctest_plans = []
     embed_sidecars = []
@@ -59,7 +63,7 @@ def _rinx_library_impl(ctx):
                 "--input", src.path,
                 "--output", ast_raw.path,
                 "--default-domain", ctx.attr.default_domain,
-            ] + schema_args + diagram_args + jinja_args,
+            ] + schema_args + diagram_args + jinja_args + default_role_args,
             # `parse_data` files join the parse action's inputs because the
             # parser genuinely reads them: `.. csv-table::`'s `:file:`, and the
             # sources `.. include::`/`.. literalinclude::` splice into the
@@ -229,6 +233,10 @@ rinx_library = rule(
             default = "py",
             values = ["py", "c"],
             doc = "The Sphinx domain (e.g. \"py\", \"c\") that bare, unprefixed directives and roles in this library's docs resolve to. This is a property of the library's content, not of any site that assembles it.",
+        ),
+        "default_role": attr.string(
+            default = "",
+            doc = "The role interpreted text written without one — `text` in single backquotes — is read as in this library's docs, the way a Sphinx project's `default_role` sets it: any role the build knows, e.g. \"any\", \"py:func\" or an entity role the schema declares. Empty keeps docutils' default, `title-reference`, which renders a title as `<cite>`. A `.. default-role::` overrides it for the rest of its document. A name no role answers to fails the parse.",
         ),
         "_worker": attr.label(
             default = Label("//:rinx"),

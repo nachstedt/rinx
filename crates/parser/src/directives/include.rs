@@ -437,6 +437,29 @@ mod tests {
     }
 
     #[test]
+    fn test_a_default_role_chosen_in_a_fragment_applies_after_the_include() {
+        // Given a fragment choosing a default role, as docutils would apply it
+        let document = parse_document(
+            &[("roles.rst", ".. default-role:: sub\n")],
+            ".. include:: roles.rst\n\nH\\ `2`\\ O\n",
+        );
+
+        // Then — the including document reads bare text with it
+        assert!(
+            document.diagnostics.is_empty(),
+            "{:?}",
+            document.diagnostics
+        );
+        let Node::Paragraph(inline) = &document.nodes[0] else {
+            panic!("expected a paragraph, got {:?}", document.nodes);
+        };
+        assert!(
+            matches!(&inline[1], InlineNode::Script { text, .. } if text == "2"),
+            "{inline:?}"
+        );
+    }
+
+    #[test]
     fn test_an_included_file_contributes_several_nodes() {
         // Given a fragment with two paragraphs
         let document = parse_document(

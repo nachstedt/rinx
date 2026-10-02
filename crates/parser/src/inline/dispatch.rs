@@ -39,6 +39,7 @@ use super::roles::registry::handle_registry_match;
 use super::roles::rfc_reference::handle_rfc_reference_match;
 use super::roles::script::handle_script_match;
 use super::roles::std_::option::handle_option_match;
+use super::roles::title_reference::handle_title_reference_match;
 
 pub(super) fn handle_inline_match(
     kind: &str,
@@ -167,7 +168,7 @@ fn build_inline_node(
         // role names are case-insensitive where the schema's are not. Anything
         // neither knows stays the text it was written as.
         "named_role" => super::roles::entity::handle_entity_role_match(m_str, ctx.schema)
-            .or_else(|| handle_custom_role_match(m_str, ctx.custom_roles()))
+            .or_else(|| handle_custom_role_match(m_str, ctx.document_roles()))
             .unwrap_or_else(|| InlineNode::Text(m_str.to_string())),
         "inline" => node_opt.expect("inline node should be present"),
         "ref" => {
@@ -217,6 +218,7 @@ fn build_inline_node(
         "math" => handle_math_match(m_str),
         "code" => handle_code_match(m_str),
         "script" => handle_script_match(m_str),
+        "title-reference" => handle_title_reference_match(m_str),
         "eq" => handle_eq_match(m_str),
         "phrased" => handle_phrased_link_match(m_str),
         "simple" => {

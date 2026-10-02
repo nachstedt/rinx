@@ -81,7 +81,7 @@ An architecture diagram inside an entity
 entity is reported as ``uml.arch-outside-entity`` rather than drawn against a
 ``need`` bound to nothing.
 
-Its `:key:` stores the template on the entity, so another diagram can import
+Its ``:key:`` stores the template on the entity, so another diagram can import
 it. This is what makes architecture diagrams compositional: a component draws
 itself once, and every diagram that reaches it pulls that picture in rather
 than restating it.

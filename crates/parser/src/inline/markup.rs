@@ -1,10 +1,13 @@
-//! Emphasis / strong / inline-literal recognition: finding where a `*`,
-//! `**` or ``` `` ``` span may validly open and close, per docutils'
-//! start-string and end-string context rules.
+//! Emphasis / strong / inline-literal / substitution recognition: finding
+//! where a `*`, `**`, ``` `` ``` or `|` span may validly open and close, per
+//! docutils' start-string and end-string context rules. Interpreted text
+//! opens here under the same rules too, but what may follow its closing
+//! backquote is [`super::interpreted`]'s to read.
 
 use rinx_ast::InlineNode;
 
 use super::escapes::is_escaped_at;
+use super::interpreted::{find_interpreted_closes, try_match_interpreted};
 use super::punctuation::{can_follow_end_string, can_precede_start_string};
 use super::typography::apply_smart_typography;
 
@@ -65,10 +68,23 @@ fn find_valid_close_positions(
     positions
 }
 
+/// What [`find_inline_markup`] found: a finished node, or interpreted text
+/// whose role only the caller, holding the parse context, can apply.
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum InlineMarkup {
+    Node(InlineNode),
+    /// `` `body` `` with no role before it, and the role written after it if
+    /// there was one.
+    Interpreted {
+        body: String,
+        suffix_role: Option<String>,
+    },
+}
+
 pub(super) fn find_inline_markup(
     full_text: &str,
     start_offset: usize,
-) -> Option<(usize, usize, InlineNode)> {
+) -> Option<(usize, usize, InlineMarkup)> {
     let text = &full_text[start_offset..];
     let mut best_match: Option<(usize, usize, InlineNode)> = None;
 
@@ -77,6 +93,7 @@ pub(super) fn find_inline_markup(
     let emphasis_close_positions = find_valid_close_positions(full_text, start_offset, "*", false);
     let substitution_close_positions =
         find_valid_close_positions(full_text, start_offset, "|", false);
+    let interpreted_closes = find_interpreted_closes(full_text, start_offset);
 
     for (i, _) in text.char_indices() {
         let abs_i = start_offset + i;
@@ -96,6 +113,17 @@ pub(super) fn find_inline_markup(
                 best_match = Some(m);
                 break; // Found the earliest match
             }
+        }
+
+        // Then interpreted text: one backquote, never the first of two. Its
+        // close may turn out to end a hyperlink reference instead, which the
+        // role table reads, so that one is no match here.
+        if text[i..].starts_with('`')
+            && !text[i..].starts_with("``")
+            && let Some((end_pos, markup)) =
+                try_match_interpreted(full_text, abs_i, &interpreted_closes)
+        {
+            return Some((i, i + (end_pos - abs_i), markup));
         }
 
         // Try Strong Emphasis next (**)
@@ -152,7 +180,7 @@ pub(super) fn find_inline_markup(
         }
     }
 
-    best_match
+    best_match.map(|(start, end, node)| (start, end, InlineMarkup::Node(node)))
 }
 
 pub(super) fn try_match_inline(
@@ -161,34 +189,39 @@ pub(super) fn try_match_inline(
     marker_len: usize,
     close_positions: &[usize],
 ) -> Option<(usize, String)> {
-    // Start context check
-    if start_pos > 0 {
-        let prev_char = full_text[..start_pos].chars().next_back().unwrap();
-        if !can_precede_start_string(prev_char) {
-            return None;
-        }
+    let search_pos = opening_search_start(full_text, start_pos, marker_len)?;
+    let idx = close_positions.partition_point(|&p| p < search_pos);
+    let &abs_end_pos = close_positions.get(idx)?;
+    let content = full_text[start_pos + marker_len..abs_end_pos].to_string();
+
+    Some((abs_end_pos + marker_len, content))
+}
+
+/// Where the search for a closing marker starts, when the `marker_len`-byte
+/// marker at `start_pos` may open markup at all: preceded by the start of the
+/// text or a character docutils allows there, and followed by a character
+/// that is not whitespace.
+///
+/// The search starts *after* that first inner character, so any close found
+/// from there yields non-empty content — no separate empty-content check is
+/// needed.
+pub(super) fn opening_search_start(
+    full_text: &str,
+    start_pos: usize,
+    marker_len: usize,
+) -> Option<usize> {
+    if let Some(prev_char) = full_text[..start_pos].chars().next_back()
+        && !can_precede_start_string(prev_char)
+    {
+        return None;
     }
 
     let after_start = start_pos + marker_len;
-    if after_start >= full_text.len() {
-        return None;
-    }
-
-    let first_inner = full_text[after_start..].chars().next().unwrap();
+    let first_inner = full_text.get(after_start..)?.chars().next()?;
     if first_inner.is_whitespace() {
         return None;
     }
-
-    // The closing search only ever considers positions at or after
-    // `search_pos`, which is always strictly after `after_start` (it skips
-    // past the first inner character), so any matched close position yields
-    // non-empty content — no separate empty-content check is needed.
-    let search_pos = after_start + first_inner.len_utf8();
-    let idx = close_positions.partition_point(|&p| p < search_pos);
-    let &abs_end_pos = close_positions.get(idx)?;
-    let content = full_text[after_start..abs_end_pos].to_string();
-
-    Some((abs_end_pos + marker_len, content))
+    Some(after_start + first_inner.len_utf8())
 }
 
 #[cfg(test)]
@@ -203,6 +236,55 @@ mod tests {
         crate::inline::escapes::EscapedText::new(raw)
             .as_str()
             .to_string()
+    }
+
+    #[test]
+    fn test_opening_search_start_skips_the_first_inner_character() {
+        // Given / When / Then
+        assert_eq!(opening_search_start("a *πx*", 2, 1), Some(5));
+    }
+
+    #[test]
+    fn test_opening_search_start_refuses_a_marker_that_opens_nothing() {
+        // Given / When / Then — inside a word, before a space, at the end
+        assert_eq!(opening_search_start("a*x*", 1, 1), None);
+        assert_eq!(opening_search_start("* x", 0, 1), None);
+        assert_eq!(opening_search_start("x *", 2, 1), None);
+    }
+
+    #[test]
+    fn test_find_inline_markup_reports_bare_interpreted_text() {
+        // Given / When
+        let found = find_inline_markup("a `b` *c*", 0);
+
+        // Then
+        assert_eq!(
+            found,
+            Some((
+                2,
+                5,
+                InlineMarkup::Interpreted {
+                    body: "b".to_string(),
+                    suffix_role: None
+                }
+            ))
+        );
+    }
+
+    #[test]
+    fn test_find_inline_markup_prefers_a_literal_to_interpreted_text() {
+        // Given / When
+        let found = find_inline_markup("``b``", 0);
+
+        // Then
+        assert_eq!(
+            found,
+            Some((
+                0,
+                5,
+                InlineMarkup::Node(InlineNode::Literal("b".to_string()))
+            ))
+        );
     }
 
     #[test]

@@ -74,6 +74,13 @@ document that a ``rinx_site`` renders, not HTML.
    * - ``default_domain``
      - The domain unprefixed directives and roles such as ``.. function::``
        belong to: ``"py"`` (the default) or ``"c"``.
+   * - ``default_role``
+     - The role text in single backquotes is read as when no role is written,
+       like Sphinx's ``default_role``: any role rinx knows, such as ``"any"``,
+       ``"py:func"`` or an entity role. Empty (the default) keeps docutils'
+       ``title-reference``, shown as a citation. A ``.. default-role::``
+       overrides it for the rest of its document; an unknown name fails the
+       build.
 
 rinx_site
 ---------
