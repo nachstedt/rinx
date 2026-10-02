@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team B: Infrastructure Guide — Megacorp Documentation</title>
+  <title>A Configured Default — Megacorp Documentation</title>
   <link rel="stylesheet" href="../../default.css">
   <script defer src="../../version_switcher.js"></script>
 </head>
@@ -241,8 +241,47 @@
             
           </li>
         
-          <li class="toctree-l1">
-            <a href="../default_role/index.html">Interpreted Text</a>
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Interpreted Text</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Interpreted Text"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#titles">Titles</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#a-role-after-the-text">A Role After the Text</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#choosing-the-default-role">Choosing the Default Role</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="index.html#a-library-s-default-role">A Library&#x27;s Default Role</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle A Library&#x27;s Default Role"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 current">
+            <a href="configured.html">A Configured Default</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+              </ul>
+            </details>
             
           </li>
         
@@ -281,25 +320,8 @@
             
           </li>
         
-          <li class="toctree-l1 current has-children">
-            <a href="index.html">Team B: Infrastructure Guide</a>
-            
-            <details open>
-              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Team B: Infrastructure Guide"></span></summary>
-              <ul>
-                
-          <li class="toctree-l2">
-            <a href="index.html#overview">Overview</a>
-            
-          </li>
-        
-          <li class="toctree-l2">
-            <a href="index.html#configuration">Configuration</a>
-            
-          </li>
-        
-              </ul>
-            </details>
+          <li class="toctree-l1">
+            <a href="../team_b/index.html">Team B: Infrastructure Guide</a>
             
           </li>
         
@@ -310,25 +332,29 @@
     <main class="document">
       
       <nav class="page-relations">
-        <a class="prev" href="../team_a/index.html">&larr; Team A: Getting Started</a>
-        <a class="next" href="../toctree/orphan.html">Deliberately Unreferenced &rarr;</a>
+        <a class="prev" href="index.html">&larr; Interpreted Text</a>
+        <a class="next" href="../sectnum/index.html">Sectnum Directives &rarr;</a>
       </nav>
       
-      <a id="team-b-index"></a>
-<h1 id="team-b-infrastructure-guide">Team B: Infrastructure Guide</h1>
-<p>This guide covers the infrastructure components maintained by Team B.</p>
-<h2 id="overview">Overview</h2>
-<p>The infrastructure layer handles deployment, monitoring, and scaling
-of all services across the platform.</p>
-<h2 id="configuration">Configuration</h2>
-<p>All configuration is managed via environment variables and checked into
-the infra repository under the config directory.</p>
-<p>See also <a href="../index.html#home-index">Rinx Example Site</a>, <a href="../team_a/index.html#team-a-index">Team A: Getting Started</a>, and <a href="index.html#team-b-index">Team B: Infrastructure Guide</a>.</p>
+      <a id="default-role-configured"></a>
+<h1 id="a-configured-default">A Configured Default</h1>
+<p>This document's library sets <code>default_role = "any"</code>, so bare text is a
+cross-reference, as if written with <code>:any:</code>:</p>
+<ul>
+<li><p>A label: <a class="reference internal" href="../index.html#home-index">Rinx Example Site</a>.</p>
+</li>
+<li><p>With an explicit title: <a class="reference internal" href="index.html#default-role-index">the interpreted text page</a>.</p>
+</li>
+</ul>
+<p><code>.. default-role::</code> still overrides the library's choice for the rest of
+the document, and without an argument restores <code>title-reference</code> rather
+than the library's default:</p>
+<p><cite>Dune</cite> is a title here.</p>
 
       
       <nav class="page-relations">
-        <a class="prev" href="../team_a/index.html">&larr; Team A: Getting Started</a>
-        <a class="next" href="../toctree/orphan.html">Deliberately Unreferenced &rarr;</a>
+        <a class="prev" href="index.html">&larr; Interpreted Text</a>
+        <a class="next" href="../sectnum/index.html">Sectnum Directives &rarr;</a>
       </nav>
       
     </main>

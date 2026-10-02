@@ -151,10 +151,27 @@ as its class. These four and <code>code</code> are the only base roles: any othe
 or none, is reported as <code>role.unsupported-base</code>, and a name rinx already
 gives a role as <code>role.builtin-name</code>.</p>
 </li>
+<li><p>Interpreted text: text in single backquotes with no role, read as the
+<em>default role</em>. That is <code>title-reference</code> (<code>:title-reference:</code>,
+<code>:title:</code> or <code>:t:</code>), shown as a citation, unless a library's
+<code>default_role</code> or a <code>.. default-role::</code> chooses another — any role rinx
+knows. A role may also be written after the text:</p>
+<div class="highlight-rst notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>Dune<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span> is a novel; water is H\ <span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>2<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span><span class="hl-entity hl-name hl-tag hl-restructuredtext"><span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span>sub<span class="hl-punctuation hl-definition hl-field hl-restructuredtext">:</span></span>\ O.</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"><span class="hl-meta hl-other hl-directive hl-restructuredtext"><span class="hl-punctuation hl-definition hl-directive hl-restructuredtext">..</span> default-role<span class="hl-punctuation hl-separator hl-key-value hl-restructuredtext">::</span></span> any</span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext"></span></span>
+<span class="hl-text hl-restructuredtext"><span class="hl-meta hl-paragraph hl-restructuredtext">See <span class="hl-markup hl-other hl-command hl-restructuredtext"><span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span>the syntax page &lt;syntax&gt;<span class="hl-punctuation hl-definition hl-interpreted hl-restructuredtext">`</span></span>.</span></span></pre></div>
+</div>
+<p><code>.. default-role::</code> applies to the rest of the document; without an
+argument it restores <code>title-reference</code>. A name no role answers to is
+reported as <code>default-role.unknown-role</code>.</p>
+</li>
 </ul>
 <p>Not yet supported: footnotes and citations, field lists beyond a document's
 leading <code>:orphan:</code>, <code>.. raw::</code>, <code>.. class::</code>, <code>.. role::</code> with a base
-other than <code>code</code>, <code>sub</code> or <code>sup</code>, <code>.. default-role::</code>, <code>.. topic::</code>,
+other than <code>code</code>, <code>sub</code> or <code>sup</code>, <code>.. topic::</code>,
 <code>.. sidebar::</code>, <code>.. rubric::</code> and <code>.. parsed-literal::</code>.</p>
 <h2 id="sphinx">Sphinx</h2>
 <p>Supported:</p>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team B: Infrastructure Guide — Megacorp Documentation</title>
+  <title>Interpreted Text — Megacorp Documentation</title>
   <link rel="stylesheet" href="../../default.css">
   <script defer src="../../version_switcher.js"></script>
 </head>
@@ -241,8 +241,35 @@
             
           </li>
         
-          <li class="toctree-l1">
-            <a href="../default_role/index.html">Interpreted Text</a>
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">Interpreted Text</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Interpreted Text"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#titles">Titles</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#a-role-after-the-text">A Role After the Text</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#choosing-the-default-role">Choosing the Default Role</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#a-library-s-default-role">A Library&#x27;s Default Role</a>
+            
+          </li>
+        
+              </ul>
+            </details>
             
           </li>
         
@@ -281,25 +308,8 @@
             
           </li>
         
-          <li class="toctree-l1 current has-children">
-            <a href="index.html">Team B: Infrastructure Guide</a>
-            
-            <details open>
-              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Team B: Infrastructure Guide"></span></summary>
-              <ul>
-                
-          <li class="toctree-l2">
-            <a href="index.html#overview">Overview</a>
-            
-          </li>
-        
-          <li class="toctree-l2">
-            <a href="index.html#configuration">Configuration</a>
-            
-          </li>
-        
-              </ul>
-            </details>
+          <li class="toctree-l1">
+            <a href="../team_b/index.html">Team B: Infrastructure Guide</a>
             
           </li>
         
@@ -310,25 +320,50 @@
     <main class="document">
       
       <nav class="page-relations">
-        <a class="prev" href="../team_a/index.html">&larr; Team A: Getting Started</a>
-        <a class="next" href="../toctree/orphan.html">Deliberately Unreferenced &rarr;</a>
+        <a class="prev" href="../contents/index.html">&larr; Contents Directives</a>
+        <a class="next" href="configured.html">A Configured Default &rarr;</a>
       </nav>
       
-      <a id="team-b-index"></a>
-<h1 id="team-b-infrastructure-guide">Team B: Infrastructure Guide</h1>
-<p>This guide covers the infrastructure components maintained by Team B.</p>
-<h2 id="overview">Overview</h2>
-<p>The infrastructure layer handles deployment, monitoring, and scaling
-of all services across the platform.</p>
-<h2 id="configuration">Configuration</h2>
-<p>All configuration is managed via environment variables and checked into
-the infra repository under the config directory.</p>
-<p>See also <a href="../index.html#home-index">Rinx Example Site</a>, <a href="../team_a/index.html#team-a-index">Team A: Getting Started</a>, and <a href="index.html#team-b-index">Team B: Infrastructure Guide</a>.</p>
+      <a id="default-role-index"></a>
+<h1 id="interpreted-text">Interpreted Text</h1>
+<p>Text between single backquotes, with no role written, is <em>interpreted text</em>:
+it is read as the <em>default role</em>. Unless a library or a document chooses
+another, that is <code>title-reference</code>, which marks the title of a work.</p>
+<h2 id="titles">Titles</h2>
+<ul>
+<li><p>Bare: <cite>The Left Hand of Darkness</cite> and <cite>Dune</cite> are novels.</p>
+</li>
+<li><p>The same role written out, under all three of its names:
+<cite>Solaris</cite>, <cite>Neuromancer</cite> and <cite>Foundation</cite>.</p>
+</li>
+<li><p>The text is plain, so markup inside it stays text: <cite>*not* emphasis</cite>.</p>
+</li>
+<li><p>Other backquoted constructs are unaffected: a <code>literal</code>, a
+<a href="https://docutils.sourceforge.io/">hyperlink</a> and a role such as
+<a href="../index.html#home-index">Rinx Example Site</a>.</p>
+</li>
+</ul>
+<h2 id="a-role-after-the-text">A Role After the Text</h2>
+<p>A role may be written after the text instead of before it, which reads the
+same: water is H<sub>2</sub>O, and E = mc<sup>2</sup>.</p>
+<h2 id="choosing-the-default-role">Choosing the Default Role</h2>
+<p><code>.. default-role::</code> changes the default for the rest of the document.</p>
+<p>Now bare text is raised: x<sup>2</sup> + y<sup>2</sup>.</p>
+<p>Any role works, including one the document defines:</p>
+<p>C<sub class="chem">6</sub>H<sub class="chem">12</sub>O<sub class="chem">6</sub>.</p>
+<p>Without an argument, the directive restores <code>title-reference</code>:</p>
+<p><cite>Dune</cite> is a title again.</p>
+<h2 id="a-library-s-default-role">A Library's Default Role</h2>
+<p>A library may set <code>default_role</code> in its <code>BUILD.bazel</code>, as a Sphinx project
+sets it in <code>conf.py</code>:</p>
+<ul>
+  <li><a href="configured.html">A Configured Default</a></li>
+</ul>
 
       
       <nav class="page-relations">
-        <a class="prev" href="../team_a/index.html">&larr; Team A: Getting Started</a>
-        <a class="next" href="../toctree/orphan.html">Deliberately Unreferenced &rarr;</a>
+        <a class="prev" href="../contents/index.html">&larr; Contents Directives</a>
+        <a class="next" href="configured.html">A Configured Default &rarr;</a>
       </nav>
       
     </main>

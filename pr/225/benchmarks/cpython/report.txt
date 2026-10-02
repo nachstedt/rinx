@@ -38,7 +38,6 @@ limited-api-list: 1
 container: 1
 Contents: 1
 epigraph: 1
-default-role: 1
 miscnews: 1
 
 Malformed Directives Summary:
@@ -54,13 +53,14 @@ Toctree Options Exercised Summary:
 
 Parser Diagnostics Summary:
 ---------------------------
-directive.unknown: 1889
+directive.unknown: 1888
 c-decl.unparsed: 168
 option.malformed-spec: 63
 substitution.undefined: 23
 block-quote.unindent-no-blank-line: 4
 list.enumerated-start-not-one: 4
 table.grid.inconsistent-column-boundary: 1
+default-role.unknown-role: 1
 
 Unresolved Domain-Object References (1866):
 -------------------------------------------
