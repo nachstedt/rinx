@@ -212,6 +212,17 @@ rendered as the empty string.</p>
 belong to: <code>"py"</code> (the default) or <code>"c"</code>.</p>
 </td>
 </tr>
+<tr>
+<td><p><code>default_role</code></p>
+</td>
+<td><p>The role text in single backquotes is read as when no role is written,
+like Sphinx's <code>default_role</code>: any role rinx knows, such as <code>"any"</code>,
+<code>"py:func"</code> or an entity role. Empty (the default) keeps docutils'
+<code>title-reference</code>, shown as a citation. A <code>.. default-role::</code>
+overrides it for the rest of its document; an unknown name fails the
+build.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h2 id="rinx-site">rinx_site</h2>

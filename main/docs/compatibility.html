@@ -620,11 +620,35 @@ markup in its toctree.</p>
 </td>
 </tr>
 <tr>
-<td><p>Default role (single-backquoted text without a role)</p>
+<td><p>Default role (single-backquoted text without a role), and a role
+written after the text (<code>`text`:role:</code>)</p>
 </td>
-<td><p>❌</p>
+<td><p>✅ ℹ️</p>
 </td>
-<td></td>
+<td><ul>
+<li><p>Role names are case-sensitive, so <code>`x`:Sub:</code> is not recognized.</p>
+</li>
+<li><p>A role written after the text that rinx does not know is left as
+written; docutils reports it.</p>
+</li>
+<li><p>An unknown library <code>default_role</code> fails the build; Sphinx warns.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p><code>:title-reference:</code>/<code>:title:</code>/<code>:t:</code> role</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Role names are case-sensitive, so <code>:Title:</code> is not recognized.</p>
+</li>
+<li><p>A section title holding one shows it as plain text in the
+navigation and the page title, as for emphasis.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p>Semantic markup roles (<code>:abbr:</code>, <code>:command:</code>, <code>:dfn:</code>,
@@ -1117,9 +1141,14 @@ class; Sphinx adds <code>highlight none</code>.</p>
 <tr>
 <td><p><code>.. default-role::</code></p>
 </td>
-<td><p>❌</p>
+<td><p>✅ ℹ️</p>
 </td>
-<td></td>
+<td><ul>
+<li><p>Built-in role names are case-sensitive, so
+<code>.. default-role:: Any</code> is reported as an unknown role.</p>
+</li>
+</ul>
+</td>
 </tr>
 <tr>
 <td><p><code>.. meta::</code></p>
