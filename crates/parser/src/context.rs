@@ -20,7 +20,8 @@ use std::collections::BTreeMap;
 use rinx_ast::{Domain, EntityId, FileId, Position, Span};
 use rinx_entity::{EntitySchema, EntityType};
 
-use crate::custom_roles::CustomRoles;
+use crate::default_role::DefaultRole;
+use crate::document_roles::DocumentRoles;
 use crate::templating::TemplateMap;
 
 /// A file read at parse time, and the identity the parser knows it by.
@@ -190,15 +191,20 @@ pub struct ParseCtx<'a> {
     /// schema file, and only the worker knows where that is. This crate reads
     /// a map it can hand straight to [`ParseFileLoader::load`] with no anchor.
     pub import_keys: &'a BTreeMap<String, String>,
-    /// The roles the document has defined so far with `.. role::`.
+    /// The role a bare `` `text` `` is read as until a `.. default-role::`
+    /// says otherwise: the library's `default_role`, Sphinx's `conf.py`
+    /// setting of the same name. `title-reference` unless one is given.
+    configured_default_role: &'a DefaultRole,
+    /// The roles the document has defined so far with `.. role::`, and the
+    /// default role a `.. default-role::` has chosen.
     ///
-    /// Unlike every other field this is *state*, not configuration: a
-    /// `.. role::` fills it in and the inline scan of every later paragraph
-    /// reads it, which is what makes a role apply from its definition onwards
-    /// — see [`crate::custom_roles`]. Set by [`crate::parse_with_ctx`], which
-    /// owns one table per document; a context built without it defines no
-    /// roles.
-    custom_roles: Option<&'a CustomRoles>,
+    /// Unlike every other field this is *state*, not configuration: the two
+    /// directives fill it in and the inline scan of every later paragraph
+    /// reads it, which is what makes them apply from where they are written
+    /// onwards — see [`crate::document_roles`]. Set by
+    /// [`crate::parse_with_ctx`], which owns one table per document; a context
+    /// built without it defines no roles and keeps the configured default.
+    document_roles: Option<&'a DocumentRoles>,
     /// Where the current line slice came from, or `None` when it came from
     /// nowhere in the source — see [`Self::synthetic`].
     origin: Option<Origin>,
@@ -260,7 +266,8 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity_id: None,
             in_grid_row: false,
             import_keys: empty_import_keys(),
-            custom_roles: None,
+            configured_default_role: &DefaultRole::TITLE_REFERENCE,
+            document_roles: None,
             origin: Some(Origin::START),
             file: None,
             current_file: None,
@@ -282,9 +289,9 @@ impl<'a> ParseCtx<'a> {
     /// owns the table for the length of one parse, as [`Self::included`]'s
     /// caller owns the include stack.
     #[must_use]
-    pub(crate) fn with_custom_roles<'b>(&'b self, roles: &'b CustomRoles) -> ParseCtx<'b> {
+    pub(crate) fn with_document_roles<'b>(&'b self, roles: &'b DocumentRoles) -> ParseCtx<'b> {
         ParseCtx {
-            custom_roles: Some(roles),
+            document_roles: Some(roles),
             ..*self
         }
     }
@@ -292,8 +299,27 @@ impl<'a> ParseCtx<'a> {
     /// The roles the document has defined so far, or `None` when this parse
     /// keeps no table.
     #[must_use]
-    pub(crate) const fn custom_roles(&self) -> Option<&'a CustomRoles> {
-        self.custom_roles
+    pub(crate) const fn document_roles(&self) -> Option<&'a DocumentRoles> {
+        self.document_roles
+    }
+
+    /// The same context, reading a bare `` `text` `` as `role` until a
+    /// `.. default-role::` says otherwise.
+    #[must_use]
+    pub fn with_default_role(self, role: &'a DefaultRole) -> Self {
+        Self {
+            configured_default_role: role,
+            ..self
+        }
+    }
+
+    /// The role a bare `` `text` `` is read as at this point of the document:
+    /// the last `.. default-role::`'s choice, else the configured one.
+    #[must_use]
+    pub(crate) fn default_role(&self) -> DefaultRole {
+        self.document_roles
+            .and_then(DocumentRoles::default_role)
+            .unwrap_or_else(|| self.configured_default_role.clone())
     }
 
     /// The same context, parsing against `schema`.
@@ -502,7 +528,8 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity_id: self.enclosing_entity_id,
             in_grid_row: self.in_grid_row,
             import_keys: self.import_keys,
-            custom_roles: self.custom_roles,
+            configured_default_role: self.configured_default_role,
+            document_roles: self.document_roles,
             origin: Some(Origin::START),
             file: Some(file),
             current_file: Some(id),
@@ -575,6 +602,33 @@ impl<'a> ParseCtx<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_default_role_is_title_reference_unless_configured() {
+        // Given / When / Then
+        assert_eq!(
+            ParseCtx::with_domain(Domain::Py).default_role(),
+            DefaultRole::TITLE_REFERENCE
+        );
+    }
+
+    #[test]
+    fn test_default_role_prefers_the_documents_choice_to_the_configured_one() {
+        // Given
+        let base = ParseCtx::with_domain(Domain::Py);
+        let configured = DefaultRole::parse("any", &base).unwrap();
+        let chosen = DefaultRole::parse("sub", &base).unwrap();
+        let configured_ctx = base.with_default_role(&configured);
+        let roles = DocumentRoles::default();
+        let ctx = configured_ctx.with_document_roles(&roles);
+        assert_eq!(ctx.default_role(), configured);
+
+        // When
+        roles.set_default(chosen);
+
+        // Then
+        assert_eq!(ctx.default_role().role_name(), Some("sub"));
+    }
 
     #[test]
     fn test_with_domain_keeps_the_requested_domain() {

@@ -43,6 +43,12 @@ pub enum RoleRefusal {
         title: String,
         entry: InvalidIndexEntry,
     },
+    /// Interpreted text with a role written both before and after it, lowered
+    /// to its source text as docutils' `problematic` node shows it.
+    MultipleRoles,
+    /// Interpreted text with a role and a hyperlink reference's `_` or `__`,
+    /// lowered to its source text as docutils' `problematic` node shows it.
+    RoleAndReference,
 }
 
 /// Why the parser refused a `:numref:` — see [`RoleRefusal::NumberReference`].
@@ -111,6 +117,14 @@ pub enum InlineNode {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         classes: Vec<String>,
     },
+    /// The title of a work, from `:title-reference:`/`:title:`/`:t:` or from
+    /// interpreted text written without a role while the default role is
+    /// docutils' own — which is what a bare `` `text` `` means unless a
+    /// `.. default-role::` or the library's `default_role` says otherwise.
+    ///
+    /// Plain text, as docutils' generic roles give it: never parsed for
+    /// nested markup and never split into a title.
+    TitleReference(String),
     /// An inline cross-reference produced by the term role, linking to a glossary entry.
     ///
     /// The `display` field is the visible link text and `term` is the glossary key.
@@ -583,6 +597,7 @@ pub fn inline_plain_text(nodes: &[InlineNode]) -> String {
                 | InlineNode::Literal(text)
                 | InlineNode::Program(text)
                 | InlineNode::Script { text, .. }
+                | InlineNode::TitleReference(text)
                 | InlineNode::Code { text, .. }
                 | InlineNode::AnonymousReference { text, .. }
                 | InlineNode::RefusedRole { text, .. }
@@ -716,6 +731,7 @@ mod tests {
                 text: "t".to_string(),
                 classes: Vec::new(),
             },
+            InlineNode::TitleReference("t".to_string()),
         ];
 
         // When / Then
@@ -1442,6 +1458,21 @@ mod tests {
 
         // Then
         assert_eq!(text, "H2O");
+    }
+
+    #[test]
+    fn test_inline_plain_text_keeps_a_title_reference_as_its_text() {
+        // Given — `` `Dune` ``
+        let nodes = vec![
+            InlineNode::Text("Read ".to_string()),
+            InlineNode::TitleReference("Dune".to_string()),
+        ];
+
+        // When
+        let text = inline_plain_text(&nodes);
+
+        // Then
+        assert_eq!(text, "Read Dune");
     }
 
     #[test]

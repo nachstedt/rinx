@@ -4,16 +4,20 @@
 //! [`text`] drives the scan and owns the entry point; it consults
 //! [`regexes`] for what to look for, [`markup`] for emphasis/strong/literal
 //! spans, and [`dispatch`] to build a node once something matches — which in
-//! turn hands the domain roles to [`roles`]. [`escapes`], [`punctuation`] and
+//! turn hands the domain roles to [`roles`]. [`interpreted`] is text in
+//! backquotes with no role before it: it reads the role written after, or
+//! the default role, and builds the node through that same dispatch. [`escapes`], [`punctuation`] and
 //! [`typography`] are the text-level primitives the rest is phrased in.
 //! [`source_map`] is what lets a matched role report where it was written:
 //! block-level parsing reflows text before the scan sees it, so the mapping
 //! back to the `.rst` has to be recorded while that reflow happens. The two
 //! role-name predicates are re-exported for `.. role::`, which must refuse a
-//! name this scan could never match, or would match as something else.
+//! name this scan could never match, or would match as something else, and
+//! `find_role_kind` for a default role, which must be one it can match.
 
 mod dispatch;
 mod escapes;
+mod interpreted;
 mod markup;
 mod punctuation;
 mod regexes;
@@ -27,12 +31,15 @@ mod code_pipeline_tests;
 #[cfg(test)]
 mod index_pipeline_tests;
 #[cfg(test)]
+mod interpreted_pipeline_tests;
+#[cfg(test)]
 mod pipeline_tests;
 #[cfg(test)]
 mod registry_pipeline_tests;
 #[cfg(test)]
 mod script_pipeline_tests;
 
+pub(crate) use interpreted::find_role_kind;
 pub(crate) use regexes::{is_fixed_role_name, is_writable_role_name};
 pub(super) use source_map::SourceMap;
 pub(super) use text::parse_inline_text_mapped;

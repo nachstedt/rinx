@@ -49,6 +49,7 @@ mod classes;
 mod code_block;
 mod contents;
 mod data_table;
+mod default_role;
 mod dispatch;
 mod doctest;
 mod domains;

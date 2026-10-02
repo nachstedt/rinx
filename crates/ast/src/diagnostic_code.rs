@@ -319,6 +319,26 @@ diagnostic_codes! {
     /// dropped.
     RoleInvalidClass => "role.invalid-class",
 
+    // --- `.. default-role::` ------------------------------------------------
+    /// An argument naming no role this build knows, so the default role was
+    /// left as it was.
+    DefaultRoleUnknownRole => "default-role.unknown-role",
+    /// An argument of more than one word, so the default role was left as
+    /// it was.
+    DefaultRoleInvalidArgument => "default-role.invalid-argument",
+    /// Options or a body, which the directive takes none of; the argument
+    /// still applies.
+    DefaultRoleUnexpectedContent => "default-role.unexpected-content",
+
+    // --- interpreted text ----------------------------------------------------
+    /// A role written both before and after the same text, as in
+    /// ``:sub:`2`:sup: ``, which docutils allows only one of; shown as
+    /// written.
+    InterpretedMultipleRoles => "interpreted.multiple-roles",
+    /// A role and a hyperlink reference's `_` on the same text, as in
+    /// ``:ref:`x`_ ``, which cannot both apply; shown as written.
+    InterpretedRoleAndReference => "interpreted.role-and-reference",
+
     // --- `:code:` and the roles derived from it -----------------------------
     /// A language with no grammar behind it, so the code was left
     /// unhighlighted. Reported while rendering, as for a code block.

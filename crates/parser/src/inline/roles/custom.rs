@@ -8,7 +8,7 @@
 use rinx_ast::InlineNode;
 
 use super::script::script_node;
-use crate::custom_roles::{CodeRole, CustomRole, CustomRoles};
+use crate::document_roles::{CodeRole, CustomRole, DocumentRoles};
 use crate::inline::regexes::NAMED_ROLE_REGEX;
 
 /// Builds the `InlineNode` for a role the document defined with `.. role::`,
@@ -16,7 +16,7 @@ use crate::inline::regexes::NAMED_ROLE_REGEX;
 /// only after its definition.
 pub(crate) fn handle_custom_role_match(
     m_str: &str,
-    roles: Option<&CustomRoles>,
+    roles: Option<&DocumentRoles>,
 ) -> Option<InlineNode> {
     let caps = NAMED_ROLE_REGEX
         .captures(m_str)
@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn test_handle_custom_role_match_builds_code_from_the_definition() {
         // Given
-        let roles = CustomRoles::default();
+        let roles = DocumentRoles::default();
         roles.define("python", python_role());
 
         // When
@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn test_handle_custom_role_match_builds_a_script_from_the_definition() {
         // Given
-        let roles = CustomRoles::default();
+        let roles = DocumentRoles::default();
         roles.define(
             "chem",
             CustomRole::Script {
@@ -96,7 +96,7 @@ mod tests {
     #[test]
     fn test_handle_custom_role_match_misses_an_undefined_role() {
         // Given
-        let roles = CustomRoles::default();
+        let roles = DocumentRoles::default();
 
         // When / Then
         assert_eq!(handle_custom_role_match(":python:`x`", Some(&roles)), None);

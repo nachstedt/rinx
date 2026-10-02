@@ -1,0 +1,23 @@
+"""Documents exercising interpreted text written without a role.
+
+Two libraries, because the default role a bare `text` in backquotes gets is a
+property of the library: `docs` keeps docutils' own, `title-reference`, and
+switches it with `.. default-role::`; `configured_docs` sets `default_role` the
+way a Sphinx project sets it in `conf.py`.
+"""
+
+load("@rinx//:defs.bzl", "rinx_library")
+
+rinx_library(
+    name = "docs",
+    srcs = ["index.rst"],
+    deps = [":configured_docs"],
+    visibility = ["//visibility:public"],
+)
+
+rinx_library(
+    name = "configured_docs",
+    srcs = ["configured.rst"],
+    # Every bare `text` in this library's documents is an `:any:` reference.
+    default_role = "any",
+)

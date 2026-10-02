@@ -226,9 +226,18 @@ Inline markup
        - A section title holding one shows it as plain text in the
          navigation and the page title, as for emphasis; Sphinx keeps the
          markup in its toctree.
-   * - Default role (single-backquoted text without a role)
-     - ❌
-     -
+   * - Default role (single-backquoted text without a role), and a role
+       written after the text (```text`:role:``)
+     - ✅ ℹ️
+     - - Role names are case-sensitive, so ```x`:Sub:`` is not recognized.
+       - A role written after the text that rinx does not know is left as
+         written; docutils reports it.
+       - An unknown library ``default_role`` fails the build; Sphinx warns.
+   * - ``:title-reference:``/``:title:``/``:t:`` role
+     - ✅ ℹ️
+     - - Role names are case-sensitive, so ``:Title:`` is not recognized.
+       - A section title holding one shows it as plain text in the
+         navigation and the page title, as for emphasis.
    * - Semantic markup roles (``:abbr:``, ``:command:``, ``:dfn:``,
        ``:file:``, ``:guilabel:``, ``:kbd:``, ``:mailheader:``,
        ``:makevar:``, ``:manpage:``, ``:menuselection:``, ``:mimetype:``,
@@ -437,8 +446,9 @@ Directives
        - ``:language: none`` highlights nothing and adds no ``highlight``
          class; Sphinx adds ``highlight none``.
    * - ``.. default-role::``
-     - ❌
-     -
+     - ✅ ℹ️
+     - - Built-in role names are case-sensitive, so
+         ``.. default-role:: Any`` is reported as an unknown role.
    * - ``.. meta::``
      - ❌
      -

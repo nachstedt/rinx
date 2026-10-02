@@ -52,6 +52,7 @@ Welcome to the Rinx example.
    entities/index
    toctree/index
    contents/index
+   default_role/index
    sectnum/index
    dropdown/index
    grid/index

@@ -19,7 +19,7 @@ use super::embed_assets::embed_available_assets;
 use super::entity_schema::{import_keys_from_args, load_entity_schema, load_entity_templates};
 use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
-use super::parse_inputs::{ParseInputs, jinja_from_args};
+use super::parse_inputs::{ParseInputs, default_role_from_args, jinja_from_args};
 use super::suppression::{
     retain_reportable, retain_reportable_diagram_errors, retain_reportable_empty_listing_errors,
     retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
@@ -214,6 +214,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     // which is the whole point of the preview sharing `ParseInputs`.
     let jinja = jinja_from_args(args)?;
     let import_keys = import_keys_from_args(args, &schema);
+    let default_role = default_role_from_args(args, &schema)?;
     let page = process_preview(
         &rst,
         index_json.as_deref(),
@@ -222,6 +223,7 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
         &doc_path,
         &ParseInputs {
             default_domain,
+            default_role: &default_role,
             // The editor previews a real file on disk, so `:file:` resolves
             // against its directory exactly as it does in `parse`.
             files: &DocumentRelativeFiles::for_document(&doc_path),
@@ -291,6 +293,7 @@ mod tests {
             "test.rst",
             &ParseInputs {
                 default_domain: ast::Domain::Py,
+                default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
                 jinja: None,
@@ -323,6 +326,7 @@ mod tests {
             "test.rst",
             &ParseInputs {
                 default_domain: ast::Domain::Py,
+                default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
                 jinja: None,
@@ -353,6 +357,7 @@ mod tests {
             "test.rst",
             &ParseInputs {
                 default_domain: ast::Domain::Py,
+                default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
                 jinja: None,
@@ -377,6 +382,7 @@ mod tests {
             "test.rst",
             &ParseInputs {
                 default_domain: ast::Domain::Py,
+                default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
                 files: &no_parse_files(),
                 schema: &EntitySchema::empty(),
                 jinja: None,

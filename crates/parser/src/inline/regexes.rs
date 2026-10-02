@@ -79,6 +79,10 @@ pub(super) static INDEX_ROLE_REGEX: LazyLock<Regex> =
 pub(super) static SCRIPT_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r":(?P<role>sub|subscript|sup|superscript):`(?P<text>[^`]+)`").unwrap()
 });
+/// `:title-reference:`, also spelled `:title:` and `:t:`. No
+/// [`EXTERNAL_PREFIX`] and no domain: it is markup, not a reference.
+pub(super) static TITLE_REFERENCE_ROLE_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r":(?:title-reference|title|t):`(?P<text>[^`]+)`").unwrap());
 pub(super) static EQ_ROLE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r":eq:`(?P<label>[^`]+)`").unwrap());
 pub(super) static FUNC_ROLE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -177,6 +181,7 @@ pub(super) static SIMPLE_ROLE_REGEXES: &[(&LazyLock<Regex>, &str)] = &[
     (&EQ_ROLE_REGEX, "eq"),
     (&CODE_ROLE_REGEX, "code"),
     (&SCRIPT_ROLE_REGEX, "script"),
+    (&TITLE_REFERENCE_ROLE_REGEX, "title-reference"),
     (&REGISTRY_ROLE_REGEX, "registry"),
     (&PEP_REFERENCE_ROLE_REGEX, "pep-reference"),
     (&RFC_REFERENCE_ROLE_REGEX, "rfc-reference"),
@@ -283,6 +288,9 @@ mod tests {
             "subscript",
             "sup",
             "superscript",
+            "title-reference",
+            "title",
+            "t",
         ] {
             assert!(is_fixed_role_name(name), "{name}");
         }
@@ -295,5 +303,6 @@ mod tests {
         assert!(!is_fixed_role_name("codex"));
         assert!(!is_fixed_role_name("red"));
         assert!(!is_fixed_role_name("subs"));
+        assert!(!is_fixed_role_name("titles"));
     }
 }

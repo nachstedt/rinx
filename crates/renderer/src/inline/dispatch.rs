@@ -69,6 +69,10 @@ pub(crate) fn render_inline(
             text,
             classes,
         } => render_inline_script(html, *position, text, classes),
+        // docutils' HTML writers and Sphinx's alike draw a title as `<cite>`.
+        rinx_ast::InlineNode::TitleReference(text) => {
+            let _ = write!(html, "<cite>{}</cite>", html_escape::encode_text(text));
+        }
         rinx_ast::InlineNode::AnonymousHyperlink { text, target } => {
             render_inline_anonymous_hyperlink(html, text, target);
         }
@@ -209,7 +213,9 @@ fn render_refused_role(html: &mut String, text: &str, refusal: &rinx_ast::RoleRe
         }
         rinx_ast::RoleRefusal::RegistryTarget { .. }
         | rinx_ast::RoleRefusal::DocutilsPepNumber { .. }
-        | rinx_ast::RoleRefusal::DocutilsRfcNumber { .. } => {
+        | rinx_ast::RoleRefusal::DocutilsRfcNumber { .. }
+        | rinx_ast::RoleRefusal::MultipleRoles
+        | rinx_ast::RoleRefusal::RoleAndReference => {
             let _ = write!(html, "{}", html_escape::encode_text(text));
         }
         rinx_ast::RoleRefusal::IndexEntry { title, .. } => {
@@ -233,6 +239,41 @@ fn render_inline_image(html: &mut String, options: &rinx_ast::ImageOptions, ctx:
         .into_iter()
         .collect();
     render_linked_image(html, options, &align_class, ctx);
+}
+
+/// Renders a hyperlink reference — `` `text`_ `` or `` `text`__ `` — which
+/// links a target the document or the project names, rather than a role's.
+fn render_hyperlink_reference(
+    html: &mut String,
+    inline: &rinx_ast::InlineNode,
+    ctx: &mut RenderCtx<'_>,
+) {
+    match inline {
+        rinx_ast::InlineNode::Hyperlink { text, target, span } => {
+            render_inline_hyperlink(
+                html,
+                RefText {
+                    display: text,
+                    target,
+                    span: *span,
+                },
+                ctx.index,
+                ctx.doc_path,
+                ctx.broken_links,
+            );
+        }
+        rinx_ast::InlineNode::AnonymousReference { text, span } => {
+            render_inline_anonymous_reference(
+                html,
+                text,
+                *span,
+                ctx.anon_targets,
+                ctx.anon_index,
+                ctx.broken_links,
+            );
+        }
+        _ => unreachable!("render_cross_reference routes only hyperlink references here"),
+    }
 }
 
 /// Renders the inline variants that resolve against the project index, each
@@ -262,28 +303,9 @@ fn render_cross_reference(
                 ctx.broken_links,
             );
         }
-        rinx_ast::InlineNode::Hyperlink { text, target, span } => {
-            render_inline_hyperlink(
-                html,
-                RefText {
-                    display: text,
-                    target,
-                    span: *span,
-                },
-                ctx.index,
-                ctx.doc_path,
-                ctx.broken_links,
-            );
-        }
-        rinx_ast::InlineNode::AnonymousReference { text, span } => {
-            render_inline_anonymous_reference(
-                html,
-                text,
-                *span,
-                ctx.anon_targets,
-                ctx.anon_index,
-                ctx.broken_links,
-            );
+        rinx_ast::InlineNode::Hyperlink { .. }
+        | rinx_ast::InlineNode::AnonymousReference { .. } => {
+            render_hyperlink_reference(html, inline, ctx);
         }
         rinx_ast::InlineNode::DomainObjectReference { .. } => {
             render_domain_object(html, inline, ctx);
@@ -341,7 +363,8 @@ fn render_cross_reference(
         | rinx_ast::InlineNode::DocutilsRfcReference { .. }
         | rinx_ast::InlineNode::DownloadReference { .. }
         | rinx_ast::InlineNode::Program(_)
-        | rinx_ast::InlineNode::Script { .. } => {
+        | rinx_ast::InlineNode::Script { .. }
+        | rinx_ast::InlineNode::TitleReference(_) => {
             unreachable!("render_inline routes only cross-reference variants here")
         }
     }
@@ -615,6 +638,18 @@ mod tests {
 
         // Then
         assert!(html.contains("H<sub>2</sub>O"), "{html}");
+    }
+
+    #[test]
+    fn test_render_inline_writes_a_title_reference_as_a_citation() {
+        // Given / When — `` `Dune & Co` ``
+        let html = render_paragraph(vec![
+            rinx_ast::InlineNode::Text("Read ".to_string()),
+            rinx_ast::InlineNode::TitleReference("Dune & Co".to_string()),
+        ]);
+
+        // Then
+        assert!(html.contains("Read <cite>Dune &amp; Co</cite>"), "{html}");
     }
 
     #[test]

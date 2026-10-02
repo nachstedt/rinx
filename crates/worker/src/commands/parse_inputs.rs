@@ -1,27 +1,30 @@
 //! Everything a subcommand needs in order to *parse*, bundled.
 //!
-//! Five settings travel together wherever RST is turned into an AST — the
-//! default domain, the loader a file-reading directive goes through, the
-//! entity schema that supplies the project's own directive vocabulary, the
-//! import keys it declares, and whether the source is rendered as a Jinja
-//! template first. Both `parse` and `preview` take all five, so they are one
-//! parameter rather than five, for
+//! Six settings travel together wherever RST is turned into an AST — the
+//! default domain, the default role, the loader a file-reading directive goes
+//! through, the entity schema that supplies the project's own directive
+//! vocabulary, the import keys it declares, and whether the source is
+//! rendered as a Jinja template first. Both `parse` and `preview` take all
+//! six, so they are one parameter rather than six, for
 //! the same reason `ParseCtx` exists in the parser: the next parse-time
 //! setting should not have to touch every signature again.
 
 use anyhow::{Result, anyhow};
 use rinx_ast as ast;
 use rinx_entity::EntitySchema;
-use rinx_parser::ParseCtx;
+use rinx_parser::{DefaultRole, ParseCtx};
 use std::collections::BTreeMap;
 
-use super::cli_args::flag_values_opt;
+use super::cli_args::{flag_value_opt, flag_values_opt};
 use super::parse_files::{DocumentRelativeFiles, parse_ctx};
 
 /// The parse-time configuration one subcommand run works under.
 pub(super) struct ParseInputs<'a> {
     /// The domain a bare directive or role resolves to.
     pub default_domain: ast::Domain,
+    /// The role a bare `` `text` `` is read as until a `.. default-role::`
+    /// says otherwise.
+    pub default_role: &'a DefaultRole,
     /// How a file-reading directive reaches the filesystem.
     pub files: &'a DocumentRelativeFiles,
     /// The project's entity meta-model.
@@ -43,7 +46,8 @@ impl<'a> ParseInputs<'a> {
     pub(super) fn ctx(&self) -> ParseCtx<'a> {
         let ctx = parse_ctx(self.default_domain, self.files)
             .with_schema(self.schema)
-            .with_import_keys(self.import_keys);
+            .with_import_keys(self.import_keys)
+            .with_default_role(self.default_role);
         match self.jinja {
             Some(context) => ctx.with_jinja(context),
             None => ctx,
@@ -58,6 +62,32 @@ impl<'a> ParseInputs<'a> {
     pub(super) fn schema_hash(&self) -> Option<String> {
         (!self.schema.is_empty()).then(|| self.schema.hash().to_string())
     }
+}
+
+/// Reads the `--default-role` flag `rinx_library`'s `default_role` attribute
+/// passes, defaulting to docutils' `title-reference` when it is absent.
+///
+/// Checked against `schema` because an entity role the schema declares is a
+/// role like any other, and may be the default.
+///
+/// # Errors
+///
+/// Fails on a name no role answers to: the setting belongs to the build, so a
+/// typo in it is a configuration fault rather than one more warning — every
+/// bare `` `text` `` of the library would otherwise silently become a title.
+pub(super) fn default_role_from_args(
+    args: &[String],
+    schema: &EntitySchema,
+) -> Result<DefaultRole> {
+    let Some(name) = flag_value_opt(args, "--default-role") else {
+        return Ok(DefaultRole::TITLE_REFERENCE);
+    };
+    // The domain plays no part in whether a name is a role: a bare `func` is
+    // one in either, it only resolves differently.
+    let ctx = ParseCtx::with_domain(ast::Domain::Py).with_schema(schema);
+    DefaultRole::parse(&name, &ctx).map_err(|error| {
+        anyhow!("Invalid --default-role '{name}': {error}; check the rinx_library's `default_role`")
+    })
 }
 
 /// Reads the `--jinja` opt-in and the `--jinja-context k=v ...` bindings that
@@ -92,6 +122,58 @@ pub(super) fn jinja_from_args(args: &[String]) -> Result<Option<Vec<(String, Str
 mod tests {
     use super::*;
 
+    fn args(values: &[&str]) -> Vec<String> {
+        values.iter().map(ToString::to_string).collect()
+    }
+
+    #[test]
+    fn test_default_role_from_args_defaults_to_title_reference() {
+        // Given / When
+        let role = default_role_from_args(&[], &EntitySchema::empty()).unwrap();
+
+        // Then
+        assert_eq!(role, DefaultRole::TITLE_REFERENCE);
+    }
+
+    #[test]
+    fn test_default_role_from_args_reads_a_role() {
+        // Given
+        let ctx = ParseCtx::with_domain(ast::Domain::Py);
+
+        // When
+        let role =
+            default_role_from_args(&args(&["--default-role", "any"]), &EntitySchema::empty())
+                .unwrap();
+
+        // Then
+        assert_eq!(role, DefaultRole::parse("any", &ctx).unwrap());
+    }
+
+    #[test]
+    fn test_default_role_from_args_names_the_attribute_on_an_unknown_role() {
+        // Given / When
+        let error =
+            default_role_from_args(&args(&["--default-role", "nope"]), &EntitySchema::empty())
+                .unwrap_err();
+
+        // Then
+        assert!(error.to_string().contains("default_role"), "{error}");
+        assert!(error.to_string().contains("':nope:'"), "{error}");
+    }
+
+    #[test]
+    fn test_default_role_from_args_accepts_an_entity_role() {
+        // Given
+        let schema = rinx_entity::load_schema(
+            "[[entity_type]]\nname = \"req\"\n\n[[role]]\nname = \"req\"\n",
+            &rinx_entity::NoReservedNames,
+        )
+        .unwrap();
+
+        // When / Then
+        assert!(default_role_from_args(&args(&["--default-role", "req"]), &schema).is_ok());
+    }
+
     fn no_files() -> DocumentRelativeFiles {
         DocumentRelativeFiles::for_document("doc.rst")
     }
@@ -107,6 +189,7 @@ mod tests {
         .unwrap();
         let inputs = ParseInputs {
             default_domain: ast::Domain::C,
+            default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
             files: &files,
             schema: &schema,
             jinja: None,
@@ -128,6 +211,7 @@ mod tests {
         let schema = EntitySchema::empty();
         let inputs = ParseInputs {
             default_domain: ast::Domain::Py,
+            default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
             files: &files,
             schema: &schema,
             jinja: None,
@@ -152,6 +236,7 @@ mod tests {
         .unwrap();
         let inputs = ParseInputs {
             default_domain: ast::Domain::Py,
+            default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
             files: &files,
             schema: &schema,
             jinja: None,
@@ -236,6 +321,7 @@ mod tests {
         let context = [("release".to_string(), "3.14".to_string())];
         let inputs = ParseInputs {
             default_domain: ast::Domain::Py,
+            default_role: &rinx_parser::DefaultRole::TITLE_REFERENCE,
             files: &files,
             schema: &schema,
             jinja: Some(&context),

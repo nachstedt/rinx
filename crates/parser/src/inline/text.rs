@@ -6,7 +6,8 @@ use rinx_ast::{Domain, InlineNode};
 
 use super::dispatch::handle_inline_match;
 use super::escapes::{EscapedText, unescape, unescape_keeping_backslashes};
-use super::markup::find_inline_markup;
+use super::interpreted::{handle_interpreted_text, prefix_role_trailer, refused};
+use super::markup::{InlineMarkup, find_inline_markup};
 use super::regexes::SIMPLE_ROLE_REGEXES;
 use super::source_map::SourceMap;
 use super::typography::apply_smart_typography;
@@ -45,35 +46,46 @@ pub(crate) fn parse_inline_text_mapped(
         let mut all_matches = Vec::new();
         for (regex, kind) in SIMPLE_ROLE_REGEXES {
             if let Some(m) = regex.find(remaining) {
-                all_matches.push((m.start(), m.end(), *kind, None));
+                all_matches.push((m.start(), m.end(), Candidate::Role(kind)));
             }
         }
-        if let Some((start, end, node)) = find_inline_markup(paragraph_text, last_match_end) {
-            all_matches.push((start, end, "inline", Some(node)));
+        if let Some((start, end, markup)) = find_inline_markup(paragraph_text, last_match_end) {
+            all_matches.push((start, end, Candidate::Markup(markup)));
         }
 
         let earliest = all_matches
             .into_iter()
-            .min_by_key(|(start, end, _, _)| (*start, std::cmp::Reverse(*end)));
+            .min_by_key(|(start, end, _)| (*start, std::cmp::Reverse(*end)));
 
-        if let Some((start, end, kind, node_opt)) = earliest {
+        if let Some((start, mut end, candidate)) = earliest {
             if start > 0 {
                 inlines.push(unescape_node(InlineNode::Text(apply_smart_typography(
                     &remaining[..start],
                 ))));
             }
-            let m_str = &remaining[start..end];
+            let node = match candidate {
+                Candidate::Role(kind) => match role_trailer(kind, &remaining[end..]) {
+                    Some((refusal, length)) => {
+                        end += length;
+                        refused(&remaining[start..end], refusal)
+                    }
+                    None => {
+                        handle_inline_match(kind, &remaining[start..end], None, default_domain, ctx)
+                    }
+                },
+                Candidate::Markup(InlineMarkup::Node(node)) => node,
+                Candidate::Markup(InlineMarkup::Interpreted { body, suffix_role }) => {
+                    handle_interpreted_text(
+                        &remaining[start..end],
+                        &body,
+                        suffix_role.as_deref(),
+                        default_domain,
+                        ctx,
+                    )
+                }
+            };
             let span = map.span(last_match_end + start, last_match_end + end, ctx);
-            inlines.push(
-                unescape_node(handle_inline_match(
-                    kind,
-                    m_str,
-                    node_opt,
-                    default_domain,
-                    ctx,
-                ))
-                .with_span(span),
-            );
+            inlines.push(unescape_node(node).with_span(span));
             last_match_end += end;
         } else {
             inlines.push(unescape_node(InlineNode::Text(apply_smart_typography(
@@ -83,6 +95,23 @@ pub(crate) fn parse_inline_text_mapped(
         }
     }
     inlines
+}
+
+/// One construct the scan could read next: a role or link from the role
+/// table, by its `kind` tag, or what the markup scan found.
+enum Candidate {
+    Role(&'static str),
+    Markup(InlineMarkup),
+}
+
+/// What a role written before its text is followed by, when it is something
+/// that role cannot also have — see [`prefix_role_trailer`]. Only a role's
+/// match is asked: a link's backquotes are not interpreted text.
+fn role_trailer(kind: &str, after: &str) -> Option<(rinx_ast::RoleRefusal, usize)> {
+    if matches!(kind, "phrased" | "simple" | "anon_phrased" | "anon_simple") {
+        return None;
+    }
+    prefix_role_trailer(after)
 }
 
 /// Strips escape markers from every text field of a node on its way out of
@@ -110,6 +139,7 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         | InlineNode::Strong(text)
         | InlineNode::Program(text)
         | InlineNode::Script { text, .. }
+        | InlineNode::TitleReference(text)
         // Unlike an inline literal, `:code:` is interpreted text: Sphinx's
         // `code_role` is handed it escaped, so `\*` shows `*` and `\\` a
         // single backslash.
@@ -196,4 +226,28 @@ fn unescape_node(mut node: InlineNode) -> InlineNode {
         | InlineNode::InlineImage(_) => {}
     }
     node
+}
+
+#[cfg(test)]
+mod tests {
+    use rinx_ast::RoleRefusal;
+
+    use super::*;
+
+    #[test]
+    fn test_role_trailer_refuses_a_second_role_after_a_role() {
+        // Given / When / Then
+        assert_eq!(
+            role_trailer("script", ":sup:"),
+            Some((RoleRefusal::MultipleRoles, 5))
+        );
+    }
+
+    #[test]
+    fn test_role_trailer_ignores_what_follows_a_link() {
+        // Given / When / Then
+        for kind in ["phrased", "simple", "anon_phrased", "anon_simple"] {
+            assert_eq!(role_trailer(kind, ":sup:"), None, "{kind}");
+        }
+    }
 }

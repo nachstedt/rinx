@@ -7,7 +7,7 @@
 //! other base, or none, is refused by name rather than half-supported.
 //!
 //! The directive contributes no node at all. What it defines is recorded in
-//! the document's [`crate::custom_roles::CustomRoles`] table as it is parsed,
+//! the document's [`crate::document_roles::DocumentRoles`] table as it is parsed,
 //! so a role applies from its definition onwards, as in docutils — and no
 //! later phase has anything to learn about it.
 
@@ -17,8 +17,8 @@ use std::sync::LazyLock;
 use regex::Regex;
 
 use crate::context::ParseCtx;
-use crate::custom_roles::{CodeRole, CustomRole};
 use crate::diagnostics::Diagnostics;
+use crate::document_roles::{CodeRole, CustomRole};
 use crate::indent::unindent_body_lines;
 use crate::inline::{is_fixed_role_name, is_writable_role_name};
 
@@ -87,7 +87,7 @@ pub(in crate::directives) fn parse_role(
     let (option_lines, _) = scan_option_lines(&unindented_lines);
     let role = read_custom_role(name, base, &option_lines, diagnostics, ctx);
 
-    if let Some(roles) = ctx.custom_roles() {
+    if let Some(roles) = ctx.document_roles() {
         roles.define(name, role);
     }
     Vec::new()
@@ -249,13 +249,13 @@ fn read_classes(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::custom_roles::CustomRoles;
+    use crate::document_roles::DocumentRoles;
     use rinx_ast::Domain;
     use rinx_entity::{EntitySchema, NoReservedNames, load_schema};
 
     /// Parses a `.. role::` with `argument` and option `body` under a fresh
     /// table, returning what it defined and the diagnostic codes.
-    fn define(argument: &str, body: &[&str]) -> (Vec<Node>, CustomRoles, Vec<DiagnosticCode>) {
+    fn define(argument: &str, body: &[&str]) -> (Vec<Node>, DocumentRoles, Vec<DiagnosticCode>) {
         define_with_schema(argument, body, &EntitySchema::empty())
     }
 
@@ -263,10 +263,10 @@ mod tests {
         argument: &str,
         body: &[&str],
         schema: &EntitySchema,
-    ) -> (Vec<Node>, CustomRoles, Vec<DiagnosticCode>) {
-        let roles = CustomRoles::default();
+    ) -> (Vec<Node>, DocumentRoles, Vec<DiagnosticCode>) {
+        let roles = DocumentRoles::default();
         let base = ParseCtx::with_domain(Domain::Py).with_schema(schema);
-        let ctx = base.with_custom_roles(&roles);
+        let ctx = base.with_document_roles(&roles);
         let mut diagnostics = Diagnostics::default();
         let nodes = parse_role(argument, None, body, &mut diagnostics, &ctx);
         let (entries, _, _) = diagnostics.into_parts();

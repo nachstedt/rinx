@@ -434,6 +434,27 @@ mod tests {
     }
 
     #[test]
+    fn test_build_document_outline_flattens_a_title_reference_in_a_title() {
+        // Given — ``Reading `Dune` ``
+        let nodes = vec![
+            heading(1, "Guide"),
+            Node::Heading {
+                level: 2,
+                text: vec![
+                    InlineNode::Text("Reading ".to_string()),
+                    InlineNode::TitleReference("Dune".to_string()),
+                ],
+            },
+        ];
+
+        // When
+        let outline = build_document_outline(&nodes).outline;
+
+        // Then
+        assert_eq!(outline.sections[0].title, "Reading Dune");
+    }
+
+    #[test]
     fn test_build_document_outline_flattens_a_subscript_in_a_title() {
         // Given — `CO\ :sub:`2` levels`
         let nodes = vec![

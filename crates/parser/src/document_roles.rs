@@ -1,8 +1,9 @@
-//! The roles a document defines for itself with `.. role::`.
+//! The roles a document defines for itself with `.. role::`, and the default
+//! role a `.. default-role::` picks.
 //!
-//! The one piece of *state* a parse carries, rather than configuration: a
-//! `.. role::` applies from its definition onwards, as in docutils, and Sphinx
-//! forgets it at the end of the document. The block parse is already
+//! The one piece of *state* a parse carries, rather than configuration: both
+//! directives apply from where they are written onwards, as in docutils, and
+//! Sphinx forgets both at the end of the document. The block parse is already
 //! sequential — each paragraph's inline scan runs when the paragraph is
 //! reached — so a table the directive fills in and the scan reads gives exactly
 //! those semantics, with no whole-document pass and no AST node for the
@@ -17,6 +18,8 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use rinx_ast::{ResolvedLanguage, ScriptPosition};
+
+use crate::default_role::DefaultRole;
 
 /// What a `.. role::` defined a role as: one variant per base role a custom
 /// role may derive from.
@@ -42,13 +45,17 @@ pub(crate) struct CodeRole {
     pub(crate) classes: Vec<String>,
 }
 
-/// The custom roles defined so far in one document, by lowercased name.
+/// The custom roles defined so far in one document, by lowercased name, and
+/// the default role a `.. default-role::` last chose, if any has.
 #[derive(Debug, Default)]
-pub(crate) struct CustomRoles {
+pub(crate) struct DocumentRoles {
     roles: RefCell<BTreeMap<String, CustomRole>>,
+    /// `None` until a `.. default-role::` is written, so the library's own
+    /// default applies until then.
+    default: RefCell<Option<DefaultRole>>,
 }
 
-impl CustomRoles {
+impl DocumentRoles {
     /// Defines `name`, replacing an earlier definition of it — docutils lets a
     /// document redefine its own role, and the later one wins from there on.
     pub(crate) fn define(&self, name: &str, role: CustomRole) {
@@ -59,6 +66,17 @@ impl CustomRoles {
     /// case-insensitive, as docutils normalizes them.
     pub(crate) fn lookup(&self, name: &str) -> Option<CustomRole> {
         self.roles.borrow().get(&name.to_lowercase()).cloned()
+    }
+
+    /// Makes `role` the default from here on, replacing the library's and any
+    /// earlier `.. default-role::`'s.
+    pub(crate) fn set_default(&self, role: DefaultRole) {
+        *self.default.borrow_mut() = Some(role);
+    }
+
+    /// The default a `.. default-role::` chose, or `None` while none has.
+    pub(crate) fn default_role(&self) -> Option<DefaultRole> {
+        self.default.borrow().clone()
     }
 }
 
@@ -88,9 +106,29 @@ mod tests {
     }
 
     #[test]
+    fn test_default_role_is_unset_until_a_directive_sets_it() {
+        // Given / When / Then
+        assert_eq!(DocumentRoles::default().default_role(), None);
+    }
+
+    #[test]
+    fn test_set_default_replaces_an_earlier_default() {
+        // Given
+        let roles = DocumentRoles::default();
+        let ctx = crate::ParseCtx::with_domain(rinx_ast::Domain::Py);
+        roles.set_default(DefaultRole::parse("any", &ctx).unwrap());
+
+        // When
+        roles.set_default(DefaultRole::TITLE_REFERENCE);
+
+        // Then
+        assert_eq!(roles.default_role(), Some(DefaultRole::TITLE_REFERENCE));
+    }
+
+    #[test]
     fn test_lookup_misses_a_role_never_defined() {
         // Given
-        let roles = CustomRoles::default();
+        let roles = DocumentRoles::default();
 
         // When / Then
         assert_eq!(roles.lookup("python"), None);
@@ -99,7 +137,7 @@ mod tests {
     #[test]
     fn test_lookup_finds_a_defined_role() {
         // Given
-        let roles = CustomRoles::default();
+        let roles = DocumentRoles::default();
 
         // When
         roles.define("python", python());
@@ -111,7 +149,7 @@ mod tests {
     #[test]
     fn test_lookup_ignores_case() {
         // Given a role defined with capitals
-        let roles = CustomRoles::default();
+        let roles = DocumentRoles::default();
         roles.define("Py", python());
 
         // When / Then — docutils normalizes role names
@@ -122,7 +160,7 @@ mod tests {
     #[test]
     fn test_define_replaces_an_earlier_definition() {
         // Given
-        let roles = CustomRoles::default();
+        let roles = DocumentRoles::default();
         roles.define("x", python());
 
         // When
@@ -135,7 +173,7 @@ mod tests {
     #[test]
     fn test_define_replaces_a_code_role_with_a_script_role() {
         // Given
-        let roles = CustomRoles::default();
+        let roles = DocumentRoles::default();
         roles.define("x", python());
 
         // When — the later definition derives from another base

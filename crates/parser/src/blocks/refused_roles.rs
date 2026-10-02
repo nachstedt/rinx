@@ -6,7 +6,8 @@
 //! a `:numref:` title Sphinx could not apply, an `:external:` prefix, a
 //! registry role (`:pep:`, `:rfc:`, `:cve:`, `:cwe:`) or docutils'
 //! `:pep-reference:`/`:rfc-reference:` naming nothing it can link, an
-//! `:index:` entry its type cannot split — belongs
+//! `:index:` entry its type cannot split, interpreted text with two roles or
+//! a role and a reference suffix — belongs
 //! at the role the author wrote. The refusal travels on the node as an
 //! [`InlineNode::RefusedRole`] until this pass reaches it.
 
@@ -50,7 +51,9 @@ fn lowered(text: String, refusal: &RoleRefusal, span: Option<Span>) -> InlineNod
         },
         RoleRefusal::RegistryTarget { .. }
         | RoleRefusal::DocutilsPepNumber { .. }
-        | RoleRefusal::DocutilsRfcNumber { .. } => InlineNode::Text(text),
+        | RoleRefusal::DocutilsRfcNumber { .. }
+        | RoleRefusal::MultipleRoles
+        | RoleRefusal::RoleAndReference => InlineNode::Text(text),
         RoleRefusal::IndexEntry { title, .. } => InlineNode::IndexReference {
             title: title.clone(),
             entries: Vec::new(),
@@ -93,6 +96,20 @@ fn refusal_diagnostic(text: &str, refusal: &RoleRefusal, span: Option<Span>) -> 
         RoleRefusal::IndexEntry { entry, .. } => Diagnostic::at(
             index_role_code(entry.entry_type),
             format!(":index: {entry}"),
+            span,
+        ),
+        // docutils' own wording for both.
+        RoleRefusal::MultipleRoles => Diagnostic::at(
+            DiagnosticCode::InterpretedMultipleRoles,
+            format!(
+                "multiple roles in interpreted text '{text}' (both prefix and suffix present; \
+                 only one allowed)"
+            ),
+            span,
+        ),
+        RoleRefusal::RoleAndReference => Diagnostic::at(
+            DiagnosticCode::InterpretedRoleAndReference,
+            format!("interpreted text '{text}' has both a role and a reference suffix"),
             span,
         ),
     }
