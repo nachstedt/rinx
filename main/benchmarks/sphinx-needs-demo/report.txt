@@ -2,29 +2,11 @@
 
 Entities Parsed By Type:
 ------------------------
-test: 44
-fsr: 36
-swreq: 32
-req: 24
-safety_goal: 20
-sysreq: 18
-seq_msg: 16
-swarch: 10
-arch: 10
-need: 8
-person: 6
-interface: 6
-component: 5
-spec: 3
-release: 3
-team: 1
-hazard: 1
+None found.
 
 Unsupported Directives Summary:
 -------------------------------
-automodule: 2
-test-file: 1
-src-trace: 1
+None found.
 
 Sphinx-Needs Constructs Without An Entity-Model Equivalent:
 ----------------------------------------------------------
@@ -65,8 +47,8 @@ entity.role-type-mismatch (5):
     1  automotive-adas/external_data.rst: broken entity type mismatch 'SWREQ_001'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'SWREQ_002'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'REQ_001'
-    1  coffee-machine/index.rst: broken entity type mismatch 'SEQSTART_01'
     1  basic_example/index.rst: broken entity type mismatch 'EX_TEST_001'
+    1  coffee-machine/index.rst: broken entity type mismatch 'SEQSTART_01'
 
 directive.unknown (4):
 ----------------------
