@@ -161,13 +161,20 @@ To develop and debug the extension without publishing:
 3.  **Launch Extension Development Host**: Press ``F5`` (or go to *Run and Debug* -> *Launch Extension*). This opens a new VS Code window with the extension loaded.
 4.  **Live Debugging**: You can set breakpoints in the TypeScript source and use the *Debug Console* to inspect the extension's behavior.
 
-4. Packaging and Local Installation
+4. Checks and Tests
+~~~~~~~~~~~~~~~~~~~
+CI runs all of these on every pull request, from ``editors/vscode``:
+
+- ``npm run typecheck``, ``npm run lint`` and ``npm run format:check``. The linter is oxlint, with type-aware rules: the extension is on TypeScript 7, which ESLint's TypeScript support cannot load.
+- ``npm test`` runs the tests inside a real VS Code through ``@vscode/test-cli``, configured in ``.vscode-test.mjs``. ``VSCODE_VERSION=min`` picks the oldest VS Code that ``engines.vscode`` allows, and ``VSCODE_VERSION=insiders`` picks the next one. ``npm test -- --coverage`` also measures coverage, which ``node scripts/check-coverage.mjs <floor>`` checks.
+
+5. Packaging and Local Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 To test the extension as a "production" build:
 1.  **Package the extension**: Run ``vsce package`` inside ``editors/vscode``. This generates a ``.vsix`` file (e.g., ``rinx-0.0.1.vsix``).
 2.  **Install locally**: Run ``code --install-extension rinx-0.0.1.vsix``.
 3.  **Configure**: Set ``rinx.binaryPath`` in your global VS Code settings to point to your locally built binary, such as ``target/debug/rinx`` after ``cargo build``. Reload the window after rebuilding it, so the language server restarts.
 
-5. Bazel Integration (Optional)
+6. Bazel Integration (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 While standard VS Code development tools are recommended, the final packaging step can be integrated into Bazel using a ``genrule`` that invokes ``vsce package``, ensuring that the extension version matches the project version.

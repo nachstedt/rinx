@@ -45,6 +45,10 @@ uv run ruff format && uv run ruff check && uv run ty check
 uv run pytest --cov        # the script tests, with the coverage floor
 bazel test //scripts:all   # the same tests, one target per file, under the same pyproject.toml
 bazel test //tests/js:all  # the default theme's browser scripts (assets/*.js), under rules_js' Node.js
+
+# VS Code extension (editors/vscode) — npm, not Bazel: its tests download and drive a real VS Code
+npm ci && npm run typecheck && npm run lint && npm run format:check   # oxlint, since TypeScript 7 has no API for typescript-eslint
+npm test                   # @vscode/test-cli (.vscode-test.mjs); VSCODE_VERSION=min|stable|insiders, `-- --coverage`
 uv export --only-group test --no-emit-project --format requirements-txt -o scripts/requirements.txt  # after changing the test group
 
 CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency

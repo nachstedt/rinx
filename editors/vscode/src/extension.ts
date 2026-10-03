@@ -6,6 +6,7 @@ import { LanguageClient } from 'vscode-languageclient/node';
 import { BazelScanner, DiscoveredConfig } from './bazel';
 import { chooseBinaryPath, explicitValue } from './binary';
 import { resolveServerBinary, startLanguageClient } from './client';
+import { errorMessage } from './errors';
 
 // A log channel rather than a plain one: the language client writes its own
 // messages and traces into it, and requires one. It also timestamps each line.
@@ -22,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
         outputChannel,
         vscode.commands.registerCommand('rinx.showPreview', () => {
             PreviewPanel.createOrShow(context.extensionUri);
-        })
+        }),
     );
     // Not awaited: finding the binary may build it with Bazel, and the
     // preview command must not wait for that.
@@ -40,11 +41,11 @@ async function startServer(): Promise<void> {
     try {
         binary = await resolveServerBinary(new BazelScanner(log), log);
         client = await startLanguageClient(binary, outputChannel);
-    } catch (error: any) {
-        log(`Language server failed to start: ${error?.message ?? error}`);
+    } catch (error: unknown) {
+        log(`Language server failed to start: ${errorMessage(error)}`);
         const action = await vscode.window.showWarningMessage(
             `Rinx: the language server could not be started from '${binary}'. Set rinx.binaryPath to a rinx binary.`,
-            'Show Logs'
+            'Show Logs',
         );
         if (action === 'Show Logs') {
             outputChannel.show();
@@ -66,10 +67,10 @@ export class BazelConfigCache {
 
     watchForInvalidation(workspaceRoot: string, onInvalidate: () => void): void {
         if (this.watcher) return;
-        
+
         // Watch for BUILD, WORKSPACE, MODULE.bazel changes
         this.watcher = vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(workspaceRoot, '**/{BUILD,BUILD.bazel,WORKSPACE,WORKSPACE.bazel,MODULE.bazel}')
+            new vscode.RelativePattern(workspaceRoot, '**/{BUILD,BUILD.bazel,WORKSPACE,WORKSPACE.bazel,MODULE.bazel}'),
         );
 
         this.watcher.onDidChange(() => {
@@ -101,23 +102,16 @@ class PreviewPanel {
     private _debounceTimer: NodeJS.Timeout | undefined;
 
     public static createOrShow(extensionUri: vscode.Uri) {
-        const column = vscode.window.activeTextEditor
-            ? vscode.window.activeTextEditor.viewColumn
-            : undefined;
+        const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         if (PreviewPanel.currentPanel) {
             PreviewPanel.currentPanel._panel.reveal(column);
             return;
         }
 
-        const panel = vscode.window.createWebviewPanel(
-            'rinxPreview',
-            'Rinx Preview',
-            column || vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-            }
-        );
+        const panel = vscode.window.createWebviewPanel('rinxPreview', 'Rinx Preview', column || vscode.ViewColumn.One, {
+            enableScripts: true,
+        });
 
         PreviewPanel.currentPanel = new PreviewPanel(panel, extensionUri);
     }
@@ -130,24 +124,36 @@ class PreviewPanel {
 
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-        vscode.workspace.onDidChangeTextDocument(e => {
-            if (e.document === vscode.window.activeTextEditor?.document) {
-                const config = vscode.workspace.getConfiguration('rinx');
-                if (config.get('previewMode') === 'onType') {
+        vscode.workspace.onDidChangeTextDocument(
+            (e) => {
+                if (e.document === vscode.window.activeTextEditor?.document) {
+                    const config = vscode.workspace.getConfiguration('rinx');
+                    if (config.get('previewMode') === 'onType') {
+                        this._scheduleUpdate();
+                    }
+                }
+            },
+            null,
+            this._disposables,
+        );
+
+        vscode.workspace.onDidSaveTextDocument(
+            (e) => {
+                if (vscode.window.activeTextEditor && e === vscode.window.activeTextEditor.document) {
                     this._scheduleUpdate();
                 }
-            }
-        }, null, this._disposables);
+            },
+            null,
+            this._disposables,
+        );
 
-        vscode.workspace.onDidSaveTextDocument(e => {
-            if (vscode.window.activeTextEditor && e === vscode.window.activeTextEditor.document) {
+        vscode.window.onDidChangeActiveTextEditor(
+            () => {
                 this._scheduleUpdate();
-            }
-        }, null, this._disposables);
-
-        vscode.window.onDidChangeActiveTextEditor(() => {
-            this._scheduleUpdate();
-        }, null, this._disposables);
+            },
+            null,
+            this._disposables,
+        );
 
         this._disposables.push(PreviewPanel._configCache);
     }
@@ -176,14 +182,17 @@ class PreviewPanel {
             return;
         }
 
-        this._renderRst(editor.document);
+        void this._renderRst(editor.document);
     }
 
-    private async _resolveConfig(document: vscode.TextDocument, workspaceRoot: string): Promise<{
-        binaryPath: string,
-        configPath: string,
-        templatePath: string,
-        indexPath: string
+    private async _resolveConfig(
+        document: vscode.TextDocument,
+        workspaceRoot: string,
+    ): Promise<{
+        binaryPath: string;
+        configPath: string;
+        templatePath: string;
+        indexPath: string;
     }> {
         const settings = vscode.workspace.getConfiguration('rinx');
         const autoDiscover = settings.get<boolean>('autoDiscover') ?? true;
@@ -194,7 +203,7 @@ class PreviewPanel {
             // Run discovery
             log(`Auto-discovery starting for workspace: ${workspaceRoot}`);
             PreviewPanel._configCache.watchForInvalidation(workspaceRoot, () => this._scheduleUpdate());
-            
+
             const targets = await this._scanner.findSiteTargets(workspaceRoot);
             log(`Found ${targets.length} site target(s): ${targets.join(', ') || '(none)'}`);
             let selectedTarget: string | undefined;
@@ -203,7 +212,7 @@ class PreviewPanel {
                 selectedTarget = targets[0];
             } else if (targets.length > 1) {
                 selectedTarget = await vscode.window.showQuickPick(targets, {
-                    placeHolder: 'Multiple Rinx sites found. Select one for preview:'
+                    placeHolder: 'Multiple Rinx sites found. Select one for preview:',
                 });
             }
 
@@ -213,12 +222,18 @@ class PreviewPanel {
                 const templateLabel = await this._scanner.queryAttribute(selectedTarget, 'template', workspaceRoot);
                 log(`Config label: ${configLabel || '(not found)'}`);
                 log(`Template label: ${templateLabel || '(not found)'}`);
-                
-                const configPath = configLabel ? await this._scanner.labelToFilesystemPath(configLabel, workspaceRoot) : undefined;
-                const templatePath = templateLabel ? await this._scanner.labelToFilesystemPath(templateLabel, workspaceRoot) : undefined;
+
+                const configPath = configLabel
+                    ? await this._scanner.labelToFilesystemPath(configLabel, workspaceRoot)
+                    : undefined;
+                const templatePath = templateLabel
+                    ? await this._scanner.labelToFilesystemPath(templateLabel, workspaceRoot)
+                    : undefined;
                 const indexPath = this._scanner.deriveIndexPath(selectedTarget, workspaceRoot);
                 const binaryPath = await this._scanner.deriveBinaryPath(workspaceRoot);
-                log(`Resolved paths — binary: ${binaryPath || '(not found)'}, config: ${configPath || '(not found)'}, template: ${templatePath || '(not found)'}, index: ${indexPath}`);
+                log(
+                    `Resolved paths — binary: ${binaryPath || '(not found)'}, config: ${configPath || '(not found)'}, template: ${templatePath || '(not found)'}, index: ${indexPath}`,
+                );
 
                 if (configPath && templatePath && binaryPath) {
                     discovered = {
@@ -226,7 +241,7 @@ class PreviewPanel {
                         binaryPath,
                         configPath,
                         templatePath,
-                        indexPath
+                        indexPath,
                     };
                     log(`Auto-discovery succeeded: ${selectedTarget}`);
                     vscode.window.setStatusBarMessage(`Rinx: Using ${selectedTarget}`, 3000);
@@ -235,9 +250,11 @@ class PreviewPanel {
                     discovered = null;
                 }
             } else {
-                log(targets.length === 0
-                    ? 'Auto-discovery failed: no rinx_site target found (is this a Bazel workspace?)'
-                    : 'Auto-discovery cancelled: user dismissed site selection');
+                log(
+                    targets.length === 0
+                        ? 'Auto-discovery failed: no rinx_site target found (is this a Bazel workspace?)'
+                        : 'Auto-discovery cancelled: user dismissed site selection',
+                );
                 discovered = null;
             }
             PreviewPanel._configCache.set(workspaceRoot, discovered);
@@ -245,7 +262,7 @@ class PreviewPanel {
             if (discovered === null) {
                 const action = await vscode.window.showWarningMessage(
                     'Rinx: Auto-discovery failed. Falling back to settings. Check the Output panel for details.',
-                    'Show Logs'
+                    'Show Logs',
                 );
                 if (action === 'Show Logs') {
                     outputChannel.show();
@@ -255,9 +272,18 @@ class PreviewPanel {
 
         return {
             binaryPath: chooseBinaryPath(explicitValue(settings.inspect<string>('binaryPath')), discovered?.binaryPath),
-            configPath: discovered?.configPath || this._getAbsolutePath(settings.get<string>('configPath') || 'rinx.toml', workspaceRoot),
-            templatePath: discovered?.templatePath || this._getAbsolutePath(settings.get<string>('templatePath') || 'templates/default.html', workspaceRoot),
-            indexPath: discovered?.indexPath || this._getAbsolutePath(settings.get<string>('indexPath') || 'bazel-bin/Doc/site.project.index', workspaceRoot)
+            configPath:
+                discovered?.configPath ||
+                this._getAbsolutePath(settings.get<string>('configPath') || 'rinx.toml', workspaceRoot),
+            templatePath:
+                discovered?.templatePath ||
+                this._getAbsolutePath(settings.get<string>('templatePath') || 'templates/default.html', workspaceRoot),
+            indexPath:
+                discovered?.indexPath ||
+                this._getAbsolutePath(
+                    settings.get<string>('indexPath') || 'bazel-bin/Doc/site.project.index',
+                    workspaceRoot,
+                ),
         };
     }
 
@@ -275,12 +301,7 @@ class PreviewPanel {
         const { binaryPath, configPath, templatePath, indexPath } = await this._resolveConfig(document, workspaceRoot);
         const relDocPath = path.relative(workspaceRoot, document.uri.fsPath);
 
-        const args = [
-            'preview',
-            '--doc-path', relDocPath,
-            '--config', configPath,
-            '--template', templatePath,
-        ];
+        const args = ['preview', '--doc-path', relDocPath, '--config', configPath, '--template', templatePath];
 
         if (fs.existsSync(indexPath)) {
             args.push('--index', indexPath);
@@ -291,9 +312,9 @@ class PreviewPanel {
 
         let spawnErrorOccurred = false;
 
-        child.on('error', err => {
+        child.on('error', (err) => {
             spawnErrorOccurred = true;
-            if ((err as any).code === 'ENOENT') {
+            if ('code' in err && err.code === 'ENOENT') {
                 this._panel.webview.html = `<h1>Binary Not Found</h1>
                     <p>The <code>rinx</code> binary was not found at <code>${binaryPath}</code>.</p>
                     <p>Please ensure <code>rinx</code> is in your PATH or set the <code>rinx.binaryPath</code> setting to the absolute path of the binary.</p>
@@ -308,11 +329,11 @@ class PreviewPanel {
         let html = '';
         let stderr = '';
 
-        child.stdout.on('data', data => {
+        child.stdout.on('data', (data: Buffer) => {
             html += data.toString();
         });
 
-        child.stderr.on('data', data => {
+        child.stderr.on('data', (data: Buffer) => {
             stderr += data.toString();
         });
 

@@ -35,7 +35,10 @@ export function clientOptions(outputChannel: vscode.LogOutputChannel): LanguageC
 }
 
 /** Starts the language server, returning the running client. */
-export async function startLanguageClient(binary: string, outputChannel: vscode.LogOutputChannel): Promise<LanguageClient> {
+export async function startLanguageClient(
+    binary: string,
+    outputChannel: vscode.LogOutputChannel,
+): Promise<LanguageClient> {
     const serverOptions: ServerOptions = { command: binary, args: ['lsp'] };
     const client = new LanguageClient('rinx', 'Rinx', serverOptions, clientOptions(outputChannel));
     await client.start();

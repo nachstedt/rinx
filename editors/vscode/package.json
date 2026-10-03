@@ -83,16 +83,22 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "typecheck": "tsc -p ./ --noEmit",
+    "lint": "oxlint --type-aware --deny-warnings",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "pretest": "npm run compile",
-    "test": "node ./out/test/runTest.js"
+    "test": "vscode-test"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.138.0",
+    "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
-    "glob": "^13.0.6",
-    "mocha": "^12.0.2",
+    "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "^7.0.2003",
+    "prettier": "^3.9.9",
     "typescript": "^7.0.2"
   },
   "dependencies": {
