@@ -28,6 +28,7 @@ mod numfig_format;
 mod octicon;
 mod page;
 mod registry_base_url;
+mod reported;
 mod resolution;
 #[cfg(test)]
 mod test_support;

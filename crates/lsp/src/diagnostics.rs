@@ -6,8 +6,8 @@
 
 use std::borrow::Cow;
 
-use lsp_types::{DiagnosticSeverity, NumberOrString, Uri};
-use rinx_ast::{Diagnostic, Domain};
+use lsp_types::{CodeDescription, DiagnosticSeverity, NumberOrString, Uri};
+use rinx_ast::{Diagnostic, DiagnosticCode, Domain, Suppression, retain_reportable, section_slug};
 use rinx_parser::{ParseCtx, RejectParseFiles};
 
 use crate::files::DiskFiles;
@@ -15,6 +15,11 @@ use crate::position::{PositionEncoding, to_lsp_range};
 
 /// What every published diagnostic names as its producer.
 const SOURCE: &str = "rinx";
+
+/// The documentation page listing every diagnostic code, generated from
+/// `DiagnosticCode::ALL` by `rinx diagnostic_codes_rst`. The `latest/` build,
+/// since the server cannot know which published version it matches.
+const CODE_DOCS: &str = "https://nachstedt.github.io/rinx/latest/diagnostics.html";
 
 /// Parses `text`, the content of the document at `uri`, and converts what the
 /// parser reported.
@@ -50,7 +55,12 @@ pub fn document_diagnostics(
             &ParseCtx::new(Domain::Py, &RejectParseFiles),
         ),
     };
-    to_lsp_diagnostics(&document.diagnostics, text, encoding)
+    to_lsp_diagnostics(
+        &document.diagnostics,
+        &document.suppressions,
+        text,
+        encoding,
+    )
 }
 
 /// `text` with every line ending written as `\n`.
@@ -87,7 +97,11 @@ fn file_path(uri: &Uri) -> Option<std::path::PathBuf> {
     Some(std::path::PathBuf::from(path.as_ref()))
 }
 
-/// Converts the diagnostics found in a document whose text is `text`.
+/// Converts the diagnostics found in a document whose text is `text`, leaving
+/// out what its `.. noqa:` comments (`suppressions`) silence.
+///
+/// The filter is the build's own [`rinx_ast::retain_reportable`], so the
+/// editor and CI cannot disagree about what a comment silences.
 ///
 /// One found inside an `.. include::`d fragment is left out: its span counts
 /// lines in the fragment, so placing it in this document would underline an
@@ -95,11 +109,11 @@ fn file_path(uri: &Uri) -> Option<std::path::PathBuf> {
 #[must_use]
 pub fn to_lsp_diagnostics(
     diagnostics: &[Diagnostic],
+    suppressions: &[Suppression],
     text: &str,
     encoding: PositionEncoding,
 ) -> Vec<lsp_types::Diagnostic> {
-    diagnostics
-        .iter()
+    retain_reportable(diagnostics, suppressions)
         .filter(|diagnostic| diagnostic.span.is_none_or(|span| span.file.is_none()))
         .map(|diagnostic| to_lsp_diagnostic(diagnostic, text, encoding))
         .collect()
@@ -120,16 +134,27 @@ fn to_lsp_diagnostic(
         range,
         severity: Some(DiagnosticSeverity::WARNING),
         code: Some(NumberOrString::String(diagnostic.code.as_str().to_string())),
+        code_description: code_description(diagnostic.code),
         source: Some(SOURCE.to_string()),
         message: diagnostic.message.clone(),
         ..lsp_types::Diagnostic::default()
     }
 }
 
+/// Where `code` is documented: its section of [`CODE_DOCS`], whose id is the
+/// one the page's heading — the bare code — gets from [`section_slug`].
+///
+/// `None` only if that address were not a URI, which a test rules out for
+/// every code.
+fn code_description(code: DiagnosticCode) -> Option<CodeDescription> {
+    let href = format!("{CODE_DOCS}#{}", section_slug(code.as_str()));
+    href.parse().ok().map(|href| CodeDescription { href })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rinx_ast::{DiagnosticCode, FileId, Position, Span};
+    use rinx_ast::{FileId, Position, Span, SuppressionCodes};
 
     fn uri(text: &str) -> Uri {
         text.parse().expect("valid uri")
@@ -172,6 +197,32 @@ mod tests {
 
         // Then
         assert_eq!(diagnostics, Vec::new());
+    }
+
+    #[test]
+    fn test_document_diagnostics_honours_a_noqa_naming_the_code() {
+        // Given
+        let text = ".. noqa: directive.unknown\n\n.. foo::\n";
+
+        // When
+        let diagnostics =
+            document_diagnostics(&uri("untitled:Untitled-1"), text, PositionEncoding::Utf16);
+
+        // Then
+        assert_eq!(diagnostics, Vec::new());
+    }
+
+    #[test]
+    fn test_document_diagnostics_keeps_what_a_noqa_does_not_name() {
+        // Given
+        let text = ".. noqa: link.broken-ref\n\n.. foo::\n";
+
+        // When
+        let diagnostics =
+            document_diagnostics(&uri("untitled:Untitled-1"), text, PositionEncoding::Utf16);
+
+        // Then
+        assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
     }
 
     #[test]
@@ -258,12 +309,36 @@ mod tests {
         )];
 
         // When
-        let converted = to_lsp_diagnostics(&diagnostics, "text\n", PositionEncoding::Utf16);
+        let converted = to_lsp_diagnostics(&diagnostics, &[], "text\n", PositionEncoding::Utf16);
 
         // Then
         assert_eq!(converted.len(), 1);
         assert_eq!(converted[0].range, lsp_types::Range::default());
         assert_eq!(converted[0].message, "bad row");
+    }
+
+    #[test]
+    fn test_to_lsp_diagnostics_leaves_out_a_suppressed_diagnostic() {
+        // Given
+        let span = Span::new(Position::new(3, 1), Position::new(3, 5));
+        let diagnostics = [Diagnostic::new(DiagnosticCode::CsvNoData, "no data", span)];
+        let suppressions = [Suppression {
+            start_line: 3,
+            end_line: 3,
+            codes: SuppressionCodes::Only(vec![DiagnosticCode::CsvNoData]),
+            file: None,
+        }];
+
+        // When
+        let converted = to_lsp_diagnostics(
+            &diagnostics,
+            &suppressions,
+            "a\nb\nc\n",
+            PositionEncoding::Utf16,
+        );
+
+        // Then
+        assert_eq!(converted, Vec::new());
     }
 
     #[test]
@@ -274,7 +349,7 @@ mod tests {
         let diagnostics = [Diagnostic::new(DiagnosticCode::CsvNoData, "no data", span)];
 
         // When
-        let converted = to_lsp_diagnostics(&diagnostics, "text\n", PositionEncoding::Utf16);
+        let converted = to_lsp_diagnostics(&diagnostics, &[], "text\n", PositionEncoding::Utf16);
 
         // Then
         assert_eq!(converted, Vec::new());
@@ -304,6 +379,38 @@ mod tests {
             ))
         );
         assert_eq!(converted.severity, Some(DiagnosticSeverity::WARNING));
+        assert_eq!(
+            converted.code_description,
+            code_description(DiagnosticCode::CsvNoData)
+        );
+    }
+
+    #[test]
+    fn test_code_description_links_the_codes_section() {
+        // Given / When
+        let description = code_description(DiagnosticCode::DirectiveUnknown);
+
+        // Then
+        assert_eq!(
+            description.map(|description| description.href.as_str().to_string()),
+            Some(
+                "https://nachstedt.github.io/rinx/latest/diagnostics.html#directive-unknown"
+                    .to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn test_every_code_has_a_code_description() {
+        // Given / When
+        let undescribed: Vec<&str> = DiagnosticCode::ALL
+            .iter()
+            .filter(|code| code_description(**code).is_none())
+            .map(|code| code.as_str())
+            .collect();
+
+        // Then
+        assert_eq!(undescribed, Vec::<&str>::new());
     }
 
     /// Properties over generated documents: whatever the text, the parse must

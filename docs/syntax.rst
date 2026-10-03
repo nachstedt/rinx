@@ -190,4 +190,4 @@ Diagnostics
 
 Every warning names its file, line and column, and carries a stable code such
 as ``link.broken-ref``. A ``.. noqa: <code>`` comment silences the codes it
-names for the block that follows it.
+names for the block that follows it. :ref:`diagnostics` lists every code.
