@@ -19,7 +19,7 @@
     "onCommand:rinx.showPreview",
     "onLanguage:restructuredtext"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
@@ -80,15 +80,20 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run bundle -- --minify",
     "compile": "tsc -p ./",
+    "bundle": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node20 --sourcemap",
     "watch": "tsc -watch -p ./",
     "typecheck": "tsc -p ./ --noEmit",
     "lint": "oxlint --type-aware --deny-warnings",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "pretest": "npm run compile",
-    "test": "vscode-test"
+    "pretest": "npm run compile && npm run bundle",
+    "test": "vscode-test",
+    "prepackage": "node scripts/write-license.mjs",
+    "package": "vsce package --no-dependencies --out rinx.vsix",
+    "package:files": "node scripts/write-license.mjs && vsce ls --no-dependencies",
+    "package:check": "npm run -s package:files | sort | diff vsix-files.txt -"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
@@ -96,6 +101,8 @@
     "@types/vscode": "^1.138.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
     "oxlint": "^1.86.0",
     "oxlint-tsgolint": "^7.0.2003",
     "prettier": "^3.9.9",

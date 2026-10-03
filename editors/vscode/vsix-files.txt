@@ -1,0 +1,4 @@
+LICENSE
+README.md
+dist/extension.js
+package.json

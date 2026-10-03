@@ -48,8 +48,9 @@ bazel test //tests/js:all  # the default theme's browser scripts (assets/*.js), 
 
 # VS Code extension (editors/vscode) — npm, not Bazel: its tests download and drive a real VS Code
 npm ci && npm run typecheck && npm run lint && npm run format:check   # oxlint, since TypeScript 7 has no API for typescript-eslint
-npm test                   # @vscode/test-cli (.vscode-test.mjs); VSCODE_VERSION=min|stable|insiders, `-- --coverage`, `-- --label unit|e2e|e2e-no-server`
+npm test                   # @vscode/test-cli (.vscode-test.mjs); VSCODE_VERSION=min|stable|insiders, `-- --coverage`, `-- --label unit|e2e|e2e-no-server|e2e-vsix`
                            # e2e drives the real `rinx lsp`: RINX_BINARY, else the repository's target/debug/rinx (`cargo build` first)
+npm run package && npm run package:check   # esbuild bundle → rinx.vsix, files compared with vsix-files.txt; RINX_VSIX=rinx.vsix npm test -- --label e2e-vsix tests it installed
 uv export --only-group test --no-emit-project --format requirements-txt -o scripts/requirements.txt  # after changing the test group
 
 CARGO_BAZEL_REPIN=1 bazel build //examples:site   # after changing a Cargo dependency

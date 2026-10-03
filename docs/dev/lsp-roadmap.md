@@ -31,9 +31,10 @@ is used in one of three ways, none of which uploads anything:
 1. **Development host.** Open `editors/vscode` in VS Code and press F5. Point
    `rinx.binaryPath` at `target/debug/rinx` (or `target/release/rinx` for a
    large corpus). The loop is `cargo build`, then reload the window.
-2. **Local VSIX.** Run `npx @vscode/vsce package` in `editors/vscode`, then
-   `code --install-extension rinx-<version>.vsix`.
-3. **Sharing with a few people.** Give them the VSIX as a CI artifact or
+2. **Local VSIX.** Run `npm run package` in `editors/vscode`, then
+   `code --install-extension rinx.vsix`.
+3. **Sharing with a few people.** Give them the VSIX as a CI artifact (every
+   CI run uploads one, as `rinx-vsix`) or
    GitHub release asset, installed via "Install from VSIX…", together with a
    binary from `cargo install --git …`.
 
@@ -180,11 +181,11 @@ excluded files are not indexed, and the default role works.
 **You experience:** `npm run package` produces a VSIX that installs into a
 normal VS Code and works. Nothing is published.
 
-- `package` script running `vsce package`, plus a `.vscodeignore`
+- ~~`package` script running `vsce package`, plus a `.vscodeignore`~~ (done early, with an esbuild bundle, in the CI testing work)
 - Optionally bundle the binary for the packaging machine's platform
 - Binary lookup order: setting → bundled → Bazel
-- CI job uploading the VSIX as a workflow artifact
-- CI smoke test installing the VSIX
+- ~~CI job uploading the VSIX as a workflow artifact~~ (done: `VS Code / package`, artifact `rinx-vsix`)
+- ~~CI smoke test installing the VSIX~~ (done: `VS Code / packaged`, which runs the e2e suite against the installed VSIX on Linux and macOS; Windows joins with #39)
 
 ### 13. Intersphinx
 

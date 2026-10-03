@@ -151,7 +151,7 @@ The extension should be developed in a dedicated directory at the project root:
 ~~~~~~~~~~~~~~~~
 - **Node.js & npm**: Required for building the extension.
 - **VS Code**: The target editor.
-- ``vsce``: The VS Code Extension Manager (``npm install -g @vscode/vsce``).
+- ``vsce``: The VS Code Extension Manager, installed as a development dependency by ``npm install``.
 
 3. Local Development Workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,13 +167,13 @@ CI runs all of these on every pull request, from ``editors/vscode``:
 
 - ``npm run typecheck``, ``npm run lint`` and ``npm run format:check``. The linter is oxlint, with type-aware rules: the extension is on TypeScript 7, which ESLint's TypeScript support cannot load.
 - ``npm test`` runs the tests inside a real VS Code through ``@vscode/test-cli``, configured in ``.vscode-test.mjs``. ``VSCODE_VERSION=min`` picks the oldest VS Code that ``engines.vscode`` allows, and ``VSCODE_VERSION=insiders`` picks the next one. ``npm test -- --coverage`` also measures coverage, which ``node scripts/check-coverage.mjs <floor>`` checks.
-- The tests come in three labels, and ``npm test -- --label <name>`` runs one. ``unit`` needs nothing else. ``e2e`` opens a copy of ``test-fixtures/workspace`` and talks to the real ``rinx lsp``: the binary named by ``RINX_BINARY``, or else ``target/debug/rinx``, so run ``cargo build`` first. ``e2e-no-server`` checks that the extension survives a binary that does not exist.
+- The tests come in four labels, and ``npm test -- --label <name>`` runs one. ``unit`` needs nothing else. ``e2e`` opens a copy of ``test-fixtures/workspace`` and talks to the real ``rinx lsp``: the binary named by ``RINX_BINARY``, or else ``target/debug/rinx``, so run ``cargo build`` first. ``e2e-no-server`` checks that the extension survives a binary that does not exist. ``e2e-vsix`` exists only when ``RINX_VSIX`` names a packaged extension: it runs the ``e2e`` tests against that VSIX installed into VS Code, rather than against the checkout.
 
 5. Packaging and Local Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 To test the extension as a "production" build:
-1.  **Package the extension**: Run ``vsce package`` inside ``editors/vscode``. This generates a ``.vsix`` file (e.g., ``rinx-0.0.1.vsix``).
-2.  **Install locally**: Run ``code --install-extension rinx-0.0.1.vsix``.
+1.  **Package the extension**: Run ``npm run package`` inside ``editors/vscode``. This bundles the extension with esbuild into ``dist/`` and writes ``rinx.vsix``. ``npm run package:check`` compares the packaged files against ``vsix-files.txt``. Every CI run also uploads the VSIX as the ``rinx-vsix`` artifact.
+2.  **Install locally**: Run ``code --install-extension rinx.vsix``.
 3.  **Configure**: Set ``rinx.binaryPath`` in your global VS Code settings to point to your locally built binary, such as ``target/debug/rinx`` after ``cargo build``. Reload the window after rebuilding it, so the language server restarts.
 
 6. Bazel Integration (Optional)
