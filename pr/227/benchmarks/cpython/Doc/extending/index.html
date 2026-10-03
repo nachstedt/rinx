@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Extending and Embedding the Python Interpreter — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">Extending and Embedding the Python Interpreter</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Extending and Embedding the Python Interpreter"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#recommended-third-party-tools">Recommended third party tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#creating-extensions-without-third-party-tools">Creating extensions without third party tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#embedding-the-cpython-runtime-in-a-larger-application">Embedding the CPython runtime in a larger application</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="../library/security_warnings.html">&larr; Security Considerations</a>
+        <a class="next" href="extending.html">Extending Python with C or C++ &rarr;</a>
+      </nav>
+      
+      <a id="extending-index"></a>
+<h1 id="extending-and-embedding-the-python-interpreter">Extending and Embedding the Python Interpreter</h1>
+<p>This document describes how to write modules in C or C++ to extend the Python
+interpreter with new modules.  Those modules can not only define new functions
+but also new object types and their methods.  The document also describes how
+to embed the Python interpreter in another application, for use as an extension
+language.  Finally, it shows how to compile and link extension modules so that
+they can be loaded dynamically (at run time) into the interpreter, if the
+underlying operating system supports this feature.</p>
+<p>This document assumes basic knowledge about Python.  For an informal
+introduction to the language, see <a href="../tutorial/index.html#tutorial-index">The Python Tutorial</a>.  <a href="../reference/index.html#reference-index">The Python Language Reference</a>
+gives a more formal definition of the language.  <a href="../library/index.html#library-index">The Python Standard Library</a> documents
+the existing object types, functions and modules (both built-in and written in
+Python) that give the language its wide application range.</p>
+<p>For a detailed description of the whole Python/C API, see the separate
+<a href="../c-api/index.html#c-api-index">Python/C API Reference Manual</a>.</p>
+<h2 id="recommended-third-party-tools">Recommended third party tools</h2>
+<p>This guide only covers the basic tools for creating extensions provided
+as part of this version of CPython. Some <a href="../c-api/intro.html#c-api-tools">third party tools</a> offer both simpler and more sophisticated approaches to creating
+C and C++ extensions for Python.</p>
+<h2 id="creating-extensions-without-third-party-tools">Creating extensions without third party tools</h2>
+<p>This section of the guide covers creating C and C++ extensions without
+assistance from third party tools. It is intended primarily for creators
+of those tools, rather than being a recommended way to create your own
+C extensions.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> – Multi-phase extension module initialization</p>
+</div>
+<ul>
+  <li><a href="extending.html"><span class="section-number">1. </span>Extending Python with C or C++</a>
+<ul>
+  <li><a href="extending.html#a-simple-example"><span class="section-number">1.1. </span>A Simple Example</a></li>
+  <li><a href="extending.html#intermezzo-errors-and-exceptions"><span class="section-number">1.2. </span>Intermezzo: Errors and Exceptions</a></li>
+  <li><a href="extending.html#back-to-the-example"><span class="section-number">1.3. </span>Back to the Example</a></li>
+  <li><a href="extending.html#the-module-s-method-table-and-initialization-function"><span class="section-number">1.4. </span>The Module's Method Table and Initialization Function</a></li>
+  <li><a href="extending.html#compilation-and-linkage"><span class="section-number">1.5. </span>Compilation and Linkage</a></li>
+  <li><a href="extending.html#calling-python-functions-from-c"><span class="section-number">1.6. </span>Calling Python Functions from C</a></li>
+  <li><a href="extending.html#extracting-parameters-in-extension-functions"><span class="section-number">1.7. </span>Extracting Parameters in Extension Functions</a></li>
+  <li><a href="extending.html#keyword-parameters-for-extension-functions"><span class="section-number">1.8. </span>Keyword Parameters for Extension Functions</a></li>
+  <li><a href="extending.html#building-arbitrary-values"><span class="section-number">1.9. </span>Building Arbitrary Values</a></li>
+  <li><a href="extending.html#reference-counts"><span class="section-number">1.10. </span>Reference Counts</a></li>
+  <li><a href="extending.html#writing-extensions-in-c"><span class="section-number">1.11. </span>Writing Extensions in C++</a></li>
+  <li><a href="extending.html#providing-a-c-api-for-an-extension-module"><span class="section-number">1.12. </span>Providing a C API for an Extension Module</a></li>
+</ul>
+  </li>
+  <li><a href="newtypes_tutorial.html"><span class="section-number">2. </span>Defining Extension Types: Tutorial</a>
+<ul>
+  <li><a href="newtypes_tutorial.html#the-basics"><span class="section-number">2.1. </span>The Basics</a></li>
+  <li><a href="newtypes_tutorial.html#adding-data-and-methods-to-the-basic-example"><span class="section-number">2.2. </span>Adding data and methods to the Basic example</a></li>
+  <li><a href="newtypes_tutorial.html#providing-finer-control-over-data-attributes"><span class="section-number">2.3. </span>Providing finer control over data attributes</a></li>
+  <li><a href="newtypes_tutorial.html#supporting-cyclic-garbage-collection"><span class="section-number">2.4. </span>Supporting cyclic garbage collection</a></li>
+  <li><a href="newtypes_tutorial.html#subclassing-other-types"><span class="section-number">2.5. </span>Subclassing other types</a></li>
+</ul>
+  </li>
+  <li><a href="newtypes.html"><span class="section-number">3. </span>Defining Extension Types: Assorted Topics</a>
+<ul>
+  <li><a href="newtypes.html#finalization-and-de-allocation"><span class="section-number">3.1. </span>Finalization and De-allocation</a></li>
+  <li><a href="newtypes.html#object-presentation"><span class="section-number">3.2. </span>Object Presentation</a></li>
+  <li><a href="newtypes.html#attribute-management"><span class="section-number">3.3. </span>Attribute Management</a></li>
+  <li><a href="newtypes.html#object-comparison"><span class="section-number">3.4. </span>Object Comparison</a></li>
+  <li><a href="newtypes.html#abstract-protocol-support"><span class="section-number">3.5. </span>Abstract Protocol Support</a></li>
+  <li><a href="newtypes.html#weak-reference-support"><span class="section-number">3.6. </span>Weak Reference Support</a></li>
+  <li><a href="newtypes.html#more-suggestions"><span class="section-number">3.7. </span>More Suggestions</a></li>
+</ul>
+  </li>
+  <li><a href="building.html"><span class="section-number">4. </span>Building C and C++ Extensions</a>
+<ul>
+  <li><a href="building.html#building-c-and-c-extensions-with-setuptools"><span class="section-number">4.1. </span>Building C and C++ Extensions with setuptools</a></li>
+</ul>
+  </li>
+  <li><a href="windows.html"><span class="section-number">5. </span>Building C and C++ Extensions on Windows</a>
+<ul>
+  <li><a href="windows.html#a-cookbook-approach"><span class="section-number">5.1. </span>A Cookbook Approach</a></li>
+  <li><a href="windows.html#differences-between-unix-and-windows"><span class="section-number">5.2. </span>Differences Between Unix and Windows</a></li>
+  <li><a href="windows.html#using-dlls-in-practice"><span class="section-number">5.3. </span>Using DLLs in Practice</a></li>
+</ul>
+  </li>
+</ul>
+<h2 id="embedding-the-cpython-runtime-in-a-larger-application">Embedding the CPython runtime in a larger application</h2>
+<p>Sometimes, rather than creating an extension that runs inside the Python
+interpreter as the main application, it is desirable to instead embed
+the CPython runtime inside a larger application. This section covers
+some of the details involved in doing that successfully.</p>
+<ul>
+  <li><a href="embedding.html"><span class="section-number">1. </span>Embedding Python in Another Application</a>
+<ul>
+  <li><a href="embedding.html#very-high-level-embedding"><span class="section-number">1.1. </span>Very High Level Embedding</a></li>
+  <li><a href="embedding.html#beyond-very-high-level-embedding-an-overview"><span class="section-number">1.2. </span>Beyond Very High Level Embedding: An overview</a></li>
+  <li><a href="embedding.html#pure-embedding"><span class="section-number">1.3. </span>Pure Embedding</a></li>
+  <li><a href="embedding.html#extending-embedded-python"><span class="section-number">1.4. </span>Extending Embedded Python</a></li>
+  <li><a href="embedding.html#embedding-python-in-c"><span class="section-number">1.5. </span>Embedding Python in C++</a></li>
+  <li><a href="embedding.html#compiling-and-linking-under-unix-like-systems"><span class="section-number">1.6. </span>Compiling and Linking under Unix-like systems</a></li>
+</ul>
+  </li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="../library/security_warnings.html">&larr; Security Considerations</a>
+        <a class="next" href="extending.html">Extending Python with C or C++ &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
