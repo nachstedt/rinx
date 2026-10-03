@@ -2,13 +2,20 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import { LanguageClient } from 'vscode-languageclient/node';
 import { BazelScanner, DiscoveredConfig } from './bazel';
+import { chooseBinaryPath, explicitValue } from './binary';
+import { resolveServerBinary, startLanguageClient } from './client';
 
-const outputChannel = vscode.window.createOutputChannel('Rinx');
+// A log channel rather than a plain one: the language client writes its own
+// messages and traces into it, and requires one. It also timestamps each line.
+const outputChannel = vscode.window.createOutputChannel('Rinx', { log: true });
 
 function log(msg: string) {
-    outputChannel.appendLine(`[${new Date().toISOString()}] ${msg}`);
+    outputChannel.info(msg);
 }
+
+let client: LanguageClient | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
@@ -17,6 +24,32 @@ export function activate(context: vscode.ExtensionContext) {
             PreviewPanel.createOrShow(context.extensionUri);
         })
     );
+    // Not awaited: finding the binary may build it with Bazel, and the
+    // preview command must not wait for that.
+    void startServer();
+}
+
+export async function deactivate(): Promise<void> {
+    await client?.stop();
+    client = undefined;
+}
+
+/** Starts the language server, reporting a failure rather than throwing. */
+async function startServer(): Promise<void> {
+    let binary = 'rinx';
+    try {
+        binary = await resolveServerBinary(new BazelScanner(log), log);
+        client = await startLanguageClient(binary, outputChannel);
+    } catch (error: any) {
+        log(`Language server failed to start: ${error?.message ?? error}`);
+        const action = await vscode.window.showWarningMessage(
+            `Rinx: the language server could not be started from '${binary}'. Set rinx.binaryPath to a rinx binary.`,
+            'Show Logs'
+        );
+        if (action === 'Show Logs') {
+            outputChannel.show();
+        }
+    }
 }
 
 export class BazelConfigCache {
@@ -184,7 +217,7 @@ class PreviewPanel {
                 const configPath = configLabel ? await this._scanner.labelToFilesystemPath(configLabel, workspaceRoot) : undefined;
                 const templatePath = templateLabel ? await this._scanner.labelToFilesystemPath(templateLabel, workspaceRoot) : undefined;
                 const indexPath = this._scanner.deriveIndexPath(selectedTarget, workspaceRoot);
-                const binaryPath = await this._scanner.deriveBinaryPath(selectedTarget, workspaceRoot);
+                const binaryPath = await this._scanner.deriveBinaryPath(workspaceRoot);
                 log(`Resolved paths — binary: ${binaryPath || '(not found)'}, config: ${configPath || '(not found)'}, template: ${templatePath || '(not found)'}, index: ${indexPath}`);
 
                 if (configPath && templatePath && binaryPath) {
@@ -221,7 +254,7 @@ class PreviewPanel {
         }
 
         return {
-            binaryPath: discovered?.binaryPath || settings.get<string>('binaryPath') || 'rinx',
+            binaryPath: chooseBinaryPath(explicitValue(settings.inspect<string>('binaryPath')), discovered?.binaryPath),
             configPath: discovered?.configPath || this._getAbsolutePath(settings.get<string>('configPath') || 'rinx.toml', workspaceRoot),
             templatePath: discovered?.templatePath || this._getAbsolutePath(settings.get<string>('templatePath') || 'templates/default.html', workspaceRoot),
             indexPath: discovered?.indexPath || this._getAbsolutePath(settings.get<string>('indexPath') || 'bazel-bin/Doc/site.project.index', workspaceRoot)

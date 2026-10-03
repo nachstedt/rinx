@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["crates/cdecl", "crates/filter", "crates/inventory", "crates/template", "crates/ast", "crates/scope",
-    "crates/toctree", "crates/entity", "crates/index", "crates/parser", "crates/analyzer", "crates/uml", "crates/renderer", "crates/worker"]
+    "crates/toctree", "crates/entity", "crates/index", "crates/parser", "crates/analyzer", "crates/uml", "crates/renderer", "crates/lsp", "crates/worker"]
 
 [workspace.package]
 version = "0.1.0"
@@ -24,6 +24,7 @@ rinx_entity = { path = "crates/entity", version = "0.1.0" }
 rinx_filter = { path = "crates/filter", version = "0.1.0" }
 rinx_index = { path = "crates/index", version = "0.1.0" }
 rinx_inventory = { path = "crates/inventory", version = "0.1.0" }
+rinx_lsp = { path = "crates/lsp", version = "0.1.0" }
 rinx_parser = { path = "crates/parser", version = "0.1.0" }
 rinx_renderer = { path = "crates/renderer", version = "0.1.0" }
 rinx_scope = { path = "crates/scope", version = "0.1.0" }

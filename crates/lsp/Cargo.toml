@@ -1,0 +1,22 @@
+[package]
+name = "rinx_lsp"
+description = "The language server of rinx, served by `rinx lsp`. Internal to rinx; no stability guarantees."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
+
+[dependencies]
+rinx_ast.workspace = true
+rinx_parser.workspace = true
+anyhow = "1.0.102"
+lsp-server = "0.10"
+lsp-types = "0.97"
+serde_json = "1"
+
+[lints]
+workspace = true

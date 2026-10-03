@@ -52,7 +52,7 @@ suite('BazelScanner Test Suite', () => {
 
         const scanner = new BazelScanner(() => {}, mockExecutor);
         
-        await scanner.deriveBinaryPath('//Doc:site', workspaceRoot);
+        await scanner.deriveBinaryPath(workspaceRoot);
         
         assert.ok(calls.some(c => c.includes(`bazel build ${workerLabel}`)), `Should have triggered build for ${workerLabel}`);
         assert.ok(calls.filter(c => c.includes('cquery')).length >= 1, 'Should have queried for path');

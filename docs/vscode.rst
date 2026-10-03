@@ -3,7 +3,7 @@
 VS Code Extension Architecture for Rinx
 =======================================
 
-This document outlines the proposed architecture for a high-performance VS Code extension providing live previews for ``rinx`` documentation.
+This document outlines the proposed architecture for a high-performance VS Code extension providing live previews for ``rinx`` documentation. The extension also runs the ``rinx`` language server, which underlines problems as you type (see :ref:`vscode-diagnostics` below).
 
 Core Philosophy
 ---------------
@@ -20,11 +20,12 @@ The extension acts as an orchestrator between the VS Code editor, the ``rinx`` C
 
 The extension provides the following settings:
 
-- ``rinx.binaryPath``: Absolute path to the ``rinx`` binary.
+- ``rinx.binaryPath``: Path to the ``rinx`` binary, for the preview and the language server. When unset, the binary is discovered through Bazel, falling back to ``rinx`` on the ``PATH``.
 - ``rinx.configPath``: Path to the ``rinx.toml`` config file (auto-detected from workspace).
 - ``rinx.templatePath``: Path to the HTML template used for rendering.
 - ``rinx.indexPath``: Path to the project index (default: auto-detected from ``bazel-bin``).
 - ``rinx.previewMode``: ``onSave`` or ``onType`` (default: ``onType``).
+- ``rinx.trace.server``: ``off``, ``messages`` or ``verbose``; traces the language server's protocol traffic into the *Rinx* output channel.
 
 2. The Preview Pipeline (As-You-Type)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -37,7 +38,16 @@ When the user edits a ``.rst`` file, the extension executes the following pipeli
 4. **Render**: The AST is rendered into HTML using the merged index.
 5. **Webview Update**: The HTML is pushed to a VS Code Webview panel.
 
-3. Change Detection & Background Reconcile
+.. _vscode-diagnostics:
+
+3. Diagnostics
+~~~~~~~~~~~~~~
+
+Opening a ``.rst`` file starts the language server, ``rinx lsp``. It is the binary the build runs, so the editor reports the build's own diagnostics: the same codes and the same messages, underlined in the editor and listed in the *Problems* view as you type. For example, ``.. foo::`` is reported as ``directive.unknown``.
+
+For now the server knows each open document on its own: there is no project index yet, no ``.. noqa:`` filtering, and no reporting inside included files. ``docs/dev/lsp-roadmap.md`` in the repository lists the steps that add these, and ``docs/decisions/038-language-server.md`` describes the design.
+
+4. Change Detection & Background Reconcile
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To keep the global state (Sidebar, cross-references to other files) eventually consistent, the extension monitors the local index:
@@ -127,7 +137,6 @@ Future Enhancements
 
 - **Long-Running Server Mode**: A ``rinx serve`` command that keeps the index in memory and accepts render requests over a local socket. This eliminates process spawn overhead and enables sub-10ms feedback.
 - **Scroll Sync**: Bidirectional scrolling between the ``.rst`` editor and the preview.
-- **Error Highlighting**: Surfacing diagnostic warnings from the ``rinx`` parser directly in the VS Code "Problems" tab.
 - **Diagram Preview**: Optional PlantUML rendering on save for users who want to see diagrams in the preview.
 
 Development and Local Testing
@@ -157,7 +166,7 @@ To develop and debug the extension without publishing:
 To test the extension as a "production" build:
 1.  **Package the extension**: Run ``vsce package`` inside ``editors/vscode``. This generates a ``.vsix`` file (e.g., ``rinx-0.0.1.vsix``).
 2.  **Install locally**: Run ``code --install-extension rinx-0.0.1.vsix``.
-3.  **Configure**: Set the ``rinx.binaryPath`` in your global VS Code settings to point to your locally built Rust binary.
+3.  **Configure**: Set ``rinx.binaryPath`` in your global VS Code settings to point to your locally built binary, such as ``target/debug/rinx`` after ``cargo build``. Reload the window after rebuilding it, so the language server restarts.
 
 5. Bazel Integration (Optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

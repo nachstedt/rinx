@@ -101,7 +101,7 @@ export class BazelScanner {
         return this.deriveBazelBinPath(siteTarget, workspaceRoot, '.project.index');
     }
 
-    async deriveBinaryPath(siteTarget: string, workspaceRoot: string): Promise<string | undefined> {
+    async deriveBinaryPath(workspaceRoot: string): Promise<string | undefined> {
         const workerLabel = '@rinx//:rinx';
 
         try {
