@@ -23,6 +23,20 @@ rinx.
 - The directive and option table #25 needs does not exist yet.
 - Whether rinx builds on Windows (#39) is unknown.
 
+## Status
+
+A finished step's heading is marked ✅ with its pull request, a partly
+finished one 🔶. A heading with no marker means the step has not started.
+
+- **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
+  (PRs #238–#248, listed at the end of M0).
+- **Done early:** most of #12, which is the packaging, the CI artifact and the
+  installed-VSIX test.
+- **Next: #2, Diagnostic polish.**
+
+The pull request that finishes a step also updates this section and the
+step's marker.
+
 ## Trying it without publishing
 
 The extension stays off the Marketplace and Open VSX until #39. Until then it
@@ -53,7 +67,7 @@ CI runs all of these on every pull request.
 
 ## M0: First contact (single file, no project knowledge)
 
-### 1. `rinx lsp` skeleton + language client
+### 1. `rinx lsp` skeleton + language client ✅ (#226)
 
 **You experience:** type `.. foo::` and it is underlined at once, with the
 message and code.
@@ -85,6 +99,19 @@ file, and editing the fragment updates the document that includes it.
 - Map `FileId` → URI via `source_files`, publish per URI, clear stale URIs
 - Track which documents include which fragments; re-parse the includer when a fragment changes
 - Tests, including comparing the build's warnings about included fragments in the parity test, which skips them today
+
+### Done between #1 and #2: testing and CI groundwork ✅
+
+This was not a numbered step. It built the tests that "What Tests means" above
+expects from every step:
+
+- #238: `rinx lsp` run as a process over stdio, exiting 1 unless shut down
+- #241: property tests for the server, which found and fixed two bugs
+- #242: the parity test (`lsp_parity.rs`), checking the editor reports what the build reports
+- #243: coverage floors and fuzzing for the parser and the server
+- #245: extension tests with test-cli, oxlint and a VS Code version matrix
+- #247: end-to-end tests driving the real binary from VS Code
+- #248: VSIX packaging, and the e2e suite run against the installed VSIX (most of #12)
 
 ---
 
@@ -176,7 +203,7 @@ excluded files are not indexed, and the default role works.
 - One-time notice naming the extensions it couldn't model
 - Regression test: CPython diagnostic count stays under a threshold
 
-### 12. Local packaging
+### 12. Local packaging 🔶 partly done (#248)
 
 **You experience:** `npm run package` produces a VSIX that installs into a
 normal VS Code and works. Nothing is published.
