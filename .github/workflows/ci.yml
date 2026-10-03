@@ -355,6 +355,33 @@ jobs:
           -o scripts/requirements.txt
         git diff --exit-code scripts/requirements.txt
 
+  # The rinx binary the extension's end-to-end tests talk to, built once for
+  # every VS Code version they run on.
+  rinx-binary:
+    name: Rust / binary
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Rust
+      run: rustup toolchain install --no-self-update
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: binary
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+
+    - name: Build rinx
+      run: cargo build --locked -p rinx
+
+    - name: Upload the binary
+      uses: actions/upload-artifact@v7
+      with:
+        name: rinx-binary
+        path: target/debug/rinx
+        retention-days: 1
+
   # Type check, lint and formatting of the extension's TypeScript. oxlint
   # rather than ESLint: the extension is on TypeScript 7, whose native compiler
   # has no JavaScript API for typescript-eslint, while oxlint's type-aware
@@ -390,10 +417,12 @@ jobs:
     - name: Check formatting
       run: npm run format:check
 
-  # The extension's tests inside a real VS Code: the oldest one engines.vscode
-  # allows, and the current release. Coverage is measured on the release.
+  # The extension's tests inside a real VS Code, the end-to-end ones against
+  # the rinx binary built above: the oldest VS Code engines.vscode allows, and
+  # the current release. Coverage is measured on the release.
   vscode:
     name: VS Code / test (${{ matrix.vscode }})
+    needs: rinx-binary
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -405,7 +434,8 @@ jobs:
         working-directory: editors/vscode
     env:
       VSCODE_VERSION: ${{ matrix.vscode }}
-      COVERAGE_FLOOR: 50
+      COVERAGE_FLOOR: 70
+      RINX_BINARY: ${{ github.workspace }}/rinx-bin/rinx
     steps:
     - uses: actions/checkout@v7
 
@@ -434,6 +464,16 @@ jobs:
         path: editors/vscode/.vscode-test
         key: ${{ steps.vscode-cache.outputs.key }}
 
+    - name: Download the rinx binary
+      uses: actions/download-artifact@v8
+      with:
+        name: rinx-binary
+        path: ${{ github.workspace }}/rinx-bin
+
+    # An artifact does not keep the executable bit.
+    - name: Make the rinx binary executable
+      run: chmod +x "$RINX_BINARY"
+
     - name: Run the extension tests
       run: xvfb-run -a npm test -- ${{ matrix.vscode == 'stable' && '--coverage' || '' }}
 
@@ -453,6 +493,7 @@ jobs:
   # regression in a prerelease is not this pull request's to fix.
   vscode-insiders:
     name: VS Code / test (insiders, not required)
+    needs: rinx-binary
     runs-on: ubuntu-latest
     timeout-minutes: 15
     continue-on-error: true
@@ -461,6 +502,7 @@ jobs:
         working-directory: editors/vscode
     env:
       VSCODE_VERSION: insiders
+      RINX_BINARY: ${{ github.workspace }}/rinx-bin/rinx
     steps:
     - uses: actions/checkout@v7
 
@@ -474,6 +516,16 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Download the rinx binary
+      uses: actions/download-artifact@v8
+      with:
+        name: rinx-binary
+        path: ${{ github.workspace }}/rinx-bin
+
+    # An artifact does not keep the executable bit.
+    - name: Make the rinx binary executable
+      run: chmod +x "$RINX_BINARY"
+
     - name: Run the extension tests
       run: xvfb-run -a npm test
 
@@ -483,7 +535,7 @@ jobs:
   ci-ok:
     name: CI result
     if: always()
-    needs: [rust-lint, rust-test, rust-coverage, fuzz-smoke, rust-package, bazel, benchmarks, python, vscode-lint, vscode]
+    needs: [rust-lint, rust-test, rust-coverage, fuzz-smoke, rust-package, bazel, benchmarks, python, rinx-binary, vscode-lint, vscode]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

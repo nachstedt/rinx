@@ -167,6 +167,7 @@ CI runs all of these on every pull request, from ``editors/vscode``:
 
 - ``npm run typecheck``, ``npm run lint`` and ``npm run format:check``. The linter is oxlint, with type-aware rules: the extension is on TypeScript 7, which ESLint's TypeScript support cannot load.
 - ``npm test`` runs the tests inside a real VS Code through ``@vscode/test-cli``, configured in ``.vscode-test.mjs``. ``VSCODE_VERSION=min`` picks the oldest VS Code that ``engines.vscode`` allows, and ``VSCODE_VERSION=insiders`` picks the next one. ``npm test -- --coverage`` also measures coverage, which ``node scripts/check-coverage.mjs <floor>`` checks.
+- The tests come in three labels, and ``npm test -- --label <name>`` runs one. ``unit`` needs nothing else. ``e2e`` opens a copy of ``test-fixtures/workspace`` and talks to the real ``rinx lsp``: the binary named by ``RINX_BINARY``, or else ``target/debug/rinx``, so run ``cargo build`` first. ``e2e-no-server`` checks that the extension survives a binary that does not exist.
 
 5. Packaging and Local Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

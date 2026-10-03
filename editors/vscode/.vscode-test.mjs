@@ -4,12 +4,23 @@
 //   VSCODE_VERSION=min npm test               # on the oldest VS Code engines.vscode allows
 //   npm test -- --label unit --coverage       # one label, with coverage
 //
-// `unit` needs no workspace; PR 6's `e2e` adds a fixture workspace and the
-// real rinx binary.
-import { readFileSync } from 'node:fs';
+// - `unit` needs no workspace.
+// - `e2e` opens a fixture workspace and talks to the real `rinx lsp`: the
+//   binary at RINX_BINARY, or else the repository's `cargo build` output.
+// - `e2e-no-server` points the extension at a binary that does not exist.
+//
+// Each e2e label gets its own copy of test-fixtures/workspace in the temp
+// directory, with the settings it needs written into the copy: test-cli shares
+// one user-data directory between labels, so a setting written by a test would
+// leak into the next label, and the fixtures in the repository stay untouched.
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@vscode/test-cli';
 
 const manifest = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+const repository = (path) => fileURLToPath(new URL(`../../${path}`, import.meta.url));
 
 /** The VS Code to test against: `min` names the oldest engines.vscode allows. */
 function vscodeVersion() {
@@ -17,13 +28,45 @@ function vscodeVersion() {
     return requested === 'min' ? manifest.engines.vscode.replace(/^\^/, '') : requested;
 }
 
+/** A fresh copy of the fixture workspace whose settings are `settings`. */
+function fixtureWorkspace(name, settings) {
+    const workspace = mkdtempSync(join(tmpdir(), `rinx-${name}-`));
+    cpSync(fileURLToPath(new URL('./test-fixtures/workspace', import.meta.url)), workspace, { recursive: true });
+    mkdirSync(join(workspace, '.vscode'));
+    writeFileSync(join(workspace, '.vscode', 'settings.json'), JSON.stringify(settings, null, 2));
+    return workspace;
+}
+
+/** The settings every e2e workspace shares: no Bazel, the repository's theme. */
+const workspaceSettings = {
+    'rinx.autoDiscover': false,
+    'rinx.trace.server': 'verbose',
+    'rinx.configPath': repository('templates/default_config.toml'),
+    'rinx.templatePath': repository('templates/default.html'),
+};
+
+const common = { version: vscodeVersion(), mocha: { ui: 'tdd', timeout: 20_000 } };
+
 export default defineConfig({
     tests: [
+        { ...common, label: 'unit', files: 'out/test/unit/**/*.test.js' },
         {
-            label: 'unit',
-            files: 'out/test/unit/**/*.test.js',
-            version: vscodeVersion(),
-            mocha: { ui: 'tdd', timeout: 20_000 },
+            ...common,
+            label: 'e2e',
+            files: 'out/test/e2e/**/*.test.js',
+            workspaceFolder: fixtureWorkspace('e2e', {
+                ...workspaceSettings,
+                'rinx.binaryPath': process.env.RINX_BINARY ?? repository('target/debug/rinx'),
+            }),
+        },
+        {
+            ...common,
+            label: 'e2e-no-server',
+            files: 'out/test/e2e-no-server/**/*.test.js',
+            workspaceFolder: fixtureWorkspace('e2e-no-server', {
+                ...workspaceSettings,
+                'rinx.binaryPath': '/nonexistent/rinx',
+            }),
         },
     ],
     coverage: {
