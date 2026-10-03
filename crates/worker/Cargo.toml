@@ -20,6 +20,7 @@ rinx_analyzer.workspace = true
 rinx_toctree.workspace = true
 rinx_index.workspace = true
 rinx_inventory.workspace = true
+rinx_lsp.workspace = true
 rinx_renderer.workspace = true
 anyhow = "1.0.102"
 base64 = "0.23"

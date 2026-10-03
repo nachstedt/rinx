@@ -22,7 +22,7 @@ The system is divided into several crates/modules to ensure a clean separation o
 - `rinx_analyzer`: Manages cross-references, indexing, TOC generation, and project-wide analysis.
 - `rinx_renderer`: Converts the resolved AST into the final output formats (HTML).
 - `rinx_worker`: A unified binary capable of acting as a **Bazel Persistent Worker**. Instead of spawning thousands of short-lived separate processes (`parse`, `index`, `render`), Bazel runs a single persistent background process. This allows `rinx` to drastically cut OS process startup times and reuse memory allocations (e.g., string interning pools) across sequential parse actions, achieving massive performance gains.
-- `rinx_lsp`: The Language Server implementing the LSP protocol for editor integration.
+- `rinx_lsp`: The Language Server implementing the LSP protocol for editor integration. It is served by the `rinx lsp` subcommand rather than built as a separate binary; see `docs/decisions/038-language-server.md` for the design and `docs/dev/lsp-roadmap.md` for its progress.
 
 ---
 

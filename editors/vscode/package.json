@@ -1,7 +1,7 @@
 {
   "name": "rinx",
   "displayName": "Rinx",
-  "description": "Live preview for Rinx documentation",
+  "description": "Live preview and diagnostics for Rinx documentation",
   "version": "0.1.0",
   "license": "MIT OR Apache-2.0",
   "repository": {
@@ -16,7 +16,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:rinx.showPreview"
+    "onCommand:rinx.showPreview",
+    "onLanguage:restructuredtext"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -34,7 +35,17 @@
         "rinx.binaryPath": {
           "type": "string",
           "default": "rinx",
-          "description": "Path to the rinx binary. Can be a bare command (if in PATH) or an absolute path (e.g., /usr/local/bin/rinx)."
+          "description": "Path to the rinx binary, used by the preview and the language server. Can be a bare command (if in PATH) or an absolute path (e.g., /usr/local/bin/rinx). When unset, the binary is discovered through Bazel, falling back to `rinx` on the PATH."
+        },
+        "rinx.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the rinx language server in the Rinx output channel."
         },
         "rinx.autoDiscover": {
           "type": "boolean",
@@ -76,12 +87,15 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.138.0",
-    "@types/node": "^22.0.0",
     "@types/mocha": "^10.0.1",
-    "typescript": "^7.0.2",
-    "mocha": "^12.0.2",
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.138.0",
+    "@vscode/test-electron": "^3.1.0",
     "glob": "^13.0.6",
-    "@vscode/test-electron": "^3.1.0"
+    "mocha": "^12.0.2",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^10.1.2"
   }
 }

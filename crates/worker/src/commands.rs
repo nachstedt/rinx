@@ -7,7 +7,8 @@
 //! single Phase 2 merge;
 //! [`render`], [`genindex`] and [`modindex`] are Phase 3, [`validate_assets`] checks the
 //! bundled images and downloads after it, and [`preview`] collapses the first
-//! three phases into one process for the editor. [`cli_args`] holds the flag parsing
+//! three phases into one process for the editor, and [`lsp`] serves the
+//! language server over stdio. [`cli_args`] holds the flag parsing
 //! they share, [`diagnostics`] the warning formatting [`render`] and
 //! [`preview`] share, [`suppression`] the `.. noqa:` filtering applied just
 //! before that formatting, and [`parse_files`] the filesystem loader that
@@ -22,6 +23,7 @@ mod extract_doctests;
 mod genindex;
 mod index;
 mod inventory;
+mod lsp;
 mod modindex;
 mod parse;
 mod parse_files;
@@ -38,6 +40,7 @@ pub(crate) use extract_doctests::cmd_extract_doctests;
 pub(crate) use genindex::cmd_genindex;
 pub(crate) use index::cmd_index;
 pub(crate) use inventory::cmd_inventory;
+pub(crate) use lsp::cmd_lsp;
 pub(crate) use modindex::cmd_modindex;
 pub(crate) use parse::cmd_parse;
 pub(crate) use preview::cmd_preview;
