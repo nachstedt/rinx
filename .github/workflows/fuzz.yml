@@ -53,8 +53,11 @@ jobs:
       run: ./run.sh "${{ matrix.target }}" 600
 
     # Keeps the cached corpus to the inputs that add coverage.
+    # The host triple for the reason run.sh gives.
     - name: Minimize the corpus
-      run: cargo fuzz cmin "${{ matrix.target }}" "corpus/${{ matrix.target }}"
+      run: |
+        cargo fuzz cmin --target "$(rustc -vV | sed -n 's/^host: //p')" \
+          "${{ matrix.target }}" "corpus/${{ matrix.target }}"
 
     - name: Upload the crashing inputs
       if: failure()

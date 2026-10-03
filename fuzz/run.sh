@@ -13,15 +13,18 @@ cd "$(dirname "$0")"
 target=$1
 seconds=$2
 mkdir -p "corpus/$target"
+# cargo-fuzz defaults to the triple it was itself built for, which for a
+# prebuilt download (as CI installs) is musl, where the sanitizers do not work.
+host=$(rustc -vV | sed -n 's/^host: //p')
 case "$target" in
   # This repository's own documents as seeds, and markup tokens as a
   # dictionary, so the parser's constructs are reached rather than guessed.
   parse)
-    exec cargo fuzz run parse "corpus/parse" ../examples ../docs -- \
+    exec cargo fuzz run --target "$host" parse "corpus/parse" ../examples ../docs -- \
       -dict=dictionaries/rst.dict -max_len=4096 -max_total_time="$seconds"
     ;;
   lsp_session)
-    exec cargo fuzz run lsp_session "corpus/lsp_session" -- -max_total_time="$seconds"
+    exec cargo fuzz run --target "$host" lsp_session "corpus/lsp_session" -- -max_total_time="$seconds"
     ;;
   *)
     echo "unknown fuzz target '$target'" >&2
