@@ -211,8 +211,27 @@ text; docutils reports it at info level.</p>
 <td><p>✅ ℹ️</p>
 </td>
 <td><ul>
-<li><p>A mismatched overline stays text and the rest reads as an underlined
-heading; docutils drops the block with a severe error.</p>
+<li><p>An underline that differs from its overline is reported and still
+makes a heading; docutils drops the block with an error.</p>
+</li>
+<li><p>An overline with no underline, or two adornments with no title
+between them, are reported and stay text; docutils drops the block.</p>
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><p>Section titles inside nested content (block quotes, lists, tables,
+directive content)</p>
+</td>
+<td><p>✅ ℹ️</p>
+</td>
+<td><ul>
+<li><p>Reported, as docutils does, but kept as a heading that sets no level
+for the document; docutils drops it.</p>
+</li>
+<li><p>Allowed in Python and C object descriptions, as in Sphinx, and in
+<code>.. include::</code> and <code>.. if-builder::</code> content.</p>
 </li>
 </ul>
 </td>
