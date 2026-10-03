@@ -371,6 +371,51 @@ mod tests {
     }
 
     #[test]
+    fn test_a_change_or_close_with_malformed_parameters_is_ignored() {
+        // Given
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, did_open(".. foo::\n"));
+
+        for method in [DidChangeTextDocument::METHOD, DidCloseTextDocument::METHOD] {
+            // When
+            let notification =
+                Notification::new(method.to_string(), serde_json::json!({ "nonsense": true }));
+            let replies = handle_notification(&mut state, notification);
+
+            // Then — and the document stays open as it was
+            assert!(replies.is_empty(), "{method}: {replies:?}");
+            assert_eq!(
+                state.documents.get(&uri()).map(|document| document.version),
+                Some(1)
+            );
+        }
+    }
+
+    #[test]
+    fn test_a_change_without_content_changes_publishes_nothing() {
+        // Given
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, did_open(".. foo::\n"));
+        let empty_change = Notification::new(
+            DidChangeTextDocument::METHOD.to_string(),
+            DidChangeTextDocumentParams {
+                text_document: VersionedTextDocumentIdentifier::new(uri(), 2),
+                content_changes: Vec::new(),
+            },
+        );
+
+        // When
+        let replies = handle_notification(&mut state, empty_change);
+
+        // Then
+        assert!(replies.is_empty(), "{replies:?}");
+        assert_eq!(
+            state.documents.get(&uri()).map(|document| document.version),
+            Some(1)
+        );
+    }
+
+    #[test]
     fn test_handle_request_refuses_an_unsupported_method() {
         // Given
         let request = Request::new(
@@ -530,6 +575,50 @@ mod tests {
         // Then — the protocol asks for exit code 1, which an error becomes
         let outcome = handle.join().expect("server thread");
         assert!(outcome.is_err(), "{outcome:?}");
+    }
+
+    #[test]
+    fn test_run_refuses_a_request_and_ignores_a_response_mid_session() {
+        // Given
+        let (server, client) = Connection::memory();
+        let handle = std::thread::spawn(move || run(&server));
+        initialize(&client);
+
+        // When — a request the server does not support, then a response to
+        // nothing the server asked, then a document
+        client
+            .sender
+            .send(
+                Request::new(
+                    RequestId::from(5),
+                    "textDocument/hover".to_string(),
+                    serde_json::Value::Null,
+                )
+                .into(),
+            )
+            .unwrap();
+        let refused = client.receiver.recv().unwrap();
+        client
+            .sender
+            .send(Response::new_ok(RequestId::from(99), serde_json::Value::Null).into())
+            .unwrap();
+        client.sender.send(did_open(".. foo::\n").into()).unwrap();
+        let next = client.receiver.recv().unwrap();
+        drop(client);
+
+        // Then — the response drew no reply: the next message is the publish
+        assert!(
+            matches!(&refused, Message::Response(response)
+                if response.id == RequestId::from(5)
+                    && response.response_result.as_ref().err().map(|error| error.code)
+                        == Some(ErrorCode::MethodNotFound as i32)),
+            "{refused:?}"
+        );
+        assert_eq!(
+            codes(&published(&next)),
+            vec!["directive.unknown".to_string()]
+        );
+        let _ = handle.join().expect("server thread");
     }
 
     #[test]

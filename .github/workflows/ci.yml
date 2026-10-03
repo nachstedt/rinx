@@ -93,6 +93,101 @@ jobs:
     - name: Package for crates.io
       run: cargo package --workspace
 
+  # Line coverage of every crate's tests, the processes the integration tests
+  # spawn included. The floors are floors, not targets: raise them as coverage
+  # rises, so a change that adds untested code fails here.
+  rust-coverage:
+    name: Rust / coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      WORKSPACE_FLOOR: 97
+      # The language server on its own, since its roadmap adds code in every
+      # step and a workspace-wide figure would hide a gap there.
+      LSP_FLOOR: 98
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Rust
+      run: |
+        rustup toolchain install --no-self-update
+        rustup component add llvm-tools-preview
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: coverage
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+
+    - uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-llvm-cov
+
+    - name: Run the tests with coverage
+      run: cargo llvm-cov --workspace --no-report
+
+    - name: Check the coverage floors
+      run: |
+        {
+          echo '### Line coverage'
+          echo '```'
+          cargo llvm-cov report --summary-only | grep -E '^(Filename|TOTAL)'
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+        cargo llvm-cov report --summary-only --fail-under-lines "$WORKSPACE_FLOOR" > /dev/null
+        lsp=$(cargo llvm-cov report --json --summary-only | jq '
+          [.data[0].files[] | select(.filename | contains("/crates/lsp/")) | .summary.lines]
+          | (map(.covered) | add) * 100 / (map(.count) | add)')
+        echo "rinx_lsp line coverage: ${lsp}% (floor ${LSP_FLOOR}%)" | tee -a "$GITHUB_STEP_SUMMARY"
+        jq -en --argjson covered "$lsp" --argjson floor "$LSP_FLOOR" '$covered >= $floor' > /dev/null
+
+  # Every fuzz target for a minute, so the targets keep building and a crash
+  # that is easy to find is found before merging. fuzz.yml runs them longer
+  # every night.
+  fuzz-smoke:
+    name: Rust / fuzz
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: fuzz
+    steps:
+    - uses: actions/checkout@v7
+
+    # Installs the nightly fuzz/rust-toolchain.toml pins.
+    - name: Set up Rust
+      run: rustup toolchain install --no-self-update
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: fuzz
+        shared-key: fuzz
+        save-if: ${{ github.ref == 'refs/heads/main' }}
+
+    - uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-fuzz
+
+    # Outside the workspace, so `Rust / lint` does not see this crate.
+    - name: Check formatting
+      run: cargo fmt --check
+
+    - name: Run Clippy
+      run: cargo clippy --all-targets -- -D warnings
+
+    - name: Fuzz the parser
+      run: ./run.sh parse 60
+
+    - name: Fuzz the language server
+      run: ./run.sh lsp_session 60
+
+    - name: Upload the crashing inputs
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: fuzz-artifacts
+        path: fuzz/artifacts
+        retention-days: 14
+
   bazel:
     name: Bazel / integration
     runs-on: ubuntu-latest
@@ -288,7 +383,7 @@ jobs:
   ci-ok:
     name: CI result
     if: always()
-    needs: [rust-lint, rust-test, rust-package, bazel, benchmarks, python, vscode]
+    needs: [rust-lint, rust-test, rust-coverage, fuzz-smoke, rust-package, bazel, benchmarks, python, vscode]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

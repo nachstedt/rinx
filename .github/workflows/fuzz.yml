@@ -1,0 +1,84 @@
+# Every fuzz target for ten minutes a night, continuing from the corpus the
+# previous night left. A crash opens an issue (or comments on the open one),
+# since nobody watches a scheduled run. CI's `Rust / fuzz` job runs the same
+# targets for a minute on every pull request.
+name: Fuzz
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: Fuzz ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [parse, lsp_session]
+    defaults:
+      run:
+        working-directory: fuzz
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Rust
+      run: rustup toolchain install --no-self-update
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: fuzz
+        shared-key: fuzz
+
+    - uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-fuzz
+
+    # A run-specific key always saves; the prefix restores the newest.
+    - uses: actions/cache@v6
+      with:
+        path: fuzz/corpus/${{ matrix.target }}
+        key: fuzz-corpus-${{ matrix.target }}-${{ github.run_id }}
+        restore-keys: fuzz-corpus-${{ matrix.target }}-
+
+    - name: Fuzz
+      run: ./run.sh "${{ matrix.target }}" 600
+
+    # Keeps the cached corpus to the inputs that add coverage.
+    # The host triple for the reason run.sh gives.
+    - name: Minimize the corpus
+      run: |
+        cargo fuzz cmin --target "$(rustc -vV | sed -n 's/^host: //p')" \
+          "${{ matrix.target }}" "corpus/${{ matrix.target }}"
+
+    - name: Upload the crashing inputs
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: fuzz-artifacts-${{ matrix.target }}
+        path: fuzz/artifacts
+        retention-days: 30
+
+    - name: Report the crash
+      if: failure()
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TARGET: ${{ matrix.target }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        title="Fuzzing failed in the $TARGET target"
+        body="The nightly fuzz run $RUN_URL failed. Any crashing input is attached to the run as \`fuzz-artifacts-$TARGET\`; replay one with \`cd fuzz && cargo fuzz run $TARGET <file>\`."
+        existing=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+        if [ -n "$existing" ]; then
+          gh issue comment "$existing" --body "$body"
+        else
+          gh issue create --title "$title" --body "$body"
+        fi

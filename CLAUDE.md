@@ -19,6 +19,8 @@ cargo test <substring>           # run a single test by name substring
 cargo test --test integration
 cargo clippy --workspace --tests  # must be warning-free before finishing any change (pedantic lints are on, see workspace Cargo.toml)
 cargo fmt
+cargo llvm-cov --workspace        # line coverage; CI's `Rust / coverage` enforces floors for the workspace and rinx_lsp
+fuzz/run.sh parse 60              # fuzz a target for N seconds (also `lsp_session`); fuzz/ is its own nightly crate outside the workspace, see fuzz/Cargo.toml
 
 bazel build //:rinx    # build the CLI binary via Bazel
 bazel build //examples:site           # build the example multi-team site end-to-end
