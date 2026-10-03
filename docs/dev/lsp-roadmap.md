@@ -29,7 +29,7 @@ A finished step's heading is marked ✅ with its pull request, a partly
 finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
-  (PRs #238–#248, listed at the end of M0), #2 (PR #253), and #3.
+  (PRs #238–#248, listed at the end of M0), #2 (PR #253), and #3 (PR #255).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
 - **Next: #4, Workspace scan + per-document index.**
@@ -92,7 +92,7 @@ The severity table this step first listed was dropped: every diagnostic stays a
 - Lift `retain_reportable*` from the worker into a shared crate and call it from both front ends
 - Tests, including tightening the parity test (`crates/worker/tests/integration/lsp_parity.rs`) from "the editor reports a superset" to equality for documents holding a `.. noqa:`
 
-### 3. Diagnostics inside included fragments ✅
+### 3. Diagnostics inside included fragments ✅ (#255)
 
 **You experience:** a mistake in an included file is underlined in *that*
 file, and editing the fragment updates the document that includes it.
