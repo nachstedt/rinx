@@ -6,10 +6,10 @@
 //! A handler is therefore testable without a connection, and the loop holds no
 //! logic worth testing beyond the one end-to-end conversation below.
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response};
 use lsp_types::notification::{
-    DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, Notification as _,
+    DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, Exit, Notification as _,
     PublishDiagnostics,
 };
 use lsp_types::{
@@ -178,6 +178,11 @@ pub fn run(connection: &Connection) -> Result<()> {
                 }
                 vec![handle_request(request).into()]
             }
+            // An `exit` after `shutdown` never reaches this loop: it is
+            // consumed by `handle_shutdown` above.
+            Message::Notification(notification) if notification.method == Exit::METHOD => {
+                bail!("the client sent 'exit' without 'shutdown'");
+            }
             Message::Notification(notification) => handle_notification(&mut state, notification),
             // The server sends no requests yet, so no response is awaited.
             Message::Response(_) => Vec::new(),
@@ -186,7 +191,9 @@ pub fn run(connection: &Connection) -> Result<()> {
             connection.sender.send(reply)?;
         }
     }
-    Ok(())
+    // The protocol asks a server to exit with code 1 unless it was shut down,
+    // which the caller makes of an error; this one is a client that crashed.
+    bail!("the client disconnected without 'shutdown'")
 }
 
 #[cfg(test)]
@@ -381,6 +388,163 @@ mod tests {
             response.response_result.err().map(|error| error.code),
             Some(ErrorCode::MethodNotFound as i32)
         );
+    }
+
+    /// Sends `initialize` and `initialized` from `client`, returning the
+    /// server's answer to the first.
+    fn initialize(client: &Connection) -> Response {
+        client
+            .sender
+            .send(
+                Request::new(
+                    RequestId::from(1),
+                    Initialize::METHOD.to_string(),
+                    InitializeParams::default(),
+                )
+                .into(),
+            )
+            .unwrap();
+        let Message::Response(initialized) = client.receiver.recv().unwrap() else {
+            panic!("expected the initialize response");
+        };
+        client
+            .sender
+            .send(
+                Notification::new(
+                    lsp_types::notification::Initialized::METHOD.to_string(),
+                    lsp_types::InitializedParams {},
+                )
+                .into(),
+            )
+            .unwrap();
+        initialized
+    }
+
+    fn exit() -> Notification {
+        Notification::new(
+            lsp_types::notification::Exit::METHOD.to_string(),
+            serde_json::Value::Null,
+        )
+    }
+
+    /// The start of the first diagnostic published for `text`.
+    fn first_diagnostic_start(text: &str, encoding: PositionEncoding) -> lsp_types::Position {
+        let mut state = ServerState::new(encoding);
+        let replies = handle_notification(&mut state, did_open(text));
+        published(&replies[0]).diagnostics[0].range.start
+    }
+
+    #[test]
+    fn test_did_open_counts_an_astral_character_twice_in_utf16() {
+        // Given — a crab (two UTF-16 units) and a space before the reference
+        let text = "🦀 |nosub|\n";
+
+        // When
+        let start = first_diagnostic_start(text, PositionEncoding::Utf16);
+
+        // Then
+        assert_eq!(start, lsp_types::Position::new(0, 3));
+    }
+
+    #[test]
+    fn test_did_open_counts_an_astral_character_once_in_utf32() {
+        // Given
+        let text = "🦀 |nosub|\n";
+
+        // When
+        let start = first_diagnostic_start(text, PositionEncoding::Utf32);
+
+        // Then
+        assert_eq!(start, lsp_types::Position::new(0, 2));
+    }
+
+    #[test]
+    fn test_did_change_of_an_unopened_document_publishes_for_it() {
+        // Given — a client that skipped didOpen, against the protocol
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+
+        // When
+        let replies = handle_notification(&mut state, did_change(".. foo::\n"));
+
+        // Then — leniently treated as opening it, rather than dropped
+        let params = published(&replies[0]);
+        assert_eq!(params.version, Some(2));
+        assert_eq!(codes(&params), vec!["directive.unknown".to_string()]);
+    }
+
+    #[test]
+    fn test_did_close_of_an_unopened_document_clears_its_diagnostics() {
+        // Given
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+
+        // When
+        let replies = handle_notification(&mut state, did_close());
+
+        // Then
+        assert_eq!(published(&replies[0]).diagnostics, Vec::new());
+    }
+
+    #[test]
+    fn test_run_answers_a_request_before_initialize_as_not_initialized() {
+        // Given
+        let (server, client) = Connection::memory();
+        let handle = std::thread::spawn(move || run(&server));
+
+        // When — the client asks something before initializing
+        client
+            .sender
+            .send(
+                Request::new(
+                    RequestId::from(9),
+                    "textDocument/hover".to_string(),
+                    serde_json::Value::Null,
+                )
+                .into(),
+            )
+            .unwrap();
+        let early = client.receiver.recv().unwrap();
+        let initialized = initialize(&client);
+        drop(client);
+
+        // Then
+        assert!(
+            matches!(&early, Message::Response(response)
+                if response.response_result.as_ref().err().map(|error| error.code)
+                    == Some(ErrorCode::ServerNotInitialized as i32)),
+            "{early:?}"
+        );
+        assert!(initialized.response_result.is_ok(), "{initialized:?}");
+        let _ = handle.join().expect("server thread");
+    }
+
+    #[test]
+    fn test_run_fails_when_the_client_exits_without_shutdown() {
+        // Given
+        let (server, client) = Connection::memory();
+        let handle = std::thread::spawn(move || run(&server));
+        initialize(&client);
+
+        // When
+        client.sender.send(exit().into()).unwrap();
+
+        // Then — the protocol asks for exit code 1, which an error becomes
+        let outcome = handle.join().expect("server thread");
+        assert!(outcome.is_err(), "{outcome:?}");
+    }
+
+    #[test]
+    fn test_run_fails_when_the_client_disconnects_without_shutdown() {
+        // Given
+        let (server, client) = Connection::memory();
+        let handle = std::thread::spawn(move || run(&server));
+        initialize(&client);
+
+        // When
+        drop(client);
+
+        // Then
+        let outcome = handle.join().expect("server thread");
+        assert!(outcome.is_err(), "{outcome:?}");
     }
 
     #[test]

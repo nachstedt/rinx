@@ -28,5 +28,10 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 toml = "1.1"
 
+[dev-dependencies]
+# The integration tests speak to `rinx lsp` over stdio with the framing the
+# server itself uses, rather than with a second implementation of it.
+lsp-server = "0.10"
+
 [lints]
 workspace = true
