@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python on Windows FAQ — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python Frequently Asked Questions</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Frequently Asked Questions"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="general.html">General Python FAQ</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="programming.html">Programming FAQ</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="design.html">Design and History FAQ</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="library.html">Library and Extension FAQ</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extending.html">Extending&#x2f;Embedding FAQ</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="windows.html">Python on Windows FAQ</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python on Windows FAQ"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="windows.html#how-do-i-run-a-python-program-under-windows">How do I run a Python program under Windows?</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="windows.html#how-do-i-make-python-scripts-executable">How do I make Python scripts executable?</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="windows.html#why-does-python-sometimes-take-so-long-to-start">Why does Python sometimes take so long to start?</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="windows.html#how-do-i-make-an-executable-from-a-python-script">How do I make an executable from a Python script?</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="windows.html#is-a-pyd-file-the-same-as-a-dll">Is a *.pyd file the same as a DLL?</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="windows.html#how-can-i-embed-python-into-a-windows-application">How can I embed Python into a Windows application?</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="windows.html#how-do-i-keep-editors-from-inserting-tabs-into-my-python-source">How do I keep editors from inserting tabs into my Python source?</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="windows.html#how-do-i-check-for-a-keypress-without-blocking">How do I check for a keypress without blocking?</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="windows.html#how-do-i-solve-the-missing-api-ms-win-crt-runtime-l1-1-0-dll-error">How do I solve the missing api-ms-win-crt-runtime-l1-1-0.dll error?</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="gui.html">Graphic User Interface FAQ</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="installed.html">&quot;Why is Python Installed on my Computer?&quot; FAQ</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="extending.html">&larr; Extending&#x2f;Embedding FAQ</a>
+        <a class="next" href="gui.html">Graphic User Interface FAQ &rarr;</a>
+      </nav>
+      
+      <a id="windows-faq"></a>
+<h1 id="python-on-windows-faq">Python on Windows FAQ</h1>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'only'</p>
+<pre class="directive-error-source">.. only:: html
+
+   .. contents::</pre>
+</div>
+<a id="faq-run-program-under-windows"></a>
+<h2 id="how-do-i-run-a-python-program-under-windows">How do I run a Python program under Windows?</h2>
+<p>This is not necessarily a straightforward question. If you are already familiar
+with running programs from the Windows command line then everything will seem
+obvious; otherwise, you might need a little more guidance.</p>
+<p>Unless you use some sort of integrated development environment, you will end up
+<em>typing</em> Windows commands into what is referred to as a
+"Command prompt window".  Usually you can create such a window from your
+search bar by searching for <code>cmd</code>.  You should be able to recognize
+when you have started such a window because you will see a Windows "command
+prompt", which usually looks like this:</p>
+<div class="highlight-doscon notranslate">
+<div class="highlight hl-code"><pre>
+C:\&gt;</pre></div>
+</div>
+<p>The letter may be different, and there might be other things after it, so you
+might just as easily see something like:</p>
+<div class="highlight-doscon notranslate">
+<div class="highlight hl-code"><pre>
+D:\YourName\Projects\Python&gt;</pre></div>
+</div>
+<p>depending on how your computer has been set up and what else you have recently
+done with it.  Once you have started such a window, you are well on the way to
+running Python programs.</p>
+<p>You need to realize that your Python scripts have to be processed by another
+program called the Python <em>interpreter</em>.  The interpreter reads your script,
+compiles it into bytecodes, and then executes the bytecodes to run your
+program. So, how do you arrange for the interpreter to handle your Python?</p>
+<p>First, you need to make sure that your command window recognises the word
+"py" as an instruction to start the interpreter.  If you have opened a
+command window, you should try entering the command <code>py</code> and hitting
+return:</p>
+<div class="highlight-doscon notranslate">
+<div class="highlight hl-code"><pre>
+C:\Users\YourName&gt; py</pre></div>
+</div>
+<p>You should then see something like:</p>
+<div class="highlight-pycon notranslate">
+<div class="highlight hl-code"><pre>
+Python 3.6.4 (v3.6.4:d48eceb, Dec 19 2017, 06:04:45) [MSC v.1900 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt;</pre></div>
+</div>
+<p>You have started the interpreter in "interactive mode". That means you can enter
+Python statements or expressions interactively and have them executed or
+evaluated while you wait.  This is one of Python's strongest features.  Check it
+by entering a few expressions of your choice and seeing the results:</p>
+<div class="highlight-pycon notranslate">
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; print("Hello")
+Hello
+&gt;&gt;&gt; "Hello" * 3
+'HelloHelloHello'</pre></div>
+</div>
+<p>Many people use the interactive mode as a convenient yet highly programmable
+calculator.  When you want to end your interactive Python session,
+call the <a href="#" class="broken-link"><code class="xref py function docutils literal">exit</code></a> function or hold the :kbd:`Ctrl` key down
+while you enter a :kbd:`Z`, then hit the ":kbd:`Enter`" key to get
+back to your Windows command prompt.</p>
+<p>You may also find that you have a Start-menu entry such as :menuselection:`Start
+--&gt; Programs --&gt; Python 3.x --&gt; Python (command line)` that results in you
+seeing the <code>&gt;&gt;&gt;</code> prompt in a new window.  If so, the window will disappear
+after you call the <a href="#" class="broken-link"><code class="xref py function docutils literal">exit</code></a> function or enter the :kbd:`Ctrl-Z`
+character; Windows is running a single "python"
+command in the window, and closes it when you terminate the interpreter.</p>
+<p>Now that we know the <code>py</code> command is recognized, you can give your
+Python script to it. You'll have to give either an absolute or a
+relative path to the Python script. Let's say your Python script is
+located in your desktop and is named <code>hello.py</code>, and your command
+prompt is nicely opened in your home directory so you're seeing something
+similar to:</p>
+<div class="highlight hl-code"><pre>
+C:\Users\YourName&gt;</pre></div>
+<p>So now you'll ask the <code>py</code> command to give your script to Python by
+typing <code>py</code> followed by your script path:</p>
+<div class="highlight hl-code"><pre>
+
+C:\Users\YourName&gt; py Desktop\hello.py
+hello</pre></div>
+<h2 id="how-do-i-make-python-scripts-executable">How do I make Python scripts executable?</h2>
+<p>On Windows, the standard Python installer already associates the .py
+extension with a file type (Python.File) and gives that file type an open
+command that runs the interpreter (<code>D:\Program Files\Python\python.exe "%1"
+%*</code>).  This is enough to make scripts executable from the command prompt as
+'foo.py'.  If you'd rather be able to execute the script by simple typing 'foo'
+with no extension you need to add .py to the PATHEXT environment variable.</p>
+<h2 id="why-does-python-sometimes-take-so-long-to-start">Why does Python sometimes take so long to start?</h2>
+<p>Usually Python starts very quickly on Windows, but occasionally there are bug
+reports that Python suddenly begins to take a long time to start up.  This is
+made even more puzzling because Python will work fine on other Windows systems
+which appear to be configured identically.</p>
+<p>The problem may be caused by a misconfiguration of virus checking software on
+the problem machine.  Some virus scanners have been known to introduce startup
+overhead of two orders of magnitude when the scanner is configured to monitor
+all reads from the filesystem.  Try checking the configuration of virus scanning
+software on your systems to ensure that they are indeed configured identically.
+McAfee, when configured to scan all file system read activity, is a particular
+offender.</p>
+<h2 id="how-do-i-make-an-executable-from-a-python-script">How do I make an executable from a Python script?</h2>
+<p>See <a href="programming.html#faq-create-standalone-binary">How can I create a stand-alone binary from a Python script?</a> for a list of tools that can be used to
+make executables.</p>
+<h2 id="is-a-pyd-file-the-same-as-a-dll">Is a <code>*.pyd</code> file the same as a DLL?</h2>
+<p>Yes, .pyd files are dll's, but there are a few differences.  If you have a DLL
+named <code>foo.pyd</code>, then it must have a function <code>PyInit_foo()</code>.  You can then
+write Python "import foo", and Python will search for foo.pyd (as well as
+foo.py, foo.pyc) and if it finds it, will attempt to call <code>PyInit_foo()</code> to
+initialize it.  You do not link your .exe with foo.lib, as that would cause
+Windows to require the DLL to be present.</p>
+<p>Note that the search path for foo.pyd is PYTHONPATH, not the same as the path
+that Windows uses to search for foo.dll.  Also, foo.pyd need not be present to
+run your program, whereas if you linked your program with a dll, the dll is
+required.  Of course, foo.pyd is required if you want to say <code>import foo</code>.  In
+a DLL, linkage is declared in the source code with <code>__declspec(dllexport)</code>.
+In a .pyd, linkage is defined in a list of available functions.</p>
+<h2 id="how-can-i-embed-python-into-a-windows-application">How can I embed Python into a Windows application?</h2>
+<p>Embedding the Python interpreter in a Windows app can be summarized as follows:</p>
+<ol class="arabic period">
+<li><p>Do <strong>not</strong> build Python into your .exe file directly.  On Windows, Python must
+be a DLL to handle importing modules that are themselves DLL's.  (This is the
+first key undocumented fact.)  Instead, link to :file:`python{NN}.dll`; it is
+typically installed in <code>C:\Windows\System</code>.  <em>NN</em> is the Python version, a
+number such as "33" for Python 3.3.</p>
+<p>You can link to Python in two different ways.  Load-time linking means
+linking against :file:`python{NN}.lib`, while run-time linking means linking
+against :file:`python{NN}.dll`.  (General note: :file:`python{NN}.lib` is the
+so-called "import lib" corresponding to :file:`python{NN}.dll`.  It merely
+defines symbols for the linker.)</p>
+<p>Run-time linking greatly simplifies link options; everything happens at run
+time.  Your code must load :file:`python{NN}.dll` using the Windows
+<code>LoadLibraryEx()</code> routine.  The code must also use access routines and data
+in :file:`python{NN}.dll` (that is, Python's C API's) using pointers obtained
+by the Windows <code>GetProcAddress()</code> routine.  Macros can make using these
+pointers transparent to any C code that calls routines in Python's C API.</p>
+</li>
+<li><p>If you use SWIG, it is easy to create a Python "extension module" that will
+make the app's data and methods available to Python.  SWIG will handle just
+about all the grungy details for you.  The result is C code that you link
+<em>into</em> your .exe file (!)  You do <strong>not</strong> have to create a DLL file, and this
+also simplifies linking.</p>
+</li>
+<li><p>SWIG will create an init function (a C function) whose name depends on the
+name of the extension module.  For example, if the name of the module is leo,
+the init function will be called initleo().  If you use SWIG shadow classes,
+as you should, the init function will be called initleoc().  This initializes
+a mostly hidden helper class used by the shadow class.</p>
+<p>The reason you can link the C code in step 2 into your .exe file is that
+calling the initialization function is equivalent to importing the module
+into Python! (This is the second key undocumented fact.)</p>
+</li>
+<li><p>In short, you can use the following code to initialize the Python interpreter
+with your extension module.</p>
+<div class="highlight-c notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-meta hl-preprocessor hl-include hl-c"><span class="hl-keyword hl-control hl-import hl-include hl-c">#include</span> <span class="hl-string hl-quoted hl-other hl-lt-gt hl-include hl-c"><span class="hl-punctuation hl-definition hl-string hl-begin hl-c">&lt;</span>Python.h<span class="hl-punctuation hl-definition hl-string hl-end hl-c">&gt;</span></span>
+</span></span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-operator hl-variadic hl-c">...</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_Initialize</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span>  <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> Initialize Python.
+</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">initmyAppc</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span>  <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> Initialize (import) the helper class.
+</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyRun_SimpleString</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-string hl-quoted hl-double hl-c"><span class="hl-punctuation hl-definition hl-string hl-begin hl-c">&quot;</span>import myApp<span class="hl-punctuation hl-definition hl-string hl-end hl-c">&quot;</span></span></span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span>  <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> Import the shadow class.</span></span></pre></div>
+</div>
+</li>
+<li><p>There are two problems with Python's C API which will become apparent if you
+use a compiler other than MSVC, the compiler used to build pythonNN.dll.</p>
+<p>Problem 1: The so-called "Very High Level" functions that take <code>FILE *</code>
+arguments will not work in a multi-compiler environment because each
+compiler's notion of a <code>struct FILE</code> will be different.  From an implementation
+standpoint these are very low level functions.</p>
+<p>Problem 2: SWIG generates the following code when generating wrappers to void
+functions:</p>
+<div class="highlight-c notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_INCREF</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">Py_None</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c">_resultobj <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> Py_None<span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> _resultobj<span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+</div>
+<p>Alas, Py_None is a macro that expands to a reference to a complex data
+structure called _Py_NoneStruct inside pythonNN.dll.  Again, this code will
+fail in a mult-compiler environment.  Replace such code by:</p>
+<div class="highlight-c notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_BuildValue</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-string hl-quoted hl-double hl-c"><span class="hl-punctuation hl-definition hl-string hl-begin hl-c">&quot;</span><span class="hl-punctuation hl-definition hl-string hl-end hl-c">&quot;</span></span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+</div>
+<p>It may be possible to use SWIG's <code>%typemap</code> command to make the change
+automatically, though I have not been able to get this to work (I'm a
+complete SWIG newbie).</p>
+</li>
+<li><p>Using a Python shell script to put up a Python interpreter window from inside
+your Windows app is not a good idea; the resulting window will be independent
+of your app's windowing system.  Rather, you (or the wxPythonWindow class)
+should create a "native" interpreter window.  It is easy to connect that
+window to the Python interpreter.  You can redirect Python's i/o to <a href="#" class="broken-link">_any</a>
+object that supports read and write, so all you need is a Python object
+(defined in your extension module) that contains read() and write() methods.</p>
+</li>
+</ol>
+<h2 id="how-do-i-keep-editors-from-inserting-tabs-into-my-python-source">How do I keep editors from inserting tabs into my Python source?</h2>
+<p>The FAQ does not recommend using tabs, and the Python style guide, <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0008/"><strong>PEP 8</strong></a>,
+recommends 4 spaces for distributed Python code; this is also the Emacs
+python-mode default.</p>
+<p>Under any editor, mixing tabs and spaces is a bad idea.  MSVC is no different in
+this respect, and is easily configured to use spaces: Take :menuselection:`Tools
+--&gt; Options --&gt; Tabs`, and for file type "Default" set "Tab size" and "Indent
+size" to 4, and select the "Insert spaces" radio button.</p>
+<p>Python raises <a class="reference internal" href="../library/exceptions.html#py:exception:indentationerror"><code class="xref py exception docutils literal">IndentationError</code></a> or <a class="reference internal" href="../library/exceptions.html#py:exception:taberror"><code class="xref py exception docutils literal">TabError</code></a> if mixed tabs
+and spaces are causing problems in leading whitespace.
+You may also run the <a class="reference internal" href="../library/tabnanny.html#py:module:tabnanny" title="tabnanny: Tool for detecting white space related problems in Python source files in a directory tree."><code class="xref py module docutils literal">tabnanny</code></a> module to check a directory tree
+in batch mode.</p>
+<h2 id="how-do-i-check-for-a-keypress-without-blocking">How do I check for a keypress without blocking?</h2>
+<p>Use the <a class="reference internal" href="../library/msvcrt.html#py:module:msvcrt" title="msvcrt: Miscellaneous useful routines from the MS VC++ runtime. (Windows)"><code class="xref py module docutils literal">msvcrt</code></a> module.  This is a standard Windows-specific extension module.
+It defines a function <code>kbhit()</code> which checks whether a keyboard hit is
+present, and <code>getch()</code> which gets one character without echoing it.</p>
+<h2 id="how-do-i-solve-the-missing-api-ms-win-crt-runtime-l1-1-0-dll-error">How do I solve the missing api-ms-win-crt-runtime-l1-1-0.dll error?</h2>
+<p>This can occur on Python 3.5 and later when using Windows 8.1 or earlier without all updates having been installed.
+First ensure your operating system is supported and is up to date, and if that does not resolve the issue,
+visit the <a href="https://support.microsoft.com/en-us/help/3118401/">Microsoft support page</a>
+for guidance on manually installing the C Runtime update.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="extending.html">&larr; Extending&#x2f;Embedding FAQ</a>
+        <a class="next" href="gui.html">Graphic User Interface FAQ &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

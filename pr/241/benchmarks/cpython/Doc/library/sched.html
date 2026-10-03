@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sched — Event scheduler — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concurrent Execution"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="threading.html">threading — Thread-based parallelism</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="multiprocessing.html">multiprocessing — Process-based parallelism</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="multiprocessing.shared_memory.html">multiprocessing.shared_memory — Shared memory for direct access across processes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.html">The concurrent package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.futures.html">concurrent.futures — Launching parallel tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.interpreters.html">concurrent.interpreters — Multiple interpreters in the same process</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="subprocess.html">subprocess — Subprocess management</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="sched.html">sched — Event scheduler</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle sched — Event scheduler"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="sched.html#scheduler-objects">Scheduler Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="queue.html">queue — A synchronized queue class</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="contextvars.html">contextvars — Context Variables</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="_thread.html">_thread — Low-level threading API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="subprocess.html">&larr; subprocess — Subprocess management</a>
+        <a class="next" href="queue.html">queue — A synchronized queue class &rarr;</a>
+      </nav>
+      
+      <h1 id="sched-event-scheduler"><code class="xref py module docutils literal">sched</code> — Event scheduler</h1>
+<dl class="py module">
+  <dt id="py:module:sched"><code class="sig-name">sched</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Moshe Zadka &lt;moshez@zadka.site.co.il&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/sched.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>The <a class="reference internal" href="sched.html#py:module:sched" title="sched: General purpose event scheduler."><code class="xref py module docutils literal">sched</code></a> module defines a class which implements a general purpose event
+scheduler:</p>
+<dl class="py class">
+  <dt id="py:class:sched.scheduler"><em class="property">class</em> <code class="sig-name">scheduler(timefunc=time.monotonic, delayfunc=time.sleep)</code></dt>
+  <dd><p>The <a class="reference internal" href="sched.html#py:class:sched.scheduler"><code class="xref py class docutils literal">scheduler</code></a> class defines a generic interface to scheduling events.
+It needs two functions to actually deal with the "outside world" — <em>timefunc</em>
+should be callable without arguments, and return  a number (the "time", in any
+units whatsoever).  The <em>delayfunc</em> function should be callable with one
+argument, compatible with the output of <em>timefunc</em>, and should delay that many
+time units. <em>delayfunc</em> will also be called with the argument <code>0</code> after each
+event is run to allow other threads an opportunity to run in multi-threaded
+applications.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>timefunc</em> and <em>delayfunc</em> parameters are optional.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><a class="reference internal" href="sched.html#py:class:sched.scheduler"><code class="xref py class docutils literal">scheduler</code></a> class can be safely used in multi-threaded
+environments.</p>
+</div>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sched</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">time</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sched</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">scheduler</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">time</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">time</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">time</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">sleep</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-invalid hl-illegal hl-name hl-python">def</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">a</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">default<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">From print_time<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">time</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">time</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">a</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-invalid hl-illegal hl-name hl-python">def</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_some_times</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">time</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">time</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">enter</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">enter</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">argument</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">positional<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> despite having higher priority, &#39;keyword&#39; runs after &#39;positional&#39; as enter() is relative
+</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">enter</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">kwargs</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span></span><span class="hl-meta hl-mapping hl-key hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">a<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-separator hl-mapping hl-key-value hl-python">:</span></span><span class="hl-meta hl-mapping hl-python"> </span><span class="hl-meta hl-mapping hl-value hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">keyword<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span><span class="hl-meta hl-mapping hl-python"><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">enterabs</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1_650_000_000</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">argument</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">first enterabs<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">enterabs</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1_650_000_000</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">argument</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">second enterabs<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">s</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">time</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">time</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_some_times</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1652342830<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>3640375</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">From</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1652342830<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>3642538</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">second</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">enterabs</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">From</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1652342830<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>3643398</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">first</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">enterabs</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">From</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1652342835<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>3694863</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">positional</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">From</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1652342835<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>3696074</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">keyword</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">From</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">print_time</span></span> <span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1652342840<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>369612</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">default</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-float hl-decimal hl-python">1652342840<span class="hl-punctuation hl-separator hl-decimal hl-python">.</span>3697174</span></span></pre></div>
+<a id="scheduler-objects"></a>
+<h2 id="scheduler-objects">Scheduler Objects</h2>
+<p><a class="reference internal" href="sched.html#py:class:sched.scheduler"><code class="xref py class docutils literal">scheduler</code></a> instances have the following methods and attributes:</p>
+<dl class="py method">
+  <dt id="py:method:sched.scheduler.enterabs"><code class="sig-name">scheduler.enterabs(time, priority, action, argument=(), kwargs={})</code></dt>
+  <dd><p>Schedule a new event. The <em>time</em> argument should be a numeric type compatible
+with the return value of the <em>timefunc</em> function passed  to the constructor.
+Events scheduled for the same <em>time</em> will be executed in the order of their
+<em>priority</em>. A lower number represents a higher priority.</p>
+<p>Executing the event means executing <code>action(*argument, **kwargs)</code>.
+<em>argument</em> is a sequence holding the positional arguments for <em>action</em>.
+<em>kwargs</em> is a dictionary holding the keyword arguments for <em>action</em>.</p>
+<p>Return value is an event which may be used for later cancellation of the event
+(see <a class="reference internal" href="sched.html#py:method:sched.scheduler.cancel"><code class="xref py method docutils literal">cancel</code></a>).</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>argument</em> parameter is optional.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>kwargs</em> parameter was added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:sched.scheduler.enter"><code class="sig-name">scheduler.enter(delay, priority, action, argument=(), kwargs={})</code></dt>
+  <dd><p>Schedule an event for <em>delay</em> more time units. Other than the relative time, the
+other arguments, the effect and the return value are the same as those for
+<a class="reference internal" href="sched.html#py:method:sched.scheduler.enterabs"><code class="xref py method docutils literal">enterabs</code></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>argument</em> parameter is optional.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>kwargs</em> parameter was added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:sched.scheduler.cancel"><code class="sig-name">scheduler.cancel(event)</code></dt>
+  <dd><p>Remove the event from the queue. If <em>event</em> is not an event currently in the
+queue, this method will raise a <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:sched.scheduler.empty"><code class="sig-name">scheduler.empty()</code></dt>
+  <dd><p>Return <code>True</code> if the event queue is empty.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:sched.scheduler.run"><code class="sig-name">scheduler.run(blocking=True)</code></dt>
+  <dd><p>Run all scheduled events. This method will wait  (using the <em>delayfunc</em>
+function passed to the constructor) for the next event, then execute it and so
+on until there are no more scheduled events.</p>
+<p>If <em>blocking</em> is false executes the scheduled events due to expire soonest
+(if any) and then return the deadline of the next scheduled call in the
+scheduler (if any).</p>
+<p>Either <em>action</em> or <em>delayfunc</em> can raise an exception.  In either case, the
+scheduler will maintain a consistent state and propagate the exception.  If an
+exception is raised by <em>action</em>, the event will not be attempted in future calls
+to <a class="reference internal" href="sched.html#py:method:sched.scheduler.run"><code class="xref py method docutils literal">run</code></a>.</p>
+<p>If a sequence of events takes longer to run than the time available before the
+next event, the scheduler will simply fall behind.  No events will be dropped;
+the calling code is responsible for canceling  events which are no longer
+pertinent.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>blocking</em> parameter was added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:sched.scheduler.queue"><code class="sig-name">scheduler.queue</code></dt>
+  <dd><p>Read-only attribute returning a list of upcoming events in the order they
+will be run.  Each event is shown as a <a class="reference internal" href="../glossary.html#term-named-tuple"><span class="xref std std-term">named tuple</span></a> with the
+following fields:  time, priority, action, argument, kwargs.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="subprocess.html">&larr; subprocess — Subprocess management</a>
+        <a class="next" href="queue.html">queue — A synchronized queue class &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
