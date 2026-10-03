@@ -358,9 +358,13 @@ jobs:
   # The rinx binary the extension's end-to-end tests talk to, built once for
   # every VS Code version they run on.
   rinx-binary:
-    name: Rust / binary
-    runs-on: ubuntu-latest
+    name: Rust / binary (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    strategy:
+      matrix:
+        # Linux for every VS Code job; macOS for the packaged extension's.
+        os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v7
 
@@ -369,7 +373,7 @@ jobs:
 
     - uses: Swatinem/rust-cache@v2
       with:
-        shared-key: binary
+        shared-key: binary-${{ runner.os }}
         save-if: ${{ github.ref == 'refs/heads/main' }}
 
     - name: Build rinx
@@ -378,7 +382,7 @@ jobs:
     - name: Upload the binary
       uses: actions/upload-artifact@v7
       with:
-        name: rinx-binary
+        name: rinx-binary-${{ runner.os }}
         path: target/debug/rinx
         retention-days: 1
 
@@ -467,7 +471,7 @@ jobs:
     - name: Download the rinx binary
       uses: actions/download-artifact@v8
       with:
-        name: rinx-binary
+        name: rinx-binary-Linux
         path: ${{ github.workspace }}/rinx-bin
 
     # An artifact does not keep the executable bit.
@@ -519,7 +523,7 @@ jobs:
     - name: Download the rinx binary
       uses: actions/download-artifact@v8
       with:
-        name: rinx-binary
+        name: rinx-binary-Linux
         path: ${{ github.workspace }}/rinx-bin
 
     # An artifact does not keep the executable bit.
@@ -529,13 +533,106 @@ jobs:
     - name: Run the extension tests
       run: xvfb-run -a npm test
 
+  # The extension as users install it: packaged by vsce from the esbuild
+  # bundle, with exactly the files vsix-files.txt lists. The VSIX is kept as an
+  # artifact, ready for "Install from VSIX...".
+  vscode-package:
+    name: VS Code / package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: editors/vscode
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: editors/vscode/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Package the extension
+      run: npm run package
+
+    - name: Check the packaged files
+      run: npm run package:check
+
+    - name: Upload the VSIX
+      uses: actions/upload-artifact@v7
+      with:
+        name: rinx-vsix
+        path: editors/vscode/rinx.vsix
+        retention-days: 14
+
+  # The end-to-end tests against that VSIX installed into a clean VS Code,
+  # rather than against the checkout, on Linux and macOS.
+  vscode-vsix:
+    name: VS Code / packaged (${{ matrix.os }})
+    needs: [rinx-binary, vscode-package]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    defaults:
+      run:
+        working-directory: editors/vscode
+    env:
+      RINX_BINARY: ${{ github.workspace }}/rinx-bin/rinx
+      RINX_VSIX: ${{ github.workspace }}/rinx-vsix/rinx.vsix
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: editors/vscode/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Download the rinx binary
+      uses: actions/download-artifact@v8
+      with:
+        name: rinx-binary-${{ runner.os }}
+        path: ${{ github.workspace }}/rinx-bin
+
+    - name: Make the rinx binary executable
+      run: chmod +x "$RINX_BINARY"
+
+    - name: Download the VSIX
+      uses: actions/download-artifact@v8
+      with:
+        name: rinx-vsix
+        path: ${{ github.workspace }}/rinx-vsix
+
+    # Linux runners have no display; macOS runners do.
+    - name: Run the end-to-end tests against the VSIX
+      run: ${{ runner.os == 'Linux' && 'xvfb-run -a' || '' }} npm test -- --label e2e-vsix
+
+    - name: Upload the VS Code logs
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: vscode-vsix-logs-${{ matrix.os }}
+        path: editors/vscode/.vscode-test/user-data/logs
+        retention-days: 7
+
   # The one check the ruleset requires. `always()` makes it report even when a
   # job it needs failed or was skipped, which would otherwise leave it pending
   # and the pull request blocked without a reason.
   ci-ok:
     name: CI result
     if: always()
-    needs: [rust-lint, rust-test, rust-coverage, fuzz-smoke, rust-package, bazel, benchmarks, python, rinx-binary, vscode-lint, vscode]
+    needs: [rust-lint, rust-test, rust-coverage, fuzz-smoke, rust-package, bazel, benchmarks, python, rinx-binary, vscode-lint, vscode, vscode-package, vscode-vsix]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

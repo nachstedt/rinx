@@ -8,6 +8,8 @@
 // - `e2e` opens a fixture workspace and talks to the real `rinx lsp`: the
 //   binary at RINX_BINARY, or else the repository's `cargo build` output.
 // - `e2e-no-server` points the extension at a binary that does not exist.
+// - `e2e-vsix`, only when RINX_VSIX names a packaged extension, runs the e2e
+//   tests against that VSIX installed, rather than against this checkout.
 //
 // Each e2e label gets its own copy of test-fixtures/workspace in the temp
 // directory, with the settings it needs written into the copy: test-cli shares
@@ -15,7 +17,7 @@
 // leak into the next label, and the fixtures in the repository stay untouched.
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from '@vscode/test-cli';
 
@@ -37,6 +39,8 @@ function fixtureWorkspace(name, settings) {
     return workspace;
 }
 
+const rinxBinary = process.env.RINX_BINARY ?? repository('target/debug/rinx');
+
 /** The settings every e2e workspace shares: no Bazel, the repository's theme. */
 const workspaceSettings = {
     'rinx.autoDiscover': false,
@@ -47,6 +51,21 @@ const workspaceSettings = {
 
 const common = { version: vscodeVersion(), mocha: { ui: 'tdd', timeout: 20_000 } };
 
+/** The e2e tests against `vsix` installed, with an empty extension in development. */
+function packagedExtensionTests(vsix) {
+    return {
+        ...common,
+        label: 'e2e-vsix',
+        files: ['out/test/e2e/**/*.test.js', 'out/test/e2e-vsix/**/*.test.js'],
+        extensionDevelopmentPath: fileURLToPath(new URL('./test-fixtures/vsix-host', import.meta.url)),
+        installExtensions: [resolve(vsix)],
+        workspaceFolder: fixtureWorkspace('e2e-vsix', {
+            ...workspaceSettings,
+            'rinx.binaryPath': rinxBinary,
+        }),
+    };
+}
+
 export default defineConfig({
     tests: [
         { ...common, label: 'unit', files: 'out/test/unit/**/*.test.js' },
@@ -56,9 +75,10 @@ export default defineConfig({
             files: 'out/test/e2e/**/*.test.js',
             workspaceFolder: fixtureWorkspace('e2e', {
                 ...workspaceSettings,
-                'rinx.binaryPath': process.env.RINX_BINARY ?? repository('target/debug/rinx'),
+                'rinx.binaryPath': rinxBinary,
             }),
         },
+        ...(process.env.RINX_VSIX ? [packagedExtensionTests(process.env.RINX_VSIX)] : []),
         {
             ...common,
             label: 'e2e-no-server',
@@ -72,11 +92,14 @@ export default defineConfig({
     coverage: {
         // Matched against absolute paths of the compiled files (test-cli turns
         // c8's relative matching off), hence the leading `**/`.
-        include: ['**/out/**'],
+        // dist/ is the bundle the e2e tests load as the extension.
+        include: ['**/out/**', '**/dist/**'],
         exclude: ['**/out/test/**'],
         // Files no test loads count as uncovered rather than disappearing.
         includeAll: true,
-        // json-summary is what scripts/check-coverage.mjs reads.
-        reporter: ['text', 'json-summary', 'lcov'],
+        // json-summary is what scripts/check-coverage.mjs reads and prints,
+        // limited to src/: the bundle's source map also reaches into the
+        // libraries it carries, and c8 applies `exclude` before source maps.
+        reporter: ['json-summary', 'lcov'],
     },
 });

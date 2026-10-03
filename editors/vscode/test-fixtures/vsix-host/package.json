@@ -1,0 +1,9 @@
+{
+  "name": "rinx-vsix-test-host",
+  "description": "An empty extension for the e2e-vsix tests to run in: test-cli always loads a development extension, so this one stands in for it while the rinx under test is the installed VSIX.",
+  "publisher": "rinx-tests",
+  "version": "0.0.0",
+  "engines": {
+    "vscode": "*"
+  }
+}

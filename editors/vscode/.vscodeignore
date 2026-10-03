@@ -1,0 +1,7 @@
+# Everything is left out of the VSIX but what is listed below: the bundle
+# carries vscode-languageclient, so no node_modules ship. vsix-files.txt is
+# the resulting list, which CI compares against.
+**
+!dist/extension.js
+!README.md
+!LICENSE
