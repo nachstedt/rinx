@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>High-level API Index — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Networking and Interprocess Communication"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3 ancestor has-children">
+            <a href="asyncio.html">asyncio — Asynchronous I&#x2f;O</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle asyncio — Asynchronous I&#x2f;O"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="asyncio-runner.html">Runners</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-task.html">Coroutines and Tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-stream.html">Streams</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-sync.html">Synchronization Primitives</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-subprocess.html">Subprocesses</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-queue.html">Queues</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-exceptions.html">Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-graph.html">Call Graph Introspection</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-eventloop.html">Event Loop</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-future.html">Futures</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-protocol.html">Transports and Protocols</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-policy.html">Policies</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-platforms.html">Platform Support</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-extending.html">Extending</a>
+            
+          </li>
+        
+          <li class="toctree-l4 current has-children">
+            <a href="asyncio-api-index.html">High-level API Index</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle High-level API Index"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="asyncio-api-index.html#tasks">Tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-api-index.html#queues">Queues</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-api-index.html#subprocesses">Subprocesses</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-api-index.html#streams">Streams</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-api-index.html#synchronization">Synchronization</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="asyncio-api-index.html#exceptions">Exceptions</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-llapi-index.html">Low-level API Index</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="asyncio-dev.html">Developing with asyncio</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socket.html">socket — Low-level networking interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ssl.html">ssl — TLS&#x2f;SSL wrapper for socket objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="select.html">select — Waiting for I&#x2f;O completion</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="selectors.html">selectors — High-level I&#x2f;O multiplexing</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="signal.html">signal — Set handlers for asynchronous events</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="mmap.html">mmap — Memory-mapped file support</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-extending.html">&larr; Extending</a>
+        <a class="next" href="asyncio-llapi-index.html">Low-level API Index &rarr;</a>
+      </nav>
+      
+      <h1 id="high-level-api-index">High-level API Index</h1>
+<p>This page lists all high-level async/await enabled asyncio APIs.</p>
+<h2 id="tasks">Tasks</h2>
+<p>Utilities to run asyncio programs, create Tasks, and
+await on multiple things with timeouts.</p>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-runner.html#py:function:asyncio.run"><code class="xref py function docutils literal">run</code></a></p>
+</td>
+<td><p>Create event loop, run a coroutine, close the loop.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-runner.html#py:class:asyncio.runner"><code class="xref py class docutils literal">Runner</code></a></p>
+</td>
+<td><p>A context manager that simplifies multiple async function calls.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-task.html#py:class:asyncio.task"><code class="xref py class docutils literal">Task</code></a></p>
+</td>
+<td><p>Task object.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-task.html#py:class:asyncio.taskgroup"><code class="xref py class docutils literal">TaskGroup</code></a></p>
+</td>
+<td><p>A context manager that holds a group of tasks. Provides
+a convenient and reliable way to wait for all tasks in the group to
+finish.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-task.html#py:function:asyncio.create_task"><code class="xref py function docutils literal">create_task</code></a></p>
+</td>
+<td><p>Start an asyncio Task, then returns it.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-task.html#py:function:asyncio.current_task"><code class="xref py function docutils literal">current_task</code></a></p>
+</td>
+<td><p>Return the current Task.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-task.html#py:function:asyncio.all_tasks"><code class="xref py function docutils literal">all_tasks</code></a></p>
+</td>
+<td><p>Return all tasks that are not yet finished for an event loop.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-task.html#py:function:asyncio.sleep"><code class="xref py function docutils literal">sleep</code></a></p>
+</td>
+<td><p>Sleep for a number of seconds.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a href="#" class="broken-link"><code class="xref py function docutils literal">gather</code></a></p>
+</td>
+<td><p>Schedule and wait for things concurrently.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-task.html#py:function:asyncio.wait_for"><code class="xref py function docutils literal">wait_for</code></a></p>
+</td>
+<td><p>Run with a timeout.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a href="#" class="broken-link"><code class="xref py function docutils literal">shield</code></a></p>
+</td>
+<td><p>Shield from cancellation.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-task.html#py:function:asyncio.wait"><code class="xref py function docutils literal">wait</code></a></p>
+</td>
+<td><p>Monitor for completion.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-task.html#py:function:asyncio.timeout"><code class="xref py function docutils literal">timeout</code></a></p>
+</td>
+<td><p>Run with a timeout. Useful in cases when <code>wait_for</code> is not suitable.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-task.html#py:function:asyncio.to_thread"><code class="xref py function docutils literal">to_thread</code></a></p>
+</td>
+<td><p>Asynchronously run a function in a separate OS thread.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-task.html#py:function:asyncio.run_coroutine_threadsafe"><code class="xref py function docutils literal">run_coroutine_threadsafe</code></a></p>
+</td>
+<td><p>Schedule a coroutine from another OS thread.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>for in</code> <a class="reference internal" href="asyncio-task.html#py:function:asyncio.as_completed"><code class="xref py function docutils literal">as_completed</code></a></p>
+</td>
+<td><p>Monitor for completion with a <code>for</code> loop.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Examples</pre>
+</div>
+<ul>
+<li><p><a href="#asyncio_example_gather" class="broken-link">Using asyncio.gather() to run things in parallel</a>.</p>
+</li>
+<li><p><a href="asyncio-task.html#asyncio_example_waitfor">Using asyncio.wait_for() to enforce a timeout</a>.</p>
+</li>
+<li><p><a href="asyncio-task.html#asyncio_example_task_cancel">Cancellation</a>.</p>
+</li>
+<li><p><a href="asyncio-task.html#asyncio_example_sleep">Using asyncio.sleep()</a>.</p>
+</li>
+<li><p>See also the main <a href="asyncio-task.html#coroutine">Tasks documentation page</a>.</p>
+</li>
+</ul>
+<h2 id="queues">Queues</h2>
+<p>Queues should be used to distribute work amongst multiple asyncio Tasks,
+implement connection pools, and pub/sub patterns.</p>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-queue.html#py:class:asyncio.queue"><code class="xref py class docutils literal">Queue</code></a></p>
+</td>
+<td><p>A FIFO queue.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-queue.html#py:class:asyncio.priorityqueue"><code class="xref py class docutils literal">PriorityQueue</code></a></p>
+</td>
+<td><p>A priority queue.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-queue.html#py:class:asyncio.lifoqueue"><code class="xref py class docutils literal">LifoQueue</code></a></p>
+</td>
+<td><p>A LIFO queue.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Examples</pre>
+</div>
+<ul>
+<li><p><a href="asyncio-queue.html#asyncio_example_queue_dist">Using asyncio.Queue to distribute workload between several
+Tasks</a>.</p>
+</li>
+<li><p>See also the <a href="asyncio-queue.html#asyncio-queues">Queues documentation page</a>.</p>
+</li>
+</ul>
+<h2 id="subprocesses">Subprocesses</h2>
+<p>Utilities to spawn subprocesses and run shell commands.</p>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-subprocess.html#py:function:asyncio.create_subprocess_exec"><code class="xref py function docutils literal">create_subprocess_exec</code></a></p>
+</td>
+<td><p>Create a subprocess.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-subprocess.html#py:function:asyncio.create_subprocess_shell"><code class="xref py function docutils literal">create_subprocess_shell</code></a></p>
+</td>
+<td><p>Run a shell command.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Examples</pre>
+</div>
+<ul>
+<li><p><a href="asyncio-subprocess.html#asyncio_example_subprocess_shell">Executing a shell command</a>.</p>
+</li>
+<li><p>See also the <a href="asyncio-subprocess.html#asyncio-subprocess">subprocess APIs</a>
+documentation.</p>
+</li>
+</ul>
+<h2 id="streams">Streams</h2>
+<p>High-level APIs to work with network IO.</p>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-stream.html#py:function:asyncio.open_connection"><code class="xref py function docutils literal">open_connection</code></a></p>
+</td>
+<td><p>Establish a TCP connection.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-stream.html#py:function:asyncio.open_unix_connection"><code class="xref py function docutils literal">open_unix_connection</code></a></p>
+</td>
+<td><p>Establish a Unix socket connection.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-stream.html#py:function:asyncio.start_server"><code class="xref py function docutils literal">start_server</code></a></p>
+</td>
+<td><p>Start a TCP server.</p>
+</td>
+</tr>
+<tr>
+<td><p><code>await</code> <a class="reference internal" href="asyncio-stream.html#py:function:asyncio.start_unix_server"><code class="xref py function docutils literal">start_unix_server</code></a></p>
+</td>
+<td><p>Start a Unix socket server.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-stream.html#py:class:asyncio.streamreader"><code class="xref py class docutils literal">StreamReader</code></a></p>
+</td>
+<td><p>High-level async/await object to receive network data.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-stream.html#py:class:asyncio.streamwriter"><code class="xref py class docutils literal">StreamWriter</code></a></p>
+</td>
+<td><p>High-level async/await object to send network data.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Examples</pre>
+</div>
+<ul>
+<li><p><a href="asyncio-stream.html#asyncio_example_stream">Example TCP client</a>.</p>
+</li>
+<li><p>See also the <a href="asyncio-stream.html#asyncio-streams">streams APIs</a>
+documentation.</p>
+</li>
+</ul>
+<h2 id="synchronization">Synchronization</h2>
+<p>Threading-like synchronization primitives that can be used in Tasks.</p>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.lock"><code class="xref py class docutils literal">Lock</code></a></p>
+</td>
+<td><p>A mutex lock.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.event"><code class="xref py class docutils literal">Event</code></a></p>
+</td>
+<td><p>An event object.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.condition"><code class="xref py class docutils literal">Condition</code></a></p>
+</td>
+<td><p>A condition object.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.semaphore"><code class="xref py class docutils literal">Semaphore</code></a></p>
+</td>
+<td><p>A semaphore.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.boundedsemaphore"><code class="xref py class docutils literal">BoundedSemaphore</code></a></p>
+</td>
+<td><p>A bounded semaphore.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-sync.html#py:class:asyncio.barrier"><code class="xref py class docutils literal">Barrier</code></a></p>
+</td>
+<td><p>A barrier object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Examples</pre>
+</div>
+<ul>
+<li><p><a href="asyncio-sync.html#asyncio_example_sync_event">Using asyncio.Event</a>.</p>
+</li>
+<li><p><a href="asyncio-sync.html#asyncio_example_barrier">Using asyncio.Barrier</a>.</p>
+</li>
+<li><p>See also the documentation of asyncio
+<a href="asyncio-sync.html#asyncio-sync">synchronization primitives</a>.</p>
+</li>
+</ul>
+<h2 id="exceptions">Exceptions</h2>
+<table class="list-table full-width-table">
+<colgroup>
+<col style="width: 50.00%" />
+<col style="width: 50.00%" />
+</colgroup>
+<tbody>
+<tr>
+<td><p><a class="reference internal" href="asyncio-exceptions.html#py:exception:asyncio.cancellederror"><code class="xref py exception docutils literal">asyncio.CancelledError</code></a></p>
+</td>
+<td><p>Raised when a Task is cancelled. See also <a class="reference internal" href="asyncio-task.html#py:method:asyncio.task.cancel"><code class="xref py method docutils literal">Task.cancel</code></a>.</p>
+</td>
+</tr>
+<tr>
+<td><p><a class="reference internal" href="asyncio-sync.html#py:exception:asyncio.brokenbarriererror"><code class="xref py exception docutils literal">asyncio.BrokenBarrierError</code></a></p>
+</td>
+<td><p>Raised when a Barrier is broken. See also <a class="reference internal" href="asyncio-sync.html#py:method:asyncio.barrier.wait"><code class="xref py method docutils literal">Barrier.wait</code></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'rubric'</p>
+<pre class="directive-error-source">.. rubric:: Examples</pre>
+</div>
+<ul>
+<li><p><a href="asyncio-task.html#asyncio_example_task_cancel">Handling CancelledError to run code on cancellation request</a>.</p>
+</li>
+<li><p>See also the full list of
+<a href="asyncio-exceptions.html#asyncio-exceptions">asyncio-specific exceptions</a>.</p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="asyncio-extending.html">&larr; Extending</a>
+        <a class="next" href="asyncio-llapi-index.html">Low-level API Index &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
