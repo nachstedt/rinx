@@ -12,8 +12,8 @@ use crate::context::ParseCtx;
 use crate::explicit_title::{split_display_and_target, split_optional_title};
 
 use super::regexes::{
-    ANONYMOUS_PHRASED_REGEX, ANONYMOUS_SIMPLE_REGEX, EMBEDDED_URI_REGEX, EXTERNAL_PREFIX_REGEX,
-    PHRASED_LINK_REGEX, PROGRAM_ROLE_REGEX, REF_REGEX, SIMPLE_LINK_REGEX, TERM_ROLE_REGEX,
+    ANONYMOUS_PHRASED_REGEX, EMBEDDED_URI_REGEX, EXTERNAL_PREFIX_REGEX, PHRASED_LINK_REGEX,
+    PROGRAM_ROLE_REGEX, REF_REGEX, TERM_ROLE_REGEX,
 };
 use super::roles::any::handle_any_match;
 use super::roles::c::macro_::handle_macro_match;
@@ -221,9 +221,11 @@ fn build_inline_node(
         "title-reference" => handle_title_reference_match(m_str),
         "eq" => handle_eq_match(m_str),
         "phrased" => handle_phrased_link_match(m_str),
+        // The two simple forms are read off the match rather than matched
+        // again: their pattern's `\b` depends on the text around the match,
+        // which the isolated `m_str` no longer has.
         "simple" => {
-            let caps = SIMPLE_LINK_REGEX.captures(m_str).unwrap();
-            let name = &caps["name"];
+            let name = m_str.strip_suffix('_').unwrap_or(m_str);
             InlineNode::Hyperlink {
                 text: name.to_string(),
                 target: name.to_string(),
@@ -246,8 +248,7 @@ fn build_inline_node(
             }
         }
         "anon_simple" => {
-            let caps = ANONYMOUS_SIMPLE_REGEX.captures(m_str).unwrap();
-            let name = &caps["name"];
+            let name = m_str.strip_suffix("__").unwrap_or(m_str);
             InlineNode::AnonymousReference {
                 text: name.to_string(),
                 span: None,
@@ -505,6 +506,52 @@ mod tests {
             result,
             InlineNode::AnonymousReference {
                 text: "anon_name".to_string(),
+                span: None,
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_simple_variant_out_of_its_context() {
+        // Given — `-_` as the scan matched it after `𐬀`, a Unicode word
+        // character whose `\b` the isolated match no longer has
+
+        // When
+        let result = handle_inline_match(
+            "simple",
+            "-_",
+            None,
+            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(
+            result,
+            InlineNode::Hyperlink {
+                text: "-".to_string(),
+                target: "-".to_string(),
+                span: None
+            }
+        );
+    }
+
+    #[test]
+    fn test_handle_inline_match_anon_simple_variant_out_of_its_context() {
+        // Given / When
+        let result = handle_inline_match(
+            "anon_simple",
+            "-__",
+            None,
+            Domain::Py,
+            &ParseCtx::with_domain(Domain::Py),
+        );
+
+        // Then
+        assert_eq!(
+            result,
+            InlineNode::AnonymousReference {
+                text: "-".to_string(),
                 span: None,
             }
         );

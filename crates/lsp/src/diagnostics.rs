@@ -4,6 +4,8 @@
 //! same messages. Only their shape changes here — a span becomes a protocol
 //! range, and the code travels as the dotted id a `.. noqa:` names.
 
+use std::borrow::Cow;
+
 use lsp_types::{DiagnosticSeverity, NumberOrString, Uri};
 use rinx_ast::{Diagnostic, Domain};
 use rinx_parser::{ParseCtx, RejectParseFiles};
@@ -17,6 +19,9 @@ const SOURCE: &str = "rinx";
 /// Parses `text`, the content of the document at `uri`, and converts what the
 /// parser reported.
 ///
+/// The text is parsed with its line endings as the protocol counts them (see
+/// [`protocol_line_endings`]), so every reported line is one the editor shows.
+///
 /// The parse uses the build's defaults — the `py` domain, `title-reference`
 /// as the default role, no entity schema, no Jinja — since nothing tells the
 /// server yet how the document's library is configured.
@@ -26,6 +31,8 @@ pub fn document_diagnostics(
     text: &str,
     encoding: PositionEncoding,
 ) -> Vec<lsp_types::Diagnostic> {
+    let text = protocol_line_endings(text);
+    let text = text.as_ref();
     let file_path = file_path(uri);
     let document = match &file_path {
         Some(path) => {
@@ -44,6 +51,21 @@ pub fn document_diagnostics(
         ),
     };
     to_lsp_diagnostics(&document.diagnostics, text, encoding)
+}
+
+/// `text` with every line ending written as `\n`.
+///
+/// The protocol ends a line at `\r\n`, `\n` or a lone `\r`, and so do VS Code
+/// and docutils, but the parser splits at `\n` alone: a lone `\r` left in
+/// place would shift every diagnostic below it onto the wrong line. Each
+/// ending stays one character wide or is dropped with its `\r\n` partner, so
+/// columns are unchanged.
+fn protocol_line_endings(text: &str) -> Cow<'_, str> {
+    if text.contains('\r') {
+        Cow::Owned(text.replace("\r\n", "\n").replace('\r', "\n"))
+    } else {
+        Cow::Borrowed(text)
+    }
 }
 
 /// The filesystem path behind `uri`, when it names a file on this machine.
@@ -166,6 +188,38 @@ mod tests {
     }
 
     #[test]
+    fn test_document_diagnostics_counts_a_lone_carriage_return_as_a_line_end() {
+        // Given — old Mac line endings, which an editor shows as two lines
+        let text = "Prose.\r\r.. foo::\r";
+
+        // When
+        let diagnostics =
+            document_diagnostics(&uri("untitled:Untitled-1"), text, PositionEncoding::Utf16);
+
+        // Then
+        assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+        assert_eq!(diagnostics[0].range.start, lsp_types::Position::new(2, 0));
+    }
+
+    #[test]
+    fn test_protocol_line_endings_leaves_newline_text_borrowed() {
+        // Given / When
+        let normalized = protocol_line_endings("one\ntwo\n");
+
+        // Then
+        assert!(matches!(normalized, Cow::Borrowed("one\ntwo\n")));
+    }
+
+    #[test]
+    fn test_protocol_line_endings_rewrites_crlf_and_lone_cr() {
+        // Given / When
+        let normalized = protocol_line_endings("a\r\nb\rc\n");
+
+        // Then
+        assert_eq!(normalized, "a\nb\nc\n");
+    }
+
+    #[test]
     fn test_file_path_reads_a_file_uri() {
         // Given / When
         let path = file_path(&uri("file:///docs/a%20b.rst"));
@@ -250,5 +304,81 @@ mod tests {
             ))
         );
         assert_eq!(converted.severity, Some(DiagnosticSeverity::WARNING));
+    }
+
+    /// Properties over generated documents: whatever the text, the parse must
+    /// not panic and every range must point into the text the editor shows.
+    mod properties {
+        use super::*;
+        use proptest::prelude::*;
+
+        /// Text built from reStructuredText's building blocks, so the
+        /// constructs that report diagnostics are actually reached — plus
+        /// arbitrary characters, astral ones and every line terminator.
+        fn rst_like_text() -> impl Strategy<Value = String> {
+            let piece = prop_oneof![
+                Just(".. ".to_string()),
+                Just("::".to_string()),
+                Just(":ref:`".to_string()),
+                Just("`".to_string()),
+                Just("|".to_string()),
+                Just("*".to_string()),
+                Just("_".to_string()),
+                Just("=====".to_string()),
+                Just("- ".to_string()),
+                Just("#. ".to_string()),
+                Just("+---+".to_string()),
+                Just(":option: ".to_string()),
+                Just("   ".to_string()),
+                Just("\t".to_string()),
+                Just("\n".to_string()),
+                Just("\n\n".to_string()),
+                Just("\r\n".to_string()),
+                Just("\r".to_string()),
+                Just("🦀".to_string()),
+                Just("foo".to_string()),
+                Just("include".to_string()),
+                Just("toctree".to_string()),
+                "\\PC{0,8}",
+            ];
+            prop::collection::vec(piece, 0..40).prop_map(|pieces| pieces.concat())
+        }
+
+        /// The document's lines as the protocol counts them: `\r\n`, `\n`
+        /// and a lone `\r` each end one.
+        fn protocol_lines(text: &str) -> Vec<String> {
+            let normalized = text.replace("\r\n", "\n").replace('\r', "\n");
+            normalized.split('\n').map(str::to_string).collect()
+        }
+
+        proptest! {
+            #[test]
+            fn test_document_diagnostics_never_panics_and_stays_in_the_text(
+                text in rst_like_text(),
+            ) {
+                // Given
+                let lines = protocol_lines(&text);
+
+                // When
+                let diagnostics = document_diagnostics(
+                    &uri("untitled:Untitled-1"),
+                    &text,
+                    PositionEncoding::Utf16,
+                );
+
+                // Then
+                for diagnostic in &diagnostics {
+                    for point in [diagnostic.range.start, diagnostic.range.end] {
+                        let line = lines.get(point.line as usize);
+                        prop_assert!(line.is_some(), "{diagnostic:?} past the end of {text:?}");
+                        let width = line.map_or(0, |line| line.encode_utf16().count());
+                        prop_assert!(
+                            point.character as usize <= width,
+                            "{diagnostic:?} past the end of its line in {text:?}"
+                        );
+                    }
+                }
+            }
+        }
     }
 }

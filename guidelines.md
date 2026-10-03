@@ -141,6 +141,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When deleting tests whose subject moved to another phase, check the destination already covers those cases and add an integration test for the seam, rather than letting the coverage go with the code.
 - Do not widen a public API to serve a test; keep test-only helpers and fixtures inside the `#[cfg(test)]` module that needs them, asserting through an existing observable effect instead.
 - Check a test's premise against what the parser can actually produce before treating its failure as a bug in the code.
+- Cover conversions and never-panic invariants with property tests against a reference implementation, and check in the regression seeds they find.
 - Assert on the specific marker a feature emits rather than on a substring that a shared wrapper also contains, or the test stops distinguishing the two.
 - When a table of related cases is maintained by hand, test its structural invariants (reflexivity, symmetry) across all entries rather than only asserting the individual rows, so a half-finished edit fails.
 - Test a hand-maintained list against the enum it mirrors where one exists, and settle for a representative sample where none does, rather than writing a probe so general it fights every construct's own input requirements.

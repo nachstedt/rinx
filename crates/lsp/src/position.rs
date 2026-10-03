@@ -291,4 +291,91 @@ mod tests {
         // Then
         assert_eq!(range, lsp_types::Range::default());
     }
+
+    /// Properties over arbitrary text, against a reference that counts
+    /// UTF-16 units with the standard library rather than by hand.
+    mod properties {
+        use super::*;
+        use proptest::prelude::*;
+
+        fn encodings() -> impl Strategy<Value = PositionEncoding> {
+            prop_oneof![Just(PositionEncoding::Utf16), Just(PositionEncoding::Utf32)]
+        }
+
+        /// The width of the first `n` characters of `line`, counted the
+        /// standard library's way.
+        fn reference_width(line: &str, n: usize, encoding: PositionEncoding) -> u32 {
+            let prefix: String = line.chars().take(n).collect();
+            let units = match encoding {
+                PositionEncoding::Utf16 => prefix.encode_utf16().count(),
+                PositionEncoding::Utf32 => prefix.chars().count(),
+            };
+            u32::try_from(units).expect("a short line")
+        }
+
+        proptest! {
+            #[test]
+            fn test_to_lsp_position_agrees_with_the_standard_library(
+                line in "\\PC{0,40}",
+                column in 1u32..60,
+                encoding in encodings(),
+            ) {
+                // Given
+                let position = Position::new(7, column);
+
+                // When
+                let converted = to_lsp_position(position, &line, encoding);
+
+                // Then
+                prop_assert_eq!(converted.line, 6);
+                prop_assert_eq!(
+                    converted.character,
+                    reference_width(&line, column as usize - 1, encoding)
+                );
+            }
+
+            #[test]
+            fn test_to_lsp_position_is_monotonic_and_stays_on_the_line(
+                line in "\\PC{0,40}",
+                column in 1u32..60,
+                encoding in encodings(),
+            ) {
+                // Given
+                let here = Position::new(1, column);
+                let next = Position::new(1, column + 1);
+
+                // When
+                let at_here = to_lsp_position(here, &line, encoding);
+                let at_next = to_lsp_position(next, &line, encoding);
+
+                // Then
+                prop_assert!(at_here.character <= at_next.character);
+                prop_assert!(
+                    at_next.character <= reference_width(&line, usize::MAX, encoding)
+                );
+            }
+
+            #[test]
+            fn test_to_lsp_range_lands_inside_the_document(
+                lines in prop::collection::vec("[^\r\n]{0,20}", 0..6),
+                start in (0u32..9, 0u32..30),
+                end in (0u32..9, 0u32..30),
+                encoding in encodings(),
+            ) {
+                // Given — any span, even one left over from a longer text
+                let text = lines.join("\n");
+                let span = Span::new(Position::new(start.0, start.1), Position::new(end.0, end.1));
+
+                // When
+                let range = to_lsp_range(span, &text, encoding);
+
+                // Then
+                for point in [range.start, range.end] {
+                    let line = lines.get(point.line as usize).map_or("", String::as_str);
+                    prop_assert!(point.line as usize <= lines.len().saturating_sub(1));
+                    prop_assert!(point.character <= reference_width(line, usize::MAX, encoding));
+                }
+            }
+        }
+    }
 }
