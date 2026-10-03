@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Python Documentation README — CPython Benchmark</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        
+        <a class="next" href="contents.html">Python Documentation contents &rarr;</a>
+      </nav>
+      
+      <h1 id="python-documentation-readme">Python Documentation README</h1>
+<p>This directory contains the reStructuredText (reST) sources to the Python
+documentation.  You don't need to build them yourself, <a href="#" class="broken-link">prebuilt versions are
+available &lt;https://docs.python.org/dev/download.html&gt;</a>.</p>
+<p>Documentation on authoring Python documentation, including information about
+both style and markup, is available in the "<a href="https://devguide.python.org/documenting/">Documenting Python</a>" chapter of the
+developers guide.</p>
+<h2 id="building-the-docs">Building the docs</h2>
+<p>The documentation is built with several tools which are not included in this
+tree but are maintained separately and are available from
+<a href="https://pypi.org/">PyPI</a>.</p>
+<ul>
+<li><p><a href="https://pypi.org/project/Sphinx/">Sphinx</a></p>
+</li>
+<li><p><a href="https://pypi.org/project/blurb/">blurb</a></p>
+</li>
+<li><p><a href="https://pypi.org/project/python-docs-theme/">python-docs-theme</a></p>
+</li>
+</ul>
+<p>The easiest way to install these tools is to create a virtual environment and
+install the tools into there.</p>
+<h3 id="using-make">Using make</h3>
+<p>To get started on Unix, you can create a virtual environment and build
+documentation with the commands:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">make</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">venv</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">make</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">html</span></span></span></pre></div>
+<p>The virtual environment in the <code>venv</code> directory will contain all the tools
+necessary to build the documentation downloaded and installed from PyPI.
+If you'd like to create the virtual environment in a different location,
+you can specify it using the <code>VENVDIR</code> variable.</p>
+<p>You can also skip creating the virtual environment altogether, in which case
+the <code>Makefile</code> will look for instances of <code>sphinx-build</code> and <code>blurb</code>
+installed on your process <code>PATH</code> (configurable with the <code>SPHINXBUILD</code> and
+<code>BLURB</code> variables).</p>
+<p>On Windows, we try to emulate the <code>Makefile</code> as closely as possible with a
+<code>make.bat</code> file. If you need to specify the Python interpreter to use,
+set the <code>PYTHON</code> environment variable.</p>
+<p>Available make targets are:</p>
+<ul>
+<li><p>"clean", which removes all build files and the virtual environment.</p>
+</li>
+<li><p>"clean-venv", which removes the virtual environment directory.</p>
+</li>
+<li><p>"venv", which creates a virtual environment with all necessary tools
+installed.</p>
+</li>
+<li><p>"html", which builds standalone HTML files for offline viewing.</p>
+</li>
+<li><p>"htmlview", which re-uses the "html" builder, but then opens the main page
+in your default web browser.</p>
+</li>
+<li><p>"htmllive", which re-uses the "html" builder, rebuilds the docs,
+starts a local server, and automatically reloads the page in your browser
+when you make changes to reST files (Unix only).</p>
+</li>
+<li><p>"htmlhelp", which builds HTML files and a HTML Help project file usable to
+convert them into a single Compiled HTML (.chm) file – these are popular
+under Microsoft Windows, but very handy on every platform.</p>
+<p>To create the CHM file, you need to run the Microsoft HTML Help Workshop
+over the generated project (.hhp) file.  The <code>make.bat</code> script does this for
+you on Windows.</p>
+</li>
+<li><p>"latex", which builds LaTeX source files as input to <code>pdflatex</code> to produce
+PDF documents.</p>
+</li>
+<li><p>"text", which builds a plain text file for each source file.</p>
+</li>
+<li><p>"epub", which builds an EPUB document, suitable to be viewed on e-book
+readers.</p>
+</li>
+<li><p>"linkcheck", which checks all external references to see whether they are
+broken, redirected or malformed, and outputs this information to stdout as
+well as a plain-text (.txt) file.</p>
+</li>
+<li><p>"changes", which builds an overview over all versionadded/versionchanged/
+deprecated items in the current version. This is meant as a help for the
+writer of the "What's New" document.</p>
+</li>
+<li><p>"coverage", which builds a coverage overview for standard library modules and
+C API.</p>
+</li>
+<li><p>"pydoc-topics", which builds a Python module containing a dictionary with
+plain text documentation for the labels defined in
+<code>tools/pyspecific.py</code> – pydoc needs these to show topic and keyword help.</p>
+</li>
+<li><p>"check", which checks for frequent markup errors.</p>
+</li>
+<li><p>"dist", (Unix only) which creates distributable archives of HTML, text,
+PDF, and EPUB builds.</p>
+</li>
+</ul>
+<h3 id="without-make">Without make</h3>
+<p>First, install the tool dependencies from PyPI.</p>
+<p>Then, from the <code>Doc</code> directory, run :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sphinx</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">build</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">builder</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> . <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">build</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">builder</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span></pre></div>
+<p>where <code>&lt;builder&gt;</code> is one of html, text, latex, or htmlhelp (for explanations
+see the make targets above).</p>
+<h2 id="deprecation-header">Deprecation header</h2>
+<p>You can define the <code>outdated</code> variable in <code>html_context</code> to show a
+red banner on each page redirecting to the "latest" version.</p>
+<p>The link points to the same page on <code>/3/</code>, sadly for the moment the
+language is lost during the process.</p>
+<h2 id="contributing">Contributing</h2>
+<p>Bugs in the content should be reported to the
+<a href="https://github.com/python/cpython/issues">Python bug tracker</a>.</p>
+<p>Bugs in the toolset should be reported to the tools themselves.</p>
+<p>To help with the documentation, or report any problems, please leave a message
+on <a href="https://discuss.python.org/c/documentation">discuss.python.org</a>.</p>
+
+      
+      <nav class="page-relations">
+        
+        <a class="next" href="contents.html">Python Documentation contents &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fileinput — Iterate over lines from multiple input streams — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Command-line interface libraries"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="argparse.html">argparse — Parser for command-line options, arguments and subcommands</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="optparse.html">optparse — Parser for command line options</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="getpass.html">getpass — Portable password input</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="fileinput.html">fileinput — Iterate over lines from multiple input streams</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="curses.html">curses — Terminal handling for character-cell displays</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="curses.ascii.html">curses.ascii — Utilities for ASCII characters</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="curses.panel.html">curses.panel — A panel stack extension for curses</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="cmd.html">cmd — Support for line-oriented command interpreters</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="getpass.html">&larr; getpass — Portable password input</a>
+        <a class="next" href="curses.html">curses — Terminal handling for character-cell displays &rarr;</a>
+      </nav>
+      
+      <h1 id="fileinput-iterate-over-lines-from-multiple-input-streams"><code class="xref py module docutils literal">fileinput</code> — Iterate over lines from multiple input streams</h1>
+<dl class="py module">
+  <dt id="py:module:fileinput"><code class="sig-name">fileinput</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Guido van Rossum &lt;guido@python.org&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Fred L. Drake, Jr. &lt;fdrake@acm.org&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/fileinput.py`</p>
+<hr />
+<p>This module implements a helper class and functions to quickly write a
+loop over standard input or a list of files. If you just want to read or
+write one file see <a class="reference internal" href="functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a>.</p>
+<p>The typical use is:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fileinput</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">line</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fileinput</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">input</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">encoding</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">utf-8<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">process</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>This iterates over the lines of all files listed in <code>sys.argv[1:]</code>, defaulting
+to <code>sys.stdin</code> if the list is empty.  If a filename is <code>'-'</code>, it is also
+replaced by <code>sys.stdin</code> and the optional arguments <em>mode</em> and <em>openhook</em>
+are ignored.  To specify an alternative list of filenames, pass it as the
+first argument to <a class="reference internal" href="fileinput.html#py:function:fileinput.input"><code class="xref py function docutils literal">input</code></a>.  A single file name is also allowed.</p>
+<p>All files are opened in text mode by default, but you can override this by
+specifying the <em>mode</em> parameter in the call to <a class="reference internal" href="fileinput.html#py:function:fileinput.input"><code class="xref py function docutils literal">input</code></a> or
+<a class="reference internal" href="fileinput.html#py:class:fileinput.fileinput"><code class="xref py class docutils literal">FileInput</code></a>.  If an I/O error occurs during opening or reading a file,
+<a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> is raised.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><a class="reference internal" href="exceptions.html#py:exception:ioerror"><code class="xref py exception docutils literal">IOError</code></a> used to be raised; it is now an alias of <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a>.</p>
+</div>
+<p>If <code>sys.stdin</code> is used more than once, the second and further use will return
+no lines, except perhaps for interactive use, or if it has been explicitly reset
+(e.g. using <code>sys.stdin.seek(0)</code>).</p>
+<p>Empty files are opened and immediately closed; the only time their presence in
+the list of filenames is noticeable at all is when the last file opened is
+empty.</p>
+<p>Lines are returned with any newlines intact, which means that the last line in
+a file may not have one.</p>
+<p>You can control how files are opened by providing an opening hook via the
+<em>openhook</em> parameter to <a class="reference internal" href="fileinput.html#py:function:fileinput.input"><code class="xref py function docutils literal">fileinput.input</code></a> or <a href="#" class="broken-link"><code class="xref py function docutils literal">FileInput</code></a>. The
+hook must be a function that takes two arguments, <em>filename</em> and <em>mode</em>, and
+returns an accordingly opened file-like object. If <em>encoding</em> and/or <em>errors</em>
+are specified, they will be passed to the hook as additional keyword arguments.
+This module provides a <a class="reference internal" href="fileinput.html#py:function:fileinput.hook_compressed"><code class="xref py function docutils literal">hook_compressed</code></a> to support compressed files.</p>
+<p>The following function is the primary interface of this module:</p>
+<dl class="py function">
+  <dt id="py:function:fileinput.input"><code class="sig-name">input(files=None, inplace=False, backup='', *, mode='r', openhook=None, encoding=None, errors=None)</code></dt>
+  <dd><p>Create an instance of the <a class="reference internal" href="fileinput.html#py:class:fileinput.fileinput"><code class="xref py class docutils literal">FileInput</code></a> class.  The instance will be used
+as global state for the functions of this module, and is also returned to use
+during iteration.  The parameters to this function will be passed along to the
+constructor of the <a class="reference internal" href="fileinput.html#py:class:fileinput.fileinput"><code class="xref py class docutils literal">FileInput</code></a> class.</p>
+<p>The <a class="reference internal" href="fileinput.html#py:class:fileinput.fileinput"><code class="xref py class docutils literal">FileInput</code></a> instance can be used as a context manager in the
+:keyword:`with` statement.  In this example, <em>input</em> is closed after the
+:keyword:`!with` statement is exited, even if an exception occurs:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fileinput</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">input</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">files</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">spam.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">eggs.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">encoding</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">utf-8<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">f</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-keyword hl-control hl-loop hl-for hl-python">for</span> <span class="hl-meta hl-generic-name hl-python">line</span> <span class="hl-keyword hl-control hl-loop hl-for hl-in hl-python">in</span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">f</span></span></span><span class="hl-meta hl-statement hl-loop hl-for hl-python"><span class="hl-punctuation hl-section hl-block hl-loop hl-for hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">process</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Can be used as a context manager.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>The keyword parameters <em>mode</em> and <em>openhook</em> are now keyword-only.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The keyword-only parameter <em>encoding</em> and <em>errors</em> are added.</p>
+</div>
+</dd>
+</dl>
+<p>The following functions use the global state created by <a class="reference internal" href="fileinput.html#py:function:fileinput.input"><code class="xref py function docutils literal">fileinput.input</code></a>;
+if there is no active state, <a class="reference internal" href="exceptions.html#py:exception:runtimeerror"><code class="xref py exception docutils literal">RuntimeError</code></a> is raised.</p>
+<dl class="py function">
+  <dt id="py:function:fileinput.filename"><code class="sig-name">filename()</code></dt>
+  <dd><p>Return the name of the file currently being read.  Before the first line has
+been read, returns <code>None</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fileinput.fileno"><code class="sig-name">fileno()</code></dt>
+  <dd><p>Return the integer "file descriptor" for the current file. When no file is
+opened (before the first line and between files), returns <code>-1</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fileinput.lineno"><code class="sig-name">lineno()</code></dt>
+  <dd><p>Return the cumulative line number of the line that has just been read.  Before
+the first line has been read, returns <code>0</code>.  After the last line of the last
+file has been read, returns the line number of that line.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fileinput.filelineno"><code class="sig-name">filelineno()</code></dt>
+  <dd><p>Return the line number in the current file.  Before the first line has been
+read, returns <code>0</code>.  After the last line of the last file has been read,
+returns the line number of that line within the file.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fileinput.isfirstline"><code class="sig-name">isfirstline()</code></dt>
+  <dd><p>Return <code>True</code> if the line just read is the first line of its file, otherwise
+return <code>False</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fileinput.isstdin"><code class="sig-name">isstdin()</code></dt>
+  <dd><p>Return <code>True</code> if the last line was read from <code>sys.stdin</code>, otherwise return
+<code>False</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fileinput.nextfile"><code class="sig-name">nextfile()</code></dt>
+  <dd><p>Close the current file so that the next iteration will read the first line from
+the next file (if any); lines not read from the file will not count towards the
+cumulative line count.  The filename is not changed until after the first line
+of the next file has been read.  Before the first line has been read, this
+function has no effect; it cannot be used to skip the first file.  After the
+last line of the last file has been read, this function has no effect.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fileinput.close"><code class="sig-name">close()</code></dt>
+  <dd><p>Close the sequence.</p>
+</dd>
+</dl>
+<p>The class which implements the sequence behavior provided by the module is
+available for subclassing as well:</p>
+<dl class="py class">
+  <dt id="py:class:fileinput.fileinput"><em class="property">class</em> <code class="sig-name">FileInput(files=None, inplace=False, backup='', *, mode='r', openhook=None, encoding=None, errors=None)</code></dt>
+  <dd><p>Class <a class="reference internal" href="fileinput.html#py:class:fileinput.fileinput"><code class="xref py class docutils literal">FileInput</code></a> is the implementation; its methods <a href="#" class="broken-link"><code class="xref py method docutils literal">filename</code></a>,
+<a href="#" class="broken-link"><code class="xref py method docutils literal">fileno</code></a>, <a href="#" class="broken-link"><code class="xref py method docutils literal">lineno</code></a>, <a href="#" class="broken-link"><code class="xref py method docutils literal">filelineno</code></a>, <a href="#" class="broken-link"><code class="xref py method docutils literal">isfirstline</code></a>,
+<a href="#" class="broken-link"><code class="xref py method docutils literal">isstdin</code></a>, <a href="#" class="broken-link"><code class="xref py method docutils literal">nextfile</code></a> and <a href="#" class="broken-link"><code class="xref py method docutils literal">close</code></a> correspond to the
+functions of the same name in the module. In addition it is <a class="reference internal" href="../glossary.html#term-iterable"><span class="xref std std-term">iterable</span></a>
+and has a <a class="reference internal" href="io.html#py:method:io.textiobase.readline"><code class="xref py method docutils literal">readline</code></a> method which returns the next
+input line. The sequence must be accessed in strictly sequential order;
+random access and <a class="reference internal" href="io.html#py:method:io.textiobase.readline"><code class="xref py method docutils literal">readline</code></a> cannot be mixed.</p>
+<p>With <em>mode</em> you can specify which file mode will be passed to <a class="reference internal" href="functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a>. It
+must be one of <code>'r'</code> and <code>'rb'</code>.</p>
+<p>The <em>openhook</em>, when given, must be a function that takes two arguments,
+<em>filename</em> and <em>mode</em>, and returns an accordingly opened file-like object. You
+cannot use <em>inplace</em> and <em>openhook</em> together.</p>
+<p>You can specify <em>encoding</em> and <em>errors</em> that is passed to <a class="reference internal" href="functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a> or <em>openhook</em>.</p>
+<p>A <a class="reference internal" href="fileinput.html#py:class:fileinput.fileinput"><code class="xref py class docutils literal">FileInput</code></a> instance can be used as a context manager in the
+:keyword:`with` statement.  In this example, <em>input</em> is closed after the
+:keyword:`!with` statement is exited, even if an exception occurs:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">FileInput</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">files</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">spam.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">eggs.txt<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-support hl-function hl-builtin hl-python">input</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">process</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">input</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Can be used as a context manager.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.8:</span></p>
+<p>The keyword parameter <em>mode</em> and <em>openhook</em> are now keyword-only.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The keyword-only parameter <em>encoding</em> and <em>errors</em> are added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>The <code>'rU'</code> and <code>'U'</code> modes and the <code class="xref py method docutils literal">__getitem__</code> method have
+been removed.</p>
+</div>
+</dd>
+</dl>
+<p><strong>Optional in-place filtering:</strong> if the keyword argument <code>inplace=True</code> is
+passed to <a class="reference internal" href="fileinput.html#py:function:fileinput.input"><code class="xref py function docutils literal">fileinput.input</code></a> or to the <a class="reference internal" href="fileinput.html#py:class:fileinput.fileinput"><code class="xref py class docutils literal">FileInput</code></a> constructor, the
+file is moved to a backup file and standard output is directed to the input file
+(if a file of the same name as the backup file already exists, it will be
+replaced silently).  This makes it possible to write a filter that rewrites its
+input file in place.  If the <em>backup</em> parameter is given (typically as
+<code>backup='.&lt;some extension&gt;'</code>), it specifies the extension for the backup file,
+and the backup file remains around; by default, the extension is <code>'.bak'</code> and
+it is deleted when the output file is closed.  In-place filtering is disabled
+when standard input is read.</p>
+<p>The two following opening hooks are provided by this module:</p>
+<dl class="py function">
+  <dt id="py:function:fileinput.hook_compressed"><code class="sig-name">hook_compressed(filename, mode, *, encoding=None, errors=None)</code></dt>
+  <dd><p>Transparently opens files compressed with gzip and bzip2 (recognized by the
+extensions <code>'.gz'</code> and <code>'.bz2'</code>) using the <a class="reference internal" href="gzip.html#py:module:gzip" title="gzip: Interfaces for gzip compression and decompression using file objects."><code class="xref py module docutils literal">gzip</code></a> and <a class="reference internal" href="bz2.html#py:module:bz2" title="bz2: Interfaces for bzip2 compression and decompression."><code class="xref py module docutils literal">bz2</code></a>
+modules.  If the filename extension is not <code>'.gz'</code> or <code>'.bz2'</code>, the file is
+opened normally (ie, using <a class="reference internal" href="functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a> without any decompression).</p>
+<p>The <em>encoding</em> and <em>errors</em> values are passed to <a class="reference internal" href="io.html#py:class:io.textiowrapper"><code class="xref py class docutils literal">io.TextIOWrapper</code></a>
+for compressed files and open for normal files.</p>
+<p>Usage example:  <code>fi = fileinput.FileInput(openhook=fileinput.hook_compressed, encoding="utf-8")</code></p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The keyword-only parameter <em>encoding</em> and <em>errors</em> are added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:fileinput.hook_encoded"><code class="sig-name">hook_encoded(encoding, errors=None)</code></dt>
+  <dd><p>Returns a hook which opens each file with <a class="reference internal" href="functions.html#py:function:open"><code class="xref py function docutils literal">open</code></a>, using the given
+<em>encoding</em> and <em>errors</em> to read the file.</p>
+<p>Usage example: <code>fi =
+fileinput.FileInput(openhook=fileinput.hook_encoded("utf-8",
+"surrogateescape"))</code></p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Added the optional <em>errors</em> parameter.</p>
+</div>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.10:</span></p>
+<p>This function is deprecated since <a class="reference internal" href="fileinput.html#py:function:fileinput.input"><code class="xref py function docutils literal">fileinput.input</code></a> and <a class="reference internal" href="fileinput.html#py:class:fileinput.fileinput"><code class="xref py class docutils literal">FileInput</code></a>
+now have <em>encoding</em> and <em>errors</em> parameters.</p>
+</div>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="getpass.html">&larr; getpass — Portable password input</a>
+        <a class="next" href="curses.html">curses — Terminal handling for character-cell displays &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
