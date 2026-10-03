@@ -98,6 +98,11 @@
             
           </li>
         
+          <li class="toctree-l1">
+            <a href="diagnostics.html">Diagnostic codes</a>
+            
+          </li>
+        
         </ul>
         
       </nav>
@@ -148,8 +153,8 @@
 </ol>
 <a id="vscode-diagnostics"></a>
 <h3 id="diagnostics">3. Diagnostics</h3>
-<p>Opening a <code>.rst</code> file starts the language server, <code>rinx lsp</code>. It is the binary the build runs, so the editor reports the build's own diagnostics: the same codes and the same messages, underlined in the editor and listed in the <em>Problems</em> view as you type. For example, <code>.. foo::</code> is reported as <code>directive.unknown</code>.</p>
-<p>For now the server knows each open document on its own: there is no project index yet, no <code>.. noqa:</code> filtering, and no reporting inside included files. <code>docs/dev/lsp-roadmap.md</code> in the repository lists the steps that add these, and <code>docs/decisions/038-language-server.md</code> describes the design.</p>
+<p>Opening a <code>.rst</code> file starts the language server, <code>rinx lsp</code>. It is the binary the build runs, so the editor reports the build's own diagnostics: the same codes and the same messages, underlined in the editor and listed in the <em>Problems</em> view as you type. For example, <code>.. foo::</code> is reported as <code>directive.unknown</code>, and the code links to its entry in <a href="diagnostics.html#diagnostics">Diagnostic codes</a>. A <code>.. noqa:</code> comment silences a diagnostic in the editor exactly as it does in the build.</p>
+<p>For now the server knows each open document on its own: there is no project index yet, and no reporting inside included files. <code>docs/dev/lsp-roadmap.md</code> in the repository lists the steps that add these, and <code>docs/decisions/038-language-server.md</code> describes the design.</p>
 <h3 id="change-detection-background-reconcile">4. Change Detection &amp; Background Reconcile</h3>
 <p>To keep the global state (Sidebar, cross-references to other files) eventually consistent, the extension monitors the local index:</p>
 <ul>
