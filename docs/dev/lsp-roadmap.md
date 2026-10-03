@@ -62,7 +62,7 @@ link, and a `.. noqa:` makes it disappear.
 - Severity table per `DiagnosticCode`
 - Docs page listing all codes, generated from `DiagnosticCode::ALL`, as the `codeDescription` target
 - Lift `retain_reportable*` from the worker into a shared crate and call it from both front ends
-- Tests
+- Tests, including tightening the parity test (`crates/worker/tests/integration/lsp_parity.rs`) from "the editor reports a superset" to equality for documents holding a `.. noqa:`
 
 ### 3. Diagnostics inside included fragments
 
@@ -72,7 +72,7 @@ file, and editing the fragment updates the document that includes it.
 - Overlay `ParseFileLoader`: open buffers first, disk second
 - Map `FileId` → URI via `source_files`, publish per URI, clear stale URIs
 - Track which documents include which fragments; re-parse the includer when a fragment changes
-- Tests
+- Tests, including comparing the build's warnings about included fragments in the parity test, which skips them today
 
 ---
 
