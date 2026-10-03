@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>traceback — Print or retrieve a stack traceback — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="python.html">Python Runtime Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python Runtime Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="sys.html">sys — System-specific parameters and functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sys.monitoring.html">sys.monitoring — Execution event monitoring</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sysconfig.html">sysconfig — Provide access to Python&#x27;s configuration information</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="builtins.html">builtins — Built-in objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="__main__.html">__main__ — Top-level code environment</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="warnings.html">warnings — Warning control</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="dataclasses.html">dataclasses — Data Classes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="contextlib.html">contextlib — Utilities for :keyword:`!with`-statement contexts</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="abc.html">abc — Abstract Base Classes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="atexit.html">atexit — Exit handlers</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="traceback.html">traceback — Print or retrieve a stack traceback</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle traceback — Print or retrieve a stack traceback"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="traceback.html#module-level-functions">Module-Level Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="traceback.html#tracebackexception-objects">TracebackException Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="traceback.html#stacksummary-objects">StackSummary Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="traceback.html#framesummary-objects">FrameSummary Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="traceback.html#examples-of-using-the-module-level-functions">Examples of Using the Module-Level Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="traceback.html#examples-of-using-tracebackexception">Examples of Using TracebackException</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="__future__.html">__future__ — Future statement definitions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="gc.html">gc — Garbage Collector interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="inspect.html">inspect — Inspect live objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="annotationlib.html">annotationlib — Functionality for introspecting annotations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="site.html">site — Site-specific configuration hook</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="atexit.html">&larr; atexit — Exit handlers</a>
+        <a class="next" href="__future__.html">__future__ — Future statement definitions &rarr;</a>
+      </nav>
+      
+      <h1 id="traceback-print-or-retrieve-a-stack-traceback"><code class="xref py module docutils literal">traceback</code> — Print or retrieve a stack traceback</h1>
+<dl class="py module">
+  <dt id="py:module:traceback"><code class="sig-name">traceback</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/traceback.py`</p>
+<hr />
+<p>This module provides a standard interface to extract, format and print
+stack traces of Python programs. It is more flexible than the
+interpreter's default traceback display, and therefore makes it
+possible to configure certain aspects of the output. Finally,
+it contains a utility for capturing enough information about an
+exception to print it later, without the need to save a reference
+to the actual exception. Since exceptions can be the roots of large
+objects graph, this utility can significantly improve
+memory management.</p>
+<span id="index-0"></span>
+<p>The module uses <a href="../reference/datamodel.html#traceback-objects">traceback objects</a> — these are
+objects of type <a class="reference internal" href="types.html#py:class:types.tracebacktype"><code class="xref py class docutils literal">types.TracebackType</code></a>,
+which are assigned to the <a class="reference internal" href="exceptions.html#py:attribute:baseexception.__traceback__"><code class="xref py attribute docutils literal">__traceback__</code></a> field of
+<a class="reference internal" href="exceptions.html#py:exception:baseexception"><code class="xref py class docutils literal">BaseException</code></a> instances.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="faulthandler.html#py:module:faulthandler" title="faulthandler: Dump the Python traceback."><code class="xref py module docutils literal">faulthandler</code></a></dt>
+<dd><p>Used to dump Python tracebacks explicitly, on a fault, after a timeout, or on a user signal.</p>
+</dd>
+<dt>Module <a class="reference internal" href="pdb.html#py:module:pdb" title="pdb: The Python debugger for interactive interpreters."><code class="xref py module docutils literal">pdb</code></a></dt>
+<dd><p>Interactive source code debugger for Python programs.</p>
+</dd>
+</dl>
+</div>
+<p>The module's API can be divided into two parts:</p>
+<ul>
+<li><p>Module-level functions offering basic functionality, which are useful for interactive
+inspection of exceptions and tracebacks.</p>
+</li>
+<li><p><a class="reference internal" href="traceback.html#py:class:traceback.tracebackexception"><code class="xref py class docutils literal">TracebackException</code></a> class and its helper classes
+<a class="reference internal" href="traceback.html#py:class:traceback.stacksummary"><code class="xref py class docutils literal">StackSummary</code></a> and <a class="reference internal" href="traceback.html#py:class:traceback.framesummary"><code class="xref py class docutils literal">FrameSummary</code></a>. These offer both more
+flexibility in the output generated and the ability to store the information
+necessary for later formatting without holding references to actual exception
+and traceback objects.</p>
+</li>
+</ul>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+<p>Output is colorized by default and can be
+<a href="../using/cmdline.html#using-on-controlling-color">controlled using environment variables</a>.</p>
+</div>
+<h2 id="module-level-functions">Module-Level Functions</h2>
+<dl class="py function">
+  <dt id="py:function:traceback.print_tb"><code class="sig-name">print_tb(tb, limit=None, file=None)</code></dt>
+  <dd><p>Print up to <em>limit</em> stack trace entries from
+<a href="../reference/datamodel.html#traceback-objects">traceback object</a> <em>tb</em> (starting
+from the caller's frame) if <em>limit</em> is positive.  Otherwise, print the last
+<code>abs(limit)</code> entries.  If <em>limit</em> is omitted or <code>None</code>, all entries are
+printed.  If <em>file</em> is omitted or <code>None</code>, the output goes to
+<a class="reference internal" href="sys.html#py:data:sys.stderr"><code class="xref py data docutils literal">sys.stderr</code></a>; otherwise it should be an open
+<a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file</span></a> or <a class="reference internal" href="../glossary.html#term-file-like-object"><span class="xref std std-term">file-like object</span></a> to
+receive the output.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The meaning of the <em>limit</em> parameter is different than the meaning
+of <a class="reference internal" href="sys.html#py:data:sys.tracebacklimit"><code class="xref py data docutils literal">sys.tracebacklimit</code></a>. A negative <em>limit</em> value corresponds to
+a positive value of <code class="xref py data docutils literal">sys.tracebacklimit</code>, whereas the behaviour of
+a positive <em>limit</em> value cannot be achieved with
+<code class="xref py data docutils literal">sys.tracebacklimit</code>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added negative <em>limit</em> support.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.print_exception"><code class="sig-name">print_exception(exc, /[, value, tb], limit=None, \</code></dt>
+  <dt id="py:function:traceback.chain=true)"><code class="sig-name">file=None, chain=True)</code></dt>
+  <dd><p>Print exception information and stack trace entries from
+<a href="../reference/datamodel.html#traceback-objects">traceback object</a>
+<em>tb</em> to <em>file</em>. This differs from <a class="reference internal" href="traceback.html#py:function:traceback.print_tb"><code class="xref py function docutils literal">print_tb</code></a> in the following
+ways:</p>
+<ul>
+<li><p>if <em>tb</em> is not <code>None</code>, it prints a header <code>Traceback (most recent
+call last):</code></p>
+</li>
+<li><p>it prints the exception type and <em>value</em> after the stack trace</p>
+</li>
+</ul>
+<span id="index-1"></span>
+<ul>
+<li><p>if <em>type(value)</em> is <a class="reference internal" href="exceptions.html#py:exception:syntaxerror"><code class="xref py exception docutils literal">SyntaxError</code></a> and <em>value</em> has the appropriate
+format, it prints the line where the syntax error occurred with a caret
+indicating the approximate position of the error.</p>
+</li>
+</ul>
+<p>Since Python 3.10, instead of passing <em>value</em> and <em>tb</em>, an exception object
+can be passed as the first argument. If <em>value</em> and <em>tb</em> are provided, the
+first argument is ignored in order to provide backwards compatibility.</p>
+<p>The optional <em>limit</em> argument has the same meaning as for <a class="reference internal" href="traceback.html#py:function:traceback.print_tb"><code class="xref py function docutils literal">print_tb</code></a>.
+If <em>chain</em> is true (the default), then chained exceptions (the
+<a class="reference internal" href="exceptions.html#py:attribute:baseexception.__cause__"><code class="xref py attribute docutils literal">__cause__</code></a> or <a class="reference internal" href="exceptions.html#py:attribute:baseexception.__context__"><code class="xref py attribute docutils literal">__context__</code></a>
+attributes of the exception) will be
+printed as well, like the interpreter itself does when printing an unhandled
+exception.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>The <em>etype</em> argument is ignored and inferred from the type of <em>value</em>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The <em>etype</em> parameter has been renamed to <em>exc</em> and is now
+positional-only.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.print_exc"><code class="sig-name">print_exc(limit=None, file=None, chain=True)</code></dt>
+  <dd><p>This is a shorthand for <code>print_exception(sys.exception(), limit=limit, file=file,
+chain=chain)</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.print_last"><code class="sig-name">print_last(limit=None, file=None, chain=True)</code></dt>
+  <dd><p>This is a shorthand for <code>print_exception(sys.last_exc, limit=limit, file=file,
+chain=chain)</code>.  In general it will work only after an exception has reached
+an interactive prompt (see <a class="reference internal" href="sys.html#py:data:sys.last_exc"><code class="xref py data docutils literal">sys.last_exc</code></a>).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.print_stack"><code class="sig-name">print_stack(f=None, limit=None, file=None)</code></dt>
+  <dd><p>Print up to <em>limit</em> stack trace entries (starting from the invocation
+point) if <em>limit</em> is positive.  Otherwise, print the last <code>abs(limit)</code>
+entries.  If <em>limit</em> is omitted or <code>None</code>, all entries are printed.
+The optional <em>f</em> argument can be used to specify an alternate
+<a href="../reference/datamodel.html#frame-objects">stack frame</a>
+to start.  The optional <em>file</em> argument has the same meaning as for
+<a class="reference internal" href="traceback.html#py:function:traceback.print_tb"><code class="xref py function docutils literal">print_tb</code></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>Added negative <em>limit</em> support.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.extract_tb"><code class="sig-name">extract_tb(tb, limit=None)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="traceback.html#py:class:traceback.stacksummary"><code class="xref py class docutils literal">StackSummary</code></a> object representing a list of "pre-processed"
+stack trace entries extracted from the
+<a href="../reference/datamodel.html#traceback-objects">traceback object</a> <em>tb</em>.  It is useful
+for alternate formatting of stack traces.  The optional <em>limit</em> argument has
+the same meaning as for <a class="reference internal" href="traceback.html#py:function:traceback.print_tb"><code class="xref py function docutils literal">print_tb</code></a>.  A "pre-processed" stack trace
+entry is a <a class="reference internal" href="traceback.html#py:class:traceback.framesummary"><code class="xref py class docutils literal">FrameSummary</code></a> object containing attributes
+<a class="reference internal" href="traceback.html#py:attribute:traceback.framesummary.filename"><code class="xref py attribute docutils literal">filename</code></a>, <a class="reference internal" href="traceback.html#py:attribute:traceback.framesummary.lineno"><code class="xref py attribute docutils literal">lineno</code></a>,
+<a class="reference internal" href="traceback.html#py:attribute:traceback.framesummary.name"><code class="xref py attribute docutils literal">name</code></a>, and <a class="reference internal" href="traceback.html#py:attribute:traceback.framesummary.line"><code class="xref py attribute docutils literal">line</code></a> representing the
+information that is usually printed for a stack trace.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.extract_stack"><code class="sig-name">extract_stack(f=None, limit=None)</code></dt>
+  <dd><p>Extract the raw traceback from the current
+<a href="../reference/datamodel.html#frame-objects">stack frame</a>.  The return value has
+the same format as for <a class="reference internal" href="traceback.html#py:function:traceback.extract_tb"><code class="xref py function docutils literal">extract_tb</code></a>.  The optional <em>f</em> and <em>limit</em>
+arguments have the same meaning as for <a class="reference internal" href="traceback.html#py:function:traceback.print_stack"><code class="xref py function docutils literal">print_stack</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.print_list"><code class="sig-name">print_list(extracted_list, file=None)</code></dt>
+  <dd><p>Print the list of tuples as returned by <a class="reference internal" href="traceback.html#py:function:traceback.extract_tb"><code class="xref py function docutils literal">extract_tb</code></a> or
+<a class="reference internal" href="traceback.html#py:function:traceback.extract_stack"><code class="xref py function docutils literal">extract_stack</code></a> as a formatted stack trace to the given file.
+If <em>file</em> is <code>None</code>, the output is written to <a class="reference internal" href="sys.html#py:data:sys.stderr"><code class="xref py data docutils literal">sys.stderr</code></a>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.format_list"><code class="sig-name">format_list(extracted_list)</code></dt>
+  <dd><p>Given a list of tuples or <a class="reference internal" href="traceback.html#py:class:traceback.framesummary"><code class="xref py class docutils literal">FrameSummary</code></a> objects as returned by
+<a class="reference internal" href="traceback.html#py:function:traceback.extract_tb"><code class="xref py function docutils literal">extract_tb</code></a> or <a class="reference internal" href="traceback.html#py:function:traceback.extract_stack"><code class="xref py function docutils literal">extract_stack</code></a>, return a list of strings ready
+for printing.  Each string in the resulting list corresponds to the item with
+the same index in the argument list.  Each string ends in a newline; the
+strings may contain internal newlines as well, for those items whose source
+text line is not <code>None</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.format_exception_only"><code class="sig-name">format_exception_only(exc, /[, value], *, show_group=False)</code></dt>
+  <dd><p>Format the exception part of a traceback using an exception value such as
+given by <a class="reference internal" href="sys.html#py:data:sys.last_value"><code class="xref py data docutils literal">sys.last_value</code></a>.  The return value is a list of strings, each
+ending in a newline.  The list contains the exception's message, which is
+normally a single string; however, for <a class="reference internal" href="exceptions.html#py:exception:syntaxerror"><code class="xref py exception docutils literal">SyntaxError</code></a> exceptions, it
+contains several lines that (when printed) display detailed information
+about where the syntax error occurred. Following the message, the list
+contains the exception's <a class="reference internal" href="exceptions.html#py:attribute:baseexception.__notes__"><code class="xref py attribute docutils literal">notes</code></a>.</p>
+<p>Since Python 3.10, instead of passing <em>value</em>, an exception object
+can be passed as the first argument.  If <em>value</em> is provided, the first
+argument is ignored in order to provide backwards compatibility.</p>
+<p>When <em>show_group</em> is <code>True</code>, and the exception is an instance of
+<a class="reference internal" href="exceptions.html#py:exception:baseexceptiongroup"><code class="xref py exception docutils literal">BaseExceptionGroup</code></a>, the nested exceptions are included as
+well, recursively, with indentation relative to their nesting depth.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>The <em>etype</em> parameter has been renamed to <em>exc</em> and is now
+positional-only.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>The returned list now includes any
+<a class="reference internal" href="exceptions.html#py:attribute:baseexception.__notes__"><code class="xref py attribute docutils literal">notes</code></a> attached to the exception.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p><em>show_group</em> parameter was added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.format_exception"><code class="sig-name">format_exception(exc, /[, value, tb], limit=None, chain=True)</code></dt>
+  <dd><p>Format a stack trace and the exception information.  The arguments  have the
+same meaning as the corresponding arguments to <a class="reference internal" href="traceback.html#py:function:traceback.print_exception"><code class="xref py function docutils literal">print_exception</code></a>.  The
+return value is a list of strings, each ending in a newline and some
+containing internal newlines.  When these lines are concatenated and printed,
+exactly the same text is printed as does <a class="reference internal" href="traceback.html#py:function:traceback.print_exception"><code class="xref py function docutils literal">print_exception</code></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.5:</span></p>
+<p>The <em>etype</em> argument is ignored and inferred from the type of <em>value</em>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>This function's behavior and signature were modified to match
+<a class="reference internal" href="traceback.html#py:function:traceback.print_exception"><code class="xref py function docutils literal">print_exception</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.format_exc"><code class="sig-name">format_exc(limit=None, chain=True)</code></dt>
+  <dd><p>This is like <code>print_exc(limit)</code> but returns a string instead of printing to
+a file.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.format_tb"><code class="sig-name">format_tb(tb, limit=None)</code></dt>
+  <dd><p>A shorthand for <code>format_list(extract_tb(tb, limit))</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.format_stack"><code class="sig-name">format_stack(f=None, limit=None)</code></dt>
+  <dd><p>A shorthand for <code>format_list(extract_stack(f, limit))</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.clear_frames"><code class="sig-name">clear_frames(tb)</code></dt>
+  <dd><p>Clears the local variables of all the stack frames in a
+<a href="../reference/datamodel.html#traceback-objects">traceback</a> <em>tb</em>
+by calling the <a class="reference internal" href="../reference/datamodel.html#py:method:frame.clear"><code class="xref py method docutils literal">clear</code></a> method of each
+<a href="../reference/datamodel.html#frame-objects">frame object</a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.walk_stack"><code class="sig-name">walk_stack(f)</code></dt>
+  <dd><p>Walk a stack following <a class="reference internal" href="../reference/datamodel.html#py:attribute:frame.f_back"><code class="xref py attribute docutils literal">f.f_back</code></a> from the given frame,
+yielding the frame
+and line number for each frame. If <em>f</em> is <code>None</code>, the current stack is
+used. This helper is used with <a class="reference internal" href="traceback.html#py:method:traceback.stacksummary.extract"><code class="xref py method docutils literal">StackSummary.extract</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.14:</span></p>
+<p>This function previously returned a generator that would walk the stack
+when first iterated over. The generator returned now is the state of the
+stack when <code>walk_stack</code> is called.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:traceback.walk_tb"><code class="sig-name">walk_tb(tb)</code></dt>
+  <dd><p>Walk a traceback following <a class="reference internal" href="../reference/datamodel.html#py:attribute:traceback.tb_next"><code class="xref py attribute docutils literal">tb_next</code></a> yielding the frame and
+line number
+for each frame. This helper is used with <a class="reference internal" href="traceback.html#py:method:traceback.stacksummary.extract"><code class="xref py method docutils literal">StackSummary.extract</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+</dd>
+</dl>
+<h2 id="tracebackexception-objects"><code class="xref py class docutils literal">TracebackException</code> Objects</h2>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+<p><code class="xref py class docutils literal">TracebackException</code> objects are created from actual exceptions to
+capture data for later printing.  They offer a more lightweight method of
+storing this information by avoiding holding references to
+<a href="../reference/datamodel.html#traceback-objects">traceback</a> and <a href="../reference/datamodel.html#frame-objects">frame</a> objects.
+In addition, they expose more options to configure the output compared to
+the module-level functions described above.</p>
+<dl class="py class">
+  <dt id="py:class:traceback.tracebackexception"><em class="property">class</em> <code class="sig-name">TracebackException(exc_type, exc_value, exc_traceback, *, limit=None, lookup_lines=True, capture_locals=False, compact=False, max_group_width=15, max_group_depth=10)</code></dt>
+  <dd><p>Capture an exception for later rendering. The meaning of <em>limit</em>,
+<em>lookup_lines</em> and <em>capture_locals</em> are as for the <a class="reference internal" href="traceback.html#py:class:traceback.stacksummary"><code class="xref py class docutils literal">StackSummary</code></a>
+class.</p>
+<p>If <em>compact</em> is true, only data that is required by
+<code class="xref py class docutils literal">TracebackException</code>'s <a class="reference internal" href="traceback.html#py:method:traceback.tracebackexception.format"><code class="xref py method docutils literal">format</code></a> method
+is saved in the class attributes. In particular, the
+<a class="reference internal" href="traceback.html#py:attribute:traceback.tracebackexception.__context__"><code class="xref py attribute docutils literal">__context__</code></a> field is calculated only if <a class="reference internal" href="traceback.html#py:attribute:traceback.tracebackexception.__cause__"><code class="xref py attribute docutils literal">__cause__</code></a> is
+<code>None</code> and <a class="reference internal" href="traceback.html#py:attribute:traceback.tracebackexception.__suppress_context__"><code class="xref py attribute docutils literal">__suppress_context__</code></a> is false.</p>
+<p>Note that when locals are captured, they are also shown in the traceback.</p>
+<p><em>max_group_width</em> and <em>max_group_depth</em> control the formatting of exception
+groups (see <a class="reference internal" href="exceptions.html#py:exception:baseexceptiongroup"><code class="xref py exception docutils literal">BaseExceptionGroup</code></a>). The depth refers to the nesting
+level of the group, and the width refers to the size of a single exception
+group's exceptions array. The formatted output is truncated when either
+limit is exceeded.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Added the <em>compact</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>Added the <em>max_group_width</em> and <em>max_group_depth</em> parameters.</p>
+</div>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.__cause__"><code class="sig-name">__cause__</code></dt>
+  <dd><p>A <code class="xref py class docutils literal">TracebackException</code> of the original
+<a class="reference internal" href="exceptions.html#py:attribute:baseexception.__cause__"><code class="xref py attribute docutils literal">__cause__</code></a>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.__context__"><code class="sig-name">__context__</code></dt>
+  <dd><p>A <code class="xref py class docutils literal">TracebackException</code> of the original
+<a class="reference internal" href="exceptions.html#py:attribute:baseexception.__context__"><code class="xref py attribute docutils literal">__context__</code></a>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.exceptions"><code class="sig-name">exceptions</code></dt>
+  <dd><p>If <code>self</code> represents an <a class="reference internal" href="exceptions.html#py:exception:exceptiongroup"><code class="xref py exception docutils literal">ExceptionGroup</code></a>, this field holds a list of
+<code class="xref py class docutils literal">TracebackException</code> instances representing the nested exceptions.
+Otherwise it is <code>None</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.__suppress_context__"><code class="sig-name">__suppress_context__</code></dt>
+  <dd><p>The <a class="reference internal" href="exceptions.html#py:attribute:baseexception.__suppress_context__"><code class="xref py attribute docutils literal">__suppress_context__</code></a> value from the original
+exception.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.__notes__"><code class="sig-name">__notes__</code></dt>
+  <dd><p>The <a class="reference internal" href="exceptions.html#py:attribute:baseexception.__notes__"><code class="xref py attribute docutils literal">__notes__</code></a> value from the original exception,
+or <code>None</code>
+if the exception does not have any notes. If it is not <code>None</code>
+is it formatted in the traceback after the exception string.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.stack"><code class="sig-name">stack</code></dt>
+  <dd><p>A <a class="reference internal" href="traceback.html#py:class:traceback.stacksummary"><code class="xref py class docutils literal">StackSummary</code></a> representing the traceback.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.exc_type"><code class="sig-name">exc_type</code></dt>
+  <dd><p>The class of the original traceback.</p>
+<div class="deprecated">
+  <p class="versionmodified deprecated"><span class="versionmodified-label">Deprecated since version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.exc_type_str"><code class="sig-name">exc_type_str</code></dt>
+  <dd><p>String display of the class of the original exception.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.filename"><code class="sig-name">filename</code></dt>
+  <dd><p>For syntax errors - the file name where the error occurred.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.lineno"><code class="sig-name">lineno</code></dt>
+  <dd><p>For syntax errors - the line number where the error occurred.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.end_lineno"><code class="sig-name">end_lineno</code></dt>
+  <dd><p>For syntax errors - the end line number where the error occurred.
+Can be <code>None</code> if not present.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.text"><code class="sig-name">text</code></dt>
+  <dd><p>For syntax errors - the text where the error occurred.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.offset"><code class="sig-name">offset</code></dt>
+  <dd><p>For syntax errors - the offset into the text where the error occurred.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.end_offset"><code class="sig-name">end_offset</code></dt>
+  <dd><p>For syntax errors - the end offset into the text where the error occurred.
+Can be <code>None</code> if not present.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.10:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.tracebackexception.msg"><code class="sig-name">msg</code></dt>
+  <dd><p>For syntax errors - the compiler error message.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:traceback.tracebackexception.from_exception"><em class="property">classmethod</em> <code class="sig-name">from_exception(exc, *, limit=None, lookup_lines=True, capture_locals=False)</code></dt>
+  <dd><p>Capture an exception for later rendering. <em>limit</em>, <em>lookup_lines</em> and
+<em>capture_locals</em> are as for the <a class="reference internal" href="traceback.html#py:class:traceback.stacksummary"><code class="xref py class docutils literal">StackSummary</code></a> class.</p>
+<p>Note that when locals are captured, they are also shown in the traceback.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:traceback.tracebackexception.print"><code class="sig-name">print(*, file=None, chain=True)</code></dt>
+  <dd><p>Print to <em>file</em> (default <code>sys.stderr</code>) the exception information returned by
+<a class="reference internal" href="traceback.html#py:method:traceback.tracebackexception.format"><code class="xref py method docutils literal">format</code></a>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:traceback.tracebackexception.format"><code class="sig-name">format(*, chain=True)</code></dt>
+  <dd><p>Format the exception.</p>
+<p>If <em>chain</em> is not <code>True</code>, <a class="reference internal" href="traceback.html#py:attribute:traceback.tracebackexception.__cause__"><code class="xref py attribute docutils literal">__cause__</code></a> and <a class="reference internal" href="traceback.html#py:attribute:traceback.tracebackexception.__context__"><code class="xref py attribute docutils literal">__context__</code></a>
+will not be formatted.</p>
+<p>The return value is a generator of strings, each ending in a newline and
+some containing internal newlines. <a class="reference internal" href="traceback.html#py:function:traceback.print_exception"><code class="xref py function docutils literal">print_exception</code></a>
+is a wrapper around this method which just prints the lines to a file.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:traceback.tracebackexception.format_exception_only"><code class="sig-name">format_exception_only(*, show_group=False)</code></dt>
+  <dd><p>Format the exception part of the traceback.</p>
+<p>The return value is a generator of strings, each ending in a newline.</p>
+<p>When <em>show_group</em> is <code>False</code>, the generator emits the exception's
+message followed by its notes (if it has any). The exception message
+is normally a single string; however, for <a class="reference internal" href="exceptions.html#py:exception:syntaxerror"><code class="xref py exception docutils literal">SyntaxError</code></a> exceptions,
+it consists of several lines that (when printed) display detailed
+information about where the syntax error occurred.</p>
+<p>When <em>show_group</em> is <code>True</code>, and the exception is an instance of
+<a class="reference internal" href="exceptions.html#py:exception:baseexceptiongroup"><code class="xref py exception docutils literal">BaseExceptionGroup</code></a>, the nested exceptions are included as
+well, recursively, with indentation relative to their nesting depth.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.11:</span></p>
+<p>The exception's <a class="reference internal" href="exceptions.html#py:attribute:baseexception.__notes__"><code class="xref py attribute docutils literal">notes</code></a> are now
+included in the output.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Added the <em>show_group</em> parameter.</p>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="stacksummary-objects"><code class="xref py class docutils literal">StackSummary</code> Objects</h2>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+<p><code class="xref py class docutils literal">StackSummary</code> objects represent a call stack ready for formatting.</p>
+<dl class="py class">
+  <dt id="py:class:traceback.stacksummary"><em class="property">class</em> <code class="sig-name">StackSummary</code></dt>
+  <dd><dl class="py method">
+  <dt id="py:method:traceback.stacksummary.extract"><em class="property">classmethod</em> <code class="sig-name">extract(frame_gen, *, limit=None, lookup_lines=True, capture_locals=False)</code></dt>
+  <dd><p>Construct a <code class="xref py class docutils literal">StackSummary</code> object from a frame generator (such as
+is returned by <a class="reference internal" href="traceback.html#py:function:traceback.walk_stack"><code class="xref py function docutils literal">walk_stack</code></a> or
+<a class="reference internal" href="traceback.html#py:function:traceback.walk_tb"><code class="xref py function docutils literal">walk_tb</code></a>).</p>
+<p>If <em>limit</em> is supplied, only this many frames are taken from <em>frame_gen</em>.
+If <em>lookup_lines</em> is <code>False</code>, the returned <a class="reference internal" href="traceback.html#py:class:traceback.framesummary"><code class="xref py class docutils literal">FrameSummary</code></a>
+objects will not have read their lines in yet, making the cost of
+creating the <code class="xref py class docutils literal">StackSummary</code> cheaper (which may be valuable if it
+may not actually get formatted). If <em>capture_locals</em> is <code>True</code> the
+local variables in each <code class="xref py class docutils literal">FrameSummary</code> are captured as object
+representations.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>Exceptions raised from <a class="reference internal" href="functions.html#py:function:repr"><code class="xref py function docutils literal">repr</code></a> on a local variable (when
+<em>capture_locals</em> is <code>True</code>) are no longer propagated to the caller.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:traceback.stacksummary.from_list"><em class="property">classmethod</em> <code class="sig-name">from_list(a_list)</code></dt>
+  <dd><p>Construct a <code class="xref py class docutils literal">StackSummary</code> object from a supplied list of
+<a class="reference internal" href="traceback.html#py:class:traceback.framesummary"><code class="xref py class docutils literal">FrameSummary</code></a> objects or old-style list of tuples.  Each tuple
+should be a 4-tuple with <em>filename</em>, <em>lineno</em>, <em>name</em>, <em>line</em> as the
+elements.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:traceback.stacksummary.format"><code class="sig-name">format()</code></dt>
+  <dd><p>Returns a list of strings ready for printing.  Each string in the
+resulting list corresponds to a single <a href="../reference/datamodel.html#frame-objects">frame</a> from
+the stack.
+Each string ends in a newline; the strings may contain internal
+newlines as well, for those items with source text lines.</p>
+<p>For long sequences of the same frame and line, the first few
+repetitions are shown, followed by a summary line stating the exact
+number of further repetitions.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.6:</span></p>
+<p>Long sequences of repeated frames are now abbreviated.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:traceback.stacksummary.format_frame_summary"><code class="sig-name">format_frame_summary(frame_summary)</code></dt>
+  <dd><p>Returns a string for printing one of the <a href="../reference/datamodel.html#frame-objects">frames</a>
+involved in the stack.
+This method is called for each <a class="reference internal" href="traceback.html#py:class:traceback.framesummary"><code class="xref py class docutils literal">FrameSummary</code></a> object to be
+printed by <a class="reference internal" href="traceback.html#py:method:traceback.stacksummary.format"><code class="xref py method docutils literal">StackSummary.format</code></a>. If it returns <code>None</code>, the
+frame is omitted from the output.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.11:</span></p>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<h2 id="framesummary-objects"><code class="xref py class docutils literal">FrameSummary</code> Objects</h2>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.5:</span></p>
+</div>
+<p>A <code class="xref py class docutils literal">FrameSummary</code> object represents a single <a href="../reference/datamodel.html#frame-objects">frame</a>
+in a <a href="../reference/datamodel.html#traceback-objects">traceback</a>.</p>
+<dl class="py class">
+  <dt id="py:class:traceback.framesummary"><em class="property">class</em> <code class="sig-name">FrameSummary(filename, lineno, name, *,\</code></dt>
+  <dt id="py:class:traceback.locals=none,\"><em class="property">class</em> <code class="sig-name">lookup_line=True, locals=None,\</code></dt>
+  <dt id="py:class:traceback.end_colno=none)"><em class="property">class</em> <code class="sig-name">line=None, end_lineno=None, colno=None, end_colno=None)</code></dt>
+  <dd><p>Represents a single <a href="../reference/datamodel.html#frame-objects">frame</a> in the
+<a href="../reference/datamodel.html#traceback-objects">traceback</a> or stack that is being formatted
+or printed. It may optionally have a stringified version of the frame's
+locals included in it. If <em>lookup_line</em> is <code>False</code>, the source code is not
+looked up until the <code class="xref py class docutils literal">FrameSummary</code> has the <a class="reference internal" href="traceback.html#py:attribute:traceback.framesummary.line"><code class="xref py attribute docutils literal">line</code></a>
+attribute accessed (which also happens when casting it to a <a class="reference internal" href="stdtypes.html#py:class:tuple"><code class="xref py class docutils literal">tuple</code></a>).
+<a class="reference internal" href="traceback.html#py:attribute:traceback.framesummary.line"><code class="xref py attribute docutils literal">line</code></a> may be directly provided, and will prevent line
+lookups happening at all. <em>locals</em> is an optional local variable
+mapping, and if supplied the variable representations are stored in the
+summary for later display.</p>
+<p><code class="xref py class docutils literal">FrameSummary</code> instances have the following attributes:</p>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.framesummary.filename"><code class="sig-name">FrameSummary.filename</code></dt>
+  <dd><p>The filename of the source code for this frame. Equivalent to accessing
+<a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_filename"><code class="xref py attribute docutils literal">f.f_code.co_filename</code></a> on a
+<a href="../reference/datamodel.html#frame-objects">frame object</a> <em>f</em>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.framesummary.lineno"><code class="sig-name">FrameSummary.lineno</code></dt>
+  <dd><p>The line number of the source code for this frame.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.framesummary.name"><code class="sig-name">FrameSummary.name</code></dt>
+  <dd><p>Equivalent to accessing <a class="reference internal" href="../reference/datamodel.html#py:attribute:codeobject.co_name"><code class="xref py attribute docutils literal">f.f_code.co_name</code></a> on
+a <a href="../reference/datamodel.html#frame-objects">frame object</a> <em>f</em>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.framesummary.line"><code class="sig-name">FrameSummary.line</code></dt>
+  <dd><p>A string representing the source code for this frame, with leading and
+trailing whitespace stripped.
+If the source is not available, it is <code>None</code>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.framesummary.end_lineno"><code class="sig-name">FrameSummary.end_lineno</code></dt>
+  <dd><p>The last line number of the source code for this frame.
+By default, it is set to <code>lineno</code> and indexation starts from 1.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>The default value changed from <code>None</code> to <code>lineno</code>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.framesummary.colno"><code class="sig-name">FrameSummary.colno</code></dt>
+  <dd><p>The column number of the source code for this frame.
+By default, it is <code>None</code> and indexation starts from 0.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:traceback.framesummary.end_colno"><code class="sig-name">FrameSummary.end_colno</code></dt>
+  <dd><p>The last column number of the source code for this frame.
+By default, it is <code>None</code> and indexation starts from 0.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<a id="traceback-example"></a>
+<h2 id="examples-of-using-the-module-level-functions">Examples of Using the Module-Level Functions</h2>
+<p>This simple example implements a basic read-eval-print loop, similar to (but
+less useful than) the standard Python interactive interpreter loop.  For a more
+complete implementation of the interpreter loop, refer to the <a class="reference internal" href="code.html#py:module:code" title="code: Facilities to implement read-eval-print loops."><code class="xref py module docutils literal">code</code></a>
+module. :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run_user_code</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">envdir</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">source</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">input</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&gt;&gt;&gt; <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">exec</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">source</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">envdir</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-keyword hl-control hl-exception hl-catch hl-python">except</span> <span class="hl-support hl-type hl-exception hl-python">Exception</span><span class="hl-punctuation hl-section hl-block hl-exception hl-catch hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Exception in user code:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">-<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">60</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_exc</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">file</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">stdout</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">-<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">*</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">60</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">envdir</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-mapping hl-empty hl-python"><span class="hl-punctuation hl-section hl-mapping hl-begin hl-python">{</span><span class="hl-punctuation hl-section hl-mapping hl-end hl-python">}</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-loop hl-while hl-python"><span class="hl-keyword hl-control hl-loop hl-while hl-python">while</span> <span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-block hl-loop hl-while hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run_user_code</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">envdir</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>The following example demonstrates the different ways to print and format the
+exception and traceback:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">tuple</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-keyword hl-control hl-exception hl-catch hl-python">except</span> <span class="hl-support hl-type hl-exception hl-python">IndexError</span> <span class="hl-keyword hl-control hl-exception hl-catch hl-as hl-python">as</span></span><span class="hl-meta hl-statement hl-exception hl-catch hl-python"> <span class="hl-meta hl-generic-name hl-python">exc</span></span><span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-punctuation hl-section hl-block hl-exception hl-catch hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*** print_tb:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_tb</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">__traceback__</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">limit</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">file</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">stdout</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*** print_exception:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_exception</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">limit</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">file</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">stdout</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*** print_exc:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_exc</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">limit</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">file</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">stdout</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*** format_exc, first and last line:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">formatted_lines</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">format_exc</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">splitlines</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">formatted_lines</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">formatted_lines</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*** format_exception:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">repr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">format_exception</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*** extract_tb:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">repr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">extract_tb</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">__traceback__</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*** format_tb:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">repr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">format_tb</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">__traceback__</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">*** tb_lineno:<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">__traceback__</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">tb_lineno</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+<p>The output for the example would look similar to this:</p>
+<div class="highlight hl-code"><pre>
+*** print_tb:
+  File "&lt;doctest...&gt;", line 10, in &lt;module&gt;
+    lumberjack()
+    ~~~~~~~~~~^^
+*** print_exception:
+Traceback (most recent call last):
+  File "&lt;doctest...&gt;", line 10, in &lt;module&gt;
+    lumberjack()
+    ~~~~~~~~~~^^
+  File "&lt;doctest...&gt;", line 4, in lumberjack
+    bright_side_of_life()
+    ~~~~~~~~~~~~~~~~~~~^^
+IndexError: tuple index out of range
+*** print_exc:
+Traceback (most recent call last):
+  File "&lt;doctest...&gt;", line 10, in &lt;module&gt;
+    lumberjack()
+    ~~~~~~~~~~^^
+  File "&lt;doctest...&gt;", line 4, in lumberjack
+    bright_side_of_life()
+    ~~~~~~~~~~~~~~~~~~~^^
+IndexError: tuple index out of range
+*** format_exc, first and last line:
+Traceback (most recent call last):
+IndexError: tuple index out of range
+*** format_exception:
+['Traceback (most recent call last):\n',
+ '  File "&lt;doctest default[0]&gt;", line 10, in &lt;module&gt;\n    lumberjack()\n    ~~~~~~~~~~^^\n',
+ '  File "&lt;doctest default[0]&gt;", line 4, in lumberjack\n    bright_side_of_life()\n    ~~~~~~~~~~~~~~~~~~~^^\n',
+ '  File "&lt;doctest default[0]&gt;", line 7, in bright_side_of_life\n    return tuple()[0]\n           ~~~~~~~^^^\n',
+ 'IndexError: tuple index out of range\n']
+*** extract_tb:
+[&lt;FrameSummary file &lt;doctest...&gt;, line 10 in &lt;module&gt;&gt;,
+ &lt;FrameSummary file &lt;doctest...&gt;, line 4 in lumberjack&gt;,
+ &lt;FrameSummary file &lt;doctest...&gt;, line 7 in bright_side_of_life&gt;]
+*** format_tb:
+['  File "&lt;doctest default[0]&gt;", line 10, in &lt;module&gt;\n    lumberjack()\n    ~~~~~~~~~~^^\n',
+ '  File "&lt;doctest default[0]&gt;", line 4, in lumberjack\n    bright_side_of_life()\n    ~~~~~~~~~~~~~~~~~~~^^\n',
+ '  File "&lt;doctest default[0]&gt;", line 7, in bright_side_of_life\n    return tuple()[0]\n           ~~~~~~~^^^\n']
+*** tb_lineno: 10</pre></div>
+<p>The following example shows the different ways to print and format the stack:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-invalid hl-illegal hl-name hl-python">def</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">another_function</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberstack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-invalid hl-illegal hl-name hl-python">def</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberstack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_stack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">repr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">extract_stack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">repr</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">format_stack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">another_function</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;doctest&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">module</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">another_function</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;doctest&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">another_function</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberstack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;doctest&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">6</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lumberstack</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">traceback</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print_stack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;doctest&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;module&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">another_function()<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;doctest&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">another_function<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">lumberstack()<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">&lt;doctest&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">7</span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">lumberstack<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">print(repr(traceback.extract_stack()))<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">  File &quot;&lt;doctest&gt;&quot;, line 10, in &lt;module&gt;<span class="hl-constant hl-character hl-escape hl-python">\n</span>    another_function()<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">  File &quot;&lt;doctest&gt;&quot;, line 3, in another_function<span class="hl-constant hl-character hl-escape hl-python">\n</span>    lumberstack()<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">  File &quot;&lt;doctest&gt;&quot;, line 8, in lumberstack<span class="hl-constant hl-character hl-escape hl-python">\n</span>    print(repr(traceback.format_stack()))<span class="hl-constant hl-character hl-escape hl-python">\n</span><span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span></pre></div>
+<p>This last example demonstrates the final few formatting functions:</p>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; import traceback
+&gt;&gt;&gt; traceback.format_list([('spam.py', 3, '&lt;module&gt;', 'spam.eggs()'),
+...                        ('eggs.py', 42, 'eggs', 'return "bacon"')])
+['  File "spam.py", line 3, in &lt;module&gt;\n    spam.eggs()\n',
+ '  File "eggs.py", line 42, in eggs\n    return "bacon"\n']
+&gt;&gt;&gt; an_error = IndexError('tuple index out of range')
+&gt;&gt;&gt; traceback.format_exception_only(an_error)
+['IndexError: tuple index out of range\n']</pre></div>
+<h2 id="examples-of-using-tracebackexception">Examples of Using <a class="reference internal" href="traceback.html#py:class:traceback.tracebackexception"><code class="xref py class docutils literal">TracebackException</code></a></h2>
+<p>With the helper class, we have more options:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">traceback</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">TracebackException</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-invalid hl-illegal hl-name hl-python">def</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-invalid hl-illegal hl-name hl-python">def</span></span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">t</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">bright<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">side<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">of<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">life<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">t</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span> <span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-keyword hl-control hl-exception hl-catch hl-python">except</span> <span class="hl-support hl-type hl-exception hl-python">IndexError</span> <span class="hl-keyword hl-control hl-exception hl-catch hl-as hl-python">as</span></span><span class="hl-meta hl-statement hl-exception hl-catch hl-python"> <span class="hl-meta hl-generic-name hl-python">e</span></span><span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-punctuation hl-section hl-block hl-exception hl-catch hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">e</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-statement hl-exception hl-try hl-python"><span class="hl-keyword hl-control hl-exception hl-try hl-python">try</span><span class="hl-punctuation hl-section hl-block hl-exception hl-try hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>         <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-keyword hl-control hl-exception hl-catch hl-python">except</span><span class="hl-punctuation hl-section hl-block hl-exception hl-catch hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>         <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span> <span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-keyword hl-control hl-exception hl-catch hl-python">except</span> <span class="hl-support hl-type hl-exception hl-python">Exception</span> <span class="hl-keyword hl-control hl-exception hl-catch hl-as hl-python">as</span></span><span class="hl-meta hl-statement hl-exception hl-catch hl-python"> <span class="hl-meta hl-generic-name hl-python">e</span></span><span class="hl-meta hl-statement hl-exception hl-catch hl-python"><span class="hl-punctuation hl-section hl-block hl-exception hl-catch hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span>     <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">chained_exc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">e</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> limit works as with the module-level functions
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">TracebackException</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">from_exception</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">limit</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-1&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">6</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-1&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">t</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python">           <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">IndexError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">tuple</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">index</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">of</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">range</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> capture_locals adds local variables in frames
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">TracebackException</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">from_exception</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exc</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">limit</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">capture_locals</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-1&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">6</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-1&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">t</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python">           <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">t</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-sequence hl-tuple hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">bright<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">side<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">of<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">life<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">IndexError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">tuple</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">index</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">of</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">range</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> The *chain* kwarg to print() controls whether chained
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> exceptions are displayed
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">TracebackException</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">from_exception</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">chained_exc</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-19&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">module</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-8&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">7</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">lumberjack</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-8&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">bright_side_of_life</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-item-access hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">t</span></span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-python">[</span></span><span class="hl-meta hl-item-access hl-arguments hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span></span><span class="hl-meta hl-item-access hl-python"><span class="hl-punctuation hl-section hl-brackets hl-end hl-python">]</span></span></span>
+<span class="hl-source hl-python">           <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">IndexError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-python">tuple</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">index</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">out</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">of</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-function hl-builtin hl-python">range</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">During</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">handling</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">of</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">the</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">above</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exception</span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">another</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">exception</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">occurred</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-19&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">6</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">module</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python">    <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">ZeroDivisionError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">division</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">by</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">zero</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">TracebackException</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">from_exception</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">chained_exc</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">chain</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-language hl-python">False</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Traceback</span></span></span> </span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">most</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">recent</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">last</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span></span>
+<span class="hl-source hl-python">  <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">File</span></span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">&lt;python-input-19&gt;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span>, <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">line</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">6</span>, <span class="hl-keyword hl-operator hl-logical hl-python">in</span> <span class="hl-keyword hl-operator hl-comparison hl-python">&lt;</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">module</span></span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span></span>
+<span class="hl-source hl-python">    <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">/</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">^</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">~</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-type hl-exception hl-python">ZeroDivisionError</span></span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">division</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">by</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">zero</span></span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="atexit.html">&larr; atexit — Exit handlers</a>
+        <a class="next" href="__future__.html">__future__ — Future statement definitions &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
