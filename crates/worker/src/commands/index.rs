@@ -14,7 +14,6 @@ use rinx_inventory::{InventoryName, MalformedLine, read_inventory};
 use super::cli_args::{flag_groups, flag_value, flag_value_opt, flag_values, read_domain_indices};
 use super::diagnostics::{WarningOrigin, format_diagnostic};
 use super::entity_schema::load_entity_schema;
-use super::suppression::retain_reportable;
 
 /// The serialized index, plus the warnings the caller should print.
 pub(super) struct IndexedProject {
@@ -82,7 +81,7 @@ pub(super) fn process_index(
                 .copied()
                 .unwrap_or(empty_files),
         );
-        for diagnostic in retain_reportable(&reported.diagnostics, doc_suppressions) {
+        for diagnostic in ast::retain_reportable(&reported.diagnostics, doc_suppressions) {
             warnings.push(format_diagnostic(&origin, diagnostic));
         }
     }

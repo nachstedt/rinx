@@ -43,9 +43,9 @@ When the user edits a ``.rst`` file, the extension executes the following pipeli
 3. Diagnostics
 ~~~~~~~~~~~~~~
 
-Opening a ``.rst`` file starts the language server, ``rinx lsp``. It is the binary the build runs, so the editor reports the build's own diagnostics: the same codes and the same messages, underlined in the editor and listed in the *Problems* view as you type. For example, ``.. foo::`` is reported as ``directive.unknown``.
+Opening a ``.rst`` file starts the language server, ``rinx lsp``. It is the binary the build runs, so the editor reports the build's own diagnostics: the same codes and the same messages, underlined in the editor and listed in the *Problems* view as you type. For example, ``.. foo::`` is reported as ``directive.unknown``, and the code links to its entry in :ref:`diagnostics`. A ``.. noqa:`` comment silences a diagnostic in the editor exactly as it does in the build.
 
-For now the server knows each open document on its own: there is no project index yet, no ``.. noqa:`` filtering, and no reporting inside included files. ``docs/dev/lsp-roadmap.md`` in the repository lists the steps that add these, and ``docs/decisions/038-language-server.md`` describes the design.
+For now the server knows each open document on its own: there is no project index yet, and no reporting inside included files. ``docs/dev/lsp-roadmap.md`` in the repository lists the steps that add these, and ``docs/decisions/038-language-server.md`` describes the design.
 
 4. Change Detection & Background Reconcile
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

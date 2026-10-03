@@ -10,7 +10,6 @@ use super::diagnostics::{WarningOrigin, format_error_diagnostic, report_diagnost
 use super::entity_schema::{import_keys_from_args, load_entity_schema};
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::{ParseInputs, default_role_from_args, jinja_from_args};
-use super::suppression::retain_reportable;
 
 /// Whether the library a document belongs to opted in to diagrams.
 ///
@@ -104,7 +103,7 @@ pub(super) fn process_parse(
     doc.entity_schema_hash = inputs.schema_hash();
     // The document's own `.. noqa:` comments decide what is worth showing.
     let origin = WarningOrigin::new(path, &doc.source_files);
-    for diagnostic in retain_reportable(&doc.diagnostics, &doc.suppressions) {
+    for diagnostic in ast::retain_reportable(&doc.diagnostics, &doc.suppressions) {
         report_diagnostic(&origin, diagnostic);
     }
     // Not subject to `.. noqa:`: a suppressed opt-in check would still leave

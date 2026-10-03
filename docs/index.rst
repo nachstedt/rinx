@@ -53,6 +53,14 @@ Contents
    vscode
    benchmark
 
+Reference
+=========
+
+.. toctree::
+   :maxdepth: 1
+
+   diagnostics
+
 More
 ====
 

@@ -4,8 +4,9 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
 /// Declares [`DiagnosticCode`] from a single table of `Variant => "dotted.id"`
-/// pairs, deriving the enum, its [`DiagnosticCode::as_str`], its [`FromStr`]
-/// and its [`DiagnosticCode::ALL`] listing from that one source.
+/// pairs, deriving the enum, its [`DiagnosticCode::as_str`], its [`FromStr`],
+/// its [`DiagnosticCode::ALL`] listing and — from each variant's doc comment —
+/// its [`DiagnosticCode::description`] from that one source.
 ///
 /// Written as a macro rather than a hand-maintained `match` in each direction
 /// because the two directions must stay exact inverses: an author writes an id
@@ -13,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// the diagnostic was raised with. Three parallel hand-written tables would let
 /// a half-finished edit compile and silently break suppression for one code.
 macro_rules! diagnostic_codes {
-    ($( $(#[$meta:meta])* $variant:ident => $id:literal ),+ $(,)?) => {
+    ($( $(#[doc = $doc:literal])* $variant:ident => $id:literal ),+ $(,)?) => {
         /// A stable identifier for one kind of diagnostic, used both to label a
         /// warning on the terminal and to name it in a `.. noqa:` comment.
         ///
@@ -31,7 +32,7 @@ macro_rules! diagnostic_codes {
             // Serialized as the dotted id rather than the variant name, so the
             // `.ast`, the `--warnings-output` sidecar, the terminal and a
             // `.. noqa:` comment all spell a code exactly one way.
-            $( $(#[$meta])* #[serde(rename = $id)] $variant ),+
+            $( $(#[doc = $doc])* #[serde(rename = $id)] $variant ),+
         }
 
         impl DiagnosticCode {
@@ -44,6 +45,16 @@ macro_rules! diagnostic_codes {
             pub const fn as_str(self) -> &'static str {
                 match self {
                     $( Self::$variant => $id ),+
+                }
+            }
+
+            /// What this code reports, for the documentation page listing
+            /// every code: the variant's doc comment, one source line per
+            /// line, each still carrying the space after its `///`.
+            #[must_use]
+            pub const fn description(self) -> &'static str {
+                match self {
+                    $( Self::$variant => concat!($($doc, "\n"),*) ),+
                 }
             }
         }
@@ -152,7 +163,7 @@ diagnostic_codes! {
     // The role writes its entries in the `.. index::` grammar, but is its own
     // construct, so it reports under its own codes: a `.. noqa:` names what
     // the author wrote. Each makes no entry; the role's text is still shown.
-    /// An `:index:` whose entry is empty — `:index:`!``, or an explicit
+    /// An `:index:` whose entry is empty — ``:index:`!` ``, or an explicit
     /// `single:` with no value.
     IndexRoleInvalidSingle => "index-role.invalid-single",
     /// An `:index:` whose `pair:` entry has no two `;`-separated parts.
@@ -186,34 +197,69 @@ diagnostic_codes! {
     HeadingUnexpected => "heading.unexpected",
 
     // --- Transitions -------------------------------------------------------
+    /// A transition (horizontal rule) as the document's first element, which
+    /// docutils forbids.
     TransitionAtDocumentStart => "transition.at-document-start",
+    /// A transition directly following another transition, with nothing between
+    /// them.
     TransitionAdjacent => "transition.adjacent",
+    /// A transition as the document's last element, which docutils forbids.
     TransitionAtDocumentEnd => "transition.at-document-end",
 
     // --- Grid tables -------------------------------------------------------
+    /// A grid table line indented differently from the table's top border.
     TableGridInconsistentIndent => "table.grid.inconsistent-indent",
+    /// A grid table line whose width differs from the top border's, usually a
+    /// misaligned `+` or `|` column boundary.
     TableGridWidthMismatch => "table.grid.width-mismatch",
+    /// A grid table not closed by a border line.
     TableGridUnterminated => "table.grid.unterminated",
+    /// A grid table with more than one `=` header/body separator line.
     TableGridMultipleHeaderSeparators => "table.grid.multiple-header-separators",
+    /// A grid table with no row content between its borders.
     TableGridNoRows => "table.grid.no-rows",
+    /// A grid table whose every row is a header row, leaving no body.
     TableGridNoBodyRows => "table.grid.no-body-rows",
+    /// A grid table whose top border defines no columns.
     TableGridNoColumns => "table.grid.no-columns",
+    /// A grid table whose `|` column boundaries do not line up from row to row.
     TableGridInconsistentColumnBoundary => "table.grid.inconsistent-column-boundary",
 
     // --- Simple tables -----------------------------------------------------
+    /// A simple table line indented less than the table's top border.
     TableSimpleUnderIndented => "table.simple.under-indented",
+    /// A simple table border whose width differs from the top border's.
     TableSimpleBorderWidthMismatch => "table.simple.border-width-mismatch",
+    /// A simple table with no bottom border, or with no blank line after it.
     TableSimpleNoBottomBorder => "table.simple.no-bottom-border",
+    /// A simple table with more than one header/body separator; only one is
+    /// allowed.
     TableSimpleMultipleHeaderSeparators => "table.simple.multiple-header-separators",
+    /// A simple table column span (a `-` underline) that does not reach the
+    /// table's right edge.
     TableSimpleIncompleteColumnSpan => "table.simple.incomplete-column-span",
+    /// Simple table text written in the blank margin between two columns.
     TableSimpleTextInMargin => "table.simple.text-in-margin",
+    /// A simple table column span whose edges do not line up with the table's
+    /// columns.
     TableSimpleUnalignedColumnSpan => "table.simple.unaligned-column-span",
+    /// A simple table line with an empty first cell, which docutils reads as a
+    /// continuation and drops — start the row with an escaped space (a
+    /// backslash, then a space) instead.
     TableSimpleEmptyFirstCell => "table.simple.empty-first-cell",
 
     // --- Lists -------------------------------------------------------------
+    /// Adjacent bullet lists with different bullet characters and no blank line
+    /// between them.
     ListBulletChanged => "list.bullet-changed",
+    /// An enumerated list starting at an ordinal other than one. The list keeps
+    /// its start value.
     ListEnumeratedStartNotOne => "list.enumerated-start-not-one",
+    /// Lines that look like an enumerated list but whose enumerators do not run
+    /// consecutively, so the block is parsed as a paragraph instead.
     ListEnumeratedNotRecognised => "list.enumerated-not-recognised",
+    /// An enumerated list ended by a less-indented line directly after it, with no
+    /// blank line in between.
     ListEnumeratedNoBlankLine => "list.enumerated-no-blank-line",
 
     // --- Block quotes --------------------------------------------------------
@@ -236,28 +282,66 @@ diagnostic_codes! {
     /// accepted as a no-op push, which a later `namespace-pop` would then
     /// unbalance.
     DirectiveNamespacePushArgumentMissing => "directive.namespace-push-argument-missing",
+    /// A `.. toctree::` option this build does not recognize. The option is
+    /// ignored.
     DirectiveToctreeUnknownOption => "directive.toctree-unknown-option",
+    /// A `.. contents::` option this build does not recognize. The option is
+    /// ignored.
     DirectiveContentsUnknownOption => "directive.contents-unknown-option",
+    /// A `.. sectnum::` option this build does not recognize. The option is
+    /// ignored.
     DirectiveSectnumUnknownOption => "directive.sectnum-unknown-option",
+    /// A `.. dropdown::` option this build does not recognize. The option is
+    /// ignored.
     DirectiveDropdownUnknownOption => "directive.dropdown-unknown-option",
+    /// A `.. grid::` option this build does not recognize. The option is ignored.
     DirectiveGridUnknownOption => "directive.grid-unknown-option",
+    /// A `.. grid-item::` option this build does not recognize. The option is
+    /// ignored.
     DirectiveGridItemUnknownOption => "directive.grid-item-unknown-option",
+    /// A `.. button-link::` option this build does not recognize. The option is
+    /// ignored.
     DirectiveButtonLinkUnknownOption => "directive.button-link-unknown-option",
+    /// An `.. entity-table::` / `.. needtable::` option this build does not
+    /// recognize. The option is ignored.
     DirectiveEntityTableUnknownOption => "directive.entity-table-unknown-option",
+    /// An `.. entity-flow::` / `.. needflow::` option this build does not
+    /// recognize. The option is ignored.
     DirectiveEntityFlowUnknownOption => "directive.entity-flow-unknown-option",
+    /// An `.. entity-sequence::` / `.. needsequence::` option this build does not
+    /// recognize. The option is ignored.
     DirectiveEntitySequenceUnknownOption => "directive.entity-sequence-unknown-option",
+    /// An `.. entity-pie::` / `.. needpie::` option this build does not recognize.
+    /// The option is ignored.
     DirectiveEntityPieUnknownOption => "directive.entity-pie-unknown-option",
+    /// An `.. entity-bar::` / `.. needbar::` option this build does not recognize.
+    /// The option is ignored.
     DirectiveEntityBarUnknownOption => "directive.entity-bar-unknown-option",
+    /// An option this build does not recognize on a directive with no option code
+    /// of its own. The option is ignored.
     DirectiveUnknownOption => "directive.unknown-option",
+    /// A `.. versionadded::`, `.. versionchanged::` or `.. deprecated::` with
+    /// no version argument.
     DirectiveVersionArgumentMissing => "directive.version-argument-missing",
+    /// A generic `.. admonition::` with no title argument.
     DirectiveTitleArgumentMissing => "directive.title-argument-missing",
 
     // --- `list-table` / `csv-table` shared options -------------------------
+    /// A `list-table` or `csv-table` whose `:widths:` gives a different number of
+    /// values than the table has columns.
     TableDataWidthsCountMismatch => "table.data.widths-count-mismatch",
+    /// A `:widths:` value that is not `auto`, `grid`, or a list of integers.
     TableDataWidthsInvalid => "table.data.widths-invalid",
+    /// An `:align:` value other than `left`, `center` or `right`.
     TableDataAlignInvalid => "table.data.align-invalid",
+    /// A `:header-rows:` or `:stub-columns:` value that is not a non-negative
+    /// integer.
     TableDataIntegerInvalid => "table.data.integer-invalid",
+    /// A `list-table` row with a different number of cells than the table's first
+    /// row.
     TableDataRowCellCount => "table.data.row-cell-count",
+    /// A `list-table` whose body is not a single bullet list of rows, each itself
+    /// a bullet list of cells.
     TableDataNotABulletList => "table.data.not-a-bullet-list",
 
     // --- `.. table::` directive ----------------------------------------------
@@ -269,25 +353,53 @@ diagnostic_codes! {
     TableDirectiveMultipleBlocks => "table.directive.multiple-blocks",
 
     // --- `csv-table` data --------------------------------------------------
+    /// A `csv-table` with a `:url:` option. Fetching over the network would make
+    /// the build non-hermetic; download the data and use `:file:` instead.
     CsvUrlUnsupported => "csv.url-unsupported",
+    /// A `csv-table` with both a `:file:` option and directive content.
     CsvFileAndContent => "csv.file-and-content",
+    /// A `csv-table` with neither content nor a `:file:`, or whose data holds no
+    /// rows.
     CsvNoData => "csv.no-data",
+    /// A `csv-table` whose `:file:` could not be read — missing, outside the
+    /// declared `parse_data`, or not readable.
     CsvFileUnreadable => "csv.file-unreadable",
+    /// A `csv-table` `:encoding:` other than UTF-8 (or its ASCII subset), which is
+    /// all this build decodes.
     CsvEncodingUnsupported => "csv.encoding-unsupported",
+    /// A `csv-table` `:header:` option whose CSV could not be parsed.
     CsvMalformedHeader => "csv.malformed-header",
+    /// A `csv-table` whose CSV data could not be parsed.
     CsvMalformedData => "csv.malformed-data",
+    /// A `csv-table` asking for more `:header-rows:` than the table has rows.
     CsvHeaderRowsExceed => "csv.header-rows-exceed",
+    /// A `csv-table` asking for more `:stub-columns:` than the table has columns.
     CsvStubColumnsExceed => "csv.stub-columns-exceed",
+    /// A `csv-table` `:delim:`, `:quote:` or `:escape:` that is not a single
+    /// character, `space`, `tab`, or a character code such as `0x20`.
     CsvDialectInvalidChar => "csv.dialect-invalid-char",
+    /// A `csv-table` `:delim:`, `:quote:` or `:escape:` that is not an ASCII
+    /// character.
     CsvDialectNonAscii => "csv.dialect-non-ascii",
 
     // --- `sphinx.ext.doctest` directives -----------------------------------
+    /// A doctest-family option that exists, but not on this directive — e.g.
+    /// `:options:` on a `.. testsetup::`.
     DoctestOptionNotSupported => "doctest.option-not-supported",
+    /// An option no doctest-family directive recognizes.
     DoctestUnknownOption => "doctest.unknown-option",
+    /// A `:pyversion:` value that is not a comparison operator followed by a
+    /// version, such as `>= 3.10`.
     DoctestPyVersionInvalid => "doctest.pyversion-invalid",
+    /// A doctest flag in `:options:` not starting with `+` or `-`.
     DoctestFlagMissingSign => "doctest.flag-missing-sign",
+    /// A doctest flag in `:options:` that Python's `doctest` module does not
+    /// define.
     DoctestUnknownFlag => "doctest.unknown-flag",
+    /// A doctest-family directive with an empty body, so there is nothing to run.
     DoctestNoCode => "doctest.no-code",
+    /// An empty group name in a doctest-family directive's group argument. The
+    /// block joins the `default` group.
     DoctestEmptyGroup => "doctest.empty-group",
 
     // --- `.. math::` and the math roles ------------------------------------
@@ -582,9 +694,14 @@ diagnostic_codes! {
     /// A `single:` entry with no value — Sphinx's "invalid single index
     /// entry". No entry is made.
     IndexInvalidSingle => "index.invalid-single",
+    /// A `pair:` entry without two `;`-separated parts — Sphinx's "invalid pair
+    /// index entry". No entry is made.
     IndexInvalidPair => "index.invalid-pair",
+    /// A `triple:` entry without three `;`-separated parts. No entry is made.
     IndexInvalidTriple => "index.invalid-triple",
+    /// A `see:` entry without two `;`-separated parts. No entry is made.
     IndexInvalidSee => "index.invalid-see",
+    /// A `seealso:` entry without two `;`-separated parts. No entry is made.
     IndexInvalidSeeAlso => "index.invalid-seealso",
 
     // --- Signatures --------------------------------------------------------
@@ -1201,6 +1318,30 @@ mod tests {
                 "{id} contains an unexpected character",
             );
         }
+    }
+
+    #[test]
+    fn test_every_code_has_a_description() {
+        // Given / When / Then — the documentation page lists each code with
+        // its description, and an empty entry would explain nothing.
+        let undocumented: Vec<_> = DiagnosticCode::ALL
+            .iter()
+            .filter(|code| code.description().trim().is_empty())
+            .map(|code| code.as_str())
+            .collect();
+        assert_eq!(undocumented, Vec::<&str>::new());
+    }
+
+    #[test]
+    fn test_description_is_the_variants_doc_comment() {
+        // Given / When
+        let description = DiagnosticCode::LinkBrokenRef.description();
+
+        // Then
+        assert_eq!(
+            description,
+            " A `:ref:` whose label is in no document's index.\n"
+        );
     }
 
     #[test]

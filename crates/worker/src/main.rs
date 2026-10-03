@@ -33,9 +33,9 @@ use std::env;
 use std::fs;
 
 use commands::{
-    cmd_embed_assets, cmd_entity_json_schema, cmd_extract_doctests, cmd_genindex, cmd_index,
-    cmd_inventory, cmd_lsp, cmd_modindex, cmd_parse, cmd_preview, cmd_render, cmd_validate_assets,
-    cmd_validate_toctree,
+    cmd_diagnostic_codes_rst, cmd_embed_assets, cmd_entity_json_schema, cmd_extract_doctests,
+    cmd_genindex, cmd_index, cmd_inventory, cmd_lsp, cmd_modindex, cmd_parse, cmd_preview,
+    cmd_render, cmd_validate_assets, cmd_validate_toctree,
 };
 
 fn cmd_legacy(path: &str) -> Result<()> {
@@ -64,6 +64,12 @@ fn run(args: &[String]) -> Result<()> {
         // JSON Schema that editors validate an `entities.toml` against.
         Some("entity_json_schema") => {
             cmd_entity_json_schema();
+            Ok(())
+        }
+        // Developer tooling too: regenerates `docs/diagnostics.rst`, the page
+        // the language server links each diagnostic code to.
+        Some("diagnostic_codes_rst") => {
+            cmd_diagnostic_codes_rst();
             Ok(())
         }
         Some(path) if !path.starts_with('-') => cmd_legacy(path),

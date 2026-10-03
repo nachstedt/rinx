@@ -1,7 +1,71 @@
+//! `.. noqa:` comments, and applying them to what a phase reported.
+//!
+//! Filtering happens at the reporting boundary, never where a diagnostic is
+//! raised: a phase's job is to *find* problems and record them faithfully, and
+//! a front end's job is to decide which of them a human should see. It is also
+//! the only place that works — a broken link is found while rendering, in a
+//! different process from the parse that read the comment excusing it, and
+//! only the `.ast` in between carries both.
+//!
+//! The filter lives here rather than in either front end because there are
+//! two — the build's worker and the language server — and they must agree on
+//! what a comment silences, or the editor and CI would disagree.
+
 use serde::{Deserialize, Serialize};
 
+use crate::diagnostic::Diagnostic;
 use crate::diagnostic_code::DiagnosticCode;
 use crate::span::{FileId, Span};
+
+/// Something a phase reported that a `.. noqa:` may silence: a parse
+/// [`Diagnostic`], or one of the renderer's typed findings.
+///
+/// A trait rather than a conversion to [`Diagnostic`] because the renderer's
+/// findings carry more than a message — the target of a broken link, which
+/// `--strict-links` then fails over — and the survivors must keep it.
+pub trait Reported {
+    /// The code a `.. noqa:` names to silence this.
+    fn code(&self) -> DiagnosticCode;
+    /// Where this was found, when that is known.
+    fn span(&self) -> Option<Span>;
+}
+
+impl Reported for Diagnostic {
+    fn code(&self) -> DiagnosticCode {
+        self.code
+    }
+
+    fn span(&self) -> Option<Span> {
+        self.span
+    }
+}
+
+/// Whether any of `suppressions` silences `code` reported at `span`.
+#[must_use]
+pub fn is_suppressed(
+    suppressions: &[Suppression],
+    code: DiagnosticCode,
+    span: Option<Span>,
+) -> bool {
+    suppressions
+        .iter()
+        .any(|suppression| suppression.suppresses(code, span))
+}
+
+/// The items no comment in `suppressions` silences.
+///
+/// A survivor is everything a suppressed item must not be: shown, written to
+/// the warning sidecar, and — for a broken link — failed over by
+/// `--strict-links`. Filter once, here, and pass the survivors to all three,
+/// or the comment would only hide the message while keeping the consequence.
+pub fn retain_reportable<'a, T: Reported>(
+    items: &'a [T],
+    suppressions: &'a [Suppression],
+) -> impl Iterator<Item = &'a T> {
+    items
+        .iter()
+        .filter(|item| !is_suppressed(suppressions, item.code(), item.span()))
+}
 
 /// Which diagnostics a `.. noqa:` comment silences.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -111,6 +175,97 @@ mod tests {
     /// A one-line span in an included fragment rather than in the document.
     fn span_on_in(line: u32, file: FileId) -> Span {
         span_on(line).with_file(Some(file))
+    }
+
+    #[test]
+    fn test_diagnostic_reports_its_code_and_span() {
+        // Given
+        let diagnostic = Diagnostic::new(DiagnosticCode::CsvNoData, "no data", span_on(4));
+
+        // When / Then
+        assert_eq!(Reported::code(&diagnostic), DiagnosticCode::CsvNoData);
+        assert_eq!(Reported::span(&diagnostic), Some(span_on(4)));
+    }
+
+    #[test]
+    fn test_is_suppressed_finds_a_matching_suppression() {
+        // Given / When / Then
+        assert!(is_suppressed(
+            &[only_broken_ref()],
+            DiagnosticCode::LinkBrokenRef,
+            Some(span_on(11))
+        ));
+    }
+
+    #[test]
+    fn test_is_suppressed_is_false_when_nothing_matches() {
+        // Given a suppression for another block
+        // When / Then
+        assert!(!is_suppressed(
+            &[only_broken_ref()],
+            DiagnosticCode::LinkBrokenRef,
+            Some(span_on(20))
+        ));
+    }
+
+    #[test]
+    fn test_is_suppressed_is_false_with_no_suppressions() {
+        // Given / When / Then
+        assert!(!is_suppressed(
+            &[],
+            DiagnosticCode::LinkBrokenRef,
+            Some(span_on(11))
+        ));
+    }
+
+    #[test]
+    fn test_retain_reportable_drops_only_the_suppressed_item() {
+        // Given two diagnostics, one inside a suppressed block
+        let diagnostics = [
+            Diagnostic::new(DiagnosticCode::LinkBrokenRef, "inside", span_on(11)),
+            Diagnostic::new(DiagnosticCode::LinkBrokenRef, "outside", span_on(20)),
+        ];
+        let suppressions = [only_broken_ref()];
+
+        // When
+        let reportable: Vec<_> = retain_reportable(&diagnostics, &suppressions).collect();
+
+        // Then
+        assert_eq!(reportable.len(), 1);
+        assert_eq!(reportable[0].message, "outside");
+    }
+
+    #[test]
+    fn test_retain_reportable_keeps_an_item_of_another_code() {
+        // Given a diagnostic in the suppressed block, but of a code the
+        // comment did not name
+        let diagnostics = [Diagnostic::new(
+            DiagnosticCode::LinkBrokenTerm,
+            "term",
+            span_on(11),
+        )];
+        let suppressions = [only_broken_ref()];
+
+        // When / Then
+        assert_eq!(retain_reportable(&diagnostics, &suppressions).count(), 1);
+    }
+
+    #[test]
+    fn test_retain_reportable_keeps_an_item_with_no_span() {
+        // Given a blanket suppression and a positionless diagnostic
+        let diagnostics = [Diagnostic::without_span(
+            DiagnosticCode::CsvNoData,
+            "no data",
+        )];
+        let suppressions = [Suppression {
+            start_line: 1,
+            end_line: 1000,
+            codes: SuppressionCodes::All,
+            file: None,
+        }];
+
+        // When / Then — nothing to match on, so it is still reported
+        assert_eq!(retain_reportable(&diagnostics, &suppressions).count(), 1);
     }
 
     #[test]
