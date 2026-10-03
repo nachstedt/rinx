@@ -237,12 +237,20 @@
 2.  <strong>Install dependencies</strong>: Run <code>npm install</code>.
 3.  <strong>Launch Extension Development Host</strong>: Press <code>F5</code> (or go to <em>Run and Debug</em> -&gt; <em>Launch Extension</em>). This opens a new VS Code window with the extension loaded.
 4.  <strong>Live Debugging</strong>: You can set breakpoints in the TypeScript source and use the <em>Debug Console</em> to inspect the extension's behavior.</p>
-<h3 id="packaging-and-local-installation">4. Packaging and Local Installation</h3>
+<h3 id="checks-and-tests">4. Checks and Tests</h3>
+<p>CI runs all of these on every pull request, from <code>editors/vscode</code>:</p>
+<ul>
+<li><p><code>npm run typecheck</code>, <code>npm run lint</code> and <code>npm run format:check</code>. The linter is oxlint, with type-aware rules: the extension is on TypeScript 7, which ESLint's TypeScript support cannot load.</p>
+</li>
+<li><p><code>npm test</code> runs the tests inside a real VS Code through <code>@vscode/test-cli</code>, configured in <code>.vscode-test.mjs</code>. <code>VSCODE_VERSION=min</code> picks the oldest VS Code that <code>engines.vscode</code> allows, and <code>VSCODE_VERSION=insiders</code> picks the next one. <code>npm test -- --coverage</code> also measures coverage, which <code>node scripts/check-coverage.mjs &lt;floor&gt;</code> checks.</p>
+</li>
+</ul>
+<h3 id="packaging-and-local-installation">5. Packaging and Local Installation</h3>
 <p>To test the extension as a "production" build:
 1.  <strong>Package the extension</strong>: Run <code>vsce package</code> inside <code>editors/vscode</code>. This generates a <code>.vsix</code> file (e.g., <code>rinx-0.0.1.vsix</code>).
 2.  <strong>Install locally</strong>: Run <code>code --install-extension rinx-0.0.1.vsix</code>.
 3.  <strong>Configure</strong>: Set <code>rinx.binaryPath</code> in your global VS Code settings to point to your locally built binary, such as <code>target/debug/rinx</code> after <code>cargo build</code>. Reload the window after rebuilding it, so the language server restarts.</p>
-<h3 id="bazel-integration-optional">5. Bazel Integration (Optional)</h3>
+<h3 id="bazel-integration-optional">6. Bazel Integration (Optional)</h3>
 <p>While standard VS Code development tools are recommended, the final packaging step can be integrated into Bazel using a <code>genrule</code> that invokes <code>vsce package</code>, ensuring that the extension version matches the project version.</p>
 
       
