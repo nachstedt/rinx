@@ -206,6 +206,7 @@ entry under the heading it belongs to, as a single short sentence.
 - After every code modification session, run `cargo clippy --tests` and resolve all warnings before finishing.
 - After every code modification session, run `cargo fmt`.
 - Do not commit changes unless explicitly requested by the user.
+- File a GitHub issue for every problem discovered but not resolved in the current change, rather than leaving it only in a PR description or a summary.
 - Give every commit a conventional-commit subject line, e.g. `feat: support simple tables`.
 - Always follow that subject with a body summarizing at a high level what the commit does and the notable decisions behind it; a bare subject line is never enough.
 - After every code modification session, verify `bazel build //examples:site` succeeds.
