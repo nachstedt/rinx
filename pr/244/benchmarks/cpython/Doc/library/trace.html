@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>trace — Trace or track Python statement execution — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Debugging and Profiling"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="audit_events.html">Audit events table</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="bdb.html">bdb — Debugger framework</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="faulthandler.html">faulthandler — Dump the Python traceback</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pdb.html">pdb — The Python Debugger</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="profile.html">The Python Profilers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="timeit.html">timeit — Measure execution time of small code snippets</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="trace.html">trace — Trace or track Python statement execution</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle trace — Trace or track Python statement execution"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="trace.html#command-line-usage">Command-Line Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="trace.html#programmatic-interface">Programmatic Interface</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="tracemalloc.html">tracemalloc — Trace memory allocations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="timeit.html">&larr; timeit — Measure execution time of small code snippets</a>
+        <a class="next" href="tracemalloc.html">tracemalloc — Trace memory allocations &rarr;</a>
+      </nav>
+      
+      <h1 id="trace-trace-or-track-python-statement-execution"><code class="xref py module docutils literal">trace</code> — Trace or track Python statement execution</h1>
+<dl class="py module">
+  <dt id="py:module:trace"><code class="sig-name">trace</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/trace.py`</p>
+<hr />
+<p>The <a class="reference internal" href="trace.html#py:module:trace" title="trace: Trace or track Python statement execution."><code class="xref py module docutils literal">trace</code></a> module allows you to trace program execution, generate
+annotated statement coverage listings, print caller/callee relationships and
+list functions executed during a program run.  It can be used in another program
+or from the command line.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a href="https://coverage.readthedocs.io/">Coverage.py</a></dt>
+<dd><p>A popular third-party coverage tool that provides HTML
+output along with advanced features such as branch coverage.</p>
+</dd>
+</dl>
+</div>
+<a id="trace-cli"></a>
+<h2 id="command-line-usage">Command-Line Usage</h2>
+<p>The <a class="reference internal" href="trace.html#py:module:trace" title="trace: Trace or track Python statement execution."><code class="xref py module docutils literal">trace</code></a> module can be invoked from the command line.  It can be as
+simple as :</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">python</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">m</span></span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">trace</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">count</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">C</span> <span class="hl-punctuation hl-accessor hl-dot hl-python">.</span> <span class="hl-meta hl-generic-name hl-python">somefile</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">py</span></span> <span class="hl-constant hl-language hl-python">...</span></span></pre></div>
+<p>The above will execute :file:`somefile.py` and generate annotated listings of
+all Python modules imported during the execution into the current directory.</p>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.--help"><code class="sig-name">--help</code></dt>
+  <dd><p>Display usage and exit.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.--version"><code class="sig-name">--version</code></dt>
+  <dd><p>Display the version of the module and exit.</p>
+</dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.8:</span></p>
+<p>Added <code>--module</code> option that allows to run an executable module.</p>
+</div>
+<h3 id="main-options">Main options</h3>
+<p>At least one of the following options must be specified when invoking
+<a class="reference internal" href="trace.html#py:module:trace" title="trace: Trace or track Python statement execution."><code class="xref py module docutils literal">trace</code></a>.  The <a class="reference internal" href="trace.html#std:cmdoption:trace.-l"><code class="xref std cmdoption docutils literal">--listfuncs</code></a> option is mutually exclusive with
+the <a class="reference internal" href="trace.html#std:cmdoption:trace.-t"><code class="xref std cmdoption docutils literal">--trace</code></a> and <a class="reference internal" href="trace.html#std:cmdoption:trace.-c"><code class="xref std cmdoption docutils literal">--count</code></a> options. When
+<a class="reference internal" href="trace.html#std:cmdoption:trace.-l"><code class="xref std cmdoption docutils literal">--listfuncs</code></a> is provided, neither <a class="reference internal" href="trace.html#std:cmdoption:trace.-c"><code class="xref std cmdoption docutils literal">--count</code></a> nor
+<a class="reference internal" href="trace.html#std:cmdoption:trace.-t"><code class="xref std cmdoption docutils literal">--trace</code></a> are accepted, and vice versa.</p>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-c"><a id="std:cmdoption:trace.--count"></a><code class="sig-name">-c, --count</code></dt>
+  <dd><p>Produce a set of annotated listing files upon program completion that shows
+how many times each statement was executed.  See also
+<a class="reference internal" href="trace.html#std:cmdoption:trace.-c"><code class="xref std cmdoption docutils literal">--coverdir</code></a>, <a class="reference internal" href="trace.html#std:cmdoption:trace.-f"><code class="xref std cmdoption docutils literal">--file</code></a> and
+<a class="reference internal" href="trace.html#std:cmdoption:trace.-r"><code class="xref std cmdoption docutils literal">--no-report</code></a> below.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-t"><a id="std:cmdoption:trace.--trace"></a><code class="sig-name">-t, --trace</code></dt>
+  <dd><p>Display lines as they are executed.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-l"><a id="std:cmdoption:trace.--listfuncs"></a><code class="sig-name">-l, --listfuncs</code></dt>
+  <dd><p>Display the functions executed by running the program.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-r"><a id="std:cmdoption:trace.--report"></a><code class="sig-name">-r, --report</code></dt>
+  <dd><p>Produce an annotated list from an earlier program run that used the
+<a class="reference internal" href="trace.html#std:cmdoption:trace.-c"><code class="xref std cmdoption docutils literal">--count</code></a> and <a class="reference internal" href="trace.html#std:cmdoption:trace.-f"><code class="xref std cmdoption docutils literal">--file</code></a> option.  This does not
+execute any code.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-t"><a id="std:cmdoption:trace.--trackcalls"></a><code class="sig-name">-T, --trackcalls</code></dt>
+  <dd><p>Display the calling relationships exposed by running the program.</p>
+</dd>
+</dl>
+<h3 id="modifiers">Modifiers</h3>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-f"><a id="std:cmdoption:trace.--file"></a><code class="sig-name">-f, --file=&lt;file&gt;</code></dt>
+  <dd><p>Name of a file to accumulate counts over several tracing runs.  Should be
+used with the <a class="reference internal" href="trace.html#std:cmdoption:trace.-c"><code class="xref std cmdoption docutils literal">--count</code></a> option.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-c"><a id="std:cmdoption:trace.--coverdir"></a><code class="sig-name">-C, --coverdir=&lt;dir&gt;</code></dt>
+  <dd><p>Directory where the report files go.  The coverage report for
+<code>package.module</code> is written to file :file:`{dir}/{package}/{module}.cover`.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-m"><a id="std:cmdoption:trace.--missing"></a><code class="sig-name">-m, --missing</code></dt>
+  <dd><p>When generating annotated listings, mark lines which were not executed with
+<code>&gt;&gt;&gt;&gt;&gt;&gt;</code>.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-s"><a id="std:cmdoption:trace.--summary"></a><code class="sig-name">-s, --summary</code></dt>
+  <dd><p>When using <a class="reference internal" href="trace.html#std:cmdoption:trace.-c"><code class="xref std cmdoption docutils literal">--count</code></a> or <a class="reference internal" href="trace.html#std:cmdoption:trace.-r"><code class="xref std cmdoption docutils literal">--report</code></a>, write a brief
+summary to stdout for each file processed.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-r"><a id="std:cmdoption:trace.--no-report"></a><code class="sig-name">-R, --no-report</code></dt>
+  <dd><p>Do not generate annotated listings.  This is useful if you intend to make
+several runs with <a class="reference internal" href="trace.html#std:cmdoption:trace.-c"><code class="xref std cmdoption docutils literal">--count</code></a>, and then produce a single set of
+annotated listings at the end.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.-g"><a id="std:cmdoption:trace.--timing"></a><code class="sig-name">-g, --timing</code></dt>
+  <dd><p>Prefix each line with the time since the program started.  Only used while
+tracing.</p>
+</dd>
+</dl>
+<h3 id="filters">Filters</h3>
+<p>These options may be repeated multiple times.</p>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.--ignore-module"><code class="sig-name">--ignore-module=&lt;mod&gt;</code></dt>
+  <dd><p>Ignore each of the given module names and its submodules (if it is a
+package).  The argument can be a list of names separated by a comma.</p>
+</dd>
+</dl>
+<dl class="std cmdoption">
+  <dt id="std:cmdoption:trace.--ignore-dir"><code class="sig-name">--ignore-dir=&lt;dir&gt;</code></dt>
+  <dd><p>Ignore all modules and packages in the named directory and subdirectories.
+The argument can be a list of directories separated by <a class="reference internal" href="os.html#py:data:os.pathsep"><code class="xref py data docutils literal">os.pathsep</code></a>.</p>
+</dd>
+</dl>
+<a id="trace-api"></a>
+<h2 id="programmatic-interface">Programmatic Interface</h2>
+<dl class="py class">
+  <dt id="py:class:trace.trace"><em class="property">class</em> <code class="sig-name">Trace(count=1, trace=1, countfuncs=0, countcallers=0, ignoremods=(),\</code></dt>
+  <dt id="py:class:trace.ignoredirs="><em class="property">class</em> <code class="sig-name">ignoredirs=(), infile=None, outfile=None, timing=False)</code></dt>
+  <dd><p>Create an object to trace execution of a single statement or expression.  All
+parameters are optional.  <em>count</em> enables counting of line numbers.  <em>trace</em>
+enables line execution tracing.  <em>countfuncs</em> enables listing of the
+functions called during the run.  <em>countcallers</em> enables call relationship
+tracking.  <em>ignoremods</em> is a list of modules or packages to ignore.
+<em>ignoredirs</em> is a list of directories whose modules or packages should be
+ignored.  <em>infile</em> is the name of the file from which to read stored count
+information.  <em>outfile</em> is the name of the file in which to write updated
+count information.  <em>timing</em> enables a timestamp relative to when tracing was
+started to be displayed.</p>
+<dl class="py method">
+  <dt id="py:method:trace.trace.run"><code class="sig-name">run(cmd)</code></dt>
+  <dd><p>Execute the command and gather statistics from the execution with
+the current tracing parameters.  <em>cmd</em> must be a string or code object,
+suitable for passing into <a class="reference internal" href="functions.html#py:function:exec"><code class="xref py function docutils literal">exec</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:trace.trace.runctx"><code class="sig-name">runctx(cmd, globals=None, locals=None)</code></dt>
+  <dd><p>Execute the command and gather statistics from the execution with the
+current tracing parameters, in the defined global and local
+environments.  If not defined, <em>globals</em> and <em>locals</em> default to empty
+dictionaries.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:trace.trace.runfunc"><code class="sig-name">runfunc(func, /, *args, **kwds)</code></dt>
+  <dd><p>Call <em>func</em> with the given arguments under control of the <a class="reference internal" href="trace.html#py:class:trace.trace"><code class="xref py class docutils literal">Trace</code></a>
+object with the current tracing parameters.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:trace.trace.results"><code class="sig-name">results()</code></dt>
+  <dd><p>Return a <a class="reference internal" href="trace.html#py:class:trace.coverageresults"><code class="xref py class docutils literal">CoverageResults</code></a> object that contains the cumulative
+results of all previous calls to <code>run</code>, <code>runctx</code> and <code>runfunc</code>
+for the given <a class="reference internal" href="trace.html#py:class:trace.trace"><code class="xref py class docutils literal">Trace</code></a> instance.  Does not reset the accumulated
+trace results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py class">
+  <dt id="py:class:trace.coverageresults"><em class="property">class</em> <code class="sig-name">CoverageResults</code></dt>
+  <dd><p>A container for coverage results, created by <a class="reference internal" href="trace.html#py:method:trace.trace.results"><code class="xref py method docutils literal">Trace.results</code></a>.  Should
+not be created directly by the user.</p>
+<dl class="py method">
+  <dt id="py:method:trace.coverageresults.update"><code class="sig-name">update(other)</code></dt>
+  <dd><p>Merge in data from another <a class="reference internal" href="trace.html#py:class:trace.coverageresults"><code class="xref py class docutils literal">CoverageResults</code></a> object.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:trace.coverageresults.write_results"><code class="sig-name">write_results(show_missing=True, summary=False, coverdir=None,\</code></dt>
+  <dt id="py:method:trace.coverageresults.ignore_missing_files=false)"><code class="sig-name">*, ignore_missing_files=False)</code></dt>
+  <dd><p>Write coverage results.  Set <em>show_missing</em> to show lines that had no
+hits.  Set <em>summary</em> to include in the output the coverage summary per
+module.  <em>coverdir</em> specifies the directory into which the coverage
+result files will be output.  If <code>None</code>, the results for each source
+file are placed in its directory.</p>
+<p>If <em>ignore_missing_files</em> is <code>True</code>, coverage counts for files that no
+longer exist are silently ignored. Otherwise, a missing file will
+raise a <a class="reference internal" href="exceptions.html#py:exception:filenotfounderror"><code class="xref py exception docutils literal">FileNotFoundError</code></a>.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.13:</span></p>
+<p>Added <em>ignore_missing_files</em> parameter.</p>
+</div>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>A simple example demonstrating the use of the programmatic interface:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">trace</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> create a Trace object, telling it what to ignore, and whether to
+</span></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> do tracing or line-counting or both.
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tracer</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">trace</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">Trace</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">ignoredirs</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">prefix</span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sys</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">exec_prefix</span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">trace</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">0</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python">    <span class="hl-variable hl-parameter hl-python">count</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> run the new command using the given tracer
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tracer</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">main()<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> make a report, placing output in the current directory
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tracer</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">results</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">write_results</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">show_missing</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-language hl-python">True</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">coverdir</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="timeit.html">&larr; timeit — Measure execution time of small code snippets</a>
+        <a class="next" href="tracemalloc.html">tracemalloc — Trace memory allocations &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>zoneinfo — IANA time zone support — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="datatypes.html">Data Types</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Data Types"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="datetime.html">datetime — Basic date and time types</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="zoneinfo.html">zoneinfo — IANA time zone support</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle zoneinfo — IANA time zone support"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="zoneinfo.html#using-zoneinfo">Using ZoneInfo</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="zoneinfo.html#data-sources">Data sources</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="zoneinfo.html#the-zoneinfo-class">The ZoneInfo class</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="zoneinfo.html#functions">Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="zoneinfo.html#globals">Globals</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="zoneinfo.html#exceptions-and-warnings">Exceptions and warnings</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="calendar.html">calendar — General calendar-related functions</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="collections.html">collections — Container datatypes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="collections.abc.html">collections.abc — Abstract Base Classes for Containers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="heapq.html">heapq — Heap queue algorithm</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="bisect.html">bisect — Array bisection algorithm</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="array.html">array — Efficient arrays of numeric values</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="weakref.html">weakref — Weak references</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="types.html">types — Dynamic type creation and names for built-in types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="copy.html">copy — Shallow and deep copy operations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="pprint.html">pprint — Data pretty printer</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="reprlib.html">reprlib — Alternate repr implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="enum.html">enum — Support for enumerations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="graphlib.html">graphlib — Functionality to operate with graph-like structures</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="datetime.html">&larr; datetime — Basic date and time types</a>
+        <a class="next" href="calendar.html">calendar — General calendar-related functions &rarr;</a>
+      </nav>
+      
+      <h1 id="zoneinfo-iana-time-zone-support"><code class="xref py module docutils literal">zoneinfo</code> — IANA time zone support</h1>
+<dl class="py module">
+  <dt id="py:module:zoneinfo"><code class="sig-name">zoneinfo</code></dt>
+  <dd></dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.9:</span></p>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Paul Ganssle &lt;paul@ganssle.io&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Paul Ganssle &lt;paul@ganssle.io&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/zoneinfo`</p>
+<hr />
+<p>The <a class="reference internal" href="zoneinfo.html#py:module:zoneinfo" title="zoneinfo: IANA time zone support"><code class="xref py module docutils literal">zoneinfo</code></a> module provides a concrete time zone implementation to
+support the IANA time zone database as originally specified in <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0615/"><strong>PEP 615</strong></a>. By
+default, <a class="reference internal" href="zoneinfo.html#py:module:zoneinfo" title="zoneinfo: IANA time zone support"><code class="xref py module docutils literal">zoneinfo</code></a> uses the system's time zone data if available; if no
+system time zone data is available, the library will fall back to using the
+first-party :pypi:`tzdata` package available on PyPI.</p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module: <a class="reference internal" href="datetime.html#py:module:datetime" title="datetime: Basic date and time types."><code class="xref py module docutils literal">datetime</code></a></dt>
+<dd><p>Provides the <a class="reference internal" href="datetime.html#py:class:datetime.time"><code class="xref py class docutils literal">time</code></a> and <a class="reference internal" href="datetime.html#py:class:datetime.datetime"><code class="xref py class docutils literal">datetime</code></a>
+types with which the <a class="reference internal" href="zoneinfo.html#py:class:zoneinfo.zoneinfo"><code class="xref py class docutils literal">ZoneInfo</code></a> class is designed to be used.</p>
+</dd>
+<dt>Package :pypi:`tzdata`</dt>
+<dd><p>First-party package maintained by the CPython core developers to supply
+time zone data via PyPI.</p>
+</dd>
+</dl>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: not WASI.
+
+   This module does not work or is not available on WebAssembly. See
+   :ref:`wasm-availability` for more information.</pre>
+</div>
+<h2 id="using-zoneinfo">Using <code>ZoneInfo</code></h2>
+<p><a class="reference internal" href="zoneinfo.html#py:class:zoneinfo.zoneinfo"><code class="xref py class docutils literal">ZoneInfo</code></a> is a concrete implementation of the <a class="reference internal" href="datetime.html#py:class:datetime.tzinfo"><code class="xref py class docutils literal">datetime.tzinfo</code></a>
+abstract base class, and is intended to be attached to <code>tzinfo</code>, either via
+the constructor, the <a class="reference internal" href="datetime.html#py:method:datetime.datetime.replace"><code class="xref py method docutils literal">datetime.replace</code></a>
+method or <a class="reference internal" href="datetime.html#py:method:datetime.datetime.astimezone"><code class="xref py method docutils literal">datetime.astimezone</code></a>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">zoneinfo</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">datetime</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">datetime</span><span class="hl-punctuation hl-separator hl-import-list hl-python">,</span> <span class="hl-meta hl-generic-name hl-python">timedelta</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">31</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">tzinfo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">America/Los_Angeles<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">31</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>7</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">tzname</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">PDT<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<p>Datetimes constructed in this way are compatible with datetime arithmetic and
+handle daylight saving time transitions with no further intervention:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt_add</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">timedelta</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">days</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt_add</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">12</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span>08<span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt_add</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">tzname</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">PST<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<p>These time zones also support the <a class="reference internal" href="datetime.html#py:attribute:datetime.datetime.fold"><code class="xref py attribute docutils literal">fold</code></a> attribute
+introduced in <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0495/"><strong>PEP 495</strong></a>.  During offset transitions which induce ambiguous
+times (such as a daylight saving time to standard time transition), the offset
+from <em>before</em> the transition is used when <code>fold=0</code>, and the offset <em>after</em>
+the transition is used when <code>fold=1</code>, for example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">tzinfo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">America/Los_Angeles<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span> <span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>7</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">replace</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">fold</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span> <span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span>08<span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span></span></pre></div>
+<p>When converting from another time zone, the fold will be set to the correct
+value:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">datetime</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">timezone</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">LOS_ANGELES</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">America/Los_Angeles<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt_utc</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">8</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">tzinfo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">timezone</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">utc</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Before the PDT -&gt; PST transition
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt_utc</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">astimezone</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">LOS_ANGELES</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span> <span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>7</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> After the PDT -&gt; PST transition
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-group hl-python"><span class="hl-punctuation hl-section hl-group hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt_utc</span></span> <span class="hl-keyword hl-operator hl-arithmetic hl-python">+</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">timedelta</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-variable hl-parameter hl-python">hours</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-group hl-end hl-python">)</span></span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">astimezone</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">LOS_ANGELES</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">11</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span> <span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>1</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span>08<span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-octal hl-python"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-python">0</span>0</span></span></pre></div>
+<h2 id="data-sources">Data sources</h2>
+<p>The <code>zoneinfo</code> module does not directly provide time zone data, and instead
+pulls time zone information from the system time zone database or the
+first-party PyPI package :pypi:`tzdata`, if available. Some systems, including
+notably Windows systems, do not have an IANA database available, and so for
+projects targeting cross-platform compatibility that require time zone data, it
+is recommended to declare a dependency on tzdata. If neither system data nor
+tzdata are available, all calls to <a class="reference internal" href="zoneinfo.html#py:class:zoneinfo.zoneinfo"><code class="xref py class docutils literal">ZoneInfo</code></a> will raise
+<a class="reference internal" href="zoneinfo.html#py:exception:zoneinfo.zoneinfonotfounderror"><code class="xref py exception docutils literal">ZoneInfoNotFoundError</code></a>.</p>
+<a id="zoneinfo_data_configuration"></a>
+<h3 id="configuring-the-data-sources">Configuring the data sources</h3>
+<p>When <code>ZoneInfo(key)</code> is called, the constructor first searches the
+directories specified in <a class="reference internal" href="zoneinfo.html#py:data:zoneinfo.tzpath"><code class="xref py data docutils literal">TZPATH</code></a> for a file matching <code>key</code>, and on
+failure looks for a match in the tzdata package. This behavior can be
+configured in three ways:</p>
+<ol class="arabic period">
+<li><p>The default <a class="reference internal" href="zoneinfo.html#py:data:zoneinfo.tzpath"><code class="xref py data docutils literal">TZPATH</code></a> when not otherwise specified can be configured at
+<a href="zoneinfo.html#zoneinfo_data_compile_time_config">compile time</a>.</p>
+</li>
+<li><p><a class="reference internal" href="zoneinfo.html#py:data:zoneinfo.tzpath"><code class="xref py data docutils literal">TZPATH</code></a> can be configured using <a href="zoneinfo.html#zoneinfo_data_environment_var">an environment variable</a>.</p>
+</li>
+<li><p>At <a href="zoneinfo.html#zoneinfo_data_runtime_config">runtime</a>, the search path can be
+manipulated using the <a class="reference internal" href="zoneinfo.html#py:function:zoneinfo.reset_tzpath"><code class="xref py function docutils literal">reset_tzpath</code></a> function.</p>
+</li>
+</ol>
+<a id="zoneinfo_data_compile_time_config"></a>
+<h4 id="compile-time-configuration">Compile-time configuration</h4>
+<p>The default <a class="reference internal" href="zoneinfo.html#py:data:zoneinfo.tzpath"><code class="xref py data docutils literal">TZPATH</code></a> includes several common deployment locations for the
+time zone database (except on Windows, where there are no "well-known"
+locations for time zone data). On POSIX systems, downstream distributors and
+those building Python from source who know where their system
+time zone data is deployed may change the default time zone path by specifying
+the compile-time option <code>TZPATH</code> (or, more likely, the <a class="reference internal" href="../using/configure.html#std:cmdoption:--with-tzpath"><code class="xref std cmdoption docutils literal">configure
+flag --with-tzpath</code></a>), which should be a string delimited by
+<a class="reference internal" href="os.html#py:data:os.pathsep"><code class="xref py data docutils literal">os.pathsep</code></a>.</p>
+<p>On all platforms, the configured value is available as the <code>TZPATH</code> key in
+<a class="reference internal" href="sysconfig.html#py:function:sysconfig.get_config_var"><code class="xref py function docutils literal">sysconfig.get_config_var</code></a>.</p>
+<a id="zoneinfo_data_environment_var"></a>
+<h4 id="environment-configuration">Environment configuration</h4>
+<p>When initializing <a class="reference internal" href="zoneinfo.html#py:data:zoneinfo.tzpath"><code class="xref py data docutils literal">TZPATH</code></a> (either at import time or whenever
+<a class="reference internal" href="zoneinfo.html#py:function:zoneinfo.reset_tzpath"><code class="xref py function docutils literal">reset_tzpath</code></a> is called with no arguments), the <code>zoneinfo</code> module will
+use the environment variable <code>PYTHONTZPATH</code>, if it exists, to set the search
+path.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'envvar'</p>
+<pre class="directive-error-source">.. envvar:: PYTHONTZPATH
+
+   This is an :data:`os.pathsep`-separated string containing the time zone
+   search path to use. It must consist of only absolute rather than relative
+   paths. Relative components specified in ``PYTHONTZPATH`` will not be used,
+   but otherwise the behavior when a relative path is specified is
+   implementation-defined; CPython will raise :exc:`InvalidTZPathWarning`, but
+   other implementations are free to silently ignore the erroneous component
+   or raise an exception.</pre>
+</div>
+<p>To set the system to ignore the system data and use the tzdata package
+instead, set <code>PYTHONTZPATH=""</code>.</p>
+<a id="zoneinfo_data_runtime_config"></a>
+<h4 id="runtime-configuration">Runtime configuration</h4>
+<p>The TZ search path can also be configured at runtime using the
+<a class="reference internal" href="zoneinfo.html#py:function:zoneinfo.reset_tzpath"><code class="xref py function docutils literal">reset_tzpath</code></a> function. This is generally not an advisable operation,
+though it is reasonable to use it in test functions that require the use of a
+specific time zone path (or require disabling access to the system time zones).</p>
+<h2 id="the-zoneinfo-class">The <code>ZoneInfo</code> class</h2>
+<dl class="py class">
+  <dt id="py:class:zoneinfo.zoneinfo"><em class="property">class</em> <code class="sig-name">ZoneInfo(key)</code></dt>
+  <dd><p>A concrete <a class="reference internal" href="datetime.html#py:class:datetime.tzinfo"><code class="xref py class docutils literal">datetime.tzinfo</code></a> subclass that represents an IANA time
+zone specified by the string <code>key</code>. Calls to the primary constructor will
+always return objects that compare identically; put another way, barring
+cache invalidation via <a class="reference internal" href="zoneinfo.html#py:method:zoneinfo.zoneinfo.clear_cache"><code class="xref py method docutils literal">ZoneInfo.clear_cache</code></a>, for all values of
+<code>key</code>, the following assertion will always be true:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">a</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">key</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">key</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-control hl-flow hl-assert hl-python">assert</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">a</span></span> <span class="hl-keyword hl-operator hl-logical hl-python">is</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">b</span></span></span></pre></div>
+</div>
+<p><code>key</code> must be in the form of a relative, normalized POSIX path, with no
+up-level references. The constructor will raise <a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> if a
+non-conforming key is passed.</p>
+<p>If no file matching <code>key</code> is found, the constructor will raise
+<a class="reference internal" href="zoneinfo.html#py:exception:zoneinfo.zoneinfonotfounderror"><code class="xref py exception docutils literal">ZoneInfoNotFoundError</code></a>.</p>
+</dd>
+</dl>
+<p>The <code>ZoneInfo</code> class has two alternate constructors:</p>
+<dl class="py method">
+  <dt id="py:method:zoneinfo.zoneinfo.from_file"><em class="property">classmethod</em> <code class="sig-name">ZoneInfo.from_file(file_obj, /, key=None)</code></dt>
+  <dd><p>Constructs a <code>ZoneInfo</code> object from a file-like object returning bytes
+(e.g. a file opened in binary mode or an <a class="reference internal" href="io.html#py:class:io.bytesio"><code class="xref py class docutils literal">io.BytesIO</code></a> object).
+Unlike the primary constructor, this always constructs a new object.</p>
+<p>The <code>key</code> parameter sets the name of the zone for the purposes of
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__str__"><code class="xref py method docutils literal">__str__</code></a> and <a class="reference internal" href="../reference/datamodel.html#py:method:object.__repr__"><code class="xref py method docutils literal">__repr__</code></a>.</p>
+<p>Objects created via this constructor cannot be pickled (see <a href="zoneinfo.html#pickling">pickling</a>).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:zoneinfo.zoneinfo.no_cache"><em class="property">classmethod</em> <code class="sig-name">ZoneInfo.no_cache(key)</code></dt>
+  <dd><p>An alternate constructor that bypasses the constructor's cache. It is
+identical to the primary constructor, but returns a new object on each
+call. This is most likely to be useful for testing or demonstration
+purposes, but it can also be used to create a system with a different cache
+invalidation strategy.</p>
+<p>Objects created via this constructor will also bypass the cache of a
+deserializing process when unpickled.</p>
+<div class="admonition caution">
+  <p class="admonition-title">Caution</p>
+<p>Using this constructor may change the semantics of your datetimes in
+surprising ways, only use it if you know that you need to.</p>
+</div>
+</dd>
+</dl>
+<p>The following class methods are also available:</p>
+<dl class="py method">
+  <dt id="py:method:zoneinfo.zoneinfo.clear_cache"><em class="property">classmethod</em> <code class="sig-name">ZoneInfo.clear_cache(*, only_keys=None)</code></dt>
+  <dd><p>A method for invalidating the cache on the <code>ZoneInfo</code> class. If no
+arguments are passed, all caches are invalidated and the next call to
+the primary constructor for each key will return a new instance.</p>
+<p>If an iterable of key names is passed to the <code>only_keys</code> parameter, only
+the specified keys will be removed from the cache. Keys passed to
+<code>only_keys</code> but not found in the cache are ignored.</p>
+<div class="admonition warning">
+  <p class="admonition-title">Warning</p>
+<p>Invoking this function may change the semantics of datetimes using
+<code>ZoneInfo</code> in surprising ways; this modifies module state
+and thus may have wide-ranging effects. Only use it if you know that you
+need to.</p>
+</div>
+</dd>
+</dl>
+<p>The class has one attribute:</p>
+<dl class="py attribute">
+  <dt id="py:attribute:zoneinfo.zoneinfo.key"><code class="sig-name">ZoneInfo.key</code></dt>
+  <dd><p>This is a read-only <a class="reference internal" href="../glossary.html#term-attribute"><span class="xref std std-term">attribute</span></a> that returns the value of <code>key</code>
+passed to the constructor, which should be a lookup key in the IANA time
+zone database (e.g. <code>America/New_York</code>, <code>Europe/Paris</code> or
+<code>Asia/Tokyo</code>).</p>
+<p>For zones constructed from file without specifying a <code>key</code> parameter,
+this will be set to <code>None</code>.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Although it is a somewhat common practice to expose these to end users,
+these values are designed to be primary keys for representing the
+relevant zones and not necessarily user-facing elements.  Projects like
+CLDR (the Unicode Common Locale Data Repository) can be used to get
+more user-friendly strings from these keys.</p>
+</div>
+</dd>
+</dl>
+<h3 id="string-representations">String representations</h3>
+<p>The string representation returned when calling <a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a> on a
+<a class="reference internal" href="zoneinfo.html#py:class:zoneinfo.zoneinfo"><code class="xref py class docutils literal">ZoneInfo</code></a> object defaults to using the <a class="reference internal" href="zoneinfo.html#py:attribute:zoneinfo.zoneinfo.key"><code class="xref py attribute docutils literal">ZoneInfo.key</code></a> attribute (see
+the note on usage in the attribute documentation):</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">zone</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">ZoneInfo</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-python">Pacific/Kwajalein<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-type hl-python">str</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">zone</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">Pacific/Kwajalein<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">datetime</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2020</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">15</span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-variable hl-parameter hl-python">tzinfo</span><span class="hl-keyword hl-operator hl-assignment hl-python">=</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">zone</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-storage hl-type hl-string hl-python">f</span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-string hl-quoted hl-double hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;</span></span></span><span class="hl-meta hl-string hl-interpolated hl-python"><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">isoformat</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python"> [</span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-begin hl-python">{</span><span class="hl-source hl-python hl-embedded"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">dt</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">tzinfo</span></span></span></span><span class="hl-meta hl-interpolation hl-python"><span class="hl-punctuation hl-section hl-interpolation hl-end hl-python">}</span></span><span class="hl-string hl-quoted hl-double hl-python">]<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">2020-04-01T03:15:00+12:00 [Pacific/Kwajalein]<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<p>For objects constructed from a file without specifying a <code>key</code> parameter,
+<code>str</code> falls back to calling <a class="reference internal" href="functions.html#py:function:repr"><code class="xref py function docutils literal">repr</code></a>. <code>ZoneInfo</code>'s <code>repr</code> is
+implementation-defined and not necessarily stable between versions, but it is
+guaranteed not to be a valid <code>ZoneInfo</code> key.</p>
+<a id="pickling"></a>
+<h3 id="pickle-serialization">Pickle serialization</h3>
+<p>Rather than serializing all transition data, <code>ZoneInfo</code> objects are
+serialized by key, and <code>ZoneInfo</code> objects constructed from files (even those
+with a value for <code>key</code> specified) cannot be pickled.</p>
+<p>The behavior of a <code>ZoneInfo</code> file depends on how it was constructed:</p>
+<ol class="arabic period">
+<li><p><code>ZoneInfo(key)</code>: When constructed with the primary constructor, a
+<code>ZoneInfo</code> object is serialized by key, and when deserialized, the
+deserializing process uses the primary and thus it is expected that these
+are the same object as other references to the same time
+zone.  For example, if <code>europe_berlin_pkl</code> is a string containing a pickle
+constructed from <code>ZoneInfo("Europe/Berlin")</code>, one would expect the
+following behavior:</p>
+<div class="highlight-pycon notranslate">
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; a = ZoneInfo("Europe/Berlin")
+&gt;&gt;&gt; b = pickle.loads(europe_berlin_pkl)
+&gt;&gt;&gt; a is b
+True</pre></div>
+</div>
+</li>
+<li><p><code>ZoneInfo.no_cache(key)</code>: When constructed from the cache-bypassing
+constructor, the <code>ZoneInfo</code> object is also serialized by key, but when
+deserialized, the deserializing process uses the cache bypassing
+constructor. If <code>europe_berlin_pkl_nc</code> is a string containing a pickle
+constructed from <code>ZoneInfo.no_cache("Europe/Berlin")</code>, one would expect
+the following behavior:</p>
+<div class="highlight-pycon notranslate">
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; a = ZoneInfo("Europe/Berlin")
+&gt;&gt;&gt; b = pickle.loads(europe_berlin_pkl_nc)
+&gt;&gt;&gt; a is b
+False</pre></div>
+</div>
+</li>
+<li><p><code>ZoneInfo.from_file(file_obj, /, key=None)</code>: When constructed from a file, the
+<code>ZoneInfo</code> object raises an exception on pickling. If an end user wants to
+pickle a <code>ZoneInfo</code> constructed from a file, it is recommended that they
+use a wrapper type or a custom serialization function: either serializing by
+key or storing the contents of the file object and serializing that.</p>
+</li>
+</ol>
+<p>This method of serialization requires that the time zone data for the required
+key be available on both the serializing and deserializing side, similar to the
+way that references to classes and functions are expected to exist in both the
+serializing and deserializing environments. It also means that no guarantees
+are made about the consistency of results when unpickling a <code>ZoneInfo</code>
+pickled in an environment with a different version of the time zone data.</p>
+<h2 id="functions">Functions</h2>
+<dl class="py function">
+  <dt id="py:function:zoneinfo.available_timezones"><code class="sig-name">available_timezones()</code></dt>
+  <dd><p>Get a set containing all the valid keys for IANA time zones available
+anywhere on the time zone path. This is recalculated on every call to the
+function.</p>
+<p>This function only includes canonical zone names and does not include
+"special" zones such as those under the <code>posix/</code> and <code>right/</code>
+directories, or the <code>posixrules</code> zone.</p>
+<div class="admonition caution">
+  <p class="admonition-title">Caution</p>
+<p>This function may open a large number of files, as the best way to
+determine if a file on the time zone path is a valid time zone is to
+read the "magic string" at the beginning.</p>
+</div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>These values are not designed to be exposed to end-users; for user
+facing elements, applications should use something like CLDR (the
+Unicode Common Locale Data Repository) to get more user-friendly
+strings. See also the cautionary note on <a class="reference internal" href="zoneinfo.html#py:attribute:zoneinfo.zoneinfo.key"><code class="xref py attribute docutils literal">ZoneInfo.key</code></a>.</p>
+</div>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:zoneinfo.reset_tzpath"><code class="sig-name">reset_tzpath(to=None)</code></dt>
+  <dd><p>Sets or resets the time zone search path (<a class="reference internal" href="zoneinfo.html#py:data:zoneinfo.tzpath"><code class="xref py data docutils literal">TZPATH</code></a>) for the module.
+When called with no arguments, <a class="reference internal" href="zoneinfo.html#py:data:zoneinfo.tzpath"><code class="xref py data docutils literal">TZPATH</code></a> is set to the default value.</p>
+<p>Calling <code>reset_tzpath</code> will not invalidate the <a class="reference internal" href="zoneinfo.html#py:class:zoneinfo.zoneinfo"><code class="xref py class docutils literal">ZoneInfo</code></a> cache,
+and so calls to the primary <code>ZoneInfo</code> constructor will only use the new
+<code>TZPATH</code> in the case of a cache miss.</p>
+<p>The <code>to</code> parameter must be a <a class="reference internal" href="../glossary.html#term-sequence"><span class="xref std std-term">sequence</span></a> of strings or
+<a class="reference internal" href="os.html#py:class:os.pathlike"><code class="xref py class docutils literal">os.PathLike</code></a> and not a string, all of which must be absolute paths.
+<a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py exception docutils literal">ValueError</code></a> will be raised if something other than an absolute path
+is passed.</p>
+</dd>
+</dl>
+<h2 id="globals">Globals</h2>
+<dl class="py data">
+  <dt id="py:data:zoneinfo.tzpath"><code class="sig-name">TZPATH</code></dt>
+  <dd><p>A read-only sequence representing the time zone search path – when
+constructing a <code>ZoneInfo</code> from a key, the key is joined to each entry in
+the <code>TZPATH</code>, and the first file found is used.</p>
+<p><code>TZPATH</code> may contain only absolute paths, never relative paths,
+regardless of how it is configured.</p>
+<p>The object that <code>zoneinfo.TZPATH</code> points to may change in response to a
+call to <a class="reference internal" href="zoneinfo.html#py:function:zoneinfo.reset_tzpath"><code class="xref py function docutils literal">reset_tzpath</code></a>, so it is recommended to use
+<code>zoneinfo.TZPATH</code> rather than importing <code>TZPATH</code> from <code>zoneinfo</code> or
+assigning a long-lived variable to <code>zoneinfo.TZPATH</code>.</p>
+<p>For more information on configuring the time zone search path, see
+<a href="zoneinfo.html#zoneinfo_data_configuration">Configuring the data sources</a>.</p>
+</dd>
+</dl>
+<h2 id="exceptions-and-warnings">Exceptions and warnings</h2>
+<dl class="py exception">
+  <dt id="py:exception:zoneinfo.zoneinfonotfounderror"><em class="property">exception</em> <code class="sig-name">ZoneInfoNotFoundError</code></dt>
+  <dd><p>Raised when construction of a <a class="reference internal" href="zoneinfo.html#py:class:zoneinfo.zoneinfo"><code class="xref py class docutils literal">ZoneInfo</code></a> object fails because the
+specified key could not be found on the system. This is a subclass of
+<a class="reference internal" href="exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a>.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:zoneinfo.invalidtzpathwarning"><em class="property">exception</em> <code class="sig-name">InvalidTZPathWarning</code></dt>
+  <dd><p>Raised when :envvar:`PYTHONTZPATH` contains an invalid component that will
+be filtered out, such as a relative path.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="datetime.html">&larr; datetime — Basic date and time types</a>
+        <a class="next" href="calendar.html">calendar — General calendar-related functions &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
