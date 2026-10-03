@@ -17,15 +17,24 @@ use lsp_types::{
     ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind, Uri,
 };
 
+use std::collections::{BTreeSet, HashSet};
+
 use crate::diagnostics::document_diagnostics;
 use crate::documents::DocumentStore;
+use crate::includes::IncludeGraph;
 use crate::position::PositionEncoding;
+use crate::uri::file_path;
 
 /// Everything the server remembers between messages.
 #[derive(Debug)]
 pub struct ServerState {
     encoding: PositionEncoding,
     documents: DocumentStore,
+    /// The latest diagnosis of every open document.
+    graph: IncludeGraph,
+    /// The URIs last published with at least one diagnostic — the ones an
+    /// empty publish must reach to clear.
+    shown: HashSet<Uri>,
 }
 
 impl ServerState {
@@ -35,18 +44,58 @@ impl ServerState {
         Self {
             encoding,
             documents: DocumentStore::default(),
+            graph: IncludeGraph::default(),
+            shown: HashSet::new(),
         }
     }
 
-    /// Diagnoses the open document at `uri`, as a notification to send.
-    fn publish_open_document(&self, uri: Uri) -> Option<Message> {
-        let document = self.documents.get(&uri)?;
-        let diagnostics = document_diagnostics(&uri, &document.text, self.encoding);
-        Some(publish_diagnostics(
-            uri,
-            diagnostics,
-            Some(document.version),
-        ))
+    /// Re-diagnoses the document at `changed`, which was just opened, edited
+    /// or closed, and every open document that reads its file, as the
+    /// notifications to send.
+    ///
+    /// `changed` itself is published last and always — even with nothing to
+    /// report — so a client waiting for it knows every other publish this
+    /// change caused came first.
+    fn refresh(&mut self, changed: &Uri) -> Vec<Message> {
+        let includers = file_path(changed)
+            .map(|path| self.graph.includers_of(&path))
+            .unwrap_or_default();
+        let mut affected = self.diagnose(changed);
+        for includer in includers.iter().filter(|includer| *includer != changed) {
+            affected.extend(self.diagnose(includer));
+        }
+        affected.remove(changed);
+        let mut messages: Vec<Message> = affected
+            .into_iter()
+            .filter_map(|uri| self.publish(uri, false))
+            .collect();
+        messages.extend(self.publish(changed.clone(), true));
+        messages
+    }
+
+    /// Parses the document at `uri` if it is open, or forgets it if not, and
+    /// returns the URIs whose published diagnostics may have changed.
+    fn diagnose(&mut self, uri: &Uri) -> BTreeSet<Uri> {
+        let Some(document) = self.documents.get(uri) else {
+            return self.graph.forget(uri);
+        };
+        let diagnosis = document_diagnostics(uri, &document.text, &self.documents, self.encoding);
+        self.graph.record(uri.clone(), diagnosis)
+    }
+
+    /// The notification publishing what `uri` shows now — or nothing, when it
+    /// shows nothing and showed nothing before, unless `always`.
+    fn publish(&mut self, uri: Uri, always: bool) -> Option<Message> {
+        let diagnostics = self.graph.diagnostics_for(&uri);
+        if diagnostics.is_empty() {
+            if !self.shown.remove(&uri) && !always {
+                return None;
+            }
+        } else {
+            self.shown.insert(uri.clone());
+        }
+        let version = self.documents.get(&uri).map(|document| document.version);
+        Some(publish_diagnostics(uri, diagnostics, version))
     }
 }
 
@@ -88,10 +137,7 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
             state
                 .documents
                 .open(document.uri.clone(), document.version, document.text);
-            state
-                .publish_open_document(document.uri)
-                .into_iter()
-                .collect()
+            state.refresh(&document.uri)
         }
         DidChangeTextDocument::METHOD => {
             let Ok(params) = notification
@@ -107,10 +153,7 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
             state
                 .documents
                 .replace(document.uri.clone(), document.version, change.text);
-            state
-                .publish_open_document(document.uri)
-                .into_iter()
-                .collect()
+            state.refresh(&document.uri)
         }
         DidCloseTextDocument::METHOD => {
             let Ok(params) = notification
@@ -120,9 +163,11 @@ pub fn handle_notification(state: &mut ServerState, notification: Notification) 
             };
             let uri = params.text_document.uri;
             state.documents.close(&uri);
-            // A closed document's squiggles would otherwise linger in the
-            // Problems view, describing text nobody is looking at.
-            vec![publish_diagnostics(uri, Vec::new(), None)]
+            // A closed document's own squiggles would otherwise linger in the
+            // Problems view, describing text nobody is looking at; what an
+            // open includer finds in it stays, and its includers now read it
+            // from the disk.
+            state.refresh(&uri)
         }
         _ => Vec::new(),
     }
@@ -355,6 +400,292 @@ mod tests {
         assert_eq!(params.diagnostics, Vec::new());
         assert_eq!(params.version, None);
         assert_eq!(state.documents.get(&uri()), None);
+    }
+
+    /// A project in a scratch directory: `index.rst` and `guide.rst`
+    /// include `part.rst`, which is saved holding `part`.
+    struct Project {
+        dir: std::path::PathBuf,
+    }
+
+    impl Project {
+        fn new(name: &str, part: &str) -> Self {
+            let dir = std::env::temp_dir().join(format!("rinx_lsp_server_{name}"));
+            let _ = std::fs::remove_dir_all(&dir);
+            std::fs::create_dir_all(&dir).expect("create temp dir");
+            std::fs::write(dir.join("part.rst"), part).expect("write the fragment");
+            Self { dir }
+        }
+
+        fn uri(&self, name: &str) -> Uri {
+            crate::uri::file_uri(&self.dir.join(name)).expect("an absolute path")
+        }
+
+        fn open(&self, name: &str, version: i32, text: &str) -> Notification {
+            Notification::new(
+                DidOpenTextDocument::METHOD.to_string(),
+                DidOpenTextDocumentParams {
+                    text_document: TextDocumentItem::new(
+                        self.uri(name),
+                        "restructuredtext".to_string(),
+                        version,
+                        text.to_string(),
+                    ),
+                },
+            )
+        }
+
+        fn change(&self, name: &str, version: i32, text: &str) -> Notification {
+            Notification::new(
+                DidChangeTextDocument::METHOD.to_string(),
+                DidChangeTextDocumentParams {
+                    text_document: VersionedTextDocumentIdentifier::new(self.uri(name), version),
+                    content_changes: vec![TextDocumentContentChangeEvent {
+                        range: None,
+                        range_length: None,
+                        text: text.to_string(),
+                    }],
+                },
+            )
+        }
+
+        fn close(&self, name: &str) -> Notification {
+            Notification::new(
+                DidCloseTextDocument::METHOD.to_string(),
+                DidCloseTextDocumentParams {
+                    text_document: TextDocumentIdentifier::new(self.uri(name)),
+                },
+            )
+        }
+
+        /// What `replies` publish, as `(file name, version, codes)` in order,
+        /// with an include's summary — which has no code — as `summary`.
+        fn publishes(&self, replies: &[Message]) -> Vec<(String, Option<i32>, Vec<String>)> {
+            replies
+                .iter()
+                .map(|reply| {
+                    let params = published(reply);
+                    let path = crate::uri::file_path(&params.uri).expect("a file uri");
+                    let name = path
+                        .strip_prefix(&self.dir)
+                        .expect("a file of the project")
+                        .to_string_lossy()
+                        .into_owned();
+                    let codes = params
+                        .diagnostics
+                        .iter()
+                        .map(|diagnostic| match &diagnostic.code {
+                            Some(NumberOrString::String(code)) => code.clone(),
+                            _ => SUMMARY.to_string(),
+                        })
+                        .collect();
+                    (name, params.version, codes)
+                })
+                .collect()
+        }
+    }
+
+    const INCLUDES_PART: &str = "Title\n=====\n\n.. include:: part.rst\n";
+    const BROKEN: &str = "Fine.\n\n.. foo::\n";
+    const UNKNOWN: &str = "directive.unknown";
+    const SUMMARY: &str = "summary";
+
+    fn entry(
+        name: &str,
+        version: Option<i32>,
+        codes: &[&str],
+    ) -> (String, Option<i32>, Vec<String>) {
+        (
+            name.to_string(),
+            version,
+            codes.iter().map(ToString::to_string).collect(),
+        )
+    }
+
+    #[test]
+    fn test_opening_an_includer_publishes_the_fragments_mistake_on_the_fragment() {
+        // Given
+        let project = Project::new("open_includer", BROKEN);
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+
+        // When
+        let replies = handle_notification(&mut state, project.open("index.rst", 1, INCLUDES_PART));
+
+        // Then — the fragment first, the opened document last
+        assert_eq!(
+            project.publishes(&replies),
+            vec![
+                entry("part.rst", None, &[UNKNOWN]),
+                entry("index.rst", Some(1), &[SUMMARY]),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_editing_an_open_fragment_re_diagnoses_its_includer() {
+        // Given a fragment saved clean, and its includer open
+        let project = Project::new("edit_fragment", "Fine.\n");
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, project.open("index.rst", 1, INCLUDES_PART));
+        handle_notification(&mut state, project.open("part.rst", 1, "Fine.\n"));
+
+        // When the fragment's buffer breaks, unsaved
+        let replies = handle_notification(&mut state, project.change("part.rst", 2, BROKEN));
+
+        // Then — the mistake is found through the includer, on the fragment,
+        // and summarized on the include
+        assert_eq!(
+            project.publishes(&replies),
+            vec![
+                entry("index.rst", Some(1), &[SUMMARY]),
+                entry("part.rst", Some(2), &[UNKNOWN]),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_fixing_the_fragment_clears_it() {
+        // Given
+        let project = Project::new("fix_fragment", BROKEN);
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, project.open("index.rst", 1, INCLUDES_PART));
+        handle_notification(&mut state, project.open("part.rst", 1, BROKEN));
+
+        // When
+        let replies = handle_notification(&mut state, project.change("part.rst", 2, "Fine.\n"));
+
+        // Then — the summary on the include goes with it
+        assert_eq!(
+            project.publishes(&replies),
+            vec![
+                entry("index.rst", Some(1), &[]),
+                entry("part.rst", Some(2), &[])
+            ]
+        );
+    }
+
+    #[test]
+    fn test_removing_the_include_clears_the_fragment() {
+        // Given
+        let project = Project::new("remove_include", BROKEN);
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, project.open("index.rst", 1, INCLUDES_PART));
+
+        // When
+        let replies = handle_notification(&mut state, project.change("index.rst", 2, "Title\n"));
+
+        // Then
+        assert_eq!(
+            project.publishes(&replies),
+            vec![
+                entry("part.rst", None, &[]),
+                entry("index.rst", Some(2), &[])
+            ]
+        );
+    }
+
+    #[test]
+    fn test_closing_the_includer_clears_a_closed_fragment() {
+        // Given
+        let project = Project::new("close_includer", BROKEN);
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, project.open("index.rst", 1, INCLUDES_PART));
+
+        // When
+        let replies = handle_notification(&mut state, project.close("index.rst"));
+
+        // Then
+        assert_eq!(
+            project.publishes(&replies),
+            vec![entry("part.rst", None, &[]), entry("index.rst", None, &[])]
+        );
+    }
+
+    #[test]
+    fn test_closing_the_includer_of_an_open_fragment_shows_its_own_parse_again() {
+        // Given a fragment using a substitution only its includer defines
+        let project = Project::new("standalone_again", "|name|\n");
+        let includer = ".. |name| replace:: rinx\n\n.. include:: part.rst\n";
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, project.open("index.rst", 1, includer));
+        let opened = handle_notification(&mut state, project.open("part.rst", 1, "|name|\n"));
+
+        // When
+        let replies = handle_notification(&mut state, project.close("index.rst"));
+
+        // Then — included, it is clean; alone, the substitution is undefined
+        assert_eq!(
+            project.publishes(&opened),
+            vec![entry("part.rst", Some(1), &[])]
+        );
+        let [first, last] = project
+            .publishes(&replies)
+            .try_into()
+            .expect("two publishes");
+        assert_eq!((first.0.as_str(), first.1), ("part.rst", Some(1)));
+        assert_eq!(first.2.len(), 1, "{first:?}");
+        assert_eq!(last, entry("index.rst", None, &[]));
+    }
+
+    #[test]
+    fn test_closing_a_fragment_keeps_what_its_includer_finds_there() {
+        // Given a fragment broken only in its unsaved buffer
+        let project = Project::new("close_fragment", "Fine.\n");
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, project.open("index.rst", 1, INCLUDES_PART));
+        handle_notification(&mut state, project.open("part.rst", 1, BROKEN));
+
+        // When its buffer is discarded
+        let replies = handle_notification(&mut state, project.close("part.rst"));
+
+        // Then — the includer reads the clean saved text again
+        assert_eq!(
+            project.publishes(&replies),
+            vec![
+                entry("index.rst", Some(1), &[]),
+                entry("part.rst", None, &[])
+            ]
+        );
+    }
+
+    #[test]
+    fn test_two_includers_report_a_shared_fragments_mistake_once() {
+        // Given
+        let project = Project::new("two_includers", BROKEN);
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, project.open("index.rst", 1, INCLUDES_PART));
+
+        // When
+        let replies = handle_notification(&mut state, project.open("guide.rst", 1, INCLUDES_PART));
+
+        // Then
+        assert_eq!(
+            project.publishes(&replies),
+            vec![
+                entry("part.rst", None, &[UNKNOWN]),
+                entry("guide.rst", Some(1), &[SUMMARY]),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_a_document_including_itself_reports_the_cycle_on_itself() {
+        // Given
+        let project = Project::new("cycle", "");
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+
+        // When
+        let replies = handle_notification(
+            &mut state,
+            project.open("index.rst", 1, ".. include:: index.rst\n"),
+        );
+
+        // Then — the saved file does not exist, so it is the open buffer that
+        // includes itself, through the overlay
+        assert_eq!(
+            project.publishes(&replies),
+            vec![entry("index.rst", Some(1), &["include.cycle"])]
+        );
     }
 
     #[test]

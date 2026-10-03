@@ -19,13 +19,13 @@
 //! re-render every page that includes it. That is correct rather than a gap.
 
 use rinx_ast::{
-    CodeBlock, CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, Directive, Node, Span,
+    CodeBlock, CodeBlockSource, CodeLanguage, Diagnostic, DiagnosticCode, Directive, IncludeSite,
+    Node, Span,
 };
 
 use crate::blocks::parse_blocks;
 use crate::context::ParseCtx;
 use crate::diagnostics::Diagnostics;
-use crate::directives::body::body_span;
 use crate::directives::error_node::{malformed_directive, malformed_node};
 use crate::directives::options::{OptionLine, report_unknown_options, scan_option_lines};
 use crate::headings::Adornment;
@@ -67,12 +67,16 @@ struct IncludeOptions {
 /// into a failed build.
 pub(in crate::directives) fn parse_include(
     argument: &str,
+    directive_span: Option<Span>,
     body_lines: &[&str],
     adornment_order: &mut Vec<Adornment>,
     diagnostics: &mut Diagnostics,
     ctx: &ParseCtx<'_>,
 ) -> Vec<Node> {
-    let span = body_span(body_lines, ctx).or_else(|| ctx.line_span(0, ""));
+    // The marker line: every problem with the directive as a whole is
+    // reported there, and it is the line an editor points at when the
+    // included file holds a problem.
+    let span = directive_span;
 
     let path = argument.trim();
     if path.is_empty() {
@@ -142,7 +146,7 @@ pub(in crate::directives) fn parse_include(
     let text = options
         .tab_width
         .map_or_else(|| file.text.clone(), |width| expand_tabs(&file.text, width));
-    let Some(text) = select(&options, &text, diagnostics, span) else {
+    let Some((text, first_line)) = select(&options, &text, diagnostics, span) else {
         return vec![contributed_nothing(argument, body_lines)];
     };
 
@@ -155,10 +159,18 @@ pub(in crate::directives) fn parse_include(
     // inside the fragment names the fragment. `adornment_order` is *not*
     // reset: an included section heading takes its level from the document's
     // own adornment sequence, which is what makes transclusion transparent.
+    // A selection is rebased on the line it starts at, so a position inside it
+    // is still a line of the file rather than of the selected part.
     let file_id = diagnostics.intern_source_file(&file.id);
+    diagnostics.record_include_site(IncludeSite {
+        directive: span,
+        file: file_id,
+    });
     let mut stack: Vec<String> = ctx.include_stack().to_vec();
     stack.push(file.id.clone());
-    let included_ctx = ctx.included(file_id, &file.id, &stack);
+    let included_ctx = ctx
+        .included(file_id, &file.id, &stack)
+        .nested(first_line - 1, 0);
     let lines: Vec<&str> = text.lines().collect();
     parse_blocks(&lines, adornment_order, diagnostics, &included_ctx)
 }
@@ -180,20 +192,29 @@ fn closes_a_cycle(ctx: &ParseCtx<'_>, id: &str) -> Option<String> {
 }
 
 /// Applies the selection options, or returns the whole file when none were
-/// written.
+/// written, together with the 1-based line of the file the result starts at.
+///
+/// An include's selection options all select one contiguous run, so the first
+/// line is always known; the fallback to line 1 only guards against a future
+/// option that is not.
 fn select(
     options: &IncludeOptions,
     text: &str,
     diagnostics: &mut Diagnostics,
     span: Option<Span>,
-) -> Option<String> {
+) -> Option<(String, usize)> {
     if options.selection.is_empty() {
-        return Some(text.to_string());
+        return Some((text.to_string(), 1));
     }
     options
         .selection
         .apply(text, DIRECTIVE, diagnostics, span)
-        .map(|selected| selected.text)
+        .map(|selected| {
+            let first_line = selected
+                .first_line
+                .map_or(1, |line| usize::try_from(line.get()).unwrap_or(1));
+            (selected.text, first_line)
+        })
 }
 
 /// The node a `:literal:` or `:code:` include produces: the file's text shown
@@ -561,6 +582,68 @@ mod tests {
     }
 
     #[test]
+    fn test_an_unreadable_file_is_reported_on_the_directives_line() {
+        // Given / When
+        let document = parse_document(&[], "Text.\n\n.. include:: nope.rst\n\nAfter.\n");
+
+        // Then — the marker line, not the blank line below it
+        let span = document.diagnostics[0]
+            .span
+            .expect("a positioned diagnostic");
+        assert_eq!(span.start.line, 3);
+    }
+
+    #[test]
+    fn test_each_include_of_a_file_records_its_own_site() {
+        // Given the same fragment included on lines 1 and 3
+        let document = parse_document(
+            &[("shared.rst", "Text.\n")],
+            ".. include:: shared.rst\n\n.. include:: shared.rst\n",
+        );
+
+        // Then — two sites, one file
+        let lines: Vec<(Option<u32>, FileId)> = document
+            .include_sites
+            .iter()
+            .map(|site| (site.directive.map(|span| span.start.line), site.file))
+            .collect();
+        assert_eq!(
+            lines,
+            vec![(Some(1), FileId::new(0)), (Some(3), FileId::new(0))]
+        );
+    }
+
+    #[test]
+    fn test_a_nested_include_site_is_written_in_its_fragment() {
+        // Given
+        let document = parse_document(
+            &[
+                ("outer.rst", "Text.\n\n.. include:: inner.rst\n"),
+                ("inner.rst", "Inner.\n"),
+            ],
+            ".. include:: outer.rst\n",
+        );
+
+        // Then — the inner directive is on line 3 of `outer.rst`
+        let inner = document.include_sites[1];
+        let span = inner.directive.expect("a positioned directive");
+        assert_eq!((span.file, span.start.line), (Some(FileId::new(0)), 3));
+        assert_eq!(inner.file, FileId::new(1));
+    }
+
+    #[test]
+    fn test_a_literal_include_records_no_site() {
+        // Given / When — nothing in a verbatim include is parsed
+        let document = parse_document(
+            &[("shared.rst", ".. foo::\n")],
+            ".. include:: shared.rst\n   :literal:\n",
+        );
+
+        // Then
+        assert_eq!(document.include_sites, Vec::new());
+    }
+
+    #[test]
     fn test_a_diagnostic_from_the_document_itself_carries_no_file() {
         // Given a document that includes something and also has its own fault
         let document = parse_document(
@@ -705,6 +788,40 @@ mod tests {
 
         // Then — index 2 is the third line, which holds `two`
         assert_eq!(paragraphs(&document.nodes), vec!["two".to_string()]);
+    }
+
+    #[test]
+    fn test_a_diagnostic_after_start_after_reports_its_line_in_the_file() {
+        // Given a fragment whose unknown directive is on line 5 of the file
+        let document = parse_document(
+            &[("shared.rst", "skip\n\nBEGIN\n\n.. foo::\n")],
+            ".. include:: shared.rst\n   :start-after: BEGIN\n",
+        );
+
+        // When
+        let span = document.diagnostics[0]
+            .span
+            .expect("a positioned diagnostic");
+
+        // Then — counted from the file's first line, not the selection's
+        assert_eq!(span.start.line, 5);
+    }
+
+    #[test]
+    fn test_a_diagnostic_after_start_line_reports_its_line_in_the_file() {
+        // Given a fragment whose unknown directive is on line 3 of the file
+        let document = parse_document(
+            &[("shared.rst", "skip\n\n.. foo::\n")],
+            ".. include:: shared.rst\n   :start-line: 2\n",
+        );
+
+        // When
+        let span = document.diagnostics[0]
+            .span
+            .expect("a positioned diagnostic");
+
+        // Then
+        assert_eq!(span.start.line, 3);
     }
 
     #[test]

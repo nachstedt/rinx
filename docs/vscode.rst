@@ -45,7 +45,9 @@ When the user edits a ``.rst`` file, the extension executes the following pipeli
 
 Opening a ``.rst`` file starts the language server, ``rinx lsp``. It is the binary the build runs, so the editor reports the build's own diagnostics: the same codes and the same messages, underlined in the editor and listed in the *Problems* view as you type. For example, ``.. foo::`` is reported as ``directive.unknown``, and the code links to its entry in :ref:`diagnostics`. A ``.. noqa:`` comment silences a diagnostic in the editor exactly as it does in the build.
 
-For now the server knows each open document on its own: there is no project index yet, and no reporting inside included files. ``docs/dev/lsp-roadmap.md`` in the repository lists the steps that add these, and ``docs/decisions/038-language-server.md`` describes the design.
+A mistake inside a file that an open document pulls in with ``.. include::`` is underlined in that file, at its own line, even when the file itself is not open. The ``.. include::`` line itself carries a note saying how many problems the file brought in, with a link to each, so the problem is visible from the document you are editing; it is information rather than a warning, so a problem is not counted twice. Editing an included file, saved or not, re-checks the open documents that include it. While an open document includes a file, that file shows what was found through its includers rather than what it reports on its own, because a fragment on its own lacks what its includer defines before the ``.. include::``.
+
+For now the server knows only the documents that are open: there is no project index yet. ``docs/dev/lsp-roadmap.md`` in the repository lists the steps that add these, and ``docs/decisions/038-language-server.md`` describes the design.
 
 4. Change Detection & Background Reconcile
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -29,10 +29,10 @@ A finished step's heading is marked ✅ with its pull request, a partly
 finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
-  (PRs #238–#248, listed at the end of M0), and #2 (PR #253).
+  (PRs #238–#248, listed at the end of M0), #2 (PR #253), and #3 (PR #255).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #3, Diagnostics inside included fragments.**
+- **Next: #4, Workspace scan + per-document index.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -92,10 +92,21 @@ The severity table this step first listed was dropped: every diagnostic stays a
 - Lift `retain_reportable*` from the worker into a shared crate and call it from both front ends
 - Tests, including tightening the parity test (`crates/worker/tests/integration/lsp_parity.rs`) from "the editor reports a superset" to equality for documents holding a `.. noqa:`
 
-### 3. Diagnostics inside included fragments
+### 3. Diagnostics inside included fragments ✅ (#255)
 
 **You experience:** a mistake in an included file is underlined in *that*
 file, and editing the fragment updates the document that includes it.
+
+While an open document includes a file, the file shows what its includers
+found in it, not its own standalone parse. Only open documents count as
+includers until #4 scans the workspace. Each `.. include::` that brings a
+problem in also carries an *Information* summary on its own line, linking to
+each problem through `relatedInformation`; it is the editor's alone, since the
+build's warning already names both files. The step also fixed two positions
+in the build as well as the editor: `.. include::` with a selection
+(`:start-after:`, `:start-line:`) counted fragment lines from the selection
+rather than the file, and the directive's own diagnostics landed on the line
+below it.
 
 - Overlay `ParseFileLoader`: open buffers first, disk second
 - Map `FileId` → URI via `source_files`, publish per URI, clear stale URIs

@@ -1,7 +1,7 @@
 //! What a parse records on the side: the problems it found, the `.. noqa:`
 //! comments excusing some of them, and the files it spliced text in from.
 
-use rinx_ast::{Diagnostic, FileId, Suppression};
+use rinx_ast::{Diagnostic, FileId, IncludeSite, Suppression};
 
 /// The collector every block-level parser is handed.
 ///
@@ -22,6 +22,7 @@ pub(crate) struct Diagnostics {
     entries: Vec<Diagnostic>,
     suppressions: Vec<Suppression>,
     source_files: Vec<String>,
+    include_sites: Vec<IncludeSite>,
 }
 
 impl Diagnostics {
@@ -52,6 +53,17 @@ impl Diagnostics {
                 self.source_files.len() - 1
             });
         FileId::new(u32::try_from(index).unwrap_or(u32::MAX))
+    }
+
+    /// Records an `.. include::` whose file is about to be parsed in.
+    pub(crate) fn record_include_site(&mut self, site: IncludeSite) {
+        self.include_sites.push(site);
+    }
+
+    /// The include sites recorded so far, leaving none behind — for the
+    /// caller that builds the `Document`, alongside [`Self::into_parts`].
+    pub(crate) fn take_include_sites(&mut self) -> Vec<IncludeSite> {
+        std::mem::take(&mut self.include_sites)
     }
 
     /// Everything recorded, for the caller that builds the `Document`.

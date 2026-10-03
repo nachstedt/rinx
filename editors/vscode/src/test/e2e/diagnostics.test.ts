@@ -29,6 +29,19 @@ async function openUntitled(content: string): Promise<vscode.TextDocument> {
     return document;
 }
 
+/** The file `name` at the root of the fixture workspace. */
+function workspaceFile(name: string): vscode.Uri {
+    const root = vscode.workspace.workspaceFolders?.[0].uri.fsPath ?? '';
+    return vscode.Uri.file(path.join(root, name));
+}
+
+/** Replaces the whole text of `document` with `text`, leaving it unsaved. */
+async function replaceAll(document: vscode.TextDocument, text: string): Promise<void> {
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), text);
+    await vscode.workspace.applyEdit(edit);
+}
+
 /** Closes the active editor, discarding its changes, so nothing prompts. */
 async function discardActiveEditor(): Promise<void> {
     await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
@@ -111,5 +124,68 @@ suite('Language server diagnostics (e2e)', () => {
         const diagnostics = await diagnosticsOn(uri);
         assert.deepStrictEqual(diagnostics.map(codeOf), ['directive.unknown']);
         assert.strictEqual(diagnostics[0].range.start.line, 5);
+    });
+
+    test('a mistake in an included file is underlined in that file', async () => {
+        // Given — a document including a fragment whose third line is broken
+        const includer = workspaceFile('broken_includer.rst');
+        const fragment = workspaceFile('broken_fragment.rst');
+
+        // When
+        await vscode.window.showTextDocument(includer);
+
+        // Then — on the fragment, which is not even open
+        const diagnostics = await diagnosticsOn(fragment);
+        assert.deepStrictEqual(diagnostics.map(codeOf), ['directive.unknown']);
+        assert.strictEqual(diagnostics[0].range.start.line, 2);
+    });
+
+    test('an include that brings a problem in summarizes it and links to it', async () => {
+        // Given
+        const includer = workspaceFile('broken_includer.rst');
+        const fragment = workspaceFile('broken_fragment.rst');
+
+        // When
+        await vscode.window.showTextDocument(includer);
+
+        // Then — information on the include line, linking into the fragment
+        const [summary] = await diagnosticsOn(includer);
+        assert.strictEqual(summary.severity, vscode.DiagnosticSeverity.Information);
+        assert.strictEqual(summary.range.start.line, 3);
+        assert.match(summary.message, /problem in included file 'broken_fragment\.rst'/);
+        const [related] = summary.relatedInformation ?? [];
+        assert.strictEqual(related.location.uri.toString(), fragment.toString());
+        assert.strictEqual(related.location.range.start.line, 2);
+    });
+
+    test('fixing an included file in its buffer clears it there', async () => {
+        // Given
+        await vscode.window.showTextDocument(workspaceFile('broken_includer.rst'));
+        const fragment = await vscode.workspace.openTextDocument(workspaceFile('broken_fragment.rst'));
+        await vscode.window.showTextDocument(fragment);
+        await diagnosticsOn(fragment.uri);
+
+        // When — unsaved
+        await replaceAll(fragment, 'Fine.\n');
+
+        // Then
+        await noDiagnosticsOn(fragment.uri);
+        await discardActiveEditor();
+    });
+
+    test('editing an included file re-diagnoses the document including it', async () => {
+        // Given — a document using a substitution its fragment defines
+        const user = workspaceFile('substitution_user.rst');
+        await vscode.window.showTextDocument(user);
+        const fragment = await vscode.workspace.openTextDocument(workspaceFile('substitution.rst'));
+        await vscode.window.showTextDocument(fragment);
+
+        // When — the definition is removed from the fragment's buffer
+        await replaceAll(fragment, 'No definitions left.\n');
+
+        // Then — the includer, untouched, now reports the reference
+        const diagnostics = await diagnosticsOn(user);
+        assert.deepStrictEqual(diagnostics.map(codeOf), ['substitution.undefined']);
+        await discardActiveEditor();
     });
 });
