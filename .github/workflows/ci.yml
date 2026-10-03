@@ -355,10 +355,17 @@ jobs:
           -o scripts/requirements.txt
         git diff --exit-code scripts/requirements.txt
 
-  vscode:
-    name: VS Code extension
+  # Type check, lint and formatting of the extension's TypeScript. oxlint
+  # rather than ESLint: the extension is on TypeScript 7, whose native compiler
+  # has no JavaScript API for typescript-eslint, while oxlint's type-aware
+  # rules run on that compiler itself (oxlint-tsgolint).
+  vscode-lint:
+    name: VS Code / lint
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: editors/vscode
     steps:
     - uses: actions/checkout@v7
 
@@ -366,15 +373,108 @@ jobs:
       uses: actions/setup-node@v7
       with:
         node-version: 22
+        cache: npm
+        cache-dependency-path: editors/vscode/package-lock.json
 
     # `npm ci` installs exactly package-lock.json, and fails when it disagrees
     # with package.json.
     - name: Install dependencies
-      working-directory: editors/vscode
       run: npm ci
 
-    - name: Run extension tests
-      working-directory: editors/vscode
+    - name: Type-check
+      run: npm run typecheck
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Check formatting
+      run: npm run format:check
+
+  # The extension's tests inside a real VS Code: the oldest one engines.vscode
+  # allows, and the current release. Coverage is measured on the release.
+  vscode:
+    name: VS Code / test (${{ matrix.vscode }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        vscode: [min, stable]
+    defaults:
+      run:
+        working-directory: editors/vscode
+    env:
+      VSCODE_VERSION: ${{ matrix.vscode }}
+      COVERAGE_FLOOR: 50
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: editors/vscode/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    # The minimum is pinned by package.json; a moving version gets a week's
+    # key, so a new release is cached within one.
+    - name: Choose the VS Code cache key
+      id: vscode-cache
+      env:
+        MANIFEST_HASH: ${{ hashFiles('editors/vscode/package.json') }}
+      run: |
+        if [ "$VSCODE_VERSION" = min ]; then suffix=$MANIFEST_HASH; else suffix=$(date +%G-%V); fi
+        echo "key=vscode-test-$VSCODE_VERSION-$suffix" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/cache@v6
+      with:
+        path: editors/vscode/.vscode-test
+        key: ${{ steps.vscode-cache.outputs.key }}
+
+    - name: Run the extension tests
+      run: xvfb-run -a npm test -- ${{ matrix.vscode == 'stable' && '--coverage' || '' }}
+
+    - name: Check the coverage floor
+      if: matrix.vscode == 'stable'
+      run: node scripts/check-coverage.mjs "$COVERAGE_FLOOR" | tee -a "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload the VS Code logs
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: vscode-logs-${{ matrix.vscode }}
+        path: editors/vscode/.vscode-test/user-data/logs
+        retention-days: 7
+
+  # The next VS Code, as an early warning: reported, but not required, since a
+  # regression in a prerelease is not this pull request's to fix.
+  vscode-insiders:
+    name: VS Code / test (insiders, not required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: editors/vscode
+    env:
+      VSCODE_VERSION: insiders
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: editors/vscode/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run the extension tests
       run: xvfb-run -a npm test
 
   # The one check the ruleset requires. `always()` makes it report even when a
@@ -383,7 +483,7 @@ jobs:
   ci-ok:
     name: CI result
     if: always()
-    needs: [rust-lint, rust-test, rust-coverage, fuzz-smoke, rust-package, bazel, benchmarks, python, vscode]
+    needs: [rust-lint, rust-test, rust-coverage, fuzz-smoke, rust-package, bazel, benchmarks, python, vscode-lint, vscode]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

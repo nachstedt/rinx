@@ -9,9 +9,9 @@ suite('BazelConfigCache Test Suite', () => {
             binaryPath: '/bin/rinx',
             configPath: '/path/to/config',
             templatePath: '/path/to/template',
-            indexPath: '/path/to/index'
+            indexPath: '/path/to/index',
         };
-        
+
         cache.set('/root', config);
         assert.deepStrictEqual(cache.get('/root'), config);
     });

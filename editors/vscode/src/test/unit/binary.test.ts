@@ -26,7 +26,7 @@ suite('Binary lookup Test Suite', () => {
     test('explicitValue: the most specific scope wins', () => {
         assert.strictEqual(
             explicitValue({ globalValue: 'global', workspaceValue: 'workspace', workspaceFolderValue: 'folder' }),
-            'folder'
+            'folder',
         );
         assert.strictEqual(explicitValue({ globalValue: 'global', workspaceValue: 'workspace' }), 'workspace');
         assert.strictEqual(explicitValue({ globalValue: 'global' }), 'global');
