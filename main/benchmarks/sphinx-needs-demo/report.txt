@@ -2,11 +2,29 @@
 
 Entities Parsed By Type:
 ------------------------
-None found.
+test: 44
+fsr: 36
+swreq: 32
+req: 24
+safety_goal: 20
+sysreq: 18
+seq_msg: 16
+swarch: 10
+arch: 10
+need: 8
+person: 6
+interface: 6
+component: 5
+spec: 3
+release: 3
+team: 1
+hazard: 1
 
 Unsupported Directives Summary:
 -------------------------------
-None found.
+automodule: 2
+test-file: 1
+src-trace: 1
 
 Sphinx-Needs Constructs Without An Entity-Model Equivalent:
 ----------------------------------------------------------
@@ -47,15 +65,15 @@ entity.role-type-mismatch (5):
     1  automotive-adas/external_data.rst: broken entity type mismatch 'SWREQ_001'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'SWREQ_002'
     1  automotive-adas/external_data.rst: broken entity type mismatch 'REQ_001'
-    1  basic_example/index.rst: broken entity type mismatch 'EX_TEST_001'
     1  coffee-machine/index.rst: broken entity type mismatch 'SEQSTART_01'
+    1  basic_example/index.rst: broken entity type mismatch 'EX_TEST_001'
 
 directive.unknown (4):
 ----------------------
     1  coffee-machine/index.rst: unknown directive type 'src-trace'
     1  automotive-adas/sys_5_sys_quali_test_results.rst: unknown directive type 'test-file'
-    1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
     1  automotive-adas/swe_4_unit_tests.rst: unknown directive type 'automodule'
+    1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
 
 entity-flow.unsupported-option (4):
 -----------------------------------
