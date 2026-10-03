@@ -102,7 +102,7 @@ pub(crate) fn try_parse_enumerated_list(
         blank_finish = item_blank_finish;
 
         let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-        let item_ctx = ctx.nested(item_start, body_indent);
+        let item_ctx = ctx.nested(item_start, body_indent).without_section_titles();
         let nodes = parse_blocks(&body_refs, adornment_order, diagnostics, &item_ctx);
         items.push(ListItem { nodes });
 

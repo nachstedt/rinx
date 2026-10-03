@@ -1167,3 +1167,22 @@ fn names_a_json_file_separates_a_path_from_an_import_key() {
     assert!(!super::names_a_json_file("needs.jsonl"));
     assert!(!super::names_a_json_file("json"));
 }
+
+#[test]
+fn reports_a_section_title_in_an_imported_needs_content() {
+    // Given a need whose content holds a title, which sphinx-needs refuses
+    // too: it parses a need's content with `match_titles=False`
+    let needs = r#"{
+    "current_version": "1.0",
+    "versions": {"1.0": {"needs": {
+        "REQ_1": {"id": "REQ_1", "type": "req", "title": "Boot",
+                  "content": "Details\n=======\n\nProse."}
+    }}}
+}"#;
+
+    // When
+    let document = parse_with(&[("needs.json", needs)], ".. needimport:: needs.json\n");
+
+    // Then
+    assert_eq!(codes(&document), vec![DiagnosticCode::HeadingUnexpected]);
+}

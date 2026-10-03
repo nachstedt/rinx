@@ -98,7 +98,9 @@ pub(super) fn try_parse_definition_list(
         }
 
         let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-        let definition_ctx = ctx.nested(definition_start, body_indent);
+        let definition_ctx = ctx
+            .nested(definition_start, body_indent)
+            .without_section_titles();
         let definition = parse_blocks(&body_refs, adornment_order, diagnostics, &definition_ctx);
 
         items.push(DefinitionListItem { term, definition });

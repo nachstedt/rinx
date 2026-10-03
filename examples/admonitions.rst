@@ -84,10 +84,9 @@ Nested Content
    
    * Bullet lists
    * Multiple paragraphs
-   
-   And even headings!
-   
-   Inner Heading
-   ~~~~~~~~~~~~~
-   
-   Text under inner heading.
+
+   **A bold line**
+
+   stands in for a heading: a section title may not stand inside an
+   admonition, and one written there is reported, as
+   :ref:`headings-misplaced` shows.

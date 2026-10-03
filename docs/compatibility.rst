@@ -39,8 +39,17 @@ Heading adornments
          text; docutils reports it at info level.
    * - Overlined headings (``===`` above **and** below the text)
      - ✅ ℹ️
-     - - A mismatched overline stays text and the rest reads as an underlined
-         heading; docutils drops the block with a severe error.
+     - - An underline that differs from its overline is reported and still
+         makes a heading; docutils drops the block with an error.
+       - An overline with no underline, or two adornments with no title
+         between them, are reported and stay text; docutils drops the block.
+   * - Section titles inside nested content (block quotes, lists, tables,
+       directive content)
+     - ✅ ℹ️
+     - - Reported, as docutils does, but kept as a heading that sets no level
+         for the document; docutils drops it.
+       - Allowed in Python and C object descriptions, as in Sphinx, and in
+         ``.. include::`` and ``.. if-builder::`` content.
    * - Per-document level reset vs. project-wide level tracking
      - 🔶
      - - Heading levels are assigned per document.

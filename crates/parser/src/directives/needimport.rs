@@ -814,8 +814,11 @@ fn import_sections(
     if content.trim().is_empty() {
         return Vec::new();
     }
+    // A need's content takes no section titles, as sphinx-needs parses it
+    // with `match_titles=False` — whatever surrounds the `.. needimport::`.
     let body_ctx = ctx
         .synthetic()
+        .without_section_titles()
         .inside_entity(entity_type)
         .inside_entity_id(id);
     let lines: Vec<&str> = content.lines().collect();

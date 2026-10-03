@@ -130,6 +130,19 @@ impl SourcePoint {
     }
 }
 
+/// Whether a section title may stand in the lines being parsed.
+///
+/// docutils' `match_titles`: a document's own lines may hold titles, and
+/// every nested parse — a block quote, a list item, a table cell, a
+/// directive's body — may not, unless the directive opts in. Sphinx's object
+/// descriptions do, and the splicing directives keep whatever surrounds them.
+/// An enum rather than a `bool` so a call site reads as the rule it applies.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SectionTitles {
+    Allowed,
+    Forbidden,
+}
+
 /// Configuration for one parse, borrowed by every block-level parser.
 pub struct ParseCtx<'a> {
     /// The domain a bare (unprefixed) directive or role resolves to.
@@ -233,6 +246,13 @@ pub struct ParseCtx<'a> {
     /// and cannot compose; it is consulted once, at the end of
     /// [`Self::position`], after every nested offset has been added.
     template_map: Option<&'a TemplateMap>,
+    /// Whether a section title may stand here — see [`SectionTitles`].
+    ///
+    /// Not changed by [`Self::nested`], which only re-bases positions: the
+    /// document's own top level is parsed through it too. A container
+    /// forbids titles where it is entered, with
+    /// [`Self::without_section_titles`].
+    section_titles: SectionTitles,
 }
 
 /// The map a context built without a schema points at.
@@ -273,6 +293,7 @@ impl<'a> ParseCtx<'a> {
             current_file: None,
             include_stack: &[],
             template_map: None,
+            section_titles: SectionTitles::Allowed,
         }
     }
 
@@ -388,6 +409,30 @@ impl<'a> ParseCtx<'a> {
             enclosing_entity_id: Some(id),
             ..*self
         }
+    }
+
+    /// Whether a section title may stand in the lines this context parses.
+    #[must_use]
+    pub(crate) const fn section_titles(&self) -> SectionTitles {
+        self.section_titles
+    }
+
+    /// The same context, with `titles` deciding whether a section title may
+    /// stand in its lines — for a construct that keeps the permission of
+    /// whatever surrounds it, as a splicing directive does.
+    #[must_use]
+    pub(crate) fn with_section_titles(&self, titles: SectionTitles) -> Self {
+        Self {
+            section_titles: titles,
+            ..*self
+        }
+    }
+
+    /// The context for a container's content, in which a section title may
+    /// not stand: docutils' default for every nested parse.
+    #[must_use]
+    pub(crate) fn without_section_titles(&self) -> Self {
+        self.with_section_titles(SectionTitles::Forbidden)
     }
 
     /// The context for parsing the body of a `.. grid::`, in which a
@@ -538,6 +583,9 @@ impl<'a> ParseCtx<'a> {
             // `source-read` fires for documents, not for transcluded text. Its
             // positions therefore restart at line 1 of its own file.
             template_map: None,
+            // A fragment's titles are allowed exactly where the `.. include::`
+            // stands allows them: the splice is transparent.
+            section_titles: self.section_titles,
         }
     }
 
@@ -734,5 +782,68 @@ mod tests {
 
         // Then
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_a_new_context_allows_section_titles() {
+        // Given / When / Then
+        assert_eq!(
+            ParseCtx::with_domain(Domain::Py).section_titles(),
+            SectionTitles::Allowed
+        );
+    }
+
+    #[test]
+    fn test_without_section_titles_forbids_them() {
+        // Given
+        let ctx = ParseCtx::with_domain(Domain::Py);
+
+        // When
+        let body = ctx.without_section_titles();
+
+        // Then
+        assert_eq!(body.section_titles(), SectionTitles::Forbidden);
+    }
+
+    #[test]
+    fn test_with_section_titles_sets_the_permission() {
+        // Given
+        let body = ParseCtx::with_domain(Domain::Py).without_section_titles();
+
+        // When
+        let splice = body.with_section_titles(SectionTitles::Allowed);
+
+        // Then
+        assert_eq!(splice.section_titles(), SectionTitles::Allowed);
+    }
+
+    #[test]
+    fn test_rebasing_a_context_keeps_its_section_title_permission() {
+        // Given — `nested` only re-bases positions; the document's own top
+        // level is parsed through it too
+        let top = ParseCtx::with_domain(Domain::Py);
+        let body = top.without_section_titles();
+
+        // When / Then
+        assert_eq!(top.nested(2, 0).section_titles(), SectionTitles::Allowed);
+        assert_eq!(body.nested(2, 3).section_titles(), SectionTitles::Forbidden);
+        assert_eq!(
+            body.hanging(0, 4, 3).section_titles(),
+            SectionTitles::Forbidden
+        );
+        assert_eq!(body.synthetic().section_titles(), SectionTitles::Forbidden);
+    }
+
+    #[test]
+    fn test_an_included_context_keeps_its_section_title_permission() {
+        // Given
+        let body = ParseCtx::with_domain(Domain::Py).without_section_titles();
+        let stack = vec!["part.rst".to_string()];
+
+        // When
+        let included = body.included(FileId::new(0), "part.rst", &stack);
+
+        // Then
+        assert_eq!(included.section_titles(), SectionTitles::Forbidden);
     }
 }
