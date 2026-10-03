@@ -16,15 +16,12 @@ use super::diagnostics::{
     format_math_error_warning, format_object_type_mismatch_warning, report_diagnostic,
 };
 use super::embed_assets::embed_available_assets;
+use rinx_ast::retain_reportable;
+
 use super::entity_schema::{import_keys_from_args, load_entity_schema, load_entity_templates};
 use super::parse::parse_default_domain_flag;
 use super::parse_files::DocumentRelativeFiles;
 use super::parse_inputs::{ParseInputs, default_role_from_args, jinja_from_args};
-use super::suppression::{
-    retain_reportable, retain_reportable_diagram_errors, retain_reportable_empty_listing_errors,
-    retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
-    retain_reportable_math_errors, retain_reportable_mismatches,
-};
 
 /// One previewed page, plus every warning it produced.
 ///
@@ -98,24 +95,27 @@ pub(super) fn process_preview(
     // With no global index nothing has a number, so every `:numref:` would be
     // reported as unnumbered through no fault of the author — dropped here for
     // the reason an empty listing is below.
-    let broken_links = retain_reportable_links(&render_output.broken_links, &doc.suppressions)
-        .into_iter()
+    let broken_links = retain_reportable(&render_output.broken_links, &doc.suppressions)
         .filter(|link| {
             index_json.is_some() || link.kind != renderer::BrokenLinkKind::UnnumberedReference
         })
+        .cloned()
         .collect();
     let object_type_mismatches =
-        retain_reportable_mismatches(&render_output.object_type_mismatches, &doc.suppressions);
-    let math_errors = retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions);
+        retain_reportable(&render_output.object_type_mismatches, &doc.suppressions)
+            .cloned()
+            .collect();
+    let math_errors = retain_reportable(&render_output.math_errors, &doc.suppressions)
+        .cloned()
+        .collect();
     // An empty listing is reported only when there *is* a project to list. With
     // no global index the graph is unknown, so every table would be empty
     // through no fault of the author — the one case this diagnostic must stay
     // quiet in, and the reason it is dropped here rather than never raised.
     let empty_listing_errors = if index_json.is_some() {
-        retain_reportable_empty_listing_errors(
-            &render_output.empty_listing_errors,
-            &doc.suppressions,
-        )
+        retain_reportable(&render_output.empty_listing_errors, &doc.suppressions)
+            .cloned()
+            .collect()
     } else {
         Vec::new()
     };
@@ -125,15 +125,16 @@ pub(super) fn process_preview(
     // for the failures that depend on the graph: a *syntax* error in the
     // template is the author's either way, and is worth seeing in an editor
     // long before a build runs.
-    let diagram_errors =
-        retain_reportable_diagram_errors(&render_output.diagram_errors, &doc.suppressions)
-            .into_iter()
-            .filter(|error| index_json.is_some() || !error.depends_on_the_project())
-            .collect();
-    let highlight_errors =
-        retain_reportable_highlight_errors(&render_output.highlight_errors, &doc.suppressions);
-    let image_errors =
-        retain_reportable_image_errors(&render_output.image_errors, &doc.suppressions);
+    let diagram_errors = retain_reportable(&render_output.diagram_errors, &doc.suppressions)
+        .filter(|error| index_json.is_some() || !error.depends_on_the_project())
+        .cloned()
+        .collect();
+    let highlight_errors = retain_reportable(&render_output.highlight_errors, &doc.suppressions)
+        .cloned()
+        .collect();
+    let image_errors = retain_reportable(&render_output.image_errors, &doc.suppressions)
+        .cloned()
+        .collect();
 
     // Extract page title from the first H1 heading, if any.
     let page_title = doc

@@ -29,10 +29,10 @@ A finished step's heading is marked ✅ with its pull request, a partly
 finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
-  (PRs #238–#248, listed at the end of M0).
+  (PRs #238–#248, listed at the end of M0), and #2 (PR #252).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #2, Diagnostic polish.**
+- **Next: #3, Diagnostics inside included fragments.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -80,12 +80,14 @@ message and code.
 - Extension: activate on `onLanguage:restructuredtext`, not only on the preview command
 - Tests: position conversion, handlers over an in-memory connection
 
-### 2. Diagnostic polish
+### 2. Diagnostic polish ✅ (#252)
 
 **You experience:** hovering a squiggle shows `directive.unknown` with a docs
 link, and a `.. noqa:` makes it disappear.
 
-- Severity table per `DiagnosticCode`
+The severity table this step first listed was dropped: every diagnostic stays a
+*Warning*, as the build prints it.
+
 - Docs page listing all codes, generated from `DiagnosticCode::ALL`, as the `codeDescription` target
 - Lift `retain_reportable*` from the worker into a shared crate and call it from both front ends
 - Tests, including tightening the parity test (`crates/worker/tests/integration/lsp_parity.rs`) from "the editor reports a superset" to equality for documents holding a `.. noqa:`

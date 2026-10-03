@@ -326,6 +326,22 @@ mod tests {
     }
 
     #[test]
+    fn test_did_change_adding_a_noqa_clears_what_it_names() {
+        // Given
+        let mut state = ServerState::new(PositionEncoding::Utf16);
+        handle_notification(&mut state, did_open(".. foo::\n"));
+
+        // When
+        let replies = handle_notification(
+            &mut state,
+            did_change(".. noqa: directive.unknown\n\n.. foo::\n"),
+        );
+
+        // Then
+        assert_eq!(published(&replies[0]).diagnostics, Vec::new());
+    }
+
+    #[test]
     fn test_did_close_clears_the_diagnostics() {
         // Given
         let mut state = ServerState::new(PositionEncoding::Utf16);

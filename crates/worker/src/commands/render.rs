@@ -13,12 +13,9 @@ use super::diagnostics::{
     format_highlight_error_warning, format_image_error_warning, format_math_error_warning,
     format_object_type_mismatch_warning,
 };
+use rinx_ast::retain_reportable;
+
 use super::entity_schema::{load_entity_schema, load_entity_templates};
-use super::suppression::{
-    retain_reportable_diagram_errors, retain_reportable_empty_listing_errors,
-    retain_reportable_highlight_errors, retain_reportable_image_errors, retain_reportable_links,
-    retain_reportable_math_errors, retain_reportable_mismatches,
-};
 
 /// One rendered page, plus everything the caller reports about it.
 ///
@@ -115,29 +112,34 @@ pub(super) fn process_render(
         // invisible to *every* consumer — the warning it would print, the
         // `--strict-links` failure it would cause, and the sidecar it would
         // appear in. Silencing only the message would leave the consequence.
-        broken_links: retain_reportable_links(&render_output.broken_links, &doc.suppressions),
-        object_type_mismatches: retain_reportable_mismatches(
+        broken_links: retain_reportable(&render_output.broken_links, &doc.suppressions)
+            .cloned()
+            .collect(),
+        object_type_mismatches: retain_reportable(
             &render_output.object_type_mismatches,
             &doc.suppressions,
-        ),
-        math_errors: retain_reportable_math_errors(&render_output.math_errors, &doc.suppressions),
-        empty_listing_errors: retain_reportable_empty_listing_errors(
+        )
+        .cloned()
+        .collect(),
+        math_errors: retain_reportable(&render_output.math_errors, &doc.suppressions)
+            .cloned()
+            .collect(),
+        empty_listing_errors: retain_reportable(
             &render_output.empty_listing_errors,
             &doc.suppressions,
-        ),
-        diagram_errors: retain_reportable_diagram_errors(
-            &render_output.diagram_errors,
-            &doc.suppressions,
-        ),
+        )
+        .cloned()
+        .collect(),
+        diagram_errors: retain_reportable(&render_output.diagram_errors, &doc.suppressions)
+            .cloned()
+            .collect(),
         diagram_sources: render_output.diagram_sources,
-        highlight_errors: retain_reportable_highlight_errors(
-            &render_output.highlight_errors,
-            &doc.suppressions,
-        ),
-        image_errors: retain_reportable_image_errors(
-            &render_output.image_errors,
-            &doc.suppressions,
-        ),
+        highlight_errors: retain_reportable(&render_output.highlight_errors, &doc.suppressions)
+            .cloned()
+            .collect(),
+        image_errors: retain_reportable(&render_output.image_errors, &doc.suppressions)
+            .cloned()
+            .collect(),
         // Not filtered by `.. noqa:`: a misconfigured template is a fault in
         // the *site*, not in any document, so no document's comment should be
         // able to silence it.

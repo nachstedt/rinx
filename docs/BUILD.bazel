@@ -13,6 +13,7 @@ rinx_library(
     srcs = [
         "benchmark.rst",
         "compatibility.rst",
+        "diagnostics.rst",
         "entities.rst",
         "getting_started.rst",
         "index.rst",

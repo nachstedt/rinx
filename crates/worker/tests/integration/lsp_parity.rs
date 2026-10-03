@@ -7,13 +7,10 @@
 //! today: the `py` domain, no entity schema, no Jinja. Project configuration
 //! reaches the server only with workspace awareness (roadmap #4, #10, #19),
 //! and from then on this test should parse each document with its library's
-//! flags. Two gaps are known, each relaxed here by name rather than by
-//! leaving documents out, and each closed by the roadmap step named:
-//!
-//! - the server does not apply `.. noqa:` yet (#2), so a document holding one
-//!   may report *more* in the editor, never less;
-//! - the server leaves out what it finds inside an `.. include::`d fragment
-//!   (#3), so the build's warnings about another file are not compared.
+//! flags. One gap is known, relaxed here by name rather than by leaving
+//! documents out, and closed by roadmap step #3: the server leaves out what it
+//! finds inside an `.. include::`d fragment, so the build's warnings about
+//! another file are not compared.
 
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
@@ -170,12 +167,7 @@ fn test_the_editor_reports_what_the_build_reports() {
         let build = build_findings(document, &scratch);
 
         // Then — collected, so one run lists every document that disagrees
-        let agrees = if text.contains(".. noqa:") {
-            build.is_subset(&editor)
-        } else {
-            build == editor
-        };
-        if !agrees {
+        if build != editor {
             let relative = document.strip_prefix(&root).unwrap_or(document);
             let _ = writeln!(
                 mismatches,

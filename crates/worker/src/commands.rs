@@ -10,11 +10,15 @@
 //! three phases into one process for the editor, and [`lsp`] serves the
 //! language server over stdio. [`cli_args`] holds the flag parsing
 //! they share, [`diagnostics`] the warning formatting [`render`] and
-//! [`preview`] share, [`suppression`] the `.. noqa:` filtering applied just
-//! before that formatting, and [`parse_files`] the filesystem loader that
-//! resolves `.. csv-table::`'s `:file:` option for both of them.
+//! [`preview`] share — each filtering through `rinx_ast::retain_reportable`
+//! first, the `.. noqa:` filter the language server shares — and
+//! [`parse_files`] the filesystem loader that resolves `.. csv-table::`'s
+//! `:file:` option for both of them. [`entity_json_schema`] and
+//! [`diagnostic_codes_rst`] are developer tooling, regenerating checked-in
+//! files.
 
 mod cli_args;
+mod diagnostic_codes_rst;
 mod diagnostics;
 mod embed_assets;
 mod entity_json_schema;
@@ -30,10 +34,10 @@ mod parse_files;
 mod parse_inputs;
 mod preview;
 mod render;
-mod suppression;
 mod validate_assets;
 mod validate_toctree;
 
+pub(crate) use diagnostic_codes_rst::cmd_diagnostic_codes_rst;
 pub(crate) use embed_assets::cmd_embed_assets;
 pub(crate) use entity_json_schema::cmd_entity_json_schema;
 pub(crate) use extract_doctests::cmd_extract_doctests;
