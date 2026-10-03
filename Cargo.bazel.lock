@@ -1,5 +1,5 @@
 {
-  "checksum": "d3a3e1955596442a1a2ce165b40fa377352cec2cca59b259cceda3d59f3bbd83",
+  "checksum": "c4c9ce213ef3174ea3a96f0c3d61a16d8edf30367bbd26cf88a149ac7fd1d5f4",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -1794,6 +1794,9 @@
     "getrandom 0.3.4": {
       "build_script_attrs": {},
       "common_attrs": {
+        "crate_features": [
+          "std"
+        ],
         "deps": {
           "common": [
             {
@@ -4024,6 +4027,44 @@
       ],
       "version": "0.3.7"
     },
+    "ppv-lite86 0.2.21": {
+      "common_attrs": {
+        "crate_features": [
+          "simd"
+        ],
+        "deps": [
+          {
+            "id": "zerocopy 0.8.56",
+            "target": "zerocopy"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "ppv_lite86",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "ppv-lite86",
+      "package_url": "https://github.com/cryptocorrosion/cryptocorrosion",
+      "repository": {
+        "Http": {
+          "sha256": "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9",
+          "url": "https://static.crates.io/crates/ppv-lite86/0.2.21/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "ppv_lite86",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.2.21"
+    },
     "proc-macro2 1.0.106": {
       "build_script_attrs": {},
       "common_attrs": {
@@ -4072,6 +4113,69 @@
         }
       ],
       "version": "1.0.106"
+    },
+    "proptest 1.11.0": {
+      "common_attrs": {
+        "crate_features": [
+          "regex-syntax",
+          "std"
+        ],
+        "deps": [
+          {
+            "id": "bitflags 2.13.1",
+            "target": "bitflags"
+          },
+          {
+            "id": "num-traits 0.2.19",
+            "target": "num_traits"
+          },
+          {
+            "id": "rand 0.9.5",
+            "target": "rand"
+          },
+          {
+            "id": "rand_chacha 0.9.0",
+            "target": "rand_chacha"
+          },
+          {
+            "id": "rand_xorshift 0.4.0",
+            "target": "rand_xorshift"
+          },
+          {
+            "id": "regex-syntax 0.8.11",
+            "target": "regex_syntax"
+          },
+          {
+            "id": "unarray 0.1.4",
+            "target": "unarray"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "proptest",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "proptest",
+      "package_url": "https://github.com/proptest-rs/proptest",
+      "repository": {
+        "Http": {
+          "sha256": "4b45fcc2344c680f5025fe57779faef368840d0bd1f42f216291f0dc4ace4744",
+          "url": "https://static.crates.io/crates/proptest/1.11.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "proptest",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "1.11.0"
     },
     "quote 1.0.45": {
       "build_script_attrs": {},
@@ -4150,6 +4254,159 @@
         }
       ],
       "version": "5.3.0"
+    },
+    "rand 0.9.5": {
+      "common_attrs": {
+        "crate_features": [
+          "alloc",
+          "os_rng",
+          "std"
+        ],
+        "deps": [
+          {
+            "id": "rand_core 0.9.5",
+            "target": "rand_core"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "rand",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "rand",
+      "package_url": "https://github.com/rust-random/rand",
+      "repository": {
+        "Http": {
+          "sha256": "b9ef1d0d795eb7d84685bca4f72f3649f064e6641543d3a8c415898726a57b41",
+          "url": "https://static.crates.io/crates/rand/0.9.5/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rand",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.9.5"
+    },
+    "rand_chacha 0.9.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "ppv-lite86 0.2.21",
+            "target": "ppv_lite86"
+          },
+          {
+            "id": "rand_core 0.9.5",
+            "target": "rand_core"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "rand_chacha",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "rand_chacha",
+      "package_url": "https://github.com/rust-random/rand",
+      "repository": {
+        "Http": {
+          "sha256": "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb",
+          "url": "https://static.crates.io/crates/rand_chacha/0.9.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rand_chacha",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.9.0"
+    },
+    "rand_core 0.9.5": {
+      "common_attrs": {
+        "crate_features": [
+          "os_rng",
+          "std"
+        ],
+        "deps": [
+          {
+            "id": "getrandom 0.3.4",
+            "target": "getrandom"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "rand_core",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "rand_core",
+      "package_url": "https://github.com/rust-random/rand",
+      "repository": {
+        "Http": {
+          "sha256": "76afc826de14238e6e8c374ddcc1fa19e374fd8dd986b0d2af0d02377261d83c",
+          "url": "https://static.crates.io/crates/rand_core/0.9.5/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rand_core",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.9.5"
+    },
+    "rand_xorshift 0.4.0": {
+      "common_attrs": {
+        "deps": [
+          {
+            "id": "rand_core 0.9.5",
+            "target": "rand_core"
+          }
+        ],
+        "edition": "2021"
+      },
+      "library_target_name": "rand_xorshift",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "rand_xorshift",
+      "package_url": "https://github.com/rust-random/rngs",
+      "repository": {
+        "Http": {
+          "sha256": "513962919efc330f829edb2535844d1b912b0fbe2ca165d613e4e8788bb05a5a",
+          "url": "https://static.crates.io/crates/rand_xorshift/0.4.0/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rand_xorshift",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.4.0"
     },
     "redox_syscall 0.5.18": {
       "common_attrs": {
@@ -4861,6 +5118,12 @@
           {
             "id": "serde_json 1.0.151",
             "target": "serde_json"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "proptest 1.11.0",
+            "target": "proptest"
           }
         ],
         "edition": "2024"
@@ -6733,6 +6996,35 @@
       ],
       "version": "1.20.0"
     },
+    "unarray 0.1.4": {
+      "common_attrs": {
+        "edition": "2018"
+      },
+      "library_target_name": "unarray",
+      "license": "MIT OR Apache-2.0",
+      "license_file": "LICENSE-APACHE",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "name": "unarray",
+      "package_url": "https://github.com/cameron1024/unarray",
+      "repository": {
+        "Http": {
+          "sha256": "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94",
+          "url": "https://static.crates.io/crates/unarray/0.1.4/download"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "unarray",
+            "crate_root": "src/lib.rs"
+          }
+        }
+      ],
+      "version": "0.1.4"
+    },
     "unicode-general-category 1.1.0": {
       "build_script_attrs": {},
       "common_attrs": {
@@ -7667,7 +7959,8 @@
     "unicode-width 0.2.2"
   ],
   "direct_dev_deps": [
-    "jsonschema 0.57.0"
+    "jsonschema 0.57.0",
+    "proptest 1.11.0"
   ],
   "workspace_members": {
     "rinx 0.1.0": "crates/worker",
