@@ -1,0 +1,6 @@
+# libFuzzer's instrumentation needs nightly. Pinned to a date, so the CI smoke
+# run cannot break overnight because nightly did; raise it by hand.
+[toolchain]
+channel = "nightly-2026-10-01"
+profile = "minimal"
+components = ["clippy", "rustfmt"]

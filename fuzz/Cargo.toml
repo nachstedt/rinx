@@ -1,0 +1,50 @@
+# Fuzz targets for the parser and the language server, run with cargo-fuzz:
+#
+#   cd fuzz && cargo fuzz run parse -- -dict=dictionaries/rst.dict
+#   cd fuzz && cargo fuzz run lsp_session
+#
+# Outside the workspace on purpose (its own `[workspace]` below, and the root
+# manifest's `exclude`): libFuzzer needs a nightly toolchain, pinned in
+# rust-toolchain.toml here, while the workspace builds on stable. Bazel never
+# sees this directory. CI runs every target briefly on each pull request and
+# for longer every night (.github/workflows/ci.yml, fuzz.yml).
+[package]
+name = "rinx-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = { version = "1", features = ["derive"] }
+libfuzzer-sys = "0.4"
+lsp-server = "0.10"
+rinx_lsp = { path = "../crates/lsp" }
+rinx_parser = { path = "../crates/parser" }
+serde_json = "1"
+
+[workspace]
+members = ["."]
+
+# The workspace's lints, which a crate outside it does not inherit.
+[lints.clippy]
+pedantic = "warn"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[[bin]]
+name = "parse"
+path = "fuzz_targets/parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "lsp_session"
+path = "fuzz_targets/lsp_session.rs"
+test = false
+doc = false
+bench = false
