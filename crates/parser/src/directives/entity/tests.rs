@@ -771,3 +771,26 @@ fn test_a_diagram_in_a_named_section_still_records_the_entity() {
     // Then
     assert!(uml.entity.is_some(), "the enclosing entity was lost");
 }
+
+#[test]
+fn test_reports_a_section_title_in_an_entitys_content() {
+    // Given — sphinx-needs parses a need's content with `match_titles=False`
+    let rst = "\
+.. req:: The system shall boot
+   :id: REQ_001
+
+   Details
+   =======
+
+   Prose.
+";
+
+    // When
+    let codes = codes(rst);
+
+    // Then — the schema's own requirements are not this test's concern
+    assert!(
+        codes.contains(&"heading.unexpected".to_string()),
+        "{codes:?}"
+    );
+}

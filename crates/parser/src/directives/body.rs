@@ -294,7 +294,9 @@ pub(in crate::directives) fn directive_content<'c>(
         let (lines, offset) = body.for_directive();
         return DirectiveContent {
             lines: unindent_body_lines(&lines),
-            ctx: ctx.nested(marker_index + 1 + offset, indent),
+            ctx: ctx
+                .nested(marker_index + 1 + offset, indent)
+                .without_section_titles(),
         };
     }
     let mut lines = vec![first_line.text.to_string()];
@@ -302,7 +304,9 @@ pub(in crate::directives) fn directive_content<'c>(
     lines.extend(unindent_body_lines(&body.lines));
     DirectiveContent {
         lines,
-        ctx: ctx.hanging(marker_index, first_line.column, indent),
+        ctx: ctx
+            .hanging(marker_index, first_line.column, indent)
+            .without_section_titles(),
     }
 }
 

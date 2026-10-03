@@ -168,6 +168,22 @@ diagnostic_codes! {
     /// A section adornment shorter than the title's display width, which
     /// docutils accepts and reports rather than rejecting.
     HeadingUnderlineTooShort => "heading.underline-too-short",
+    /// An overlined title whose underline differs from its overline in length
+    /// or character — docutils' "Title overline & underline mismatch". The
+    /// title is still a heading.
+    HeadingOverlineMismatch => "heading.overline-mismatch",
+    /// An overline over a title with no underline below it — docutils'
+    /// "Missing matching underline for section title overline", and its
+    /// "Incomplete section title" at the end of a file. The lines stay text.
+    HeadingMissingUnderline => "heading.missing-underline",
+    /// Two adornment lines directly on top of each other, with no title
+    /// between them — docutils' "Invalid section title or transition marker".
+    /// The lines stay text.
+    HeadingAdornmentWithoutTitle => "heading.adornment-without-title",
+    /// A section title where none may stand: inside a block quote, list,
+    /// table or directive body — docutils' "Unexpected section title". The
+    /// title is still a heading, but sets no level for the document's own.
+    HeadingUnexpected => "heading.unexpected",
 
     // --- Transitions -------------------------------------------------------
     TransitionAtDocumentStart => "transition.at-document-start",

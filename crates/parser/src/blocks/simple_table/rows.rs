@@ -214,10 +214,13 @@ fn build_row(
         // Where this cell's first content character sits in the document: the
         // row's first line past the blank lines normalization dropped, and the
         // table's indent plus the column's own start and stripped margin.
-        let nested = ctx.parse_ctx.nested(
-            ctx.start_i + start + cell.first_line_offset,
-            ctx.indent + column.start + cell.column_offset,
-        );
+        let nested = ctx
+            .parse_ctx
+            .nested(
+                ctx.start_i + start + cell.first_line_offset,
+                ctx.indent + column.start + cell.column_offset,
+            )
+            .without_section_titles();
         let content = parse_blocks(&content_refs, ctx.adornment_order, ctx.diagnostics, &nested);
         cells.push(TableCell {
             colspan,

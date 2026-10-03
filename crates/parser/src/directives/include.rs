@@ -437,6 +437,32 @@ mod tests {
     }
 
     #[test]
+    fn test_a_title_in_a_fragment_included_at_top_level_is_allowed() {
+        // Given — the splice is transparent, so the fragment's title is the
+        // document's own
+        let document = parse_document(
+            &[("part.rst", "Part Title\n==========\n\nText.\n")],
+            ".. include:: part.rst\n",
+        );
+
+        // Then
+        assert_eq!(codes(&document), Vec::new());
+        assert!(matches!(document.nodes[0], Node::Heading { level: 1, .. }));
+    }
+
+    #[test]
+    fn test_a_title_in_a_fragment_included_inside_a_note_is_unexpected() {
+        // Given — a fragment takes the permission of where it is included
+        let document = parse_document(
+            &[("part.rst", "Part Title\n==========\n")],
+            ".. note::\n\n   .. include:: part.rst\n",
+        );
+
+        // Then
+        assert_eq!(codes(&document), vec![DiagnosticCode::HeadingUnexpected]);
+    }
+
+    #[test]
     fn test_a_default_role_chosen_in_a_fragment_applies_after_the_include() {
         // Given a fragment choosing a default role, as docutils would apply it
         let document = parse_document(

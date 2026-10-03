@@ -82,6 +82,9 @@ pub(crate) fn try_parse_directive(
             };
         let body = collect_directive_body(lines, i + 1 + continuations_consumed, min_indent);
         let (body_lines, first_line_offset) = body.for_directive();
+        // Section titles keep the enclosing permission rather than being
+        // forbidden: Sphinx parses an object description's content with
+        // `allow_section_headings=True`.
         let body_ctx = ctx.nested(
             i + 1 + continuations_consumed + first_line_offset,
             body_indent(&body.lines),
@@ -137,7 +140,11 @@ pub(crate) fn try_parse_directive(
     // `.. image:: logo.png` has no body line to borrow one from.
     let directive_span = ctx.line_span(i, line);
     let (body_lines, first_line_offset) = body.for_directive();
-    let body_ctx = ctx.nested(i + 1 + first_line_offset, body_indent(&body.lines));
+    // A directive's content takes no section titles — docutils' default for a
+    // nested parse. The splicing directives below opt back out.
+    let body_ctx = ctx
+        .nested(i + 1 + first_line_offset, body_indent(&body.lines))
+        .without_section_titles();
     let consumed_lines = body.consumed;
 
     // Checked before the chain below, because these are the directives whose
@@ -166,7 +173,9 @@ pub(crate) fn try_parse_directive(
         &body_lines,
         adornment_order,
         diagnostics,
-        &body_ctx,
+        // A splice is transparent: its titles are allowed exactly where the
+        // directive itself stands allows them.
+        &body_ctx.with_section_titles(ctx.section_titles()),
     ) {
         return Some((1 + consumed_lines, nodes));
     }
@@ -372,7 +381,11 @@ fn try_parse_entity_directive(
     } = site;
     let body = collect_directive_body(lines, i + 1, min_indent);
     let (body_lines, first_line_offset) = body.for_directive();
-    let body_ctx = ctx.nested(i + 1 + first_line_offset, body_indent(&body.lines));
+    // An entity's content takes no section titles, as sphinx-needs parses a
+    // need's content with `match_titles=False`.
+    let body_ctx = ctx
+        .nested(i + 1 + first_line_offset, body_indent(&body.lines))
+        .without_section_titles();
     let discriminator = ctx.position(i, 0).map_or(0, |point| point.position.line);
     let directive = parse_entity(
         &EntityDirective {

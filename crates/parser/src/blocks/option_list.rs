@@ -245,7 +245,9 @@ pub(super) fn try_parse_option_list(
         }
 
         let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-        let item_ctx = ctx.nested(description_start_line, body_indent);
+        let item_ctx = ctx
+            .nested(description_start_line, body_indent)
+            .without_section_titles();
         let description = parse_blocks(&body_refs, adornment_order, diagnostics, &item_ctx);
 
         items.push(OptionListItem {

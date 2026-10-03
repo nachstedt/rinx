@@ -52,7 +52,7 @@ pub(super) fn try_parse_block_quote(
         ));
     }
 
-    let block_ctx = ctx.nested(i, reference);
+    let block_ctx = ctx.nested(i, reference).without_section_titles();
     let dedented_refs: Vec<&str> = dedented.iter().map(String::as_str).collect();
     let nodes = split_into_block_quotes(&dedented_refs, adornment_order, diagnostics, &block_ctx);
     Some((consumed, nodes))

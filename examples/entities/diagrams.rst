@@ -155,7 +155,7 @@ reports one rather than mistaking it for PlantUML source.
    :caption: Every entity in the project, and every relation between them
 
 Selecting a subgraph, and labelling its edges
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``:filter:`` is the same expression language an ``.. entity-table::``'s is, and
 ``:relations:`` — sphinx-needs spells it ``:link_types:`` — says which relations

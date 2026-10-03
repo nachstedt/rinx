@@ -94,6 +94,7 @@ entry under the heading it belongs to, as a single short sentence.
 - When the reference implementation defines a rule over full Unicode character classes, port those classes rather than an ASCII approximation that happens to satisfy the current tests.
 - Transcribe a reference implementation's pre-generated tables rather than re-deriving them, so the two cannot drift apart as either side's inputs change; fetch the actual source rather than reconstructing a table from memory.
 - Keep the reference implementation's default for a feature that changes rendered output, so adopting it never alters a site that did not ask for it.
+- Mirror the reference's defaults for nested content (docutils' `nested_parse` forbids section titles) where a container is entered, and let each directive that differs opt back in, rather than allowing everything and refusing case by case.
 
 ## Diagnostics
 
@@ -102,6 +103,7 @@ entry under the heading it belongs to, as a single short sentence.
 - Do not diagnose a failure the author could not have caused or acted on: a value this codebase chose for them degrades silently, while one they wrote is reported.
 - When a lookup is genuinely ambiguous, do not pick a winner — leave it unresolved and emit a warning that names every candidate, so the diagnostic tells the author what to disambiguate between.
 - When porting a reference implementation, port its full diagnostic set, and additionally invent diagnostics of your own wherever it silently degrades valid-looking input into something else.
+- When fixing one missing diagnostic of a construct, port every check the reference implementation makes on that construct, including where it may stand, rather than scoping the change to the case that was noticed.
 - When two phases must derive the same identifier, give them one function to call rather than two implementations to keep in step, and key it on something that cannot collide (a position) rather than on content that can.
 - Before keeping an invented diagnostic, measure its false-positive rate over the benchmark corpus; a heuristic that stays silent across real documents is safe to keep unnarrowed.
 - Report a malformed value in the earliest phase that reads the author's text, even where the reference implementation only notices it later, but keep the reference's output for it.

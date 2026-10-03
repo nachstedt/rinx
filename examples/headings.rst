@@ -62,3 +62,55 @@ adornment at all, and the two lines stay ordinary text:
 
 Not a heading
 ~~~
+
+.. _headings-misplaced:
+
+Malformed and misplaced titles
+------------------------------
+
+docutils rejects four more ways of drawing a title, and the build reports each
+of them. Each case below is preceded by a comment silencing its warning, so this
+page stays clean.
+
+An overline and an underline that differ, in length or in character, still make
+a heading, styled by the overline. The build reports
+``heading.overline-mismatch``:
+
+.. noqa: heading.overline-mismatch
+
+##################
+Unevenly adorned
+######################
+
+An overline with no underline below its title stays text. It is reported as
+``heading.missing-underline``, because a rule written directly above prose is
+as likely a transition missing its blank line:
+
+.. noqa: heading.missing-underline
+
+##################
+Never closed
+
+Two adornments with no title between them stay text too, reported as
+``heading.adornment-without-title``:
+
+.. noqa: heading.adornment-without-title
+
+##################
+------------------
+
+A section title may only stand at the top level of a document, not inside a
+block quote, a list, a table or a directive's content. One written there is
+reported as ``heading.unexpected``. It still renders, but takes no level from
+the document's own headings. Python and C object descriptions allow titles in
+their content, as Sphinx does, and so do ``.. include::`` and
+``.. if-builder::``, whose content belongs to the enclosing document.
+
+.. noqa: heading.unexpected
+
+.. note::
+
+   Inside a note
+   ~~~~~~~~~~~~~
+
+   The title above is reported.

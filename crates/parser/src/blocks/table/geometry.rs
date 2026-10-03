@@ -267,10 +267,13 @@ pub(super) fn build_row_cells(
         // document: the grid row it was sliced from, past the blank lines
         // normalization dropped, and the table's own indent plus the `|` and
         // the margin that were stripped.
-        let nested = ctx.parse_ctx.nested(
-            ctx.start_i + top + 1 + start + cell.first_line_offset,
-            ctx.table_indent() + ctx.col_bounds[column] + 1 + cell.column_offset,
-        );
+        let nested = ctx
+            .parse_ctx
+            .nested(
+                ctx.start_i + top + 1 + start + cell.first_line_offset,
+                ctx.table_indent() + ctx.col_bounds[column] + 1 + cell.column_offset,
+            )
+            .without_section_titles();
         let content = parse_blocks(&content_refs, ctx.adornment_order, ctx.diagnostics, &nested);
         cells.push(TableCell {
             colspan,

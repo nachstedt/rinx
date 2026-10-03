@@ -67,9 +67,10 @@ fn test_parse_creates_paragraph_for_shorter_underline() {
 }
 
 #[test]
-fn test_parse_ignores_surrounding_whitespace_for_heading() {
-    // Given
-    let input = "Heading  \n  =======  \n\nNext";
+fn test_parse_ignores_trailing_whitespace_for_heading() {
+    // Given — trailing only: an *indented* underline is a definition, as in
+    // docutils, which matches adornments in column 0
+    let input = "Heading  \n=======  \n\nNext";
     // When
     let doc = parse("test.rst", input);
     // Then

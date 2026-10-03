@@ -119,7 +119,7 @@ pub(super) fn try_parse_bullet_list(
             }
 
             let body_refs: Vec<&str> = body_lines.iter().map(String::as_str).collect();
-            let item_ctx = ctx.nested(item_start, body_indent);
+            let item_ctx = ctx.nested(item_start, body_indent).without_section_titles();
             let body_nodes = parse_blocks(&body_refs, adornment_order, diagnostics, &item_ctx);
 
             items.push(rinx_ast::ListItem { nodes: body_nodes });
