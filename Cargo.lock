@@ -963,6 +963,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64",
+ "lsp-server",
  "rinx_analyzer",
  "rinx_ast",
  "rinx_entity",

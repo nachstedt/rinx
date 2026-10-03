@@ -1,5 +1,5 @@
 {
-  "checksum": "9f78bf8aa392d231ffa16e6e24f33064489fac424623619965c47967368cccaa",
+  "checksum": "d3a3e1955596442a1a2ce165b40fa377352cec2cca59b259cceda3d59f3bbd83",
   "conditions": {
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
@@ -4549,6 +4549,12 @@
           {
             "id": "toml 1.1.6+spec-1.1.0",
             "target": "toml"
+          }
+        ],
+        "deps_dev": [
+          {
+            "id": "lsp-server 0.10.0",
+            "target": "lsp_server"
           }
         ],
         "edition": "2024"
