@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>concurrent.interpreters — Multiple interpreters in the same process — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concurrent Execution"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="threading.html">threading — Thread-based parallelism</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="multiprocessing.html">multiprocessing — Process-based parallelism</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="multiprocessing.shared_memory.html">multiprocessing.shared_memory — Shared memory for direct access across processes</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.html">The concurrent package</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concurrent.futures.html">concurrent.futures — Launching parallel tasks</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="concurrent.interpreters.html">concurrent.interpreters — Multiple interpreters in the same process</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle concurrent.interpreters — Multiple interpreters in the same process"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="concurrent.interpreters.html#key-details">Key details</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="concurrent.interpreters.html#introduction">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="concurrent.interpreters.html#reference">Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="concurrent.interpreters.html#basic-usage">Basic usage</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="subprocess.html">subprocess — Subprocess management</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="sched.html">sched — Event scheduler</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="queue.html">queue — A synchronized queue class</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="contextvars.html">contextvars — Context Variables</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="_thread.html">_thread — Low-level threading API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="concurrent.futures.html">&larr; concurrent.futures — Launching parallel tasks</a>
+        <a class="next" href="subprocess.html">subprocess — Subprocess management &rarr;</a>
+      </nav>
+      
+      <h1 id="concurrent-interpreters-multiple-interpreters-in-the-same-process"><code class="xref py module docutils literal">concurrent.interpreters</code> — Multiple interpreters in the same process</h1>
+<dl class="py module">
+  <dt id="py:module:concurrent.interpreters"><code class="sig-name">concurrent.interpreters</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Eric Snow &lt;ericsnowcurrently@gmail.com&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Eric Snow &lt;ericsnowcurrently@gmail.com&gt;</pre>
+</div>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.14:</span></p>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/concurrent/interpreters`</p>
+<hr />
+<p>The <code class="xref py module docutils literal">concurrent.interpreters</code> module constructs higher-level
+interfaces on top of the lower level <code class="xref py module docutils literal">_interpreters</code> module.</p>
+<p>The module is primarily meant to provide a basic API for managing
+interpreters (AKA "subinterpreters") and running things in them.
+Running mostly involves switching to an interpreter (in the current
+thread) and calling a function in that execution context.</p>
+<p>For concurrency, interpreters themselves (and this module) don't
+provide much more than isolation, which on its own isn't useful.
+Actual concurrency is available separately through
+<a class="reference internal" href="threading.html#py:module:threading" title="threading: Thread-based parallelism."><code class="xref py module docutils literal">threads</code></a>  See <a href="#" class="broken-link">below</a></p>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt><a class="reference internal" href="concurrent.futures.html#py:class:concurrent.futures.interpreterpoolexecutor"><code class="xref py class docutils literal">InterpreterPoolExecutor</code></a></dt>
+<dd><p>Combines threads with interpreters in a familiar interface.</p>
+</dd>
+</dl>
+<dl>
+<dt><a href="../howto/isolating-extensions.html#isolating-extensions-howto">Isolating Extension Modules</a></dt>
+<dd><p>How to update an extension module to support multiple interpreters.</p>
+</dd>
+</dl>
+<p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0554/"><strong>PEP 554</strong></a></p>
+<p><span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0734/"><strong>PEP 734</strong></a></p>
+<p><span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a></p>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: not WASI.
+
+   This module does not work or is not available on WebAssembly. See
+   :ref:`wasm-availability` for more information.</pre>
+</div>
+<h2 id="key-details">Key details</h2>
+<p>Before we dive in further, there are a small number of details
+to keep in mind about using multiple interpreters:</p>
+<ul>
+<li><p><a href="#" class="broken-link">isolated</a>, by default</p>
+</li>
+<li><p>no implicit threads</p>
+</li>
+<li><p>not all PyPI packages support use in multiple interpreters yet</p>
+</li>
+</ul>
+<a id="interpreters-intro"></a>
+<h2 id="introduction">Introduction</h2>
+<p>An "interpreter" is effectively the execution context of the Python
+runtime.  It contains all of the state the runtime needs to execute
+a program.  This includes things like the import state and builtins.
+(Each thread, even if there's only the main thread, has some extra
+runtime state, in addition to the current interpreter, related to
+the current exception and the bytecode eval loop.)</p>
+<p>The concept and functionality of the interpreter have been a part of
+Python since version 2.2, but the feature was only available through
+the C-API and not well known, and the <a href="#" class="broken-link">isolation</a>
+was relatively incomplete until version 3.12.</p>
+<a id="interp-isolation"></a>
+<h3 id="multiple-interpreters-and-isolation">Multiple Interpreters and Isolation</h3>
+<p>A Python implementation may support using multiple interpreters in the
+same process.  CPython has this support.  Each interpreter is
+effectively isolated from the others (with a limited number of
+carefully managed process-global exceptions to the rule).</p>
+<p>That isolation is primarily useful as a strong separation between
+distinct logical components of a program, where you want to have
+careful control of how those components interact.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Interpreters in the same process can technically never be strictly
+isolated from one another since there are few restrictions on memory
+access within the same process.  The Python runtime makes a best
+effort at isolation but extension modules may easily violate that.
+Therefore, do not use multiple interpreters in security-sensitive
+situations, where they shouldn't have access to each other's data.</p>
+</div>
+<h3 id="running-in-an-interpreter">Running in an Interpreter</h3>
+<p>Running in a different interpreter involves switching to it in the
+current thread and then calling some function.  The runtime will
+execute the function using the current interpreter's state.  The
+<code class="xref py module docutils literal">concurrent.interpreters</code> module provides a basic API for
+creating and managing interpreters, as well as the switch-and-call
+operation.</p>
+<p>No other threads are automatically started for the operation.
+There is <a href="#" class="broken-link">a helper</a> for that though.
+There is another dedicated helper for calling the builtin
+<a class="reference internal" href="functions.html#py:function:exec"><code class="xref py function docutils literal">exec</code></a> in an interpreter.</p>
+<p>When <a class="reference internal" href="functions.html#py:function:exec"><code class="xref py function docutils literal">exec</code></a> (or <a class="reference internal" href="functions.html#py:function:eval"><code class="xref py function docutils literal">eval</code></a>) are called in an interpreter,
+they run using the interpreter's <code class="xref py module docutils literal">__main__</code> module as the
+"globals" namespace.  The same is true for functions that aren't
+associated with any module.  This is the same as how scripts invoked
+from the command-line run in the <code class="xref py module docutils literal">__main__</code> module.</p>
+<a id="interp-concurrency"></a>
+<h3 id="concurrency-and-parallelism">Concurrency and Parallelism</h3>
+<p>As noted earlier, interpreters do not provide any concurrency
+on their own.  They strictly represent the isolated execution
+context the runtime will use <em>in the current thread</em>.  That isolation
+makes them similar to processes, but they still enjoy in-process
+efficiency, like threads.</p>
+<p>All that said, interpreters do naturally support certain flavors of
+concurrency.
+There's a powerful side effect of that isolation.  It enables a
+different approach to concurrency than you can take with async or
+threads.  It's a similar concurrency model to CSP or the actor model,
+a model which is relatively easy to reason about.</p>
+<p>You can take advantage of that concurrency model in a single thread,
+switching back and forth between interpreters, Stackless-style.
+However, this model is more useful when you combine interpreters
+with multiple threads.  This mostly involves starting a new thread,
+where you switch to another interpreter and run what you want there.</p>
+<p>Each actual thread in Python, even if you're only running in the main
+thread, has its own <em>current</em> execution context.  Multiple threads can
+use the same interpreter or different ones.</p>
+<p>At a high level, you can think of the combination of threads and
+interpreters as threads with opt-in sharing.</p>
+<p>As a significant bonus, interpreters are sufficiently isolated that
+they do not share the <a class="reference internal" href="../glossary.html#term-gil"><span class="xref std std-term">GIL</span></a>, which means combining threads with
+multiple interpreters enables full multi-core parallelism.
+(This has been the case since Python 3.12.)</p>
+<h3 id="communication-between-interpreters">Communication Between Interpreters</h3>
+<p>In practice, multiple interpreters are useful only if we have a way
+to communicate between them.  This usually involves some form of
+message passing, but can even mean sharing data in some carefully
+managed way.</p>
+<p>With this in mind, the <code class="xref py module docutils literal">concurrent.interpreters</code> module provides
+a <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">queue.Queue</code></a> implementation, available through
+<a class="reference internal" href="concurrent.interpreters.html#py:function:concurrent.interpreters.create_queue"><code class="xref py function docutils literal">create_queue</code></a>.</p>
+<a id="interp-object-sharing"></a>
+<h3 id="sharing-objects">"Sharing" Objects</h3>
+<p>Any data actually shared between interpreters loses the thread-safety
+provided by the <a class="reference internal" href="../glossary.html#term-gil"><span class="xref std std-term">GIL</span></a>.  There are various options for dealing with
+this in extension modules.  However, from Python code the lack of
+thread-safety means objects can't actually be shared, with a few
+exceptions.  Instead, a copy must be created, which means mutable
+objects won't stay in sync.</p>
+<p>By default, most objects are copied with <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a> when they are
+passed to another interpreter.  Nearly all of the immutable builtin
+objects are either directly shared or copied efficiently.  For example:</p>
+<ul>
+<li><p><a class="reference internal" href="constants.html#py:data:none"><code class="xref py data docutils literal">None</code></a></p>
+</li>
+<li><p><a class="reference internal" href="functions.html#py:class:bool"><code class="xref py class docutils literal">bool</code></a> (<a class="reference internal" href="constants.html#py:data:true"><code class="xref py data docutils literal">True</code></a> and <a class="reference internal" href="constants.html#py:data:false"><code class="xref py data docutils literal">False</code></a>)</p>
+</li>
+<li><p><a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a></p>
+</li>
+<li><p><a class="reference internal" href="stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a></p>
+</li>
+<li><p><a class="reference internal" href="functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a></p>
+</li>
+<li><p><a class="reference internal" href="functions.html#py:class:float"><code class="xref py class docutils literal">float</code></a></p>
+</li>
+<li><p><a class="reference internal" href="stdtypes.html#py:class:tuple"><code class="xref py class docutils literal">tuple</code></a> (of similarly supported objects)</p>
+</li>
+</ul>
+<p>There is a small number of Python types that actually share mutable
+data between interpreters:</p>
+<ul>
+<li><p><a class="reference internal" href="stdtypes.html#py:class:memoryview"><code class="xref py class docutils literal">memoryview</code></a></p>
+</li>
+<li><p><a class="reference internal" href="concurrent.interpreters.html#py:class:concurrent.interpreters.queue"><code class="xref py class docutils literal">Queue</code></a></p>
+</li>
+</ul>
+<h2 id="reference">Reference</h2>
+<p>This module defines the following functions:</p>
+<dl class="py function">
+  <dt id="py:function:concurrent.interpreters.list_all"><code class="sig-name">list_all()</code></dt>
+  <dd><p>Return a <a class="reference internal" href="stdtypes.html#py:class:list"><code class="xref py class docutils literal">list</code></a> of <a class="reference internal" href="concurrent.interpreters.html#py:class:concurrent.interpreters.interpreter"><code class="xref py class docutils literal">Interpreter</code></a> objects,
+one for each existing interpreter.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:concurrent.interpreters.get_current"><code class="sig-name">get_current()</code></dt>
+  <dd><p>Return an <a class="reference internal" href="concurrent.interpreters.html#py:class:concurrent.interpreters.interpreter"><code class="xref py class docutils literal">Interpreter</code></a> object for the currently running
+interpreter.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:concurrent.interpreters.get_main"><code class="sig-name">get_main()</code></dt>
+  <dd><p>Return an <a class="reference internal" href="concurrent.interpreters.html#py:class:concurrent.interpreters.interpreter"><code class="xref py class docutils literal">Interpreter</code></a> object for the main interpreter.
+This is the interpreter the runtime created to run the <a class="reference internal" href="../glossary.html#term-repl"><span class="xref std std-term">REPL</span></a>
+or the script given at the command-line.  It is usually the only one.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:concurrent.interpreters.create"><code class="sig-name">create()</code></dt>
+  <dd><p>Initialize a new (idle) Python interpreter
+and return a <a class="reference internal" href="concurrent.interpreters.html#py:class:concurrent.interpreters.interpreter"><code class="xref py class docutils literal">Interpreter</code></a> object for it.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:concurrent.interpreters.create_queue"><code class="sig-name">create_queue()</code></dt>
+  <dd><p>Initialize a new cross-interpreter queue and return a <a class="reference internal" href="concurrent.interpreters.html#py:class:concurrent.interpreters.queue"><code class="xref py class docutils literal">Queue</code></a>
+object for it.</p>
+</dd>
+</dl>
+<h3 id="interpreter-objects">Interpreter objects</h3>
+<dl class="py class">
+  <dt id="py:class:concurrent.interpreters.interpreter"><em class="property">class</em> <code class="sig-name">Interpreter(id)</code></dt>
+  <dd><p>A single interpreter in the current process.</p>
+<p>Generally, <a class="reference internal" href="concurrent.interpreters.html#py:class:concurrent.interpreters.interpreter"><code class="xref py class docutils literal">Interpreter</code></a> shouldn't be called directly.
+Instead, use <a class="reference internal" href="concurrent.interpreters.html#py:function:concurrent.interpreters.create"><code class="xref py function docutils literal">create</code></a> or one of the other module functions.</p>
+<dl class="py attribute">
+  <dt id="py:attribute:concurrent.interpreters.interpreter.id"><code class="sig-name">id</code></dt>
+  <dd><p>(read-only)</p>
+<p>The underlying interpreter's ID.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+  <dt id="py:attribute:concurrent.interpreters.interpreter.whence"><code class="sig-name">whence</code></dt>
+  <dd><p>(read-only)</p>
+<p>A string describing where the interpreter came from.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:concurrent.interpreters.interpreter.is_running"><code class="sig-name">is_running()</code></dt>
+  <dd><p>Return <code>True</code> if the interpreter is currently executing code
+in its <code class="xref py module docutils literal">__main__</code> module and <code>False</code> otherwise.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:concurrent.interpreters.interpreter.close"><code class="sig-name">close()</code></dt>
+  <dd><p>Finalize and destroy the interpreter.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:concurrent.interpreters.interpreter.prepare_main"><code class="sig-name">prepare_main(ns=None, **kwargs)</code></dt>
+  <dd><p>Bind objects in the interpreter's <code class="xref py module docutils literal">__main__</code> module.</p>
+<p>Some objects are actually shared and some are copied efficiently,
+but most are copied via <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a>.  See <a href="concurrent.interpreters.html#interp-object-sharing">"Sharing" Objects</a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:concurrent.interpreters.interpreter.exec"><code class="sig-name">exec(code, /, dedent=True)</code></dt>
+  <dd><p>Run the given source code in the interpreter (in the current thread).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:concurrent.interpreters.interpreter.call"><code class="sig-name">call(callable, /, *args, **kwargs)</code></dt>
+  <dd><p>Return the result of calling running the given function in the
+interpreter (in the current thread).</p>
+</dd>
+</dl>
+<a id="interp-call-in-thread"></a>
+<dl class="py method">
+  <dt id="py:method:concurrent.interpreters.interpreter.call_in_thread"><code class="sig-name">call_in_thread(callable, /, *args, **kwargs)</code></dt>
+  <dd><p>Run the given function in the interpreter (in a new thread).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h3 id="exceptions">Exceptions</h3>
+<dl class="py exception">
+  <dt id="py:exception:concurrent.interpreters.interpretererror"><em class="property">exception</em> <code class="sig-name">InterpreterError</code></dt>
+  <dd><p>This exception, a subclass of <a class="reference internal" href="exceptions.html#py:exception:exception"><code class="xref py exception docutils literal">Exception</code></a>, is raised when
+an interpreter-related error happens.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:concurrent.interpreters.interpreternotfounderror"><em class="property">exception</em> <code class="sig-name">InterpreterNotFoundError</code></dt>
+  <dd><p>This exception, a subclass of <a class="reference internal" href="concurrent.interpreters.html#py:exception:concurrent.interpreters.interpretererror"><code class="xref py exception docutils literal">InterpreterError</code></a>, is raised when
+the targeted interpreter no longer exists.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:concurrent.interpreters.executionfailed"><em class="property">exception</em> <code class="sig-name">ExecutionFailed</code></dt>
+  <dd><p>This exception, a subclass of <a class="reference internal" href="concurrent.interpreters.html#py:exception:concurrent.interpreters.interpretererror"><code class="xref py exception docutils literal">InterpreterError</code></a>, is raised when
+the running code raised an uncaught exception.</p>
+<dl class="py attribute">
+  <dt id="py:attribute:concurrent.interpreters.executionfailed.excinfo"><code class="sig-name">excinfo</code></dt>
+  <dd><p>A basic snapshot of the exception raised in the other interpreter.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:concurrent.interpreters.notshareableerror"><em class="property">exception</em> <code class="sig-name">NotShareableError</code></dt>
+  <dd><p>This exception, a subclass of <a class="reference internal" href="exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a>, is raised when
+an object cannot be sent to another interpreter.</p>
+</dd>
+</dl>
+<h3 id="communicating-between-interpreters">Communicating Between Interpreters</h3>
+<dl class="py class">
+  <dt id="py:class:concurrent.interpreters.queue"><em class="property">class</em> <code class="sig-name">Queue(id)</code></dt>
+  <dd><p>A wrapper around a low-level, cross-interpreter queue, which
+implements the <a class="reference internal" href="queue.html#py:class:queue.queue"><code class="xref py class docutils literal">queue.Queue</code></a> interface.  The underlying queue
+can only be created through <a class="reference internal" href="concurrent.interpreters.html#py:function:concurrent.interpreters.create_queue"><code class="xref py function docutils literal">create_queue</code></a>.</p>
+<p>Some objects are actually shared and some are copied efficiently,
+but most are copied via <a class="reference internal" href="pickle.html#py:module:pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py module docutils literal">pickle</code></a>.  See <a href="concurrent.interpreters.html#interp-object-sharing">"Sharing" Objects</a>.</p>
+<dl class="py attribute">
+  <dt id="py:attribute:concurrent.interpreters.queue.id"><code class="sig-name">id</code></dt>
+  <dd><p>(read-only)</p>
+<p>The queue's ID.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:concurrent.interpreters.queueemptyerror"><em class="property">exception</em> <code class="sig-name">QueueEmptyError</code></dt>
+  <dd><p>This exception, a subclass of <a class="reference internal" href="queue.html#py:exception:queue.empty"><code class="xref py exception docutils literal">queue.Empty</code></a>, is raised from
+<code class="xref py method docutils literal">Queue.get</code> and <code class="xref py method docutils literal">Queue.get_nowait</code> when the queue
+is empty.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:concurrent.interpreters.queuefullerror"><em class="property">exception</em> <code class="sig-name">QueueFullError</code></dt>
+  <dd><p>This exception, a subclass of <a class="reference internal" href="queue.html#py:exception:queue.full"><code class="xref py exception docutils literal">queue.Full</code></a>, is raised from
+<code class="xref py method docutils literal">Queue.put</code> and <code class="xref py method docutils literal">Queue.put_nowait</code> when the queue
+is full.</p>
+</dd>
+</dl>
+<h2 id="basic-usage">Basic usage</h2>
+<p>Creating an interpreter and running code in it:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">concurrent</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">interpreters</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">interp</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">interpreters</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">create</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Run in the current OS thread.
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">interp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">exec</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">print(&quot;spam!&quot;)<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">interp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">exec</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;&quot;&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python"><span class="hl-meta hl-string hl-python"></span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">if True:</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">    print(&#39;spam!&#39;)</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">    <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;&quot;&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">textwrap</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-meta hl-generic-name hl-python">dedent</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">interp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">exec</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">dedent</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&quot;&quot;&quot;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python"></span></span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">    <span class="hl-meta hl-string hl-python"></span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">print(&#39;spam!&#39;)</span></span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-double hl-block hl-python">    <span class="hl-punctuation hl-definition hl-string hl-end hl-python">&quot;&quot;&quot;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">arg</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">arg</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">res</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">interp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">spam!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">res</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python"><span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">print</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">spam!<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">interp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">call</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> Run in new OS thread.
+</span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">t</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">interp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">call_in_thread</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">run</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">t</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">join</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span></pre></div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="concurrent.futures.html">&larr; concurrent.futures — Launching parallel tasks</a>
+        <a class="next" href="subprocess.html">subprocess — Subprocess management &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ftplib — FTP protocol client — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Internet Protocols and Support"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="webbrowser.html">webbrowser — Convenient web-browser controller</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="wsgiref.html">wsgiref — WSGI Utilities and Reference Implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.html">urllib — URL handling modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.request.html">urllib.request — Extensible library for opening URLs</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.parse.html">urllib.parse — Parse URLs into components</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.error.html">urllib.error — Exception classes raised by urllib.request</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="urllib.robotparser.html">urllib.robotparser —  Parser for robots.txt</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.html">http — HTTP modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.client.html">http.client — HTTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current has-children">
+            <a href="ftplib.html">ftplib — FTP protocol client</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle ftplib — FTP protocol client"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4">
+            <a href="ftplib.html#reference">Reference</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="poplib.html">poplib — POP3 protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="imaplib.html">imaplib — IMAP4 protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="smtplib.html">smtplib — SMTP protocol client</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="uuid.html">uuid — UUID objects according to RFC 9562</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="socketserver.html">socketserver — A framework for network servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.server.html">http.server — HTTP servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.cookies.html">http.cookies — HTTP state management</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="http.cookiejar.html">http.cookiejar — Cookie handling for HTTP clients</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.html">xmlrpc — XMLRPC server and client modules</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.client.html">xmlrpc.client — XML-RPC client access</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="xmlrpc.server.html">xmlrpc.server — Basic XML-RPC servers</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="ipaddress.html">ipaddress — IPv4&#x2f;IPv6 manipulation library</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="http.client.html">&larr; http.client — HTTP protocol client</a>
+        <a class="next" href="poplib.html">poplib — POP3 protocol client &rarr;</a>
+      </nav>
+      
+      <h1 id="ftplib-ftp-protocol-client"><code class="xref py module docutils literal">ftplib</code> — FTP protocol client</h1>
+<dl class="py module">
+  <dt id="py:module:ftplib"><code class="sig-name">ftplib</code></dt>
+  <dd></dd>
+</dl>
+<p><strong>Source code:</strong> :source:`Lib/ftplib.py`</p>
+<span id="index-0"></span>
+<hr />
+<p>This module defines the class <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> and a few related items. The
+<a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> class implements the client side of the FTP protocol.  You can use
+this to write Python programs that perform a variety of automated FTP jobs, such
+as mirroring other FTP servers.  It is also used by the module
+<a class="reference internal" href="urllib.request.html#py:module:urllib.request" title="urllib.request: Extensible library for opening URLs."><code class="xref py module docutils literal">urllib.request</code></a> to handle URLs that use FTP.  For more information on FTP
+(File Transfer Protocol), see internet <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc959.html"><strong>RFC 959</strong></a>.</p>
+<p>The default encoding is UTF-8, following <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2640.html"><strong>RFC 2640</strong></a>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'availability'</p>
+<pre class="directive-error-source">.. availability:: not WASI.
+
+   This module does not work or is not available on WebAssembly. See
+   :ref:`wasm-availability` for more information.</pre>
+</div>
+<p>Here's a sample session using the <a class="reference internal" href="ftplib.html#py:module:ftplib" title="ftplib: FTP protocol client (requires sockets)."><code class="xref py module docutils literal">ftplib</code></a> module:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-from hl-python">from</span></span><span class="hl-meta hl-statement hl-import hl-python"><span class="hl-meta hl-import-source hl-python"> <span class="hl-meta hl-import-path hl-python"><span class="hl-meta hl-import-name hl-python">ftplib</span></span> <span class="hl-meta hl-statement hl-import hl-python"><span class="hl-keyword hl-control hl-import hl-python">import</span></span></span></span><span class="hl-meta hl-statement hl-import hl-python"></span><span class="hl-meta hl-statement hl-import hl-python"> <span class="hl-variable hl-other hl-constant hl-python">FTP</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftp</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">FTP</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ftp.us.debian.org<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>  <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> connect to host, default port
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">login</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>                     <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> user anonymous, passwd anonymous@
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">230 Login successful.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">cwd</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">debian<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>               <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> change into &quot;debian&quot; directory
+</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">250 Directory successfully changed.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">retrlines</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">LIST<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span>           <span class="hl-comment hl-line hl-number-sign hl-python"><span class="hl-punctuation hl-definition hl-comment hl-python">#</span> list directory contents
+</span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rw</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">rw</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">r</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span>    <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1176</span>     <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1176</span>         <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1063</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Jun</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">15</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span><span class="hl-punctuation hl-separator hl-annotation hl-variable hl-python">:</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">18</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-other hl-constant hl-python">README</span></span></span>
+<span class="hl-source hl-python"><span class="hl-constant hl-language hl-python">...</span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">drwxr</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sr</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span>    <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">5</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1176</span>     <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1176</span>         <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4096</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Dec</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">19</span>  <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2000</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">pool</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">drwxr</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">sr</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span>    <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1176</span>     <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1176</span>         <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4096</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Nov</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">17</span>  <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2008</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">project</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">drwxr</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">xr</span></span><span class="hl-keyword hl-operator hl-arithmetic hl-python">-</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">x</span></span>    <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">3</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1176</span>     <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">1176</span>         <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">4096</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">Oct</span></span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">10</span>  <span class="hl-constant hl-numeric hl-integer hl-decimal hl-python">2012</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">tools</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">226 Directory send OK.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-python">with</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">open</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">README<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">wb<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span> <span class="hl-meta hl-statement hl-with hl-python"><span class="hl-keyword hl-control hl-flow hl-with hl-as hl-python">as</span></span></span><span class="hl-meta hl-statement hl-with hl-python"> <span class="hl-meta hl-generic-name hl-python">fp</span><span class="hl-punctuation hl-section hl-block hl-with hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span>     <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">retrbinary</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">RETR README<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-arguments hl-python">,</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">fp</span><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span><span class="hl-meta hl-generic-name hl-python">write</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">226 Transfer complete.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftp</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">quit</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">221 Goodbye.<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span></pre></div>
+<a id="ftplib-reference"></a>
+<h2 id="reference">Reference</h2>
+<a id="ftp-objects"></a>
+<h3 id="ftp-objects">FTP objects</h3>
+<dl class="py class">
+  <dt id="py:class:ftplib.ftp"><em class="property">class</em> <code class="sig-name">FTP(host='', user='', passwd='', acct='', timeout=None, \</code></dt>
+  <dt id="py:class:ftplib.encoding='utf-8')"><em class="property">class</em> <code class="sig-name">source_address=None, *, encoding='utf-8')</code></dt>
+  <dd><p>Return a new instance of the <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> class.</p>
+<dl>
+<dt>:param str host:</dt>
+<dd><p>The hostname to connect to.
+If given, <code class="code">connect(host)</code> is implicitly called by the constructor.</p>
+</dd>
+<dt>:param str user:</dt>
+<dd><p>The username to log in with (default: <code>'anonymous'</code>).
+If given, <code class="code">login(host, passwd, acct)</code> is implicitly called
+by the constructor.</p>
+</dd>
+<dt>:param str passwd:</dt>
+<dd><p>The password to use when logging in. If not given, and if <em>passwd</em> is the empty string or <code>"-"</code>, a password will be automatically generated.</p>
+</dd>
+<dt>:param str acct:</dt>
+<dd><p>Account information to be used for the <code>ACCT</code> FTP command. Few systems implement this. See <a href="https://datatracker.ietf.org/doc/html/rfc959.html">RFC-959</a> for more details.</p>
+</dd>
+<dt>:param timeout:</dt>
+<dd><p>A timeout in seconds for blocking operations like <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.connect"><code class="xref py method docutils literal">connect</code></a>
+(default: the global default timeout setting).</p>
+</dd>
+</dl>
+<p>:type timeout: float | None</p>
+<dl>
+<dt>:param source_address:</dt>
+<dd><p>A 2-tuple <code>(host, port)</code> for the socket to bind to as its source address before connecting.</p>
+</dd>
+</dl>
+<p>:type source_address: tuple | None</p>
+<dl>
+<dt>:param str encoding:</dt>
+<dd><p>The encoding for directories and filenames (default: <code>'utf-8'</code>).</p>
+</dd>
+</dl>
+<p>The <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> class supports the :keyword:`with` statement, e.g.:</p>
+<blockquote>
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; from ftplib import FTP
+&gt;&gt;&gt; with FTP("ftp1.at.proftpd.org") as ftp:
+...     ftp.login()
+...     ftp.dir()
+...
+'230 Anonymous login ok, restrictions apply.'
+dr-xr-xr-x   9 ftp      ftp           154 May  6 10:43 .
+dr-xr-xr-x   9 ftp      ftp           154 May  6 10:43 ..
+dr-xr-xr-x   5 ftp      ftp          4096 May  6 10:43 CentOS
+dr-xr-xr-x   3 ftp      ftp            18 Jul 10  2008 Fedora
+&gt;&gt;&gt;</pre></div>
+</blockquote>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.2:</span></p>
+<p>Support for the :keyword:`with` statement was added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>source_address</em> parameter was added.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>If the <em>timeout</em> parameter is set to be zero, it will raise a
+<a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a> to prevent the creation of a non-blocking socket.
+The <em>encoding</em> parameter was added, and the default was changed from
+Latin-1 to UTF-8 to follow <span class="target" id="index-3"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2640.html"><strong>RFC 2640</strong></a>.</p>
+</div>
+<p>Several <code class="xref py class docutils literal">FTP</code> methods are available in two flavors:
+one for handling text files and another for binary files.
+The methods are named for the command which is used followed by
+<code>lines</code> for the text version or <code>binary</code> for the binary version.</p>
+<p><a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> instances have the following methods:</p>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.set_debuglevel"><code class="sig-name">FTP.set_debuglevel(level)</code></dt>
+  <dd><p>Set the instance's debugging level as an <a class="reference internal" href="functions.html#py:class:int"><code class="xref py class docutils literal">int</code></a>.
+This controls the amount of debugging output printed.
+The debug levels are:</p>
+<ul>
+<li><p><code>0</code> (default): No debug output.</p>
+</li>
+<li><p><code>1</code>: Produce a moderate amount of debug output,
+generally a single line per request.</p>
+</li>
+<li><p><code>2</code> or higher: Produce the maximum amount of debugging output,
+logging each line sent and received on the control connection.</p>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.connect"><code class="sig-name">FTP.connect(host='', port=0, timeout=None, source_address=None)</code></dt>
+  <dd><p>Connect to the given host and port.
+This function should be called only once for each instance;
+it should not be called if a <em>host</em> argument was given
+when the <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> instance was created.
+All other <code class="xref py class docutils literal">FTP</code> methods can only be called
+after a connection has successfully been made.</p>
+<dl>
+<dt>:param str host:</dt>
+<dd><p>The host to connect to.</p>
+</dd>
+<dt>:param int port:</dt>
+<dd><p>The TCP port to connect to (default: <code>21</code>,
+as specified by the FTP protocol specification).
+It is rarely needed to specify a different port number.</p>
+</dd>
+<dt>:param timeout:</dt>
+<dd><p>A timeout in seconds for the connection attempt
+(default: the global default timeout setting).</p>
+</dd>
+</dl>
+<p>:type timeout: float | None</p>
+<dl>
+<dt>:param source_address:</dt>
+<dd><p>A 2-tuple <code>(host, port)</code> for the socket to bind to as its source address before connecting.</p>
+</dd>
+</dl>
+<p>:type source_address: tuple | None</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: ftplib.connect self,host,port ftplib.FTP.connect</pre>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p><em>source_address</em> parameter was added.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.getwelcome"><code class="sig-name">FTP.getwelcome()</code></dt>
+  <dd><p>Return the welcome message sent by the server in reply to the initial
+connection.  (This message sometimes contains disclaimers or help information
+that may be relevant to the user.)</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.login"><code class="sig-name">FTP.login(user='anonymous', passwd='', acct='')</code></dt>
+  <dd><p>Log on to the connected FTP server.
+This function should be called only once for each instance,
+after a connection has been established;
+it should not be called if the <em>host</em> and <em>user</em> arguments were given
+when the <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> instance was created.
+Most FTP commands are only allowed after the client has logged in.</p>
+<dl>
+<dt>:param str user:</dt>
+<dd><p>The username to log in with (default: <code>'anonymous'</code>).</p>
+</dd>
+<dt>:param str passwd:</dt>
+<dd><p>The password to use when logging in. If not given, and if <em>passwd</em> is the empty string or <code>"-"</code>, a password will be automatically generated.</p>
+</dd>
+<dt>:param str acct:</dt>
+<dd><p>Account information to be used for the <code>ACCT</code> FTP command. Few systems implement this. See <a href="https://datatracker.ietf.org/doc/html/rfc959.html">RFC-959</a> for more details.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.abort"><code class="sig-name">FTP.abort()</code></dt>
+  <dd><p>Abort a file transfer that is in progress.  Using this does not always work, but
+it's worth a try.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.sendcmd"><code class="sig-name">FTP.sendcmd(cmd)</code></dt>
+  <dd><p>Send a simple command string to the server and return the response string.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: ftplib.sendcmd self,cmd ftplib.FTP.sendcmd</pre>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.voidcmd"><code class="sig-name">FTP.voidcmd(cmd)</code></dt>
+  <dd><p>Send a simple command string to the server and handle the response.  Return
+the response string if the response code corresponds to success (codes in
+the range 200–299).  Raise <a class="reference internal" href="ftplib.html#py:exception:ftplib.error_reply"><code class="xref py exception docutils literal">error_reply</code></a> otherwise.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'audit-event'</p>
+<pre class="directive-error-source">.. audit-event:: ftplib.sendcmd self,cmd ftplib.FTP.voidcmd</pre>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.retrbinary"><code class="sig-name">FTP.retrbinary(cmd, callback, blocksize=8192, rest=None)</code></dt>
+  <dd><p>Retrieve a file in binary transfer mode.</p>
+<dl>
+<dt>:param str cmd:</dt>
+<dd><p>An appropriate <code>RETR</code> command: :samp:`"RETR {filename}"`.</p>
+</dd>
+<dt>:param callback:</dt>
+<dd><p>A single parameter callable that is called
+for each block of data received,
+with its single argument being the data as <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>.</p>
+</dd>
+</dl>
+<p>:type callback: <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a></p>
+<dl>
+<dt>:param int blocksize:</dt>
+<dd><p>The maximum chunk size to read on the low-level
+<a class="reference internal" href="socket.html#py:class:socket.socket"><code class="xref py class docutils literal">socket</code></a> object created to do the actual transfer.
+This also corresponds to the largest size of data
+that will be passed to <em>callback</em>.
+Defaults to <code>8192</code>.</p>
+</dd>
+<dt>:param int rest:</dt>
+<dd><p>A <code>REST</code> command to be sent to the server.
+See the documentation for the <em>rest</em> parameter of the <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.transfercmd"><code class="xref py method docutils literal">transfercmd</code></a> method.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.retrlines"><code class="sig-name">FTP.retrlines(cmd, callback=None)</code></dt>
+  <dd><p>Retrieve a file or directory listing in the encoding specified by the
+<em>encoding</em> parameter at initialization.
+<em>cmd</em> should be an appropriate <code>RETR</code> command (see <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.retrbinary"><code class="xref py method docutils literal">retrbinary</code></a>) or
+a command such as <code>LIST</code> or <code>NLST</code> (usually just the string <code>'LIST'</code>).
+<code>LIST</code> retrieves a list of files and information about those files.
+<code>NLST</code> retrieves a list of file names.
+The <em>callback</em> function is called for each line with a string argument
+containing the line with the trailing CRLF stripped.  The default <em>callback</em>
+prints the line to <a class="reference internal" href="sys.html#py:data:sys.stdout"><code class="xref py data docutils literal">sys.stdout</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.set_pasv"><code class="sig-name">FTP.set_pasv(val)</code></dt>
+  <dd><p>Enable "passive" mode if <em>val</em> is true, otherwise disable passive mode.
+Passive mode is on by default.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.storbinary"><code class="sig-name">FTP.storbinary(cmd, fp, blocksize=8192, callback=None, rest=None)</code></dt>
+  <dd><p>Store a file in binary transfer mode.</p>
+<dl>
+<dt>:param str cmd:</dt>
+<dd><p>An appropriate <code>STOR</code> command: :samp:`"STOR {filename}"`.</p>
+</dd>
+<dt>:param fp:</dt>
+<dd><p>A file object (opened in binary mode) which is read until EOF,
+using its <a class="reference internal" href="io.html#py:method:io.rawiobase.read"><code class="xref py method docutils literal">read</code></a> method in blocks of size <em>blocksize</em>
+to provide the data to be stored.</p>
+</dd>
+</dl>
+<p>:type fp: <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a></p>
+<dl>
+<dt>:param int blocksize:</dt>
+<dd><p>The read block size.
+Defaults to <code>8192</code>.</p>
+</dd>
+<dt>:param callback:</dt>
+<dd><p>A single parameter callable that is called
+for each block of data sent,
+with its single argument being the data as <a class="reference internal" href="stdtypes.html#py:class:bytes"><code class="xref py class docutils literal">bytes</code></a>.</p>
+</dd>
+</dl>
+<p>:type callback: <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a></p>
+<dl>
+<dt>:param int rest:</dt>
+<dd><p>A <code>REST</code> command to be sent to the server.
+See the documentation for the <em>rest</em> parameter of the <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.transfercmd"><code class="xref py method docutils literal">transfercmd</code></a> method.</p>
+</dd>
+<dt>.. versionchanged:: 3.2</dt>
+<dd><p>The <em>rest</em> parameter was added.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.storlines"><code class="sig-name">FTP.storlines(cmd, fp, callback=None)</code></dt>
+  <dd><p>Store a file in line mode.  <em>cmd</em> should be an appropriate
+<code>STOR</code> command (see <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.storbinary"><code class="xref py method docutils literal">storbinary</code></a>).  Lines are read until EOF from the
+<a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file object</span></a> <em>fp</em> (opened in binary mode) using its <a class="reference internal" href="io.html#py:method:io.iobase.readline"><code class="xref py method docutils literal">readline</code></a>
+method to provide the data to be stored.  <em>callback</em> is an optional single
+parameter callable that is called on each line after it is sent.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.transfercmd"><code class="sig-name">FTP.transfercmd(cmd, rest=None)</code></dt>
+  <dd><p>Initiate a transfer over the data connection.  If the transfer is active, send an
+<code>EPRT</code> or  <code>PORT</code> command and the transfer command specified by <em>cmd</em>, and
+accept the connection.  If the server is passive, send an <code>EPSV</code> or <code>PASV</code>
+command, connect to it, and start the transfer command.  Either way, return the
+socket for the connection.</p>
+<p>If optional <em>rest</em> is given, a <code>REST</code> command is sent to the server, passing
+<em>rest</em> as an argument.  <em>rest</em> is usually a byte offset into the requested file,
+telling the server to restart sending the file's bytes at the requested offset,
+skipping over the initial bytes.  Note however that the <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.transfercmd"><code class="xref py method docutils literal">transfercmd</code></a>
+method converts <em>rest</em> to a string with the <em>encoding</em> parameter specified
+at initialization, but no check is performed on the string's contents.  If the
+server does not recognize the <code>REST</code> command, an <a class="reference internal" href="ftplib.html#py:exception:ftplib.error_reply"><code class="xref py exception docutils literal">error_reply</code></a> exception
+will be raised.  If this happens, simply call <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.transfercmd"><code class="xref py method docutils literal">transfercmd</code></a> without a
+<em>rest</em> argument.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.ntransfercmd"><code class="sig-name">FTP.ntransfercmd(cmd, rest=None)</code></dt>
+  <dd><p>Like <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.transfercmd"><code class="xref py method docutils literal">transfercmd</code></a>, but returns a tuple of the data connection and the
+expected size of the data.  If the expected size could not be computed, <code>None</code>
+will be returned as the expected size.  <em>cmd</em> and <em>rest</em> means the same thing as
+in <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.transfercmd"><code class="xref py method docutils literal">transfercmd</code></a>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.mlsd"><code class="sig-name">FTP.mlsd(path="", facts=[])</code></dt>
+  <dd><p>List a directory in a standardized format by using <code>MLSD</code> command
+(<span class="target" id="index-4"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3659.html"><strong>RFC 3659</strong></a>).  If <em>path</em> is omitted the current directory is assumed.
+<em>facts</em> is a list of strings representing the type of information desired
+(e.g. <code>["type", "size", "perm"]</code>).  Return a generator object yielding a
+tuple of two elements for every file found in path.  First element is the
+file name, the second one is a dictionary containing facts about the file
+name.  Content of this dictionary might be limited by the <em>facts</em> argument
+but server is not guaranteed to return all requested facts.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.nlst"><code class="sig-name">FTP.nlst(argument[, ...])</code></dt>
+  <dd><p>Return a list of file names as returned by the <code>NLST</code> command.  The
+optional <em>argument</em> is a directory to list (default is the current server
+directory).  Multiple arguments can be used to pass non-standard options to
+the <code>NLST</code> command.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If your server supports the command, <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.mlsd"><code class="xref py method docutils literal">mlsd</code></a> offers a better API.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.dir"><code class="sig-name">FTP.dir(argument[, ...])</code></dt>
+  <dd><p>Produce a directory listing as returned by the <code>LIST</code> command, printing it to
+standard output.  The optional <em>argument</em> is a directory to list (default is the
+current server directory).  Multiple arguments can be used to pass non-standard
+options to the <code>LIST</code> command.  If the last argument is a function, it is used
+as a <em>callback</em> function as for <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.retrlines"><code class="xref py method docutils literal">retrlines</code></a>; the default prints to
+<a class="reference internal" href="sys.html#py:data:sys.stdout"><code class="xref py data docutils literal">sys.stdout</code></a>.  This method returns <code>None</code>.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>If your server supports the command, <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.mlsd"><code class="xref py method docutils literal">mlsd</code></a> offers a better API.</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.rename"><code class="sig-name">FTP.rename(fromname, toname)</code></dt>
+  <dd><p>Rename file <em>fromname</em> on the server to <em>toname</em>.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.delete"><code class="sig-name">FTP.delete(filename)</code></dt>
+  <dd><p>Remove the file named <em>filename</em> from the server.  If successful, returns the
+text of the response, otherwise raises <a class="reference internal" href="ftplib.html#py:exception:ftplib.error_perm"><code class="xref py exception docutils literal">error_perm</code></a> on permission errors or
+<a class="reference internal" href="ftplib.html#py:exception:ftplib.error_reply"><code class="xref py exception docutils literal">error_reply</code></a> on other errors.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.cwd"><code class="sig-name">FTP.cwd(pathname)</code></dt>
+  <dd><p>Set the current directory on the server.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.mkd"><code class="sig-name">FTP.mkd(pathname)</code></dt>
+  <dd><p>Create a new directory on the server.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.pwd"><code class="sig-name">FTP.pwd()</code></dt>
+  <dd><p>Return the pathname of the current directory on the server.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.rmd"><code class="sig-name">FTP.rmd(dirname)</code></dt>
+  <dd><p>Remove the directory named <em>dirname</em> on the server.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.size"><code class="sig-name">FTP.size(filename)</code></dt>
+  <dd><p>Request the size of the file named <em>filename</em> on the server.  On success, the
+size of the file is returned as an integer, otherwise <code>None</code> is returned.
+Note that the <code>SIZE</code> command is not  standardized, but is supported by many
+common server implementations.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.quit"><code class="sig-name">FTP.quit()</code></dt>
+  <dd><p>Send a <code>QUIT</code> command to the server and close the connection. This is the
+"polite" way to close a connection, but it may raise an exception if the server
+responds with an error to the <code>QUIT</code> command.  This implies a call to the
+<a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.close"><code class="xref py method docutils literal">close</code></a> method which renders the <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> instance useless for
+subsequent calls (see below).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp.close"><code class="sig-name">FTP.close()</code></dt>
+  <dd><p>Close the connection unilaterally.  This should not be applied to an already
+closed connection such as after a successful call to <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.quit"><code class="xref py method docutils literal">quit</code></a>.
+After this call the <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> instance should not be used any more (after
+a call to <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.close"><code class="xref py method docutils literal">close</code></a> or <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.quit"><code class="xref py method docutils literal">quit</code></a> you cannot reopen the
+connection by issuing another <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.login"><code class="xref py method docutils literal">login</code></a> method).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h3 id="ftp-tls-objects">FTP_TLS objects</h3>
+<dl class="py class">
+  <dt id="py:class:ftplib.ftp_tls"><em class="property">class</em> <code class="sig-name">FTP_TLS(host='', user='', passwd='', acct='', *, context=None, \</code></dt>
+  <dt id="py:class:ftplib.encoding='utf-8')"><em class="property">class</em> <code class="sig-name">timeout=None, source_address=None, encoding='utf-8')</code></dt>
+  <dd><p>An <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a> subclass which adds TLS support to FTP as described in
+<span class="target" id="index-5"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc4217.html"><strong>RFC 4217</strong></a>.
+Connect to port 21 implicitly securing the FTP control connection
+before authenticating.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The user must explicitly secure the data connection
+by calling the <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp_tls.prot_p"><code class="xref py method docutils literal">prot_p</code></a> method.</p>
+</div>
+<dl>
+<dt>:param str host:</dt>
+<dd><p>The hostname to connect to.
+If given, <code class="code">connect(host)</code> is implicitly called by the constructor.</p>
+</dd>
+<dt>:param str user:</dt>
+<dd><p>The username to log in with (default: <code>'anonymous'</code>).
+If given, <code class="code">login(host, passwd, acct)</code> is implicitly called
+by the constructor.</p>
+</dd>
+<dt>:param str passwd:</dt>
+<dd><p>The password to use when logging in. If not given, and if <em>passwd</em> is the empty string or <code>"-"</code>, a password will be automatically generated.</p>
+</dd>
+<dt>:param str acct:</dt>
+<dd><p>Account information to be used for the <code>ACCT</code> FTP command. Few systems implement this. See <a href="https://datatracker.ietf.org/doc/html/rfc959.html">RFC-959</a> for more details.</p>
+</dd>
+<dt>:param context:</dt>
+<dd><p>An SSL context object which allows bundling SSL configuration options,
+certificates and private keys into a single, potentially long-lived,
+structure.
+Please read <a href="ssl.html#ssl-security">Security considerations</a> for best practices.</p>
+</dd>
+</dl>
+<p>:type context: <a class="reference internal" href="ssl.html#py:class:ssl.sslcontext"><code class="xref py class docutils literal">ssl.SSLContext</code></a></p>
+<dl>
+<dt>:param timeout:</dt>
+<dd><p>A timeout in seconds for blocking operations like <a class="reference internal" href="ftplib.html#py:method:ftplib.ftp.connect"><code class="xref py method docutils literal">connect</code></a>
+(default: the global default timeout setting).</p>
+</dd>
+</dl>
+<p>:type timeout: float | None</p>
+<dl>
+<dt>:param source_address:</dt>
+<dd><p>A 2-tuple <code>(host, port)</code> for the socket to bind to as its source address before connecting.</p>
+</dd>
+</dl>
+<p>:type source_address: tuple | None</p>
+<dl>
+<dt>:param str encoding:</dt>
+<dd><p>The encoding for directories and filenames (default: <code>'utf-8'</code>).</p>
+</dd>
+</dl>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.2:</span></p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.3:</span></p>
+<p>Added the <em>source_address</em> parameter.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>The class now supports hostname check with
+<a class="reference internal" href="ssl.html#py:attribute:ssl.sslcontext.check_hostname"><code class="xref py attribute docutils literal">ssl.SSLContext.check_hostname</code></a> and <em>Server Name Indication</em> (see
+<a class="reference internal" href="ssl.html#py:data:ssl.has_sni"><code class="xref py data docutils literal">ssl.HAS_SNI</code></a>).</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.9:</span></p>
+<p>If the <em>timeout</em> parameter is set to be zero, it will raise a
+<a class="reference internal" href="exceptions.html#py:exception:valueerror"><code class="xref py class docutils literal">ValueError</code></a> to prevent the creation of a non-blocking socket.
+The <em>encoding</em> parameter was added, and the default was changed from
+Latin-1 to UTF-8 to follow <span class="target" id="index-6"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc2640.html"><strong>RFC 2640</strong></a>.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.12:</span></p>
+<p>The deprecated <em>keyfile</em> and <em>certfile</em> parameters have been removed.</p>
+</div>
+<p>Here's a sample session using the <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp_tls"><code class="xref py class docutils literal">FTP_TLS</code></a> class:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftps</span></span> <span class="hl-keyword hl-operator hl-assignment hl-python">=</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">FTP_TLS</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ftp.pureftpd.org<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftps</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">login</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">230 Anonymous user logged in<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftps</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">prot_p</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">200 Data protection level set to &quot;private&quot;<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span></span>
+<span class="hl-source hl-python"><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span><span class="hl-keyword hl-operator hl-comparison hl-python">&gt;</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-meta hl-generic-name hl-python">ftps</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-punctuation hl-accessor hl-dot hl-python">.</span></span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">nlst</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-sequence hl-list hl-python"><span class="hl-punctuation hl-section hl-sequence hl-begin hl-python">[</span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">6jack<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">OpenBSD<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">antilink<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">blogbench<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">bsdcam<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">clockspeed<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">djbdns-jedi<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">docs<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">eaccelerator-jedi<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">favicon.ico<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">francotone<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">fugu<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ignore<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">libpuzzle<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">metalog<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">minidentd<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">misc<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">mysql-udf-global-user-variables<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">php-jenkins-hash<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">php-skein-hash<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">php-webdav<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">phpaudit<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">phpbench<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">pincaster<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ping<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">posto<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">pub<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">public<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">public_keys<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">pure-ftpd<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">qscan<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">qtc<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">sharedance<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">skycache<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">sound<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">tmp<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-separator hl-sequence hl-python">,</span> <span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python"><span class="hl-punctuation hl-definition hl-string hl-begin hl-python">&#39;</span></span></span><span class="hl-meta hl-string hl-python"><span class="hl-string hl-quoted hl-single hl-python">ucarp<span class="hl-punctuation hl-definition hl-string hl-end hl-python">&#39;</span></span></span><span class="hl-punctuation hl-section hl-sequence hl-end hl-python">]</span></span></span></pre></div>
+<p><code class="xref py class docutils literal">FTP_TLS</code> class inherits from <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a>,
+defining these additional methods and attributes:</p>
+<dl class="py attribute">
+  <dt id="py:attribute:ftplib.ftp_tls.ssl_version"><code class="sig-name">FTP_TLS.ssl_version</code></dt>
+  <dd><p>The SSL version to use (defaults to <a class="reference internal" href="ssl.html#py:data:ssl.protocol_sslv23"><code class="xref py data docutils literal">ssl.PROTOCOL_SSLv23</code></a>).</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp_tls.auth"><code class="sig-name">FTP_TLS.auth()</code></dt>
+  <dd><p>Set up a secure control connection by using TLS or SSL, depending on what
+is specified in the <a class="reference internal" href="ftplib.html#py:attribute:ftplib.ftp_tls.ssl_version"><code class="xref py attribute docutils literal">ssl_version</code></a> attribute.</p>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.4:</span></p>
+<p>The method now supports hostname check with
+<a class="reference internal" href="ssl.html#py:attribute:ssl.sslcontext.check_hostname"><code class="xref py attribute docutils literal">ssl.SSLContext.check_hostname</code></a> and <em>Server Name Indication</em> (see
+<a class="reference internal" href="ssl.html#py:data:ssl.has_sni"><code class="xref py data docutils literal">ssl.HAS_SNI</code></a>).</p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp_tls.ccc"><code class="sig-name">FTP_TLS.ccc()</code></dt>
+  <dd><p>Revert control channel back to plaintext.  This can be useful to take
+advantage of firewalls that know how to handle NAT with non-secure FTP
+without opening fixed ports.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.3:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp_tls.prot_p"><code class="sig-name">FTP_TLS.prot_p()</code></dt>
+  <dd><p>Set up secure data connection.</p>
+</dd>
+</dl>
+<dl class="py method">
+  <dt id="py:method:ftplib.ftp_tls.prot_c"><code class="sig-name">FTP_TLS.prot_c()</code></dt>
+  <dd><p>Set up clear text data connection.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<h3 id="module-variables">Module variables</h3>
+<dl class="py exception">
+  <dt id="py:exception:ftplib.error_reply"><em class="property">exception</em> <code class="sig-name">error_reply</code></dt>
+  <dd><p>Exception raised when an unexpected reply is received from the server.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:ftplib.error_temp"><em class="property">exception</em> <code class="sig-name">error_temp</code></dt>
+  <dd><p>Exception raised when an error code signifying a temporary error (response
+codes in the range 400–499) is received.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:ftplib.error_perm"><em class="property">exception</em> <code class="sig-name">error_perm</code></dt>
+  <dd><p>Exception raised when an error code signifying a permanent error (response
+codes in the range 500–599) is received.</p>
+</dd>
+</dl>
+<dl class="py exception">
+  <dt id="py:exception:ftplib.error_proto"><em class="property">exception</em> <code class="sig-name">error_proto</code></dt>
+  <dd><p>Exception raised when a reply is received from the server that does not fit
+the response specifications of the File Transfer Protocol, i.e. begin with a
+digit in the range 1–5.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:ftplib.all_errors"><code class="sig-name">all_errors</code></dt>
+  <dd><p>The set of all exceptions (as a tuple) that methods of <a class="reference internal" href="ftplib.html#py:class:ftplib.ftp"><code class="xref py class docutils literal">FTP</code></a>
+instances may raise as a result of problems with the FTP connection (as
+opposed to programming errors made by the caller).  This set includes the
+four exceptions listed above as well as <a class="reference internal" href="exceptions.html#py:exception:oserror"><code class="xref py exception docutils literal">OSError</code></a> and <a class="reference internal" href="exceptions.html#py:exception:eoferror"><code class="xref py exception docutils literal">EOFError</code></a>.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+  <p class="admonition-title">See also</p>
+<dl>
+<dt>Module <a class="reference internal" href="netrc.html#py:module:netrc" title="netrc: Loading of .netrc files."><code class="xref py module docutils literal">netrc</code></a></dt>
+<dd><p>Parser for the :file:`.netrc` file format.  The file :file:`.netrc` is
+typically used by FTP clients to load user authentication information
+before prompting the user.</p>
+</dd>
+</dl>
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="http.client.html">&larr; http.client — HTTP protocol client</a>
+        <a class="next" href="poplib.html">poplib — POP3 protocol client &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
