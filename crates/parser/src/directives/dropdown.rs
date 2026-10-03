@@ -192,9 +192,9 @@ fn parse_icon(
 /// Whether the icon set defines an icon by this name, at any size.
 ///
 /// The set keys each drawing by name *and* height (`light-bulb-16`), and the
-/// heights an icon ships in vary — mostly 16 and 24, but nine icons add a 12
-/// and two exist only at 48 or 96 — so a name is known when any of them
-/// resolves. The renderer picks between them when it draws (see its
+/// heights an icon ships in vary — mostly 16 and 24, but a few icons add a 12
+/// and `copilot` a 48 and a 96, and some ship at a single height — so a name
+/// is known when any of them resolves. The renderer picks between them when it draws (see its
 /// `octicon` module); here only existence is being asked.
 fn is_known_octicon(name: &str) -> bool {
     const ARTWORK_HEIGHTS: &[u32] = &[16, 24, 12, 48, 96];

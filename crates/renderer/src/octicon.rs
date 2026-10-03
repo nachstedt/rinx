@@ -74,9 +74,10 @@ fn original_height_for(height_em: f64) -> u32 {
 
 /// Every artwork height the icon set ships, smallest first.
 ///
-/// Mostly 16 and 24 — but nine icons add a 12, and a couple exist only at 48
-/// or 96, so a search that knew about two sizes would report a handful of
-/// perfectly good names as unknown (`no-entry-fill` ships at 12 alone).
+/// Mostly 16 and 24 — but a few icons add a 12 and `copilot` a 48 and a 96,
+/// and some ship at a single height, so a search that knew about one size
+/// would report perfectly good names as unknown (`no-entry-fill` ships at 12
+/// alone).
 const ARTWORK_HEIGHTS: &[u32] = &[12, 16, 24, 48, 96];
 
 /// Finds an icon's SVG, preferring the given artwork height.
@@ -212,15 +213,15 @@ mod tests {
 
     #[test]
     fn test_prefers_the_requested_height_over_the_fallbacks() {
-        // Given — `bookmark-fill` ships at 24 only, `beaker` at both
-        // When
-        let only_24 = render_octicon("bookmark-fill", ICON_HEIGHT_EM, &[])
-            .expect("bookmark-fill is an octicon");
-        let both = render_octicon("beaker", ICON_HEIGHT_EM, &[]).expect("beaker is an octicon");
+        // Given — `webhook` ships at 16 only, `beaker` at both
+        // When — both are requested at the height that prefers the 24px artwork
+        let only_16 =
+            render_octicon("webhook", MARKER_HEIGHT_EM, &[]).expect("webhook is an octicon");
+        let both = render_octicon("beaker", MARKER_HEIGHT_EM, &[]).expect("beaker is an octicon");
 
         // Then — the fallback is taken only where the preferred size is absent
-        assert!(only_24.contains("viewBox=\"0 0 24 24\""));
-        assert!(both.contains("viewBox=\"0 0 16 16\""));
+        assert!(only_16.contains("viewBox=\"0 0 16 16\""));
+        assert!(both.contains("viewBox=\"0 0 24 24\""));
     }
 
     #[test]
