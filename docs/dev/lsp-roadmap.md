@@ -37,6 +37,17 @@ is used in one of three ways, none of which uploads anything:
    GitHub release asset, installed via "Install from VSIX…", together with a
    binary from `cargo install --git …`.
 
+## What "Tests" means in each step
+
+Every step's "Tests" item includes the following:
+
+- **Handler tests** in `rinx_lsp`.
+- **A stdio test** (`crates/worker/tests/integration/lsp.rs`) when the step changes the protocol surface.
+- **An end-to-end test** through real VS Code (`editors/vscode/src/test/e2e/`) when the step is something an author can see.
+- **Parity work**: narrowing the parity test's relaxations (`lsp_parity.rs`) when the step closes a gap it names.
+
+CI runs all of these on every pull request.
+
 ---
 
 ## M0: First contact (single file, no project knowledge)

@@ -100,6 +100,9 @@ class PreviewPanel {
     private static _configCache = new BazelConfigCache();
     private _scanner = new BazelScanner(log);
     private _debounceTimer: NodeJS.Timeout | undefined;
+    // Set once the panel is closed. A render already running when the user
+    // closes it finishes later, and must not write into the disposed webview.
+    private _disposed = false;
 
     public static createOrShow(extensionUri: vscode.Uri) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
@@ -159,6 +162,8 @@ class PreviewPanel {
     }
 
     public dispose() {
+        this._disposed = true;
+        clearTimeout(this._debounceTimer);
         PreviewPanel.currentPanel = undefined;
         this._panel.dispose();
         while (this._disposables.length) {
@@ -166,6 +171,13 @@ class PreviewPanel {
             if (x) {
                 x.dispose();
             }
+        }
+    }
+
+    /** Shows `html` in the panel, unless the panel has been closed meanwhile. */
+    private _show(html: string) {
+        if (!this._disposed) {
+            this._panel.webview.html = html;
         }
     }
 
@@ -315,14 +327,14 @@ class PreviewPanel {
         child.on('error', (err) => {
             spawnErrorOccurred = true;
             if ('code' in err && err.code === 'ENOENT') {
-                this._panel.webview.html = `<h1>Binary Not Found</h1>
+                this._show(`<h1>Binary Not Found</h1>
                     <p>The <code>rinx</code> binary was not found at <code>${binaryPath}</code>.</p>
                     <p>Please ensure <code>rinx</code> is in your PATH or set the <code>rinx.binaryPath</code> setting to the absolute path of the binary.</p>
                     <hr>
-                    <p>Current Workspace Root: <code>${workspaceRoot}</code></p>`;
+                    <p>Current Workspace Root: <code>${workspaceRoot}</code></p>`);
             } else {
-                this._panel.webview.html = `<h1>Spawn Error</h1><pre>${err.message}</pre>
-                    <h2>Command</h2><pre>${cmdLine}</pre>`;
+                this._show(`<h1>Spawn Error</h1><pre>${err.message}</pre>
+                    <h2>Command</h2><pre>${cmdLine}</pre>`);
             }
         });
 
@@ -340,14 +352,14 @@ class PreviewPanel {
         child.on('close', (code, signal) => {
             if (spawnErrorOccurred) return;
             if (code === 0) {
-                this._panel.webview.html = html;
+                this._show(html);
             } else {
                 const escapedStderr = stderr.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                this._panel.webview.html = `<h1>Render Error</h1>
+                this._show(`<h1>Render Error</h1>
                     <p>Exit code: <code>${code}</code> | Signal: <code>${signal || 'none'}</code></p>
                     <h2>stderr</h2><pre>${escapedStderr || '(empty)'}</pre>
                     <h2>Command</h2><pre>${cmdLine}</pre>
-                    <h2>Working Directory</h2><pre>${workspaceRoot}</pre>`;
+                    <h2>Working Directory</h2><pre>${workspaceRoot}</pre>`);
             }
         });
 
