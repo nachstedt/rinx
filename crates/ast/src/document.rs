@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use crate::diagnostic::Diagnostic;
+use crate::include_site::IncludeSite;
 use crate::node::Node;
 use crate::span::{FileId, Span};
 use crate::suppression::Suppression;
@@ -46,6 +47,15 @@ pub struct Document {
     /// warning can print one without further resolution.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub source_files: Vec<String>,
+    /// Every `.. include::` whose file was parsed in, in the order they were
+    /// met — what an editor needs to point at the line that included a
+    /// problem.
+    ///
+    /// Not serialized: only a process that just parsed the document reads it,
+    /// and leaving it out of the `.ast` keeps a moved `.. include::` from
+    /// changing the bytes every later build step is cached on.
+    #[serde(skip)]
+    pub include_sites: Vec<IncludeSite>,
     /// The hash of the entity schema this document was parsed against.
     ///
     /// Recorded because the schema reaches the *parse* action, so a library
@@ -71,6 +81,7 @@ impl Document {
             suppressions: Vec::new(),
             metadata: BTreeMap::new(),
             source_files: Vec::new(),
+            include_sites: Vec::new(),
             entity_schema_hash: None,
         }
     }

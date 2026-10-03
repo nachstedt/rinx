@@ -62,6 +62,56 @@ fn test_lsp_serves_a_session_over_stdio() {
 }
 
 #[test]
+fn test_lsp_underlines_a_mistake_in_an_included_file_in_that_file() {
+    // Given a document including a fragment whose third line is broken
+    let dir = std::env::temp_dir().join(format!("rinx_lsp_stdio_include_{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a scratch directory");
+    std::fs::write(dir.join("part.rst"), "Fine.\n\n.. foo::\n").expect("the fragment");
+    let index = format!("file://{}", dir.join("index.rst").display());
+    let part = format!("file://{}", dir.join("part.rst").display());
+    let mut server = Server::spawn();
+    server.initialize(&json!({}));
+
+    // When — the includer is opened, then the fragment, fixed in its buffer
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": index, "languageId": "restructuredtext", "version": 1,
+            "text": ".. include:: part.rst\n",
+        }}),
+    );
+    let opened = server.published_until(&index);
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": part, "languageId": "restructuredtext", "version": 1,
+            "text": "Fine.\n",
+        }}),
+    );
+    let fixed = server.published_until(&part);
+    let _ = std::fs::remove_dir_all(&dir);
+
+    // Then — on the fragment's own line, summarized on the include and
+    // linked from there; then cleared in both places
+    assert_eq!(opened.len(), 2, "{opened:?}");
+    assert_eq!(opened[0]["uri"], part.as_str());
+    assert_eq!(codes(&opened[0]), vec!["directive.unknown"]);
+    assert_eq!(opened[0]["diagnostics"][0]["range"]["start"]["line"], 2);
+    assert_eq!(opened[1]["uri"], index.as_str());
+    let summary = &opened[1]["diagnostics"][0];
+    assert_eq!(summary["range"]["start"]["line"], 0);
+    assert_eq!(summary["severity"], 3, "information: {summary}");
+    assert_eq!(
+        summary["relatedInformation"][0]["location"]["uri"],
+        part.as_str()
+    );
+    assert_eq!(fixed.len(), 2, "{fixed:?}");
+    assert_eq!(fixed[0]["uri"], index.as_str());
+    assert_eq!(fixed[0]["diagnostics"], json!([]));
+    assert_eq!(fixed[1]["diagnostics"], json!([]));
+}
+
+#[test]
 fn test_lsp_exits_with_success_after_shutdown_and_exit() {
     // Given
     let mut server = Server::spawn();

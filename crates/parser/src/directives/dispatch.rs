@@ -223,6 +223,7 @@ fn try_parse_splicing_directive(
         // Splices another file's reStructuredText in where it stands.
         "include" => Some(parse_include(
             argument,
+            directive_span,
             body_lines,
             adornment_order,
             diagnostics,

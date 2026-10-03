@@ -11,13 +11,19 @@
 //! - `position` converts rinx's 1-based character positions to the protocol's
 //!   0-based, negotiated-unit ones;
 //! - `documents` holds the text of every open document;
-//! - `files` is the loader a file-reading directive goes through.
+//! - `include_summary` notes on an `.. include::` the problems it brought in;
+//! - `includes` decides what a file shows when open documents include it;
+//! - `files` is the loader a file-reading directive goes through;
+//! - `uri` converts between the protocol's `file:` URIs and paths.
 
 mod diagnostics;
 mod documents;
 mod files;
+mod include_summary;
+mod includes;
 mod position;
 mod server;
+mod uri;
 
 pub use position::PositionEncoding;
 pub use server::run;

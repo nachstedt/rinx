@@ -97,6 +97,24 @@ impl Server {
         }
     }
 
+    /// The parameters of every `publishDiagnostics` up to and including the
+    /// one for `uri`.
+    ///
+    /// A change to one document can publish for several files — the fragments
+    /// it includes, or its includers — and the server publishes the changed
+    /// document itself last, so this collects exactly what one change caused.
+    pub(crate) fn published_until(&self, uri: &str) -> Vec<Value> {
+        let mut found = Vec::new();
+        loop {
+            let published = self.published();
+            let done = published["uri"] == uri;
+            found.push(published);
+            if done {
+                return found;
+            }
+        }
+    }
+
     /// Closes the server's input and waits for it to exit.
     pub(crate) fn wait(&mut self) -> ExitStatus {
         self.stdin = None;

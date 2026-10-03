@@ -66,6 +66,7 @@ mod glossary_entry;
 mod grid;
 mod hashed_content;
 mod image;
+mod include_site;
 mod index_entry;
 mod inline_lists;
 mod inline_node;
@@ -143,6 +144,7 @@ pub use image::{
     Figure, FigureWidth, ImageAlign, ImageLoading, ImageOptions, ImageTarget, InvalidLength,
     Length, LengthOrPercentage, LengthUnit, Percentage, is_vertical_name, scaled_width,
 };
+pub use include_site::IncludeSite;
 pub use index_entry::{IndexEntry, IndexEntryType, InvalidIndexEntry};
 pub use inline_lists::{for_each_inline_list, for_each_inline_list_mut};
 pub use inline_node::{InlineNode, NumberReferenceRefusal, RoleRefusal, inline_plain_text};

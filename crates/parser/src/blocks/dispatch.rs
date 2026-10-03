@@ -111,8 +111,10 @@ pub fn parse_with_ctx(path: &str, input: &str, ctx: &ParseCtx<'_>) -> Document {
     // an `:index:` whose entry was refused still gets one.
     super::index_ids::assign_inline_index_ids(&mut nodes, &mut index_id_counter);
 
+    let include_sites = diagnostics.take_include_sites();
     let (entries, suppressions, source_files) = diagnostics.into_parts();
     let mut doc = Document::new(path.to_string(), nodes);
+    doc.include_sites = include_sites;
     doc.diagnostics = entries;
     doc.suppressions = suppressions;
     doc.metadata = metadata;

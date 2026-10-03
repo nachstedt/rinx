@@ -1,0 +1,5 @@
+# `lsp_types::Uri` holds fluent-uri's lazily parsed authority in a `Cell`, so
+# `mutable_key_type` refuses it as a map key. Its `Eq`, `Ord` and `Hash` all
+# compare the URI's text alone (lsp-types' `src/uri.rs`), which the cache never
+# changes — the language server keys its documents and diagnostics by URI.
+ignore-interior-mutability = ["lsp_types::Uri"]
