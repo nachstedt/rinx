@@ -27,4 +27,4 @@ workspace = true
 # retrieval of remote `$ref`s, and with it rustls and the `aws-lc-rs` C
 # toolchain. This schema has no remote references and validation runs offline
 # in a sandbox, so that whole tree is cost with no benefit.
-jsonschema = { version = "0.57.0", default-features = false }
+jsonschema = { version = "0.58.3", default-features = false }
