@@ -71,9 +71,9 @@ entity.role-type-mismatch (5):
 directive.unknown (4):
 ----------------------
     1  coffee-machine/index.rst: unknown directive type 'src-trace'
+    1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
     1  automotive-adas/sys_5_sys_quali_test_results.rst: unknown directive type 'test-file'
     1  automotive-adas/swe_4_unit_tests.rst: unknown directive type 'automodule'
-    1  automotive-adas/swe_3_sw_detailed_design.rst: unknown directive type 'automodule'
 
 entity-flow.unsupported-option (4):
 -----------------------------------
