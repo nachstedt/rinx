@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>☕️ Coffee Machine Example — Sphinx-Needs Demo Benchmark</title>
+  <link rel="stylesheet" href="../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Sphinx-Needs Demo Benchmark</h2>
+        
+        
+        
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../demo_details.html">🔍 Demo details</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../online_editor.html">⌨ Online Editor</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../basic_example/index.html">🧰 Basic Example</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">☕️ Coffee Machine Example</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle ☕️ Coffee Machine Example"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#system-requirements">System Requirements</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#software-requirements">Software Requirements</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#software-architecture">Software Architecture</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#implementation">Implementation</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#test-cases">Test Cases</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#traceability-overview">Traceability Overview</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../automotive-adas/index.html">🚗 Automotive ADAS</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../safety_example/index.html">🛡️ ISO 26262 Functional Safety Example</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="../basic_example/index.html">&larr; 🧰 Basic Example</a>
+        <a class="next" href="../automotive-adas/index.html">🚗 Automotive ADAS &rarr;</a>
+      </nav>
+      
+      <h1 id="coffee-machine-example">☕️ Coffee Machine Example</h1>
+<p>This example demonstrates a complete traceability chain for a coffee
+machine system, from high-level requirements down to implementation
+and test cases.</p>
+<p>The <strong>BrewMaster Pro 3000</strong> is an advanced automatic coffee machine
+designed for commercial and high-end residential use. Featuring
+precision temperature control, customizable brew strength settings,
+and comprehensive safety mechanisms, it represents the cutting edge of
+coffee brewing technology. This document traces the complete
+development lifecycle from initial customer needs through verified
+implementation.</p>
+<img src="../_images/_images/BrewMaster-Pro-3000.jpg" alt="BrewMaster Pro 3000 Coffee Machine" class="align-center" style="width: 600px" />
+<h2 id="system-requirements">System Requirements</h2>
+<p>The system requirements capture the fundamental capabilities that the
+BrewMaster Pro 3000 must deliver to meet customer expectations and
+safety standards. These high-level requirements define what the system
+does from an external perspective, focusing on user-visible behavior
+and safety constraints. Each requirement has been derived from market
+analysis, customer feedback, and applicable safety regulations for
+household appliances.</p>
+<div class="entity entity-req" id="entity-REQ_BREW_COFFEE"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">Brew Coffee</span><span class="entity-id">REQ_BREW_COFFEE</span></p><div class="entity-content"><p>The coffee machine shall be able to brew coffee with user-selected
+strength (weak, medium, strong).</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>brewing, core</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specified by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_BREW_STRENGTH">SWREQ_BREW_STRENGTH</a></li></ul></div></details></div><div class="entity entity-req" id="entity-REQ_HEAT_WATER"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">Heat Water</span><span class="entity-id">REQ_HEAT_WATER</span></p><div class="entity-content"><p>The coffee machine shall heat water to the appropriate temperature
+(85-95°C) for brewing coffee.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>heating, safety</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specified by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_TEMP_REGULATION">SWREQ_TEMP_REGULATION</a></li></ul></div></details></div><div class="entity entity-req" id="entity-REQ_USER_INTERFACE"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">User Interface</span><span class="entity-id">REQ_USER_INTERFACE</span></p><div class="entity-content"><p>The coffee machine shall provide a user interface with buttons for
+selecting coffee strength and starting the brewing process.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>ui, usability</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specified by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_BUTTON_INPUT">SWREQ_BUTTON_INPUT</a></li></ul></div></details></div><div class="entity entity-req" id="entity-REQ_SAFETY_SHUTDOWN"><p class="entity-header"><span class="entity-type">Requirement</span><span class="entity-title">Safety Shutdown</span><span class="entity-id">REQ_SAFETY_SHUTDOWN</span></p><div class="entity-content"><p>The coffee machine shall automatically shut down if the water
+temperature exceeds 100°C or if no water is detected.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>safety, critical</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specified by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_OVERTEMP_SHUTDOWN">SWREQ_OVERTEMP_SHUTDOWN</a></li><li><a class="reference internal" href="index.html#entity-SWREQ_WATER_LEVEL">SWREQ_WATER_LEVEL</a></li></ul></div></details></div><h2 id="software-requirements">Software Requirements</h2>
+<p>The software requirements section refines the high-level system
+requirements into detailed, implementable specifications for the
+embedded control system. The BrewMaster Pro 3000 runs on a custom
+Rust-based embedded platform with real-time capabilities, chosen for
+its memory safety guarantees, zero-cost abstractions, and excellent
+embedded systems support. These requirements specify precise timing
+constraints, control algorithms, and safety-critical behavior that
+must be implemented in software. Each software requirement is
+traceable back to one or more system requirements, ensuring complete
+coverage of customer needs.</p>
+<div class="entity entity-swreq" id="entity-SWREQ_TEMP_REGULATION"><p class="entity-header"><span class="entity-type">SW_Requirement</span><span class="entity-title">Temperature Regulation</span><span class="entity-id">SWREQ_TEMP_REGULATION</span></p><div class="entity-content"><p>The temperature control software shall monitor the water temperature
+sensor and regulate the heating element to maintain temperature
+between 85-95°C using PID control.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>control, heating</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specifies</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-REQ_HEAT_WATER">REQ_HEAT_WATER</a></li></ul><p class="entity-link-label">implemented by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul><p class="entity-link-label">test_cases</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-TEST_E2E_BREWING">TEST_E2E_BREWING</a></li><li><a class="reference internal" href="index.html#entity-TEST_TEMP_CONTROL">TEST_TEMP_CONTROL</a></li></ul></div></details></div><div class="entity entity-swreq" id="entity-SWREQ_OVERTEMP_SHUTDOWN"><p class="entity-header"><span class="entity-type">SW_Requirement</span><span class="entity-title">Over-Temperature Shutdown</span><span class="entity-id">SWREQ_OVERTEMP_SHUTDOWN</span></p><div class="entity-content"><p>The software shall continuously monitor water temperature and trigger
+an emergency shutdown within 100ms if temperature exceeds 100°C to
+prevent boiling and potential hazards.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>safety, critical</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specifies</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-REQ_SAFETY_SHUTDOWN">REQ_SAFETY_SHUTDOWN</a></li></ul><p class="entity-link-label">implemented by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">test_cases</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-TEST_SAFETY_SHUTDOWN">TEST_SAFETY_SHUTDOWN</a></li></ul></div></details></div><div class="entity entity-swreq" id="entity-SWREQ_BREW_STRENGTH"><p class="entity-header"><span class="entity-type">SW_Requirement</span><span class="entity-title">Brew Strength Selection</span><span class="entity-id">SWREQ_BREW_STRENGTH</span></p><div class="entity-content"><p>The software shall implement brew strength selection by controlling
+the water flow rate and brewing time:</p>
+<ul>
+<li><p>Weak: 180ml water, 3 minutes</p>
+</li>
+<li><p>Medium: 180ml water, 4 minutes</p>
+</li>
+<li><p>Strong: 180ml water, 5 minutes</p>
+</li>
+</ul>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>control, brewing</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specifies</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-REQ_BREW_COFFEE">REQ_BREW_COFFEE</a></li></ul><p class="entity-link-label">implemented by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li></ul><p class="entity-link-label">test_cases</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-TEST_BREW_STRENGTH">TEST_BREW_STRENGTH</a></li><li><a class="reference internal" href="index.html#entity-TEST_E2E_BREWING">TEST_E2E_BREWING</a></li></ul></div></details></div><div class="entity entity-swreq" id="entity-SWREQ_BUTTON_INPUT"><p class="entity-header"><span class="entity-type">SW_Requirement</span><span class="entity-title">Button Input Handler</span><span class="entity-id">SWREQ_BUTTON_INPUT</span></p><div class="entity-content"><p>The software shall process button inputs with debouncing and trigger
+appropriate actions (strength selection, start brewing, stop/cancel).</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>ui, input</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specifies</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-REQ_USER_INTERFACE">REQ_USER_INTERFACE</a></li></ul><p class="entity-link-label">implemented by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_UI_MODULE">COMP_UI_MODULE</a></li></ul><p class="entity-link-label">test_cases</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-TEST_BUTTON_DEBOUNCE">TEST_BUTTON_DEBOUNCE</a></li><li><a class="reference internal" href="index.html#entity-TEST_E2E_BREWING">TEST_E2E_BREWING</a></li></ul></div></details></div><div class="entity entity-swreq" id="entity-SWREQ_WATER_LEVEL"><p class="entity-header"><span class="entity-type">SW_Requirement</span><span class="entity-title">Water Level Monitoring</span><span class="entity-id">SWREQ_WATER_LEVEL</span></p><div class="entity-content"><p>The software shall continuously monitor the water level sensor and
+prevent brewing operations when water level is below minimum
+threshold.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>safety, monitoring</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specifies</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-REQ_SAFETY_SHUTDOWN">REQ_SAFETY_SHUTDOWN</a></li></ul><p class="entity-link-label">implemented by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">test_cases</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-TEST_SAFETY_SHUTDOWN">TEST_SAFETY_SHUTDOWN</a></li></ul></div></details></div><h2 id="software-architecture">Software Architecture</h2>
+<p>The software architecture defines the modular structure of the
+BrewMaster Pro 3000's embedded control system. The architecture
+follows a layered approach with clear separation of concerns:
+safety-critical functions are isolated in dedicated modules, control
+algorithms are encapsulated for reusability, and user interface logic
+is decoupled from core brewing operations. This modular design enables
+independent testing, facilitates maintenance, and provides clear
+interfaces between components.</p>
+<p>The architecture emphasizes fail-safe design principles. The Safety
+Monitor Module operates with the highest priority and can override all
+other subsystems. Module dependencies are carefully managed to prevent
+circular references and ensure deterministic behavior. The following
+diagram shows the architectural modules and their relationships:</p>
+<div class="entity entity-component" id="entity-COMP_TEMP_CTRL"><p class="entity-header"><span class="entity-type">Component</span><span class="entity-title">Temperature Controller Module</span><span class="entity-id">COMP_TEMP_CTRL</span></p><div class="entity-content"><p>Module responsible for PID-based temperature control. Interfaces:</p>
+<ul>
+<li><p>Input: Temperature sensor (ADC)</p>
+</li>
+<li><p>Output: Heating element PWM control</p>
+</li>
+<li><p>Safety: Reports temperature status to Safety Monitor</p>
+</li>
+<li><p>Safety: Responds to emergency shutdown commands</p>
+</li>
+</ul>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>module, control</td></tr><tr><th>Collapse</th><td>true</td></tr><tr><th>Template</th><td>component_arch</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_TEMP_REGULATION">SWREQ_TEMP_REGULATION</a></li></ul><p class="entity-link-label">uses</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-INTF_SAFETY_CMD">INTF_SAFETY_CMD</a></li><li><a class="reference internal" href="index.html#entity-INTF_SENSOR_DATA">INTF_SENSOR_DATA</a></li></ul><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_07">SEQSTART_07</a></li></ul><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_03">SEQSHTDWN_03</a></li></ul><p class="entity-link-label">provides</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-INTF_TEMP_CTRL_STATUS">INTF_TEMP_CTRL_STATUS</a></li><li><a class="reference internal" href="index.html#entity-INTF_TEMP_STATUS">INTF_TEMP_STATUS</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_06">SEQSTART_06</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_02">SEQSHTDWN_02</a></li></ul></div></details></div><div class="entity entity-component" id="entity-COMP_BREW_CTRL"><p class="entity-header"><span class="entity-type">Component</span><span class="entity-title">Brew Controller Module</span><span class="entity-id">COMP_BREW_CTRL</span></p><div class="entity-content"><p>Module managing the brewing process state machine. States: IDLE,
+HEATING, BREWING, COMPLETE, ERROR. Controls pump and valve timing
+based on selected strength. Waits for temperature ready signal before
+initiating brew cycle. Monitors safety status continuously.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>module, control</td></tr><tr><th>Collapse</th><td>true</td></tr><tr><th>Template</th><td>component_arch</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_BREW_STRENGTH">SWREQ_BREW_STRENGTH</a></li></ul><p class="entity-link-label">uses</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-INTF_TEMP_STATUS">INTF_TEMP_STATUS</a></li><li><a class="reference internal" href="index.html#entity-INTF_SAFETY_CMD">INTF_SAFETY_CMD</a></li><li><a class="reference internal" href="index.html#entity-INTF_USER_CMD">INTF_USER_CMD</a></li></ul><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_09">SEQSTART_09</a></li></ul><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_05">SEQSHTDWN_05</a></li></ul><p class="entity-link-label">provides</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-INTF_BREW_CTRL_STATUS">INTF_BREW_CTRL_STATUS</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_08">SEQSTART_08</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_04">SEQSHTDWN_04</a></li></ul></div></details></div><div class="entity entity-component" id="entity-COMP_UI_MODULE"><p class="entity-header"><span class="entity-type">Component</span><span class="entity-title">User Interface Module</span><span class="entity-id">COMP_UI_MODULE</span></p><div class="entity-content"><p>Module handling all user interactions including button debouncing, LED
+status indicators, and display updates. Interfaces with the Brew
+Controller to send user commands (strength selection, start/stop).</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>module, ui</td></tr><tr><th>Collapse</th><td>true</td></tr><tr><th>Template</th><td>component_arch</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_BUTTON_INPUT">SWREQ_BUTTON_INPUT</a></li></ul><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_01">SEQSTART_01</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_03">SEQSTART_03</a></li></ul><p class="entity-link-label">provides</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-INTF_USER_CMD">INTF_USER_CMD</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_02">SEQSTART_02</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_10">SEQSTART_10</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_06">SEQSHTDWN_06</a></li></ul></div></details></div><div class="entity entity-component" id="entity-COMP_SAFETY_MON"><p class="entity-header"><span class="entity-type">Component</span><span class="entity-title">Safety Monitor Module</span><span class="entity-id">COMP_SAFETY_MON</span></p><div class="entity-content"><p>Module performing continuous safety checks on temperature and water
+level. Implements fail-safe shutdown procedures.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>module, safety</td></tr><tr><th>Collapse</th><td>true</td></tr><tr><th>Template</th><td>component_arch</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">implements</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_WATER_LEVEL">SWREQ_WATER_LEVEL</a></li><li><a class="reference internal" href="index.html#entity-SWREQ_OVERTEMP_SHUTDOWN">SWREQ_OVERTEMP_SHUTDOWN</a></li></ul><p class="entity-link-label">uses</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-INTF_TEMP_CTRL_STATUS">INTF_TEMP_CTRL_STATUS</a></li><li><a class="reference internal" href="index.html#entity-INTF_BREW_CTRL_STATUS">INTF_BREW_CTRL_STATUS</a></li><li><a class="reference internal" href="index.html#entity-INTF_SENSOR_DATA">INTF_SENSOR_DATA</a></li></ul><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_04">SEQSTART_04</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_06">SEQSTART_06</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_08">SEQSTART_08</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_10">SEQSTART_10</a></li></ul><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_02">SEQSHTDWN_02</a></li><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_04">SEQSHTDWN_04</a></li><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_06">SEQSHTDWN_06</a></li></ul><p class="entity-link-label">provides</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-INTF_SAFETY_CMD">INTF_SAFETY_CMD</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_03">SEQSTART_03</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_05">SEQSTART_05</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_07">SEQSTART_07</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_09">SEQSTART_09</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_01">SEQSHTDWN_01</a></li><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_03">SEQSHTDWN_03</a></li><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_05">SEQSHTDWN_05</a></li></ul></div></details></div><div class="entity entity-component" id="entity-COMP_HAL"><p class="entity-header"><span class="entity-type">Component</span><span class="entity-title">Hardware Abstraction Layer</span><span class="entity-id">COMP_HAL</span></p><div class="entity-content"><p>Module providing abstraction over hardware sensors and actuators.
+Handles low-level sensor reading via ADC, signal conditioning, and
+calibration. Interfaces:</p>
+<ul>
+<li><p>Input: Temperature sensor (NTC thermistor via ADC channel 0)</p>
+</li>
+<li><p>Input: Water level sensor (capacitive via ADC channel 1)</p>
+</li>
+<li><p>Output: Heating element control (PWM channel)</p>
+</li>
+<li><p>Output: Pump control (GPIO)</p>
+</li>
+</ul>
+<p>Implements DMA-based ADC sampling at 100Hz with automatic averaging
+and outlier rejection for robust sensor readings.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>module, hardware, driver</td></tr><tr><th>Collapse</th><td>true</td></tr><tr><th>Template</th><td>component_arch</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_02">SEQSTART_02</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_05">SEQSTART_05</a></li></ul><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSHTDWN_01">SEQSHTDWN_01</a></li></ul><p class="entity-link-label">provides</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-INTF_SENSOR_DATA">INTF_SENSOR_DATA</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SEQSTART_01">SEQSTART_01</a></li><li><a class="reference internal" href="index.html#entity-SEQSTART_04">SEQSTART_04</a></li></ul></div></details></div><h3 id="component-interfaces">Component Interfaces</h3>
+<p>The following interfaces define the communication contracts between
+architectural components. Each interface specifies the data exchanged,
+protocols used, and timing constraints to ensure deterministic and
+safe inter-component communication.</p>
+<div class="entity entity-interface" id="entity-INTF_TEMP_STATUS"><p class="entity-header"><span class="entity-type">Interface</span><span class="entity-title">Temperature Status Interface</span><span class="entity-id">INTF_TEMP_STATUS</span></p><div class="entity-content"><p><strong>Provider</strong>: Temperature Controller Module</p>
+<p><strong>Consumer</strong>: Brew Controller Module</p>
+<p><strong>Description</strong>: Provides current temperature readings and heating
+status to the brew controller.</p>
+<p><strong>Data Elements</strong>:</p>
+<ul>
+<li><p>current_temp: int16 (°C × 10 for 0.1°C resolution)</p>
+</li>
+<li><p>target_temp: int16 (°C × 10)</p>
+</li>
+<li><p>is_ready: bool (true when within target range)</p>
+</li>
+<li><p>heating_active: bool</p>
+</li>
+</ul>
+<p><strong>Protocol</strong>: Shared memory with atomic updates, 100ms refresh rate</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>interface, control</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">provided by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul><p class="entity-link-label">used by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li></ul></div></details></div><div class="entity entity-interface" id="entity-INTF_SAFETY_CMD"><p class="entity-header"><span class="entity-type">Interface</span><span class="entity-title">Safety Command Interface</span><span class="entity-id">INTF_SAFETY_CMD</span></p><div class="entity-content"><p><strong>Provider</strong>: Safety Monitor Module</p>
+<p><strong>Consumers</strong>: Temperature Controller, Brew Controller</p>
+<p><strong>Description</strong>: Emergency shutdown commands from safety monitor to
+all controlled subsystems.</p>
+<p><strong>Commands</strong>:</p>
+<ul>
+<li><p>EMERGENCY_STOP: Immediate shutdown (&lt;100ms response required)</p>
+</li>
+<li><p>RESUME_NORMAL: Clear emergency state after fault resolved</p>
+</li>
+</ul>
+<p><strong>Protocol</strong>: Interrupt-driven with hardware watchdog backup, highest
+priority</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>interface, safety</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">provided by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">used by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul></div></details></div><div class="entity entity-interface" id="entity-INTF_TEMP_CTRL_STATUS"><p class="entity-header"><span class="entity-type">Interface</span><span class="entity-title">Temperature Controller Safety Status Interface</span><span class="entity-id">INTF_TEMP_CTRL_STATUS</span></p><div class="entity-content"><p><strong>Provider</strong>: Temperature Controller Module</p>
+<p><strong>Consumer</strong>: Safety Monitor Module</p>
+<p><strong>Description</strong>: Heartbeat and fault status reported by the
+Temperature Controller to the Safety Monitor for fault detection.</p>
+<p><strong>Data Elements</strong>:</p>
+<ul>
+<li><p>module_id: uint8</p>
+</li>
+<li><p>heartbeat_counter: uint32 (incremented each cycle)</p>
+</li>
+<li><p>fault_flags: uint16 (bitfield of detected faults)</p>
+</li>
+<li><p>temperature_value: int16 (current measured temperature)</p>
+</li>
+</ul>
+<p><strong>Protocol</strong>: Polled by safety monitor at 10Hz</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>interface, safety</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">provided by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul><p class="entity-link-label">used by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div><div class="entity entity-interface" id="entity-INTF_BREW_CTRL_STATUS"><p class="entity-header"><span class="entity-type">Interface</span><span class="entity-title">Brew Controller Safety Status Interface</span><span class="entity-id">INTF_BREW_CTRL_STATUS</span></p><div class="entity-content"><p><strong>Provider</strong>: Brew Controller Module</p>
+<p><strong>Consumer</strong>: Safety Monitor Module</p>
+<p><strong>Description</strong>: Heartbeat and fault status reported by the Brew
+Controller to the Safety Monitor for fault detection.</p>
+<p><strong>Data Elements</strong>:</p>
+<ul>
+<li><p>module_id: uint8</p>
+</li>
+<li><p>heartbeat_counter: uint32 (incremented each cycle)</p>
+</li>
+<li><p>fault_flags: uint16 (bitfield of detected faults)</p>
+</li>
+<li><p>water_level: uint8 (0-100%)</p>
+</li>
+</ul>
+<p><strong>Protocol</strong>: Polled by safety monitor at 10Hz</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>interface, safety</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">provided by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li></ul><p class="entity-link-label">used by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div><div class="entity entity-interface" id="entity-INTF_USER_CMD"><p class="entity-header"><span class="entity-type">Interface</span><span class="entity-title">User Command Interface</span><span class="entity-id">INTF_USER_CMD</span></p><div class="entity-content"><p><strong>Provider</strong>: User Interface Module</p>
+<p><strong>Consumer</strong>: Brew Controller Module</p>
+<p><strong>Description</strong>: User commands and settings passed from UI to the
+brewing state machine.</p>
+<p><strong>Commands</strong>:</p>
+<ul>
+<li><p>START_BREW(strength: enum {WEAK, MEDIUM, STRONG})</p>
+</li>
+<li><p>STOP_BREW</p>
+</li>
+<li><p>SELECT_STRENGTH(strength: enum)</p>
+</li>
+</ul>
+<p><strong>Protocol</strong>: Message queue with event-driven processing, debounced at
+UI layer</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>interface, ui</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">provided by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_UI_MODULE">COMP_UI_MODULE</a></li></ul><p class="entity-link-label">used by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li></ul></div></details></div><div class="entity entity-interface" id="entity-INTF_SENSOR_DATA"><p class="entity-header"><span class="entity-type">Interface</span><span class="entity-title">Sensor Data Interface</span><span class="entity-id">INTF_SENSOR_DATA</span></p><div class="entity-content"><p><strong>Provider</strong>: Hardware sensors (temperature, water level)</p>
+<p><strong>Consumers</strong>: Temperature Controller, Safety Monitor</p>
+<p><strong>Description</strong>: Raw sensor readings from hardware via ADC.</p>
+<p><strong>Data Elements</strong>:</p>
+<ul>
+<li><p>temp_sensor_raw: uint16 (ADC value 0-4095)</p>
+</li>
+<li><p>water_level_raw: uint16 (ADC value 0-4095)</p>
+</li>
+<li><p>sensor_timestamp: uint32 (milliseconds)</p>
+</li>
+</ul>
+<p><strong>Protocol</strong>: ADC DMA with double buffering, 100Hz sampling rate</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>interface, hardware</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">provided by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_HAL">COMP_HAL</a></li></ul><p class="entity-link-label">used by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul></div></details></div><h3 id="static-view">Static View</h3>
+<div class="plantuml-diagram">
+  <img src="../_images/2ea44f30b6844464669f91e73307c0f4df81a07aa8021ae98b0616233bfb1b7d.svg" alt="PlantUML Diagram" />
+</div>
+<h3 id="dynamic-view">Dynamic View</h3>
+<p>The sequence diagrams below show how the architectural components
+interact at runtime. Participants map directly to the components
+defined in the Static View.</p>
+<p>The diagrams are generated by <code>needsequence</code>, which traverses the <code>startup_calls</code>
+/ <code>shutdown_calls</code> links defined on each component need.  Each <a class="reference internal" href="index.html#entity-SEQSTART_01"><span class="xref entity entity-seq_msg">seq_msg</span></a>
+need in the chain represents one message; odd hops are <em>participants</em>,
+even hops are <em>messages</em>.</p>
+<h4 id="startup-sequence">Startup Sequence</h4>
+<p>On power-on the system initialises hardware, validates initial sensor
+readings, then brings all control modules online in dependency order
+before signalling readiness to the user.</p>
+<p>The sequence message needs (<code>SEQSTART_01</code>–<code>SEQSTART_10</code>) are
+defined below.  <code>COMP_UI_MODULE</code> is the starting participant.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Startup Sequence Messages</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<div class="entity entity-seq_msg" id="entity-SEQSTART_01"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">init()</span><span class="entity-id">SEQSTART_01</span></p><div class="entity-content"><p>HAL hardware initialisation call from UI Module.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_HAL">COMP_HAL</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_UI_MODULE">COMP_UI_MODULE</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_02"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">init_ok</span><span class="entity-id">SEQSTART_02</span></p><div class="entity-content"><p>HAL confirms successful ADC calibration to UI Module.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_UI_MODULE">COMP_UI_MODULE</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_HAL">COMP_HAL</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_03"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">start() — Safety Monitor</span><span class="entity-id">SEQSTART_03</span></p><div class="entity-content"><p>UI Module requests Safety Monitor to start and run pre-checks.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_UI_MODULE">COMP_UI_MODULE</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_04"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">read_sensors()</span><span class="entity-id">SEQSTART_04</span></p><div class="entity-content"><p>Safety Monitor polls HAL for initial sensor readings.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_HAL">COMP_HAL</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_05"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">temp=22°C, water_level=85%</span><span class="entity-id">SEQSTART_05</span></p><div class="entity-content"><p>HAL returns <code>INTF_SENSOR_DATA</code> values; Safety Monitor asserts
+pre-conditions (temp &lt; 100 °C, water &gt; threshold).</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_HAL">COMP_HAL</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_06"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">start() — Temp Controller</span><span class="entity-id">SEQSTART_06</span></p><div class="entity-content"><p>Safety Monitor starts Temperature Controller Module.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_07"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">started (INTF_TEMP_CTRL_STATUS heartbeat)</span><span class="entity-id">SEQSTART_07</span></p><div class="entity-content"><p>Temperature Controller confirms startup via heartbeat on <code>INTF_TEMP_CTRL_STATUS</code>.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_08"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">start() — Brew Controller</span><span class="entity-id">SEQSTART_08</span></p><div class="entity-content"><p>Safety Monitor starts Brew Controller Module.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_09"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">started (INTF_BREW_CTRL_STATUS heartbeat)</span><span class="entity-id">SEQSTART_09</span></p><div class="entity-content"><p>Brew Controller confirms startup via heartbeat on <code>INTF_BREW_CTRL_STATUS</code>.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSTART_10"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">system_ready</span><span class="entity-id">SEQSTART_10</span></p><div class="entity-content"><p>Safety Monitor signals system readiness to UI Module; UI illuminates
+the Ready LED.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_UI_MODULE">COMP_UI_MODULE</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div></div>
+</details>
+<div class="plantuml-diagram">
+  <img src="../_images/e02de8d7690cbf1e4eb84dab37cb11ddb38a0ca8305d38c2883cf3241866eb4b.svg" alt="PlantUML Diagram" />
+  <p class="caption">Startup Sequence</p>
+</div>
+<h4 id="safety-shutdown-sequence">Safety Shutdown Sequence</h4>
+<p>If the Safety Monitor detects an over-temperature condition it issues
+an <code>EMERGENCY_STOP</code> command on <code>INTF_SAFETY_CMD</code> to all controlled
+subsystems. All modules must respond within 100 ms.</p>
+<p>The sequence message needs (<code>SEQSHTDWN_01</code>–<code>SEQSHTDWN_06</code>) are
+defined below.  <code>COMP_HAL</code> is the starting participant (it is the
+source of the over-temperature sensor reading).</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Safety Shutdown Sequence Messages</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<div class="entity entity-seq_msg" id="entity-SEQSHTDWN_01"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">temp=102°C (INTF_SENSOR_DATA — over-temp)</span><span class="entity-id">SEQSHTDWN_01</span></p><div class="entity-content"><p>HAL reports temperature exceeding 100 °C threshold to Safety Monitor
+via <code>INTF_SENSOR_DATA</code> (polled every 100 ms).</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_HAL">COMP_HAL</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSHTDWN_02"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">EMERGENCY_STOP → Temp Controller</span><span class="entity-id">SEQSHTDWN_02</span></p><div class="entity-content"><p>Safety Monitor broadcasts <code>EMERGENCY_STOP</code> on <code>INTF_SAFETY_CMD</code> to
+Temperature Controller; response required within 100 ms.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSHTDWN_03"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">fault_flags=OVERTEMP (INTF_TEMP_CTRL_STATUS)</span><span class="entity-id">SEQSHTDWN_03</span></p><div class="entity-content"><p>Temperature Controller confirms shutdown and reports <code>FAULT_OVERTEMP</code>
+flag via <code>INTF_TEMP_CTRL_STATUS</code>.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_TEMP_CTRL">COMP_TEMP_CTRL</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSHTDWN_04"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">EMERGENCY_STOP → Brew Controller</span><span class="entity-id">SEQSHTDWN_04</span></p><div class="entity-content"><p>Safety Monitor broadcasts <code>EMERGENCY_STOP</code> on <code>INTF_SAFETY_CMD</code> to
+Brew Controller; brew cycle aborted, pump stopped.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSHTDWN_05"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">fault_flags=ABORT (INTF_BREW_CTRL_STATUS)</span><span class="entity-id">SEQSHTDWN_05</span></p><div class="entity-content"><p>Brew Controller confirms abort and reports <code>FAULT_ABORT</code> flag via <code>INTF_BREW_CTRL_STATUS</code>.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_BREW_CTRL">COMP_BREW_CTRL</a></li></ul></div></details></div><div class="entity entity-seq_msg" id="entity-SEQSHTDWN_06"><p class="entity-header"><span class="entity-type">Sequence Message</span><span class="entity-title">fault_event(OVERTEMP)</span><span class="entity-id">SEQSHTDWN_06</span></p><div class="entity-content"><p>Safety Monitor notifies UI Module of over-temperature fault; UI
+illuminates the Error LED and displays the fault message.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">sends</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_UI_MODULE">COMP_UI_MODULE</a></li></ul><p class="entity-link-label">sent by</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-COMP_SAFETY_MON">COMP_SAFETY_MON</a></li></ul></div></details></div></div>
+</details>
+<div class="plantuml-diagram">
+  <img src="../_images/a5a8fdaa4f683d89e971d769c8af88ba19ebb88f7f4fd12cb7d2587ce00b8170.svg" alt="PlantUML Diagram" />
+  <p class="caption">Safety Shutdown Sequence</p>
+</div>
+<h2 id="implementation">Implementation</h2>
+<p>The implementation phase translates the architectural designs into
+working code. All BrewMaster Pro 3000 software is implemented in Rust,
+leveraging its memory safety guarantees, zero-cost abstractions, and
+excellent embedded systems support.</p>
+<p>The choice of Rust provides critical advantages for safety-critical
+applications: compile-time memory safety prevents entire classes of
+bugs, the type system enforces correct API usage, and the no_std
+capability enables bare-metal operation if needed. The implementation
+follows strict coding standards including comprehensive documentation,
+clippy linting at the pedantic level, and zero unsafe code in
+safety-critical modules.</p>
+<p>Each implementation artifact maps directly to an architectural module,
+ensuring traceability from design to code. The code is organized as a
+Cargo workspace located in <code>../../brewmaster-controller/</code> relative
+to this documentation, with clear module boundaries matching the
+architectural decomposition.</p>
+<h3 id="rust-interface-implementations">Rust Interface Implementations</h3>
+<p>The following interface implementations are extracted from the Rust
+source code in <code>crates/coffee-machine/src/interfaces.rs</code>. Each
+implementation is automatically traced to its corresponding interface
+and component specifications through codelinks annotations.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Rust Artifacts</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'src-trace'</p>
+<pre class="directive-error-source">.. src-trace::
+   :project: coffee_machine</pre>
+</div>
+</div>
+</details>
+<h2 id="test-cases">Test Cases</h2>
+<p>Comprehensive testing ensures that the BrewMaster Pro 3000 meets all
+specified requirements and operates safely under all conditions. The
+test strategy employs multiple levels:</p>
+<ul>
+<li><p><strong>Unit Tests</strong>: Verify individual components in isolation (temperature
+control, button debouncing, state machine transitions)</p>
+</li>
+<li><p><strong>Integration Tests</strong>: Validate interactions between modules (brew
+controller coordinating with temperature controller)</p>
+</li>
+<li><p><strong>System Tests</strong>: End-to-end verification of complete brewing cycles</p>
+</li>
+<li><p><strong>Safety Tests</strong>: Dedicated verification of all safety-critical
+functions under normal and fault conditions</p>
+</li>
+</ul>
+<p>All tests are automated and integrated into the continuous integration
+pipeline. Safety-critical tests are executed on hardware-in-the-loop
+test benches that simulate real sensors, actuators, and fault
+conditions. Test coverage targets are set based on the criticality of
+each component.</p>
+<div class="entity entity-test" id="entity-TEST_TEMP_CONTROL"><p class="entity-header"><span class="entity-type">Test Case</span><span class="entity-title">Test Temperature Control</span><span class="entity-id">TEST_TEMP_CONTROL</span></p><div class="entity-content"><p><strong>Objective</strong>: Verify temperature controller maintains target
+temperature within ±2°C.</p>
+<p><strong>Steps</strong>:</p>
+<ol class="arabic period">
+<li><p>Initialize controller with target 90°C</p>
+</li>
+<li><p>Simulate temperature sensor readings from 20°C to 95°C</p>
+</li>
+<li><p>Record PWM output at each temperature</p>
+</li>
+</ol>
+<p><strong>Expected</strong>: PWM duty cycle decreases as temperature approaches
+target, maintains oscillation within ±2°C of setpoint.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>unit, control</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specs</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_TEMP_REGULATION">SWREQ_TEMP_REGULATION</a></li></ul></div></details></div><div class="entity entity-test" id="entity-TEST_BREW_STRENGTH"><p class="entity-header"><span class="entity-type">Test Case</span><span class="entity-title">Test Brew Strength Settings</span><span class="entity-id">TEST_BREW_STRENGTH</span></p><div class="entity-content"><p><strong>Objective</strong>: Verify all three strength settings produce correct
+timing and water volume.</p>
+<p><strong>Test Cases</strong>:</p>
+<ul>
+<li><p>Weak: Assert 180ml water dispensed in 3 min ±5s</p>
+</li>
+<li><p>Medium: Assert 180ml water dispensed in 4 min ±5s</p>
+</li>
+<li><p>Strong: Assert 180ml water dispensed in 5 min ±5s</p>
+</li>
+</ul>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>integration, brewing</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specs</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_BREW_STRENGTH">SWREQ_BREW_STRENGTH</a></li></ul></div></details></div><div class="entity entity-test" id="entity-TEST_BUTTON_DEBOUNCE"><p class="entity-header"><span class="entity-type">Test Case</span><span class="entity-title">Test Button Debouncing</span><span class="entity-id">TEST_BUTTON_DEBOUNCE</span></p><div class="entity-content"><p><strong>Objective</strong>: Verify button handler correctly debounces rapid inputs.</p>
+<p><strong>Steps</strong>:</p>
+<ol class="arabic period">
+<li><p>Simulate 10 button presses within 200ms</p>
+</li>
+<li><p>Count triggered events</p>
+</li>
+</ol>
+<p><strong>Expected</strong>: Only 1-2 events triggered (first press + possible bounce
+after 50ms timeout).</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>unit, ui</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specs</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_BUTTON_INPUT">SWREQ_BUTTON_INPUT</a></li></ul></div></details></div><div class="entity entity-test" id="entity-TEST_SAFETY_SHUTDOWN"><p class="entity-header"><span class="entity-type">Test Case</span><span class="entity-title">Test Safety Shutdown</span><span class="entity-id">TEST_SAFETY_SHUTDOWN</span></p><div class="entity-content"><p><strong>Objective</strong>: Verify safety monitor triggers shutdown on critical
+conditions.</p>
+<p><strong>Test Cases</strong>:</p>
+<ul>
+<li><p>Over-temperature: Set temp &gt; 100°C, assert shutdown within 100ms</p>
+</li>
+<li><p>Low water: Set water level &lt; threshold, assert brewing prevented</p>
+</li>
+<li><p>Watchdog timeout: Block safety loop, assert hardware reset within 1s</p>
+</li>
+</ul>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>integration, safety</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specs</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_OVERTEMP_SHUTDOWN">SWREQ_OVERTEMP_SHUTDOWN</a></li><li><a class="reference internal" href="index.html#entity-SWREQ_WATER_LEVEL">SWREQ_WATER_LEVEL</a></li></ul></div></details></div><div class="entity entity-test" id="entity-TEST_E2E_BREWING"><p class="entity-header"><span class="entity-type">Test Case</span><span class="entity-title">Test End-to-End Brewing</span><span class="entity-id">TEST_E2E_BREWING</span></p><div class="entity-content"><p><strong>Objective</strong>: Verify complete brewing cycle from user input to coffee
+output.</p>
+<p><strong>Steps</strong>:</p>
+<ol class="arabic period">
+<li><p>Select medium strength</p>
+</li>
+<li><p>Press start button</p>
+</li>
+<li><p>Monitor temperature, water flow, and timing</p>
+</li>
+</ol>
+<p><strong>Expected</strong>: System heats to 85-95°C, dispenses 180ml over 4 minutes,
+returns to idle state, no safety triggers.</p>
+</div><details class="entity-more"><summary class="entity-more-toggle">Details</summary><table class="entity-attributes"><tbody><tr><th>Status</th><td>open</td></tr><tr><th>Tags</th><td>system, e2e</td></tr><tr><th>Collapse</th><td>true</td></tr></tbody></table><div class="entity-links"><p class="entity-link-label">specs</p><ul class="entity-link-list"><li><a class="reference internal" href="index.html#entity-SWREQ_BREW_STRENGTH">SWREQ_BREW_STRENGTH</a></li><li><a class="reference internal" href="index.html#entity-SWREQ_TEMP_REGULATION">SWREQ_TEMP_REGULATION</a></li><li><a class="reference internal" href="index.html#entity-SWREQ_BUTTON_INPUT">SWREQ_BUTTON_INPUT</a></li></ul></div></details></div><h2 id="traceability-overview">Traceability Overview</h2>
+<p>Complete traceability is a cornerstone of the BrewMaster Pro 3000
+development process. Every line of code can be traced back through
+architectural designs and requirements to the original customer need
+or safety regulation. Conversely, every requirement can be traced
+forward to its implementation and verification test cases. This
+bidirectional traceability ensures nothing is missed and enables rapid
+impact analysis when requirements change.</p>
+<p>The sphinx-needs tool automates traceability management, maintaining
+links between artifacts and generating visual diagrams. This example
+demonstrates:</p>
+<ul>
+<li><p><strong>Requirements → SW Requirements</strong>: High-level needs decomposed into
+software-specific requirements</p>
+</li>
+<li><p><strong>SW Requirements → Architecture</strong>: Requirements mapped to software
+modules</p>
+</li>
+<li><p><strong>Architecture → Implementation</strong>: Architectural designs realized in
+code</p>
+</li>
+<li><p><strong>Implementation → Tests</strong>: All implementations verified through test
+cases</p>
+</li>
+</ul>
+<p>Use the query tools to explore the relationships between these needs
+and verify complete traceability coverage.</p>
+<h3 id="traceability-diagram">Traceability Diagram</h3>
+<p>The following diagram shows all needs and their connections in this
+coffee machine example:</p>
+<div class="plantuml-diagram">
+  <img src="../_images/40b60e932db99397a302da250cf93a4d57bcdb2ea474248a38dff98fd8426ddb.svg" alt="PlantUML Diagram" />
+</div>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="../basic_example/index.html">&larr; 🧰 Basic Example</a>
+        <a class="next" href="../automotive-adas/index.html">🚗 Automotive ADAS &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

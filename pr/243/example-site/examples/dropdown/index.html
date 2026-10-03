@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dropdown Directives — Megacorp Documentation</title>
+  <link rel="stylesheet" href="../../default.css">
+  <script defer src="../../version_switcher.js"></script>
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">Megacorp Documentation</h2>
+        <p class="project-version">v2.0-beta</p>
+        <div class="version-switcher" data-json-url="https:&#x2f;&#x2f;nachstedt.github.io&#x2f;rinx&#x2f;versions.json" hidden></div>
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../headings.html">Section headings</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../hyperlinks.html">Hyperlinks and Targets</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../admonitions.html">Admonitions Showcase</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../inline_roles.html">Inline Roles</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../any_role.html">The :any: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../doc_role.html">The :doc: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../numref.html">The :numref: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../downloads.html">The :download: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../version_changes.html">Version Change Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../seealso.html">See Also Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../literal_blocks.html">Literal Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../code_blocks.html">Code Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../definition_lists.html">Definition Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../enumerated_lists.html">Enumerated Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../option_lists.html">Option Lists</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../block_quotes.html">Block Quotes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../line_blocks.html">Line Blocks</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../comments.html">Comments</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../domains.html">Domains</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../current_module.html">Current Module</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../transitions.html">Transitions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../typography.html">Smart Typography</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../escapes.html">Backslash Escapes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tables.html">Grid Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../simple_tables.html">Simple Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../list_table.html">List Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../csv_table.html">CSV Tables</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../table_directive.html">The table Directive</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../math.html">Math</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../code_role.html">The :code: Role</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../registry_roles.html">Registry Roles: :pep:, :rfc:, :cve: and :cwe:</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../images.html">Images</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../figures.html">Figures</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../substitutions.html">Substitutions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../includes.html">Includes</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../index_entries.html">Index Entries</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../noqa.html">Suppressing diagnostics</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../unknown_directives.html">Unrecognized and malformed directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../if_builder.html">Conditional content by builder</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../doctests.html">Doctest Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../entities/index.html">Entities</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../toctree/index.html">Toctree Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../contents/index.html">Contents Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../default_role/index.html">Interpreted Text</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../sectnum/index.html">Sectnum Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1 current has-children">
+            <a href="index.html">Dropdown Directives</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Dropdown Directives"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="index.html#basics">Basics</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#colours">Colours</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#icons">Icons</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#markers-and-animation">Markers and animation</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#spacing-and-classes">Spacing and classes</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="index.html#cross-references">Cross-references</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="basics.html">Dropdown Basics</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="colors.html">Dropdown Colours</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="icons.html">Dropdown Icons</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markers.html">Dropdown Markers and Animation</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="spacing.html">Dropdown Spacing and Classes</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="reference.html">Referring to a Dropdown</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../grid/index.html">Grid Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../button_link/index.html">Button Link Directives</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../jinja/index.html">🧩 Templated Sources</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../intersphinx/index.html">Linking into other sites</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../team_a/index.html">Team A: Getting Started</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../team_b/index.html">Team B: Infrastructure Guide</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="../sectnum/prefix_suffix.html">&larr; Prefix and Suffix</a>
+        <a class="next" href="basics.html">Dropdown Basics &rarr;</a>
+      </nav>
+      
+      <a id="dropdown-index"></a>
+<h1 id="dropdown-directives">Dropdown Directives</h1>
+<p><code>.. dropdown::</code> is sphinx-design's collapsible container: a <code>&lt;details&gt;</code>
+element with a clickable summary bar. Unlike every other directive in this
+example site it is not part of docutils or Sphinx, and unlike a
+<code>:collapsible:</code> admonition its title is parsed as inline markup and its ten
+options control the bar's colour, icon, marker, animation and spacing.</p>
+<p>Both of its states, side by side — the first starts collapsed, the second
+carries <code>:open:</code> so its body shows without being clicked:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Click me</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text">A dropdown's body is ordinary block content, so it can hold anything a
+document can.</p>
+</div>
+</details>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" open="open">
+<summary class="sd-summary-title sd-card-header sd-bg-success sd-bg-text-success">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-light-bulb" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg></span><span class="sd-summary-text">Already open, with an icon and a coloured bar</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text"><code>:open:</code>, <code>:icon: light-bulb</code> and <code>:color: success</code> together. The
+pages below take the ten options one group at a time.</p>
+</div>
+</details>
+<ul>
+  <li><a href="basics.html">Dropdown Basics</a></li>
+  <li><a href="colors.html">Dropdown Colours</a></li>
+  <li><a href="icons.html">Dropdown Icons</a></li>
+  <li><a href="markers.html">Dropdown Markers and Animation</a></li>
+  <li><a href="spacing.html">Dropdown Spacing and Classes</a></li>
+  <li><a href="reference.html">Referring to a Dropdown</a></li>
+</ul>
+<h2 id="basics">Basics</h2>
+<p>"Basics" shows the title, the body, <code>:open:</code>, and what a dropdown with no
+title at all looks like. Written with no argument, the summary draws a
+placeholder icon instead of an empty bar, so there is still something to click:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-kebab-horizontal no-title" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14a2 2 0 1 1-.001-3.999A2 2 0 0 1 20 14ZM6 12a2 2 0 1 1-3.999.001A2 2 0 0 1 6 12Zm8 0a2 2 0 1 1-3.999.001A2 2 0 0 1 14 12Z"/></svg></span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text">No title was written for this one — the only thing in its summary is the
+placeholder.</p>
+</div>
+</details>
+<h2 id="colours">Colours</h2>
+<p>"Colours" paints the summary bar with each of the eleven <code>:color:</code> values.
+One of them, with the marker taking the bar's own colour:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header sd-bg-danger sd-bg-text-danger">
+<span class="sd-summary-text"><code>:color: danger</code></span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text">Each value adds a background class and a matching text class, so the title
+stays readable on a light bar as well as a dark one.</p>
+</div>
+</details>
+<h2 id="icons">Icons</h2>
+<p>"Icons" puts an octicon before the title with <code>:icon:</code>. The name is checked
+while parsing, so a misspelled one is reported rather than silently missing:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-beaker" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 5.782V2.5h-.25a.75.75 0 0 1 0-1.5h6.5a.75.75 0 0 1 0 1.5H11v3.282l3.666 5.76C15.619 13.04 14.543 15 12.767 15H3.233c-1.776 0-2.852-1.96-1.899-3.458Zm-2.4 6.565a.75.75 0 0 0 .633 1.153h9.534a.75.75 0 0 0 .633-1.153L12.225 10.5h-8.45ZM9.5 2.5h-3V6c0 .143-.04.283-.117.403L4.73 9h6.54L9.617 6.403A.746.746 0 0 1 9.5 6Z"/></svg></span><span class="sd-summary-text"><code>:icon: beaker</code></span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text">Any name from the bundled octicon set works; the icon sits before the title
+text, and the state marker stays on the right.</p>
+</div>
+</details>
+<h2 id="markers-and-animation">Markers and animation</h2>
+<p>"Markers" shows the two <code>:chevron:</code> directions and the two <code>:animate:</code>
+reveals. Both are only visible in motion, so this one is worth opening:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text"><code>:chevron: down-up</code> and <code>:animate: fade-in-slide-down</code></span>
+<span class="sd-summary-state-marker sd-summary-chevron-down"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-down" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.22 8.22a.749.749 0 0 0 0 1.06l6.25 6.25a.749.749 0 0 0 1.06 0l6.25-6.25a.749.749 0 1 0-1.06-1.06L12 13.939 6.28 8.22a.749.749 0 0 0-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text">The marker pointed down while this was closed and points up now. The body
+faded in while sliding down as it opened.</p>
+</div>
+</details>
+<h2 id="spacing-and-classes">Spacing and classes</h2>
+<p>"Spacing" shows <code>:margin:</code> in both its forms, and the three
+<code>:class-container:</code> / <code>:class-title:</code> / <code>:class-body:</code> escape hatches:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mt-0 sd-mb-4 sd-ml-auto sd-mr-auto">
+<summary class="sd-summary-title sd-card-header sd-bg-info sd-bg-text-info">
+<span class="sd-summary-text"><code>:margin: 0 4 auto auto</code> with a body class</span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body example-dropdown-body">
+<p class="sd-card-text">Four values are read as <em>top bottom left right</em> — no space above, a wide gap
+below, centred horizontally. <code>:class-body:</code> is the hook a project's own
+stylesheet would use; this site defines nothing for it.</p>
+</div>
+</details>
+<h2 id="cross-references">Cross-references</h2>
+<p>"Reference" gives a dropdown a <code>:name:</code> and links to it. The name becomes the
+<code>id</code> of the <code>&lt;details&gt;</code>, so a link lands on the summary bar:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" id="dropdown-overview-target">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-link" viewBox="0 0 16 16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"/></svg></span><span class="sd-summary-text"><code>:name: dropdown-overview-target</code></span>
+<span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"/></svg></span>
+</summary>
+<div class="sd-summary-content sd-card-body">
+<p class="sd-card-text">Targets written <em>inside</em> a dropdown work too, since the body is ordinary
+content.</p>
+</div>
+</details>
+<p>A link to the dropdown above: <a href="index.html#dropdown-overview-target">dropdown-overview-target</a>.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="../sectnum/prefix_suffix.html">&larr; Prefix and Suffix</a>
+        <a class="next" href="basics.html">Dropdown Basics &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

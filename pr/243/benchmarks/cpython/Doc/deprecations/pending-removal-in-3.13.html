@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pending removal in Python 3.13 — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="c-api-pending-removal-in-future.html">&larr; Pending removal in future versions</a>
+        <a class="next" href="pending-removal-in-3.14.html">Pending removal in Python 3.14 &rarr;</a>
+      </nav>
+      
+      <h1 id="pending-removal-in-python-3-13">Pending removal in Python 3.13</h1>
+<p>Modules (see <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>):</p>
+<ul>
+<li><p><code class="xref py module docutils literal">aifc</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">audioop</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">cgi</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">cgitb</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">chunk</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">crypt</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">imghdr</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">mailcap</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">msilib</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">nis</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">nntplib</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">ossaudiodev</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">pipes</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">sndhdr</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">spwd</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">sunau</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">telnetlib</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">uu</code></p>
+</li>
+<li><p><code class="xref py module docutils literal">xdrlib</code></p>
+</li>
+</ul>
+<p>Other modules:</p>
+<ul>
+<li><p><code class="xref py module docutils literal">lib2to3</code>, and the <strong class="program">2to3</strong> program (:gh:`84540`)</p>
+</li>
+</ul>
+<p>APIs:</p>
+<ul>
+<li><p><code class="xref py class docutils literal">configparser.LegacyInterpolation</code> (:gh:`90765`)</p>
+</li>
+<li><p><code>locale.resetlocale()</code> (:gh:`90817`)</p>
+</li>
+<li><p><code class="xref py method docutils literal">turtle.RawTurtle.settiltangle</code> (:gh:`50096`)</p>
+</li>
+<li><p><code class="xref py function docutils literal">unittest.findTestCases</code> (:gh:`50096`)</p>
+</li>
+<li><p><code class="xref py function docutils literal">unittest.getTestCaseNames</code> (:gh:`50096`)</p>
+</li>
+<li><p><code class="xref py function docutils literal">unittest.makeSuite</code> (:gh:`50096`)</p>
+</li>
+<li><p><code class="xref py method docutils literal">unittest.TestProgram.usageExit</code> (:gh:`67048`)</p>
+</li>
+<li><p><code class="xref py class docutils literal">webbrowser.MacOSX</code> (:gh:`86421`)</p>
+</li>
+<li><p><a href="#" class="broken-link"><code class="xref py class docutils literal">classmethod</code></a> descriptor chaining (:gh:`89519`)</p>
+</li>
+</ul>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="c-api-pending-removal-in-future.html">&larr; Pending removal in future versions</a>
+        <a class="next" href="pending-removal-in-3.14.html">Pending removal in Python 3.14 &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
