@@ -29,7 +29,7 @@ A finished step's heading is marked ✅ with its pull request, a partly
 finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
-  (PRs #238–#248, listed at the end of M0), and #2 (PR #252).
+  (PRs #238–#248, listed at the end of M0), and #2 (PR #253).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
 - **Next: #3, Diagnostics inside included fragments.**
@@ -80,7 +80,7 @@ message and code.
 - Extension: activate on `onLanguage:restructuredtext`, not only on the preview command
 - Tests: position conversion, handlers over an in-memory connection
 
-### 2. Diagnostic polish ✅ (#252)
+### 2. Diagnostic polish ✅ (#253)
 
 **You experience:** hovering a squiggle shows `directive.unknown` with a docs
 link, and a `.. noqa:` makes it disappear.
