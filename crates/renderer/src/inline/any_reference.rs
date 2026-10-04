@@ -101,6 +101,9 @@ pub(super) fn render_inline_any_reference(
             };
             write_external_link(html, &hit, doc_path, &inner);
         }
+        AnyResolution::Contested(documents) => {
+            report(html, BrokenLinkKind::AmbiguousTarget { documents });
+        }
         AnyResolution::NotFound => report(
             html,
             unresolved_kind(

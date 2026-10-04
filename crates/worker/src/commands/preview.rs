@@ -68,7 +68,7 @@ pub(super) fn process_preview(
     };
 
     let local_index = analyzer::analyze(&doc);
-    let _ = index.merge(local_index);
+    index.merge(local_index);
     // Figure numbers are project-wide, so the stale index's would miss a
     // figure this edit added and shift every one after it. Renumbering is one
     // cheap walk over data the merge just brought up to date — unlike section

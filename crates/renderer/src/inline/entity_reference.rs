@@ -42,14 +42,20 @@ pub(super) fn render_inline_entity_reference(
             });
             record
         }
-        EntityResolution::NotFound => {
+        unresolved @ (EntityResolution::NotFound | EntityResolution::Contested(_)) => {
             let display_escaped = html_escape::encode_text(display);
             let _ = write!(
                 html,
                 "<a href=\"#\" class=\"broken-link\"><span class=\"xref entity\">{display_escaped}</span></a>"
             );
+            let kind = match unresolved {
+                EntityResolution::Contested(documents) => {
+                    BrokenLinkKind::AmbiguousTarget { documents }
+                }
+                _ => BrokenLinkKind::EntityReference(role.to_string()),
+            };
             broken_links.push(BrokenLink {
-                kind: BrokenLinkKind::EntityReference(role.to_string()),
+                kind,
                 target: target.to_string(),
                 span,
             });

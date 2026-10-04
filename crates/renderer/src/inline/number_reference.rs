@@ -95,7 +95,10 @@ pub(super) fn render_inline_number_reference(
         }
         Err(kind) => {
             let text = reference.written_text();
-            if matches!(kind, BrokenLinkKind::NumberReference) {
+            if matches!(
+                kind,
+                BrokenLinkKind::NumberReference | BrokenLinkKind::AmbiguousTarget { .. }
+            ) {
                 let _ = write!(
                     html,
                     "<a href=\"#\" class=\"broken-link\">{}</a>",
@@ -128,10 +131,10 @@ fn resolve<'a>(
     numbering: &Numbering<'_>,
 ) -> Result<Resolved<'a>, BrokenLinkKind> {
     let label = TargetName::new(reference.target);
-    let target = index
-        .numref_targets
-        .get(&label)
-        .ok_or(BrokenLinkKind::NumberReference)?;
+    let target = index.numref_targets.get(&label).ok_or_else(|| {
+        BrokenLinkKind::NumberReference
+            .unless_contested(index.ambiguous_definitions.targets.get(&label))
+    })?;
     let kind = target.subject.kind();
     if kind != EnumerableKind::Section && !numbering.is_enabled() {
         return Err(BrokenLinkKind::NumberingDisabled);

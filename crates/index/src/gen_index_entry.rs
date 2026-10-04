@@ -26,7 +26,7 @@ pub struct GenIndexEntry {
 /// Sphinx files it under `primary` as an unlinked subentry reading
 /// `see <target>` (or `see also <target>`); [`Self::subentry_text`] is that
 /// text. `target` is not checked against the index, as Sphinx does not.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct GenIndexRedirect {
     /// The term the redirect is listed under.
     pub primary: String,
@@ -37,7 +37,7 @@ pub struct GenIndexRedirect {
 }
 
 /// Which of Sphinx's two redirecting entry types a [`GenIndexRedirect`] is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GenIndexRedirectKind {
     See,

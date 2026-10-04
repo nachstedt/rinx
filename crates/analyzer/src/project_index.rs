@@ -77,7 +77,7 @@ pub fn build_project_index_reporting(
 ) -> ProjectIndexBuild {
     let universe: BTreeSet<String> = docs.iter().map(|doc| doc.path.clone()).collect();
 
-    let (mut index, merge_diagnostics) = merge_document_analyses(docs);
+    let mut index = merge_document_analyses(docs);
     index.root_documents = find_root_documents(docs, &index, settings.root_doc);
     index.section_numbers = assign_section_numbers(&index, &universe);
     // Figure numbers carry the section number they sit under, so they are
@@ -100,7 +100,8 @@ pub fn build_project_index_reporting(
         .collect();
 
     let mut diagnostics = super::nav_diagnostics::collect_nav_diagnostics(docs, &index);
-    diagnostics.extend(merge_diagnostics);
+    diagnostics
+        .extend(super::duplicate_definitions::collect_duplicate_definition_diagnostics(&index));
     diagnostics.extend(collect_schema_mismatches(&schema_hashes, schema));
     diagnostics.extend(update_diagnostics);
     diagnostics.extend(collect_entity_diagnostics(&index, schema));
@@ -108,36 +109,23 @@ pub fn build_project_index_reporting(
 }
 
 /// Merges every document's own analysis — targets, titles, outlines, toctrees,
-/// glossary terms, equations — into one index.
-fn merge_document_analyses(docs: &[Document]) -> (ProjectIndex, Vec<super::DocumentDiagnostics>) {
+/// glossary terms, equations — into one index. A definition several documents
+/// claim is left out and recorded as contested by the merge itself, which is
+/// what keeps the result independent of the order of `docs`.
+///
+/// The two accumulated lists are put in document order afterwards for the
+/// same reason: each document's general-index entries stay in the order it
+/// wrote them, but which document comes first must not depend on `docs`.
+fn merge_document_analyses(docs: &[Document]) -> ProjectIndex {
     let mut index = ProjectIndex::default();
-    let mut diagnostics = Vec::new();
     for doc in docs {
-        let conflicts = index.merge(analyze(doc));
-        // A duplicate id is only visible to whichever merge sees the second
-        // definition, so it is collected here rather than rediscovered later.
-        // Attributed to the document merged in, whose definition won and which
-        // is therefore the one an author will want to look at.
-        //
-        // `duplicate_glossary_terms` is deliberately still dropped: there is no
-        // diagnostic code for it yet, and inventing one here would start
-        // emitting a warning on projects that never asked for this feature.
-        if !conflicts.duplicate_entity_ids.is_empty() {
-            diagnostics.push(super::DocumentDiagnostics {
-                source_path: doc.path.clone(),
-                diagnostics: conflicts
-                    .duplicate_entity_ids
-                    .iter()
-                    .map(|clash| rinx_ast::Diagnostic {
-                        code: rinx_ast::DiagnosticCode::EntityDuplicateId,
-                        message: clash.message(),
-                        span: None,
-                    })
-                    .collect(),
-            });
-        }
+        index.merge(analyze(doc));
     }
-    (index, diagnostics)
+    index
+        .genindex_entries
+        .sort_by(|left, right| left.doc_path.cmp(&right.doc_path));
+    index.genindex_redirects.sort();
+    index
 }
 
 /// Chooses the documents navigation starts from.
@@ -195,7 +183,7 @@ mod tests {
             Document::new("index.rst".to_string(), vec![]),
             Document::new("stray.rst".to_string(), vec![]),
         ];
-        let (index, _) = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&docs);
 
         // When
         let roots = find_root_documents(&docs, &index, "index");
@@ -208,7 +196,7 @@ mod tests {
     fn test_find_root_documents_accepts_a_configured_root_with_an_extension() {
         // Given
         let docs = vec![Document::new("index.rst".to_string(), vec![])];
-        let (index, _) = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&docs);
 
         // When
         let roots = find_root_documents(&docs, &index, "index.rst");
@@ -228,7 +216,7 @@ mod tests {
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
-        let (index, _) = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&docs);
 
         // When
         let roots = find_root_documents(&docs, &index, "nonexistent");
@@ -252,7 +240,7 @@ mod tests {
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
-        let (index, _) = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&docs);
 
         // When
         let roots = find_root_documents(&docs, &index, "nonexistent");
@@ -270,7 +258,7 @@ mod tests {
         )];
 
         // When
-        let (index, _) = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&docs);
 
         // Then — the graph is stored unexpanded, per toctree.
         assert_eq!(index.toctrees["index.rst"].len(), 1);
@@ -407,5 +395,106 @@ mod tests {
 
         // Then
         let _ = format!("{index:?}");
+    }
+
+    /// A document at `path` holding a label, a glossary term and a Python
+    /// class, each named `name`, after a heading.
+    fn defining(path: &str, name: &str) -> Document {
+        use rinx_ast::{
+            DescriptionFlags, Directive, DomainObjectBody, GlossaryEntry, InlineNode, Node,
+            NonEmptyVector, TargetName,
+        };
+        Document::new(
+            path.to_string(),
+            vec![
+                Node::Heading {
+                    level: 1,
+                    text: vec![InlineNode::Text(path.to_string())],
+                },
+                Node::Target {
+                    name: TargetName::new(name),
+                    destination: None,
+                },
+                Node::Directive(Directive::Glossary {
+                    entries: vec![GlossaryEntry {
+                        terms: vec![name.to_string()],
+                        definition: Vec::new(),
+                    }],
+                    sorted: false,
+                }),
+                Node::Directive(Directive::DomainObject(DomainObjectBody::PyClass {
+                    flags: DescriptionFlags::default(),
+                    module: None,
+                    signatures: NonEmptyVector::single(name.to_string()),
+                    is_final: false,
+                    body: Vec::new(),
+                })),
+            ],
+        )
+    }
+
+    /// The index `docs` build, as JSON, and its diagnostics as sorted
+    /// `(document, code, message)` triples.
+    fn build(docs: &[Document]) -> (String, Vec<(String, String, String)>) {
+        let build =
+            build_project_index_reporting(docs, &IndexSettings::new("a"), &EntitySchema::empty());
+        let mut diagnostics: Vec<(String, String, String)> = build
+            .diagnostics
+            .iter()
+            .flat_map(|group| {
+                group.diagnostics.iter().map(|diagnostic| {
+                    (
+                        group.source_path.clone(),
+                        diagnostic.code.as_str().to_string(),
+                        diagnostic.message.clone(),
+                    )
+                })
+            })
+            .collect();
+        diagnostics.sort();
+        (
+            serde_json::to_string(&build.index).expect("serializes"),
+            diagnostics,
+        )
+    }
+
+    #[test]
+    fn test_build_project_index_does_not_depend_on_the_order_of_documents() {
+        // Given — `shared` defined by two documents, `own` by one.
+        let documents = [("a.rst", "shared"), ("b.rst", "shared"), ("c.rst", "own")];
+        let orders: Vec<Vec<Document>> = [[0, 1, 2], [1, 0, 2], [2, 1, 0], [1, 2, 0]]
+            .iter()
+            .map(|order| {
+                order
+                    .iter()
+                    .map(|&i| defining(documents[i].0, documents[i].1))
+                    .collect()
+            })
+            .collect();
+
+        // When
+        let builds: Vec<_> = orders.iter().map(|docs| build(docs)).collect();
+
+        // Then — byte-identical indexes and the same warnings, every time.
+        for other in &builds[1..] {
+            assert_eq!(other, &builds[0]);
+        }
+        let duplicates: Vec<_> = builds[0]
+            .1
+            .iter()
+            .filter(|(_, code, _)| code.contains("duplicate"))
+            .map(|(doc, code, _)| (doc.as_str(), code.as_str()))
+            .collect();
+        assert_eq!(
+            duplicates,
+            [
+                ("a.rst", "glossary.duplicate-term"),
+                ("a.rst", "object.duplicate-description"),
+                ("a.rst", "target.duplicate-name"),
+                ("b.rst", "glossary.duplicate-term"),
+                ("b.rst", "object.duplicate-description"),
+                ("b.rst", "target.duplicate-name"),
+            ]
+        );
     }
 }

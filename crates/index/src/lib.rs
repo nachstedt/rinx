@@ -5,6 +5,7 @@
 //! it links into. Pure data, no indexing/traversal logic — see
 //! `rinx_analyzer` for how a `ProjectIndex` gets built.
 
+mod ambiguous_definitions;
 mod document_outline;
 mod domain_index;
 mod element_numbering;
@@ -21,6 +22,7 @@ mod project_index;
 mod section_numbers;
 mod special_page;
 
+pub use ambiguous_definitions::AmbiguousDefinitions;
 pub use document_outline::{DocumentOutline, DocumentToctree, OutlineSection};
 pub use domain_index::{DomainIndex, UnknownDomainIndex};
 pub use element_numbering::{
@@ -39,6 +41,6 @@ pub use external_inventory::{ExternalInventory, ExternalTarget};
 pub use gen_index_entry::{GenIndexEntry, GenIndexRedirect, GenIndexRedirectKind};
 pub use href::{entity_anchor, relative_doc_href};
 pub use module_entry::ModuleEntry;
-pub use project_index::{DuplicateEntityId, MergeConflicts, ProjectIndex};
+pub use project_index::ProjectIndex;
 pub use section_numbers::DocumentNumbers;
 pub use special_page::SpecialPage;

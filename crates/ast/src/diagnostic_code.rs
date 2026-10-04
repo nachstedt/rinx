@@ -100,6 +100,10 @@ diagnostic_codes! {
     /// An `:any:` role whose target names several things at once, so it was
     /// deliberately left unresolved rather than linked to one of them.
     LinkAmbiguousAny => "link.ambiguous-any",
+    /// A reference to a name several documents define, so it links to none
+    /// of them. Each definition is reported on its own page, under its
+    /// family's `duplicate` code.
+    LinkAmbiguousTarget => "link.ambiguous-target",
     /// A domain-object role that resolved only via an object-type alias — the
     /// definition's own type differs from the one the role asked for.
     LinkTypeMismatch => "link.type-mismatch",
@@ -410,6 +414,9 @@ diagnostic_codes! {
     /// while parsing — the parser deliberately never inspects the LaTeX, since
     /// only the renderer knows the math backend.
     MathInvalidLatex => "math.invalid-latex",
+    /// An equation label another document gives its own equation too. Neither
+    /// equation can be referenced until one label is changed.
+    MathDuplicateLabel => "math.duplicate-label",
 
     // --- `.. code-block::` / `.. code::` / `.. highlight::` ----------------
     /// A language argument, or a `.. highlight::`, naming nothing at all.
@@ -582,6 +589,19 @@ diagnostic_codes! {
     /// following a cross-reference. Suppress with a leading `:orphan:` field.
     ToctreeOrphanDocument => "toctree.orphan-document",
 
+    // --- Definitions several documents claim --------------------------------
+    /// A label, `:name:` or other `:ref:` target another document defines too.
+    /// Neither is a target until one is renamed: whichever won would depend
+    /// on the order the documents were read in.
+    TargetDuplicateName => "target.duplicate-name",
+    /// A glossary term another document defines too. Neither definition is
+    /// reached by `:term:` until one is removed.
+    GlossaryDuplicateTerm => "glossary.duplicate-term",
+    /// A domain object (a function, class, option, …) another document
+    /// describes too. Neither description is a target until all but one are
+    /// marked `:no-index:`, as Sphinx advises.
+    ObjectDuplicateDescription => "object.duplicate-description",
+
     // --- `.. contents::` -----------------------------------------------------
     /// A `:depth:` whose value is not a positive integer. Sphinx would treat
     /// the directive as having no depth limit at all, which silently lists a
@@ -750,7 +770,8 @@ diagnostic_codes! {
     /// migrating project may want to silence on its own.
     EntityIdPatternMismatch => "entity.id-pattern-mismatch",
     /// Two entities in the project claiming one id. Found by the index phase,
-    /// which is the first to see every document.
+    /// which is the first to see every document. Neither entity is indexed
+    /// until one id is changed.
     EntityDuplicateId => "entity.duplicate-id",
     /// A relation or role naming an entity that no document declares.
     EntityUnknownTarget => "entity.unknown-target",

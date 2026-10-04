@@ -84,6 +84,13 @@ link.ambiguous-any
 An ``:any:`` role whose target names several things at once, so it was
 deliberately left unresolved rather than linked to one of them.
 
+link.ambiguous-target
+~~~~~~~~~~~~~~~~~~~~~
+
+A reference to a name several documents define, so it links to none of them.
+Each definition is reported on its own page, under its family's ``duplicate``
+code.
+
 link.type-mismatch
 ~~~~~~~~~~~~~~~~~~
 
@@ -683,6 +690,12 @@ LaTeX the math renderer rejected, reported while rendering rather than while
 parsing — the parser deliberately never inspects the LaTeX, since only the
 renderer knows the math backend.
 
+math.duplicate-label
+~~~~~~~~~~~~~~~~~~~~
+
+An equation label another document gives its own equation too. Neither equation
+can be referenced until one label is changed.
+
 code-block
 ----------
 
@@ -1007,6 +1020,35 @@ toctree.orphan-document
 A document no toctree reaches, so a reader can only arrive at it by following a
 cross-reference. Suppress with a leading ``:orphan:`` field.
 
+target
+------
+
+target.duplicate-name
+~~~~~~~~~~~~~~~~~~~~~
+
+A label, ``:name:`` or other ``:ref:`` target another document defines too.
+Neither is a target until one is renamed: whichever won would depend on the
+order the documents were read in.
+
+glossary
+--------
+
+glossary.duplicate-term
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A glossary term another document defines too. Neither definition is reached by
+``:term:`` until one is removed.
+
+object
+------
+
+object.duplicate-description
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A domain object (a function, class, option, …) another document describes too.
+Neither description is a target until all but one are marked ``:no-index:``, as
+Sphinx advises.
+
 contents
 --------
 
@@ -1322,7 +1364,8 @@ entity.duplicate-id
 ~~~~~~~~~~~~~~~~~~~
 
 Two entities in the project claiming one id. Found by the index phase, which is
-the first to see every document.
+the first to see every document. Neither entity is indexed until one id is
+changed.
 
 entity.unknown-target
 ~~~~~~~~~~~~~~~~~~~~~

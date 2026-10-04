@@ -641,6 +641,12 @@ Every domain
    * - An option an object does not take
      - ✅ ℹ️
      - - Warns, as Sphinx errors.
+   * - A label, term, equation, object or entity defined in two documents
+     - ✅ ℹ️
+     - - Defines nothing, and every document defining it is warned; Sphinx
+         warns and links to the definition it read last, which depends on
+         the order documents are read in.
+       - A reference to it is reported as ``link.ambiguous-target``.
 
 Python (``py``)
 ~~~~~~~~~~~~~~~
