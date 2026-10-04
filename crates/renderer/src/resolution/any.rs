@@ -101,6 +101,9 @@ impl AnyHit<'_> {
 pub(crate) enum AnyResolution<'a> {
     /// Every local hit, in search order; never empty.
     Local(Vec<AnyHit<'a>>),
+    /// Nothing local, but a label, glossary term or equation of that name is
+    /// one several documents define; carries every claimant.
+    Contested(Vec<String>),
     /// Nothing local, but another site's inventory lists the target.
     External(ExternalHit<'a>),
     NotFound,
@@ -134,8 +137,31 @@ impl<'a> AnyResolver<'_, 'a> {
         if !local.is_empty() {
             return AnyResolution::Local(local);
         }
+        if selector.allows_local() {
+            let claimants = self.contested_claimants(target);
+            if !claimants.is_empty() {
+                return AnyResolution::Contested(claimants.into_iter().collect());
+            }
+        }
         resolve_external_any(&self.index.external_inventories, target, selector)
             .map_or(AnyResolution::NotFound, AnyResolution::External)
+    }
+
+    /// Every document claiming a contested label, glossary term or equation
+    /// named `target` — the families `:any:` searches by name alone.
+    fn contested_claimants(&self, target: &str) -> std::collections::BTreeSet<String> {
+        let name = TargetName::new(target);
+        let contested = &self.index.ambiguous_definitions;
+        [
+            contested.targets.get(&name),
+            contested.glossary_terms.get(&name),
+            contested.equations.get(&name),
+        ]
+        .into_iter()
+        .flatten()
+        .flatten()
+        .cloned()
+        .collect()
     }
 
     /// Every hit of this site, in the module documentation's order.

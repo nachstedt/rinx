@@ -12,6 +12,7 @@
 
 mod document_index;
 mod domain_object_index;
+mod duplicate_definitions;
 mod element_numbering;
 mod entity_index;
 mod entity_update_apply;

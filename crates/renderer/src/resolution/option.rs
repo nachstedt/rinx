@@ -47,6 +47,11 @@ pub(crate) enum OptionResolution<'a> {
         qualified_name: String,
         doc_path: &'a str,
     },
+    /// The first `(program, optname)` pair the search reached is described
+    /// by several documents, so it names none of them; carries the claimants.
+    Contested {
+        documents: Vec<String>,
+    },
     /// No document of this site defines the option, but another site's
     /// inventory lists it.
     External(ExternalHit<'a>),
@@ -155,10 +160,20 @@ impl<'a> OptionResolver<'a> {
             None => optname.to_string(),
         };
         let object_type = ObjectType::Std(StdObjectType::Cmdoption);
+        let name = TargetName::new(&qualified_name);
+        if let Some(documents) = self
+            .index
+            .ambiguous_definitions
+            .domain_object(&name, object_type)
+        {
+            return Some(OptionResolution::Contested {
+                documents: documents.iter().cloned().collect(),
+            });
+        }
         let doc_path = self
             .index
             .domain_objects
-            .get(&TargetName::new(&qualified_name))
+            .get(&name)
             .and_then(|entries| entries.get(&object_type))?;
         Some(OptionResolution::Resolved {
             qualified_name,

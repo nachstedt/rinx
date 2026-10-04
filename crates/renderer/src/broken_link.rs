@@ -57,6 +57,11 @@ pub enum BrokenLinkKind {
     /// is (real Sphinx links the first); each candidate is the role that would
     /// name it alone, e.g. ``:py:func:`pkg.close` ``.
     AmbiguousAnyReference { candidates: Vec<String> },
+    /// A reference to a name several documents define — a label, glossary
+    /// term, equation, domain object or entity — which therefore names none
+    /// of them. Carries the claiming documents, which is where the fix is;
+    /// each definition is also reported there, under its family's code.
+    AmbiguousTarget { documents: Vec<String> },
     /// A `:numref:` whose label names nothing a number is given to — no
     /// label at all, or one on a paragraph or an uncaptioned code block.
     NumberReference,
@@ -73,6 +78,23 @@ pub enum BrokenLinkKind {
 }
 
 impl BrokenLinkKind {
+    /// [`Self::AmbiguousTarget`] when several documents claim the name a
+    /// reference missed (`claimants`, from
+    /// `ProjectIndex::ambiguous_definitions`), else `self` — so the author is
+    /// told the name is defined twice, not that it is missing.
+    #[must_use]
+    pub(crate) fn unless_contested(
+        self,
+        claimants: Option<&std::collections::BTreeSet<String>>,
+    ) -> Self {
+        match claimants {
+            Some(documents) => Self::AmbiguousTarget {
+                documents: documents.iter().cloned().collect(),
+            },
+            None => self,
+        }
+    }
+
     /// The diagnostic code this kind reports under — what a `.. noqa:`
     /// comment names to suppress it.
     #[must_use]
@@ -91,6 +113,7 @@ impl BrokenLinkKind {
             Self::DocReference => DiagnosticCode::LinkBrokenDoc,
             Self::AnyReference => DiagnosticCode::LinkBrokenAny,
             Self::AmbiguousAnyReference { .. } => DiagnosticCode::LinkAmbiguousAny,
+            Self::AmbiguousTarget { .. } => DiagnosticCode::LinkAmbiguousTarget,
             Self::UnknownInventory(_) => DiagnosticCode::LinkUnknownInventory,
             Self::NumberReference => DiagnosticCode::LinkBrokenNumref,
             Self::NumberingDisabled => DiagnosticCode::NumrefDisabled,
@@ -116,6 +139,7 @@ impl BrokenLinkKind {
             Self::DocReference => "doc reference",
             Self::AnyReference => "any reference",
             Self::AmbiguousAnyReference { .. } => "ambiguous any reference",
+            Self::AmbiguousTarget { .. } => "ambiguous target",
             Self::UnknownInventory(_) => "reference into an undeclared inventory",
             Self::NumberReference
             | Self::NumberingDisabled

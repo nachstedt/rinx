@@ -92,6 +92,17 @@ impl DocumentHyperlinkTargets {
                     .insert(LinkDestination::Uri(anchor));
             }
         }
+        // A label another document defines too is no `:ref:` target, but it
+        // is still this document's own, which is all a `name_` asks for.
+        for (name, claimants) in &index.ambiguous_definitions.targets {
+            if claimants.contains(&doc.path) {
+                let anchor = format!("#{}", contested_target_anchor(index, name));
+                explicit
+                    .entry(name.clone())
+                    .or_default()
+                    .insert(LinkDestination::Uri(anchor));
+            }
+        }
 
         let mut implicit: BTreeMap<TargetName, BTreeSet<LinkDestination>> = BTreeMap::new();
         for (node_index, id) in section_ids {
@@ -142,6 +153,20 @@ impl DocumentHyperlinkTargets {
             None => self.implicit.get(name).and_then(only),
         }
     }
+}
+
+/// The anchor of a contested target, whose recorded anchor the merge dropped
+/// with it: an entity's own `entity-<id>`, else the name.
+fn contested_target_anchor(index: &ProjectIndex, name: &TargetName) -> String {
+    index
+        .ambiguous_definitions
+        .entities
+        .keys()
+        .find(|id| TargetName::new(id.as_str()) == *name)
+        .map_or_else(
+            || name.as_str().to_string(),
+            |id| rinx_index::entity_anchor(id.as_str()),
+        )
 }
 
 /// The one destination in `destinations`, or `None` when there are several.
@@ -417,5 +442,37 @@ mod tests {
             targets.destination_href(&LinkDestination::Uri("#usage".to_string())),
             Some("#usage")
         );
+    }
+
+    #[test]
+    fn test_collect_keeps_this_documents_label_when_another_document_defines_it_too() {
+        // Given — `setup` contested between this page and another.
+        let mut index = ProjectIndex::default();
+        index.ambiguous_definitions.targets.insert(
+            TargetName::new("setup"),
+            BTreeSet::from(["page.rst".to_string(), "other.rst".to_string()]),
+        );
+
+        // When
+        let targets = collect(Vec::new(), &index);
+
+        // Then — `setup`_ still reaches this page's own label.
+        assert_eq!(href(&targets, "setup").as_deref(), Some("#setup"));
+    }
+
+    #[test]
+    fn test_collect_leaves_out_a_contested_label_this_document_does_not_claim() {
+        // Given
+        let mut index = ProjectIndex::default();
+        index.ambiguous_definitions.targets.insert(
+            TargetName::new("setup"),
+            BTreeSet::from(["a.rst".to_string(), "b.rst".to_string()]),
+        );
+
+        // When
+        let targets = collect(Vec::new(), &index);
+
+        // Then
+        assert_eq!(href(&targets, "setup"), None);
     }
 }

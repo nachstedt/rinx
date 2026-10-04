@@ -1,3 +1,4 @@
+use crate::ambiguous_definitions::{AmbiguousDefinitions, merge_claims};
 use crate::{
     DocumentNumbers, DocumentOutline, DocumentToctree, DomainIndex, ElementNumbers,
     EntityFieldHistory, EntityRecord, EntityUpdateRecord, EquationLocation, ExternalInventory,
@@ -204,6 +205,10 @@ pub struct ProjectIndex {
     /// merges into a stale index, still knows whether to link them.
     #[serde(default)]
     pub domain_indices: BTreeSet<DomainIndex>,
+    /// The definitions two or more documents claim, which the families above
+    /// therefore leave out — see [`AmbiguousDefinitions`].
+    #[serde(default, skip_serializing_if = "AmbiguousDefinitions::is_empty")]
+    pub ambiguous_definitions: AmbiguousDefinitions,
 }
 
 impl ProjectIndex {
@@ -312,33 +317,78 @@ impl ProjectIndex {
         !self.genindex_entries.is_empty() || !self.genindex_redirects.is_empty()
     }
 
-    /// Merge another `ProjectIndex` into this one.
+    /// Merges another `ProjectIndex` into this one.
     ///
-    /// Emits a diagnostic string for each glossary term defined in both indices
-    /// (case-insensitive duplicate detection). Last-writer-wins for the mapping value.
-    pub fn merge(&mut self, other: Self) -> MergeConflicts {
-        self.targets.extend(other.targets);
+    /// Per-document data is carried over, and every family of definitions is
+    /// merged by [`merge_claims`]'s rule: a name one document defines is
+    /// defined, a name several documents claim is moved to
+    /// [`Self::ambiguous_definitions`] and defined by none — so the result is
+    /// the same whichever order the documents arrive in. Data attached to a
+    /// label (its title, anchor and `:numref:` subject) leaves with it.
+    pub fn merge(&mut self, other: Self) {
+        let mut contested = std::mem::take(&mut self.ambiguous_definitions);
+        let incoming = other.ambiguous_definitions;
+        merge_claims(
+            &mut self.targets,
+            &mut contested.targets,
+            other.targets,
+            incoming.targets,
+            String::as_str,
+        );
+        merge_claims(
+            &mut self.glossary_terms,
+            &mut contested.glossary_terms,
+            other.glossary_terms,
+            incoming.glossary_terms,
+            String::as_str,
+        );
+        merge_claims(
+            &mut self.equations,
+            &mut contested.equations,
+            other.equations,
+            incoming.equations,
+            |location| location.doc_path.as_str(),
+        );
+        merge_claims(
+            &mut self.entities,
+            &mut contested.entities,
+            other.entities,
+            incoming.entities,
+            |record| record.doc_path.as_str(),
+        );
+        self.merge_domain_objects(
+            &mut contested,
+            other.domain_objects,
+            incoming.domain_objects,
+        );
+
         self.target_titles.extend(other.target_titles);
         self.target_anchors.extend(other.target_anchors);
+        self.numref_targets.extend(other.numref_targets);
+        self.modules.extend(other.modules);
+        self.target_titles
+            .retain(|name, _| !contested.targets.contains_key(name));
+        self.target_anchors
+            .retain(|name, _| !contested.targets.contains_key(name));
+        self.numref_targets
+            .retain(|name, _| !contested.targets.contains_key(name));
+        self.modules.retain(|name, _| {
+            contested
+                .domain_object(name, ObjectType::Py(rinx_ast::PyObjectType::Module))
+                .is_none()
+        });
+        self.ambiguous_definitions = contested;
+
         self.document_titles.extend(other.document_titles);
         self.documents.extend(other.documents);
         self.document_outlines.extend(other.document_outlines);
         self.toctrees.extend(other.toctrees);
-        for (name, object_types) in other.domain_objects {
-            self.domain_objects
-                .entry(name)
-                .or_default()
-                .extend(object_types);
-        }
         self.domain_object_spellings
             .extend(other.domain_object_spellings);
-        self.modules.extend(other.modules);
         self.genindex_entries.extend(other.genindex_entries);
         self.genindex_redirects.extend(other.genindex_redirects);
-        self.equations.extend(other.equations);
         self.sectnum.extend(other.sectnum);
         self.numbering_steps.extend(other.numbering_steps);
-        self.numref_targets.extend(other.numref_targets);
         // Accumulates like `genindex_entries`; applying it is a later phase's
         // job, not this merge's.
         self.entity_updates.extend(other.entity_updates);
@@ -347,74 +397,54 @@ impl ProjectIndex {
         // they are recomputed rather than merged; external_inventories and
         // domain_indices are build inputs no document contributes to, so
         // they are kept as they are
-        let mut conflicts = MergeConflicts::default();
-        for (id, record) in other.entities {
-            if let Some(existing) = self.entities.get(&id) {
-                conflicts.duplicate_entity_ids.push(DuplicateEntityId {
-                    id: id.clone(),
-                    first_doc: existing.doc_path.clone(),
-                    second_doc: record.doc_path.clone(),
-                });
-            }
-            self.entities.insert(id, record);
-        }
-        for (term, path) in other.glossary_terms {
-            if let Some(existing) = self.glossary_terms.get(&term) {
-                conflicts.duplicate_glossary_terms.push(format!(
-                    "Duplicate glossary term '{}': defined in '{}' and '{}'. The latter definition wins.",
-                    term.as_str(),
-                    existing,
-                    path,
-                ));
-            }
-            self.glossary_terms.insert(term, path);
-        }
-        conflicts
+    }
+
+    /// [`Self::merge`]'s step for domain objects, whose definitions are keyed
+    /// by name *and* object type: flattened to that pair for
+    /// [`merge_claims`], and nested again afterwards.
+    fn merge_domain_objects(
+        &mut self,
+        contested: &mut AmbiguousDefinitions,
+        incoming: BTreeMap<TargetName, BTreeMap<ObjectType, String>>,
+        incoming_contested: BTreeMap<TargetName, BTreeMap<ObjectType, BTreeSet<String>>>,
+    ) {
+        let mut defined = flatten(std::mem::take(&mut self.domain_objects));
+        let mut flat_contested = flatten(std::mem::take(&mut contested.domain_objects));
+        merge_claims(
+            &mut defined,
+            &mut flat_contested,
+            flatten(incoming),
+            flatten(incoming_contested),
+            String::as_str,
+        );
+        self.domain_objects = nest(defined);
+        contested.domain_objects = nest(flat_contested);
     }
 }
 
-/// What a [`ProjectIndex::merge`] found defined twice.
-///
-/// Two fields rather than one list of messages, because the two are reported
-/// differently: a duplicate entity id becomes a coded diagnostic attributed to
-/// a document, while duplicate glossary terms have no diagnostic code yet and
-/// are still only a message. Keeping them apart means neither can be
-/// mislabelled as the other.
-#[derive(Debug, Default, PartialEq, Eq)]
-pub struct MergeConflicts {
-    pub duplicate_entity_ids: Vec<DuplicateEntityId>,
-    pub duplicate_glossary_terms: Vec<String>,
+/// A name-then-type map as one map keyed by the pair.
+fn flatten<V>(
+    nested: BTreeMap<TargetName, BTreeMap<ObjectType, V>>,
+) -> BTreeMap<(TargetName, ObjectType), V> {
+    nested
+        .into_iter()
+        .flat_map(|(name, by_type)| {
+            by_type
+                .into_iter()
+                .map(move |(object_type, value)| ((name.clone(), object_type), value))
+        })
+        .collect()
 }
 
-impl MergeConflicts {
-    /// Reports whether the merge found nothing defined twice.
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.duplicate_entity_ids.is_empty() && self.duplicate_glossary_terms.is_empty()
+/// [`flatten`]'s inverse.
+fn nest<V>(
+    flat: BTreeMap<(TargetName, ObjectType), V>,
+) -> BTreeMap<TargetName, BTreeMap<ObjectType, V>> {
+    let mut nested: BTreeMap<TargetName, BTreeMap<ObjectType, V>> = BTreeMap::new();
+    for ((name, object_type), value) in flat {
+        nested.entry(name).or_default().insert(object_type, value);
     }
-}
-
-/// One entity id claimed by two documents.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DuplicateEntityId {
-    pub id: EntityId,
-    /// The document that defined it first, and whose definition is discarded.
-    pub first_doc: String,
-    /// The document merged in second, whose definition wins.
-    pub second_doc: String,
-}
-
-impl DuplicateEntityId {
-    /// The author-facing explanation, naming both documents and which won.
-    #[must_use]
-    pub fn message(&self) -> String {
-        format!(
-            "Duplicate entity id '{}': defined in '{}' and '{}'. The latter definition wins.",
-            self.id.as_str(),
-            self.first_doc,
-            self.second_doc,
-        )
-    }
+    nested
 }
 
 #[cfg(test)]
@@ -507,10 +537,10 @@ mod tests {
         );
 
         // When
-        let diagnostics = stale.merge(fresh);
+        stale.merge(fresh);
 
         // Then
-        assert!(diagnostics.is_empty());
+        assert_eq!(stale.ambiguous_definitions, AmbiguousDefinitions::default());
         assert!(stale.toctrees.contains_key("index.rst"));
         assert!(stale.toctrees.contains_key("guide.rst"));
         assert_eq!(stale.document_outlines["guide.rst"].sections.len(), 1);
@@ -551,7 +581,7 @@ mod tests {
             .insert("guide.rst".to_string(), fresh_numbers);
 
         // When
-        let _ = stale.merge(fresh);
+        stale.merge(fresh);
 
         // Then — the input merges; the project-wide numbers are recomputed
         assert!(stale.numbering_steps.contains_key("guide.rst"));
@@ -720,40 +750,119 @@ mod tests {
             .insert(TargetName::new("bar"), "glossary_b.rst".to_string());
 
         // When
-        let diagnostics = idx1.merge(idx2);
+        idx1.merge(idx2);
 
         // Then
-        assert!(diagnostics.is_empty());
+        assert_eq!(idx1.ambiguous_definitions, AmbiguousDefinitions::default());
         assert_eq!(idx1.glossary_terms.len(), 2);
         assert!(idx1.glossary_terms.contains_key(&TargetName::new("foo")));
         assert!(idx1.glossary_terms.contains_key(&TargetName::new("bar")));
     }
 
     #[test]
-    fn test_merge_emits_diagnostic_for_duplicate_glossary_term() {
+    fn test_merge_contests_a_glossary_term_two_documents_define() {
         // Given
         let mut idx1 = ProjectIndex::default();
         idx1.glossary_terms
             .insert(TargetName::new("environment"), "glossary.rst".to_string());
-
         let mut idx2 = ProjectIndex::default();
         idx2.glossary_terms
             .insert(TargetName::new("environment"), "other.rst".to_string());
 
         // When
-        let conflicts = idx1.merge(idx2);
+        idx1.merge(idx2);
 
-        // Then
-        assert_eq!(conflicts.duplicate_glossary_terms.len(), 1);
-        assert!(conflicts.duplicate_glossary_terms[0].contains("Duplicate glossary term"));
-        assert!(conflicts.duplicate_glossary_terms[0].contains("environment"));
-        // Last-writer-wins: idx2's path should be kept
+        // Then — neither definition wins.
+        assert!(idx1.glossary_terms.is_empty());
         assert_eq!(
-            idx1.glossary_terms.get(&TargetName::new("environment")),
-            Some(&"other.rst".to_string())
+            idx1.ambiguous_definitions.glossary_terms[&TargetName::new("environment")],
+            BTreeSet::from(["glossary.rst".to_string(), "other.rst".to_string()])
         );
     }
+    #[test]
+    fn test_merge_contests_a_label_and_drops_its_title_anchor_and_numref_subject() {
+        // Given
+        let mut first = ProjectIndex::default();
+        first
+            .targets
+            .insert(TargetName::new("setup"), "a.rst".to_string());
+        first
+            .target_titles
+            .insert(TargetName::new("setup"), "Setup".to_string());
+        first
+            .target_anchors
+            .insert(TargetName::new("setup"), "setup".to_string());
+        let mut second = ProjectIndex::default();
+        second
+            .targets
+            .insert(TargetName::new("setup"), "b.rst".to_string());
 
+        // When
+        first.merge(second);
+
+        // Then
+        assert!(first.targets.is_empty());
+        assert!(first.target_titles.is_empty());
+        assert!(first.target_anchors.is_empty());
+        assert!(
+            first
+                .ambiguous_definitions
+                .targets
+                .contains_key(&TargetName::new("setup"))
+        );
+    }
+    #[test]
+    fn test_merge_contests_a_domain_object_only_under_its_own_object_type() {
+        // Given — `bytearray` the class in one document, and both a class and
+        // a function `bytearray` in another.
+        let mut first = ProjectIndex::default();
+        first.insert_domain_object(ObjectType::Py(PyObjectType::Class), "bytearray", "a.rst");
+        let mut second = ProjectIndex::default();
+        second.insert_domain_object(ObjectType::Py(PyObjectType::Class), "bytearray", "b.rst");
+        second.insert_domain_object(ObjectType::Py(PyObjectType::Function), "bytearray", "b.rst");
+
+        // When
+        first.merge(second);
+
+        // Then
+        assert_eq!(lookup_domain_object(&first, "py:class:bytearray"), None);
+        assert_eq!(
+            lookup_domain_object(&first, "py:function:bytearray"),
+            Some(&"b.rst".to_string())
+        );
+        assert_eq!(
+            first.ambiguous_definitions.domain_object(
+                &TargetName::new("bytearray"),
+                ObjectType::Py(PyObjectType::Class)
+            ),
+            Some(&BTreeSet::from(["a.rst".to_string(), "b.rst".to_string()]))
+        );
+    }
+    #[test]
+    fn test_merge_drops_the_module_entry_of_a_contested_module() {
+        // Given
+        let module = |doc: &str| {
+            let mut index = ProjectIndex::default();
+            index.insert_domain_object(ObjectType::Py(PyObjectType::Module), "os", doc);
+            index.modules.insert(
+                TargetName::new("os"),
+                crate::ModuleEntry {
+                    doc_path: doc.to_string(),
+                    synopsis: None,
+                    platform: None,
+                    deprecated: false,
+                },
+            );
+            index
+        };
+        let mut first = module("a.rst");
+
+        // When
+        first.merge(module("b.rst"));
+
+        // Then
+        assert!(first.modules.is_empty());
+    }
     #[test]
     fn test_target_anchor_is_the_name_for_an_ordinary_label() {
         // Given
@@ -912,10 +1021,10 @@ mod tests {
         });
 
         // When
-        let diagnostics = idx1.merge(idx2);
+        idx1.merge(idx2);
 
-        // Then — both locations kept, no dedup/diagnostics
-        assert!(diagnostics.is_empty());
+        // Then — both locations kept, no dedup and nothing contested
+        assert_eq!(idx1.ambiguous_definitions, AmbiguousDefinitions::default());
         assert_eq!(idx1.genindex_entries.len(), 2);
     }
 
@@ -958,10 +1067,10 @@ mod tests {
         idx2.genindex_redirects.push(redirect);
 
         // When
-        let diagnostics = idx1.merge(idx2);
+        idx1.merge(idx2);
 
         // Then — both kept, as entries are
-        assert!(diagnostics.is_empty());
+        assert_eq!(idx1.ambiguous_definitions, AmbiguousDefinitions::default());
         assert_eq!(idx1.genindex_redirects.len(), 2);
     }
 
@@ -971,22 +1080,16 @@ mod tests {
         let mut idx1 = ProjectIndex::default();
         idx1.glossary_terms
             .insert(TargetName::new("Environment"), "a.rst".to_string());
-
         let mut idx2 = ProjectIndex::default();
         idx2.glossary_terms
             .insert(TargetName::new("environment"), "b.rst".to_string());
 
         // When
-        let conflicts = idx1.merge(idx2);
+        idx1.merge(idx2);
 
         // Then
-        assert_eq!(
-            conflicts.duplicate_glossary_terms.len(),
-            1,
-            "Expected duplicate diagnostic"
-        );
+        assert_eq!(idx1.ambiguous_definitions.glossary_terms.len(), 1);
     }
-
     #[test]
     fn test_project_index_round_trips_through_json() {
         // Given — a populated index exercising every field

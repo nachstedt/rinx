@@ -54,6 +54,10 @@ pub(crate) enum DomainObjectResolution<'a> {
     /// reference does not name one thing. Candidates are qualified names, in
     /// index order.
     Ambiguous { candidates: Vec<String> },
+    /// The nearest matching name is one several documents describe, so it
+    /// names none of them — and is not looked up in another site either,
+    /// since this site does define it, twice. Carries the claimants.
+    Contested { documents: Vec<String> },
     /// No document of this site defines the object, but another site's
     /// inventory lists it — reached only after every local tier, the suffix
     /// search included, has missed.
@@ -139,11 +143,16 @@ impl<'a> DomainObjectResolver<'a> {
             .reference_candidates(object_type.domain(), name, order)
             .into_iter()
             .find_map(|candidate| {
-                let (matched_type, doc_path) = self.lookup(object_type, &candidate)?;
-                Some(DomainObjectResolution::Resolved {
-                    object_type: matched_type,
-                    qualified_name: candidate,
-                    doc_path,
+                if let Some((matched_type, doc_path)) = self.lookup(object_type, &candidate) {
+                    return Some(DomainObjectResolution::Resolved {
+                        object_type: matched_type,
+                        qualified_name: candidate,
+                        doc_path,
+                    });
+                }
+                let documents = self.lookup_contested(object_type, &candidate)?;
+                Some(DomainObjectResolution::Contested {
+                    documents: documents.iter().cloned().collect(),
                 })
             });
 
@@ -174,6 +183,25 @@ impl<'a> DomainObjectResolver<'a> {
             .iter()
             .find(|candidate| entries.contains_key(candidate))?;
         Some((*matched_type, entries.get(matched_type)?.as_str()))
+    }
+
+    /// The documents describing `qualified_name` under one of the object types
+    /// `object_type` accepts, when several do — [`Self::lookup`]'s
+    /// counterpart for a contested name.
+    fn lookup_contested(
+        &self,
+        object_type: ObjectType,
+        qualified_name: &str,
+    ) -> Option<&'a std::collections::BTreeSet<String>> {
+        let name = TargetName::new(qualified_name);
+        object_type
+            .role_alias_candidates()
+            .iter()
+            .find_map(|candidate| {
+                self.index
+                    .ambiguous_definitions
+                    .domain_object(&name, *candidate)
+            })
     }
 
     /// Sphinx's "fuzzy" fallback: treat the target as a dotted *suffix* and

@@ -131,6 +131,9 @@ pub(crate) fn collect_entity_diagnostics(
             for target in targets {
                 let found = index.entities.get(target);
                 let diagnostic = match found {
+                    // Declared twice rather than not at all: already reported
+                    // on both declarations as `entity.duplicate-id`.
+                    None if index.ambiguous_definitions.entities.contains_key(target) => None,
                     None => Some(entity_diagnostic(
                         DiagnosticCode::EntityUnknownTarget,
                         format!(

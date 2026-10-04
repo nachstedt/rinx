@@ -57,6 +57,13 @@ pub(super) fn render_inline_reference(
         Some(target_path) if inventory.allows_local() => Some(target_path),
         _ => None,
     };
+    // A label several documents define is this site's, twice: refused here
+    // rather than looked up in another site, which would link it elsewhere.
+    let contested = index
+        .ambiguous_definitions
+        .targets
+        .get(&target_name)
+        .filter(|_| inventory.allows_local());
     // A page the build writes that no document is (`genindex`, and the module
     // index where enabled): local, so ahead of every inventory, but behind a
     // label a document defines.
@@ -68,6 +75,7 @@ pub(super) fn render_inline_reference(
         return;
     }
     if local.is_none()
+        && contested.is_none()
         && let Some(hit) = resolve_external(
             &index.external_inventories,
             &["std:label".to_string()],
@@ -96,7 +104,8 @@ pub(super) fn render_inline_reference(
                 inventory,
                 &index.external_inventories,
                 BrokenLinkKind::Reference,
-            ),
+            )
+            .unless_contested(contested),
             target: target.to_string(),
             span,
         });

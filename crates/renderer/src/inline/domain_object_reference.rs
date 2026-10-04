@@ -127,6 +127,9 @@ pub(super) fn render_inline_domain_object_reference(
                 candidates,
             });
         }
+        DomainObjectResolution::Contested { documents } => {
+            render_unresolved(BrokenLinkKind::AmbiguousTarget { documents });
+        }
         DomainObjectResolution::NotFound => {
             render_unresolved(unresolved_kind(
                 inventory,

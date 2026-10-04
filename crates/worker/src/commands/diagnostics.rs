@@ -153,6 +153,9 @@ pub(super) fn format_broken_link_warning(
         renderer::BrokenLinkKind::AmbiguousAnyReference { candidates } => {
             format!(" (could be {})", candidates.join(" or "))
         }
+        renderer::BrokenLinkKind::AmbiguousTarget { documents } => {
+            format!(" (defined in {})", documents.join(" and "))
+        }
         renderer::BrokenLinkKind::UnknownInventory(name) => {
             format!(" (no inventory is declared as '{name}')")
         }

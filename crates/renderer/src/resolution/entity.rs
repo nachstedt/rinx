@@ -19,6 +19,9 @@ pub(crate) enum EntityResolution<'a> {
     /// Carried separately from `Resolved` so the caller can link it *and*
     /// report it, which is what a domain-object type mismatch does.
     TypeMismatch(&'a EntityRecord),
+    /// Several documents declare the id, so it names none of them; carries
+    /// the claimants.
+    Contested(Vec<String>),
     /// No entity carries that id.
     NotFound,
 }
@@ -45,7 +48,14 @@ impl<'a> EntityResolver<'a> {
             return EntityResolution::NotFound;
         };
         let Some(record) = self.index.entities.get(&id) else {
-            return EntityResolution::NotFound;
+            return self
+                .index
+                .ambiguous_definitions
+                .entities
+                .get(&id)
+                .map_or(EntityResolution::NotFound, |documents| {
+                    EntityResolution::Contested(documents.iter().cloned().collect())
+                });
         };
         match self.schema.role(role) {
             Some(spec) if spec.accepts(&record.type_name) => EntityResolution::Resolved(record),

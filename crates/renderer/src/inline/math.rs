@@ -68,7 +68,8 @@ pub(super) fn render_equation_reference(
             "<a href=\"#{anchor}\" class=\"broken-link\"><span class=\"eqno\">(?)</span></a>"
         );
         broken_links.push(BrokenLink {
-            kind: BrokenLinkKind::EquationReference,
+            kind: BrokenLinkKind::EquationReference
+                .unless_contested(index.ambiguous_definitions.equations.get(&target_name)),
             target: label.to_string(),
             span,
         });

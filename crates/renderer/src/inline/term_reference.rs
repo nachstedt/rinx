@@ -34,6 +34,13 @@ pub(super) fn render_inline_term_reference(
     } else {
         None
     };
+    // A term several glossaries define is this site's, twice: refused rather
+    // than looked up in another site.
+    let contested = index
+        .ambiguous_definitions
+        .glossary_terms
+        .get(&term_name)
+        .filter(|_| inventory.allows_local());
     if let Some(glossary_doc_path) = local {
         let href = term_href(glossary_doc_path, term, doc_path);
         let href_attr = html_escape::encode_double_quoted_attribute(&href);
@@ -41,12 +48,18 @@ pub(super) fn render_inline_term_reference(
             html,
             "<a class=\"reference internal\" href=\"{href_attr}\"><span class=\"xref std std-term\">{display_escaped}</span></a>"
         );
-    } else if let Some(hit) = resolve_external(
-        &index.external_inventories,
-        &["std:term".to_string()],
-        term,
-        inventory,
-    ) {
+    } else if let Some(hit) = contested
+        .is_none()
+        .then(|| {
+            resolve_external(
+                &index.external_inventories,
+                &["std:term".to_string()],
+                term,
+                inventory,
+            )
+        })
+        .flatten()
+    {
         let inner = format!("<span class=\"xref std std-term\">{display_escaped}</span>");
         write_external_link(html, &hit, doc_path, &inner);
     } else {
@@ -59,7 +72,8 @@ pub(super) fn render_inline_term_reference(
                 inventory,
                 &index.external_inventories,
                 BrokenLinkKind::TermReference,
-            ),
+            )
+            .unless_contested(contested),
             target: term.to_string(),
             span,
         });

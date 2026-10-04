@@ -55,6 +55,14 @@ pub(super) fn render_inline_option_reference(
         OptionResolution::External(hit) => {
             write_external_link(html, &hit, doc_path, &literal);
         }
+        OptionResolution::Contested { documents } => {
+            let _ = write!(html, "<a href=\"#\" class=\"broken-link\">{literal}</a>");
+            broken_links.push(BrokenLink {
+                kind: BrokenLinkKind::AmbiguousTarget { documents },
+                target: target.to_string(),
+                span,
+            });
+        }
         OptionResolution::NotFound => {
             let _ = write!(html, "<a href=\"#\" class=\"broken-link\">{literal}</a>");
             broken_links.push(BrokenLink {
