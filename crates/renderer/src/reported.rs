@@ -1,12 +1,15 @@
 //! The renderer's findings as [`Reported`] items, so a `.. noqa:` filters
 //! them through the same [`rinx_ast::retain_reportable`] a parse diagnostic
-//! goes through.
+//! goes through — and so the build's warning line and the language server's
+//! diagnostic word each one the same way.
 //!
 //! Gathered in one file rather than beside each type because every impl is the
-//! same two lines: each type already answers its code (an inherent `code()`,
-//! which stays `const`) and carries its `span`.
+//! same three lines: each type already answers its code (an inherent `code()`,
+//! which stays `const`), carries its `span`, and words its message.
 
-use rinx_ast::{DiagnosticCode, Reported, Span};
+use std::borrow::Cow;
+
+use rinx_ast::{Diagnostic, DiagnosticCode, Reported, Span};
 
 use crate::{
     BrokenLink, DiagramError, EmptyListingError, HighlightError, ImageError, MathError,
@@ -14,28 +17,33 @@ use crate::{
 };
 
 /// Implements [`Reported`] for types with an inherent `code()` and a `span`
-/// field.
+/// field, whose message is `$message` of the finding bound to `$finding`.
 macro_rules! reported_by_code_and_span {
-    ($($finding:ty),+ $(,)?) => {$(
-        impl Reported for $finding {
+    ($($type:ty => |$finding:ident| $message:expr),+ $(,)?) => {$(
+        impl Reported for $type {
             fn code(&self) -> DiagnosticCode {
-                <$finding>::code(self)
+                <$type>::code(self)
             }
 
             fn span(&self) -> Option<Span> {
                 self.span
+            }
+
+            fn message(&self) -> Cow<'_, str> {
+                let $finding = self;
+                $message
             }
         }
     )+};
 }
 
 reported_by_code_and_span!(
-    BrokenLink,
-    MathError,
-    EmptyListingError,
-    DiagramError,
-    HighlightError,
-    ImageError,
+    BrokenLink => |link| Cow::Owned(BrokenLink::message(link)),
+    MathError => |error| Cow::Owned(format!("invalid math: {}", error.message)),
+    EmptyListingError => |error| Cow::Owned(EmptyListingError::message(error)),
+    DiagramError => |error| Cow::Owned(DiagramError::message(error)),
+    HighlightError => |error| Cow::Borrowed(&error.message),
+    ImageError => |error| Cow::Borrowed(&error.message),
 );
 
 /// A mismatch has no code of its own to delegate to: there is one kind.
@@ -47,6 +55,42 @@ impl Reported for ObjectTypeMismatch {
     fn span(&self) -> Option<Span> {
         self.span
     }
+
+    fn message(&self) -> Cow<'_, str> {
+        Cow::Owned(ObjectTypeMismatch::message(self))
+    }
+}
+
+impl crate::RenderOutput {
+    /// Every problem the render found that a document's author can act on, as
+    /// plain diagnostics in source order — what the language server shows.
+    ///
+    /// The entity templates a site could not use are left out: they are a
+    /// fault in the site, named by no document's span.
+    #[must_use]
+    pub fn diagnostics(&self) -> Vec<Diagnostic> {
+        let mut diagnostics: Vec<Diagnostic> = self
+            .broken_links
+            .iter()
+            .map(Reported::to_diagnostic)
+            .chain(
+                self.object_type_mismatches
+                    .iter()
+                    .map(Reported::to_diagnostic),
+            )
+            .chain(self.math_errors.iter().map(Reported::to_diagnostic))
+            .chain(
+                self.empty_listing_errors
+                    .iter()
+                    .map(Reported::to_diagnostic),
+            )
+            .chain(self.diagram_errors.iter().map(Reported::to_diagnostic))
+            .chain(self.highlight_errors.iter().map(Reported::to_diagnostic))
+            .chain(self.image_errors.iter().map(Reported::to_diagnostic))
+            .collect();
+        diagnostics.sort_by_key(|diagnostic| diagnostic.span.map(|span| (span.file, span.start)));
+        diagnostics
+    }
 }
 
 #[cfg(test)]
@@ -57,6 +101,77 @@ mod tests {
     use rinx_uml::UmlError;
 
     const SPAN: Span = Span::new(Position::new(3, 1), Position::new(3, 9));
+
+    #[test]
+    fn test_every_finding_words_its_message_as_the_build_prints_it() {
+        // Given
+        let math = MathError {
+            message: "unknown command".to_string(),
+            span: None,
+        };
+        let highlight = HighlightError {
+            message: "no grammar".to_string(),
+            kind: HighlightErrorKind::UnknownLanguage,
+            span: None,
+            construct: HighlightedConstruct::CodeRole,
+        };
+        let image = ImageError {
+            uri: "logo.png".to_string(),
+            message: "unavailable".to_string(),
+            span: None,
+        };
+        let listing = EmptyListingError::pie("needpie", None);
+
+        // When / Then
+        assert_eq!(Reported::message(&math), "invalid math: unknown command");
+        assert_eq!(Reported::message(&highlight), "no grammar");
+        assert_eq!(Reported::message(&image), "unavailable");
+        assert_eq!(
+            Reported::message(&listing),
+            EmptyListingError::message(&listing)
+        );
+    }
+
+    #[test]
+    fn test_diagnostics_lists_every_finding_in_source_order() {
+        // Given — a broken `:ref:` on line 3 and an invalid equation on line 1,
+        // which the render collects into separate lists
+        let on_line = |line| Some(Span::new(Position::new(line, 1), Position::new(line, 9)));
+        let document = rinx_ast::Document::new(
+            "index.rst".to_string(),
+            vec![
+                rinx_ast::Node::Paragraph(vec![rinx_ast::InlineNode::Reference {
+                    display: None,
+                    target: "missing".to_string(),
+                    span: on_line(3),
+                    inventory: rinx_ast::InventorySelector::Any,
+                }]),
+                rinx_ast::Node::Paragraph(vec![rinx_ast::InlineNode::Math {
+                    latex: "\\frac{".to_string(),
+                    span: on_line(1),
+                }]),
+            ],
+        );
+
+        // When
+        let diagnostics =
+            crate::render(&document, &rinx_index::ProjectIndex::default(), "index.rst")
+                .diagnostics();
+
+        // Then
+        let found: Vec<(DiagnosticCode, Option<Span>)> = diagnostics
+            .iter()
+            .map(|diagnostic| (diagnostic.code, diagnostic.span))
+            .collect();
+        assert_eq!(
+            found,
+            [
+                (DiagnosticCode::MathInvalidLatex, on_line(1)),
+                (DiagnosticCode::LinkBrokenRef, on_line(3)),
+            ]
+        );
+        assert_eq!(diagnostics[1].message, "broken ref 'missing'");
+    }
 
     /// The trait's answers, read through the trait rather than the inherent
     /// method of the same name.

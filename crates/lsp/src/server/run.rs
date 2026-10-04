@@ -1,9 +1,10 @@
 //! The protocol loop: receives, dispatches to the handlers, sends.
 
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, bail};
-use crossbeam_channel::{Receiver, never, select, unbounded};
+use crossbeam_channel::{Receiver, after, never, select, unbounded};
 use lsp_server::{Connection, Message};
 use lsp_types::notification::{Exit, Notification as _};
 use lsp_types::{ClientCapabilities, InitializeParams};
@@ -13,11 +14,20 @@ use super::scan::{ScanEvent, spawn_scan};
 use super::state::ServerState;
 use crate::uri::file_path;
 
+/// How long the client must have sent nothing before the server renders: a
+/// render costs far more than a parse, and typing would otherwise pay for one
+/// per keystroke.
+const RENDER_DELAY: Duration = Duration::from_millis(300);
+
 /// Serves `connection` from the `initialize` handshake until `exit`.
 ///
 /// The workspace scan runs on a thread of its own from the handshake on, so
 /// a document opened meanwhile is diagnosed at once; what the scan finds
 /// reaches the loop as events, beside the client's messages.
+///
+/// Renders run once the client has been quiet for [`RENDER_DELAY`], one
+/// document per turn of the loop, so a message arriving meanwhile is answered
+/// before the next render — and pushes the rest back.
 ///
 /// # Errors
 ///
@@ -45,9 +55,16 @@ pub fn run(connection: &Connection) -> Result<()> {
         connection.sender.send(message)?;
     }
 
+    let mut quiet_since = Instant::now();
     loop {
+        let render_due = if state.has_pending_renders() {
+            after(RENDER_DELAY.saturating_sub(quiet_since.elapsed()))
+        } else {
+            never()
+        };
         let replies = select! {
             recv(connection.receiver) -> message => {
+                quiet_since = Instant::now();
                 // The protocol asks a server to exit with code 1 unless it
                 // was shut down, which the caller makes of an error; this
                 // one is a client that crashed.
@@ -78,7 +95,8 @@ pub fn run(connection: &Connection) -> Result<()> {
                 // The scan is over and its thread gone; stop listening.
                 scan_events = never();
                 Vec::new()
-            }
+            },
+            recv(render_due) -> _ => state.render_next(),
         };
         for reply in replies {
             connection.sender.send(reply)?;

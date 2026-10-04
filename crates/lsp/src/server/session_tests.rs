@@ -178,3 +178,43 @@ fn test_run_serves_a_whole_session() {
     );
     handle.join().expect("server thread").expect("clean exit");
 }
+
+#[test]
+fn test_run_publishes_what_rendering_found_once_the_client_is_quiet() {
+    // Given — a workspace whose one document references a label nobody defines
+    let text = "See :ref:`install`.\n";
+    let workspace = Workspace::new("session_render", &[("index.rst", text)]);
+    let (server, client) = Connection::memory();
+    let handle = std::thread::spawn(move || run(&server));
+    initialize_with(
+        &client,
+        InitializeParams {
+            workspace_folders: Some(vec![lsp_types::WorkspaceFolder {
+                uri: crate::uri::file_uri(&workspace.root).expect("a folder uri"),
+                name: "docs".to_string(),
+            }]),
+            ..InitializeParams::default()
+        },
+    );
+
+    // When — the document is opened, and nothing else is sent
+    client
+        .sender
+        .send(workspace.open("index.rst", text).into())
+        .unwrap();
+    let codes = std::iter::from_fn(|| client.receiver.recv().ok())
+        .filter_map(|message| match message {
+            Message::Notification(notification)
+                if notification.method == PublishDiagnostics::METHOD =>
+            {
+                Some(codes(&published(&Message::Notification(notification))))
+            }
+            _ => None,
+        })
+        .find(|codes| !codes.is_empty());
+    drop(client);
+
+    // Then
+    assert_eq!(codes, Some(vec!["link.broken-ref".to_string()]));
+    let _ = handle.join().expect("server thread");
+}

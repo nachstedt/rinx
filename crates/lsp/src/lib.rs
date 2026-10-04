@@ -9,6 +9,7 @@
 //! - `server` is the protocol loop and the pure handlers it dispatches to;
 //! - `completion` completes a `:ref:` or `:doc:` target from the index;
 //! - `diagnostics` parses an open document and converts what the parser found;
+//! - `render` renders a document for the diagnostics only a render finds;
 //! - `position` converts rinx's 1-based character positions to the protocol's
 //!   0-based, negotiated-unit ones;
 //! - `documents` holds the text of every open document;
@@ -26,6 +27,7 @@ mod include_summary;
 mod includes;
 mod position;
 mod progress;
+mod render;
 mod server;
 mod uri;
 mod workspace;

@@ -10,11 +10,7 @@ use std::fs;
 use std::io::{self, Read};
 
 use super::cli_args::{flag_value, flag_value_opt};
-use super::diagnostics::{
-    WarningOrigin, format_broken_link_warning, format_diagram_error_warning,
-    format_empty_listing_error_warning, format_highlight_error_warning, format_image_error_warning,
-    format_math_error_warning, format_object_type_mismatch_warning, report_diagnostic,
-};
+use super::diagnostics::{WarningOrigin, format_diagnostic, report_diagnostic};
 use super::embed_assets::embed_available_assets;
 use rinx_ast::retain_reportable;
 
@@ -239,25 +235,25 @@ pub(crate) fn cmd_preview(args: &[String]) -> Result<()> {
     // documents), so broken links are always warnings, never a failure.
     let origin = WarningOrigin::new(&doc_path, &page.source_files);
     for link in &page.broken_links {
-        eprintln!("{}", format_broken_link_warning(&origin, link));
+        eprintln!("{}", format_diagnostic(&origin, link));
     }
     for mismatch in &page.object_type_mismatches {
-        eprintln!("{}", format_object_type_mismatch_warning(&origin, mismatch));
+        eprintln!("{}", format_diagnostic(&origin, mismatch));
     }
     for error in &page.math_errors {
-        eprintln!("{}", format_math_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
     for error in &page.empty_listing_errors {
-        eprintln!("{}", format_empty_listing_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
     for error in &page.diagram_errors {
-        eprintln!("{}", format_diagram_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
     for error in &page.highlight_errors {
-        eprintln!("{}", format_highlight_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
     for error in &page.image_errors {
-        eprintln!("{}", format_image_error_warning(&origin, error));
+        eprintln!("{}", format_diagnostic(&origin, error));
     }
 
     println!("{}", page.html);

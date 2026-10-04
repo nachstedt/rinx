@@ -30,10 +30,10 @@ finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
-  #4 (PR #267, prepared by #259, #261–#263 and #266), and #5 (PR #269).
+  #4 (PR #267, prepared by #259, #261–#263 and #266), #5 (PR #269), and #6 (PR #270).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #6, broken-reference diagnostics.**
+- **Next: #7, hover on references.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -166,7 +166,7 @@ The list is marked incomplete while the scan runs, so the editor asks again.
 A document outside every workspace folder gets no completion, and a role whose
 text wraps onto the next line is not recognised.
 
-### 6. Broken-reference diagnostics
+### 6. Broken-reference diagnostics ✅ (#270)
 
 **You experience:** a typo in a `:ref:` is underlined, and adding the label in
 another file clears it.
@@ -176,6 +176,17 @@ another file clears it.
 - Debounce, and cancel stale renders
 - Re-diagnose open documents when the index changes
 - Tests
+
+The renderer now words each finding through `Reported::message`, which the
+build's warning line and the editor share. Closed documents including an open
+file are rendered too, for that file. The loop stays synchronous: it renders
+one document per turn after 300 ms of quiet, so there is no stale render to
+cancel; cancelling *inside* a render is #38's. Until #10/#13/#18 the render
+uses the default site configuration and no inventories, so intersphinx
+references and `numfig` projects report what a bare site would.
+
+Measured on CPython's 528 documents: the render tier arrives 140–230 ms after
+the pause (`library/os.rst`, `library/stdtypes.rst`), fold included.
 
 ### 7. Hover on references
 

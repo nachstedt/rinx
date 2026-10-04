@@ -28,7 +28,7 @@
 //! before spans carried a file — points confidently at the wrong place.
 
 use anyhow::{Result, anyhow};
-use rinx_ast::{Diagnostic, DiagnosticCode, Span};
+use rinx_ast::{Diagnostic, Reported, Span};
 use rinx_renderer::{self as renderer};
 
 /// The document a batch of warnings is about, plus the files it included —
@@ -88,13 +88,17 @@ impl<'a> WarningOrigin<'a> {
     }
 }
 
-/// Formats a parse-time diagnostic as a human-readable warning line.
-pub(super) fn format_diagnostic(origin: &WarningOrigin<'_>, diagnostic: &Diagnostic) -> String {
+/// Formats anything a phase reported — a parse diagnostic or one of the
+/// renderer's findings — as a human-readable warning line.
+///
+/// The message is the finding's own [`Reported::message`], the wording the
+/// language server shows too, so the editor and the build cannot drift apart.
+pub(super) fn format_diagnostic(origin: &WarningOrigin<'_>, finding: &impl Reported) -> String {
     format!(
         "warning: {} {}: {}",
-        origin.location(diagnostic.span),
-        diagnostic.code,
-        diagnostic.message
+        origin.location(finding.span()),
+        finding.code(),
+        finding.message()
     )
 }
 
@@ -126,180 +130,6 @@ pub(super) fn report_diagnostic(origin: &WarningOrigin<'_>, diagnostic: &Diagnos
     eprintln!("{}", format_diagnostic(origin, diagnostic));
 }
 
-/// Formats a single broken-link diagnostic as a human-readable warning line.
-///
-/// For a broken domain-object reference the role's requested object type (the
-/// "missed type", e.g. `py:function`) is included — it's known at the point
-/// resolution failed and pinpoints what kind of object couldn't be found. An
-/// ambiguous reference additionally lists the qualified names it matched:
-/// unlike a plain miss, the fix is to pick one of them, so they are the
-/// actionable part of the message.
-pub(super) fn format_broken_link_warning(
-    origin: &WarningOrigin<'_>,
-    link: &renderer::BrokenLink,
-) -> String {
-    let requested = match &link.kind {
-        renderer::BrokenLinkKind::DomainObjectReference(object_type) => {
-            format!(" (referenced as {})", object_type.domain_qualified_str())
-        }
-        renderer::BrokenLinkKind::AmbiguousDomainObjectReference {
-            object_type,
-            candidates,
-        } => format!(
-            " (referenced as {}, matches {})",
-            object_type.domain_qualified_str(),
-            candidates.join(", ")
-        ),
-        renderer::BrokenLinkKind::AmbiguousAnyReference { candidates } => {
-            format!(" (could be {})", candidates.join(" or "))
-        }
-        renderer::BrokenLinkKind::AmbiguousTarget { documents } => {
-            format!(" (defined in {})", documents.join(" and "))
-        }
-        renderer::BrokenLinkKind::UnknownInventory(name) => {
-            format!(" (no inventory is declared as '{name}')")
-        }
-        renderer::BrokenLinkKind::NumberReference => {
-            " (no captioned figure, table or code block, and no heading, has this label)"
-                .to_string()
-        }
-        renderer::BrokenLinkKind::NumberingDisabled => {
-            " (numfig is off in rinx.toml, so figures, tables and code blocks have no numbers)"
-                .to_string()
-        }
-        renderer::BrokenLinkKind::UnnumberedReference => {
-            " (it has no number: no toctree reaches its document, or its section is not numbered)"
-                .to_string()
-        }
-        renderer::BrokenLinkKind::UncaptionedReference => {
-            " (its format shows {name}, but it has no caption)".to_string()
-        }
-        _ => String::new(),
-    };
-    format!(
-        "warning: {} {}: broken {} '{}'{requested}",
-        origin.location(link.span),
-        link.code(),
-        link.kind.as_str(),
-        link.target
-    )
-}
-
-/// Formats a single object-type-mismatch diagnostic as a human-readable
-/// warning line. Both the requested and resolved object types are shown
-/// domain-qualified (e.g. `"py:class"`, not just `"class"`) via
-/// [`rinx_ast::ObjectType::domain_qualified_str`] — the alias
-/// fallback is domain-scoped today (`py`'s `class`/`exception`, and `c`'s
-/// `macro`/`member` and `function`/`macro`), so the two domains always match
-/// in practice, but spelling both out avoids the reader having to assume
-/// that rather than see it.
-/// Unlike [`format_broken_link_warning`], this never feeds into
-/// [`check_broken_links_strict`] — the reference did resolve, so `--strict-links`
-/// never fails the build for it; the warning only flags that the reference's
-/// role (e.g. `:exc:`) and the definition's actual object type (e.g. `class`)
-/// are inconsistent.
-pub(super) fn format_object_type_mismatch_warning(
-    origin: &WarningOrigin<'_>,
-    mismatch: &renderer::ObjectTypeMismatch,
-) -> String {
-    format!(
-        "warning: {} {}: domain object '{}' referenced as '{}' but defined as '{}'",
-        origin.location(mismatch.span),
-        DiagnosticCode::LinkTypeMismatch,
-        mismatch.name,
-        mismatch.requested_type.domain_qualified_str(),
-        mismatch.resolved_type.domain_qualified_str(),
-    )
-}
-
-/// Formats a single invalid-LaTeX diagnostic as a human-readable warning line.
-///
-/// Like [`format_object_type_mismatch_warning`], this never feeds into
-/// [`check_broken_links_strict`]: `--strict-links` is about references that
-/// don't resolve, and an equation that fails to convert is a different
-/// complaint. The page still renders, showing the LaTeX the author wrote.
-pub(super) fn format_math_error_warning(
-    origin: &WarningOrigin<'_>,
-    error: &renderer::MathError,
-) -> String {
-    format!(
-        "warning: {} {}: invalid math: {}",
-        origin.location(error.span),
-        error.code(),
-        error.message
-    )
-}
-
-/// Formats a single empty-listing diagnostic as a warning line.
-///
-/// Like [`format_math_error_warning`], this never feeds into
-/// [`check_broken_links_strict`]: a filter that matched nothing is not a
-/// reference that failed to resolve. The page still renders, showing the
-/// table's headings so a reader can see what was asked for.
-pub(super) fn format_empty_listing_error_warning(
-    origin: &WarningOrigin<'_>,
-    error: &renderer::EmptyListingError,
-) -> String {
-    format!(
-        "warning: {} {}: {}",
-        origin.location(error.span),
-        error.code(),
-        error.message()
-    )
-}
-
-/// Formats a single diagram-expansion diagnostic as a warning line.
-///
-/// Like [`format_empty_listing_error_warning`], this never feeds into
-/// [`check_broken_links_strict`]: a template that could not be expanded is not
-/// a reference that failed to resolve. The page still renders — without the
-/// picture, since none was compiled.
-pub(super) fn format_diagram_error_warning(
-    origin: &WarningOrigin<'_>,
-    error: &renderer::DiagramError,
-) -> String {
-    format!(
-        "warning: {} {}: {}",
-        origin.location(error.span),
-        error.code(),
-        error.message()
-    )
-}
-
-/// Formats a single highlighting-failure diagnostic as a warning line.
-///
-/// Like [`format_math_error_warning`], this never feeds into
-/// [`check_broken_links_strict`]: a block that could not be highlighted is not
-/// a reference that failed to resolve. The page still renders, showing the
-/// author's code as plain text.
-pub(super) fn format_highlight_error_warning(
-    origin: &WarningOrigin<'_>,
-    error: &renderer::HighlightError,
-) -> String {
-    format!(
-        "warning: {} {}: {}",
-        origin.location(error.span),
-        error.code(),
-        error.message
-    )
-}
-
-/// Formats a single image diagnostic as a human-readable warning line.
-///
-/// The URI is not repeated here: an image's message already names the file it
-/// could not embed, since that is the only thing the author can act on.
-pub(super) fn format_image_error_warning(
-    origin: &WarningOrigin<'_>,
-    error: &renderer::ImageError,
-) -> String {
-    format!(
-        "warning: {} {}: {}",
-        origin.location(error.span),
-        error.code(),
-        error.message
-    )
-}
-
 /// Returns an error listing every broken link when `strict` is true and
 /// `broken_links` is non-empty. Diagnostics are always reported to stderr by
 /// the caller regardless of `strict` — this only controls whether they also
@@ -314,7 +144,7 @@ pub(super) fn check_broken_links_strict(
     }
     let messages: Vec<String> = broken_links
         .iter()
-        .map(|link| format_broken_link_warning(origin, link))
+        .map(|link| format_diagnostic(origin, link))
         .collect();
     Err(anyhow!(
         "Broken link validation failed:\n{}",
@@ -325,6 +155,7 @@ pub(super) fn check_broken_links_strict(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rinx_ast::DiagnosticCode;
 
     use rinx_ast::Position;
 
@@ -333,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_broken_link_warning_names_the_position_code_kind_and_target() {
+    fn test_format_diagnostic_of_a_broken_link_names_the_position_code_kind_and_target() {
         // Given a broken reference the parser could place
         let link = renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::Reference,
@@ -342,8 +173,7 @@ mod tests {
         };
 
         // When
-        let message =
-            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
+        let message = format_diagnostic(&WarningOrigin::document_only("guide/intro.rst"), &link);
 
         // Then — the span's *start* is shown, not the range
         assert_eq!(
@@ -353,7 +183,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_broken_link_warning_names_a_broken_doc_reference() {
+    fn test_format_diagnostic_of_a_broken_link_names_a_broken_doc_reference() {
         // Given
         let link = renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::DocReference,
@@ -362,8 +192,7 @@ mod tests {
         };
 
         // When
-        let message =
-            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
+        let message = format_diagnostic(&WarningOrigin::document_only("guide/intro.rst"), &link);
 
         // Then
         assert_eq!(
@@ -373,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_broken_link_warning_explains_each_numref_problem() {
+    fn test_format_diagnostic_of_a_broken_link_explains_each_numref_problem() {
         // Given one link per `:numref:` problem
         let cases = [
             (
@@ -402,8 +231,7 @@ mod tests {
             };
 
             // When
-            let message =
-                format_broken_link_warning(&WarningOrigin::document_only("guide.rst"), &link);
+            let message = format_diagnostic(&WarningOrigin::document_only("guide.rst"), &link);
 
             // Then
             assert!(message.contains(expected), "{message}");
@@ -411,7 +239,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_broken_link_warning_lists_the_roles_an_ambiguous_any_could_be() {
+    fn test_format_diagnostic_of_a_broken_link_lists_the_roles_an_ambiguous_any_could_be() {
         // Given
         let link = renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::AmbiguousAnyReference {
@@ -425,8 +253,7 @@ mod tests {
         };
 
         // When
-        let message =
-            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
+        let message = format_diagnostic(&WarningOrigin::document_only("guide/intro.rst"), &link);
 
         // Then
         assert_eq!(
@@ -437,7 +264,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_broken_link_warning_names_an_undeclared_inventory() {
+    fn test_format_diagnostic_of_a_broken_link_names_an_undeclared_inventory() {
         // Given an `:external+numpy:` role in a site that declared no `numpy`
         let link = renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::UnknownInventory(
@@ -448,8 +275,7 @@ mod tests {
         };
 
         // When
-        let message =
-            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
+        let message = format_diagnostic(&WarningOrigin::document_only("guide/intro.rst"), &link);
 
         // Then
         assert_eq!(
@@ -460,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_broken_link_warning_omits_the_position_when_there_is_none() {
+    fn test_format_diagnostic_of_a_broken_link_omits_the_position_when_there_is_none() {
         // Given a reference from generated content, which has no source line
         let link = renderer::BrokenLink {
             kind: renderer::BrokenLinkKind::Reference,
@@ -469,8 +295,7 @@ mod tests {
         };
 
         // When
-        let message =
-            format_broken_link_warning(&WarningOrigin::document_only("guide/intro.rst"), &link);
+        let message = format_diagnostic(&WarningOrigin::document_only("guide/intro.rst"), &link);
 
         // Then — the document is still named; no line is invented for it
         assert_eq!(
@@ -567,7 +392,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_broken_link_warning_names_the_included_file() {
+    fn test_format_diagnostic_of_a_broken_link_names_the_included_file() {
         // Given a `:ref:` inside an included fragment that resolves nowhere —
         // found at *render* time, long after the fragment was spliced in
         let files = ["shared/params.rst".to_string()];
@@ -579,7 +404,7 @@ mod tests {
         };
 
         // When
-        let message = format_broken_link_warning(&origin, &link);
+        let message = format_diagnostic(&origin, &link);
 
         // Then
         assert_eq!(
@@ -743,7 +568,7 @@ mod tests {
     }
 
     #[test]
-    fn test_format_object_type_mismatch_warning_includes_name_and_types() {
+    fn test_format_diagnostic_of_a_type_mismatch_includes_name_and_types() {
         // Given
         let mismatch = renderer::ObjectTypeMismatch {
             name: "fault".to_string(),
@@ -753,7 +578,7 @@ mod tests {
         };
 
         // When
-        let message = format_object_type_mismatch_warning(
+        let message = format_diagnostic(
             &WarningOrigin::document_only("xmlrpc.client.rst"),
             &mismatch,
         );

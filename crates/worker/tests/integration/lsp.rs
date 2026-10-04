@@ -207,6 +207,47 @@ fn test_lsp_completes_a_label_defined_in_another_document() {
 }
 
 #[test]
+fn test_lsp_underlines_a_reference_to_a_label_no_document_defines() {
+    // Given — a workspace folder whose document references a missing label
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_broken_reference");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    let text = "Title\n=====\n\nSee :ref:`install`.\n";
+    std::fs::write(root.join("index.rst"), text).expect("write");
+    let index = format!("file://{}", root.join("index.rst").display());
+    let mut server = Server::spawn();
+    server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+
+    // When — opened; the render tier follows once the client is quiet
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": index, "languageId": "restructuredtext", "version": 1, "text": text,
+        }}),
+    );
+    let rendered = std::iter::from_fn(|| match server.receive() {
+        Message::Notification(notification) => Some(notification),
+        _ => None,
+    })
+    .filter(|notification| notification.method == "textDocument/publishDiagnostics")
+    .map(|notification| notification.params)
+    .find(|published| !codes(published).is_empty())
+    .expect("a publish with diagnostics");
+
+    // Then
+    assert_eq!(rendered["uri"], index.as_str());
+    assert_eq!(codes(&rendered), vec!["link.broken-ref"]);
+    assert_eq!(rendered["diagnostics"][0]["range"]["start"]["line"], 3);
+    assert_eq!(
+        rendered["diagnostics"][0]["message"],
+        "broken ref 'install'"
+    );
+}
+
+#[test]
 fn test_lsp_exits_with_success_after_shutdown_and_exit() {
     // Given
     let mut server = Server::spawn();

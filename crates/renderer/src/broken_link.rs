@@ -167,6 +167,67 @@ impl BrokenLink {
     pub const fn code(&self) -> DiagnosticCode {
         self.kind.code()
     }
+
+    /// What the author is told: the kind and the target as written, and —
+    /// where it is known when resolution fails — what would fix it.
+    ///
+    /// For a broken domain-object reference that is the requested object
+    /// type, which pinpoints what could not be found; an ambiguous reference
+    /// lists what it matched, since picking one of them is the fix.
+    #[must_use]
+    pub fn message(&self) -> String {
+        format!(
+            "broken {} '{}'{}",
+            self.kind.as_str(),
+            self.target,
+            self.kind.explanation()
+        )
+    }
+}
+
+impl BrokenLinkKind {
+    /// The parenthetical a broken link's message ends with, with its leading
+    /// space — or nothing, for a kind whose code and target say it all.
+    fn explanation(&self) -> String {
+        match self {
+            Self::DomainObjectReference(object_type) => {
+                format!(" (referenced as {})", object_type.domain_qualified_str())
+            }
+            Self::AmbiguousDomainObjectReference {
+                object_type,
+                candidates,
+            } => format!(
+                " (referenced as {}, matches {})",
+                object_type.domain_qualified_str(),
+                candidates.join(", ")
+            ),
+            Self::AmbiguousAnyReference { candidates } => {
+                format!(" (could be {})", candidates.join(" or "))
+            }
+            Self::AmbiguousTarget { documents } => {
+                format!(" (defined in {})", documents.join(" and "))
+            }
+            Self::UnknownInventory(name) => {
+                format!(" (no inventory is declared as '{name}')")
+            }
+            Self::NumberReference => {
+                " (no captioned figure, table or code block, and no heading, has this label)"
+                    .to_string()
+            }
+            Self::NumberingDisabled => {
+                " (numfig is off in rinx.toml, so figures, tables and code blocks have no numbers)"
+                    .to_string()
+            }
+            Self::UnnumberedReference => {
+                " (it has no number: no toctree reaches its document, or its section is not numbered)"
+                    .to_string()
+            }
+            Self::UncaptionedReference => {
+                " (its format shows {name}, but it has no caption)".to_string()
+            }
+            _ => String::new(),
+        }
+    }
 }
 
 /// A domain-object reference that *did* resolve, but only via
@@ -190,10 +251,96 @@ pub struct ObjectTypeMismatch {
     pub resolved_type: ObjectType,
 }
 
+impl ObjectTypeMismatch {
+    /// What the author is told: the name, and both object types spelled with
+    /// their domain, so the reader need not assume the two domains agree.
+    #[must_use]
+    pub fn message(&self) -> String {
+        format!(
+            "domain object '{}' referenced as '{}' but defined as '{}'",
+            self.name,
+            self.requested_type.domain_qualified_str(),
+            self.resolved_type.domain_qualified_str(),
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rinx_ast::PyObjectType;
+
+    fn link(kind: BrokenLinkKind, target: &str) -> BrokenLink {
+        BrokenLink {
+            kind,
+            target: target.to_string(),
+            span: None,
+        }
+    }
+
+    #[test]
+    fn test_message_names_the_kind_and_the_target() {
+        // When / Then
+        assert_eq!(
+            link(BrokenLinkKind::Reference, "missing").message(),
+            "broken ref 'missing'"
+        );
+        assert_eq!(
+            link(BrokenLinkKind::DocReference, "../missing").message(),
+            "broken doc reference '../missing'"
+        );
+    }
+
+    #[test]
+    fn test_message_names_the_requested_object_type() {
+        // Given
+        let kind = BrokenLinkKind::DomainObjectReference(ObjectType::Py(PyObjectType::Function));
+
+        // When / Then
+        assert_eq!(
+            link(kind, "f").message(),
+            "broken domain object 'f' (referenced as py:function)"
+        );
+    }
+
+    #[test]
+    fn test_message_lists_what_an_ambiguous_reference_matched() {
+        // Given
+        let object = BrokenLinkKind::AmbiguousDomainObjectReference {
+            object_type: ObjectType::Py(PyObjectType::Function),
+            candidates: vec!["a.f".to_string(), "b.f".to_string()],
+        };
+        let target = BrokenLinkKind::AmbiguousTarget {
+            documents: vec!["a.rst".to_string(), "b.rst".to_string()],
+        };
+
+        // When / Then
+        assert_eq!(
+            link(object, "f").message(),
+            "broken ambiguous domain object 'f' (referenced as py:function, matches a.f, b.f)"
+        );
+        assert_eq!(
+            link(target, "setup").message(),
+            "broken ambiguous target 'setup' (defined in a.rst and b.rst)"
+        );
+    }
+
+    #[test]
+    fn test_message_of_a_type_mismatch_names_both_types() {
+        // Given
+        let mismatch = ObjectTypeMismatch {
+            name: "fault".to_string(),
+            span: None,
+            requested_type: ObjectType::Py(PyObjectType::Exception),
+            resolved_type: ObjectType::Py(PyObjectType::Class),
+        };
+
+        // When / Then
+        assert_eq!(
+            mismatch.message(),
+            "domain object 'fault' referenced as 'py:exception' but defined as 'py:class'"
+        );
+    }
 
     #[test]
     fn test_as_str_labels_each_simple_kind() {

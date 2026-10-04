@@ -104,17 +104,20 @@ pub fn parse_source(
     }
 }
 
-/// Converts what one parse of the document at `uri` reported into the
-/// diagnostics to publish, file by file.
+/// Converts what one parse of the document at `uri` reported, and what
+/// rendering that parse found (`rendered`, empty until it is rendered), into
+/// the diagnostics to publish, file by file.
 #[must_use]
 pub fn diagnose_source(
     uri: &Uri,
     parsed: &ParsedSource,
+    rendered: &[Diagnostic],
     open: &DocumentStore,
     encoding: PositionEncoding,
 ) -> DocumentDiagnosis {
     let by_uri = to_lsp_diagnostics(
         &parsed.document,
+        rendered,
         &Placement {
             uri,
             text: &parsed.text,
@@ -208,8 +211,9 @@ pub(crate) struct Placed<'a> {
     pub range: Range,
 }
 
-/// Converts the diagnostics found in `document`, by the URI of the file each
-/// one is in, leaving out what its `.. noqa:` comments silence — and adds, on
+/// Converts the diagnostics found in `document` — those its parse recorded
+/// and `rendered`, those rendering it found — by the URI of the file each one
+/// is in, leaving out what its `.. noqa:` comments silence, and adds, on
 /// each `.. include::` that brought problems in, a summary of them (see
 /// [`crate::include_summary`]).
 ///
@@ -219,10 +223,12 @@ pub(crate) struct Placed<'a> {
 #[must_use]
 pub fn to_lsp_diagnostics(
     document: &Document,
+    rendered: &[Diagnostic],
     placement: &Placement<'_>,
     encoding: PositionEncoding,
 ) -> BTreeMap<Uri, Vec<lsp_types::Diagnostic>> {
     let placed: Vec<Placed<'_>> = retain_reportable(&document.diagnostics, &document.suppressions)
+        .chain(retain_reportable(rendered, &document.suppressions))
         .map(|diagnostic| {
             let (uri, range) = placement.place(document, diagnostic.span, encoding);
             Placed {
@@ -281,7 +287,13 @@ mod tests {
         open: &DocumentStore,
         encoding: PositionEncoding,
     ) -> DocumentDiagnosis {
-        diagnose_source(uri, &parse_source(uri, None, text, open), open, encoding)
+        diagnose_source(
+            uri,
+            &parse_source(uri, None, text, open),
+            &[],
+            open,
+            encoding,
+        )
     }
 
     use rinx_ast::{FileId, Position, Span, Suppression, SuppressionCodes};
@@ -445,6 +457,18 @@ mod tests {
         included: &[(&str, &str)],
         open: &DocumentStore,
     ) -> BTreeMap<Uri, Vec<lsp_types::Diagnostic>> {
+        convert_with_rendered(diagnostics, &[], suppressions, text, included, open)
+    }
+
+    /// [`convert`], with `rendered` found by rendering the document.
+    fn convert_with_rendered(
+        diagnostics: Vec<Diagnostic>,
+        rendered: &[Diagnostic],
+        suppressions: Vec<Suppression>,
+        text: &str,
+        included: &[(&str, &str)],
+        open: &DocumentStore,
+    ) -> BTreeMap<Uri, Vec<lsp_types::Diagnostic>> {
         let mut document = Document::new("/docs/index.rst".to_string(), Vec::new());
         document.diagnostics = diagnostics;
         document.suppressions = suppressions;
@@ -458,6 +482,7 @@ mod tests {
         }
         to_lsp_diagnostics(
             &document,
+            rendered,
             &Placement {
                 uri: &uri("file:///docs/index.rst"),
                 text,
@@ -471,6 +496,103 @@ mod tests {
     fn in_fragment(line: u32, column: u32) -> Span {
         Span::new(Position::new(line, column), Position::new(line, column + 1))
             .with_file(Some(FileId::new(0)))
+    }
+
+    #[test]
+    fn test_to_lsp_diagnostics_reports_what_rendering_found_beside_the_parse() {
+        // Given a broken reference on line 2 and an unknown directive on line 1
+        let parsed = vec![Diagnostic::new(
+            DiagnosticCode::DirectiveUnknown,
+            "unknown directive type 'foo'",
+            Span::new(Position::new(1, 1), Position::new(1, 9)),
+        )];
+        let rendered = [Diagnostic::new(
+            DiagnosticCode::LinkBrokenRef,
+            "broken ref 'missing'",
+            Span::new(Position::new(2, 5), Position::new(2, 19)),
+        )];
+
+        // When
+        let converted = convert_with_rendered(
+            parsed,
+            &rendered,
+            Vec::new(),
+            ".. foo::\nSee :ref:`missing`.\n",
+            &[],
+            &DocumentStore::default(),
+        );
+
+        // Then
+        let own = &converted[&uri("file:///docs/index.rst")];
+        let shown: Vec<(&str, u32)> = own
+            .iter()
+            .map(|diagnostic| (diagnostic.message.as_str(), diagnostic.range.start.line))
+            .collect();
+        assert_eq!(
+            shown,
+            [
+                ("unknown directive type 'foo'", 0),
+                ("broken ref 'missing'", 1)
+            ]
+        );
+        assert_eq!(
+            own[1].code,
+            Some(NumberOrString::String("link.broken-ref".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_to_lsp_diagnostics_lets_a_noqa_silence_what_rendering_found() {
+        // Given
+        let span = Span::new(Position::new(3, 1), Position::new(3, 5));
+        let rendered = [Diagnostic::new(
+            DiagnosticCode::LinkBrokenRef,
+            "broken ref 'x'",
+            span,
+        )];
+        let suppressions = vec![Suppression {
+            start_line: 3,
+            end_line: 3,
+            codes: SuppressionCodes::Only(vec![DiagnosticCode::LinkBrokenRef]),
+            file: None,
+        }];
+
+        // When
+        let converted = convert_with_rendered(
+            Vec::new(),
+            &rendered,
+            suppressions,
+            "a\nb\nc\n",
+            &[],
+            &DocumentStore::default(),
+        );
+
+        // Then
+        assert_eq!(converted[&uri("file:///docs/index.rst")], Vec::new());
+    }
+
+    #[test]
+    fn test_to_lsp_diagnostics_places_a_rendered_finding_in_its_fragment() {
+        // Given a broken reference found inside an included fragment
+        let rendered = [Diagnostic::new(
+            DiagnosticCode::LinkBrokenRef,
+            "broken ref 'x'",
+            in_fragment(2, 1),
+        )];
+
+        // When
+        let converted = convert_with_rendered(
+            Vec::new(),
+            &rendered,
+            Vec::new(),
+            "a\n",
+            &[("/docs/part.rst", "x\n:ref:`x`\n")],
+            &DocumentStore::default(),
+        );
+
+        // Then
+        let fragment = &converted[&uri("file:///docs/part.rst")];
+        assert_eq!(fragment[0].range.start, lsp_types::Position::new(1, 0));
     }
 
     #[test]
