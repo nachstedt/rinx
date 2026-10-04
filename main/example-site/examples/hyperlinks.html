@@ -351,6 +351,19 @@ These can be on a single line or indented on the next line.</p>
 <code>` `Text &lt;URL&gt;`_ `</code> syntax.</p>
 <p>Check out the <a href="https://www.sphinx-doc.org">Sphinx Documentation</a> for more
 details on reStructuredText.</p>
+<h3 id="relative-and-wrapped-embedded-uris">Relative and Wrapped Embedded URIs</h3>
+<p>An embedded URI may be relative, such as a fragment of this page:
+<a href="#hyperlinks-and-targets">back to the top</a>. The link text may also wrap
+over a line break before its <a href="https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#embedded-uris-and-aliases">embedded
+URI</a>,
+and a URI that is all there is shows itself: <a href="https://www.python.org">https://www.python.org</a>.</p>
+<p>The text of an embedded reference names a target of its own, so
+<a href="https://www.sphinx-doc.org">Sphinx Documentation</a> links to the URI embedded above.</p>
+<h3 id="aliases-and-indirect-targets">Aliases and Indirect Targets</h3>
+<p>Text ending in an underscore inside <code>&lt;…&gt;</code> names another target instead of
+a URI: <a href="https://www.rust-lang.org">the language</a> links where <code>Rust Language</code> does.
+A target can point at another target in the same way:</p>
+<p>so <a href="https://www.rust-lang.org">Rust</a> leads to the Rust site as well.</p>
 <h2 id="phrased-and-simple-links">Phrased and Simple Links</h2>
 <p>Phrased links use backticks and an underscore: <a href="https://www.python.org">Python Website</a>.
 Simple links are just a word followed by an underscore: <a href="https://www.sphinx-doc.org">Sphinx</a>.</p>

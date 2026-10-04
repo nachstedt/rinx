@@ -1257,8 +1257,8 @@ Traceback (most recent call last):
     ...
 AttributeError: 'Immutable' object has no attribute 'location'</pre></div>
 <p>3. Saves memory.  On a 64-bit Linux build, an instance with two attributes
-takes 48 bytes with <code>__slots__</code> and 152 bytes without.  This <a href="#" class="broken-link">flyweight
-design pattern &lt;https://en.wikipedia.org/wiki/Flyweight_pattern&gt;</a> likely only
+takes 48 bytes with <code>__slots__</code> and 152 bytes without.  This <a href="https://en.wikipedia.org/wiki/Flyweight_pattern">flyweight
+design pattern</a> likely only
 matters when a large number of instances are going to be created.</p>
 <p>4. Improves speed.  Reading instance variables is 35% faster with
 <code>__slots__</code> (as measured with Python 3.10 on an Apple M1 processor).</p>

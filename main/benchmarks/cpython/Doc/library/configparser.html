@@ -492,7 +492,7 @@ sometimes used for configuration, but does not support comments.</p>
 </span></span>
 <span class="hl-source hl-ini"><span class="hl-meta hl-declaration hl-ini"><span class="hl-meta hl-property hl-ini"><span class="hl-keyword hl-name hl-ini">ForwardX11</span> <span class="hl-punctuation hl-definition hl-equals hl-ini">=</span></span> <span class="hl-meta hl-value hl-ini"><span class="hl-string hl-name hl-value hl-ini">no</span></span></span></span></pre></div>
 </div>
-<p>The structure of INI files is described <a href="#" class="broken-link">in the following section</a>.  Essentially, the file
+<p>The structure of INI files is described <a href="#supported-ini-file-structure">in the following section</a>.  Essentially, the file
 consists of sections, each of which contains keys with values.
 <a class="reference internal" href="configparser.html#py:module:configparser" title="configparser: Configuration file parser."><code class="xref py module docutils literal">configparser</code></a> classes can read and write such files.  Let's start by
 creating the above configuration file programmatically.</p>
@@ -513,7 +513,7 @@ creating the above configuration file programmatically.</p>
 ...   config.write(configfile)
 ...</pre></div>
 <p>As you can see, we can treat a config parser much like a dictionary.
-There are differences, <a href="#" class="broken-link">outlined later</a>, but
+There are differences, <a href="#mapping-protocol-access">outlined later</a>, but
 the behavior is very close to what you would expect from a dictionary.</p>
 <p>Now that we have created and saved a configuration file, let's read it
 back and explore the data it holds.</p>
@@ -1130,7 +1130,7 @@ a file.  Its current value can be retrieved using the
 through the <em>interpolation</em> argument. <code>None</code> can be used to turn off
 interpolation completely, <code>ExtendedInterpolation()</code> provides a more
 advanced variant inspired by <code>zc.buildout</code>.  More on the subject in the
-<a href="#" class="broken-link">dedicated documentation section</a>.
+<a href="#interpolation-of-values">dedicated documentation section</a>.
 <a class="reference internal" href="configparser.html#py:class:configparser.rawconfigparser"><code class="xref py class docutils literal">RawConfigParser</code></a> has a default value of <code>None</code>.</p>
 </li>
 <li><p><em>converters</em>, default value: not set</p>
@@ -1389,7 +1389,7 @@ parsed settings to a new config file.</p>
 through the <em>interpolation</em> argument. <code>None</code> can be used to turn off
 interpolation completely, <code>ExtendedInterpolation()</code> provides a more
 advanced variant inspired by <code>zc.buildout</code>.  More on the subject in the
-<a href="#" class="broken-link">dedicated documentation section</a>.</p>
+<a href="#interpolation-of-values">dedicated documentation section</a>.</p>
 <p>All option names used in interpolation will be passed through the
 <a class="reference internal" href="configparser.html#py:method:configparser.configparser.optionxform"><code class="xref py method docutils literal">optionxform</code></a> method just like any other option name reference.  For
 example, using the default implementation of <a class="reference internal" href="configparser.html#py:method:configparser.configparser.optionxform"><code class="xref py method docutils literal">optionxform</code></a> (which
@@ -1402,7 +1402,7 @@ converter gets its own corresponding <code class="xref py method docutils litera
 object and section proxies.</p>
 <p>When <em>allow_unnamed_section</em> is <code>True</code> (default: <code>False</code>),
 the first section name can be omitted. See the
-<a href="#" class="broken-link">"Unnamed Sections" section</a>.</p>
+<a href="#unnamed-sections">"Unnamed Sections" section</a>.</p>
 <p>It is possible to read several configurations into a single
 <a class="reference internal" href="configparser.html#py:class:configparser.configparser"><code class="xref py class docutils literal">ConfigParser</code></a>, where the most recently added configuration has the
 highest priority. Any conflicting keys are taken from the more recent

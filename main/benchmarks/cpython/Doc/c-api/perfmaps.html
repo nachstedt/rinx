@@ -256,8 +256,7 @@ advantage of <em>perf map files</em> to make Python functions visible to an exte
 profiling tool (such as <a href="https://perf.wiki.kernel.org/index.php/Main_Page">perf</a>).
 A running process may create a file in the <code>/tmp</code> directory, which contains entries
 that can map a section of executable code to a name. This interface is described in the
-<a href="https://git.kernel.org/pub/scm/linux/
-kernel/git/torvalds/linux.git/tree/tools/perf/Documentation/jit-interface.txt">documentation of the Linux Perf tool</a>.</p>
+<a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/perf/Documentation/jit-interface.txt">documentation of the Linux Perf tool</a>.</p>
 <p>In Python, these helper APIs can be used by libraries and features that rely
 on generating machine code on the fly.</p>
 <p>Note that holding an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> is not required for these APIs.</p>

@@ -423,7 +423,7 @@ thread) and calling a function in that execution context.</p>
 <p>For concurrency, interpreters themselves (and this module) don't
 provide much more than isolation, which on its own isn't useful.
 Actual concurrency is available separately through
-<a class="reference internal" href="threading.html#py:module:threading" title="threading: Thread-based parallelism."><code class="xref py module docutils literal">threads</code></a>  See <a href="#" class="broken-link">below</a></p>
+<a class="reference internal" href="threading.html#py:module:threading" title="threading: Thread-based parallelism."><code class="xref py module docutils literal">threads</code></a>  See <a href="#interp-concurrency">below</a></p>
 <div class="admonition seealso">
   <p class="admonition-title">See also</p>
 <dl>
@@ -451,7 +451,7 @@ Actual concurrency is available separately through
 <p>Before we dive in further, there are a small number of details
 to keep in mind about using multiple interpreters:</p>
 <ul>
-<li><p><a href="#" class="broken-link">isolated</a>, by default</p>
+<li><p><a href="#interp-isolation">isolated</a>, by default</p>
 </li>
 <li><p>no implicit threads</p>
 </li>
@@ -468,7 +468,7 @@ runtime state, in addition to the current interpreter, related to
 the current exception and the bytecode eval loop.)</p>
 <p>The concept and functionality of the interpreter have been a part of
 Python since version 2.2, but the feature was only available through
-the C-API and not well known, and the <a href="#" class="broken-link">isolation</a>
+the C-API and not well known, and the <a href="#interp-isolation">isolation</a>
 was relatively incomplete until version 3.12.</p>
 <a id="interp-isolation"></a>
 <h3 id="multiple-interpreters-and-isolation">Multiple Interpreters and Isolation</h3>
@@ -496,7 +496,7 @@ execute the function using the current interpreter's state.  The
 creating and managing interpreters, as well as the switch-and-call
 operation.</p>
 <p>No other threads are automatically started for the operation.
-There is <a href="#" class="broken-link">a helper</a> for that though.
+There is <a href="#interp-call-in-thread">a helper</a> for that though.
 There is another dedicated helper for calling the builtin
 <a class="reference internal" href="functions.html#py:function:exec"><code class="xref py function docutils literal">exec</code></a> in an interpreter.</p>
 <p>When <a class="reference internal" href="functions.html#py:function:exec"><code class="xref py function docutils literal">exec</code></a> (or <a class="reference internal" href="functions.html#py:function:eval"><code class="xref py function docutils literal">eval</code></a>) are called in an interpreter,

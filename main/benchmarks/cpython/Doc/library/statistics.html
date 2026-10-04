@@ -1169,8 +1169,8 @@ of the dependent variable).</p>
 <p>Both inputs must be of the same length (no less than two), and
 the independent variable <em>x</em> cannot be constant;
 otherwise a <a class="reference internal" href="statistics.html#py:exception:statistics.statisticserror"><code class="xref py exception docutils literal">StatisticsError</code></a> is raised.</p>
-<p>For example, we can use the <a href="#" class="broken-link">release dates of the Monty
-Python films &lt;https://en.wikipedia.org/wiki/Monty_Python#Films&gt;</a>
+<p>For example, we can use the <a href="https://en.wikipedia.org/wiki/Monty_Python#Films">release dates of the Monty
+Python films</a>
 to predict the cumulative number of Monty Python films
 that would have been produced by 2019
 assuming that they had kept the pace.</p>
@@ -1228,8 +1228,8 @@ measurements as a single entity.</p>
 of applications in statistics.</p>
 <dl class="py class">
   <dt id="py:class:statistics.normaldist"><em class="property">class</em> <code class="sig-name">NormalDist(mu=0.0, sigma=1.0)</code></dt>
-  <dd><p>Returns a new <em>NormalDist</em> object where <em>mu</em> represents the <a href="#" class="broken-link">arithmetic
-mean &lt;https://en.wikipedia.org/wiki/Arithmetic_mean&gt;</a> and <em>sigma</em>
+  <dd><p>Returns a new <em>NormalDist</em> object where <em>mu</em> represents the <a href="https://en.wikipedia.org/wiki/Arithmetic_mean">arithmetic
+mean</a> and <em>sigma</em>
 represents the <a href="https://en.wikipedia.org/wiki/Standard_deviation">standard deviation</a>.</p>
 <p>If <em>sigma</em> is negative, raises <a class="reference internal" href="statistics.html#py:exception:statistics.statisticserror"><code class="xref py exception docutils literal">StatisticsError</code></a>.</p>
 <dl class="py attribute">
@@ -1320,9 +1320,8 @@ equals the given probability <em>p</em>.</p>
 <dl class="py method">
   <dt id="py:method:statistics.normaldist.overlap"><code class="sig-name">NormalDist.overlap(other)</code></dt>
   <dd><p>Measures the agreement between two normal probability distributions.
-Returns a value between 0.0 and 1.0 giving <a href="#" class="broken-link">the overlapping area for
-the two probability density functions
-&lt;https://www.rasch.org/rmt/rmt101r.htm&gt;</a>.</p>
+Returns a value between 0.0 and 1.0 giving <a href="https://www.rasch.org/rmt/rmt101r.htm">the overlapping area for
+the two probability density functions</a>.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -1357,9 +1356,8 @@ NormalDist(mu=41.0, sigma=4.5)</pre></div>
 <p>Dividing a constant by an instance of <a class="reference internal" href="statistics.html#py:class:statistics.normaldist"><code class="xref py class docutils literal">NormalDist</code></a> is not supported
 because the result wouldn't be normally distributed.</p>
 <p>Since normal distributions arise from additive effects of independent
-variables, it is possible to <a href="#" class="broken-link">add and subtract two independent normally
-distributed random variables
-&lt;https://en.wikipedia.org/wiki/Sum_of_normally_distributed_random_variables&gt;</a>
+variables, it is possible to <a href="https://en.wikipedia.org/wiki/Sum_of_normally_distributed_random_variables">add and subtract two independent normally
+distributed random variables</a>
 represented as instances of <a class="reference internal" href="statistics.html#py:class:statistics.normaldist"><code class="xref py class docutils literal">NormalDist</code></a>.  For example:</p>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; birth_weights = NormalDist.from_samples([2.5, 3.1, 2.1, 2.4, 2.7, 3.5])
@@ -1394,8 +1392,8 @@ between 1100 and 1200, after rounding to the nearest whole number:</p>
 [810, 896, 958, 1011, 1060, 1109, 1162, 1224, 1310]</pre></div>
 <h3 id="monte-carlo-inputs-for-simulations">Monte Carlo inputs for simulations</h3>
 <p>To estimate the distribution for a model that isn't easy to solve
-analytically, <a class="reference internal" href="statistics.html#py:class:statistics.normaldist"><code class="xref py class docutils literal">NormalDist</code></a> can generate input samples for a <a href="#" class="broken-link">Monte
-Carlo simulation &lt;https://en.wikipedia.org/wiki/Monte_Carlo_method&gt;</a>:</p>
+analytically, <a class="reference internal" href="statistics.html#py:class:statistics.normaldist"><code class="xref py class docutils literal">NormalDist</code></a> can generate input samples for a <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method">Monte
+Carlo simulation</a>:</p>
 <div class="highlight hl-code"><pre>
 &gt;&gt;&gt; def model(x, y, z):
 ...     return (3*x + 7*x*y - 5*y) / (11 * z)
@@ -1407,8 +1405,8 @@ Carlo simulation &lt;https://en.wikipedia.org/wiki/Monte_Carlo_method&gt;</a>:</
 &gt;&gt;&gt; quantiles(map(model, X, Y, Z))
 [1.4591308524824727, 1.8035946855390597, 2.175091447274739]</pre></div>
 <h3 id="approximating-binomial-distributions">Approximating binomial distributions</h3>
-<p>Normal distributions can be used to approximate <a href="#" class="broken-link">Binomial
-distributions &lt;https://mathworld.wolfram.com/BinomialDistribution.html&gt;</a>
+<p>Normal distributions can be used to approximate <a href="https://mathworld.wolfram.com/BinomialDistribution.html">Binomial
+distributions</a>
 when the sample size is large and when the probability of a successful
 trial is near 50%.</p>
 <p>For example, an open source conference has 750 attendees and two rooms with a

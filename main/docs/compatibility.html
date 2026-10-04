@@ -336,12 +336,12 @@ the label; Sphinx warns.</p>
 <li><p>A named reference resolves within its own document, as in docutils:
 against its external targets, labels and section titles.</p>
 </li>
+<li><p>Embedded URIs may be relative (<code>&lt;#anchor&gt;</code>, <code>&lt;page.html&gt;</code>) or
+aliases (<code>&lt;name_&gt;</code>), targets may be indirect (<code>.. _a: b_</code>), and
+the text of `` <a href="uri">text</a> `` names a target, all as in docutils.</p>
+</li>
 <li><p>A name given two different targets in one document links nowhere, but
 is not yet reported as docutils' "Duplicate explicit target name".</p>
-</li>
-<li><p>Embedded relative URIs (<code>&lt;#anchor&gt;</code>), embedded aliases
-(<code>&lt;name_&gt;</code>) and link text wrapped over a line break are not
-recognised.</p>
 </li>
 </ul>
 </td>
