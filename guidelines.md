@@ -78,6 +78,8 @@ entry under the heading it belongs to, as a single short sentence.
 - Declare a relationship on the side that writes it, so the declared source can never drift from actual use, and derive the reverse direction rather than asking for it twice.
 - Give a generated identifier a deterministic source (position, not content) so a cached build artefact stays byte-identical, and say plainly which edits perturb it.
 - Store only what a later reader needs in a shared index: prose belongs in the document, not in an artefact every phase loads.
+- Never write data derivable from the AST into a serialized artefact beside it, since that creates an invariant between the two with no clear answer when they disagree; derive it in memory where it is read.
+- When several phases need the same state derived from a document, compute it once in an in-memory pre-pass answering by node, rather than replaying the rules in each phase's own walk.
 - When implementing a subset of a language a reference implementation embeds whole, recognise the constructs outside the subset and reject each *by name*, since the common failure is an unsupported feature rather than a typo.
 - Choose a parsing library for what it produces, not for what it saves: one that hands back a token tree still leaves the tree-building, the error wording and the panic-freedom to write by hand.
 - Weigh a library against the features still to come, not only the one at hand: accepting a vendored asset and a larger output is worth it when the next construct in the same family reuses the library's harder parts instead of hand-rolling them too.

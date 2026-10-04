@@ -338,7 +338,7 @@ fn render_cross_reference(
                     domains: ctx.domain_resolver,
                     options: ctx.option_resolver,
                 },
-                &ctx.scope,
+                ctx.scopes.scope_at(inline),
                 ctx.doc_path,
                 ctx.broken_links,
             );
@@ -441,7 +441,7 @@ fn render_indexed_cross_reference(
                 },
                 inventory,
                 ctx.option_resolver,
-                ctx.scope.program.current(),
+                ctx.scopes.scope_at(inline).program.current(),
                 ctx.doc_path,
                 ctx.broken_links,
             );
@@ -517,7 +517,7 @@ fn render_domain_object(html: &mut String, inline: &rinx_ast::InlineNode, ctx: &
             broken_links: ctx.broken_links,
             object_type_mismatches: ctx.object_type_mismatches,
         },
-        &ctx.scope,
+        ctx.scopes.scope_at(inline),
     );
 }
 

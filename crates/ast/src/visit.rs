@@ -8,22 +8,25 @@
 //! [`crate::Directive::Uml`] extraction and validation being the original
 //! two.
 //!
-//! It is deliberately **not** a general refactoring target for
-//! `rinx_analyzer`'s `index_nodes` or `rinx_renderer`'s
-//! `render_nodes`. Those push and pop domain scope around a node's children and
-//! interleave output with the walk, neither of which a `FnMut(&Node)` visitor
-//! can express. Rewriting them on top of this would require a visitor that
-//! brackets every descent, which is a different (and much larger) abstraction.
+//! [`for_each_child`] is the one-level step it is built from, and the step a
+//! walk keeping state across the document builds on instead:
+//! `rinx_scope`'s `DocumentScopes` brackets each domain object's body with
+//! the scope it lends and reads the inline lists in between, which a
+//! `FnMut(&Node)` visitor cannot express. `rinx_analyzer`'s `index_nodes` and
+//! `rinx_renderer`'s `render_nodes` keep walks of their own, which decide how
+//! each construct's children are indexed or drawn.
 //!
 //! # Exhaustiveness
 //!
-//! [`walk_nodes`]'s inner `match` lists every [`Node`] variant explicitly, with
+//! [`for_each_child`]'s `match` lists every [`Node`] variant explicitly, with
 //! no `_` arm. That is the point: a future variant that carries child nodes
 //! becomes a compile error here rather than a silently unvisited subtree. This
 //! is the same protection `render_directive` has, and that
 //! `rinx_analyzer`'s `index_nodes` conspicuously lacks.
 
 use crate::directive::Directive;
+use crate::inline_node::InlineNode;
+use crate::line_block::LineBlockItem;
 use crate::node::Node;
 
 /// Visits `nodes` and every block-level node nested within them, in document
@@ -74,79 +77,131 @@ pub fn walk_nodes<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a Node)) {
 pub fn walk_nodes_with_siblings<'a>(nodes: &'a [Node], visit: &mut impl FnMut(&'a [Node], usize)) {
     for (index, node) in nodes.iter().enumerate() {
         visit(nodes, index);
+        for_each_child(node, &mut |child| {
+            if let Child::Nodes(children) = child {
+                walk_nodes_with_siblings(children, visit);
+            }
+        });
+    }
+}
 
-        match node {
-            Node::Directive(directive) => walk_directive(directive, visit),
-            Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
-                for item in items {
-                    walk_nodes_with_siblings(&item.nodes, visit);
+/// One list a node holds directly — see [`for_each_child`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Child<'a> {
+    /// Inline content: a paragraph, a heading's text, a definition term, one
+    /// line of a line block, a caption.
+    Inline(&'a [InlineNode]),
+    /// Block-level content: a list item, a directive body, a table cell.
+    Nodes(&'a [Node]),
+}
+
+/// Passes every list `node` holds *directly* to `visit`, inline and
+/// block-level alike, in document order — without descending into them.
+///
+/// The one-level step the recursive walks are built from: [`walk_nodes`]
+/// recurses into the [`Child::Nodes`], and a walk that keeps state across the
+/// document (`rinx_scope`'s `DocumentScopes`) recurses into those and reads
+/// the [`Child::Inline`] in between, so a scope change written in a block
+/// quote's content applies to its attribution, as it is read.
+pub fn for_each_child<'a>(node: &'a Node, visit: &mut impl FnMut(Child<'a>)) {
+    match node {
+        Node::Heading { text, .. } => visit(Child::Inline(text)),
+        Node::Paragraph(inlines) => visit(Child::Inline(inlines)),
+        Node::Directive(directive) => for_each_directive_child(directive, visit),
+        Node::BulletList { items, .. } | Node::EnumeratedList { items, .. } => {
+            for item in items {
+                visit(Child::Nodes(&item.nodes));
+            }
+        }
+        Node::DefinitionList { items } => {
+            for item in items {
+                visit(Child::Inline(&item.term));
+                visit(Child::Nodes(&item.definition));
+            }
+        }
+        Node::OptionList { items } => {
+            for item in items {
+                visit(Child::Nodes(&item.description));
+            }
+        }
+        Node::Table {
+            header_rows,
+            body_rows,
+        } => {
+            for row in header_rows.iter().chain(body_rows) {
+                for cell in &row.cells {
+                    visit(Child::Nodes(&cell.content));
                 }
             }
-            Node::DefinitionList { items } => {
-                for item in items {
-                    walk_nodes_with_siblings(&item.definition, visit);
-                }
+        }
+        Node::BlockQuote {
+            content,
+            attribution,
+        } => {
+            visit(Child::Nodes(content));
+            if let Some(attribution) = attribution {
+                visit(Child::Inline(attribution));
             }
-            Node::OptionList { items } => {
-                for item in items {
-                    walk_nodes_with_siblings(&item.description, visit);
-                }
-            }
-            Node::Table {
-                header_rows,
-                body_rows,
-            } => {
-                for row in header_rows.iter().chain(body_rows) {
-                    for cell in &row.cells {
-                        walk_nodes_with_siblings(&cell.content, visit);
-                    }
-                }
-            }
-            Node::BlockQuote { content, .. } => walk_nodes_with_siblings(content, visit),
-            // Leaf nodes: no block-level children to descend into. A doctest
-            // block's body is verbatim text, not nested nodes. A line block's
-            // content is `InlineNode` only — its nesting is expressed through
-            // `LineBlockItem`, not `Node`.
-            Node::Heading { .. }
-            | Node::Paragraph(_)
-            | Node::Target { .. }
-            | Node::AnonymousTarget { .. }
-            | Node::LiteralBlock { .. }
-            | Node::DoctestBlock(_)
-            | Node::Comment
-            | Node::Transition
-            | Node::LineBlock(_) => {}
+        }
+        // A line block's nesting is expressed through `LineBlockItem`, not
+        // `Node`: each line is one inline list.
+        Node::LineBlock(items) => for_each_line(items, visit),
+        // Leaf nodes: a target's URI, a literal/doctest block's verbatim
+        // text, and a comment/transition hold no list at all.
+        Node::Target { .. }
+        | Node::AnonymousTarget { .. }
+        | Node::LiteralBlock { .. }
+        | Node::DoctestBlock(_)
+        | Node::Comment
+        | Node::Transition => {}
+    }
+}
+
+/// Passes every line of a line block, nested ones included, to `visit`.
+fn for_each_line<'a>(items: &'a [LineBlockItem], visit: &mut impl FnMut(Child<'a>)) {
+    for item in items {
+        match item {
+            LineBlockItem::Line(inlines) => visit(Child::Inline(inlines)),
+            LineBlockItem::Nested(nested) => for_each_line(nested, visit),
         }
     }
 }
 
-/// Descends into the block-level children a [`Directive`] carries.
+/// The lists a [`Directive`] holds directly.
 ///
-/// Split out from [`walk_nodes`] so both matches stay exhaustive and readable;
-/// the directive arm of `Node` is by far the most branch-heavy.
-fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a [Node], usize)) {
+/// Split out from [`for_each_child`] so both matches stay exhaustive and
+/// readable; the directive arm of `Node` is by far the most branch-heavy.
+fn for_each_directive_child<'a>(directive: &'a Directive, visit: &mut impl FnMut(Child<'a>)) {
     match directive {
         Directive::Admonition { body, .. }
         | Directive::VersionChange { body, .. }
         // A section that reached this walker was written outside any entity, so
         // it never got folded into one. Its body is still ordinary content.
         | Directive::EntitySection { body, .. }
-        | Directive::SeeAlso { body } => walk_nodes_with_siblings(body, visit),
-        Directive::Dropdown(dropdown) => walk_nodes_with_siblings(&dropdown.body, visit),
+        | Directive::SeeAlso { body } => visit(Child::Nodes(body)),
+        // Both halves carry markup: the title is inline-parsed, unlike every
+        // other directive caption in this build, and the body is ordinary
+        // block content.
+        Directive::Dropdown(dropdown) => {
+            visit(Child::Inline(&dropdown.title));
+            visit(Child::Nodes(&dropdown.body));
+        }
         // Its body is ordinary content, exactly as a dropdown's is — a target
         // or entity written in the justification belongs to this document.
-        Directive::EntityUpdate(update) => walk_nodes_with_siblings(&update.body, visit),
-        Directive::Grid(grid) => walk_nodes_with_siblings(&grid.body, visit),
-        Directive::GridItem(item) => walk_nodes_with_siblings(&item.body, visit),
+        Directive::EntityUpdate(update) => visit(Child::Nodes(&update.body)),
+        Directive::Grid(grid) => visit(Child::Nodes(&grid.body)),
+        Directive::GridItem(item) => visit(Child::Nodes(&item.body)),
+        // Inline markup only: a button's content is its label, not a body.
+        Directive::ButtonLink(button) => visit(Child::Inline(&button.label)),
         Directive::Glossary { entries, .. } => {
             for entry in entries {
-                walk_nodes_with_siblings(&entry.definition, visit);
+                visit(Child::Nodes(&entry.definition));
             }
         }
         Directive::DataTable { rows, .. } => {
             for row in rows {
                 for cell in &row.cells {
-                    walk_nodes_with_siblings(&cell.content, visit);
+                    visit(Child::Nodes(&cell.content));
                 }
             }
         }
@@ -157,42 +212,41 @@ fn walk_directive<'a>(directive: &'a Directive, visit: &mut impl FnMut(&'a [Node
         } => {
             for row in header_rows.iter().chain(body_rows) {
                 for cell in &row.cells {
-                    walk_nodes_with_siblings(&cell.content, visit);
+                    visit(Child::Nodes(&cell.content));
                 }
             }
         }
-        Directive::DomainObject(body) => walk_nodes_with_siblings(body.body(), visit),
+        Directive::DomainObject(body) => visit(Child::Nodes(body.body())),
         // Every section's prose is ordinary body content — a target, a nested
         // directive or even another entity inside a `.. verification-criteria::`
-        // must be reached, or it would be invisible to indexing.
+        // must be reached, or it would be invisible to indexing. Attribute
+        // values are deliberately not passed: they are typed values validated
+        // against the schema, not inline markup.
         Directive::Entity(entity) => {
             for section in &entity.sections {
-                walk_nodes_with_siblings(&section.body, visit);
+                visit(Child::Nodes(&section.body));
             }
         }
-
-        // A figure's legend is ordinary body content and may hold anything,
-        // including another image. Its caption is inline markup only, so there
-        // is nothing there to descend into.
-        Directive::Figure(figure) => walk_nodes_with_siblings(&figure.legend, visit),
-        // Directives with no block-level children. A doctest block's body is
-        // verbatim text, not nested nodes, a math block's is verbatim LaTeX,
-        // and a code block's is verbatim source, so there is nothing to
-        // descend into. A `.. highlight::` has no body at all, and an
-        // `.. image::` is a leaf by definition. A substitution definition's
-        // `replace` content is `InlineNode` only, like a line block's — this
-        // walker doesn't descend into inline content at all (see the module
-        // doc comment). An entity table's rows are not children either: they
-        // are resolved from the project index while rendering, so there is
-        // nothing in this document to walk, and neither are a flowchart's
-        // nodes and edges or a chart's wedges and bars: they are generated from
-        // that same index. A `.. button-link::` is a leaf for the same reason
-        // the substitution definition beside it is: its content is a *label*,
-        // parsed as inline markup, so this walker has nothing to descend into
-        // — which is why it needs no arm in the block traversals its three
-        // sphinx-design neighbours above all appear in.
-        Directive::ButtonLink(_)
-        | Directive::EntityTable(_)
+        // A figure's caption is inline markup, and its legend is ordinary
+        // body content that may hold anything, including another image.
+        Directive::Figure(figure) => {
+            if let Some(caption) = &figure.caption {
+                visit(Child::Inline(caption));
+            }
+            visit(Child::Nodes(&figure.legend));
+        }
+        // Directives holding no list. A doctest block's body is verbatim
+        // text, a math block's is verbatim LaTeX, and a code block's is
+        // verbatim source. A `.. highlight::` has no body at all, and an
+        // `.. image::`'s `:alt:` and a toctree entry's title are plain
+        // strings, not inline-parsed. A substitution definition's `replace`
+        // content was spliced into every reference by the parser, so it is
+        // not read where it is defined. An entity table's rows are not
+        // content of this document either: they are resolved from the project
+        // index while rendering, and neither are a flowchart's nodes and
+        // edges or a chart's wedges and bars, which are generated from that
+        // same index.
+        Directive::EntityTable(_)
         | Directive::EntityFlow(_)
         | Directive::EntitySequence(_)
         | Directive::EntityPie(_)
@@ -589,5 +643,90 @@ mod tests {
 
         // Then — pre-order, and only the first two are in the top-level list
         assert_eq!(seen, vec![(true, 0), (true, 1), (false, 0)]);
+    }
+
+    /// What `for_each_child` passes for `node`: each inline list's text, and
+    /// each node list's length.
+    fn children_of(node: &Node) -> Vec<String> {
+        let mut seen = Vec::new();
+        for_each_child(node, &mut |child| match child {
+            Child::Inline(inlines) => seen.push(crate::inline_plain_text(inlines)),
+            Child::Nodes(nodes) => seen.push(format!("{} nodes", nodes.len())),
+        });
+        seen
+    }
+
+    fn text(value: &str) -> Vec<InlineNode> {
+        vec![InlineNode::Text(value.to_string())]
+    }
+
+    #[test]
+    fn test_for_each_child_passes_a_block_quote_content_before_its_attribution() {
+        // Given
+        let node = Node::BlockQuote {
+            content: vec![Node::Transition, Node::Comment],
+            attribution: Some(text("author")),
+        };
+
+        // When / Then — in the order a reader meets them
+        assert_eq!(children_of(&node), ["2 nodes", "author"]);
+    }
+
+    #[test]
+    fn test_for_each_child_interleaves_each_definition_term_with_its_definition() {
+        // Given
+        let node = Node::DefinitionList {
+            items: vec![
+                DefinitionListItem {
+                    term: text("first"),
+                    definition: vec![Node::Transition],
+                },
+                DefinitionListItem {
+                    term: text("second"),
+                    definition: vec![],
+                },
+            ],
+        };
+
+        // When / Then
+        assert_eq!(
+            children_of(&node),
+            ["first", "1 nodes", "second", "0 nodes"]
+        );
+    }
+
+    #[test]
+    fn test_for_each_child_passes_every_line_of_a_nested_line_block() {
+        // Given
+        let node = Node::LineBlock(vec![
+            LineBlockItem::Line(text("outer")),
+            LineBlockItem::Nested(vec![LineBlockItem::Line(text("inner"))]),
+        ]);
+
+        // When / Then
+        assert_eq!(children_of(&node), ["outer", "inner"]);
+    }
+
+    #[test]
+    fn test_for_each_child_passes_a_paragraph_and_nothing_for_a_leaf() {
+        // Given
+        let paragraph = Node::Paragraph(text("prose"));
+
+        // When / Then
+        assert_eq!(children_of(&paragraph), ["prose"]);
+        assert!(children_of(&Node::Transition).is_empty());
+    }
+
+    #[test]
+    fn test_for_each_child_passes_a_domain_object_body() {
+        // Given
+        let node = Node::Directive(Directive::DomainObject(DomainObjectBody::PyModule {
+            name: "pkg".to_string(),
+            options: crate::module_options::ModuleOptions::default(),
+            body: vec![Node::Transition],
+        }));
+
+        // When / Then
+        assert_eq!(children_of(&node), ["1 nodes"]);
     }
 }

@@ -157,10 +157,9 @@ pub(crate) fn render_code(
 /// Applies a `.. highlight::`, which renders nothing and exists only to change
 /// what the code blocks below it inherit.
 ///
-/// Lives here rather than in the dispatcher for the same reason
-/// [`super::scope_directives::apply_scope_directive`] does: a directive whose
-/// whole effect is a context mutation belongs with the construct that reads
-/// that context, not in the match that happens to reach it. Document order is
+/// Lives here rather than in the dispatcher because a directive whose whole
+/// effect is a context mutation belongs with the construct that reads that
+/// context, not in the match that happens to reach it. Document order is
 /// what makes it correct, which is why it runs during the node walk rather
 /// than in a pre-pass.
 pub(super) fn apply_highlight_directive(

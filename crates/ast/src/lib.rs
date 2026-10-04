@@ -186,4 +186,4 @@ pub use target_search_order::TargetSearchOrder;
 pub use toctree::{NumberedDepth, TocEntry, Toctree, ToctreeFlag, ToctreeOptions};
 pub use uml::{Uml, UmlSource};
 pub use version_change_kind::VersionChangeKind;
-pub use visit::{walk_nodes, walk_nodes_with_siblings};
+pub use visit::{Child, for_each_child, walk_nodes, walk_nodes_with_siblings};

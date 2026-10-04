@@ -24,7 +24,6 @@ use super::image::render_image_directive;
 use super::line_block::render_line_block;
 use super::math::render_math;
 use super::option_list::render_option_list;
-use super::scope_directives::apply_scope_directive;
 use super::table_directive::{TableDirectiveParams, render_table_directive};
 use super::uml::render_uml_directive;
 use crate::RenderCtx;
@@ -588,21 +587,13 @@ fn render_directive(
 }
 
 /// The directives with no content-shaped output of their own: they either
-/// only mutate rendering state, execute outside the render pass entirely, or
-/// were already fully handled elsewhere. Split out of [`render_directive`]
+/// execute outside the render pass entirely, or were already fully handled
+/// elsewhere. Split out of [`render_directive`]
 /// once this last group of arms pushed it past its line limit — every variant
 /// it's called with is named explicitly in the arm above, so the `unreachable!`
 /// below only fires if that arm's list and this match ever drift apart.
 fn render_side_effect_directive(html: &mut String, directive: &Directive, ctx: &mut RenderCtx<'_>) {
     match directive {
-        // Scope-mutating directives render no HTML of their own — mirrored
-        // from the analyzer's `index_nodes` so anchor `id`s never drift from
-        // the index keys it built.
-        Directive::PyCurrentModule { .. }
-        | Directive::CNamespace { .. }
-        | Directive::CNamespacePush { .. }
-        | Directive::CNamespacePop
-        | Directive::StdProgram { .. } => apply_scope_directive(directive, ctx),
         // Presentation only — whether this block's code passes, fails, or is
         // never run is decided by a separate, opt-in test target, and cannot
         // influence the HTML.
@@ -612,9 +603,17 @@ fn render_side_effect_directive(html: &mut String, directive: &Directive, ctx: &
             }
         }
         // `SubstitutionDefinition` was already spliced in by the parser's
-        // `resolve_substitutions` pass and `Sectnum`'s numbers are
-        // precomputed, so both produce no output here.
-        Directive::Sectnum(_) | Directive::SubstitutionDefinition(_) => {}
+        // `resolve_substitutions` pass, `Sectnum`'s numbers are precomputed,
+        // and the scope a scope-moving directive sets was applied for the
+        // whole document by `rinx_scope::DocumentScopes`, so none of them
+        // produces output here.
+        Directive::Sectnum(_)
+        | Directive::SubstitutionDefinition(_)
+        | Directive::PyCurrentModule { .. }
+        | Directive::CNamespace { .. }
+        | Directive::CNamespacePush { .. }
+        | Directive::CNamespacePop
+        | Directive::StdProgram { .. } => {}
         _ => unreachable!("render_directive routes every other variant to its own arm"),
     }
 }

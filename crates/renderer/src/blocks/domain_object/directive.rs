@@ -3,6 +3,8 @@
 
 use std::fmt::Write as _;
 
+use rinx_scope::DefinitionNames;
+
 use super::c::render_cmdoption;
 use super::labels::{domain_object_prefix_labels, is_decorator_signature};
 use crate::RenderCtx;
@@ -21,94 +23,42 @@ use crate::RenderCtx;
 /// Sphinx never prints them: they reach the reader through the Python Module
 /// Index and the `:mod:` link tooltip instead (ADR-032).
 ///
-/// The body renders under whatever scope this object establishes (see
-/// [`rinx_ast::DomainObjectBody::deduce_local_scope`]), popped again
-/// afterwards so it can't leak into later siblings — the analyzer's
-/// `index_domain_object` applies the same scope to keep index keys and
-/// anchor `id`s in agreement.
+/// Each `<dt>`'s `id` is built from the names [`rinx_scope::DocumentScopes`]
+/// qualified the object to — the same names the analyzer's
+/// `index_domain_object` indexes it under, so index keys and anchor `id`s
+/// cannot disagree.
 pub(crate) fn render_domain_object(
     html: &mut String,
     obj: &rinx_ast::DomainObjectBody,
     ctx: &mut RenderCtx<'_>,
 ) {
-    if let rinx_ast::DomainObjectBody::StdCmdoption {
-        signatures, body, ..
-    } = obj
-    {
-        render_cmdoption(html, signatures, obj.no_index(), body, ctx);
-        return;
-    }
+    // Copied out of the context, so the names borrow the table rather than
+    // `ctx`, which the body renders through below.
+    let scopes = ctx.scopes;
+    let definition = scopes.definition(obj);
+    let names = match &*definition {
+        DefinitionNames::Options(lines) => {
+            render_cmdoption(html, obj, lines, ctx);
+            return;
+        }
+        DefinitionNames::Object(names) => names,
+    };
 
     let object_type = obj.object_type();
-    let own_names = obj.names();
-    // A `py:module`'s own name is never qualified against the *previous*
-    // module: real Sphinx always writes it in full and sets it verbatim as
-    // the new current module, matching `index_domain_object` in the analyzer.
-    let is_module = matches!(obj, rinx_ast::DomainObjectBody::PyModule { .. });
-    // Every `c`-domain object qualifies against `ctx.scope.c` instead of
-    // `ctx.scope.python` — mirrors the analyzer's `index_domain_object`
-    // exactly, so anchor `id`s never drift from the index keys. See that
-    // function's doc comment (`docs/dev/known_bugs.md` #2) for why `c:function`/
-    // `c:macro` joined this set.
-    let uses_c_scope = matches!(
-        obj,
-        rinx_ast::DomainObjectBody::CStruct { .. }
-            | rinx_ast::DomainObjectBody::CUnion { .. }
-            | rinx_ast::DomainObjectBody::CMember { .. }
-            | rinx_ast::DomainObjectBody::CType { .. }
-            | rinx_ast::DomainObjectBody::CFunction { .. }
-            | rinx_ast::DomainObjectBody::CMacro { .. }
-    );
-    // The `:module:` option: overrides `ctx.scope.python`'s current module
-    // for the duration of this whole call — this object's own (and its
-    // aliases') qualification below, and its nested body — restored at the
-    // very end, mirroring the analyzer's `index_domain_object` exactly (see
-    // there for why this is what real Sphinx's `before_content()`/
-    // `after_content()` do) so anchor `id`s never drift from index keys.
-    let restore_module = obj
-        .module_override()
-        .map(|module| ctx.scope.python.push_module_override(module));
-    // Only the primary name qualifies the scope, exactly as in the analyzer's
-    // `index_domain_object`; the rest are aliases that get their own `<dt>`
-    // anchor but lend nothing to the body.
-    let (qualified_primary, new_segments) = if is_module {
-        (own_names.first().clone(), Vec::new())
-    } else if uses_c_scope {
-        let qualification = ctx.scope.c.qualify(own_names.first());
-        (qualification.qualified_name, qualification.new_segments)
-    } else {
-        let qualification = ctx.scope.python.qualify(own_names.first());
-        (qualification.qualified_name, qualification.new_segments)
-    };
-    if is_module {
-        ctx.scope.python.set_module(&qualified_primary);
-    }
     let domain_str = object_type.domain().as_str();
     let objtype_str = object_type.as_str();
 
     let _ = writeln!(html, "<dl class=\"{domain_str} {objtype_str}\">");
     // One `<dt>` per declared signature, all sharing the single `<dd>` below —
     // the shape real Sphinx renders a multi-signature object description in.
-    for (index_in_object, (own_name, signature_text)) in own_names
-        .as_slice()
-        .iter()
-        .zip(obj.signature_texts())
-        .enumerate()
-    {
-        let qualified_name = if index_in_object == 0 {
-            qualified_primary.clone()
-        } else if uses_c_scope {
-            ctx.scope.c.qualify(own_name).qualified_name
-        } else {
-            ctx.scope.python.qualify(own_name).qualified_name
-        };
+    for (qualified_name, signature_text) in names.as_slice().iter().zip(obj.signature_texts()) {
         let sig_escaped = html_escape::encode_text(signature_text);
         // `no_index` means no cross-reference target — omit the `id`
         // entirely rather than emitting a dangling anchor.
         if obj.no_index() {
             let _ = write!(html, "  <dt>");
         } else {
-            let key = rinx_ast::build_domain_object_key(object_type, &qualified_name);
+            let key = rinx_ast::build_domain_object_key(object_type, qualified_name);
             let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
             let _ = write!(html, "  <dt id=\"{id_attr}\">");
         }
@@ -129,22 +79,9 @@ pub(crate) fn render_domain_object(
     }
     let _ = write!(html, "  <dd>");
     render_domain_object_options(html, obj);
-    let lend = obj.deduce_local_scope(&new_segments);
-    if uses_c_scope {
-        let saved = ctx.scope.c.push_containers(&lend);
-        crate::render_nodes(html, obj.body(), ctx);
-        ctx.scope.c.restore_containers(saved);
-    } else {
-        let depth = ctx.scope.python.push_classes(&lend);
-        crate::render_nodes(html, obj.body(), ctx);
-        ctx.scope.python.truncate_classes(depth);
-    }
+    crate::render_nodes(html, obj.body(), ctx);
     let _ = writeln!(html, "</dd>");
     let _ = writeln!(html, "</dl>");
-
-    if let Some(previous) = restore_module {
-        ctx.scope.python.restore_module(previous);
-    }
 }
 
 /// Renders a domain object's type-specific options (`py:data`'s `type`/`value`,

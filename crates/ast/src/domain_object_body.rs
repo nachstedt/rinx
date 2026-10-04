@@ -168,7 +168,7 @@ pub enum DomainObjectBody {
     /// `"-c, --compress"`), which real Sphinx renders as one shared `<dt>`
     /// with multiple anchor ids. That per-line/per-spec split (via
     /// [`split_option_line_specs`]/[`extract_option_name`]) happens in
-    /// `index_domain_object`/`render_domain_object`, not here, and neither
+    /// `rinx_scope`'s `Scope::enter_definition`, not here, and neither
     /// analyzer nor renderer route `StdCmdoption` through the generic
     /// `names()`-driven one-`<dt>`-per-name loop other variants share.
     StdCmdoption {
@@ -239,8 +239,8 @@ impl DomainObjectBody {
             // `signature_texts()` below are not index-parallel: `StdCmdoption`
             // is deliberately never routed through the generic
             // one-`<dt>`-per-name loop that relies on that parallelism (see
-            // `index_domain_object`/`render_domain_object`), so nothing
-            // depends on the lengths matching here.
+            // `rinx_scope`'s `DefinitionNames::Options`), so nothing depends
+            // on the lengths matching here.
             Self::StdCmdoption { signatures, .. } => {
                 let mut names = signatures
                     .as_slice()
@@ -340,9 +340,8 @@ impl DomainObjectBody {
     /// name (`xml.etree.ElementTree`) must never be mistaken for a class
     /// prefix. `c` domain objects establish none either.
     ///
-    /// Shared by the analyzer (`index_domain_object`) and the renderer
-    /// (`render_domain_object`), so both always agree on the scope a given
-    /// body introduces. Matched exhaustively rather than with a wildcard, so
+    /// Read by `rinx_scope`'s `Scope::enter_definition`, the one place a
+    /// body's scope is decided for the analyzer and the renderer alike. Matched exhaustively rather than with a wildcard, so
     /// a new object type can't be added without deciding what it scopes.
     #[must_use]
     pub fn deduce_local_scope(&self, new_segments: &[String]) -> Vec<String> {

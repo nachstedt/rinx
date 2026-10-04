@@ -4,7 +4,6 @@
 //! (the `std` domain) needs its own renderer, since it doesn't fit
 //! that function's one-`<dt>`-per-name loop.
 
-use rinx_ast::Node;
 use std::fmt::Write as _;
 
 use crate::RenderCtx;
@@ -25,32 +24,32 @@ use crate::RenderCtx;
 /// block (the same technique docutils' own HTML writer uses for a node
 /// registered under multiple ids).
 ///
-/// Qualification (`ctx.scope.program.qualify`) mirrors the analyzer's
-/// `index_domain_object` exactly, so anchor `id`s never drift from index
-/// keys. Options never nest (`deduce_local_scope` is empty for `StdCmdoption`),
-/// so the shared body renders with no scope push/pop.
+/// Each spec's anchor is built from the name [`rinx_scope::DocumentScopes`]
+/// qualified it to (`lines`, per signature line, per spec), the same name the
+/// analyzer's `index_domain_object` indexes it under. Options never nest, so
+/// the shared body renders in the scope around the definition.
 pub(super) fn render_cmdoption(
     html: &mut String,
-    signatures: &rinx_ast::NonEmptyVector<String>,
-    no_index: bool,
-    body: &[Node],
+    obj: &rinx_ast::DomainObjectBody,
+    lines: &[Vec<String>],
     ctx: &mut RenderCtx<'_>,
 ) {
     let object_type = rinx_ast::ObjectType::Std(rinx_ast::StdObjectType::Cmdoption);
 
     let _ = writeln!(html, "<dl class=\"std cmdoption\">");
-    for line in signatures.as_slice() {
-        let specs = rinx_ast::split_option_line_specs(line);
+    for (line, qualified_names) in obj.signature_texts().into_iter().zip(lines) {
         let line_escaped = html_escape::encode_text(line);
         let mut dt_open = String::from("  <dt");
         let mut secondary_anchors = String::new();
         // `:no-index:` means no cross-reference target, so no anchor at all —
         // as `render_domain_object` omits the `id` for every other type.
-        let anchored_specs = if no_index { &[][..] } else { &specs[..] };
-        for (spec_index, spec) in anchored_specs.iter().enumerate() {
-            let optname = rinx_ast::extract_option_name(spec);
-            let qualified_name = ctx.scope.program.qualify(&optname);
-            let key = rinx_ast::build_domain_object_key(object_type, &qualified_name);
+        let anchored_names = if obj.no_index() {
+            &[][..]
+        } else {
+            &qualified_names[..]
+        };
+        for (spec_index, qualified_name) in anchored_names.iter().enumerate() {
+            let key = rinx_ast::build_domain_object_key(object_type, qualified_name);
             let id_attr = html_escape::encode_double_quoted_attribute(key.as_str());
             if spec_index == 0 {
                 let _ = write!(dt_open, " id=\"{id_attr}\"");
@@ -64,7 +63,7 @@ pub(super) fn render_cmdoption(
         );
     }
     let _ = write!(html, "  <dd>");
-    crate::render_nodes(html, body, ctx);
+    crate::render_nodes(html, obj.body(), ctx);
     let _ = writeln!(html, "</dd>");
     let _ = writeln!(html, "</dl>");
 }

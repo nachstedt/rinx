@@ -192,6 +192,14 @@ the pause (`library/os.rst`, `library/stdtypes.rst`), fold included.
 
 **You experience:** hovering a reference shows the resolved title and file.
 
+A preparatory pull request comes first, because a domain role, `:option:`
+and `:any:` resolve against the scope where they are written, and that scope
+existed only inside the analyzer's and the renderer's walks, as two copies of
+the same rules. `rinx_scope`'s `DocumentScopes` now computes it once per
+document, in memory, and every phase asks it by node: the analyzer and the
+renderer already, and hover, go-to-definition (#8) and find-references (#30)
+next.
+
 - `node_at(document, position)`: walk the inline nodes by span
 - Reuse the renderer's resolution for the title and target
 - Markdown hover content

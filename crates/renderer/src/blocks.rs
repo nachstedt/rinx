@@ -6,7 +6,7 @@
 //! [`block_quote`], [`data_table`], [`table_directive`] (`.. table::`, sharing
 //! [`table_shell`]'s presentation-shell helpers with `data_table`),
 //! [`doctest`], [`glossary`], [`image`], [`figure`], [`line_block`],
-//! [`option_list`], [`scope_directives`], [`tables`], [`directive_error`]
+//! [`option_list`], [`tables`], [`directive_error`]
 //! (the two nodes a directive that could not become content degrades to),
 //! [`contents`] (the
 //! local, single-document table of contents `.. contents::` renders — not to
@@ -51,7 +51,6 @@ mod math;
 mod option_list;
 #[cfg(test)]
 mod render_test_support;
-mod scope_directives;
 mod table_directive;
 mod table_shell;
 #[cfg(test)]
