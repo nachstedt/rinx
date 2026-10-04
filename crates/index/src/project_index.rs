@@ -400,51 +400,39 @@ impl ProjectIndex {
     }
 
     /// [`Self::merge`]'s step for domain objects, whose definitions are keyed
-    /// by name *and* object type: flattened to that pair for
-    /// [`merge_claims`], and nested again afterwards.
+    /// by name *and* object type: [`merge_claims`] runs on each incoming
+    /// name's map of object types, so a merge costs what it brings in rather
+    /// than what the index already holds.
     fn merge_domain_objects(
         &mut self,
         contested: &mut AmbiguousDefinitions,
-        incoming: BTreeMap<TargetName, BTreeMap<ObjectType, String>>,
-        incoming_contested: BTreeMap<TargetName, BTreeMap<ObjectType, BTreeSet<String>>>,
+        mut incoming: BTreeMap<TargetName, BTreeMap<ObjectType, String>>,
+        mut incoming_contested: BTreeMap<TargetName, BTreeMap<ObjectType, BTreeSet<String>>>,
     ) {
-        let mut defined = flatten(std::mem::take(&mut self.domain_objects));
-        let mut flat_contested = flatten(std::mem::take(&mut contested.domain_objects));
-        merge_claims(
-            &mut defined,
-            &mut flat_contested,
-            flatten(incoming),
-            flatten(incoming_contested),
-            String::as_str,
-        );
-        self.domain_objects = nest(defined);
-        contested.domain_objects = nest(flat_contested);
+        let names: BTreeSet<TargetName> = incoming
+            .keys()
+            .chain(incoming_contested.keys())
+            .cloned()
+            .collect();
+        for name in names {
+            let defined = self.domain_objects.entry(name.clone()).or_default();
+            let claimed = contested.domain_objects.entry(name.clone()).or_default();
+            merge_claims(
+                defined,
+                claimed,
+                incoming.remove(&name).unwrap_or_default(),
+                incoming_contested.remove(&name).unwrap_or_default(),
+                String::as_str,
+            );
+            let (none_defined, none_claimed) = (defined.is_empty(), claimed.is_empty());
+            if none_defined {
+                self.domain_objects.remove(&name);
+            }
+            if none_claimed {
+                contested.domain_objects.remove(&name);
+            }
+        }
     }
-}
-
-/// A name-then-type map as one map keyed by the pair.
-fn flatten<V>(
-    nested: BTreeMap<TargetName, BTreeMap<ObjectType, V>>,
-) -> BTreeMap<(TargetName, ObjectType), V> {
-    nested
-        .into_iter()
-        .flat_map(|(name, by_type)| {
-            by_type
-                .into_iter()
-                .map(move |(object_type, value)| ((name.clone(), object_type), value))
-        })
-        .collect()
-}
-
-/// [`flatten`]'s inverse.
-fn nest<V>(
-    flat: BTreeMap<(TargetName, ObjectType), V>,
-) -> BTreeMap<TargetName, BTreeMap<ObjectType, V>> {
-    let mut nested: BTreeMap<TargetName, BTreeMap<ObjectType, V>> = BTreeMap::new();
-    for ((name, object_type), value) in flat {
-        nested.entry(name).or_default().insert(object_type, value);
-    }
-    nested
 }
 
 #[cfg(test)]
