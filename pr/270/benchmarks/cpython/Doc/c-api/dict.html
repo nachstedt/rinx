@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dictionary Objects — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python&#x2f;C API Reference Manual</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python&#x2f;C API Reference Manual"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stable.html">C API Stability</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="veryhigh.html">The Very High Level Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="refcounting.html">Reference Counting</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Exception Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="extension-modules.html">Defining extension modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="utilities.html">Utilities</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="abstract.html">Abstract Objects Layer</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="concrete.html">Concrete Objects Layer</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Concrete Objects Layer"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="concrete.html#fundamental-objects">Fundamental Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#numeric-objects">Numeric Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#sequence-objects">Sequence Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3 ancestor has-children">
+            <a href="concrete.html#container-objects">Container Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Container Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l4 current has-children">
+            <a href="dict.html">Dictionary Objects</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Dictionary Objects"></span></summary>
+              <ul>
+                
+          <li class="toctree-l5">
+            <a href="dict.html#dictionary-view-objects">Dictionary View Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l5">
+            <a href="dict.html#ordered-dictionaries">Ordered Dictionaries</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l4">
+            <a href="set.html">Set Objects</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#function-objects">Function Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#other-objects">Other Objects</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="concrete.html#c-api-for-extension-modules">C API for extension modules</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init.html">Initialization, Finalization, and Threads</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="init_config.html">Python Initialization Configuration</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="memory.html">Memory Management</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="objimpl.html">Object Implementation Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="apiabiversion.html">API and ABI Versioning</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="monitoring.html">Monitoring C API</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="list.html">&larr; List Objects</a>
+        <a class="next" href="set.html">Set Objects &rarr;</a>
+      </nav>
+      
+      <a id="dictobjects"></a>
+<h1 id="dictionary-objects">Dictionary Objects</h1>
+<span id="index-0"></span>
+<dl class="c type">
+  <dt id="c:type:pydictobject"><code class="sig-name">PyDictObject</code></dt>
+  <dd><p>This subtype of <a class="reference internal" href="structures.html#c:type:pyobject"><code class="xref c type docutils literal">PyObject</code></a> represents a Python dictionary object.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pydict_type"><code class="sig-name">PyTypeObject PyDict_Type</code></dt>
+  <dd><p>This instance of <a class="reference internal" href="type.html#c:type:pytypeobject"><code class="xref c type docutils literal">PyTypeObject</code></a> represents the Python dictionary
+type.  This is the same object as <a class="reference internal" href="../library/stdtypes.html#py:class:dict"><code class="xref py class docutils literal">dict</code></a> in the Python layer.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_check"><code class="sig-name">int PyDict_Check(PyObject *p)</code></dt>
+  <dd><p>Return true if <em>p</em> is a dict object or an instance of a subtype of the dict
+type.  This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_checkexact"><code class="sig-name">int PyDict_CheckExact(PyObject *p)</code></dt>
+  <dd><p>Return true if <em>p</em> is a dict object, but not an instance of a subtype of
+the dict type.  This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_new"><code class="sig-name">PyObject* PyDict_New()</code></dt>
+  <dd><p>Return a new empty dictionary, or <code>NULL</code> on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydictproxy_new"><code class="sig-name">PyObject* PyDictProxy_New(PyObject *mapping)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="../library/types.html#py:class:types.mappingproxytype"><code class="xref py class docutils literal">types.MappingProxyType</code></a> object for a mapping which
+enforces read-only behavior.  This is normally used to create a view to
+prevent modification of the dictionary for non-dynamic class types.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pydictproxy_type"><code class="sig-name">PyTypeObject PyDictProxy_Type</code></dt>
+  <dd><p>The type object for mapping proxy objects created by
+<a class="reference internal" href="dict.html#c:function:pydictproxy_new"><code class="xref c function docutils literal">PyDictProxy_New</code></a> and for the read-only <code>__dict__</code> attribute
+of many built-in types. A <a href="#" class="broken-link"><code class="xref c type docutils literal">PyDictProxy_Type</code></a> instance provides a
+dynamic, read-only view of an underlying dictionary: changes to the
+underlying dictionary are reflected in the proxy, but the proxy itself
+does not support mutation operations. This corresponds to
+<a class="reference internal" href="../library/types.html#py:class:types.mappingproxytype"><code class="xref py class docutils literal">types.MappingProxyType</code></a> in Python.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_clear"><code class="sig-name">void PyDict_Clear(PyObject *p)</code></dt>
+  <dd><p>Empty an existing dictionary of all key-value pairs.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_contains"><code class="sig-name">int PyDict_Contains(PyObject *p, PyObject *key)</code></dt>
+  <dd><p>Determine if dictionary <em>p</em> contains <em>key</em>.  If an item in <em>p</em> matches
+<em>key</em>, return <code>1</code>, otherwise return <code>0</code>.  On error, return <code>-1</code>.
+This is equivalent to the Python expression <code>key in p</code>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_containsstring"><code class="sig-name">int PyDict_ContainsString(PyObject *p, const char *key)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="dict.html#c:function:pydict_contains"><code class="xref c function docutils literal">PyDict_Contains</code></a>, but <em>key</em> is specified as a
+:c:expr:`const char*` UTF-8 encoded bytes string, rather than a
+:c:expr:`PyObject*`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_copy"><code class="sig-name">PyObject* PyDict_Copy(PyObject *p)</code></dt>
+  <dd><p>Return a new dictionary that contains the same key-value pairs as <em>p</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_setitem"><code class="sig-name">int PyDict_SetItem(PyObject *p, PyObject *key, PyObject *val)</code></dt>
+  <dd><p>Insert <em>val</em> into the dictionary <em>p</em> with a key of <em>key</em>.  <em>key</em> must be
+<a class="reference internal" href="../glossary.html#term-hashable"><span class="xref std std-term">hashable</span></a>; if it isn't, <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> will be raised. Return
+<code>0</code> on success or <code>-1</code> on failure.  This function <em>does not</em> steal a
+reference to <em>val</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_setitemstring"><code class="sig-name">int PyDict_SetItemString(PyObject *p, const char *key, PyObject *val)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="dict.html#c:function:pydict_setitem"><code class="xref c function docutils literal">PyDict_SetItem</code></a>, but <em>key</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_delitem"><code class="sig-name">int PyDict_DelItem(PyObject *p, PyObject *key)</code></dt>
+  <dd><p>Remove the entry in dictionary <em>p</em> with key <em>key</em>. <em>key</em> must be <a class="reference internal" href="../glossary.html#term-hashable"><span class="xref std std-term">hashable</span></a>;
+if it isn't, <a class="reference internal" href="../library/exceptions.html#py:exception:typeerror"><code class="xref py exception docutils literal">TypeError</code></a> is raised.
+If <em>key</em> is not in the dictionary, <a class="reference internal" href="../library/exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a> is raised.
+Return <code>0</code> on success or <code>-1</code> on failure.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_delitemstring"><code class="sig-name">int PyDict_DelItemString(PyObject *p, const char *key)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="dict.html#c:function:pydict_delitem"><code class="xref c function docutils literal">PyDict_DelItem</code></a>, but <em>key</em> is
+specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+rather than a :c:expr:`PyObject*`.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_getitemref"><code class="sig-name">int PyDict_GetItemRef(PyObject *p, PyObject *key, PyObject **result)</code></dt>
+  <dd><p>Return a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the object from dictionary <em>p</em>
+which has a key <em>key</em>:</p>
+<ul>
+<li><p>If the key is present, set <em>*result</em> to a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>
+to the value and return <code>1</code>.</p>
+</li>
+<li><p>If the key is missing, set <em>*result</em> to <code>NULL</code> and return <code>0</code>.</p>
+</li>
+<li><p>On error, raise an exception and return <code>-1</code>.</p>
+</li>
+</ul>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+<p>See also the <a class="reference internal" href="object.html#c:function:pyobject_getitem"><code class="xref c function docutils literal">PyObject_GetItem</code></a> function.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_getitem"><code class="sig-name">PyObject* PyDict_GetItem(PyObject *p, PyObject *key)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a> to the object from dictionary <em>p</em> which
+has a key <em>key</em>.  Return <code>NULL</code> if the key <em>key</em> is missing <em>without</em>
+setting an exception.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Exceptions that occur while this calls <a class="reference internal" href="../reference/datamodel.html#py:method:object.__hash__"><code class="xref py method docutils literal">__hash__</code></a> and
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__eq__"><code class="xref py method docutils literal">__eq__</code></a> methods are silently ignored.
+Prefer the <a class="reference internal" href="dict.html#c:function:pydict_getitemwitherror"><code class="xref c function docutils literal">PyDict_GetItemWithError</code></a> function instead.</p>
+</div>
+<div class="versionchanged">
+  <p class="versionmodified changed"><span class="versionmodified-label">Changed in version 3.10:</span></p>
+<p>Calling this API without an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> had been allowed for historical
+reason. It is no longer allowed.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_getitemwitherror"><code class="sig-name">PyObject* PyDict_GetItemWithError(PyObject *p, PyObject *key)</code></dt>
+  <dd><p>Variant of <a class="reference internal" href="dict.html#c:function:pydict_getitem"><code class="xref c function docutils literal">PyDict_GetItem</code></a> that does not suppress
+exceptions. Return <code>NULL</code> <strong>with</strong> an exception set if an exception
+occurred.  Return <code>NULL</code> <strong>without</strong> an exception set if the key
+wasn't present.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_getitemstring"><code class="sig-name">PyObject* PyDict_GetItemString(PyObject *p, const char *key)</code></dt>
+  <dd><p>This is the same as <a class="reference internal" href="dict.html#c:function:pydict_getitem"><code class="xref c function docutils literal">PyDict_GetItem</code></a>, but <em>key</em> is specified as a
+:c:expr:`const char*` UTF-8 encoded bytes string, rather than a
+:c:expr:`PyObject*`.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Exceptions that occur while this calls <a class="reference internal" href="../reference/datamodel.html#py:method:object.__hash__"><code class="xref py method docutils literal">__hash__</code></a> and
+<a class="reference internal" href="../reference/datamodel.html#py:method:object.__eq__"><code class="xref py method docutils literal">__eq__</code></a> methods or while creating the temporary <a class="reference internal" href="../library/stdtypes.html#py:class:str"><code class="xref py class docutils literal">str</code></a>
+object are silently ignored.
+Prefer using the <a class="reference internal" href="dict.html#c:function:pydict_getitemwitherror"><code class="xref c function docutils literal">PyDict_GetItemWithError</code></a> function with your own
+<a class="reference internal" href="unicode.html#c:function:pyunicode_fromstring"><code class="xref c function docutils literal">PyUnicode_FromString</code></a> <em>key</em> instead.</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_getitemstringref"><code class="sig-name">int PyDict_GetItemStringRef(PyObject *p, const char *key, PyObject **result)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="dict.html#c:function:pydict_getitemref"><code class="xref c function docutils literal">PyDict_GetItemRef</code></a>, but <em>key</em> is specified as a
+:c:expr:`const char*` UTF-8 encoded bytes string, rather than a
+:c:expr:`PyObject*`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_setdefault"><code class="sig-name">PyObject* PyDict_SetDefault(PyObject *p, PyObject *key, PyObject *defaultobj)</code></dt>
+  <dd><p>This is the same as the Python-level <a class="reference internal" href="../library/stdtypes.html#py:method:dict.setdefault"><code class="xref py method docutils literal">dict.setdefault</code></a>.  If present, it
+returns the value corresponding to <em>key</em> from the dictionary <em>p</em>.  If the key
+is not in the dict, it is inserted with value <em>defaultobj</em> and <em>defaultobj</em>
+is returned.  This function evaluates the hash function of <em>key</em> only once,
+instead of evaluating it independently for the lookup and the insertion.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.4:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_setdefaultref"><code class="sig-name">int PyDict_SetDefaultRef(PyObject *p, PyObject *key, PyObject *default_value, PyObject **result)</code></dt>
+  <dd><p>Inserts <em>default_value</em> into the dictionary <em>p</em> with a key of <em>key</em> if the
+key is not already present in the dictionary. If <em>result</em> is not <code>NULL</code>,
+then <em>*result</em> is set to a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to either
+<em>default_value</em>, if the key was not present, or the existing value, if <em>key</em>
+was already present in the dictionary.
+Returns <code>1</code> if the key was present and <em>default_value</em> was not inserted,
+or <code>0</code> if the key was not present and <em>default_value</em> was inserted.
+On failure, returns <code>-1</code>, sets an exception, and sets <code>*result</code>
+to <code>NULL</code>.</p>
+<p>For clarity: if you have a strong reference to <em>default_value</em> before
+calling this function, then after it returns, you hold a strong reference
+to both <em>default_value</em> and <em>*result</em> (if it's not <code>NULL</code>).
+These may refer to the same object: in that case you hold two separate
+references to it.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_pop"><code class="sig-name">int PyDict_Pop(PyObject *p, PyObject *key, PyObject **result)</code></dt>
+  <dd><p>Remove <em>key</em> from dictionary <em>p</em> and optionally return the removed value.
+Do not raise <a class="reference internal" href="../library/exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a> if the key is missing.</p>
+<ul>
+<li><p>If the key is present, set <em>*result</em> to a new reference to the removed
+value if <em>result</em> is not <code>NULL</code>, and return <code>1</code>.</p>
+</li>
+<li><p>If the key is missing, set <em>*result</em> to <code>NULL</code> if <em>result</em> is not
+<code>NULL</code>, and return <code>0</code>.</p>
+</li>
+<li><p>On error, raise an exception and return <code>-1</code>.</p>
+</li>
+</ul>
+<p>Similar to <a class="reference internal" href="../library/stdtypes.html#py:method:dict.pop"><code class="xref py method docutils literal">dict.pop</code></a>, but without the default value and
+not raising <a class="reference internal" href="../library/exceptions.html#py:exception:keyerror"><code class="xref py exception docutils literal">KeyError</code></a> if the key is missing.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_popstring"><code class="sig-name">int PyDict_PopString(PyObject *p, const char *key, PyObject **result)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="dict.html#c:function:pydict_pop"><code class="xref c function docutils literal">PyDict_Pop</code></a>, but <em>key</em> is specified as a
+:c:expr:`const char*` UTF-8 encoded bytes string, rather than a
+:c:expr:`PyObject*`.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.13:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_items"><code class="sig-name">PyObject* PyDict_Items(PyObject *p)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="list.html#c:type:pylistobject"><code class="xref c type docutils literal">PyListObject</code></a> containing all the items from the dictionary.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_keys"><code class="sig-name">PyObject* PyDict_Keys(PyObject *p)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="list.html#c:type:pylistobject"><code class="xref c type docutils literal">PyListObject</code></a> containing all the keys from the dictionary.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_values"><code class="sig-name">PyObject* PyDict_Values(PyObject *p)</code></dt>
+  <dd><p>Return a <a class="reference internal" href="list.html#c:type:pylistobject"><code class="xref c type docutils literal">PyListObject</code></a> containing all the values from the dictionary
+<em>p</em>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_size"><code class="sig-name">Py_ssize_t PyDict_Size(PyObject *p)</code></dt>
+  <dd><span id="index-1"></span>
+<p>Return the number of items in the dictionary.  This is equivalent to
+<code>len(p)</code> on a dictionary.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_get_size"><code class="sig-name">Py_ssize_t PyDict_GET_SIZE(PyObject *p)</code></dt>
+  <dd><p>Similar to <a class="reference internal" href="dict.html#c:function:pydict_size"><code class="xref c function docutils literal">PyDict_Size</code></a>, but without error checking.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_next"><code class="sig-name">int PyDict_Next(PyObject *p, Py_ssize_t *ppos, PyObject **pkey, PyObject **pvalue)</code></dt>
+  <dd><p>Iterate over all key-value pairs in the dictionary <em>p</em>.  The
+<a class="reference internal" href="intro.html#c:type:py_ssize_t"><code class="xref c type docutils literal">Py_ssize_t</code></a> referred to by <em>ppos</em> must be initialized to <code>0</code>
+prior to the first call to this function to start the iteration; the
+function returns true for each pair in the dictionary, and false once all
+pairs have been reported.  The parameters <em>pkey</em> and <em>pvalue</em> should either
+point to :c:expr:`PyObject*` variables that will be filled in with each key
+and value, respectively, or may be <code>NULL</code>.  Any references returned through
+them are borrowed.  <em>ppos</em> should not be altered during iteration. Its
+value represents offsets within the internal dictionary structure, and
+since the structure is sparse, the offsets are not consecutive.</p>
+<p>For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span>key<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">*</span>value<span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c">Py_ssize_t pos <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-c">while</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyDict_Next</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self<span class="hl-punctuation hl-accessor hl-c">-&gt;</span>dict<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>pos<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>key<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>value</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-comment hl-block hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">/*</span> do something interesting with the values... <span class="hl-punctuation hl-definition hl-comment hl-c">*/</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-operator hl-variadic hl-c">...</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></pre></div>
+<p>The dictionary <em>p</em> should not be mutated during iteration.  It is safe to
+modify the values of the keys as you iterate over the dictionary, but only
+so long as the set of keys does not change.  For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span>key<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">*</span>value<span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c">Py_ssize_t pos <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-c">while</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyDict_Next</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self<span class="hl-punctuation hl-accessor hl-c">-&gt;</span>dict<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>pos<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>key<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>value</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-storage hl-type hl-c">long</span> i <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyLong_AsLong</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">value</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>i <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">&amp;&amp;</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyErr_Occurred</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    PyObject <span class="hl-keyword hl-operator hl-c">*</span>o <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyLong_FromLong</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">i <span class="hl-keyword hl-operator hl-arithmetic hl-c">+</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>o <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyDict_SetItem</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self<span class="hl-punctuation hl-accessor hl-c">-&gt;</span>dict<span class="hl-punctuation hl-separator hl-c">,</span> key<span class="hl-punctuation hl-separator hl-c">,</span> o</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span> <span class="hl-keyword hl-operator hl-comparison hl-c">&lt;</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_DECREF</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">o</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_DECREF</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">o</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></pre></div>
+<p>The function is not thread-safe in the <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free-threaded</span></a>
+build without external synchronization.  You can use
+<a class="reference internal" href="init.html#c:macro:py_begin_critical_section"><code class="xref c macro docutils literal">Py_BEGIN_CRITICAL_SECTION</code></a> to lock the dictionary while iterating
+over it:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_BEGIN_CRITICAL_SECTION</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self<span class="hl-punctuation hl-accessor hl-c">-&gt;</span>dict</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-c">while</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyDict_Next</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self<span class="hl-punctuation hl-accessor hl-c">-&gt;</span>dict<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>pos<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>key<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>value</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-operator hl-variadic hl-c">...</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_END_CRITICAL_SECTION</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>On the free-threaded build, this function can be used safely inside a
+critical section. However, the references returned for <em>pkey</em> and <em>pvalue</em>
+are <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed</span></a> and are only valid while the
+critical section is held. If you need to use these objects outside the
+critical section or when the critical section can be suspended, create a
+<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> (for example, using
+<a class="reference internal" href="refcounting.html#c:function:py_newref"><code class="xref c function docutils literal">Py_NewRef</code></a>).</p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_merge"><code class="sig-name">int PyDict_Merge(PyObject *a, PyObject *b, int override)</code></dt>
+  <dd><p>Iterate over mapping object <em>b</em> adding key-value pairs to dictionary <em>a</em>.
+<em>b</em> may be a dictionary, or any object supporting <a class="reference internal" href="mapping.html#c:function:pymapping_keys"><code class="xref c function docutils literal">PyMapping_Keys</code></a>
+and <a class="reference internal" href="object.html#c:function:pyobject_getitem"><code class="xref c function docutils literal">PyObject_GetItem</code></a>. If <em>override</em> is true, existing pairs in <em>a</em>
+will be replaced if a matching key is found in <em>b</em>, otherwise pairs will
+only be added if there is not a matching key in <em>a</em>. Return <code>0</code> on
+success or <code>-1</code> if an exception was raised.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_update"><code class="sig-name">int PyDict_Update(PyObject *a, PyObject *b)</code></dt>
+  <dd><p>This is the same as <code>PyDict_Merge(a, b, 1)</code> in C, and is similar to
+<code>a.update(b)</code> in Python except that <a class="reference internal" href="dict.html#c:function:pydict_update"><code class="xref c function docutils literal">PyDict_Update</code></a> doesn't fall
+back to the iterating over a sequence of key value pairs if the second
+argument has no "keys" attribute.  Return <code>0</code> on success or <code>-1</code> if an
+exception was raised.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_mergefromseq2"><code class="sig-name">int PyDict_MergeFromSeq2(PyObject *a, PyObject *seq2, int override)</code></dt>
+  <dd><p>Update or merge into dictionary <em>a</em>, from the key-value pairs in <em>seq2</em>.
+<em>seq2</em> must be an iterable object producing iterable objects of length 2,
+viewed as key-value pairs.  In case of duplicate keys, the last wins if
+<em>override</em> is true, else the first wins. Return <code>0</code> on success or <code>-1</code>
+if an exception was raised. Equivalent Python (except for the return
+value):</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">def <span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">PyDict_MergeFromSeq2</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-variable hl-parameter hl-c">a</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-variable hl-parameter hl-c">seq2</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-variable hl-parameter hl-c">override</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-keyword hl-operator hl-ternary hl-c">:</span></span>
+<span class="hl-source hl-c">    <span class="hl-keyword hl-control hl-c">for</span> key<span class="hl-punctuation hl-separator hl-c">,</span> value in seq2<span class="hl-keyword hl-operator hl-ternary hl-c">:</span></span>
+<span class="hl-source hl-c">        <span class="hl-keyword hl-control hl-c">if</span> override or key not in a<span class="hl-keyword hl-operator hl-ternary hl-c">:</span></span>
+<span class="hl-source hl-c">            a<span class="hl-meta hl-brackets hl-c"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-c">[</span>key<span class="hl-punctuation hl-section hl-brackets hl-end hl-c">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> value</span></pre></div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_addwatcher"><code class="sig-name">int PyDict_AddWatcher(PyDict_WatchCallback callback)</code></dt>
+  <dd><p>Register <em>callback</em> as a dictionary watcher. Return a non-negative integer
+id which must be passed to future calls to <a class="reference internal" href="dict.html#c:function:pydict_watch"><code class="xref c function docutils literal">PyDict_Watch</code></a>. In case
+of error (e.g. no more watcher IDs available), return <code>-1</code> and set an
+exception.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_clearwatcher"><code class="sig-name">int PyDict_ClearWatcher(int watcher_id)</code></dt>
+  <dd><p>Clear watcher identified by <em>watcher_id</em> previously returned from
+<a class="reference internal" href="dict.html#c:function:pydict_addwatcher"><code class="xref c function docutils literal">PyDict_AddWatcher</code></a>. Return <code>0</code> on success, <code>-1</code> on error (e.g.
+if the given <em>watcher_id</em> was never registered.)</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_watch"><code class="sig-name">int PyDict_Watch(int watcher_id, PyObject *dict)</code></dt>
+  <dd><p>Mark dictionary <em>dict</em> as watched. The callback granted <em>watcher_id</em> by
+<a class="reference internal" href="dict.html#c:function:pydict_addwatcher"><code class="xref c function docutils literal">PyDict_AddWatcher</code></a> will be called when <em>dict</em> is modified or
+deallocated. Return <code>0</code> on success or <code>-1</code> on error.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydict_unwatch"><code class="sig-name">int PyDict_Unwatch(int watcher_id, PyObject *dict)</code></dt>
+  <dd><p>Mark dictionary <em>dict</em> as no longer watched. The callback granted
+<em>watcher_id</em> by <a class="reference internal" href="dict.html#c:function:pydict_addwatcher"><code class="xref c function docutils literal">PyDict_AddWatcher</code></a> will no longer be called when
+<em>dict</em> is modified or deallocated. The dict must previously have been
+watched by this watcher. Return <code>0</code> on success or <code>-1</code> on error.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pydict_watchevent"><code class="sig-name">PyDict_WatchEvent</code></dt>
+  <dd><p>Enumeration of possible dictionary watcher events: <code>PyDict_EVENT_ADDED</code>,
+<code>PyDict_EVENT_MODIFIED</code>, <code>PyDict_EVENT_DELETED</code>, <code>PyDict_EVENT_CLONED</code>,
+<code>PyDict_EVENT_CLEARED</code>, or <code>PyDict_EVENT_DEALLOCATED</code>.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<dl class="c type">
+  <dt id="c:type:pydict_watchcallback"><code class="sig-name">int (*PyDict_WatchCallback)(PyDict_WatchEvent event, PyObject *dict, PyObject *key, PyObject *new_value)</code></dt>
+  <dd><p>Type of a dict watcher callback function.</p>
+<p>If <em>event</em> is <code>PyDict_EVENT_CLEARED</code> or <code>PyDict_EVENT_DEALLOCATED</code>, both
+<em>key</em> and <em>new_value</em> will be <code>NULL</code>. If <em>event</em> is <code>PyDict_EVENT_ADDED</code>
+or <code>PyDict_EVENT_MODIFIED</code>, <em>new_value</em> will be the new value for <em>key</em>.
+If <em>event</em> is <code>PyDict_EVENT_DELETED</code>, <em>key</em> is being deleted from the
+dictionary and <em>new_value</em> will be <code>NULL</code>.</p>
+<p><code>PyDict_EVENT_CLONED</code> occurs when <em>dict</em> was previously empty and another
+dict is merged into it. To maintain efficiency of this operation, per-key
+<code>PyDict_EVENT_ADDED</code> events are not issued in this case; instead a
+single <code>PyDict_EVENT_CLONED</code> is issued, and <em>key</em> will be the source
+dictionary.</p>
+<p>The callback may inspect but must not modify <em>dict</em>; doing so could have
+unpredictable effects, including infinite recursion. Do not trigger Python
+code execution in the callback, as it could modify the dict as a side effect.</p>
+<p>If <em>event</em> is <code>PyDict_EVENT_DEALLOCATED</code>, taking a new reference in the
+callback to the about-to-be-destroyed dictionary will resurrect it and
+prevent it from being freed at this time. When the resurrected object is
+destroyed later, any watcher callbacks active at that time will be called
+again.</p>
+<p>Callbacks occur before the notified modification to <em>dict</em> takes place, so
+the prior state of <em>dict</em> can be inspected.</p>
+<p>If the callback sets an exception, it must return <code>-1</code>; this exception will
+be printed as an unraisable exception using <a class="reference internal" href="exceptions.html#c:function:pyerr_writeunraisable"><code class="xref c function docutils literal">PyErr_WriteUnraisable</code></a>.
+Otherwise it should return <code>0</code>.</p>
+<p>There may already be a pending exception set on entry to the callback. In
+this case, the callback should return <code>0</code> with the same exception still
+set. This means the callback may not call any other API that can set an
+exception unless it saves and clears the exception state first, and restores
+it before returning.</p>
+<div class="versionadded">
+  <p class="versionmodified added"><span class="versionmodified-label">New in version 3.12:</span></p>
+</div>
+</dd>
+</dl>
+<h2 id="dictionary-view-objects">Dictionary View Objects</h2>
+<dl class="c function">
+  <dt id="c:function:pydictviewset_check"><code class="sig-name">int PyDictViewSet_Check(PyObject *op)</code></dt>
+  <dd><p>Return true if <em>op</em> is a view of a set inside a dictionary. This is currently
+equivalent to :c:expr:`PyDictKeys_Check(op) || PyDictItems_Check(op)`. This
+function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pydictkeys_type"><code class="sig-name">PyTypeObject PyDictKeys_Type</code></dt>
+  <dd><p>Type object for a view of dictionary keys. In Python, this is the type of
+the object returned by <a class="reference internal" href="../library/stdtypes.html#py:method:dict.keys"><code class="xref py method docutils literal">dict.keys</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydictkeys_check"><code class="sig-name">int PyDictKeys_Check(PyObject *op)</code></dt>
+  <dd><p>Return true if <em>op</em> is an instance of a dictionary keys view. This function
+always succeeds.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pydictvalues_type"><code class="sig-name">PyTypeObject PyDictValues_Type</code></dt>
+  <dd><p>Type object for a view of dictionary values. In Python, this is the type of
+the object returned by <a class="reference internal" href="../library/stdtypes.html#py:method:dict.values"><code class="xref py method docutils literal">dict.values</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydictvalues_check"><code class="sig-name">int PyDictValues_Check(PyObject *op)</code></dt>
+  <dd><p>Return true if <em>op</em> is an instance of a dictionary values view. This function
+always succeeds.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pydictitems_type"><code class="sig-name">PyTypeObject PyDictItems_Type</code></dt>
+  <dd><p>Type object for a view of dictionary items. In Python, this is the type of
+the object returned by <a class="reference internal" href="../library/stdtypes.html#py:method:dict.items"><code class="xref py method docutils literal">dict.items</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pydictitems_check"><code class="sig-name">int PyDictItems_Check(PyObject *op)</code></dt>
+  <dd><p>Return true if <em>op</em> is an instance of a dictionary items view. This function
+always succeeds.</p>
+</dd>
+</dl>
+<h2 id="ordered-dictionaries">Ordered Dictionaries</h2>
+<p>Python's C API provides interface for <a class="reference internal" href="../library/collections.html#py:class:collections.ordereddict"><code class="xref py class docutils literal">collections.OrderedDict</code></a> from C.
+Since Python 3.7, dictionaries are ordered by default, so there is usually
+little need for these functions; prefer <code>PyDict*</code> where possible.</p>
+<dl class="c member">
+  <dt id="c:member:pyodict_type"><code class="sig-name">PyTypeObject PyODict_Type</code></dt>
+  <dd><p>Type object for ordered dictionaries. This is the same object as
+<a class="reference internal" href="../library/collections.html#py:class:collections.ordereddict"><code class="xref py class docutils literal">collections.OrderedDict</code></a> in the Python layer.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyodict_check"><code class="sig-name">int PyODict_Check(PyObject *od)</code></dt>
+  <dd><p>Return true if <em>od</em> is an ordered dictionary object or an instance of a
+subtype of the <a class="reference internal" href="../library/collections.html#py:class:collections.ordereddict"><code class="xref py class docutils literal">OrderedDict</code></a> type.  This function
+always succeeds.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyodict_checkexact"><code class="sig-name">int PyODict_CheckExact(PyObject *od)</code></dt>
+  <dd><p>Return true if <em>od</em> is an ordered dictionary object, but not an instance of
+a subtype of the <a class="reference internal" href="../library/collections.html#py:class:collections.ordereddict"><code class="xref py class docutils literal">OrderedDict</code></a> type.
+This function always succeeds.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pyodictkeys_type"><code class="sig-name">PyTypeObject PyODictKeys_Type</code></dt>
+  <dd><p>Analogous to <a href="#" class="broken-link"><code class="xref c type docutils literal">PyDictKeys_Type</code></a> for ordered dictionaries.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pyodictvalues_type"><code class="sig-name">PyTypeObject PyODictValues_Type</code></dt>
+  <dd><p>Analogous to <a href="#" class="broken-link"><code class="xref c type docutils literal">PyDictValues_Type</code></a> for ordered dictionaries.</p>
+</dd>
+</dl>
+<dl class="c member">
+  <dt id="c:member:pyodictitems_type"><code class="sig-name">PyTypeObject PyODictItems_Type</code></dt>
+  <dd><p>Analogous to <a href="#" class="broken-link"><code class="xref c type docutils literal">PyDictItems_Type</code></a> for ordered dictionaries.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyodict_new"><code class="sig-name">PyObject *PyODict_New(void)</code></dt>
+  <dd><p>Return a new empty ordered dictionary, or <code>NULL</code> on failure.</p>
+<p>This is analogous to <a class="reference internal" href="dict.html#c:function:pydict_new"><code class="xref c function docutils literal">PyDict_New</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyodict_setitem"><code class="sig-name">int PyODict_SetItem(PyObject *od, PyObject *key, PyObject *value)</code></dt>
+  <dd><p>Insert <em>value</em> into the ordered dictionary <em>od</em> with a key of <em>key</em>.
+Return <code>0</code> on success or <code>-1</code> with an exception set on failure.</p>
+<p>This is analogous to <a class="reference internal" href="dict.html#c:function:pydict_setitem"><code class="xref c function docutils literal">PyDict_SetItem</code></a>.</p>
+</dd>
+</dl>
+<dl class="c function">
+  <dt id="c:function:pyodict_delitem"><code class="sig-name">int PyODict_DelItem(PyObject *od, PyObject *key)</code></dt>
+  <dd><p>Remove the entry in the ordered dictionary <em>od</em> with key <em>key</em>.
+Return <code>0</code> on success or <code>-1</code> with an exception set on failure.</p>
+<p>This is analogous to <a class="reference internal" href="dict.html#c:function:pydict_delitem"><code class="xref c function docutils literal">PyDict_DelItem</code></a>.</p>
+</dd>
+</dl>
+<p>These are <a class="reference internal" href="../glossary.html#term-soft-deprecated"><span class="xref std std-term">soft deprecated</span></a> aliases to <code>PyDict</code> APIs:</p>
+<table class="list-table">
+<thead>
+<tr>
+<th><p><code>PyODict</code></p>
+</th>
+<th><p><code>PyDict</code></p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:pyodict_getitem"><code class="sig-name">PyODict_GetItem(od, key)</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><a class="reference internal" href="dict.html#c:function:pydict_getitem"><code class="xref c function docutils literal">PyDict_GetItem</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:pyodict_getitemwitherror"><code class="sig-name">PyODict_GetItemWithError(od, key)</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><a class="reference internal" href="dict.html#c:function:pydict_getitemwitherror"><code class="xref c function docutils literal">PyDict_GetItemWithError</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:pyodict_getitemstring"><code class="sig-name">PyODict_GetItemString(od, key)</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><a class="reference internal" href="dict.html#c:function:pydict_getitemstring"><code class="xref c function docutils literal">PyDict_GetItemString</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:pyodict_contains"><code class="sig-name">PyODict_Contains(od, key)</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><a class="reference internal" href="dict.html#c:function:pydict_contains"><code class="xref c function docutils literal">PyDict_Contains</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:pyodict_size"><code class="sig-name">PyODict_Size(od)</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><a class="reference internal" href="dict.html#c:function:pydict_size"><code class="xref c function docutils literal">PyDict_Size</code></a></p>
+</td>
+</tr>
+<tr>
+<td><dl class="c macro">
+  <dt id="c:macro:pyodict_size"><code class="sig-name">PyODict_SIZE(od)</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p><a class="reference internal" href="dict.html#c:function:pydict_get_size"><code class="xref c function docutils literal">PyDict_GET_SIZE</code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="list.html">&larr; List Objects</a>
+        <a class="next" href="set.html">Set Objects &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
