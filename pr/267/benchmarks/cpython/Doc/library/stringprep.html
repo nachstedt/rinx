@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>stringprep — Internet String Preparation — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="text.html">Text Processing Services</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Text Processing Services"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="string.html">string — Common string operations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="string.templatelib.html">string.templatelib — Support for template string literals</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="re.html">re — Regular expression operations</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="difflib.html">difflib — Helpers for computing deltas</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="textwrap.html">textwrap — Text wrapping and filling</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="unicodedata.html">unicodedata — Unicode Database</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="stringprep.html">stringprep — Internet String Preparation</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="readline.html">readline — GNU readline interface</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="rlcompleter.html">rlcompleter — Completion function for GNU readline</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="unicodedata.html">&larr; unicodedata — Unicode Database</a>
+        <a class="next" href="readline.html">readline — GNU readline interface &rarr;</a>
+      </nav>
+      
+      <h1 id="stringprep-internet-string-preparation"><code class="xref py module docutils literal">stringprep</code> — Internet String Preparation</h1>
+<dl class="py module">
+  <dt id="py:module:stringprep"><code class="sig-name">stringprep</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Martin v. Löwis &lt;martin@v.loewis.de&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Martin v. Löwis &lt;martin@v.loewis.de&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/stringprep.py`</p>
+<hr />
+<p>When identifying things (such as host names) in the internet, it is often
+necessary to compare such identifications for "equality". Exactly how this
+comparison is executed may depend on the application domain, e.g. whether it
+should be case-insensitive or not. It may be also necessary to restrict the
+possible identifications, to allow only identifications consisting of
+"printable" characters.</p>
+<p><span class="target" id="index-0"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3454.html"><strong>RFC 3454</strong></a> defines a procedure for "preparing" Unicode strings in internet
+protocols. Before passing strings onto the wire, they are processed with the
+preparation procedure, after which they have a certain normalized form. The RFC
+defines a set of tables, which can be combined into profiles. Each profile must
+define which tables it uses, and what other optional parts of the <code>stringprep</code>
+procedure are part of the profile. One example of a <code>stringprep</code> profile is
+<code>nameprep</code>, which is used for internationalized domain names.</p>
+<p>The module <a class="reference internal" href="stringprep.html#py:module:stringprep" title="stringprep: String preparation, as per RFC 3453"><code class="xref py module docutils literal">stringprep</code></a> only exposes the tables from <span class="target" id="index-1"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc3454.html"><strong>RFC 3454</strong></a>. As these
+tables would be very large to represent as dictionaries or lists, the
+module uses the Unicode character database internally. The module source code
+itself was generated using the <code>mkstringprep.py</code> utility.</p>
+<p>As a result, these tables are exposed as functions, not as data structures.
+There are two kinds of tables in the RFC: sets and mappings. For a set,
+<a class="reference internal" href="stringprep.html#py:module:stringprep" title="stringprep: String preparation, as per RFC 3453"><code class="xref py module docutils literal">stringprep</code></a> provides the "characteristic function", i.e. a function that
+returns <code>True</code> if the parameter is part of the set. For mappings, it provides the
+mapping function: given the key, it returns the associated value. Below is a
+list of all functions available in the module.</p>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_a1"><code class="sig-name">in_table_a1(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableA.1 (Unassigned code points in Unicode 3.2).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_b1"><code class="sig-name">in_table_b1(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableB.1 (Commonly mapped to nothing).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.map_table_b2"><code class="sig-name">map_table_b2(code)</code></dt>
+  <dd><p>Return the mapped value for <em>code</em> according to tableB.2 (Mapping for
+case-folding used with NFKC).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.map_table_b3"><code class="sig-name">map_table_b3(code)</code></dt>
+  <dd><p>Return the mapped value for <em>code</em> according to tableB.3 (Mapping for
+case-folding used with no normalization).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c11"><code class="sig-name">in_table_c11(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.1.1  (ASCII space characters).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c12"><code class="sig-name">in_table_c12(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.1.2  (Non-ASCII space characters).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c11_c12"><code class="sig-name">in_table_c11_c12(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.1  (Space characters, union of C.1.1 and
+C.1.2).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c21"><code class="sig-name">in_table_c21(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.2.1  (ASCII control characters).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c22"><code class="sig-name">in_table_c22(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.2.2  (Non-ASCII control characters).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c21_c22"><code class="sig-name">in_table_c21_c22(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.2  (Control characters, union of C.2.1 and
+C.2.2).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c3"><code class="sig-name">in_table_c3(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.3  (Private use).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c4"><code class="sig-name">in_table_c4(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.4  (Non-character code points).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c5"><code class="sig-name">in_table_c5(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.5  (Surrogate codes).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c6"><code class="sig-name">in_table_c6(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.6  (Inappropriate for plain text).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c7"><code class="sig-name">in_table_c7(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.7  (Inappropriate for canonical
+representation).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c8"><code class="sig-name">in_table_c8(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.8  (Change display properties or are
+deprecated).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_c9"><code class="sig-name">in_table_c9(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableC.9  (Tagging characters).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_d1"><code class="sig-name">in_table_d1(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableD.1  (Characters with bidirectional property
+"R" or "AL").</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:stringprep.in_table_d2"><code class="sig-name">in_table_d2(code)</code></dt>
+  <dd><p>Determine whether <em>code</em> is in tableD.2  (Characters with bidirectional property
+"L").</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="unicodedata.html">&larr; unicodedata — Unicode Database</a>
+        <a class="next" href="readline.html">readline — GNU readline interface &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
