@@ -6,7 +6,7 @@ use super::RefText;
 use rinx_index::EntityRecord;
 
 use crate::resolution::{EntityResolution, EntityResolver};
-use crate::{BrokenLink, BrokenLinkKind};
+use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 
 /// Renders an entity reference, linking to the entity's anchor in its document.
 ///
@@ -80,6 +80,26 @@ pub(super) fn render_inline_entity_reference(
         html_escape::encode_double_quoted_attribute(&record.type_name),
         html_escape::encode_text(shown)
     );
+}
+
+/// Where the entity reference to `target`, written with `role`, leads —
+/// `None` whenever [`render_inline_entity_reference`] would draw it broken. A
+/// type mismatch still leads to the entity, as it still links.
+pub(super) fn entity_target(
+    role: &str,
+    target: &str,
+    resolver: &EntityResolver<'_>,
+) -> Option<ReferenceTarget> {
+    let record = match resolver.resolve(role, target) {
+        EntityResolution::Resolved(record) | EntityResolution::TypeMismatch(record) => record,
+        EntityResolution::NotFound | EntityResolution::Contested(_) => return None,
+    };
+    let id = entity_id_of(target);
+    Some(ReferenceTarget::in_document(
+        record.display_text(&id),
+        &record.doc_path,
+        Some(crate::blocks::entity_anchor(target)),
+    ))
 }
 
 /// The id this reference names, for the display-text fallback.

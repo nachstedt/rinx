@@ -451,7 +451,7 @@ fn test_handle_request_refuses_an_unsupported_method() {
     let mut state = ServerState::new(PositionEncoding::Utf16);
     let request = Request::new(
         RequestId::from(7),
-        "textDocument/hover".to_string(),
+        "textDocument/formatting".to_string(),
         serde_json::Value::Null,
     );
 

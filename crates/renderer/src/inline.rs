@@ -28,6 +28,9 @@
 //! serves six spellings: `:sub:`/`:subscript:`, `:sup:`/`:superscript:` and
 //! the roles derived from them with `.. role::`.
 //!
+//! [`target`] asks the same role modules where a reference leads without
+//! writing it — the answer [`crate::ReferenceResolver`] gives.
+//!
 //! [`RefText`] is the one shape they all share: the visible text, the target
 //! to resolve, and where the role was written.
 
@@ -51,7 +54,9 @@ mod ref_text;
 mod reference;
 mod registry_reference;
 mod script;
+mod target;
 mod term_reference;
 
 pub(crate) use dispatch::render_inline;
 use ref_text::RefText;
+pub(crate) use target::reference_target;

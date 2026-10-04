@@ -207,6 +207,69 @@ fn test_lsp_completes_a_label_defined_in_another_document() {
 }
 
 #[test]
+fn test_lsp_shows_where_a_reference_leads_on_hover() {
+    // Given — a scanned folder whose `setup.rst` labels a section
+    let root = std::env::temp_dir().join("rinx_lsp_stdio_hover");
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).expect("mkdir");
+    std::fs::write(
+        root.join("setup.rst"),
+        ".. _install:\n\nInstalling\n==========\n",
+    )
+    .expect("write");
+    let notes = format!("file://{}", root.join("notes.rst").display());
+    let mut server = Server::spawn();
+    let initialized = server.initialize_with(json!({
+        "capabilities": {},
+        "workspaceFolders": [{"uri": format!("file://{}", root.display()), "name": "docs"}],
+    }));
+    while !matches!(
+        server.receive(),
+        Message::Notification(notification)
+            if notification.method == "rinx/status" && notification.params["state"] == "ready"
+    ) {}
+    server.notify(
+        "textDocument/didOpen",
+        json!({ "textDocument": {
+            "uri": notes, "languageId": "restructuredtext", "version": 1,
+            "text": "See :ref:`install`.\n",
+        }}),
+    );
+    server.published_until(&notes);
+
+    // When
+    server.request(
+        2,
+        "textDocument/hover",
+        json!({
+            "textDocument": { "uri": notes },
+            "position": { "line": 0, "character": 8 },
+        }),
+    );
+    let hovered = std::iter::from_fn(|| Some(server.receive()))
+        .find_map(|message| match message {
+            Message::Response(response) => Some(response),
+            _ => None,
+        })
+        .expect("the hover");
+
+    // Then
+    let capabilities = &initialized.response_result.expect("initialized")["capabilities"];
+    assert_eq!(capabilities["hoverProvider"], true);
+    let hover = hovered.response_result.expect("a hover");
+    assert_eq!(hover["contents"]["kind"], "markdown");
+    let markdown = hover["contents"]["value"].as_str().expect("markdown");
+    assert!(
+        markdown.starts_with("**Installing**\n\n[setup\\.rst](file://"),
+        "{markdown}"
+    );
+    assert_eq!(
+        hover["range"]["start"],
+        json!({ "line": 0, "character": 4 })
+    );
+}
+
+#[test]
 fn test_lsp_underlines_a_reference_to_a_label_no_document_defines() {
     // Given — a workspace folder whose document references a missing label
     let root = std::env::temp_dir().join("rinx_lsp_stdio_broken_reference");

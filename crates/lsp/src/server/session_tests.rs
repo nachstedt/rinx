@@ -64,7 +64,7 @@ fn test_run_refuses_a_request_and_ignores_a_response_mid_session() {
         .send(
             Request::new(
                 RequestId::from(5),
-                "textDocument/hover".to_string(),
+                "textDocument/formatting".to_string(),
                 serde_json::Value::Null,
             )
             .into(),

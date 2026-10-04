@@ -9,7 +9,9 @@
 //! diagnostics a render reports alongside its HTML. `math` sits flat beside
 //! them for the same reason `resolution` does — both `blocks` and `inline`
 //! render equations — and is the only module that knows which math backend
-//! is in use.
+//! is in use. `reference_target` answers where a reference leads without
+//! rendering a page — the language server's question — through the same
+//! role modules `inline` writes links with.
 
 mod asset_href;
 mod blocks;
@@ -28,6 +30,7 @@ mod numbering;
 mod numfig_format;
 mod octicon;
 mod page;
+mod reference_target;
 mod registry_base_url;
 mod reported;
 mod resolution;
@@ -47,6 +50,7 @@ pub use page::{
     MODINDEX_PATH, MODINDEX_TITLE, PageMeta, css_relative_path, render_genindex, render_modindex,
     render_page,
 };
+pub use reference_target::{Destination, ReferenceResolver, ReferenceTarget};
 pub use uml_error::{DiagramError, DiagramFailure};
 
 use rinx_ast::HashedContent;

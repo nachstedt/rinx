@@ -7,8 +7,8 @@ use rinx_ast::{InventorySelector, Span};
 use rinx_index::{ProjectIndex, relative_doc_href};
 
 use super::external_link::write_external_link;
-use crate::resolution::{resolve_document, resolve_external, unresolved_kind};
-use crate::{BrokenLink, BrokenLinkKind};
+use crate::resolution::{ExternalHit, resolve_document, resolve_external, unresolved_kind};
+use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 
 /// What Sphinx shows for a document that has no title.
 const NO_TITLE: &str = "<no title>";
@@ -61,13 +61,52 @@ pub(super) fn render_inline_doc_reference(
         );
         return;
     }
+    match resolve_doc(index, doc_path, target, inventory) {
+        DocResolution::Local(target_doc) => {
+            write_doc_link(html, index, title, target_doc, doc_path);
+        }
+        DocResolution::External(hit) => {
+            let display = title.unwrap_or_else(|| hit.target.display_text());
+            write_external_link(html, &hit, doc_path, &html_escape::encode_text(display));
+        }
+        DocResolution::Unresolved(kind) => {
+            let _ = write!(
+                html,
+                "<a href=\"#\" class=\"broken-link\">{}</a>",
+                html_escape::encode_text(title.unwrap_or(target))
+            );
+            broken_links.push(BrokenLink {
+                kind,
+                target: target.to_string(),
+                span,
+            });
+        }
+    }
+}
+
+/// What a `:doc:` resolved to.
+enum DocResolution<'a> {
+    /// A document of this site, by its `.rst` path.
+    Local(&'a str),
+    /// A document another site's inventory lists.
+    External(ExternalHit<'a>),
+    /// Nothing the reference may link to; why.
+    Unresolved(BrokenLinkKind),
+}
+
+/// Resolves the document name `target`, written in the page at `doc_path`.
+fn resolve_doc<'a>(
+    index: &'a ProjectIndex,
+    doc_path: &str,
+    target: &str,
+    inventory: &InventorySelector,
+) -> DocResolution<'a> {
     let local = inventory
         .allows_local()
         .then(|| resolve_document(index, doc_path, target))
         .flatten();
     if let Some(target_doc) = local {
-        write_doc_link(html, index, title, target_doc, doc_path);
-        return;
+        return DocResolution::Local(target_doc);
     }
     if !inventory.is_any()
         && let Some(hit) = resolve_external(
@@ -77,24 +116,43 @@ pub(super) fn render_inline_doc_reference(
             inventory,
         )
     {
-        let display = title.unwrap_or_else(|| hit.target.display_text());
-        write_external_link(html, &hit, doc_path, &html_escape::encode_text(display));
-        return;
+        return DocResolution::External(hit);
     }
-    let _ = write!(
-        html,
-        "<a href=\"#\" class=\"broken-link\">{}</a>",
-        html_escape::encode_text(title.unwrap_or(target))
-    );
-    broken_links.push(BrokenLink {
-        kind: unresolved_kind(
-            inventory,
-            &index.external_inventories,
-            BrokenLinkKind::DocReference,
-        ),
-        target: target.to_string(),
-        span,
-    });
+    DocResolution::Unresolved(unresolved_kind(
+        inventory,
+        &index.external_inventories,
+        BrokenLinkKind::DocReference,
+    ))
+}
+
+/// Where the `:doc:` to `target`, written in the page at `doc_path`, leads —
+/// `None` when [`render_inline_doc_reference`] would draw it broken.
+pub(super) fn doc_target(
+    index: &ProjectIndex,
+    target: &str,
+    inventory: &InventorySelector,
+    doc_path: &str,
+) -> Option<ReferenceTarget> {
+    match resolve_doc(index, doc_path, target, inventory) {
+        DocResolution::Local(target_doc) => Some(document_reference_target(index, target_doc)),
+        DocResolution::External(hit) => Some(ReferenceTarget::external(
+            None,
+            hit.inventory,
+            hit.target,
+            doc_path,
+        )),
+        DocResolution::Unresolved(_) => None,
+    }
+}
+
+/// The document `target_doc` as a reference target, titled as a bare `:doc:`
+/// shows it — shared with `:any:`.
+pub(super) fn document_reference_target(index: &ProjectIndex, target_doc: &str) -> ReferenceTarget {
+    ReferenceTarget::in_document(
+        index.document_title(target_doc).unwrap_or(NO_TITLE),
+        target_doc,
+        None,
+    )
 }
 
 /// Writes the link to `target_doc`, a document of this site, from the page at

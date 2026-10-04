@@ -16,7 +16,7 @@ use rinx_index::{NumrefSubject, ProjectIndex, join_number};
 use super::reference::label_href;
 use crate::RenderCtx;
 use crate::numbering::Numbering;
-use crate::{BrokenLink, BrokenLinkKind};
+use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 
 /// A `:numref:` as the author wrote it.
 #[derive(Debug, Clone, Copy)]
@@ -114,6 +114,24 @@ pub(super) fn render_inline_number_reference(
             });
         }
     }
+}
+
+/// Where `reference` leads — `None` for the `!` form and whenever
+/// [`render_inline_number_reference`] would show it unlinked or broken.
+pub(super) fn number_reference_target(
+    reference: NumRef<'_>,
+    index: &ProjectIndex,
+    numbering: &Numbering<'_>,
+) -> Option<ReferenceTarget> {
+    if !reference.link {
+        return None;
+    }
+    let resolved = resolve(reference, index, numbering).ok()?;
+    Some(ReferenceTarget::in_document(
+        resolved.text,
+        resolved.doc_path,
+        Some(index.target_anchor(&resolved.label).to_string()),
+    ))
 }
 
 /// A `:numref:` that resolved, ready to be drawn.

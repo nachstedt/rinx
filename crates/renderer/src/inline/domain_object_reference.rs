@@ -11,7 +11,7 @@ use rinx_ast::{InventorySelector, ObjectType};
 
 use super::external_link::write_external_link;
 use crate::resolution::{DomainObjectResolution, DomainObjectResolver, unresolved_kind};
-use crate::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch};
+use crate::{BrokenLink, BrokenLinkKind, ObjectTypeMismatch, ReferenceTarget};
 
 /// The fields of `InlineNode::DomainObjectReference` needed to render it,
 /// bundled to keep [`render_inline_domain_object_reference`] within clippy's
@@ -138,6 +138,67 @@ pub(super) fn render_inline_domain_object_reference(
             ));
         }
     }
+}
+
+/// Where `obj_ref`, written inside `scope` in the page at `doc_path`, leads —
+/// `None` for the `!` form and whenever
+/// [`render_inline_domain_object_reference`] would draw it broken. A
+/// reference that resolved only through an object-type fallback still leads
+/// to that object, as it still links.
+pub(super) fn domain_object_target(
+    obj_ref: DomainObjectRef<'_>,
+    resolver: &DomainObjectResolver<'_>,
+    doc_path: &str,
+    scope: &rinx_scope::Scope,
+) -> Option<ReferenceTarget> {
+    if !obj_ref.link {
+        return None;
+    }
+    match resolver.resolve(
+        scope,
+        obj_ref.object_type,
+        obj_ref.name,
+        obj_ref.search_order,
+        obj_ref.inventory,
+    ) {
+        DomainObjectResolution::Resolved {
+            object_type,
+            qualified_name,
+            doc_path: target_doc,
+        } => Some(domain_object_reference_target(
+            object_type,
+            &qualified_name,
+            target_doc,
+        )),
+        DomainObjectResolution::External(hit) => Some(ReferenceTarget::external(
+            None,
+            hit.inventory,
+            hit.target,
+            doc_path,
+        )),
+        DomainObjectResolution::Ambiguous { .. }
+        | DomainObjectResolution::Contested { .. }
+        | DomainObjectResolution::NotFound => None,
+    }
+}
+
+/// The object `qualified_name` of `object_type`, defined in `target_doc`, as
+/// a reference target titled by that name — shared with `:option:` and
+/// `:any:`.
+pub(super) fn domain_object_reference_target(
+    object_type: ObjectType,
+    qualified_name: &str,
+    target_doc: &str,
+) -> ReferenceTarget {
+    ReferenceTarget::in_document(
+        qualified_name,
+        target_doc,
+        Some(
+            rinx_ast::build_domain_object_key(object_type, qualified_name)
+                .as_str()
+                .to_string(),
+        ),
+    )
 }
 
 /// The href a page at `doc_path` links the object `qualified_name` of

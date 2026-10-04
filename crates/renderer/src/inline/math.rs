@@ -13,7 +13,7 @@ use rinx_index::{EquationLocation, ProjectIndex};
 
 use crate::blocks::equation_anchor_id;
 use crate::math::{MathError, MathRenderer};
-use crate::{BrokenLink, BrokenLinkKind};
+use crate::{BrokenLink, BrokenLinkKind, ReferenceTarget};
 use rinx_index::relative_doc_href;
 
 /// Renders a `:math:` role.
@@ -74,6 +74,29 @@ pub(super) fn render_equation_reference(
             span,
         });
     }
+}
+
+/// Where the `:eq:` to `label` leads — `None` when
+/// [`render_equation_reference`] would draw it broken.
+pub(super) fn equation_target(index: &ProjectIndex, label: &str) -> Option<ReferenceTarget> {
+    let name = rinx_ast::TargetName::new(label);
+    index
+        .equations
+        .get(&name)
+        .map(|location| equation_reference_target(&name, location))
+}
+
+/// The equation labeled `label` as a reference target, titled with its
+/// number as `:eq:` shows it — shared with `:any:`.
+pub(super) fn equation_reference_target(
+    label: &rinx_ast::TargetName,
+    location: &EquationLocation,
+) -> ReferenceTarget {
+    ReferenceTarget::in_document(
+        format!("({})", location.number),
+        &location.doc_path,
+        Some(equation_anchor_id(label)),
+    )
 }
 
 /// Writes a link to the equation labeled `label`, showing its number — what
