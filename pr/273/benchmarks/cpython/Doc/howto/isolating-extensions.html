@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Isolating Extension Modules — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../library/index.html">The Python Standard Library</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">Python HOWTOs</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Python HOWTOs"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="a-conceptual-overview-of-asyncio.html">A Conceptual Overview of asyncio</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cporting.html">Porting Extension Modules to Python 3</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="curses.html">Curses Programming with Python</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="descriptor.html">Descriptor Guide</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="gdb_helpers.html">Debugging C API extensions and CPython Internals with GDB</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="enum.html">Enum HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="logging.html">Logging HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="logging-cookbook.html">Logging Cookbook</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="regex.html">Regular Expression HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sockets.html">Socket Programming HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="sorting.html">Sorting Techniques</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unicode.html">Unicode HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="urllib2.html">HOWTO Fetch Internet Resources Using The urllib Package</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="argparse.html">Argparse Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipaddress.html">An introduction to the ipaddress module</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="instrumentation.html">Instrumenting CPython with DTrace and SystemTap</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="perf_profiling.html">Python support for the Linux perf profiler</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="annotations.html">Annotations Best Practices</a>
+            
+          </li>
+        
+          <li class="toctree-l2 current has-children">
+            <a href="isolating-extensions.html">Isolating Extension Modules</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Isolating Extension Modules"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="isolating-extensions.html#who-should-read-this">Who should read this</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="isolating-extensions.html#background">Background</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="isolating-extensions.html#making-modules-safe-with-multiple-interpreters">Making Modules Safe with Multiple Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="isolating-extensions.html#heap-types">Heap Types</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="isolating-extensions.html#open-issues">Open Issues</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="timerfd.html">timer file descriptor HOWTO</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mro.html">The Python 2.3 Method Resolution Order</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="free-threading-python.html">Python support for free threading</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="free-threading-extensions.html">C API Extension Support for Free Threading</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="remote_debugging.html">Remote debugging attachment protocol</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="annotations.html">&larr; Annotations Best Practices</a>
+        <a class="next" href="timerfd.html">timer file descriptor HOWTO &rarr;</a>
+      </nav>
+      
+      <a id="isolating-extensions-howto"></a>
+<h1 id="isolating-extension-modules">Isolating Extension Modules</h1>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'topic'</p>
+<pre class="directive-error-source">.. topic:: Abstract
+
+   Traditionally, state belonging to Python extension modules was kept in C
+   ``static`` variables, which have process-wide scope. This document
+   describes problems of such per-process state and shows a safer way:
+   per-module state.
+
+   The document also describes how to switch to per-module state where
+   possible. This transition involves allocating space for that state, potentially
+   switching from static types to heap types, and—perhaps most
+   importantly—accessing per-module state from code.</pre>
+</div>
+<h2 id="who-should-read-this">Who should read this</h2>
+<p>This guide is written for maintainers of <a href="../c-api/index.html#c-api-index">C-API</a> extensions
+who would like to make that extension safer to use in applications where
+Python itself is used as a library.</p>
+<h2 id="background">Background</h2>
+<p>An <em>interpreter</em> is the context in which Python code runs. It contains
+configuration (e.g. the import path) and runtime state (e.g. the set of
+imported modules).</p>
+<p>Python supports running multiple interpreters in one process. There are
+two cases to think about—users may run interpreters:</p>
+<ul>
+<li><p>in sequence, with several <a class="reference internal" href="../c-api/init.html#c:function:py_initializeex"><code class="xref c function docutils literal">Py_InitializeEx</code></a>/<a class="reference internal" href="../c-api/init.html#c:function:py_finalizeex"><code class="xref c function docutils literal">Py_FinalizeEx</code></a>
+cycles, and</p>
+</li>
+<li><p>in parallel, managing "sub-interpreters" using
+<a class="reference internal" href="../c-api/init.html#c:function:py_newinterpreter"><code class="xref c function docutils literal">Py_NewInterpreter</code></a>/<a class="reference internal" href="../c-api/init.html#c:function:py_endinterpreter"><code class="xref c function docutils literal">Py_EndInterpreter</code></a>.</p>
+</li>
+</ul>
+<p>Both cases (and combinations of them) would be most useful when
+embedding Python within a library. Libraries generally shouldn't make
+assumptions about the application that uses them, which include
+assuming a process-wide "main Python interpreter".</p>
+<p>Historically, Python extension modules don't handle this use case well.
+Many extension modules (and even some stdlib modules) use <em>per-process</em>
+global state, because C <code>static</code> variables are extremely easy to use.
+Thus, data that should be specific to an interpreter ends up being shared
+between interpreters. Unless the extension developer is careful, it is very
+easy to introduce edge cases that lead to crashes when a module is loaded in
+more than one interpreter in the same process.</p>
+<p>Unfortunately, <em>per-interpreter</em> state is not easy to achieve. Extension
+authors tend to not keep multiple interpreters in mind when developing,
+and it is currently cumbersome to test the behavior.</p>
+<h3 id="enter-per-module-state">Enter Per-Module State</h3>
+<p>Instead of focusing on per-interpreter state, Python's C API is evolving
+to better support the more granular <em>per-module</em> state.
+This means that C-level data should be attached to a <em>module object</em>.
+Each interpreter creates its own module object, keeping the data separate.
+For testing the isolation, multiple module objects corresponding to a single
+extension can even be loaded in a single interpreter.</p>
+<p>Per-module state provides an easy way to think about lifetime and
+resource ownership: the extension module will initialize when a
+module object is created, and clean up when it's freed. In this regard,
+a module is just like any other :c:expr:`PyObject *`; there are no "on
+interpreter shutdown" hooks to think—or forget—about.</p>
+<p>Note that there are use cases for different kinds of "globals":
+per-process, per-interpreter, per-thread or per-task state.
+With per-module state as the default, these are still possible,
+but you should treat them as exceptional cases:
+if you need them, you should give them additional care and testing.
+(Note that this guide does not cover them.)</p>
+<h3 id="isolated-module-objects">Isolated Module Objects</h3>
+<p>The key point to keep in mind when developing an extension module is
+that several module objects can be created from a single shared library.
+For example:</p>
+<div class="highlight-pycon notranslate">
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; import sys
+&gt;&gt;&gt; import binascii
+&gt;&gt;&gt; old_binascii = binascii
+&gt;&gt;&gt; del sys.modules['binascii']
+&gt;&gt;&gt; import binascii  # create a new module object
+&gt;&gt;&gt; old_binascii == binascii
+False</pre></div>
+</div>
+<p>As a rule of thumb, the two modules should be completely independent.
+All objects and state specific to the module should be encapsulated
+within the module object, not shared with other module objects, and
+cleaned up when the module object is deallocated.
+Since this just is a rule of thumb, exceptions are possible
+(see <a href="#managing-global-state">Managing Global State</a>), but they will need more
+thought and attention to edge cases.</p>
+<p>While some modules could do with less stringent restrictions, isolated
+modules make it easier to set clear expectations and guidelines that
+work across a variety of use cases.</p>
+<h3 id="surprising-edge-cases">Surprising Edge Cases</h3>
+<p>Note that isolated modules do create some surprising edge cases. Most
+notably, each module object will typically not share its classes and
+exceptions with other similar modules. Continuing from the
+<a href="#isolated-module-objects">example above</a>,
+note that <code>old_binascii.Error</code> and <code>binascii.Error</code> are
+separate objects. In the following code, the exception is <em>not</em> caught:</p>
+<div class="highlight-pycon notranslate">
+<div class="highlight hl-code"><pre>
+&gt;&gt;&gt; old_binascii.Error == binascii.Error
+False
+&gt;&gt;&gt; try:
+...     old_binascii.unhexlify(b'qwertyuiop')
+... except binascii.Error:
+...     print('boo')
+...
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 2, in &lt;module&gt;
+binascii.Error: Non-hexadecimal digit found</pre></div>
+</div>
+<p>This is expected. Notice that pure-Python modules behave the same way:
+it is a part of how Python works.</p>
+<p>The goal is to make extension modules safe at the C level, not to make
+hacks behave intuitively. Mutating <code>sys.modules</code> "manually" counts
+as a hack.</p>
+<h2 id="making-modules-safe-with-multiple-interpreters">Making Modules Safe with Multiple Interpreters</h2>
+<h3 id="managing-global-state">Managing Global State</h3>
+<p>Sometimes, the state associated with a Python module is not specific to that module, but
+to the entire process (or something else "more global" than a module).
+For example:</p>
+<ul>
+<li><p>The <code>readline</code> module manages <em>the</em> terminal.</p>
+</li>
+<li><p>A module running on a circuit board wants to control <em>the</em> on-board
+LED.</p>
+</li>
+</ul>
+<p>In these cases, the Python module should provide <em>access</em> to the global
+state, rather than <em>own</em> it. If possible, write the module so that
+multiple copies of it can access the state independently (along with
+other libraries, whether for Python or other languages). If that is not
+possible, consider explicit locking.</p>
+<p>If it is necessary to use process-global state, the simplest way to
+avoid issues with multiple interpreters is to explicitly prevent a
+module from being loaded more than once per process—see
+<a href="isolating-extensions.html#isolating-extensions-optout">Opt-Out: Limiting to One Module Object per Process</a>.</p>
+<h3 id="managing-per-module-state">Managing Per-Module State</h3>
+<p>To use per-module state, use
+<a href="../c-api/extension-modules.html#multi-phase-initialization">multi-phase extension module initialization</a>.
+This signals that your module supports multiple interpreters correctly.</p>
+<p>Set <code>PyModuleDef.m_size</code> to a positive number to request that many
+bytes of storage local to the module. Usually, this will be set to the
+size of some module-specific <code>struct</code>, which can store all of the
+module's C-level state. In particular, it is where you should put
+pointers to classes (including exceptions, but excluding static types)
+and settings (e.g. <code>csv</code>'s <a href="#" class="broken-link"><code class="xref py data docutils literal">field_size_limit</code></a>)
+which the C code needs to function.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Another option is to store state in the module's <code>__dict__</code>,
+but you must avoid crashing when users modify <code>__dict__</code> from
+Python code. This usually means error- and type-checking at the C level,
+which is easy to get wrong and hard to test sufficiently.</p>
+<p>However, if module state is not needed in C code, storing it in
+<code>__dict__</code> only is a good idea.</p>
+</div>
+<p>If the module state includes <code>PyObject</code> pointers, the module object
+must hold references to those objects and implement the module-level hooks
+<code>m_traverse</code>, <code>m_clear</code> and <code>m_free</code>. These work like
+<code>tp_traverse</code>, <code>tp_clear</code> and <code>tp_free</code> of a class. Adding them will
+require some work and make the code longer; this is the price for
+modules which can be unloaded cleanly.</p>
+<p>An example of a module with per-module state is currently available as
+<a href="https://github.com/python/cpython/blob/master/Modules/xxlimited.c">xxlimited</a>;
+example module initialization shown at the bottom of the file.</p>
+<a id="isolating-extensions-optout"></a>
+<h3 id="opt-out-limiting-to-one-module-object-per-process">Opt-Out: Limiting to One Module Object per Process</h3>
+<p>A non-negative <code>PyModuleDef.m_size</code> signals that a module supports
+multiple interpreters correctly. If this is not yet the case for your
+module, you can explicitly make your module loadable only once per
+process. For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> A process-wide flag
+</span></span>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> <span class="hl-storage hl-type hl-c">int</span> loaded <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c"><span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> Mutex to provide thread safety (only needed for free-threaded Python)
+</span></span>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> PyMutex modinit_mutex <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> <span class="hl-storage hl-type hl-c">int</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">exec_module</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject<span class="hl-keyword hl-operator hl-c">*</span> <span class="hl-variable hl-parameter hl-c">module</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Lock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>modinit_mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>loaded<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Unlock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>modinit_mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyErr_SetString</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">PyExc_ImportError<span class="hl-punctuation hl-separator hl-c">,</span></span></span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">                        <span class="hl-string hl-quoted hl-double hl-c"><span class="hl-punctuation hl-definition hl-string hl-begin hl-c">&quot;</span>cannot load module more than once per process<span class="hl-punctuation hl-definition hl-string hl-end hl-c">&quot;</span></span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-keyword hl-operator hl-arithmetic hl-c">-</span><span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    loaded <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">1</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyMutex_Unlock</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-keyword hl-operator hl-c">&amp;</span>modinit_mutex</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> ... rest of initialization
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></pre></div>
+<p>If your module's <a class="reference internal" href="../c-api/module.html#c:member:pymoduledef.m_clear"><code class="xref c member docutils literal">PyModuleDef.m_clear</code></a> function is able to prepare
+for future re-initialization, it should clear the <code>loaded</code> flag.
+In this case, your module won't support multiple instances existing
+<em>concurrently</em>, but it will, for example, support being loaded after
+Python runtime shutdown (<a class="reference internal" href="../c-api/init.html#c:function:py_finalizeex"><code class="xref c function docutils literal">Py_FinalizeEx</code></a>) and re-initialization
+(<a class="reference internal" href="../c-api/init.html#c:function:py_initialize"><code class="xref c function docutils literal">Py_Initialize</code></a>).</p>
+<h3 id="module-state-access-from-functions">Module State Access from Functions</h3>
+<p>Accessing the state from module-level functions is straightforward.
+Functions get the module object as their first argument; for extracting
+the state, you can use <code>PyModule_GetState</code>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> PyObject <span class="hl-keyword hl-operator hl-c">*</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">func</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">module</span><span class="hl-punctuation hl-separator hl-c">,</span> PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">args</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    my_struct <span class="hl-keyword hl-operator hl-c">*</span>state <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>my_struct<span class="hl-keyword hl-operator hl-c">*</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyModule_GetState</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">module</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>state <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> ... rest of logic
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></pre></div>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p><code>PyModule_GetState</code> may return <code>NULL</code> without setting an
+exception if there is no module state, i.e. <code>PyModuleDef.m_size</code> was
+zero. In your own module, you're in control of <code>m_size</code>, so this is
+easy to prevent.</p>
+</div>
+<h2 id="heap-types">Heap Types</h2>
+<p>Traditionally, types defined in C code are <em>static</em>; that is,
+<code>static PyTypeObject</code> structures defined directly in code and
+initialized using <code>PyType_Ready()</code>.</p>
+<p>Such types are necessarily shared across the process. Sharing them
+between module objects requires paying attention to any state they own
+or access. To limit the possible issues, static types are immutable at
+the Python level: for example, you can't set <code>str.myattribute = 123</code>.</p>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'impl-detail'</p>
+<pre class="directive-error-source">.. impl-detail::
+   Sharing truly immutable objects between interpreters is fine,
+   as long as they don't provide access to mutable objects.
+   However, in CPython, every Python object has a mutable implementation
+   detail: the reference count. Changes to the refcount are guarded by the GIL.
+   Thus, code that shares any Python objects across interpreters implicitly
+   depends on CPython's current, process-wide GIL.</pre>
+</div>
+<p>Because they are immutable and process-global, static types cannot access
+"their" module state.
+If any method of such a type requires access to module state,
+the type must be converted to a <em>heap-allocated type</em>, or <em>heap type</em>
+for short. These correspond more closely to classes created by Python's
+<code>class</code> statement.</p>
+<p>For new modules, using heap types by default is a good rule of thumb.</p>
+<h3 id="changing-static-types-to-heap-types">Changing Static Types to Heap Types</h3>
+<p>Static types can be converted to heap types, but note that
+the heap type API was not designed for "lossless" conversion
+from static types—that is, creating a type that works exactly like a given
+static type.
+So, when rewriting the class definition in a new API,
+you are likely to unintentionally change a few details (e.g. pickleability
+or inherited slots).
+Always test the details that are important to you.</p>
+<p>Watch out for the following two points in particular (but note that this is not
+a comprehensive list):</p>
+<ul>
+<li><p>Unlike static types, heap type objects are mutable by default.
+Use the <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_immutabletype"><code class="xref c macro docutils literal">Py_TPFLAGS_IMMUTABLETYPE</code></a> flag to prevent mutability.</p>
+</li>
+<li><p>Heap types inherit <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_new"><code class="xref c member docutils literal">tp_new</code></a> by default,
+so it may become possible to instantiate them from Python code.
+You can prevent this with the <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_disallow_instantiation"><code class="xref c macro docutils literal">Py_TPFLAGS_DISALLOW_INSTANTIATION</code></a> flag.</p>
+</li>
+</ul>
+<h3 id="defining-heap-types">Defining Heap Types</h3>
+<p>Heap types can be created by filling a <a href="#" class="broken-link"><code class="xref c struct docutils literal">PyType_Spec</code></a> structure, a
+description or "blueprint" of a class, and calling
+<a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a> to construct a new class object.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>Other functions, like <a class="reference internal" href="../c-api/type.html#c:function:pytype_fromspec"><code class="xref c function docutils literal">PyType_FromSpec</code></a>, can also create
+heap types, but <a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a> associates the module
+with the class, allowing access to the module state from methods.</p>
+</div>
+<p>The class should generally be stored in <em>both</em> the module state (for
+safe access from C) and the module's <code>__dict__</code> (for access from
+Python code).</p>
+<h3 id="garbage-collection-protocol">Garbage-Collection Protocol</h3>
+<p>Instances of heap types hold a reference to their type.
+This ensures that the type isn't destroyed before all its instances are,
+but may result in reference cycles that need to be broken by the
+garbage collector.</p>
+<p>To avoid memory leaks, instances of heap types must implement the
+garbage collection protocol.
+That is, heap types should:</p>
+<ul>
+<li><p>Have the <a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_have_gc"><code class="xref c macro docutils literal">Py_TPFLAGS_HAVE_GC</code></a> flag.</p>
+</li>
+<li><p>Define a traverse function using <a href="#" class="broken-link"><code class="xref c member docutils literal">Py_tp_traverse</code></a>, which
+visits the type (e.g. using <code>Py_VISIT(Py_TYPE(self))</code>).</p>
+</li>
+</ul>
+<p>Please refer to the documentation of
+<a class="reference internal" href="../c-api/typeobj.html#c:macro:py_tpflags_have_gc"><code class="xref c macro docutils literal">Py_TPFLAGS_HAVE_GC</code></a> and <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_traverse"><code class="xref c member docutils literal">tp_traverse</code></a>
+for additional considerations.</p>
+<p>The API for defining heap types grew organically, leaving it
+somewhat awkward to use in its current state.
+The following sections will guide you through common issues.</p>
+<h4 id="tp-traverse-in-python-3-8-and-lower"><code>tp_traverse</code> in Python 3.8 and lower</h4>
+<p>The requirement to visit the type from <code>tp_traverse</code> was added in Python 3.9.
+If you support Python 3.8 and lower, the traverse function must <em>not</em>
+visit the type, so it must be more complicated:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> <span class="hl-storage hl-type hl-c">int</span> <span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">my_traverse</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span> visitproc <span class="hl-variable hl-parameter hl-c">visit</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-storage hl-type hl-c">void</span> <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">arg</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>Py_Version <span class="hl-keyword hl-operator hl-comparison hl-c">&gt;=</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-c"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-c">0x</span>03090000</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_VISIT</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_TYPE</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></pre></div>
+<p>Unfortunately, <a class="reference internal" href="../c-api/apiabiversion.html#c:member:py_version"><code class="xref c member docutils literal">Py_Version</code></a> was only added in Python 3.11.
+As a replacement, use:</p>
+<ul>
+<li><p><a class="reference internal" href="../c-api/apiabiversion.html#c:macro:py_version_hex"><code class="xref c macro docutils literal">PY_VERSION_HEX</code></a>, if not using the stable ABI, or</p>
+</li>
+<li><p><a class="reference internal" href="../library/sys.html#py:data:sys.version_info"><code class="xref py data docutils literal">sys.version_info</code></a> (via <a class="reference internal" href="../c-api/sys.html#c:function:pysys_getobject"><code class="xref c function docutils literal">PySys_GetObject</code></a> and
+<a class="reference internal" href="../c-api/arg.html#c:function:pyarg_parsetuple"><code class="xref c function docutils literal">PyArg_ParseTuple</code></a>).</p>
+</li>
+</ul>
+<h4 id="delegating-tp-traverse">Delegating <code>tp_traverse</code></h4>
+<p>If your traverse function delegates to the <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_traverse"><code class="xref c member docutils literal">tp_traverse</code></a>
+of its base class (or another type), ensure that <code>Py_TYPE(self)</code> is visited
+only once.
+Note that only heap type are expected to visit the type in <code>tp_traverse</code>.</p>
+<p>For example, if your traverse function includes:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">base<span class="hl-punctuation hl-accessor hl-c">-&gt;</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">tp_traverse</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self<span class="hl-punctuation hl-separator hl-c">,</span> visit<span class="hl-punctuation hl-separator hl-c">,</span> arg</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span></pre></div>
+<p>…and <code>base</code> may be a static type, then it should also include:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>base<span class="hl-punctuation hl-accessor hl-c">-&gt;</span>tp_flags <span class="hl-keyword hl-operator hl-c">&amp;</span> Py_TPFLAGS_HEAPTYPE<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> a heap type&#39;s tp_traverse already visited Py_TYPE(self)
+</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span> <span class="hl-keyword hl-control hl-c">else</span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>Py_Version <span class="hl-keyword hl-operator hl-comparison hl-c">&gt;=</span> <span class="hl-constant hl-numeric hl-integer hl-hexadecimal hl-c"><span class="hl-punctuation hl-definition hl-numeric hl-base hl-c">0x</span>03090000</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_VISIT</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_TYPE</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></pre></div>
+<p>It is not necessary to handle the type's reference count in
+<a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_new"><code class="xref c member docutils literal">tp_new</code></a> and <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_clear"><code class="xref c member docutils literal">tp_clear</code></a>.</p>
+<h4 id="defining-tp-dealloc">Defining <code>tp_dealloc</code></h4>
+<p>If your type has a custom <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_dealloc"><code class="xref c member docutils literal">tp_dealloc</code></a> function,
+it needs to:</p>
+<ul>
+<li><p>call <a class="reference internal" href="../c-api/gcsupport.html#c:function:pyobject_gc_untrack"><code class="xref c function docutils literal">PyObject_GC_UnTrack</code></a> before any fields are invalidated, and</p>
+</li>
+<li><p>decrement the reference count of the type.</p>
+</li>
+</ul>
+<p>To keep the type valid while <code>tp_free</code> is called, the type's refcount needs
+to be decremented <em>after</em> the instance is deallocated. For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> <span class="hl-storage hl-type hl-c">void</span> <span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">my_dealloc</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyObject_GC_UnTrack</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-operator hl-variadic hl-c">...</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    PyTypeObject <span class="hl-keyword hl-operator hl-c">*</span>type <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_TYPE</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    type<span class="hl-punctuation hl-accessor hl-c">-&gt;</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">tp_free</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_DECREF</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">type</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></pre></div>
+<p>The default <code>tp_dealloc</code> function does this, so
+if your type does <em>not</em> override
+<code>tp_dealloc</code> you don't need to add it.</p>
+<h4 id="not-overriding-tp-free">Not overriding <code>tp_free</code></h4>
+<p>The <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_free"><code class="xref c member docutils literal">tp_free</code></a> slot of a heap type must be set to
+<a class="reference internal" href="../c-api/gcsupport.html#c:function:pyobject_gc_del"><code class="xref c function docutils literal">PyObject_GC_Del</code></a>.
+This is the default; do not override it.</p>
+<h4 id="avoiding-pyobject-new">Avoiding <code>PyObject_New</code></h4>
+<p>GC-tracked objects need to be allocated using GC-aware functions.</p>
+<p>If you use <a class="reference internal" href="../c-api/allocation.html#c:macro:pyobject_new"><code class="xref c function docutils literal">PyObject_New</code></a> or <a class="reference internal" href="../c-api/allocation.html#c:macro:pyobject_newvar"><code class="xref c function docutils literal">PyObject_NewVar</code></a>:</p>
+<ul>
+<li><p>Get and call type's <a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_alloc"><code class="xref c member docutils literal">tp_alloc</code></a> slot, if possible.
+That is, replace <code>TYPE *o = PyObject_New(TYPE, typeobj)</code> with:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">TYPE <span class="hl-keyword hl-operator hl-c">*</span>o <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> typeobj<span class="hl-punctuation hl-accessor hl-c">-&gt;</span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">tp_alloc</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">typeobj<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-constant hl-numeric hl-integer hl-decimal hl-c">0</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+<p>Replace <code>o = PyObject_NewVar(TYPE, typeobj, size)</code> with the same,
+but use size instead of the 0.</p>
+</li>
+<li><p>If the above is not possible (e.g. inside a custom <code>tp_alloc</code>),
+call <a class="reference internal" href="../c-api/gcsupport.html#c:macro:pyobject_gc_new"><code class="xref c function docutils literal">PyObject_GC_New</code></a> or <a class="reference internal" href="../c-api/gcsupport.html#c:macro:pyobject_gc_newvar"><code class="xref c function docutils literal">PyObject_GC_NewVar</code></a>:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">TYPE <span class="hl-keyword hl-operator hl-c">*</span>o <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyObject_GC_New</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">TYPE<span class="hl-punctuation hl-separator hl-c">,</span> typeobj</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c">TYPE <span class="hl-keyword hl-operator hl-c">*</span>o <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyObject_GC_NewVar</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">TYPE<span class="hl-punctuation hl-separator hl-c">,</span> typeobj<span class="hl-punctuation hl-separator hl-c">,</span> size</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></pre></div>
+</li>
+</ul>
+<h3 id="module-state-access-from-classes">Module State Access from Classes</h3>
+<p>If you have a type object defined with <a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a>,
+you can call <a class="reference internal" href="../c-api/type.html#c:function:pytype_getmodule"><code class="xref c function docutils literal">PyType_GetModule</code></a> to get the associated module, and then
+<a class="reference internal" href="../c-api/module.html#c:function:pymodule_getstate"><code class="xref c function docutils literal">PyModule_GetState</code></a> to get the module's state.</p>
+<p>To save a some tedious error-handling boilerplate code, you can combine
+these two steps with <a class="reference internal" href="../c-api/type.html#c:function:pytype_getmodulestate"><code class="xref c function docutils literal">PyType_GetModuleState</code></a>, resulting in:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">my_struct <span class="hl-keyword hl-operator hl-c">*</span>state <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>my_struct<span class="hl-keyword hl-operator hl-c">*</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyType_GetModuleState</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">type</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>state <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></pre></div>
+<h3 id="module-state-access-from-regular-methods">Module State Access from Regular Methods</h3>
+<p>Accessing the module-level state from methods of a class is somewhat more
+complicated, but is possible thanks to API introduced in Python 3.9.
+To get the state, you need to first get the <em>defining class</em>, and then
+get the module state from it.</p>
+<p>The largest roadblock is getting <em>the class a method was defined in</em>, or
+that method's "defining class" for short. The defining class can have a
+reference to the module it is part of.</p>
+<p>Do not confuse the defining class with <code>Py_TYPE(self)</code>. If the method
+is called on a <em>subclass</em> of your type, <code>Py_TYPE(self)</code> will refer to
+that subclass, which may be defined in different module than yours.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>The following Python code can illustrate the concept.
+<code>Base.get_defining_class</code> returns <code>Base</code> even
+if <code>type(self) == Sub</code>:</p>
+<div class="highlight-python notranslate">
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">Base</span></span><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_type_of_self</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-function-call hl-python"><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-function hl-python"><span class="hl-support hl-function hl-builtin hl-python">type</span></span></span></span><span class="hl-meta hl-function-call hl-arguments hl-python"><span class="hl-punctuation hl-section hl-arguments hl-begin hl-python">(</span><span class="hl-meta hl-qualified-name hl-python"><span class="hl-variable hl-language hl-python">self</span></span><span class="hl-punctuation hl-section hl-arguments hl-end hl-python">)</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-function hl-python">    <span class="hl-storage hl-type hl-function hl-python"><span class="hl-keyword hl-declaration hl-function hl-python">def</span></span> <span class="hl-entity hl-name hl-function hl-python"><span class="hl-meta hl-generic-name hl-python">get_defining_class</span></span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-punctuation hl-section hl-parameters hl-begin hl-python">(</span></span><span class="hl-meta hl-function hl-parameters hl-python"><span class="hl-variable hl-parameter hl-python">self</span><span class="hl-punctuation hl-section hl-parameters hl-end hl-python">)</span></span><span class="hl-meta hl-function hl-python"><span class="hl-punctuation hl-section hl-function hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">        <span class="hl-keyword hl-control hl-flow hl-return hl-python">return</span> <span class="hl-meta hl-qualified-name hl-python"><span class="hl-support hl-variable hl-magic hl-python">__class__</span></span></span>
+<span class="hl-source hl-python"></span>
+<span class="hl-source hl-python"><span class="hl-meta hl-class hl-python"><span class="hl-storage hl-type hl-class hl-python"><span class="hl-keyword hl-declaration hl-class hl-python">class</span></span> <span class="hl-entity hl-name hl-class hl-python"><span class="hl-meta hl-generic-name hl-python">Sub</span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-punctuation hl-section hl-inheritance hl-begin hl-python">(</span></span></span><span class="hl-meta hl-class hl-inheritance hl-python"><span class="hl-entity hl-other hl-inherited-class hl-python">Base</span><span class="hl-punctuation hl-section hl-inheritance hl-end hl-python">)</span></span><span class="hl-meta hl-class hl-python"><span class="hl-punctuation hl-section hl-class hl-begin hl-python">:</span></span></span>
+<span class="hl-source hl-python">    <span class="hl-keyword hl-control hl-flow hl-pass hl-python">pass</span></span></pre></div>
+</div>
+</div>
+<p>For a method to get its "defining class", it must use the
+<a href="../c-api/structures.html#meth_method-meth_fastcall-meth_keywords">METH_METHOD | METH_FASTCALL | METH_KEYWORDS</a>
+<a class="reference internal" href="../c-api/structures.html#c:type:pymethoddef"><code class="xref c type docutils literal">calling convention</code></a>
+and the corresponding <a class="reference internal" href="../c-api/structures.html#c:type:pycmethod"><code class="xref c type docutils literal">PyCMethod</code></a> signature:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">PyCMethod</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">    PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span>               <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> object the method was called on
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">    PyTypeObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">defining_class</span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> defining class
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">    PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-storage hl-modifier hl-c">const</span> <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">args</span><span class="hl-punctuation hl-separator hl-c">,</span>        <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> C array of arguments
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">    Py_ssize_t <span class="hl-variable hl-parameter hl-c">nargs</span><span class="hl-punctuation hl-separator hl-c">,</span>             <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> length of &quot;args&quot;
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">    PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">kwnames</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c">            <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> NULL, or dict of keyword arguments</span></span></span></pre></div>
+<p>Once you have the defining class, call <a class="reference internal" href="../c-api/type.html#c:function:pytype_getmodulestate"><code class="xref c function docutils literal">PyType_GetModuleState</code></a> to get
+the state of its associated module.</p>
+<p>For example:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> PyObject <span class="hl-keyword hl-operator hl-c">*</span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-entity hl-name hl-function hl-c">example_method</span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">self</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">        PyTypeObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">defining_class</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">        PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-storage hl-modifier hl-c">const</span> <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">args</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">        Py_ssize_t <span class="hl-variable hl-parameter hl-c">nargs</span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-parameters hl-c"><span class="hl-meta hl-group hl-c">        PyObject <span class="hl-keyword hl-operator hl-c">*</span><span class="hl-variable hl-parameter hl-c">kwnames</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-meta hl-function hl-c"></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    my_struct <span class="hl-keyword hl-operator hl-c">*</span>state <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>my_struct<span class="hl-keyword hl-operator hl-c">*</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyType_GetModuleState</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">defining_class</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>state <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">        <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-operator hl-variadic hl-c">...</span> <span class="hl-comment hl-line hl-double-slash hl-c"><span class="hl-punctuation hl-definition hl-comment hl-c">//</span> rest of logic
+</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"></span></span><span class="hl-meta hl-function hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyDoc_STRVAR</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">example_method_doc<span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-string hl-quoted hl-double hl-c"><span class="hl-punctuation hl-definition hl-string hl-begin hl-c">&quot;</span>...<span class="hl-punctuation hl-definition hl-string hl-end hl-c">&quot;</span></span></span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"></span>
+<span class="hl-source hl-c"><span class="hl-storage hl-modifier hl-c">static</span> PyMethodDef my_methods<span class="hl-meta hl-brackets hl-c"><span class="hl-punctuation hl-section hl-brackets hl-begin hl-c">[</span><span class="hl-punctuation hl-section hl-brackets hl-end hl-c">]</span></span> <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span><span class="hl-string hl-quoted hl-double hl-c"><span class="hl-punctuation hl-definition hl-string hl-begin hl-c">&quot;</span>example_method<span class="hl-punctuation hl-definition hl-string hl-end hl-c">&quot;</span></span><span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">      <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>PyCFunction<span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-storage hl-type hl-c">void</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-keyword hl-operator hl-c">*</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span><span class="hl-storage hl-type hl-c">void</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span>example_method<span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">      METH_METHOD<span class="hl-keyword hl-operator hl-arithmetic hl-c">|</span>METH_FASTCALL<span class="hl-keyword hl-operator hl-arithmetic hl-c">|</span>METH_KEYWORDS<span class="hl-punctuation hl-separator hl-c">,</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-meta hl-block hl-c">      example_method_doc<span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span><span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span><span class="hl-punctuation hl-separator hl-c">,</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></pre></div>
+<h3 id="module-state-access-from-slot-methods-getters-and-setters">Module State Access from Slot Methods, Getters and Setters</h3>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>This is new in Python 3.11.</p>
+</div>
+<p>Slot methods—the fast C equivalents for special methods, such as
+<a class="reference internal" href="../c-api/typeobj.html#c:member:pynumbermethods.nb_add"><code class="xref c member docutils literal">nb_add</code></a> for <a href="#" class="broken-link"><code class="xref py attribute docutils literal">__add__</code></a> or
+<a class="reference internal" href="../c-api/typeobj.html#c:member:pytypeobject.tp_new"><code class="xref c member docutils literal">tp_new</code></a> for initialization—have a very simple API that
+doesn't allow passing in the defining class, unlike with <a class="reference internal" href="../c-api/structures.html#c:type:pycmethod"><code class="xref c type docutils literal">PyCMethod</code></a>.
+The same goes for getters and setters defined with
+<a class="reference internal" href="../c-api/structures.html#c:type:pygetsetdef"><code class="xref c type docutils literal">PyGetSetDef</code></a>.</p>
+<p>To access the module state in these cases, use the
+<a class="reference internal" href="../c-api/type.html#c:function:pytype_getmodulebydef"><code class="xref c function docutils literal">PyType_GetModuleByDef</code></a> function, and pass in the module definition.
+Once you have the module, call <a class="reference internal" href="../c-api/module.html#c:function:pymodule_getstate"><code class="xref c function docutils literal">PyModule_GetState</code></a>
+to get the state:</p>
+<div class="highlight hl-code"><pre>
+<span class="hl-source hl-c">PyObject <span class="hl-keyword hl-operator hl-c">*</span>module <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyType_GetModuleByDef</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">Py_TYPE</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">self</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-separator hl-c">,</span> <span class="hl-keyword hl-operator hl-c">&amp;</span>module_def</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c">my_struct <span class="hl-keyword hl-operator hl-c">*</span>state <span class="hl-keyword hl-operator hl-assignment hl-c">=</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>my_struct<span class="hl-keyword hl-operator hl-c">*</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-variable hl-function hl-c">PyModule_GetState</span><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span></span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c">module</span></span><span class="hl-meta hl-function-call hl-c"><span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span></span><span class="hl-punctuation hl-terminator hl-c">;</span></span>
+<span class="hl-source hl-c"><span class="hl-keyword hl-control hl-c">if</span> <span class="hl-meta hl-group hl-c"><span class="hl-punctuation hl-section hl-group hl-begin hl-c">(</span>state <span class="hl-keyword hl-operator hl-comparison hl-c">==</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-section hl-group hl-end hl-c">)</span></span> <span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-begin hl-c">{</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c">    <span class="hl-keyword hl-control hl-flow hl-return hl-c">return</span> <span class="hl-constant hl-language hl-c">NULL</span><span class="hl-punctuation hl-terminator hl-c">;</span></span></span>
+<span class="hl-source hl-c"><span class="hl-meta hl-block hl-c"><span class="hl-punctuation hl-section hl-block hl-end hl-c">}</span></span></span></pre></div>
+<p><code class="xref c function docutils literal">PyType_GetModuleByDef</code> works by searching the
+<a class="reference internal" href="../glossary.html#term-method-resolution-order"><span class="xref std std-term">method resolution order</span></a> (i.e. all superclasses) for the first
+superclass that has a corresponding module.</p>
+<div class="admonition note">
+  <p class="admonition-title">Note</p>
+<p>In very exotic cases (inheritance chains spanning multiple modules
+created from the same definition), <code class="xref c function docutils literal">PyType_GetModuleByDef</code> might not
+return the module of the true defining class. However, it will always
+return a module with the same definition, ensuring a compatible
+C memory layout.</p>
+</div>
+<h3 id="lifetime-of-the-module-state">Lifetime of the Module State</h3>
+<p>When a module object is garbage-collected, its module state is freed.
+For each pointer to (a part of) the module state, you must hold a reference
+to the module object.</p>
+<p>Usually this is not an issue, because types created with
+<a class="reference internal" href="../c-api/type.html#c:function:pytype_frommoduleandspec"><code class="xref c function docutils literal">PyType_FromModuleAndSpec</code></a>, and their instances, hold a reference
+to the module.
+However, you must be careful in reference counting when you reference
+module state from other places, such as callbacks for external
+libraries.</p>
+<h2 id="open-issues">Open Issues</h2>
+<p>Several issues around per-module state and heap types are still open.</p>
+<p>Discussions about improving the situation are best held on the <a href="https://discuss.python.org/c/core-dev/c-api/30">discuss forum under c-api tag</a>.</p>
+<h3 id="per-class-scope">Per-Class Scope</h3>
+<p>It is currently (as of Python 3.11) not possible to attach state to individual
+<em>types</em> without relying on CPython implementation details (which may change
+in the future—perhaps, ironically, to allow a proper solution for
+per-class scope).</p>
+<h3 id="lossless-conversion-to-heap-types">Lossless Conversion to Heap Types</h3>
+<p>The heap type API was not designed for "lossless" conversion from static types;
+that is, creating a type that works exactly like a given static type.</p>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="annotations.html">&larr; Annotations Best Practices</a>
+        <a class="next" href="timerfd.html">timer file descriptor HOWTO &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>

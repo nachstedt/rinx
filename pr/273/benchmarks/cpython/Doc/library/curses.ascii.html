@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>curses.ascii — Utilities for ASCII characters — CPython Benchmark</title>
+  <link rel="stylesheet" href="../../default.css">
+</head>
+<body>
+  <div class="document-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="project-name">CPython Benchmark</h2>
+        
+        <p class="sidebar-index-link"><a href="../../genindex.html">Index</a></p>
+        <p class="sidebar-index-link"><a href="../../py-modindex.html">Module Index</a></p>
+      </div>
+      <nav class="sidebar-nav">
+        
+        <ul class="nav-tree">
+        
+          <li class="toctree-l1">
+            <a href="../whatsnew/index.html">What&#x27;s New in Python</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../tutorial/index.html">The Python Tutorial</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../using/index.html">Python Setup and Usage</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../reference/index.html">The Python Language Reference</a>
+            
+          </li>
+        
+          <li class="toctree-l1 ancestor has-children">
+            <a href="index.html">The Python Standard Library</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle The Python Standard Library"></span></summary>
+              <ul>
+                
+          <li class="toctree-l2">
+            <a href="intro.html">Introduction</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functions.html">Built-in Functions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="constants.html">Built-in Constants</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="stdtypes.html">Built-in Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="exceptions.html">Built-in Exceptions</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="text.html">Text Processing Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="binary.html">Binary Data Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="datatypes.html">Data Types</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="numeric.html">Numeric and Mathematical Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="functional.html">Functional Programming Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="filesys.html">File and Directory Access</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="persistence.html">Data Persistence</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="archiving.html">Data Compression and Archiving</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="fileformats.html">File Formats</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="crypto.html">Cryptographic Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="allos.html">Generic Operating System Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2 ancestor has-children">
+            <a href="cmdlinelibs.html">Command-line interface libraries</a>
+            
+            <details open>
+              <summary><span class="toctree-toggle" role="img" aria-label="Toggle Command-line interface libraries"></span></summary>
+              <ul>
+                
+          <li class="toctree-l3">
+            <a href="argparse.html">argparse — Parser for command-line options, arguments and subcommands</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="optparse.html">optparse — Parser for command line options</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="getpass.html">getpass — Portable password input</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="fileinput.html">fileinput — Iterate over lines from multiple input streams</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="curses.html">curses — Terminal handling for character-cell displays</a>
+            
+          </li>
+        
+          <li class="toctree-l3 current">
+            <a href="curses.ascii.html">curses.ascii — Utilities for ASCII characters</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="curses.panel.html">curses.panel — A panel stack extension for curses</a>
+            
+          </li>
+        
+          <li class="toctree-l3">
+            <a href="cmd.html">cmd — Support for line-oriented command interpreters</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="concurrency.html">Concurrent Execution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="ipc.html">Networking and Interprocess Communication</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="netdata.html">Internet Data Handling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="markup.html">Structured Markup Processing Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="internet.html">Internet Protocols and Support</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="mm.html">Multimedia Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="i18n.html">Internationalization</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="tk.html">Graphical user interfaces with Tk</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="development.html">Development Tools</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="debug.html">Debugging and Profiling</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="distribution.html">Software Packaging and Distribution</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="python.html">Python Runtime Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="custominterp.html">Custom Python Interpreters</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="modules.html">Importing Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="language.html">Python Language Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="windows.html">MS Windows Specific Services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="unix.html">Unix-specific services</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="cmdline.html">Modules command-line interface (CLI)</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="superseded.html">Superseded Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="removed.html">Removed Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l2">
+            <a href="security_warnings.html">Security Considerations</a>
+            
+          </li>
+        
+              </ul>
+            </details>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../extending/index.html">Extending and Embedding the Python Interpreter</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../c-api/index.html">Python&#x2f;C API Reference Manual</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../installing/index.html">Installing Python Modules</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../howto/index.html">Python HOWTOs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../faq/index.html">Python Frequently Asked Questions</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../deprecations/index.html">Deprecations</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../glossary.html">Glossary</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../about.html">About this documentation</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../bugs.html">Dealing with Bugs</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../copyright.html">Copyright</a>
+            
+          </li>
+        
+          <li class="toctree-l1">
+            <a href="../license.html">History and License</a>
+            
+          </li>
+        
+        </ul>
+        
+      </nav>
+    </aside>
+    <main class="document">
+      
+      <nav class="page-relations">
+        <a class="prev" href="curses.html">&larr; curses — Terminal handling for character-cell displays</a>
+        <a class="next" href="curses.panel.html">curses.panel — A panel stack extension for curses &rarr;</a>
+      </nav>
+      
+      <h1 id="curses-ascii-utilities-for-ascii-characters"><code class="xref py module docutils literal">curses.ascii</code> — Utilities for ASCII characters</h1>
+<dl class="py module">
+  <dt id="py:module:curses.ascii"><code class="sig-name">curses.ascii</code></dt>
+  <dd></dd>
+</dl>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'moduleauthor'</p>
+<pre class="directive-error-source">.. moduleauthor:: Eric S. Raymond &lt;esr@thyrsus.com&gt;</pre>
+</div>
+<div class="directive-error">
+<p class="directive-error-message">unknown directive type 'sectionauthor'</p>
+<pre class="directive-error-source">.. sectionauthor:: Eric S. Raymond &lt;esr@thyrsus.com&gt;</pre>
+</div>
+<p><strong>Source code:</strong> :source:`Lib/curses/ascii.py`</p>
+<hr />
+<p>The <a class="reference internal" href="curses.ascii.html#py:module:curses.ascii" title="curses.ascii: Constants and set-membership functions for ASCII characters."><code class="xref py module docutils literal">curses.ascii</code></a> module supplies name constants for ASCII characters and
+functions to test membership in various ASCII character classes.  The constants
+supplied are names for control characters as follows:</p>
+<table>
+<thead>
+<tr>
+<th><p>Name</p>
+</th>
+<th><p>Meaning</p>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.nul"><code class="sig-name">NUL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td></td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.soh"><code class="sig-name">SOH</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Start of heading, console interrupt</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.stx"><code class="sig-name">STX</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Start of text</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.etx"><code class="sig-name">ETX</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>End of text</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.eot"><code class="sig-name">EOT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>End of transmission</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.enq"><code class="sig-name">ENQ</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Enquiry, goes with <a class="reference internal" href="curses.ascii.html#py:data:curses.ascii.ack"><code class="xref py data docutils literal">ACK</code></a> flow control</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.ack"><code class="sig-name">ACK</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Acknowledgement</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.bel"><code class="sig-name">BEL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Bell</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.bs"><code class="sig-name">BS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Backspace</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.tab"><code class="sig-name">TAB</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Tab</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.ht"><code class="sig-name">HT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Alias for <a class="reference internal" href="curses.ascii.html#py:data:curses.ascii.tab"><code class="xref py data docutils literal">TAB</code></a>: "Horizontal tab"</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.lf"><code class="sig-name">LF</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Line feed</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.nl"><code class="sig-name">NL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Alias for <a class="reference internal" href="curses.ascii.html#py:data:curses.ascii.lf"><code class="xref py data docutils literal">LF</code></a>: "New line"</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.vt"><code class="sig-name">VT</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Vertical tab</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.ff"><code class="sig-name">FF</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Form feed</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.cr"><code class="sig-name">CR</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Carriage return</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.so"><code class="sig-name">SO</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Shift-out, begin alternate character set</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.si"><code class="sig-name">SI</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Shift-in, resume default character set</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.dle"><code class="sig-name">DLE</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Data-link escape</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.dc1"><code class="sig-name">DC1</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>XON, for flow control</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.dc2"><code class="sig-name">DC2</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Device control 2, block-mode flow control</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.dc3"><code class="sig-name">DC3</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>XOFF, for flow control</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.dc4"><code class="sig-name">DC4</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Device control 4</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.nak"><code class="sig-name">NAK</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Negative acknowledgement</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.syn"><code class="sig-name">SYN</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Synchronous idle</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.etb"><code class="sig-name">ETB</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>End transmission block</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.can"><code class="sig-name">CAN</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Cancel</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.em"><code class="sig-name">EM</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>End of medium</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.sub"><code class="sig-name">SUB</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Substitute</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.esc"><code class="sig-name">ESC</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Escape</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.fs"><code class="sig-name">FS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>File separator</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.gs"><code class="sig-name">GS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Group separator</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.rs"><code class="sig-name">RS</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Record separator, block-mode terminator</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.us"><code class="sig-name">US</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Unit separator</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.sp"><code class="sig-name">SP</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Space</p>
+</td>
+</tr>
+<tr>
+<td><dl class="py data">
+  <dt id="py:data:curses.ascii.del"><code class="sig-name">DEL</code></dt>
+  <dd></dd>
+</dl>
+</td>
+<td><p>Delete</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Note that many of these have little practical significance in modern usage.  The
+mnemonics derive from teleprinter conventions that predate digital computers.</p>
+<p>The module supplies the following functions, patterned on those in the standard
+C library:</p>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isalnum"><code class="sig-name">isalnum(c)</code></dt>
+  <dd><p>Checks for an ASCII alphanumeric character; it is equivalent to <code>isalpha(c) or
+isdigit(c)</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isalpha"><code class="sig-name">isalpha(c)</code></dt>
+  <dd><p>Checks for an ASCII alphabetic character; it is equivalent to <code>isupper(c) or
+islower(c)</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isascii"><code class="sig-name">isascii(c)</code></dt>
+  <dd><p>Checks for a character value that fits in the 7-bit ASCII set.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isblank"><code class="sig-name">isblank(c)</code></dt>
+  <dd><p>Checks for an ASCII whitespace character; space or horizontal tab.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.iscntrl"><code class="sig-name">iscntrl(c)</code></dt>
+  <dd><p>Checks for an ASCII control character (in the range 0x00 to 0x1f or 0x7f).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isdigit"><code class="sig-name">isdigit(c)</code></dt>
+  <dd><p>Checks for an ASCII decimal digit, <code>'0'</code> through <code>'9'</code>.  This is equivalent
+to <code>c in string.digits</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isgraph"><code class="sig-name">isgraph(c)</code></dt>
+  <dd><p>Checks for ASCII any printable character except space.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.islower"><code class="sig-name">islower(c)</code></dt>
+  <dd><p>Checks for an ASCII lower-case character.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isprint"><code class="sig-name">isprint(c)</code></dt>
+  <dd><p>Checks for any ASCII printable character including space.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.ispunct"><code class="sig-name">ispunct(c)</code></dt>
+  <dd><p>Checks for any printable ASCII character which is not a space or an alphanumeric
+character.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isspace"><code class="sig-name">isspace(c)</code></dt>
+  <dd><p>Checks for ASCII white-space characters; space, line feed, carriage return, form
+feed, horizontal tab, vertical tab.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isupper"><code class="sig-name">isupper(c)</code></dt>
+  <dd><p>Checks for an ASCII uppercase letter.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isxdigit"><code class="sig-name">isxdigit(c)</code></dt>
+  <dd><p>Checks for an ASCII hexadecimal digit.  This is equivalent to <code>c in
+string.hexdigits</code>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.isctrl"><code class="sig-name">isctrl(c)</code></dt>
+  <dd><p>Checks for an ASCII control character (ordinal values 0 to 31).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.ismeta"><code class="sig-name">ismeta(c)</code></dt>
+  <dd><p>Checks for a non-ASCII character (ordinal values 0x80 and above).</p>
+</dd>
+</dl>
+<p>These functions accept either integers or single-character strings; when the argument is a
+string, it is first converted using the built-in function <a class="reference internal" href="functions.html#py:function:ord"><code class="xref py function docutils literal">ord</code></a>.</p>
+<p>Note that all these functions check ordinal bit values derived from the
+character of the string you pass in; they do not actually know anything about
+the host machine's character encoding.</p>
+<p>The following two functions take either a single-character string or integer
+byte value; they return a value of the same type.</p>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.ascii"><code class="sig-name">ascii(c)</code></dt>
+  <dd><p>Return the ASCII value corresponding to the low 7 bits of <em>c</em>.</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.ctrl"><code class="sig-name">ctrl(c)</code></dt>
+  <dd><p>Return the control character corresponding to the given character (the character
+bit value is bitwise-anded with 0x1f).</p>
+</dd>
+</dl>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.alt"><code class="sig-name">alt(c)</code></dt>
+  <dd><p>Return the 8-bit character corresponding to the given ASCII character (the
+character bit value is bitwise-ored with 0x80).</p>
+</dd>
+</dl>
+<p>The following function takes either a single-character string or integer value;
+it returns a string.</p>
+<span id="index-0"></span>
+<dl class="py function">
+  <dt id="py:function:curses.ascii.unctrl"><code class="sig-name">unctrl(c)</code></dt>
+  <dd><p>Return a string representation of the ASCII character <em>c</em>.  If <em>c</em> is printable,
+this string is the character itself.  If the character is a control character
+(0x00–0x1f) the string consists of a caret (<code>'^'</code>) followed by the
+corresponding uppercase letter. If the character is an ASCII delete (0x7f) the
+string is <code>'^?'</code>.  If the character has its meta bit (0x80) set, the meta bit
+is stripped, the preceding rules applied, and <code>'!'</code> prepended to the result.</p>
+</dd>
+</dl>
+<dl class="py data">
+  <dt id="py:data:curses.ascii.controlnames"><code class="sig-name">controlnames</code></dt>
+  <dd><p>A 33-element string array that contains the ASCII mnemonics for the thirty-two
+ASCII control characters from 0 (NUL) to 0x1f (US), in order, plus the mnemonic
+<code>SP</code> for the space character.</p>
+</dd>
+</dl>
+
+      
+      <nav class="page-relations">
+        <a class="prev" href="curses.html">&larr; curses — Terminal handling for character-cell displays</a>
+        <a class="next" href="curses.panel.html">curses.panel — A panel stack extension for curses &rarr;</a>
+      </nav>
+      
+    </main>
+  </div>
+</body>
+</html>
