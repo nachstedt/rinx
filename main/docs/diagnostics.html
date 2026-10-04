@@ -119,6 +119,10 @@ domain object, here or in any inventory it may search.</p>
 <h3 id="link-ambiguous-any">link.ambiguous-any</h3>
 <p>An <code>:any:</code> role whose target names several things at once, so it was
 deliberately left unresolved rather than linked to one of them.</p>
+<h3 id="link-ambiguous-target">link.ambiguous-target</h3>
+<p>A reference to a name several documents define, so it links to none of them.
+Each definition is reported on its own page, under its family's <code>duplicate</code>
+code.</p>
 <h3 id="link-type-mismatch">link.type-mismatch</h3>
 <p>A domain-object role that resolved only via an object-type alias — the
 definition's own type differs from the one the role asked for.</p>
@@ -395,6 +399,9 @@ equation and it stays unnumbered.</p>
 <p>LaTeX the math renderer rejected, reported while rendering rather than while
 parsing — the parser deliberately never inspects the LaTeX, since only the
 renderer knows the math backend.</p>
+<h3 id="math-duplicate-label">math.duplicate-label</h3>
+<p>An equation label another document gives its own equation too. Neither equation
+can be referenced until one label is changed.</p>
 <h2 id="code-block">code-block</h2>
 <h3 id="code-block-empty-language">code-block.empty-language</h3>
 <p>A language argument, or a <code>.. highlight::</code>, naming nothing at all.</p>
@@ -552,6 +559,20 @@ navigation and only the first position orders it.</p>
 <h3 id="toctree-orphan-document">toctree.orphan-document</h3>
 <p>A document no toctree reaches, so a reader can only arrive at it by following a
 cross-reference. Suppress with a leading <code>:orphan:</code> field.</p>
+<h2 id="target">target</h2>
+<h3 id="target-duplicate-name">target.duplicate-name</h3>
+<p>A label, <code>:name:</code> or other <code>:ref:</code> target another document defines too.
+Neither is a target until one is renamed: whichever won would depend on the
+order the documents were read in.</p>
+<h2 id="glossary">glossary</h2>
+<h3 id="glossary-duplicate-term">glossary.duplicate-term</h3>
+<p>A glossary term another document defines too. Neither definition is reached by
+<code>:term:</code> until one is removed.</p>
+<h2 id="object">object</h2>
+<h3 id="object-duplicate-description">object.duplicate-description</h3>
+<p>A domain object (a function, class, option, …) another document describes too.
+Neither description is a target until all but one are marked <code>:no-index:</code>, as
+Sphinx advises.</p>
 <h2 id="contents">contents</h2>
 <h3 id="contents-depth-invalid">contents.depth-invalid</h3>
 <p>A <code>:depth:</code> whose value is not a positive integer. Sphinx would treat the
@@ -704,7 +725,8 @@ resolve: what is broken is a naming convention, which a migrating project may
 want to silence on its own.</p>
 <h3 id="entity-duplicate-id">entity.duplicate-id</h3>
 <p>Two entities in the project claiming one id. Found by the index phase, which is
-the first to see every document.</p>
+the first to see every document. Neither entity is indexed until one id is
+changed.</p>
 <h3 id="entity-unknown-target">entity.unknown-target</h3>
 <p>A relation or role naming an entity that no document declares.</p>
 <h3 id="entity-disallowed-relation">entity.disallowed-relation</h3>
