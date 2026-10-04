@@ -29,10 +29,11 @@ A finished step's heading is marked ✅ with its pull request, a partly
 finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
-  (PRs #238–#248, listed at the end of M0), #2 (PR #253), and #3 (PR #255).
+  (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255), and
+  #4 (PR #267, prepared by #259, #261–#263 and #266).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
-- **Next: #4, Workspace scan + per-document index.**
+- **Next: #5, `:ref:` and `:doc:` completion.**
 
 The pull request that finishes a step also updates this section and the
 step's marker.
@@ -130,7 +131,7 @@ expects from every step:
 
 ## M1: Workspace awareness (no configuration yet)
 
-### 4. Workspace scan + per-document index
+### 4. Workspace scan + per-document index ✅ (#267)
 
 **You experience:** the status bar shows `rinx: 512 docs indexed (0.8 s)`, and
 a fragment opened on its own is checked as the documents including it read
