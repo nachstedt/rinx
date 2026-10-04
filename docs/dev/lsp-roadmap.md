@@ -30,7 +30,7 @@ finished one 🔶. A heading with no marker means the step has not started.
 
 - **Done:** #1 (PR #226), plus the testing and CI groundwork that came before #2
   (PRs #238–#248, listed at the end of M0), #2 (PR #253), #3 (PR #255),
-  #4 (PR #267, prepared by #259, #261–#263 and #266), and #5.
+  #4 (PR #267, prepared by #259, #261–#263 and #266), and #5 (PR #269).
 - **Done early:** most of #12, which is the packaging, the CI artifact and the
   installed-VSIX test.
 - **Next: #6, broken-reference diagnostics.**
@@ -152,7 +152,7 @@ definition claimed by two documents defining nothing (#263, ADR-039).
 
 Measured on CPython's 528 documents: the scan takes 0.45 s, a fold 27 ms.
 
-### 5. `:ref:` and `:doc:` completion ✅
+### 5. `:ref:` and `:doc:` completion ✅ (#269)
 
 **You experience:** typing `` :ref:` `` lists every label with its title.
 
