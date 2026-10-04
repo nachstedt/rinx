@@ -2,7 +2,7 @@ use rinx_ast::Document;
 use rinx_entity::EntitySchema;
 use rinx_index::ProjectIndex;
 
-use super::document_index::analyze;
+use super::document_analysis::DocumentAnalysis;
 use super::element_numbering::assign_element_numbers;
 use super::entity_index::{
     collect_entity_diagnostics, collect_schema_mismatches, derive_entity_backlinks,
@@ -12,7 +12,7 @@ use super::page_order::collect_page_order;
 use super::section_numbering::assign_section_numbers;
 use rinx_toctree::expand_toctree;
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Analyzes a collection of `Document`s and builds a complete `ProjectIndex`.
 ///
@@ -75,10 +75,33 @@ pub fn build_project_index_reporting(
     settings: &IndexSettings<'_>,
     schema: &EntitySchema,
 ) -> ProjectIndexBuild {
-    let universe: BTreeSet<String> = docs.iter().map(|doc| doc.path.clone()).collect();
+    build_project_index_from_analyses(&analyze_documents(docs), settings, schema)
+}
 
-    let mut index = merge_document_analyses(docs);
-    index.root_documents = find_root_documents(docs, &index, settings.root_doc);
+/// Each of `docs`' analysis, by document path.
+fn analyze_documents(docs: &[Document]) -> BTreeMap<String, DocumentAnalysis> {
+    docs.iter()
+        .map(|doc| (doc.path.clone(), DocumentAnalysis::of(doc)))
+        .collect()
+}
+
+/// Folds every document's analysis through the project-wide phases into one
+/// index, and the diagnostics only that view reveals.
+///
+/// The form the language server calls: it keeps one [`DocumentAnalysis`] per
+/// workspace document, replaces the one an edit touched, and folds again. The
+/// result cannot depend on which documents were analysed when, since the
+/// merge does not depend on order (ADR-039) and the map is keyed by path.
+#[must_use]
+pub fn build_project_index_from_analyses(
+    analyses: &BTreeMap<String, DocumentAnalysis>,
+    settings: &IndexSettings<'_>,
+    schema: &EntitySchema,
+) -> ProjectIndexBuild {
+    let universe: BTreeSet<String> = analyses.keys().cloned().collect();
+
+    let mut index = merge_document_analyses(analyses);
+    index.root_documents = find_root_documents(&universe, &index, settings.root_doc);
     index.section_numbers = assign_section_numbers(&index, &universe);
     // Figure numbers carry the section number they sit under, so they are
     // assigned only once every section has one.
@@ -94,12 +117,12 @@ pub fn build_project_index_reporting(
     // function of the merged toctrees.
     index.entity_backlinks = derive_entity_backlinks(&index, schema);
 
-    let schema_hashes: Vec<(&str, Option<&str>)> = docs
+    let schema_hashes: Vec<(&str, Option<&str>)> = analyses
         .iter()
-        .map(|doc| (doc.path.as_str(), doc.entity_schema_hash.as_deref()))
+        .map(|(path, analysis)| (path.as_str(), analysis.entity_schema_hash.as_deref()))
         .collect();
 
-    let mut diagnostics = super::nav_diagnostics::collect_nav_diagnostics(docs, &index);
+    let mut diagnostics = super::nav_diagnostics::collect_nav_diagnostics(analyses, &index);
     diagnostics
         .extend(super::duplicate_definitions::collect_duplicate_definition_diagnostics(&index));
     diagnostics.extend(collect_schema_mismatches(&schema_hashes, schema));
@@ -111,15 +134,16 @@ pub fn build_project_index_reporting(
 /// Merges every document's own analysis — targets, titles, outlines, toctrees,
 /// glossary terms, equations — into one index. A definition several documents
 /// claim is left out and recorded as contested by the merge itself, which is
-/// what keeps the result independent of the order of `docs`.
+/// what keeps the result independent of the order documents were analysed in.
 ///
 /// The two accumulated lists are put in document order afterwards for the
 /// same reason: each document's general-index entries stay in the order it
-/// wrote them, but which document comes first must not depend on `docs`.
-fn merge_document_analyses(docs: &[Document]) -> ProjectIndex {
+/// wrote them, but which document comes first must not depend on how the
+/// analyses were collected.
+fn merge_document_analyses(analyses: &BTreeMap<String, DocumentAnalysis>) -> ProjectIndex {
     let mut index = ProjectIndex::default();
-    for doc in docs {
-        index.merge(analyze(doc));
+    for analysis in analyses.values() {
+        index.merge(analysis.index.clone());
     }
     index
         .genindex_entries
@@ -135,7 +159,11 @@ fn merge_document_analyses(docs: &[Document]) -> ProjectIndex {
 /// root. Otherwise roots are inferred as every document no toctree references
 /// — the historical behaviour, which also means an orphaned document shows up
 /// as its own top-level entry rather than disappearing.
-fn find_root_documents(docs: &[Document], index: &ProjectIndex, root_doc: &str) -> Vec<String> {
+fn find_root_documents(
+    universe: &BTreeSet<String>,
+    index: &ProjectIndex,
+    root_doc: &str,
+) -> Vec<String> {
     let configured = if std::path::Path::new(root_doc)
         .extension()
         .is_some_and(|ext| ext.eq_ignore_ascii_case("rst"))
@@ -144,15 +172,14 @@ fn find_root_documents(docs: &[Document], index: &ProjectIndex, root_doc: &str) 
     } else {
         format!("{root_doc}.rst")
     };
-    if docs.iter().any(|doc| doc.path == configured) {
+    if universe.contains(&configured) {
         return vec![configured];
     }
 
-    let universe: BTreeSet<String> = docs.iter().map(|doc| doc.path.clone()).collect();
     let mut referenced: BTreeSet<String> = BTreeSet::new();
     for (owner, toctrees) in &index.toctrees {
         for toctree in toctrees {
-            let (targets, _) = expand_toctree(&toctree.toctree, owner, &universe);
+            let (targets, _) = expand_toctree(&toctree.toctree, owner, universe);
             for target in targets {
                 // A `self` entry names its own document, which must not make
                 // that document a non-root.
@@ -166,14 +193,20 @@ fn find_root_documents(docs: &[Document], index: &ProjectIndex, root_doc: &str) 
     }
 
     universe
-        .into_iter()
-        .filter(|path| !referenced.contains(path))
+        .iter()
+        .filter(|path| !referenced.contains(*path))
+        .cloned()
         .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The paths of `docs`, as the root-finding phase receives them.
+    fn universe_of(docs: &[Document]) -> BTreeSet<String> {
+        docs.iter().map(|doc| doc.path.clone()).collect()
+    }
 
     #[test]
     fn test_find_root_documents_prefers_the_configured_root() {
@@ -183,10 +216,10 @@ mod tests {
             Document::new("index.rst".to_string(), vec![]),
             Document::new("stray.rst".to_string(), vec![]),
         ];
-        let index = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&analyze_documents(&docs));
 
         // When
-        let roots = find_root_documents(&docs, &index, "index");
+        let roots = find_root_documents(&universe_of(&docs), &index, "index");
 
         // Then
         assert_eq!(roots, vec!["index.rst"]);
@@ -196,10 +229,10 @@ mod tests {
     fn test_find_root_documents_accepts_a_configured_root_with_an_extension() {
         // Given
         let docs = vec![Document::new("index.rst".to_string(), vec![])];
-        let index = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&analyze_documents(&docs));
 
         // When
-        let roots = find_root_documents(&docs, &index, "index.rst");
+        let roots = find_root_documents(&universe_of(&docs), &index, "index.rst");
 
         // Then
         assert_eq!(roots, vec!["index.rst"]);
@@ -216,10 +249,10 @@ mod tests {
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
-        let index = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&analyze_documents(&docs));
 
         // When
-        let roots = find_root_documents(&docs, &index, "nonexistent");
+        let roots = find_root_documents(&universe_of(&docs), &index, "nonexistent");
 
         // Then — `child` is referenced, so only `start` is inferred a root.
         assert_eq!(roots, vec!["start.rst"]);
@@ -240,10 +273,10 @@ mod tests {
             ),
             Document::new("child.rst".to_string(), vec![]),
         ];
-        let index = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&analyze_documents(&docs));
 
         // When
-        let roots = find_root_documents(&docs, &index, "nonexistent");
+        let roots = find_root_documents(&universe_of(&docs), &index, "nonexistent");
 
         // Then
         assert_eq!(roots, vec!["start.rst"]);
@@ -258,7 +291,7 @@ mod tests {
         )];
 
         // When
-        let index = merge_document_analyses(&docs);
+        let index = merge_document_analyses(&analyze_documents(&docs));
 
         // Then — the graph is stored unexpanded, per toctree.
         assert_eq!(index.toctrees["index.rst"].len(), 1);

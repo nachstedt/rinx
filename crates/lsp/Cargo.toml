@@ -11,11 +11,17 @@ authors.workspace = true
 keywords.workspace = true
 
 [dependencies]
+rinx_analyzer.workspace = true
 rinx_ast.workspace = true
+rinx_entity.workspace = true
+rinx_index.workspace = true
 rinx_parser.workspace = true
 anyhow = "1.0.102"
+crossbeam-channel = "0.5"
 lsp-server = "0.10"
 lsp-types = "0.97"
+rayon = "1"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 [dev-dependencies]

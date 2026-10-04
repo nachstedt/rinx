@@ -26,6 +26,11 @@
         "command": "rinx.showPreview",
         "title": "Rinx: Show Preview",
         "category": "Rinx"
+      },
+      {
+        "command": "rinx.showLogs",
+        "title": "Rinx: Show Logs",
+        "category": "Rinx"
       }
     ],
     "configuration": {

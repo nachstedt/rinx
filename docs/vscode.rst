@@ -47,7 +47,9 @@ Opening a ``.rst`` file starts the language server, ``rinx lsp``. It is the bina
 
 A mistake inside a file that an open document pulls in with ``.. include::`` is underlined in that file, at its own line, even when the file itself is not open. The ``.. include::`` line itself carries a note saying how many problems the file brought in, with a link to each, so the problem is visible from the document you are editing; it is information rather than a warning, so a problem is not counted twice. Editing an included file, saved or not, re-checks the open documents that include it. While an open document includes a file, that file shows what was found through its includers rather than what it reports on its own, because a fragment on its own lacks what its includer defines before the ``.. include::``.
 
-For now the server knows only the documents that are open: there is no project index yet. ``docs/dev/lsp-roadmap.md`` in the repository lists the steps that add these, and ``docs/decisions/038-language-server.md`` describes the design.
+That holds for documents that are not open, too. The server reads every ``.rst`` file under each workspace folder when it starts, so a fragment opened on its own is checked as the documents including it read it, whether or not they are open.
+
+That scan also builds the project index the server keeps current as you edit. The status bar shows its progress, then for example ``rinx: 512 docs indexed (0.8 s)``; clicking it opens the server's log. The scan skips hidden directories and does not follow a symlinked directory, so a Bazel workspace's ``bazel-*`` output links are not read twice; ``.gitignore`` is not consulted, since generated sources are often part of the documentation. Until the server reads a project's configuration, each workspace folder is one project, with ``index`` as its root document. Nothing uses the index yet: completion and broken-reference diagnostics come next. ``docs/dev/lsp-roadmap.md`` in the repository lists the steps, and ``docs/decisions/038-language-server.md`` describes the design.
 
 4. Change Detection & Background Reconcile
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

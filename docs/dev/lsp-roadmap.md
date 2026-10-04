@@ -98,8 +98,8 @@ The severity table this step first listed was dropped: every diagnostic stays a
 file, and editing the fragment updates the document that includes it.
 
 While an open document includes a file, the file shows what its includers
-found in it, not its own standalone parse. Only open documents count as
-includers until #4 scans the workspace. Each `.. include::` that brings a
+found in it, not its own standalone parse. Since #4, documents that are not
+open count as includers too. Each `.. include::` that brings a
 problem in also carries an *Information* summary on its own line, linking to
 each problem through `relatedInformation`; it is the editor's alone, since the
 build's warning already names both files. The step also fixed two positions
@@ -132,14 +132,24 @@ expects from every step:
 
 ### 4. Workspace scan + per-document index
 
-**You experience:** the status bar shows `rinx: 512 docs indexed (0.8 s)`.
+**You experience:** the status bar shows `rinx: 512 docs indexed (0.8 s)`, and
+a fragment opened on its own is checked as the documents including it read
+it, open or not.
 
-- Discover sources under the workspace folders
-- Parallel parse and analysis (rayon)
-- `BTreeMap<DocPath, DocumentAnalysis>` folded through the existing global phases (refactor `build_project_index` to accept it)
-- Re-analyse one document per edit
+Three preparatory pull requests came first, because a fold must not depend on
+the order documents arrive in: `:no-index:` on every domain object (#259),
+named references resolved within their own document (#261, #262), and a
+definition claimed by two documents defining nothing (#263, ADR-039).
+
+- Discover sources under the workspace folders: every `*.rst`, skipping hidden and symlinked directories, never consulting `.gitignore`
+- Parallel parse and analysis (rayon), through the same parse an open document gets
+- `BTreeMap<DocPath, DocumentAnalysis>` folded through the existing global phases (`build_project_index_from_analyses`)
+- Re-analyse the changed document and every document including it, open or not, on each change
+- Documents that are not open count as includers of an open fragment (the remainder of #3)
 - `$/progress` plus a custom `rinx/status` notification → status bar item
-- Test: the folded index equals `build_project_index` on the examples
+- Test: the folded index equals `build_project_index` on the examples and the docs, and after edits equals a fresh scan
+
+Measured on CPython's 528 documents: the scan takes 0.45 s, a fold 27 ms.
 
 ### 5. `:ref:` and `:doc:` completion
 
