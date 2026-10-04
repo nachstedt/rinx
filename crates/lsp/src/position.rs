@@ -1,4 +1,4 @@
-//! Converting rinx's source positions into the protocol's.
+//! Converting between rinx's source positions and the protocol's.
 //!
 //! The two disagree on purpose (ADR-003): a [`rinx_ast::Position`] is
 //! 1-based in both components and counts columns in Unicode scalar values,
@@ -81,6 +81,23 @@ pub fn to_lsp_position(
         line: position.line.saturating_sub(1),
         character,
     }
+}
+
+/// The 0-based character index on `line_text` of the protocol column
+/// `character` — the inverse of [`to_lsp_position`]'s column.
+///
+/// A column inside a surrogate pair rounds down to the character it splits,
+/// and one beyond the end of the line is clamped to the line's end.
+#[must_use]
+pub fn char_index_of(line_text: &str, character: u32, encoding: PositionEncoding) -> usize {
+    let mut units = 0;
+    line_text
+        .chars()
+        .take_while(|&c| {
+            units += encoding.width(c);
+            units <= character
+        })
+        .count()
 }
 
 /// The protocol range of `span` within the document whose text is `text`.
@@ -248,6 +265,34 @@ mod tests {
     }
 
     #[test]
+    fn test_char_index_of_counts_ascii_units() {
+        // Given / When / Then
+        assert_eq!(char_index_of(":ref:`x", 6, PositionEncoding::Utf16), 6);
+    }
+
+    #[test]
+    fn test_char_index_of_reads_a_surrogate_pair_as_one_character() {
+        // Given — the crab takes two UTF-16 units, one character
+        let line = "🦀:doc:`";
+
+        // When / Then
+        assert_eq!(char_index_of(line, 2, PositionEncoding::Utf16), 1);
+        assert_eq!(char_index_of(line, 1, PositionEncoding::Utf32), 1);
+    }
+
+    #[test]
+    fn test_char_index_of_rounds_down_inside_a_surrogate_pair() {
+        // Given / When / Then — unit 1 is the crab's second half
+        assert_eq!(char_index_of("🦀x", 1, PositionEncoding::Utf16), 0);
+    }
+
+    #[test]
+    fn test_char_index_of_clamps_a_unit_past_the_line_end() {
+        // Given / When / Then
+        assert_eq!(char_index_of("ab", 40, PositionEncoding::Utf16), 2);
+    }
+
+    #[test]
     fn test_to_lsp_range_converts_both_ends_on_their_own_lines() {
         // Given
         let text = "Title\n🦀 .. foo::\n";
@@ -353,6 +398,24 @@ mod tests {
                 prop_assert!(
                     at_next.character <= reference_width(&line, usize::MAX, encoding)
                 );
+            }
+
+            #[test]
+            fn test_char_index_of_inverts_to_lsp_position(
+                line in "\\PC{0,40}",
+                index in 0usize..60,
+                encoding in encodings(),
+            ) {
+                // Given — a character boundary, clamped to the line
+                let index = index.min(line.chars().count());
+                let column = u32::try_from(index).expect("a short line") + 1;
+                let character = to_lsp_position(Position::new(1, column), &line, encoding).character;
+
+                // When
+                let found = char_index_of(&line, character, encoding);
+
+                // Then
+                prop_assert_eq!(found, index);
             }
 
             #[test]
